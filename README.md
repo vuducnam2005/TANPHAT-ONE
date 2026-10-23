@@ -7,6 +7,7 @@ Workspace khởi tạo cho hệ thống quản trị nội bộ. Tuần 1 tập 
 - `frontend/`: trang mẫu ReactJS + TypeScript + Vite.
 - `custom_addons/`: addon `tadic_core` mới là khung tối thiểu; chưa có nghiệp vụ hay model.
 - `docs/`: biểu mẫu khảo sát và phác thảo dữ liệu cần xác nhận.
+- `DESIGN.md`: quy ước giao diện dùng chung cho giai đoạn xây dựng React.
 - `odoo/`: source Odoo 20 từ upstream, được giữ riêng khỏi Git của dự án.
 - `venv/`: môi trường Python cục bộ, không đưa lên Git.
 - `odoo.conf`: cấu hình cục bộ chứa thông tin truy cập database, không đưa lên Git.
@@ -34,4 +35,4 @@ Nếu Odoo báo `password authentication failed`, cần kiểm tra mật khẩu 
 
 ## Kế hoạch tuần 1
 
-Xem [checklist tuần 1](docs/tuan-1-checklist.md). Các biểu mẫu trong `docs/` là bản nháp để thu thập và xác nhận yêu cầu, chưa đại diện cho quy trình đã được phê duyệt.
+Xem [checklist tuần 1](docs/tuan-1-checklist.md) và [mẫu tổng hợp yêu cầu/MVP](docs/tom-tat-yeu-cau-va-mvp.md). Các biểu mẫu trong `docs/` là bản nháp để thu thập và xác nhận yêu cầu, chưa đại diện cho quy trình đã được phê duyệt.
