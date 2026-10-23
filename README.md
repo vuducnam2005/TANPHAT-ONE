@@ -1,6 +1,6 @@
 # Tadic Management
 
-Workspace khởi tạo cho hệ thống quản trị nội bộ. Tuần 1 tập trung vào môi trường phát triển, khảo sát yêu cầu và phạm vi bản demo; chưa có nghiệp vụ chính thức hay kết nối React–Odoo.
+Workspace khởi tạo cho hệ thống quản trị nội bộ. Tháng 1 tập trung vào đọc tài liệu nghiệp vụ, khảo sát, thiết kế khung hệ thống và chọn techstack; chưa triển khai code chức năng nghiệp vụ.
 
 ## Cấu trúc
 
@@ -33,6 +33,6 @@ Mở URL mà Vite in ra trong terminal (mặc định `http://localhost:5173`). 
 
 Nếu Odoo báo `password authentication failed`, cần kiểm tra mật khẩu của role PostgreSQL trong `odoo.conf`. Thông tin đăng nhập Odoo thử nghiệm trên máy này nằm trong `LOCAL-ACCESS.txt`, được Git bỏ qua.
 
-## Kế hoạch tuần 1
+## Kế hoạch tháng đầu
 
-Xem [checklist tuần 1](docs/tuan-1-checklist.md) và [mẫu tổng hợp yêu cầu/MVP](docs/tom-tat-yeu-cau-va-mvp.md). Các biểu mẫu trong `docs/` là bản nháp để thu thập và xác nhận yêu cầu, chưa đại diện cho quy trình đã được phê duyệt.
+Xem [kế hoạch tháng 1](docs/ke-hoach-thang-1.md), [checklist tuần 1](docs/tuan-1-checklist.md) và [phân tích mẫu PKH](docs/phan-tich-mau-pkh.md). Các biểu mẫu trong `docs/` là bản nháp để thu thập và xác nhận yêu cầu, chưa đại diện cho quy trình đã được phê duyệt.

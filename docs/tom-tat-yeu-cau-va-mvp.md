@@ -1,6 +1,6 @@
 # Tóm tắt yêu cầu và phạm vi MVP — bản chờ xác nhận
 
-Tài liệu này dùng để tổng hợp kết quả khảo sát tuần 1. Chưa có quy trình, chức năng hay quyền nghiệp vụ nào được phê duyệt. Không coi các ô gợi ý bên dưới là yêu cầu đã chốt.
+Tài liệu này dùng để tổng hợp kết quả khảo sát tháng đầu. Chưa có quy trình, chức năng hay quyền nghiệp vụ nào được phê duyệt. Không coi các ô gợi ý bên dưới là yêu cầu đã chốt. Chỉ chuyển sang triển khai sau khi khung hệ thống và phạm vi MVP được xác nhận.
 
 ## Thông tin xác nhận
 
@@ -37,7 +37,7 @@ Mỗi chức năng chỉ chuyển sang trạng thái **Đã chốt** khi có ng�
 | Luồng duyệt và sửa sau duyệt |  |  |  | Chưa chốt |
 | Dữ liệu mẫu cho bản demo |  |  |  | Chưa chốt |
 
-## Bàn giao để bắt đầu tuần 2
+## Bàn giao để bắt đầu tháng 2
 
 - [ ] Có biên bản khảo sát được người liên quan xác nhận.
 - [ ] Có danh mục biểu mẫu và dữ liệu mẫu được phép sử dụng.
