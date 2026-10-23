@@ -35,4 +35,4 @@ Nếu Odoo báo `password authentication failed`, cần kiểm tra mật khẩu 
 
 ## Kế hoạch tháng đầu
 
-Xem [kế hoạch tổng thể điều chỉnh](docs/ke-hoach-tong-the.md), [kế hoạch tháng 1](docs/ke-hoach-thang-1.md), [checklist tuần 1](docs/tuan-1-checklist.md) và [phân tích mẫu PKH](docs/phan-tich-mau-pkh.md). Các biểu mẫu trong `docs/` là bản nháp để thu thập và xác nhận yêu cầu, chưa đại diện cho quy trình đã được phê duyệt.
+Xem [kế hoạch tổng thể điều chỉnh](docs/ke-hoach-tong-the.md), [kế hoạch tháng 1](docs/ke-hoach-thang-1.md), [checklist tuần 1](docs/tuan-1-checklist.md), [phân tích mẫu PKH](docs/phan-tich-mau-pkh.md) và [phân tích nghiệp vụ KHKD](docs/phan-tich-nghiep-vu-khkd.md). Các biểu mẫu trong `docs/` là bản nháp để thu thập và xác nhận yêu cầu, chưa đại diện cho quy trình đã được phê duyệt.
