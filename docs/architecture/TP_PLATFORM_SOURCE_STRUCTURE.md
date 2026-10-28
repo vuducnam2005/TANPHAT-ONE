@@ -138,28 +138,29 @@ Source checkout hiện không có `documents`/`approvals` chuẩn dưới `addon
 
 `tp_import` lưu file/hash/schema/batch, đọc Excel ở staging hoặc worker offline, kiểm tra mapping và quarantine dòng lỗi. Import lặp không được cộng trùng và luôn có báo cáo đối chiếu. API web không đọc trực tiếp file Excel trên NAS.
 
-Mỗi addon chỉ tạo các thư mục dùng thật. Ví dụ `tp_contract` khi bắt đầu triển khai:
+Mỗi addon chỉ tạo các thư mục dùng thật. `tp_contract` của CTR-001 (read slice) hiện có:
 
 ```text
 tp_contract/
 ├── __init__.py
-├── __manifest__.py
+├── __manifest__.py                # depends tp_core, tp_project
 ├── models/
 │   ├── __init__.py
-│   ├── tp_contract.py
-│   ├── tp_contract_line.py
-│   └── tp_contract_amendment.py
+│   ├── tp_contract.py             # danh tính, snapshot theo ngày, tổng
+│   ├── tp_contract_revision.py    # gốc/phụ lục/đính chính, review/ký/hiệu lực
+│   ├── tp_contract_line.py        # dòng phạm vi + tp.contract.line.amount
+│   ├── tp_approval_reference.py   # kết quả BASE + tp.approval.reference.amount
+│   └── tp_contract_document.py    # tệp general/financial
 ├── security/
-│   ├── tp_contract_security.xml
-│   └── ir.access.csv
-├── views/
-│   ├── tp_contract_views.xml
-│   └── tp_contract_menus.xml
+│   └── ir.access.csv              # access domain theo project, company, grant financial_read
 └── tests/
     ├── __init__.py
-    ├── test_contract_amendment.py
-    └── test_contract_access.py
+    ├── common.py
+    ├── test_contract_access.py
+    └── test_contract_model.py
 ```
+
+Chưa có `views/` hoặc menu native vì người dùng nghiệp vụ đọc qua API/React; grant `financial_read` (`tp.project.grant`) nằm ở `tp_project` để domain khác dùng lại. Thêm view/menu khi có ca quản trị thật.
 
 Model/action/constraint giữ nghiệp vụ; route chỉ parse input, gọi action và serialize. Dùng action chuẩn như `sale.order.action_confirm`, `purchase.order.button_confirm`, `account.move.action_post` thay cho ghi thẳng state. Các ràng buộc SQL theo API `models.Constraint`/`Index` của source hiện tại; không sao mẫu `_sql_constraints` cũ. Khai báo dependency trực tiếp thật sự dùng trong manifest.
 
@@ -259,7 +260,7 @@ Dependency đích cho phần nghiệp vụ đầu tiên:
 | `tp_settlement` | `tp_project`, `tp_contract`, `tp_allocation` |
 | `tp_reporting` | `tp_project`, `tp_contract`, `tp_allocation`, `tp_settlement` |
 | `tp_api` | `web`; không phụ thuộc các domain trên |
-| `tp_planning_api` | `tp_api`, `tp_project` lúc đầu; thêm contract/allocation/settlement/reporting khi endpoint tương ứng xuất hiện |
+| `tp_planning_api` | `tp_api`, `tp_project`, `tp_contract` (đã thêm cho API đọc hợp đồng CTR-001); thêm allocation/settlement/reporting khi endpoint tương ứng xuất hiện |
 | `tp_bid` (sau) | `crm`, `tp_project` khi liên kết cơ hội-dự án được dùng |
 | `tp_sale_bridge` (sau) | `tp_contract`, `sale` |
 | `tp_purchase_bridge` (sau) | `tp_contract`, `purchase`; thêm allocation nếu dùng liên kết đó |
@@ -302,7 +303,7 @@ Khi có runtime, CI tập trung vào cài/upgrade addon, security/transaction te
 
 ## 10. Phạm vi lượt thiết kế này
 
-Lượt dựng nền triển khai tổ chức/hạng mục/dự án, phân công và API đọc, kèm React workspace nối Odoo thật trên database dev/test. Các module hợp đồng, giao khoán, nghiệm thu, reporting và import trong tài liệu là thiết kế cho giai đoạn tiếp theo; chưa tạo bảng hoặc phát hành dữ liệu nghiệp vụ. Chưa triển khai production hoặc quy trình backup/restore.
+Lượt dựng nền triển khai tổ chức/hạng mục/dự án, phân công và API đọc, kèm React workspace nối Odoo thật trên database dev/test. CTR-001 sau đó thêm `tp_contract` read slice (hợp đồng/revision/dòng phạm vi/BASE/tài liệu, grant tiền theo project) với dữ liệu giả lập. Giao khoán, nghiệm thu, reporting và import trong tài liệu vẫn là thiết kế cho giai đoạn tiếp theo; chưa có dữ liệu nghiệp vụ thật. Chưa triển khai production hoặc quy trình backup/restore.
 
 ## 11. Cơ sở kiểm tra và phần cần xác minh khi triển khai
 

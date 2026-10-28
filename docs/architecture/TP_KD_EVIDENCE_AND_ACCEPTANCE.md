@@ -83,6 +83,7 @@ Ba hồ sơ giả lập đại diện được diễn giải để chuyển thà
 
 - Chưa có hồ sơ thật đã khử dữ liệu để xác nhận signatory, bốn mắt, thuế/gross-net, ngày hiệu lực và nghiệp vụ tạm ứng/giữ lại.
 - Chưa có feed kế toán thật; S05 không chứng minh đối chiếu đã thành công.
-- Chưa chạy model/API/action test; đây là acceptance matrix cho CTR-001 trở đi.
+- CTR-001 (`CHG-20261028-006`) đã chuyển phần đọc thành Odoo/API/E2E test với dữ liệu giả lập: C1 và hồ sơ P-A (60 + 40 = 100; phụ lục 70 + 40 = 110; as-of 31/10 là 100, 01/11 là 110, không 210); C5 cho dòng hợp đồng (chưa xác nhận là null, 0 là 0, tổng chưa đủ thì không có giá trị); BASE approved/verified nhưng chưa ký/hiệu lực; kết quả BASE khai báo hiển thị chưa xác minh. Ma trận quyền âm đã có test cho: reader không có grant (không amount trong ORM/`read_group`/export/API, tải tệp financial bị từ chối), URL khác project trả 404, metadata A + financial B, grant hết hạn/thu hồi chặn request sau, tài liệu financial cần grant kể cả khi có link.
+- Chưa test vì chưa có action ghi: sửa giảm/về 0 của phụ lục, hủy draft, record/verify BASE, make_effective, idempotency, audit break-glass; C2–C4, C6 và P-B/P-C thuộc CTR-002/ALC/STL.
 - Khi thu thập hồ sơ đại diện, ghi source hash, che tên/số tiền nếu đưa vào test, và cập nhật câu hỏi Q1–Q8 trong workflow chính.
 

@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useProject } from '../queries';
 import { ApiError } from '../../../shared/api/client';
 import { StatusPanel } from '../../../shared/ui/StatusPanel';
+import { subsystems } from '../../../shared/config/product';
 
 export function ProjectDetailPage() {
   const parameter = useParams().projectId ?? '';
@@ -37,7 +38,11 @@ export function ProjectDetailPage() {
         <Fact label="Công ty quản lý" value={project.company.name} />
         <Fact label="Cập nhật gần nhất" value={updated} />
       </dl>
-      <div className="tp-next-step"><strong>Hồ sơ nghiệp vụ</strong><p>Hợp đồng, giao khoán và nghiệm thu sẽ được bổ sung trong giai đoạn tiếp theo.</p></div>
+      <div className="tp-next-step">
+        <strong>Hồ sơ nghiệp vụ</strong>
+        <p>Hợp đồng của dự án đã có trong {subsystems.contracts.name}. Giao khoán và nghiệm thu sẽ được bổ sung trong giai đoạn tiếp theo.</p>
+        <Link className="tp-quiet-button" to={`/contracts?project_id=${project.id}`}>Xem hợp đồng của dự án</Link>
+      </div>
     </section>
   );
 }

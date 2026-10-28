@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 LOCAL = ROOT / '.local'
 PGDATA = LOCAL / 'postgres' / 'data'
 CONFIG = LOCAL / 'odoo.conf'
-MODULES = 'tp_core,tp_organization,tp_project,tp_api,tp_planning_api'
+MODULES = 'tp_core,tp_organization,tp_project,tp_contract,tp_api,tp_planning_api'
 DEV_DB = 'tp_tanphat_dev'
 TEST_DB = 'tp_tanphat_test'
 PG_PORT = 55432
@@ -139,7 +139,7 @@ def install(dbname, values, *, test=False):
     if test:
         if is_listening(18079):
             raise RuntimeError('Test HTTP port 18079 is already occupied.')
-        args += ['--test-enable', '--test-tags', '/tp_project,/tp_planning_api', '--http-port', '18079']
+        args += ['--test-enable', '--test-tags', '/tp_project,/tp_contract,/tp_planning_api', '--http-port', '18079']
     else:
         args += ['--no-http']
     run(args)
@@ -184,11 +184,101 @@ def seed_dev(values):
                 'name': 'Development Project - Unassigned', 'tp_managed': True, 'tp_code': 'DEV-002', 'company_id': company.id,
             })
             seeded('tp.project.assignment', 'assignment', {'project_id': project.id, 'user_id': planner.id})
+        if not env.ref('tp_core.dev_contract_a', raise_if_not_found=False):
+            seed_dev_contracts(env, seeded)
         env.ref('base.user_admin').write({'password': values['admin'], 'tz': 'Asia/Ho_Chi_Minh'})
         planner = env.ref('tp_core.dev_planner', raise_if_not_found=False)
         if planner:
             planner.write({'password': values['planner'], 'tz': 'Asia/Ho_Chi_Minh'})
         cursor.commit()  # This bootstrap owns its registry cursor.
+
+
+def seed_dev_contracts(env, seeded):
+    """Synthetic TP Contracts fixtures (amounts in VND); never real business records."""
+    import hashlib
+
+    from odoo.tools import BinaryBytes
+
+    project = env.ref('tp_core.dev_project')
+    hidden = env.ref('tp_core.dev_project_hidden')
+    admin = env.ref('base.user_admin')
+    owner = seeded('res.partner', 'contract_owner', {'name': 'Chủ đầu tư giả lập - DEV', 'is_company': True})
+    # Development only: lets the admin account exercise the financial path on DEV-001.
+    seeded('tp.project.grant', 'grant_admin', {
+        'project_id': project.id, 'user_id': admin.id, 'capability': 'financial_read',
+        'reason': 'Development fixture: synthetic financial read on DEV-001 only.',
+    })
+
+    def revision(contract, sequence, *, previous=None, signed=None, effective=None):
+        vals = {
+            'contract_id': contract.id, 'sequence': sequence, 'revision_kind': 'amendment' if previous else 'original',
+            'name': f'Phụ lục {sequence:02d}' if previous else 'Hợp đồng gốc', 'review_state': 'review_complete',
+            'previous_revision_id': previous.id if previous else False,
+        }
+        if signed:
+            vals.update(signature_status='signed_recorded', signed_date=signed)
+        if effective:
+            vals.update(effectivity_status='effective_recorded', effective_date=effective)
+        return env['tp.contract.revision'].create(vals)
+
+    def line(rev, key, name, change_kind, amount, previous=None):
+        record = env['tp.contract.line'].create({
+            'revision_id': rev.id, 'scope_key': key, 'name': name, 'change_kind': change_kind,
+            'previous_line_id': previous.id if previous else False,
+        })
+        env['tp.contract.line.amount'].create({
+            'line_id': record.id, 'amount_state': 'unconfirmed' if amount is None else 'confirmed', 'amount': amount or 0,
+        })
+        return record
+
+    def approval(rev, amount, **vals):
+        reference = env['tp.approval.reference'].create({
+            'revision_id': rev.id, 'decision': 'approved', 'decided_by_name': 'Người duyệt BASE (giả lập)',
+            'evidence_sha256': hashlib.sha256(f'synthetic evidence {rev.id}'.encode()).hexdigest(), **vals,
+        })
+        env['tp.approval.reference.amount'].create({'reference_id': reference.id, 'amount_state': 'confirmed', 'amount': amount})
+
+    # C1: the amendment replaces the original snapshot from 2026-11-01 (100 -> 110 million, never 210).
+    contract_a = seeded('tp.contract', 'contract_a', {
+        'code': 'HD-DEV-001', 'name': 'Hợp đồng tư vấn khảo sát thiết kế (giả lập)', 'project_id': project.id,
+        'partner_id': owner.id, 'contract_type': 'owner',
+    })
+    original = revision(contract_a, 0, signed='2026-01-05', effective='2026-01-10')
+    survey = line(original, 'KS', 'Khảo sát địa hình (giả lập)', 'original', 60_000_000)
+    design = line(original, 'TK', 'Thiết kế cơ sở (giả lập)', 'original', 40_000_000)
+    amendment = revision(contract_a, 1, previous=original, signed='2026-10-10', effective='2026-11-01')
+    line(amendment, 'KS', 'Khảo sát địa hình (giả lập)', 'amended', 70_000_000, survey)
+    line(amendment, 'TK', 'Thiết kế cơ sở (giả lập)', 'unchanged', 40_000_000, design)
+    approval(amendment, 110_000_000, reference_kind='manual', provenance='Ảnh chụp BASE giả lập',
+             decided_at='2026-10-09 03:00:00')
+    contract_a.lifecycle_state = 'effective'
+    env['tp.contract.document'].create([
+        {'contract_id': contract_a.id, 'revision_id': amendment.id, 'name': 'Phụ lục 01 đã ký (giả lập)',
+         'document_kind': 'amendment', 'file': BinaryBytes(b'Synthetic signed amendment - DEV'), 'file_name': 'phu-luc-01-gia-lap.txt'},
+        {'contract_id': contract_a.id, 'name': 'Đề cương kỹ thuật (giả lập)', 'document_kind': 'technical_scope',
+         'confidentiality': 'general', 'file': BinaryBytes(b'Synthetic technical scope - DEV'), 'file_name': 'de-cuong-gia-lap.txt'},
+    ])
+
+    # BASE approved and verified, but neither signed nor effective; one amount is still unconfirmed.
+    contract_c = seeded('tp.contract', 'contract_c', {
+        'code': 'HD-DEV-003', 'name': 'Hợp đồng thí nghiệm vật liệu (giả lập)', 'project_id': project.id,
+        'contract_type': 'subcontractor',
+    })
+    pending = revision(contract_c, 0)
+    line(pending, 'TN', 'Thí nghiệm vật liệu (giả lập)', 'original', 45_000_000)
+    line(pending, 'DP', 'Hạng mục chờ báo giá (giả lập)', 'original', None)
+    approval(pending, 45_000_000, reference_kind='base_id', base_reference='BASE-DEV-0003',
+             source_url='https://base.example.invalid/approvals/BASE-DEV-0003', decided_at='2026-10-20 02:00:00',
+             verification_state='verified', verified_by_id=admin.id, verified_at='2026-10-21 02:00:00',
+             authority_status='confirmed', authority_source='Văn bản ủy quyền giả lập - DEV')
+
+    # Outside the planner's scope; admin sees the metadata but has no financial grant here.
+    contract_b = seeded('tp.contract', 'contract_b', {
+        'code': 'HD-DEV-002', 'name': 'Hợp đồng giám sát (giả lập)', 'project_id': hidden.id, 'contract_type': 'owner',
+    })
+    hidden_revision = revision(contract_b, 0, signed='2026-02-01', effective='2026-02-01')
+    line(hidden_revision, 'GS', 'Giám sát thi công (giả lập)', 'original', 25_000_000)
+    contract_b.lifecycle_state = 'effective'
 
 
 def smoke(values):
@@ -208,7 +298,27 @@ def smoke(values):
         data = projects.json()['data']
         assert [row['code'] for row in data] == ['DEV-001'], 'Unexpected project scope for dev reader.'
         assert session.get(base_url + f"/api/v1/projects/{data[0]['id']}", timeout=15).status_code == 200
-    print('PASS: native session login, JSON 401, scoped project list and detail.')
+        contracts = session.get(base_url + '/api/v1/contracts', timeout=15).json()['data']
+        assert [row['code'] for row in contracts] == ['HD-DEV-001', 'HD-DEV-003'], 'Unexpected contract scope for dev reader.'
+        detail = session.get(base_url + f"/api/v1/contracts/{contracts[0]['id']}", timeout=15)
+        assert detail.status_code == 200 and not detail.json()['data']['permissions']['financial_read']
+        assert '"total"' not in detail.text and '"approved_amount"' not in detail.text, 'Dev reader received amounts.'
+        kinds = {doc['confidentiality'] for doc in detail.json()['data']['documents']}
+        assert kinds == {'general'}, 'Dev reader can list financial documents.'
+    with requests.Session() as session:
+        response = session.post(base_url + '/web/session/authenticate', json={
+            'jsonrpc': '2.0', 'method': 'call', 'id': 1,
+            'params': {'db': DEV_DB, 'login': 'admin', 'password': values['admin']},
+        }, timeout=30)
+        assert response.json().get('result', {}).get('uid'), 'Development admin login failed.'
+        contracts = {row['code']: row['id'] for row in session.get(base_url + '/api/v1/contracts', timeout=15).json()['data']}
+        url = f"{base_url}/api/v1/contracts/{contracts['HD-DEV-001']}"
+        totals = [session.get(url, params={'as_of': as_of}, timeout=15).json()['data']['effective_snapshot']['total']['value']
+                  for as_of in ('2026-10-31', '2026-11-01')]
+        assert totals == ['100000000', '110000000'], f'Unexpected C1 totals: {totals}'
+        hidden = session.get(f"{base_url}/api/v1/contracts/{contracts['HD-DEV-002']}", timeout=15)
+        assert not hidden.json()['data']['permissions']['financial_read'] and '"total"' not in hidden.text
+    print('PASS: native session login, JSON 401, scoped project list/detail, contract scope and financial grant.')
 
 
 def start_server():

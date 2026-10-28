@@ -54,6 +54,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/contracts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description TP Contracts metadata visible through project scope and active companies. Never contains amounts; search matches code and name only. */
+        get: operations["listContracts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{contract_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Contract detail with revision history, declared BASE references and documents. Money keys (`effective_snapshot.total`, `base_references[].approved_amount`) are present only when `permissions.financial_read` is true. Financial documents are omitted without that grant. Contracts outside project or company scope return 404. */
+        get: operations["getContract"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{contract_id}/revisions/{revision_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description One full revision snapshot with its scope lines. `lines[].amount` and `total` are present only with `permissions.financial_read`. A revision of another contract returns 404. */
+        get: operations["getContractRevision"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{contract_id}/documents/{document_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Streams the stored file as an attachment with `X-Content-Type-Options: nosniff` and `Cache-Control: no-store`. Financial documents without the financial.read grant, documents of another contract and documents without a file all return 404. */
+        get: operations["downloadContractDocument"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -81,6 +149,243 @@ export interface components {
             id: number;
             name: string;
         } | null;
+        PageMeta: components["schemas"]["Meta"] & {
+            pagination: {
+                limit: number;
+                offset: number;
+                has_more: boolean;
+            };
+        };
+        /** @description Decimal string in the contract currency precision; `value` is null unless `status` is confirmed. Null never means zero. */
+        Money: {
+            value: string | null;
+            currency: string;
+            /** @enum {string} */
+            status: "confirmed" | "unconfirmed" | "incomplete" | "empty" | "mixed_basis";
+            /** @enum {string} */
+            tax_basis: "unknown" | "excluding_tax" | "including_tax" | "mixed";
+        };
+        NullableMoney: {
+            value: string | null;
+            currency: string;
+            /** @enum {string} */
+            status: "confirmed" | "unconfirmed" | "incomplete" | "empty" | "mixed_basis";
+            /** @enum {string} */
+            tax_basis: "unknown" | "excluding_tax" | "including_tax" | "mixed";
+        } | null;
+        ContractPermissions: {
+            /** @description Active financial.read grant on the contract project. */
+            financial_read: boolean;
+        };
+        RevisionStatus: {
+            id: number;
+            sequence: number;
+            /** @enum {string} */
+            kind: "original" | "amendment" | "correction";
+            name: string;
+            /** @enum {string} */
+            review_state: "draft" | "in_review" | "returned" | "review_complete" | "cancelled";
+            /** @enum {string} */
+            signature_status: "unsigned" | "signed_recorded";
+            /** @enum {string} */
+            effectivity_status: "not_effective" | "effective_recorded";
+        };
+        NullableRevisionStatus: {
+            id: number;
+            sequence: number;
+            /** @enum {string} */
+            kind: "original" | "amendment" | "correction";
+            name: string;
+            /** @enum {string} */
+            review_state: "draft" | "in_review" | "returned" | "review_complete" | "cancelled";
+            /** @enum {string} */
+            signature_status: "unsigned" | "signed_recorded";
+            /** @enum {string} */
+            effectivity_status: "not_effective" | "effective_recorded";
+        } | null;
+        ContractSummary: {
+            id: number;
+            code: string;
+            name: string;
+            /** @enum {string} */
+            contract_type: "owner" | "general_contractor" | "subcontractor";
+            /**
+             * @description Recorded legal lifecycle. BASE approval never changes it.
+             * @enum {string}
+             */
+            lifecycle_state: "not_effective" | "effective" | "suspended" | "execution_completed" | "liquidated" | "terminated";
+            legacy_unverified: boolean;
+            active: boolean;
+            project: {
+                id: number;
+                code: string;
+                name: string;
+            };
+            company: components["schemas"]["NameRef"];
+            counterparty: components["schemas"]["NullableNameRef"];
+            currency: string;
+            revision_count: number;
+            latest_revision: components["schemas"]["NullableRevisionStatus"];
+            /** Format: date-time */
+            updated_at: string;
+        };
+        /** @description Declared BASE result for one revision. `verified_result` requires a decision, verified evidence and confirmed authority; even then it is not a signature and not legal effect. */
+        ApprovalReference: {
+            id: number;
+            /** @enum {string} */
+            purpose: "revision_approval";
+            /** @enum {string} */
+            reference_kind: "base_id" | "manual";
+            base_reference: string | null;
+            source_url: string | null;
+            provenance: string | null;
+            /** @enum {string} */
+            decision: "pending" | "approved" | "rejected" | "cancelled";
+            decided_by_name: string | null;
+            /** Format: date-time */
+            decided_at: string | null;
+            decision_reason: string | null;
+            /** @enum {string} */
+            verification_state: "pending" | "verified" | "disputed";
+            verified_by: components["schemas"]["NullableNameRef"];
+            /** Format: date-time */
+            verified_at: string | null;
+            /** @enum {string} */
+            authority_status: "unconfirmed" | "confirmed";
+            authority_source: string | null;
+            recorded_by: components["schemas"]["NullableNameRef"];
+            /** Format: date-time */
+            recorded_at: string | null;
+            previous_reference_id: number | null;
+            evidence_sha256: string | null;
+            submitted_document_sha256: string | null;
+            verified_result: boolean;
+            approved_amount?: components["schemas"]["NullableMoney"];
+        };
+        Revision: {
+            id: number;
+            sequence: number;
+            /** @enum {string} */
+            kind: "original" | "amendment" | "correction";
+            name: string;
+            /** @enum {string} */
+            review_state: "draft" | "in_review" | "returned" | "review_complete" | "cancelled";
+            /** @enum {string} */
+            signature_status: "unsigned" | "signed_recorded";
+            /** @enum {string} */
+            effectivity_status: "not_effective" | "effective_recorded";
+            reference: string | null;
+            previous_revision_id: number | null;
+            /** Format: date */
+            signed_date: string | null;
+            /** Format: date */
+            effective_date: string | null;
+            /** Format: date-time */
+            recorded_at: string | null;
+            /** @enum {string} */
+            signature_authority_status: "pending" | "confirmed";
+            legacy_unverified: boolean;
+            line_count: number;
+            base_references: components["schemas"]["ApprovalReference"][];
+        };
+        ContractDocument: {
+            id: number;
+            name: string;
+            /** @enum {string} */
+            kind: "signed_contract" | "amendment" | "base_evidence" | "technical_scope" | "other";
+            /** @enum {string} */
+            confidentiality: "financial" | "general";
+            revision_id: number | null;
+            file_name: string | null;
+            has_file: boolean;
+        };
+        /** @description Revision in force on `as_of` by recorded effectivity, as known at `known_at`. A same-date conflict returns `revision_id: null` with a warning instead of picking one. `total` requires financial.read. */
+        EffectiveSnapshot: {
+            /** Format: date */
+            as_of: string;
+            /** Format: date-time */
+            known_at: string;
+            /** @enum {string} */
+            basis: "recorded_effectivity";
+            revision_id: number | null;
+            warnings: ("future_revision_recorded" | "no_effective_revision" | "effective_date_conflict")[];
+            total?: components["schemas"]["NullableMoney"];
+        };
+        ContractDetail: {
+            id: number;
+            code: string;
+            name: string;
+            /** @enum {string} */
+            contract_type: "owner" | "general_contractor" | "subcontractor";
+            /**
+             * @description Recorded legal lifecycle. BASE approval never changes it.
+             * @enum {string}
+             */
+            lifecycle_state: "not_effective" | "effective" | "suspended" | "execution_completed" | "liquidated" | "terminated";
+            legacy_unverified: boolean;
+            active: boolean;
+            project: {
+                id: number;
+                code: string;
+                name: string;
+            };
+            company: components["schemas"]["NameRef"];
+            counterparty: components["schemas"]["NullableNameRef"];
+            currency: string;
+            revision_count: number;
+            latest_revision: components["schemas"]["NullableRevisionStatus"];
+            /** Format: date-time */
+            updated_at: string;
+            permissions: components["schemas"]["ContractPermissions"];
+            effective_snapshot: components["schemas"]["EffectiveSnapshot"];
+            revisions: components["schemas"]["Revision"][];
+            documents: components["schemas"]["ContractDocument"][];
+        };
+        ContractLine: {
+            id: number;
+            sequence: number;
+            scope_key: string;
+            name: string;
+            work_item: {
+                id: number;
+                code: string | null;
+                name: string;
+            } | null;
+            /** @enum {string} */
+            change_kind: "original" | "unchanged" | "amended" | "added";
+            previous_line_id: number | null;
+            amount?: components["schemas"]["Money"];
+        };
+        RevisionDetail: {
+            id: number;
+            sequence: number;
+            /** @enum {string} */
+            kind: "original" | "amendment" | "correction";
+            name: string;
+            /** @enum {string} */
+            review_state: "draft" | "in_review" | "returned" | "review_complete" | "cancelled";
+            /** @enum {string} */
+            signature_status: "unsigned" | "signed_recorded";
+            /** @enum {string} */
+            effectivity_status: "not_effective" | "effective_recorded";
+            reference: string | null;
+            previous_revision_id: number | null;
+            /** Format: date */
+            signed_date: string | null;
+            /** Format: date */
+            effective_date: string | null;
+            /** Format: date-time */
+            recorded_at: string | null;
+            /** @enum {string} */
+            signature_authority_status: "pending" | "confirmed";
+            legacy_unverified: boolean;
+            line_count: number;
+            base_references: components["schemas"]["ApprovalReference"][];
+            contract_id: number;
+            permissions: components["schemas"]["ContractPermissions"];
+            lines: components["schemas"]["ContractLine"][];
+            total?: components["schemas"]["NullableMoney"];
+        };
         ErrorEnvelope: {
             error: {
                 code: string;
@@ -196,6 +501,126 @@ export interface operations {
                         data: components["schemas"]["Project"];
                         meta: components["schemas"]["Meta"];
                     };
+                };
+            };
+            400: components["responses"]["ApiError"];
+            401: components["responses"]["ApiError"];
+            403: components["responses"]["ApiError"];
+            404: components["responses"]["ApiError"];
+        };
+    };
+    listContracts: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                q?: string;
+                project_id?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Permission-scoped page of contract summaries. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ContractSummary"][];
+                        meta: components["schemas"]["PageMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["ApiError"];
+            401: components["responses"]["ApiError"];
+            403: components["responses"]["ApiError"];
+        };
+    };
+    getContract: {
+        parameters: {
+            query?: {
+                /** @description Snapshot date (YYYY-MM-DD). Defaults to today in the user's timezone. */
+                as_of?: string;
+            };
+            header?: never;
+            path: {
+                contract_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contract detail DTO. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ContractDetail"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            400: components["responses"]["ApiError"];
+            401: components["responses"]["ApiError"];
+            403: components["responses"]["ApiError"];
+            404: components["responses"]["ApiError"];
+        };
+    };
+    getContractRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: number;
+                revision_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revision detail DTO. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RevisionDetail"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            400: components["responses"]["ApiError"];
+            401: components["responses"]["ApiError"];
+            403: components["responses"]["ApiError"];
+            404: components["responses"]["ApiError"];
+        };
+    };
+    downloadContractDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: number;
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description File content. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
                 };
             };
             400: components["responses"]["ApiError"];

@@ -226,7 +226,7 @@ Không có capability “phê duyệt chính thức trong Odoo” ở giai đo�
 
 ### 7.3. Thực thi Odoo và quyền quản trị
 
-ACL kiểm model; global rules giới hạn company/project; action checks giới hạn state/capability. Tiền theo grant từng project cần lớp dữ liệu tài chính có scope riêng hoặc cơ chế ORM tương đương được kiểm chứng; một field group financial toàn cục không đủ khi cùng user được xem metadata project A nhưng chỉ xem tiền project B. Ưu tiên record tài chính được bảo vệ riêng; chốt schema cụ thể ở CTR-001 và kiểm native read/search/read_group/export/RPC, không chỉ React.
+ACL kiểm model; global rules giới hạn company/project; action checks giới hạn state/capability. Tiền theo grant từng project cần lớp dữ liệu tài chính có scope riêng hoặc cơ chế ORM tương đương được kiểm chứng; một field group financial toàn cục không đủ khi cùng user được xem metadata project A nhưng chỉ xem tiền project B. Ưu tiên record tài chính được bảo vệ riêng; chốt schema cụ thể ở CTR-001 và kiểm native read/search/read_group/export/RPC, không chỉ React. **Đã áp dụng ở CTR-001 (DEC-017):** số tiền nằm ở `tp.contract.line.amount`/`tp.approval.reference.amount`, tài liệu có `confidentiality`, access domain đòi grant `tp.project.grant` (`financial_read`) còn hiệu lực của đúng project; các ca read/search/`read_group`/export/API/tải tệp/thu hồi đã có test.
 
 ACL/group rules cộng quyền; global rules giao nhau, group rules có thể hợp nhau. Không giả định role hạn chế hơn tự thắng. Người SUPPORT kiêm FINANCE có thể xem tiền đúng finance scope; đánh giá grant theo từng project. Thu hồi grant phải có hiệu lực request sau cả API/tệp.
 
@@ -247,7 +247,7 @@ Mọi transition phải có actor/capability, scope, state trước/sau, guard, 
 - Tiền theo currency/rounding Odoo, DTO decimal string + currency + basis/verification; JavaScript không tính tiền chính thức.
 - Request không tạo tiền thực tế, ghi BASE không auto-post kế toán.
 
-**Sau baseline được phép:** read-only vertical slice cho tp.contract, tp.contract.revision, tp.contract.line và tp.approval.reference; chưa mở command ghi/chốt pháp lý khi Q1/Q2 chưa đóng.
+**Sau baseline được phép:** read-only vertical slice cho tp.contract, tp.contract.revision, tp.contract.line và tp.approval.reference; chưa mở command ghi/chốt pháp lý khi Q1/Q2 chưa đóng. CTR-001 đã làm phần này với 4 endpoint GET; actor lấy từ session, ngoài scope trả 404, `no-store`.
 
 ## 9. Câu hỏi còn mở và cổng triển khai
 
@@ -266,7 +266,7 @@ Thiếu Q1 không ngăn đọc hồ sơ/thiết kế schema hoặc draft develop
 
 | Giai đoạn | Làm tiếp được | Điều kiện qua cổng |
 | --- | --- | --- |
-| CTR-001 đọc | Model/revision/line, quyền, DTO, màn hình, BASE reference có nhãn xác minh; dữ liệu giả | Security/API/UI tests, không import thật/action chốt |
+| CTR-001 đọc | Model/revision/line, quyền, DTO, màn hình, BASE reference có nhãn xác minh; dữ liệu giả | Security/API/UI tests, không import thật/action chốt. **Đạt trên dev (CHG-20261028-006);** chờ chủ nghiệp vụ nghiệm thu và Q2 người cấp grant |
 | CTR-002a draft | Phát triển draft/submit/return trên test | Capability/CSRF/version/idempotency/audit, negative tests; grant xác nhận trước pilot |
 | CTR-002b evidence/pháp lý | Record/verify BASE, chữ ký, hiệu lực | Q1–Q3 và phần Q4/Q8 liên quan; chưa đủ giữ cổng đóng |
 | ALC/STL/FIN/IMP | Mỗi nghiệp vụ theo slice | Q4–Q8 liên quan, hồ sơ khử dữ liệu, reconcile, tests và owner nghiệm thu |
@@ -277,5 +277,5 @@ Thiếu Q1 không ngăn đọc hồ sơ/thiết kế schema hoặc draft develop
 
 Chưa có chủ nghiệp vụ ký xác nhận ma trận, chưa có văn bản hạn mức, chưa đối chiếu 2–3 bộ hợp đồng/biên bản/phiếu duyệt thực tế đầy đủ. Các state/capability/ca test là thiết kế, chưa triển khai/chạy trên Odoo.
 
-**Bước tiếp theo:** CTR-001 — TP Contracts đọc hợp đồng, revision, line và tham chiếu BASE; ưu tiên quyền tiền/attachment. Thu thập Q1–Q3 để chuẩn bị ghi/chốt sau; không tạo engine chung hoặc mở đủ chín phân hệ.
+**Bước tiếp theo:** CTR-001 đã hoàn tất read slice trên dev. Tiếp theo: nghiệm thu với chủ nghiệp vụ, chốt Q2 (ai cấp/thu hồi `financial_read`, ai record/verify BASE), rồi CTR-002a draft/submit/return trên test. Thu thập Q1–Q3 trước action xác minh/chốt pháp lý; không tạo engine chung hoặc mở đủ chín phân hệ.
 

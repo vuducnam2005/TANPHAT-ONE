@@ -3,11 +3,11 @@
 **Cập nhật:** 28/10/2026 (Asia/Saigon)  
 **Thư mục:** `C:\TANPHAT ONE`  
 **Mục tiêu hiện tại:** xây nền tảng quản trị doanh nghiệp theo module Odoo + web frontend riêng, bắt đầu từ phòng Kế hoạch Kinh doanh.
-Last change: `CHG-20261028-005`
+Last change: `CHG-20261028-006`
 
-**Phase:** Baseline nghiệp vụ KD → TP Contracts read slice.
-**Task vừa hoàn tất:** BIZ-001 — hoàn tất baseline phân tích workflow và ma trận quyền từ năm nguồn; nghiệm thu chủ nghiệp vụ/hồ sơ thực tế và văn bản thẩm quyền còn chờ.
-**Next task:** CTR-001 — TP Contracts đọc hợp đồng/revision/line và tham chiếu BASE, có quyền tiền/attachment; chưa có action ghi/chốt pháp lý.
+**Phase:** TP Contracts read slice → nghiệm thu nghiệp vụ và draft trên test.
+**Task vừa hoàn tất:** CTR-001 — TP Contracts đọc hợp đồng, revision, dòng phạm vi, kết quả BASE và tài liệu từ Odoo đến React; quyền tiền theo grant từng project được kiểm ở ORM/RPC, API và tệp; đã kiểm chứng trên dev với dữ liệu giả lập.
+**Next task:** nghiệm thu BIZ-001/CTR-001 với chủ nghiệp vụ và chốt Q2 (người cấp grant); sau đó CTR-002 draft/submit/return trên test. Chưa có action ghi/duyệt/ký/xác nhận hiệu lực.
 
 ## Trạng thái tổng quan
 
@@ -15,11 +15,12 @@ Last change: `CHG-20261028-005`
 | --- | --- | --- |
 | Tên sản phẩm | Đã chốt | TANPHAT ONE |
 | Tên phân hệ | Đã chốt | TP Dashboard, TP Projects, TP Survey, TP Design, TP Contracts, TP Tasks, TP HR, TP Finance, TP Documents |
-| Backend nền | Đã chạy | Odoo 20, `tp_core`, `tp_organization`, `tp_project`, `tp_api`, `tp_planning_api` |
+| Backend nền | Đã chạy | Odoo 20, `tp_core`, `tp_organization`, `tp_project`, `tp_contract`, `tp_api`, `tp_planning_api` |
 | Database dev/test | Đã chạy | PostgreSQL 18, `tp_tanphat_dev`, `tp_tanphat_test` |
 | Frontend nền | Đã chạy | React/TypeScript/Vite tại `/work/`, login riêng TANPHAT ONE gọi session Odoo; MFA/passkey có native fallback |
 | Vertical slice đọc dự án | Đã kiểm chứng | login → `/me` → list/detail theo quyền → logout/session expiry |
-| Hợp đồng/giao khoán/nghiệm thu | Chưa triển khai | Đã có thiết kế database, chưa có model nghiệp vụ |
+| TP Contracts read slice | Đã kiểm chứng dev | CTR-001: contract/revision/line/approval reference/document, grant `financial_read` theo project, 4 API GET, 3 màn hình React; chỉ đọc, dữ liệu giả lập |
+| Giao khoán/nghiệm thu/thanh toán | Chưa triển khai | Đã có thiết kế database; ghi/duyệt hợp đồng chưa mở |
 | Workflow và ma trận quyền KD | Baseline phân tích hoàn tất | BIZ-001: BASE phê duyệt chính thức, tiền theo scope, hạn mức chưa biết; model/state/capability mới là đề xuất |
 | Production | Chưa triển khai | Chưa có HTTPS, backup production, staging migration hoặc dữ liệu thật |
 | Git history | Đã chốt baseline publish | `main` và `origin/main` đã đối chiếu ở `a25a0182`; các thay đổi handoff hiện tại được gom vào commit/push của CHG-20261028-002; hai ID foundation cũ không tìm thấy |
@@ -39,8 +40,28 @@ Last change: `CHG-20261028-005`
 - Browser test kiểm tra reader/manager scope, 404, reload, search, CSRF logout, session hết hạn và mobile overflow.
 - Tên sản phẩm/phân hệ và đường dẫn runtime đã đổi sang `C:\TANPHAT ONE`.
 - Quy trình bàn giao AI bắt buộc đọc status trước khi làm và cập nhật status/changelog sau mỗi code change.
+- `tp_contract`: `tp.contract` (danh tính), `tp.contract.revision` (bản gốc/phụ lục/đính chính với review, chữ ký, thẩm quyền ký, hiệu lực tách riêng), `tp.contract.line` (phạm vi; nguồn bản trước và change kind), `tp.contract.line.amount` và `tp.approval.reference.amount` (số tiền nằm ở model riêng), `tp.approval.reference` (kết quả BASE có declared/verified), `tp.contract.document` (tệp phân loại general/financial). Snapshot theo ngày hiệu lực thay thế, không cộng phụ lục; null/0/chưa xác nhận/khác cơ sở thuế được phân biệt.
+- `tp.project.grant` trong `tp_project`: capability `financial_read` theo user + project, có lý do, thời hạn và thu hồi; chỉ superuser cấp trong khi Q2 chưa chốt. Không có grant thì ORM/RPC, `read_group`, export, API và tải tệp tài chính đều không thấy tiền; Platform Manager/admin không mặc nhiên có tiền.
+- API đọc `GET /api/v1/contracts`, `/contracts/{id}?as_of=`, `/contracts/{id}/revisions/{rid}`, `/contracts/{id}/documents/{did}/content`; ngoài scope trả 404, `Cache-Control: no-store`, field tiền bị bỏ khi thiếu grant. OpenAPI và TypeScript types đã cập nhật.
+- TP Contracts frontend: danh sách có tìm kiếm/lọc theo project, chi tiết với bản áp dụng theo ngày, lịch sử revision, nhãn BASE đã/chưa xác minh, tài liệu, trang phạm vi công việc; số tiền định dạng từ decimal string, không đổi sang số JavaScript.
+- Dev seed có ba hợp đồng giả lập (`HD-DEV-001/002/003`) và grant dev cho admin trên DEV-001; không có hồ sơ doanh nghiệp thật.
 
 ## Kiểm chứng gần nhất
+
+Lượt CTR-001 (`CHG-20261028-006`) chạy mới trên dev, không dùng kết quả cũ:
+
+```text
+Odoo tests (dev.py test, grep log): 0 failed, 0 error(s) of 53 tests
+  TestContractAccess 15, TestContractModel 16, TestContractsApi 12, TestProjectAccess 6, TestProjectsApi 4
+dev.ps1 upgrade + smoke: passed (login, /me, projects, contracts theo planner/admin)
+check_contract.py --live: passed
+Ruff: passed
+Frontend typecheck: passed; Vitest: 14 passed; build (VITE_ODOO_DATABASE=tp_tanphat_dev): passed
+Playwright E2E: 11 passed (3 contracts, login/project regression)
+git diff --check: passed
+```
+
+Các ca được kiểm: reader chỉ metadata không thấy tiền ở ORM read/search/`read_group`/export, API và tệp; metadata dự án A + tiền dự án B; grant hết hạn/thu hồi có hiệu lực ở request sau; Platform Manager/admin không có tiền mặc định; khác project/company trả 404; revision không thuộc hợp đồng bị từ chối; tài liệu tài chính cần grant, tài liệu chung theo scope project; phụ lục thay thế giá trị (100 → 110 triệu, không 210); bản chưa có hiệu lực, ngày trùng, BASE approved nhưng chưa ký/hiệu lực; dòng chưa xác nhận là null chứ không phải 0. E2E kiểm UI ở 390px không tràn ngang; screenshot `.local/frontend-contract-detail.png` và `.local/frontend-contract-mobile.png` ngoài Git.
 
 Lượt BIZ-001 (`CHG-20261028-005`) chỉ thay tài liệu kiến trúc/bàn giao. Đã đọc DOCX/PDF/ba XLSM, đối chiếu ảnh quy trình và công thức/hướng dẫn; không chạy macro/external link, không import hoặc sửa database. [Workflow và ma trận quyền](architecture/TP_KD_WORKFLOW_AND_PERMISSIONS.md) tách review, kết quả BASE, chữ ký/hiệu lực và revision; [bằng chứng/ca nghiệm thu](architecture/TP_KD_EVIDENCE_AND_ACCEPTANCE.md) giữ registry hash, vị trí nguồn và các ca giả lập. `verify_baseline.py` đạt 27 link, 26 bảng nhất quán, hash 5 nguồn NAS khớp, 0 cell kế toán thực tế được đọc và 10 phép tính Decimal giả lập; `git diff --check` đạt. Chưa có biên bản ký duyệt ma trận, chưa có hợp đồng/BASE evidence thực tế đầy đủ; không nhận ca giả lập là Odoo tests. Không chạy lại bộ ứng dụng vì không đổi code/runtime.
 
@@ -75,9 +96,9 @@ npm.cmd run test:e2e --prefix frontend
 
 ## Next action bắt buộc
 
-1. **CTR-001:** đọc baseline BIZ-001 và ca nghiệm thu; làm `tp_contract` theo model → security/test → API read → frontend read. Tách danh tính contract, snapshot revision/line và `tp.approval.reference`; kiểm quyền tiền/file ở ORM/RPC và API, không chỉ React. Chỉ dùng dữ liệu giả, trạng thái thiếu chứng cứ phải hiển thị chưa xác minh.
-2. **Nghiệm thu nghiệp vụ BIZ-001:** bổ sung 2–3 bộ hồ sơ khử dữ liệu có phụ lục, khoán cấp 2 và correction/void; dùng Q1–Q8 đóng cổng tương ứng. Cần lãnh đạo/QT-TC xác nhận văn bản ký/duyệt và người record/verify BASE, không hỏi lại nơi duyệt đã chọn.
-3. **CTR-002:** có thể phát triển draft/submit/return trên test sau read slice; chưa mở xác nhận BASE/hiệu lực pháp lý cho pilot khi thiếu thẩm quyền/evidence. **PRJ-002** không bắt buộc để mở read hợp đồng; các task còn lại theo [roadmap](ROADMAP.md).
+1. **Nghiệm thu BIZ-001/CTR-001:** cho chủ nghiệp vụ xem read slice bằng dữ liệu giả lập; bổ sung 2–3 bộ hồ sơ khử dữ liệu có phụ lục, khoán cấp 2 và correction/void. Chốt Q2: ai cấp/thu hồi grant `financial_read` theo project và ai record/verify BASE. Trước khi có câu trả lời, grant chỉ do superuser tạo; không tự gán cho Trưởng ban/QT-TC/lãnh đạo.
+2. **CTR-002:** phát triển draft/submit/return hợp đồng trên test (capability, CSRF, version, idempotency, audit, negative tests). Chưa mở record/verify BASE, ký hoặc xác nhận hiệu lực pháp lý khi Q1–Q3 còn mở.
+3. **Sau Q2:** màn hình/API quản trị grant có audit; trước đó không mở API ghi grant. **PRJ-002** và các task còn lại theo [roadmap](ROADMAP.md).
 
 ## Không được làm ở bước hiện tại
 
@@ -98,4 +119,6 @@ Lượt AI-001 không sửa Git metadata, không stage hoặc commit và không 
 Đã xác nhận nơi duyệt chính thức là BASE và phạm vi xem tiền; chưa xác minh văn bản ký/duyệt/hạn mức, bốn mắt, BASE ID/evidence thực tế, cơ sở thuế/ngày hiệu lực và nghiệm thu ma trận với chủ nghiệp vụ. S05 bản đọc chưa có hàng import kế toán thực tế, không dùng làm chứng cứ reconcile đạt. Các điểm vận hành còn thiếu: backup ngoài máy, mã hóa/retention/RPO/RTO, host khác, staging/production. Backup local chưa mã hóa; credential nằm ngoài Git. Odoo test Windows từng có INFO filestore GC `WinError 5`; kiểm tra dự án/API không chứng minh toàn bộ hồ sơ tệp vận hành ổn định.
 
 Lượt BIZ-001 giữ nguyên các thay đổi login chưa commit từ AUTH-001, không commit/push hoặc sửa Git metadata. Hai tài liệu chi tiết BIZ mới được kiểm riêng về liên kết/nội dung; checker hiện dùng danh sách policy cố định, không tự hash mọi Markdown được liên kết.
+
+CTR-001 (chưa commit, cùng working tree với AUTH-001/BIZ-001): grant `financial_read` chỉ superuser cấp đến khi Q2 được chốt; grant admin trong dev chỉ là fixture. Quyền tiền bảo vệ field số tiền, tệp tài chính và tổng; văn bản tự do (tên, mô tả, lý do) không được quét số tiền, nên quy tắc nhập liệu cần cấm ghi giá trị vào các trường đó. Admin/superuser vẫn có khả năng truy cập kỹ thuật. Chưa có view/menu Odoo native cho `tp_contract`; người dùng nghiệp vụ dùng API/React. Exit code `dev.py test` không đáng tin, phải đọc dòng `0 failed, 0 error(s) of N tests` trong log; INFO filestore GC `WinError 5` trên Windows vẫn xuất hiện. Upgrade dev ghi lại mật khẩu dev từ file secrets hiện có (giá trị không đổi). MFA thật chưa kiểm.
 

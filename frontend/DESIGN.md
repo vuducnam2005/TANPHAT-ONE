@@ -33,4 +33,6 @@ Bố cục desktop có điều hướng trái, tài khoản trên cùng và danh
 
 Các điều chỉnh so với mẫu dashboard phổ thông: dùng hồ sơ dự án thực tế thay dãy KPI mẫu, palette công trường đã có thay palette mới, giữ form và tên nghiệp vụ tiếng Việt. Màn hình không đưa tên API, model, ID nội bộ hay thuật ngữ lập trình vào nội dung làm việc.
 
+TP Contracts dùng cùng palette. Chi tiết hợp đồng có khối "Bản áp dụng theo ngày" với form chọn ngày, lịch sử revision (bản áp dụng có viền nhấn), nhãn BASE "đã xác minh"/"chưa xác minh" và ghi chú BASE không đồng nghĩa đã ký/hiệu lực. Số tiền căn phải, nhóm chữ số kiểu Việt Nam kèm đơn vị tiền và cơ sở thuế; giá trị thiếu hiển thị bằng chữ, không hiển thị 0. Người chưa có quyền tiền thấy thông báo thay vì cột trống. Bảng phạm vi chuyển thành từng thẻ theo nhãn cột ở màn hình ≤760px.
+
 Kiểm tra trực quan desktop 1440px và mobile 390px bằng browser test. Focus bàn phím hiển thị rõ, có skip link, reduced-motion và các trạng thái loading/empty/error/permission/session. Prototype thiết kế cũ vẫn nằm ở `prototype/` để tham khảo.

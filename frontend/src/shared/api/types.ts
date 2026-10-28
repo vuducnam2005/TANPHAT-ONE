@@ -16,3 +16,15 @@ export interface ApiEnvelope<T> {
 export type ApiErrorBody = components['schemas']['ErrorEnvelope'];
 
 export type SessionBootstrap = operations['getCurrentSession']['responses'][200]['content']['application/json']['data'];
+
+type Schemas = components['schemas'];
+export type Money = Schemas['Money'];
+export type ContractSummary = Schemas['ContractSummary'];
+export type ContractDetail = Schemas['ContractDetail'];
+export type ContractRevision = Schemas['Revision'];
+export type RevisionDetail = Schemas['RevisionDetail'];
+export type RevisionStatus = Schemas['RevisionStatus'];
+export type ApprovalReference = Schemas['ApprovalReference'];
+export type ContractDocument = Schemas['ContractDocument'];
+export type ContractLine = Schemas['ContractLine'];
+export type EffectiveWarning = Schemas['EffectiveSnapshot']['warnings'][number];

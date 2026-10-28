@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: TANPHAT ONE API
   version: 1.0.0
-  description: Read-only project foundation. Browser uses the native Odoo session on the same origin.
+  description: Read-only project and TP Contracts foundation. Browser uses the native Odoo session on the same origin.
 servers:
   - url: /
 security:
@@ -90,6 +90,106 @@ paths:
         '401': { $ref: '#/components/responses/ApiError' }
         '403': { $ref: '#/components/responses/ApiError' }
         '404': { $ref: '#/components/responses/ApiError' }
+  /api/v1/contracts:
+    get:
+      operationId: listContracts
+      description: >-
+        TP Contracts metadata visible through project scope and active companies. Never contains amounts;
+        search matches code and name only.
+      parameters:
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - { in: query, name: offset, schema: { type: integer, minimum: 0, maximum: 10000, default: 0 } }
+        - { in: query, name: q, schema: { type: string, maxLength: 100 } }
+        - { in: query, name: project_id, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200':
+          description: Permission-scoped page of contract summaries.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ContractSummary' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '400': { $ref: '#/components/responses/ApiError' }
+        '401': { $ref: '#/components/responses/ApiError' }
+        '403': { $ref: '#/components/responses/ApiError' }
+  /api/v1/contracts/{contract_id}:
+    get:
+      operationId: getContract
+      description: >-
+        Contract detail with revision history, declared BASE references and documents. Money keys
+        (`effective_snapshot.total`, `base_references[].approved_amount`) are present only when
+        `permissions.financial_read` is true. Financial documents are omitted without that grant.
+        Contracts outside project or company scope return 404.
+      parameters:
+        - { in: path, name: contract_id, required: true, schema: { type: integer, minimum: 1 } }
+        - in: query
+          name: as_of
+          description: Snapshot date (YYYY-MM-DD). Defaults to today in the user's timezone.
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Contract detail DTO.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data: { $ref: '#/components/schemas/ContractDetail' }
+                  meta: { $ref: '#/components/schemas/Meta' }
+        '400': { $ref: '#/components/responses/ApiError' }
+        '401': { $ref: '#/components/responses/ApiError' }
+        '403': { $ref: '#/components/responses/ApiError' }
+        '404': { $ref: '#/components/responses/ApiError' }
+  /api/v1/contracts/{contract_id}/revisions/{revision_id}:
+    get:
+      operationId: getContractRevision
+      description: >-
+        One full revision snapshot with its scope lines. `lines[].amount` and `total` are present only
+        with `permissions.financial_read`. A revision of another contract returns 404.
+      parameters:
+        - { in: path, name: contract_id, required: true, schema: { type: integer, minimum: 1 } }
+        - { in: path, name: revision_id, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200':
+          description: Revision detail DTO.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data: { $ref: '#/components/schemas/RevisionDetail' }
+                  meta: { $ref: '#/components/schemas/Meta' }
+        '400': { $ref: '#/components/responses/ApiError' }
+        '401': { $ref: '#/components/responses/ApiError' }
+        '403': { $ref: '#/components/responses/ApiError' }
+        '404': { $ref: '#/components/responses/ApiError' }
+  /api/v1/contracts/{contract_id}/documents/{document_id}/content:
+    get:
+      operationId: downloadContractDocument
+      description: >-
+        Streams the stored file as an attachment with `X-Content-Type-Options: nosniff` and
+        `Cache-Control: no-store`. Financial documents without the financial.read grant, documents of
+        another contract and documents without a file all return 404.
+      parameters:
+        - { in: path, name: contract_id, required: true, schema: { type: integer, minimum: 1 } }
+        - { in: path, name: document_id, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200':
+          description: File content.
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        '400': { $ref: '#/components/responses/ApiError' }
+        '401': { $ref: '#/components/responses/ApiError' }
+        '403': { $ref: '#/components/responses/ApiError' }
+        '404': { $ref: '#/components/responses/ApiError' }
 components:
   securitySchemes:
     OdooSession:
@@ -131,6 +231,222 @@ components:
       properties:
         id: { type: integer, minimum: 1 }
         name: { type: string }
+    PageMeta:
+      allOf:
+        - { $ref: '#/components/schemas/Meta' }
+        - type: object
+          required: [pagination]
+          properties:
+            pagination:
+              type: object
+              required: [limit, offset, has_more]
+              properties:
+                limit: { type: integer, minimum: 1, maximum: 100 }
+                offset: { type: integer, minimum: 0, maximum: 10000 }
+                has_more: { type: boolean }
+    Money:
+      type: object
+      description: >-
+        Decimal string in the contract currency precision; `value` is null unless `status` is confirmed.
+        Null never means zero.
+      required: [value, currency, status, tax_basis]
+      additionalProperties: false
+      properties: &moneyProperties
+        value: { type: string, nullable: true, pattern: '^[0-9]+(\.[0-9]+)?$' }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        status: { type: string, enum: [confirmed, unconfirmed, incomplete, empty, mixed_basis] }
+        tax_basis: { type: string, enum: [unknown, excluding_tax, including_tax, mixed] }
+    NullableMoney:
+      type: object
+      nullable: true
+      required: [value, currency, status, tax_basis]
+      additionalProperties: false
+      properties: *moneyProperties
+    ContractPermissions:
+      type: object
+      required: [financial_read]
+      additionalProperties: false
+      properties:
+        financial_read: { type: boolean, description: Active financial.read grant on the contract project. }
+    RevisionStatus:
+      type: object
+      required: [id, sequence, kind, name, review_state, signature_status, effectivity_status]
+      additionalProperties: false
+      properties: &revisionStatusProperties
+        id: { type: integer, minimum: 1 }
+        sequence: { type: integer, minimum: 0 }
+        kind: { type: string, enum: [original, amendment, correction] }
+        name: { type: string }
+        review_state: { type: string, enum: [draft, in_review, returned, review_complete, cancelled] }
+        signature_status: { type: string, enum: [unsigned, signed_recorded] }
+        effectivity_status: { type: string, enum: [not_effective, effective_recorded] }
+    NullableRevisionStatus:
+      type: object
+      nullable: true
+      required: [id, sequence, kind, name, review_state, signature_status, effectivity_status]
+      additionalProperties: false
+      properties: *revisionStatusProperties
+    ContractSummary:
+      type: object
+      required: [id, code, name, contract_type, lifecycle_state, legacy_unverified, active, project, company,
+                 counterparty, currency, revision_count, latest_revision, updated_at]
+      additionalProperties: false
+      properties: &contractSummaryProperties
+        id: { type: integer, minimum: 1 }
+        code: { type: string, minLength: 1 }
+        name: { type: string }
+        contract_type: { type: string, enum: [owner, general_contractor, subcontractor] }
+        lifecycle_state:
+          type: string
+          description: Recorded legal lifecycle. BASE approval never changes it.
+          enum: [not_effective, effective, suspended, execution_completed, liquidated, terminated]
+        legacy_unverified: { type: boolean }
+        active: { type: boolean }
+        project:
+          type: object
+          required: [id, code, name]
+          additionalProperties: false
+          properties:
+            id: { type: integer, minimum: 1 }
+            code: { type: string }
+            name: { type: string }
+        company: { $ref: '#/components/schemas/NameRef' }
+        counterparty: { $ref: '#/components/schemas/NullableNameRef' }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        revision_count: { type: integer, minimum: 0 }
+        latest_revision: { $ref: '#/components/schemas/NullableRevisionStatus' }
+        updated_at: { type: string, format: date-time }
+    ApprovalReference:
+      type: object
+      description: >-
+        Declared BASE result for one revision. `verified_result` requires a decision, verified evidence and
+        confirmed authority; even then it is not a signature and not legal effect.
+      required: [id, purpose, reference_kind, base_reference, source_url, provenance, decision, decided_by_name,
+                 decided_at, decision_reason, verification_state, verified_by, verified_at, authority_status,
+                 authority_source, recorded_by, recorded_at, previous_reference_id, evidence_sha256,
+                 submitted_document_sha256, verified_result]
+      additionalProperties: false
+      properties:
+        id: { type: integer, minimum: 1 }
+        purpose: { type: string, enum: [revision_approval] }
+        reference_kind: { type: string, enum: [base_id, manual] }
+        base_reference: { type: string, nullable: true }
+        source_url: { type: string, nullable: true }
+        provenance: { type: string, nullable: true }
+        decision: { type: string, enum: [pending, approved, rejected, cancelled] }
+        decided_by_name: { type: string, nullable: true }
+        decided_at: { type: string, format: date-time, nullable: true }
+        decision_reason: { type: string, nullable: true }
+        verification_state: { type: string, enum: [pending, verified, disputed] }
+        verified_by: { $ref: '#/components/schemas/NullableNameRef' }
+        verified_at: { type: string, format: date-time, nullable: true }
+        authority_status: { type: string, enum: [unconfirmed, confirmed] }
+        authority_source: { type: string, nullable: true }
+        recorded_by: { $ref: '#/components/schemas/NullableNameRef' }
+        recorded_at: { type: string, format: date-time, nullable: true }
+        previous_reference_id: { type: integer, minimum: 1, nullable: true }
+        evidence_sha256: { type: string, nullable: true, pattern: '^[0-9a-f]{64}$' }
+        submitted_document_sha256: { type: string, nullable: true, pattern: '^[0-9a-f]{64}$' }
+        verified_result: { type: boolean }
+        approved_amount: { $ref: '#/components/schemas/NullableMoney' }
+    Revision:
+      type: object
+      required: [id, sequence, kind, name, review_state, signature_status, effectivity_status, reference,
+                 previous_revision_id, signed_date, effective_date, recorded_at, signature_authority_status,
+                 legacy_unverified, line_count, base_references]
+      additionalProperties: false
+      properties: &revisionProperties
+        <<: *revisionStatusProperties
+        reference: { type: string, nullable: true }
+        previous_revision_id: { type: integer, minimum: 1, nullable: true }
+        signed_date: { type: string, format: date, nullable: true }
+        effective_date: { type: string, format: date, nullable: true }
+        recorded_at: { type: string, format: date-time, nullable: true }
+        signature_authority_status: { type: string, enum: [pending, confirmed] }
+        legacy_unverified: { type: boolean }
+        line_count: { type: integer, minimum: 0 }
+        base_references:
+          type: array
+          items: { $ref: '#/components/schemas/ApprovalReference' }
+    ContractDocument:
+      type: object
+      required: [id, name, kind, confidentiality, revision_id, file_name, has_file]
+      additionalProperties: false
+      properties:
+        id: { type: integer, minimum: 1 }
+        name: { type: string }
+        kind: { type: string, enum: [signed_contract, amendment, base_evidence, technical_scope, other] }
+        confidentiality: { type: string, enum: [financial, general] }
+        revision_id: { type: integer, minimum: 1, nullable: true }
+        file_name: { type: string, nullable: true }
+        has_file: { type: boolean }
+    EffectiveSnapshot:
+      type: object
+      description: >-
+        Revision in force on `as_of` by recorded effectivity, as known at `known_at`. A same-date conflict
+        returns `revision_id: null` with a warning instead of picking one. `total` requires financial.read.
+      required: [as_of, known_at, basis, revision_id, warnings]
+      additionalProperties: false
+      properties:
+        as_of: { type: string, format: date }
+        known_at: { type: string, format: date-time }
+        basis: { type: string, enum: [recorded_effectivity] }
+        revision_id: { type: integer, minimum: 1, nullable: true }
+        warnings:
+          type: array
+          items: { type: string, enum: [future_revision_recorded, no_effective_revision, effective_date_conflict] }
+        total: { $ref: '#/components/schemas/NullableMoney' }
+    ContractDetail:
+      type: object
+      required: [id, code, name, contract_type, lifecycle_state, legacy_unverified, active, project, company,
+                 counterparty, currency, revision_count, latest_revision, updated_at, permissions,
+                 effective_snapshot, revisions, documents]
+      additionalProperties: false
+      properties:
+        <<: *contractSummaryProperties
+        permissions: { $ref: '#/components/schemas/ContractPermissions' }
+        effective_snapshot: { $ref: '#/components/schemas/EffectiveSnapshot' }
+        revisions:
+          type: array
+          items: { $ref: '#/components/schemas/Revision' }
+        documents:
+          type: array
+          items: { $ref: '#/components/schemas/ContractDocument' }
+    ContractLine:
+      type: object
+      required: [id, sequence, scope_key, name, work_item, change_kind, previous_line_id]
+      additionalProperties: false
+      properties:
+        id: { type: integer, minimum: 1 }
+        sequence: { type: integer }
+        scope_key: { type: string, minLength: 1 }
+        name: { type: string }
+        work_item:
+          type: object
+          nullable: true
+          required: [id, code, name]
+          additionalProperties: false
+          properties:
+            id: { type: integer, minimum: 1 }
+            code: { type: string, nullable: true }
+            name: { type: string }
+        change_kind: { type: string, enum: [original, unchanged, amended, added] }
+        previous_line_id: { type: integer, minimum: 1, nullable: true }
+        amount: { $ref: '#/components/schemas/Money' }
+    RevisionDetail:
+      type: object
+      required: [id, sequence, kind, name, review_state, signature_status, effectivity_status, reference,
+                 previous_revision_id, signed_date, effective_date, recorded_at, signature_authority_status,
+                 legacy_unverified, line_count, base_references, contract_id, permissions, lines]
+      additionalProperties: false
+      properties:
+        <<: *revisionProperties
+        contract_id: { type: integer, minimum: 1 }
+        permissions: { $ref: '#/components/schemas/ContractPermissions' }
+        lines:
+          type: array
+          items: { $ref: '#/components/schemas/ContractLine' }
+        total: { $ref: '#/components/schemas/NullableMoney' }
     ErrorEnvelope:
       type: object
       required: [error, meta]

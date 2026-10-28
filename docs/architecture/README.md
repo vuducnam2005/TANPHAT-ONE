@@ -6,7 +6,7 @@ Từ quyết định ngày 28/10/2026, frontend chính là web riêng gọi API 
 
 Thiết kế hiện hành: [Cấu trúc source nền tảng Tấn Phát](TP_PLATFORM_SOURCE_STRUCTURE.md).
 
-Baseline nghiệp vụ hiện hành: [BIZ-001 — workflow và ma trận quyền KD](TP_KD_WORKFLOW_AND_PERMISSIONS.md), kèm [bằng chứng nguồn và ca nghiệm thu](TP_KD_EVIDENCE_AND_ACCEPTANCE.md). Phần phân tích hoàn tất; thẩm quyền ký/duyệt và nghiệm thu chủ nghiệp vụ còn chờ. BASE giữ phê duyệt chính thức, TANPHAT ONE ghi nhận hồ sơ/kết quả; bước tiếp theo là TP Contracts read slice.
+Baseline nghiệp vụ hiện hành: [BIZ-001 — workflow và ma trận quyền KD](TP_KD_WORKFLOW_AND_PERMISSIONS.md), kèm [bằng chứng nguồn và ca nghiệm thu](TP_KD_EVIDENCE_AND_ACCEPTANCE.md). Phần phân tích hoàn tất; thẩm quyền ký/duyệt và nghiệm thu chủ nghiệp vụ còn chờ. BASE giữ phê duyệt chính thức, TANPHAT ONE ghi nhận hồ sơ/kết quả. TP Contracts read slice (CTR-001) đã kiểm chứng trên dev; bước tiếp theo là nghiệm thu nghiệp vụ, chốt người cấp grant (Q2) và CTR-002 draft trên test.
 
 - `odoo/` và `addons/` giữ layout upstream.
 - `custom_addons/` dành cho backend riêng.
@@ -16,6 +16,6 @@ Baseline nghiệp vụ hiện hành: [BIZ-001 — workflow và ma trận quyền
 
 Các tài liệu `docs/dashboard/` giữ giá trị khảo sát dữ liệu và prototype. Phương án OWL client action trong các tài liệu đó là định hướng cũ cho phạm vi dashboard, đã được thay bằng thiết kế hiện hành cho toàn nền tảng.
 
-Vertical slice nền đầu tiên có addon cài được (`tp_core`, `tp_organization`, `tp_project`, `tp_api`, `tp_planning_api`) và app React đọc dự án trên database dev. Login React riêng dùng session Odoo, native MFA fallback, phân quyền, search/detail, logout/session hết hạn đã có browser tests. Chưa triển khai production, hợp đồng/nghiệm thu, import Excel hoặc dữ liệu doanh nghiệp thật.
+Vertical slice nền đầu tiên có addon cài được (`tp_core`, `tp_organization`, `tp_project`, `tp_contract`, `tp_api`, `tp_planning_api`) và app React đọc dự án, hợp đồng trên database dev. Login React riêng dùng session Odoo, native MFA fallback, phân quyền, search/detail, logout/session hết hạn đã có browser tests. TP Contracts chỉ đọc: hợp đồng, revision, phạm vi, kết quả BASE và tài liệu; số tiền theo grant `financial_read` từng project (DEC-017). Chưa triển khai production, ghi/duyệt hợp đồng, giao khoán/nghiệm thu, import Excel hoặc dữ liệu doanh nghiệp thật.
 
 Thiết kế database: [TP_DATABASE_DESIGN.md](TP_DATABASE_DESIGN.md). Cách chạy nền: [LOCAL_DEVELOPMENT.md](../../ops/runbooks/LOCAL_DEVELOPMENT.md).

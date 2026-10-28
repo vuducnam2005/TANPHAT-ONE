@@ -2,6 +2,19 @@
 
 Mỗi lượt thay đổi code hoặc quyết định kiến trúc ghi một mục ngắn. Không ghi credential, dữ liệu thật hoặc log chứa bí mật.
 
+## CHG-20261028-006 — CTR-001: TP Contracts read slice
+
+- Phạm vi: addon mới `tp_contract`, grant `financial_read` trong `tp_project`, API đọc trong `tp_planning_api`, OpenAPI, frontend TP Contracts, dev seed/smoke/checker và tài liệu. Không sửa `odoo/`/`addons/`, không mở API ghi/duyệt/ký/xác nhận hiệu lực, không đổi xác thực.
+- Model: `tp.contract`, `tp.contract.revision`, `tp.contract.line`, `tp.contract.line.amount`, `tp.approval.reference`, `tp.approval.reference.amount`, `tp.contract.document`; review, chữ ký, thẩm quyền ký, hiệu lực và kết quả BASE là các trường riêng; snapshot theo ngày hiệu lực thay thế bản trước; tổng chỉ có giá trị khi mọi dòng đã xác nhận và cùng cơ sở thuế.
+- Quyền: đọc metadata theo assignment project + company; số tiền và tài liệu `financial` thêm điều kiện grant `tp.project.grant` còn hiệu lực cho đúng project. Grant có lý do/thời hạn/thu hồi, không tự cấp, chỉ superuser tạo khi Q2 chưa chốt. Không group nào được ghi dữ liệu hợp đồng qua ORM/RPC.
+- API: `GET /api/v1/contracts`, `/contracts/{id}?as_of=`, `/contracts/{id}/revisions/{revision_id}`, `/contracts/{id}/documents/{document_id}/content`; 404 ngoài scope, 400 `invalid_request`, `no-store`, bỏ field tiền khi thiếu grant.
+- Frontend: route `/contracts`, chi tiết hợp đồng, trang phạm vi revision; nhãn BASE đã/chưa xác minh, ghi chú BASE approved không đồng nghĩa đã ký/hiệu lực, định dạng tiền từ decimal string, mobile 390px.
+- Dữ liệu dev: ba hợp đồng giả lập `HD-DEV-001/002/003` và grant dev cho admin trên DEV-001. Không có hồ sơ thật.
+- Quyết định: DEC-017.
+- Kiểm thử thực chạy: Odoo `0 failed, 0 error(s) of 53 tests` (contract access 15, model 16, contracts API 12, project 10); upgrade + smoke đạt; `check_contract.py --live` đạt; Ruff đạt; frontend typecheck đạt, Vitest 14 đạt, build đạt, Playwright 11 đạt; `git diff --check` đạt.
+- Giới hạn: Q1–Q3 còn mở; chưa có quản trị grant ngoài superuser; văn bản tự do không được quét số tiền; chưa có view Odoo native cho hợp đồng; exit code `dev.py test` không đáng tin. Chưa commit/push; giữ nguyên thay đổi login AUTH-001.
+- Next: nghiệm thu BIZ-001/CTR-001 và chốt Q2; CTR-002 draft/submit/return trên test.
+
 ## CHG-20261028-005 — BIZ-001: baseline workflow và ma trận quyền Ban Kinh doanh
 
 - Phạm vi: phân tích năm nguồn S01–S05 và cập nhật tài liệu workflow/database/status/roadmap/decision; không sửa model, API, frontend, runtime hoặc import dữ liệu.

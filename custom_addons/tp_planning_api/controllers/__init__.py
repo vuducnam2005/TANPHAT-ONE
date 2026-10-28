@@ -1,1 +1,1 @@
-from . import projects
+from . import contracts, projects

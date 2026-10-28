@@ -1,31 +1,30 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-10-28T06:50:46.580965+00:00",
-  "last_change_id": "CHG-20261028-003",
-  "code_digest": "c649297ea64d492048af4e91542607d94ba977c1a412d52e3c6ec078f07a91a7",
-  "code_file_count": 76,
+  "updated_at": "2026-10-28T09:06:56.949830+00:00",
+  "last_change_id": "CHG-20261028-006",
+  "code_digest": "d13b5d40bbb1aec56b9bcf0a3489fa23047eab95447380094888f52ecf442c00",
+  "code_file_count": 108,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "ec6bad84875d20abc3a6dd32c09689ba4da4fbac05e1c0a9ec81d821fa5917f9",
-    "docs/CHANGELOG.md": "7561c4c7a39f77cd2150ca013f2e1e36351f8813e0eb7fb9872065f65d3e0168",
+    "docs/PROJECT_STATUS.md": "17413109ae8d551569589a56348bfab9b11b1c4d736954a2795150c09935158e",
+    "docs/CHANGELOG.md": "8598c284df4b727cac32b2bf0cf9654b7dca5cd8441d6fe464a172c41b6aa13f",
     "AGENTS.md": "2474c035b6823d7157f6c8afd17b7cadc8aded79fa45ac8505d7f561f01bf0cf",
     "README_TANPHAT.md": "7b12ef66c29f0cbecb53096a3115e6199ea014cde2eb59e550221e9001f41f47",
     "docs/AI_CHANGE_WORKFLOW.md": "ecd678252dc1333b30d1de1254c7407631695ca900a2cea36e10757516a4b25d",
-    "docs/ROADMAP.md": "cfa61f95d11685a3626a3926bb91b1fd5b4e07e7a610142c09a58ee35414d74a",
-    "docs/DECISIONS.md": "5dbb4d5666b95ffaf26a1c767bf730d825254e6ab346d78079e50eb5f76f033b",
+    "docs/ROADMAP.md": "58587566b564a1e1af2068b9fbf75690e18dca7a13f3963315b798cc4ac53b2a",
+    "docs/DECISIONS.md": "ec400bb32b9edc56f423020ea3dc90a6815dc59a95c7e85023cf915699cd1ddf",
     "docs/HANDOFF_TEMPLATE.md": "7a98efbd7a557efe789b51fefbf5c4072908f9d9f29a21e0c76d012cbddf3d32",
-    "docs/architecture/TP_BUSINESS_WORKFLOW.md": "77fcd3bf1b34b6af8884456083115fb03d966fd9eb25934f339783e33683af9b",
-    "docs/architecture/TP_DATABASE_DESIGN.md": "578e7c9447a735878d7a390601302b2759bba51ca230ed4063760c247a07e77a",
-    "docs/architecture/TP_PLATFORM_SOURCE_STRUCTURE.md": "cf8357b39feaba6ce56ee3ab49ce43fe0c73f656ba0f6a1fabaeab2031b2c3f9",
+    "docs/architecture/TP_BUSINESS_WORKFLOW.md": "174667a33bae46d5ae9f2510b774f44ec200a944a13cef9d1a2f75f42e89c0c6",
+    "docs/architecture/TP_DATABASE_DESIGN.md": "3487f0b33b79cee0d3bd74675da26b7db67e26b0c0c870e621763022a6e68bad",
+    "docs/architecture/TP_PLATFORM_SOURCE_STRUCTURE.md": "5616f3c764c6a8465a8a4dc25a364065ee56bf0a20d3f18343051594edf829d0",
     "docs/architecture/TP_PRODUCT_NAMING.md": "b93114db49706b3ad642335c58fa67339ab0fdd8880b7a83ef8e8e1f514af3a3"
   },
   "reported_checks": [
-    "scripts/tests: 21 unit tests passed",
-    "ruff check backup_restore.py and tests: passed",
-    "backup manifest: 314 public tables, 37 attachment references, SHA256 payload verification passed",
-    "restore report: 314 tables, 37 attachment downloads, project-scope access, login/API checks, isolated cleanup and original dev smoke passed",
-    "documentation links: 17 checked, 0 issues",
-    "credential audit: no private values in pending source/document files",
-    "git diff --check: passed"
+    "python scripts/dev.py test: 0 failed, 0 error(s) of 53 tests (TestContractAccess 15, TestContractModel 16, TestContractsApi 12, TestProjectAccess 6, TestProjectsApi 4)",
+    ".\\scripts\\dev.ps1 upgrade + smoke: PASS (contract scope and financial grant)",
+    "scripts\\check_contract.py --live: PASS",
+    "ruff check custom_addons scripts\\dev.py scripts\\check_contract.py: passed",
+    "frontend typecheck passed; vitest 14 passed; build (VITE_ODOO_DATABASE=tp_tanphat_dev) passed; playwright e2e 11 passed",
+    "git diff --check: passed; Markdown relative links 0 broken"
   ]
 }

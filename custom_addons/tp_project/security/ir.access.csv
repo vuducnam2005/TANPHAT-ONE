@@ -7,3 +7,6 @@ task_platform_write_scope,Managed task write scope,project.task,,cud,"[] if user
 assignment_reader,Assignment reader,tp.project.assignment,tp_core.group_user,r,"[('user_id', '=', user.id)]"
 assignment_manager,Assignment manager,tp.project.assignment,tp_core.group_manager,crud,
 assignment_company,Assignment company restriction,tp.project.assignment,,crud,"[('company_id', 'in', company_ids)]"
+grant_reader,Own capability grant reader,tp.project.grant,tp_core.group_user,r,"[('user_id', '=', user.id)]"
+grant_manager_reader,Capability grant audit reader,tp.project.grant,tp_core.group_manager,r,
+grant_company,Capability grant company restriction,tp.project.grant,,crud,"[('company_id', 'in', company_ids)]"

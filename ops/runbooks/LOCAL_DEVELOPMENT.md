@@ -1,6 +1,6 @@
 # Chạy nền Odoo TANPHAT ONE trên Windows
 
-Nền dùng Python 3.12 trong `.venv`, PostgreSQL 18 cluster riêng trong `.local`, Odoo 20 và 5 addon Tấn Phát. Không dùng service PostgreSQL khác trên máy và không thay đổi Python global. Đây là môi trường dev dùng loopback.
+Nền dùng Python 3.12 trong `.venv`, PostgreSQL 18 cluster riêng trong `.local`, Odoo 20 và 6 addon Tấn Phát. Không dùng service PostgreSQL khác trên máy và không thay đổi Python global. Đây là môi trường dev dùng loopback.
 
 Chạy từ `C:\TANPHAT ONE`:
 
@@ -17,9 +17,9 @@ Nếu PostgreSQL được cài ở đường dẫn khác:
 .\scripts\dev.ps1 setup -PgBin 'D:\PostgreSQL\18\bin'
 ```
 
-Mở `http://127.0.0.1:18069/odoo` hoặc `/web/login`. Tài khoản `admin` dùng giá trị `admin` trong `.local/dev-secrets.json`; `planner.dev` dùng giá trị `planner`. Mật khẩu được tạo ngẫu nhiên, script không in ra console hoặc lưu trong Git. Seed chỉ tạo dữ liệu giả lập lần đầu: phòng KHKD, hai dự án DEV-001/DEV-002 và phân công reader cho DEV-001. Setup/upgrade đồng bộ password hai tài khoản dev từ file credential; không dùng các tài khoản này cho production. Không có dữ liệu Excel thật.
+Mở `http://127.0.0.1:18069/odoo` hoặc `/web/login`. Tài khoản `admin` dùng giá trị `admin` trong `.local/dev-secrets.json`; `planner.dev` dùng giá trị `planner`. Mật khẩu được tạo ngẫu nhiên, script không in ra console hoặc lưu trong Git. Seed chỉ tạo dữ liệu giả lập lần đầu: phòng KHKD, hai dự án DEV-001/DEV-002, phân công reader cho DEV-001, ba hợp đồng `HD-DEV-001/002/003` (gốc + phụ lục có hiệu lực 01/11/2026, dòng chưa xác nhận, BASE đã/chưa xác minh, một tài liệu tài chính và một tài liệu chung) và grant `financial_read` cho `admin` trên DEV-001. Grant này chỉ là fixture dev; `planner.dev` chỉ có metadata. Setup/upgrade đồng bộ password hai tài khoản dev từ file credential; không dùng các tài khoản này cho production. Không có dữ liệu Excel thật.
 
-Native menu Tan Phat cho phép manager cấu hình catalog/dự án/phân công. Reader dùng API chỉ thấy dự án được phân công. API có `/api/v1/me`, `/api/v1/projects`, `/api/v1/projects/{id}`; contract ở `contracts/openapi/tanphat-v1.yaml`. Đây là API đọc, chưa có các thao tác ghi nghiệp vụ. Frontend React đã nối session và API dự án thật.
+Native menu Tan Phat cho phép manager cấu hình catalog/dự án/phân công. Reader dùng API chỉ thấy dự án được phân công. API có `/api/v1/me`, `/api/v1/projects`, `/api/v1/projects/{id}` và nhóm `/api/v1/contracts` (danh sách, chi tiết `?as_of=`, revision, tải tài liệu); contract ở `contracts/openapi/tanphat-v1.yaml`. Đây là API đọc, chưa có các thao tác ghi nghiệp vụ. Frontend React đã nối session và API dự án/hợp đồng thật. `tp_contract` chưa có menu native; grant `financial_read` chỉ superuser tạo khi Q2 chưa chốt.
 
 ## Kiểm thử và nâng cấp
 
@@ -27,7 +27,7 @@ Native menu Tan Phat cho phép manager cấu hình catalog/dự án/phân công.
 .\scripts\dev.ps1 test
 ```
 
-Test chạy trên `tp_tanphat_test`, cổng HTTP 18079, không ghi vào dev DB. Log kiểm thử có thể chuyển vào `.local/logs/tests.log`. Test Odoo kiểm scope ORM, self-assignment, quyền từ group native, company, API 401/403/404 và validation. Smoke dùng đăng nhập native thật trên dev và kiểm tra project scope. Prototype JavaScript vẫn chạy bằng `npm.cmd run test:prototype --prefix frontend` từ root.
+Test chạy trên `tp_tanphat_test`, cổng HTTP 18079, không ghi vào dev DB. Log kiểm thử có thể chuyển vào `.local/logs/tests.log`. Exit code của lệnh test không đủ tin cậy: xác nhận bằng dòng `0 failed, 0 error(s) of N tests` trong log. INFO filestore GC `WinError 5` trên Windows không phải lỗi test. Test Odoo kiểm scope ORM, self-assignment, quyền từ group native, company, API 401/403/404 và validation; với hợp đồng còn kiểm grant tiền theo project (read/search/`read_group`/export, thu hồi, hết hạn), tài liệu tài chính, snapshot phụ lục và null/0. Smoke dùng đăng nhập native thật trên dev và kiểm tra project scope. Prototype JavaScript vẫn chạy bằng `npm.cmd run test:prototype --prefix frontend` từ root.
 
 Kiểm OpenAPI và response API thật (công cụ riêng cho phát triển):
 

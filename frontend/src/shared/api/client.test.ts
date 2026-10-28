@@ -27,6 +27,22 @@ describe('business API transport', () => {
     await expect(api.session()).rejects.toMatchObject({ status: 401, code: 'unauthenticated', requestId: 'trace-123' });
   });
 
+  it('builds contract list, detail and revision URLs from typed arguments only', async () => {
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(Response.json({ data: [], meta: { request_id: 'r' } })));
+    vi.stubGlobal('fetch', fetchMock);
+    await api.contracts({ q: ' HD-01 ', limit: 20, offset: 40, projectId: 7 });
+    await api.contract(12);
+    await api.contract(12, '2026-11-01');
+    await api.contractRevision(12, 34);
+    const urls = fetchMock.mock.calls.map(([url]) => new URL(url, 'http://test'));
+    expect([...urls[0].searchParams.entries()]).toEqual([['q', 'HD-01'], ['limit', '20'], ['offset', '40'], ['project_id', '7']]);
+    expect(urls[0].pathname).toBe('/api/v1/contracts');
+    expect(urls[1].pathname + urls[1].search).toBe('/api/v1/contracts/12');
+    expect(urls[2].pathname + urls[2].search).toBe('/api/v1/contracts/12?as_of=2026-11-01');
+    expect(urls[3].pathname + urls[3].search).toBe('/api/v1/contracts/12/revisions/34');
+    expect(api.contractDocumentUrl(12, 56)).toBe('/api/v1/contracts/12/documents/56/content');
+  });
+
   it('handles an HTML gateway failure without exposing the HTML', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html>internal proxy details</html>', { status: 502 })));
     await expect(api.projects()).rejects.toBeInstanceOf(ApiError);

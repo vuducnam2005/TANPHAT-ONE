@@ -1,4 +1,6 @@
-import type { ApiEnvelope, ApiErrorBody, Project, SessionBootstrap } from './types';
+import type {
+  ApiEnvelope, ApiErrorBody, ContractDetail, ContractSummary, Project, RevisionDetail, SessionBootstrap,
+} from './types';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -104,4 +106,23 @@ export const api = {
     return get<ApiEnvelope<Project[]>>(`/api/v1/projects${suffix}`, signal);
   },
   project: (id: number, signal?: AbortSignal) => get<ApiEnvelope<Project>>(`/api/v1/projects/${id}`, signal),
+  contracts: (query: { q?: string; limit?: number; offset?: number; projectId?: number } = {}, signal?: AbortSignal) => {
+    const params = new URLSearchParams();
+    if (query.q?.trim()) params.set('q', query.q.trim());
+    if (query.limit) params.set('limit', String(query.limit));
+    if (query.offset) params.set('offset', String(query.offset));
+    if (query.projectId) params.set('project_id', String(query.projectId));
+    const suffix = params.toString() ? `?${params}` : '';
+    return get<ApiEnvelope<ContractSummary[]>>(`/api/v1/contracts${suffix}`, signal);
+  },
+  // Without asOf the backend resolves "today" in the user's timezone.
+  contract: (id: number, asOf?: string, signal?: AbortSignal) => {
+    const suffix = asOf ? `?${new URLSearchParams({ as_of: asOf })}` : '';
+    return get<ApiEnvelope<ContractDetail>>(`/api/v1/contracts/${id}${suffix}`, signal);
+  },
+  contractRevision: (contractId: number, revisionId: number, signal?: AbortSignal) =>
+    get<ApiEnvelope<RevisionDetail>>(`/api/v1/contracts/${contractId}/revisions/${revisionId}`, signal),
+  // Downloads are plain same-origin links so the browser sends the Odoo session cookie.
+  contractDocumentUrl: (contractId: number, documentId: number) =>
+    `/api/v1/contracts/${contractId}/documents/${documentId}/content`,
 };

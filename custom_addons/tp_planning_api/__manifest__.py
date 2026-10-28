@@ -3,5 +3,5 @@
     'author': 'Tan Phat JSC',
     'version': '20.0.1.0.0',
     'license': 'LGPL-3',
-    'depends': ['tp_api', 'tp_core', 'tp_project'],
+    'depends': ['tp_api', 'tp_core', 'tp_project', 'tp_contract'],
 }

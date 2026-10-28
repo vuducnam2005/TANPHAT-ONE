@@ -45,7 +45,8 @@ Project có thể mở từ cơ hội/dự thầu; có đường giao trực ti�
 | Project Reader và assignment reader/coordinator | Đã triển khai đọc project được phân công; coordinator hiện vẫn chỉ đọc |
 | Platform Manager | Quản lý project metadata/catalog/assignment nền; không ngầm là reviewer/approver hợp đồng |
 | KD_HEAD, PROJECT_OWNER, PLANNING, SUPPORT, TECHNICAL, FINANCE, EXECUTIVE | Preset đề xuất của BIZ-001, chưa thành group/XML ID |
-| financial.read, financial.draft_edit, base_result.record/verify và các capability khác | Thiết kế, phải triển khai/test trong domain tương ứng |
+| financial.read | Đã triển khai cho TP Contracts (CTR-001): `tp.project.grant` theo user + project, superuser cấp khi Q2 chưa chốt; Platform Manager/admin không có tiền mặc định |
+| financial.draft_edit, base_result.record/verify và các capability khác | Thiết kế, phải triển khai/test trong domain tương ứng |
 | Người duyệt chính thức | Trên BASE theo văn bản thẩm quyền; không có quyền duyệt song song trong Odoo |
 
 ACL/group rules Odoo có tính cộng quyền, global rules giới hạn giao nhau; không giả định role hạn chế tự thắng. Kiểm quyền theo capability/scope của record. Admin/superuser có khả năng truy cập kỹ thuật; dùng quản trị riêng/audit, API nghiệp vụ không sudo để né scope.
@@ -53,7 +54,7 @@ ACL/group rules Odoo có tính cộng quyền, global rules giới hạn giao nh
 ## 4. Project, contract và các đối tượng tiếp theo
 
 - Project dự kiến draft → review → active/on_hold → completed/cancelled; chưa triển khai ngoài active flag chuẩn/tp_managed và assignment. Không thêm state chỉ để mở CTR-001.
-- Hợp đồng giữ danh tính ổn định; version hồ sơ/review, approval reference, chữ ký, lifecycle và snapshot revision hiệu lực liên kết rõ.
+- Hợp đồng giữ danh tính ổn định; version hồ sơ/review, approval reference, chữ ký, lifecycle và snapshot revision hiệu lực liên kết rõ. CTR-001 đã có các trường này ở dạng chỉ đọc; chưa có transition submit/review/sign/make_effective.
 - Phụ lục PKH là tổng giá trị mới ở phạm vi hạng mục/đơn vị được cập nhật; thiết kế snapshot đầy đủ phải ghép với phạm vi không đổi. Không cộng như delta.
 - Giao khoán cấp 1 gồm thầu phụ công ty và khoán nội bộ; cấp 2 thuộc khoán nội bộ cha, cùng company/project, không cộng tổng lần hai.
 - Sản lượng, nghiệm thu, hóa đơn, tiền và giữ lại tách riêng. Nghiệm thu cần căn cứ chuyên môn/bên ký; không mặc định mọi biên bản đều phải có một quyết định BASE riêng.
@@ -64,7 +65,7 @@ ACL/group rules Odoo có tính cộng quyền, global rules giới hạn giao nh
 
 | Phạm vi | Đầu vào tối thiểu |
 | --- | --- |
-| CTR-001 đọc | Baseline BIZ-001, typed schema, field/scope/attachment policy, test dữ liệu giả, API DTO |
+| CTR-001 đọc | Baseline BIZ-001, typed schema, field/scope/attachment policy, test dữ liệu giả, API DTO — đạt trên dev (CHG-20261028-006) |
 | Draft/submit/return trên test | Action matrix, capability, CSRF/version/idempotency/audit và negative tests |
 | Xác minh BASE/hiệu lực pháp lý trên pilot | Văn bản thẩm quyền, phân công record/verify, hồ sơ BASE thực tế, quy tắc ngày và correction liên quan |
 | Allocation/acceptance/finance/import | Quy chế và hồ sơ đại diện đúng domain; mapping/reconcile, owner nghiệp vụ nghiệm thu |

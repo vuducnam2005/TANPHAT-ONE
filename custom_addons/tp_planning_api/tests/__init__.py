@@ -1,1 +1,1 @@
-from . import test_projects_api
+from . import test_contracts_api, test_projects_api
