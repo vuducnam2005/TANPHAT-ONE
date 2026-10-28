@@ -3,7 +3,7 @@
 **Cập nhật:** 28/10/2026 (Asia/Saigon)  
 **Thư mục:** `C:\TANPHAT ONE`  
 **Mục tiêu hiện tại:** xây nền tảng quản trị doanh nghiệp theo module Odoo + web frontend riêng, bắt đầu từ phòng Kế hoạch Kinh doanh.
-Last change: `CHG-20261028-007`
+Last change: `CHG-20261028-008`
 
 **Phase:** TP Contracts read slice → nghiệm thu nghiệp vụ và draft trên test.
 **Task vừa hoàn tất:** CTR-001 — TP Contracts đọc hợp đồng, revision, dòng phạm vi, kết quả BASE và tài liệu từ Odoo đến React; quyền tiền theo grant từng project được kiểm ở ORM/RPC, API và tệp; đã kiểm chứng trên dev với dữ liệu giả lập.
@@ -23,7 +23,7 @@ Last change: `CHG-20261028-007`
 | Giao khoán/nghiệm thu/thanh toán | Chưa triển khai | Đã có thiết kế database; ghi/duyệt hợp đồng chưa mở |
 | Workflow và ma trận quyền KD | Baseline phân tích hoàn tất | BIZ-001: BASE phê duyệt chính thức, tiền theo scope, hạn mức chưa biết; model/state/capability mới là đề xuất |
 | Production | Chưa triển khai | Chưa có HTTPS, backup production, staging migration hoặc dữ liệu thật |
-| Git history | Commit local, chưa push | `origin/main` (ref local) ở `03702d24`; `main` thêm `395be562` (AUTH-001 + BIZ-001), `807018b9` (CTR-001) và commit tài liệu CHG-20261028-007. Push chỉ khi người dùng yêu cầu; hai ID foundation cũ không tìm thấy |
+| Git history | Đã push | `main` và `origin/main` đồng bộ đến `00d4ddc7`: `395be562` (AUTH-001 + BIZ-001), `807018b9` (CTR-001), `00d4ddc7` (CHG-20261028-007). Commit tài liệu CHG-20261028-008 push trong cùng lượt; hai ID foundation cũ không tìm thấy |
 | AI handoff workflow | Đã thiết lập | `AGENTS.md`, status, changelog, business workflow và local checker |
 | Backup/restore dev | Đã kiểm chứng local | `scripts/backup_restore.py`; backup `20261028T062821364112Z`; final restore report `20261028T064405723351Z`; nghiệp vụ/config dev giữ nguyên |
 
@@ -48,7 +48,9 @@ Last change: `CHG-20261028-007`
 
 ## Kiểm chứng gần nhất
 
-Lượt commit (`CHG-20261028-007`) tách thay đổi chưa commit thành hai commit local, chưa push. Các file dùng chung được dựng lại về trạng thái trước CTR-001 bằng cách đảo các chỉnh sửa CTR-001 đã ghi nhận; áp lại các chỉnh sửa đó cho kết quả trùng 18/18 file hiện tại. Bản export của `395be562`: frontend typecheck đạt, Vitest 10 đạt; không chạy lại Odoo tests vì commit này không đổi backend. `395be562` giữ `docs/AI_WORKFLOW_STATE.json` của `03702d24` nên `ai_workflow.py check` tại đúng commit đó báo lệch; từ `807018b9` trở đi checker đạt. Quét diff không có credential/dữ liệu thật.
+Lượt `CHG-20261028-008` chỉ đổi tài liệu: thêm mục 4.4 trong [workflow KD](architecture/TP_KD_WORKFLOW_AND_PERMISSIONS.md) ánh xạ tên trạng thái nghiệp vụ sang field/giá trị trong code, đối chiếu trực tiếp với model `tp_contract` và DTO API; ghi nhận đã push `00d4ddc7`. Không chạy lại test ứng dụng vì không đổi code.
+
+Lượt commit (`CHG-20261028-007`) tách thay đổi chưa commit thành hai commit local; sau đó đã push lên `origin/main`. Các file dùng chung được dựng lại về trạng thái trước CTR-001 bằng cách đảo các chỉnh sửa CTR-001 đã ghi nhận; áp lại các chỉnh sửa đó cho kết quả trùng 18/18 file hiện tại. Bản export của `395be562`: frontend typecheck đạt, Vitest 10 đạt; không chạy lại Odoo tests vì commit này không đổi backend. `395be562` giữ `docs/AI_WORKFLOW_STATE.json` của `03702d24` nên `ai_workflow.py check` tại đúng commit đó báo lệch; từ `807018b9` trở đi checker đạt. Quét diff không có credential/dữ liệu thật.
 
 Lượt CTR-001 (`CHG-20261028-006`) chạy mới trên dev, không dùng kết quả cũ:
 
@@ -99,7 +101,7 @@ npm.cmd run test:e2e --prefix frontend
 ## Next action bắt buộc
 
 1. **Nghiệm thu BIZ-001/CTR-001:** cho chủ nghiệp vụ xem read slice bằng dữ liệu giả lập; bổ sung 2–3 bộ hồ sơ khử dữ liệu có phụ lục, khoán cấp 2 và correction/void. Chốt Q2: ai cấp/thu hồi grant `financial_read` theo project và ai record/verify BASE. Trước khi có câu trả lời, grant chỉ do superuser tạo; không tự gán cho Trưởng ban/QT-TC/lãnh đạo.
-2. **CTR-002:** phát triển draft/submit/return hợp đồng trên test (capability, CSRF, version, idempotency, audit, negative tests). Chưa mở record/verify BASE, ký hoặc xác nhận hiệu lực pháp lý khi Q1–Q3 còn mở.
+2. **CTR-002:** phát triển draft/submit/return hợp đồng trên test (capability, CSRF, version, idempotency, audit, negative tests). Chưa mở record/verify BASE, ký hoặc xác nhận hiệu lực pháp lý khi Q1–Q3 còn mở. Dùng đúng field/giá trị ở mục 4.4 của workflow KD; trước khi viết action, chốt transition hủy revision (`review_state = cancelled`: ai hủy, lý do).
 3. **Sau Q2:** màn hình/API quản trị grant có audit; trước đó không mở API ghi grant. **PRJ-002** và các task còn lại theo [roadmap](ROADMAP.md).
 
 ## Không được làm ở bước hiện tại
@@ -122,5 +124,5 @@ Lượt AI-001 không sửa Git metadata, không stage hoặc commit và không 
 
 Lượt BIZ-001 giữ nguyên các thay đổi login chưa commit từ AUTH-001, không commit/push hoặc sửa Git metadata. Hai tài liệu chi tiết BIZ mới được kiểm riêng về liên kết/nội dung; checker hiện dùng danh sách policy cố định, không tự hash mọi Markdown được liên kết.
 
-CTR-001 (commit local `807018b9`, chưa push; AUTH-001/BIZ-001 ở `395be562`): grant `financial_read` chỉ superuser cấp đến khi Q2 được chốt; grant admin trong dev chỉ là fixture. Quyền tiền bảo vệ field số tiền, tệp tài chính và tổng; văn bản tự do (tên, mô tả, lý do) không được quét số tiền, nên quy tắc nhập liệu cần cấm ghi giá trị vào các trường đó. Admin/superuser vẫn có khả năng truy cập kỹ thuật. Chưa có view/menu Odoo native cho `tp_contract`; người dùng nghiệp vụ dùng API/React. Exit code `dev.py test` không đáng tin, phải đọc dòng `0 failed, 0 error(s) of N tests` trong log; INFO filestore GC `WinError 5` trên Windows vẫn xuất hiện. Upgrade dev ghi lại mật khẩu dev từ file secrets hiện có (giá trị không đổi). MFA thật chưa kiểm.
+CTR-001 (`807018b9`, đã push; AUTH-001/BIZ-001 ở `395be562`): grant `financial_read` chỉ superuser cấp đến khi Q2 được chốt; grant admin trong dev chỉ là fixture. Quyền tiền bảo vệ field số tiền, tệp tài chính và tổng; văn bản tự do (tên, mô tả, lý do) không được quét số tiền, nên quy tắc nhập liệu cần cấm ghi giá trị vào các trường đó. Admin/superuser vẫn có khả năng truy cập kỹ thuật. Chưa có view/menu Odoo native cho `tp_contract`; người dùng nghiệp vụ dùng API/React. Exit code `dev.py test` không đáng tin, phải đọc dòng `0 failed, 0 error(s) of N tests` trong log; INFO filestore GC `WinError 5` trên Windows vẫn xuất hiện. Upgrade dev ghi lại mật khẩu dev từ file secrets hiện có (giá trị không đổi). MFA thật chưa kiểm.
 

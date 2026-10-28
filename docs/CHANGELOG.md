@@ -2,6 +2,14 @@
 
 Mỗi lượt thay đổi code hoặc quyết định kiến trúc ghi một mục ngắn. Không ghi credential, dữ liệu thật hoặc log chứa bí mật.
 
+## CHG-20261028-008 — Ánh xạ trạng thái hợp đồng và ghi nhận push
+
+- Phạm vi: tài liệu; không đổi model, API, frontend, runtime hoặc database.
+- Đã làm: thêm mục 4.4 trong `TP_KD_WORKFLOW_AND_PERMISSIONS.md` ánh xạ tên trạng thái ở 4.1–4.3 sang field/giá trị trong code (`review_state`, `decision`, `verification_state`, `authority_status`, `signature_status`, `signature_authority_status`, `effectivity_status`, `lifecycle_state`) kèm constraint hiện có; liên kết từ `TP_BUSINESS_WORKFLOW.md`. Status ghi nhận `main` đã push đến `00d4ddc7`.
+- Điểm cần chốt cho CTR-002: transition hủy revision (`cancelled` có trong code, 4.1 chưa có); cách confirm_effectivity cập nhật `effectivity_status` và `lifecycle_state` cùng lúc; thứ tự review → BASE reference chưa có constraint ở model.
+- Kiểm tra: đối chiếu giá trị với model `tp_contract`, DTO `tp_planning_api` và nhãn frontend; kiểm liên kết Markdown; `git diff --check`; `ai_workflow.py finish/check`.
+- Next: nghiệm thu BIZ-001/CTR-001 và chốt Q2; CTR-002.
+
 ## CHG-20261028-007 — Commit local AUTH-001, BIZ-001 và CTR-001
 
 - Phạm vi: Git history và tài liệu bàn giao; không đổi model, API, frontend, runtime hoặc database.

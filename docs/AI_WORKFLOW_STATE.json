@@ -1,25 +1,25 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-10-28T09:24:23.422931+00:00",
-  "last_change_id": "CHG-20261028-007",
+  "updated_at": "2026-10-28T09:31:54.256543+00:00",
+  "last_change_id": "CHG-20261028-008",
   "code_digest": "d13b5d40bbb1aec56b9bcf0a3489fa23047eab95447380094888f52ecf442c00",
   "code_file_count": 108,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "481f3a4b5a4d7ab036ba0bd25ef01e131c418efeecf14d9b0d2dd513351f5faf",
-    "docs/CHANGELOG.md": "a799d09e511a13211362858419154a013775ed1d1543b93e665817ff01be350e",
+    "docs/PROJECT_STATUS.md": "aecb875ecdc2616660e0cb21ddcf13d0c90ad64d8b4f3988ec9122fadb56d87e",
+    "docs/CHANGELOG.md": "78c322eefbe18f974e8b50f486e6da12a605bdc2e2ab9ce16496f78a9505cedd",
     "AGENTS.md": "2474c035b6823d7157f6c8afd17b7cadc8aded79fa45ac8505d7f561f01bf0cf",
     "README_TANPHAT.md": "7b12ef66c29f0cbecb53096a3115e6199ea014cde2eb59e550221e9001f41f47",
     "docs/AI_CHANGE_WORKFLOW.md": "ecd678252dc1333b30d1de1254c7407631695ca900a2cea36e10757516a4b25d",
     "docs/ROADMAP.md": "58587566b564a1e1af2068b9fbf75690e18dca7a13f3963315b798cc4ac53b2a",
     "docs/DECISIONS.md": "ec400bb32b9edc56f423020ea3dc90a6815dc59a95c7e85023cf915699cd1ddf",
     "docs/HANDOFF_TEMPLATE.md": "7a98efbd7a557efe789b51fefbf5c4072908f9d9f29a21e0c76d012cbddf3d32",
-    "docs/architecture/TP_BUSINESS_WORKFLOW.md": "174667a33bae46d5ae9f2510b774f44ec200a944a13cef9d1a2f75f42e89c0c6",
+    "docs/architecture/TP_BUSINESS_WORKFLOW.md": "557d15cf85e1865206487abfaaa58e912374a21ecbcea66cba1e30f46b809d05",
     "docs/architecture/TP_DATABASE_DESIGN.md": "3487f0b33b79cee0d3bd74675da26b7db67e26b0c0c870e621763022a6e68bad",
     "docs/architecture/TP_PLATFORM_SOURCE_STRUCTURE.md": "5616f3c764c6a8465a8a4dc25a364065ee56bf0a20d3f18343051594edf829d0",
     "docs/architecture/TP_PRODUCT_NAMING.md": "b93114db49706b3ad642335c58fa67339ab0fdd8880b7a83ef8e8e1f514af3a3"
   },
   "reported_checks": [
-    "Git split: 395be562 (AUTH-001+BIZ-001) and 807018b9 (CTR-001), round trip 18/18 files; export 395be562 typecheck passed, Vitest 10 passed; git diff HEAD empty after 807018b9; ai_workflow check PASS; git diff --check passed; docs-only change, app tests not rerun"
+    "Docs-only: KD workflow section 4.4 state mapping checked against tp_contract models, tp_planning_api DTO and frontend label; doccheck CRLF/tables/relative links passed on 4 docs; git diff --check passed; app tests not rerun (no code change)"
   ]
 }

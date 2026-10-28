@@ -54,7 +54,7 @@ ACL/group rules Odoo có tính cộng quyền, global rules giới hạn giao nh
 ## 4. Project, contract và các đối tượng tiếp theo
 
 - Project dự kiến draft → review → active/on_hold → completed/cancelled; chưa triển khai ngoài active flag chuẩn/tp_managed và assignment. Không thêm state chỉ để mở CTR-001.
-- Hợp đồng giữ danh tính ổn định; version hồ sơ/review, approval reference, chữ ký, lifecycle và snapshot revision hiệu lực liên kết rõ. CTR-001 đã có các trường này ở dạng chỉ đọc; chưa có transition submit/review/sign/make_effective.
+- Hợp đồng giữ danh tính ổn định; version hồ sơ/review, approval reference, chữ ký, lifecycle và snapshot revision hiệu lực liên kết rõ. CTR-001 đã có các trường này ở dạng chỉ đọc; chưa có transition submit/review/sign/make_effective. Ánh xạ tên trạng thái nghiệp vụ sang field/giá trị trong code nằm ở mục 4.4 của [workflow KD](TP_KD_WORKFLOW_AND_PERMISSIONS.md).
 - Phụ lục PKH là tổng giá trị mới ở phạm vi hạng mục/đơn vị được cập nhật; thiết kế snapshot đầy đủ phải ghép với phạm vi không đổi. Không cộng như delta.
 - Giao khoán cấp 1 gồm thầu phụ công ty và khoán nội bộ; cấp 2 thuộc khoán nội bộ cha, cùng company/project, không cộng tổng lần hai.
 - Sản lượng, nghiệm thu, hóa đơn, tiền và giữ lại tách riêng. Nghiệm thu cần căn cứ chuyên môn/bên ký; không mặc định mọi biên bản đều phải có một quyết định BASE riêng.

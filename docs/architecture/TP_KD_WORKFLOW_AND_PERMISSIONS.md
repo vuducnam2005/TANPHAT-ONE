@@ -104,6 +104,23 @@ Không dùng approval cũ cho bản đổi giá/phạm vi. Thu hồi/tranh chấ
 
 Các action ghi nhận hiệu lực theo bằng chứng, không tự tạo hiệu lực pháp lý. Hồ sơ lịch sử thiếu căn cứ vẫn lưu/đọc với legacy_unverified; không bịa approval để làm sạch báo cáo.
 
+### 4.4. Ánh xạ sang giá trị trong code (CTR-001)
+
+Tên ở 4.1–4.3 là tên nghiệp vụ. CTR-001 đã có các field dưới đây ở dạng chỉ đọc, chưa có action chuyển trạng thái; giá trị do dữ liệu dev/superuser đặt và chỉ bị chặn bởi constraint. Từ CTR-002, action, API và test dùng đúng field/giá trị này; đổi tên giá trị cần migration và cập nhật OpenAPI.
+
+| Lớp (mục 3) | Field | Giá trị trong code | Tương ứng 4.1–4.3 | Ràng buộc hiện có / điểm cần chốt |
+| --- | --- | --- | --- | --- |
+| Review hồ sơ | `tp.contract.revision.review_state` | `draft`, `in_review`, `returned`, `review_complete`, `cancelled` | draft → in_review → returned/review_complete | `cancelled` có trong code nhưng 4.1 chưa có transition hủy. Bản `cancelled` không được ghi nhận hiệu lực và không vào snapshot. Ai được hủy và lý do bắt buộc: chốt khi làm CTR-002 |
+| Kết quả BASE | `tp.approval.reference.decision` | `pending`, `approved`, `rejected`, `cancelled` | review_complete → BASE pending → approved/rejected/cancelled | “BASE pending” là approval reference có `decision = pending`. Khác `pending` cần người quyết định và thời điểm trên BASE; `rejected`/`cancelled` cần lý do. Model chưa buộc revision phải `review_complete` trước khi có reference; CTR-002 kiểm trong action |
+| Xác minh evidence | `tp.approval.reference.verification_state` | `pending`, `verified`, `disputed` | Evidence pending → verified/disputed | Khác `pending` cần người kiểm và thời điểm |
+| Thẩm quyền quyết định | `tp.approval.reference.authority_status` | `unconfirmed`, `confirmed` | “authority phù hợp” ở 4.2 | `confirmed` cần nguồn ủy quyền. API trả `verified_result = true` (nhãn “Kết quả BASE đã xác minh”) chỉ khi decision khác `pending`, `verified` và `confirmed` |
+| Chữ ký | `tp.contract.revision.signature_status` | `unsigned`, `signed_recorded` | record_signature; “signed” ở 4.3 | `signed_recorded` là đã ghi nhận bản ký, không phải xác nhận pháp lý; cần `signed_date` |
+| Thẩm quyền ký | `tp.contract.revision.signature_authority_status` | `pending`, `confirmed` | authority_pending ở 4.3 | authority_pending tương ứng `pending` |
+| Hiệu lực của bản | `tp.contract.revision.effectivity_status` | `not_effective`, `effective_recorded` | confirm_effectivity, phía revision | `effective_recorded` cần `signed_recorded`, `effective_date` và bản không `cancelled`. Chỉ bản này được chọn cho snapshot theo ngày; BASE approved không làm bản có hiệu lực |
+| Lifecycle hợp đồng | `tp.contract.lifecycle_state` | `not_effective`, `effective`, `suspended`, `execution_completed`, `liquidated`, `terminated` | confirm_effectivity phía hợp đồng; suspend/resume, complete_execution, record_liquidation, terminate | Khác `not_effective` cần ít nhất một bản `effective_recorded`. Chưa ràng buộc thứ tự chuyển giữa các giá trị |
+
+“signed → effective” ở 4.3 gộp hai lớp mà code tách riêng: `effectivity_status` của từng bản và `lifecycle_state` của hợp đồng. Cách confirm_effectivity cập nhật hai field này trong cùng transaction được chốt khi thiết kế action, sau khi Q1–Q3 có câu trả lời.
+
 ## 5. Revision, dữ liệu tiền và ngày báo cáo
 
 ### 5.1. Phụ lục và sửa sai
