@@ -74,8 +74,6 @@ dt { color: var(--muted); } dd { margin: 0; overflow-wrap: anywhere; }
 .tp-pagination { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--muted); font-size: 13px; }
 .tp-session-page { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 26px; padding: 24px; }
 .tp-session-page .tp-status-panel { width: min(500px, 100%); border-top: 4px solid var(--accent); }
-.tp-login-brand { width: min(500px, 100%); font-size: 28px; font-weight: 700; }
-.tp-login-brand span { display: block; font-size: 14px; color: var(--muted); font-weight: 400; margin-top: 5px; }
 .tp-skip-link { position: fixed; z-index: 10; top: -100px; left: 16px; padding: 12px; color: #fff; background: var(--ink); }
 .tp-skip-link:focus { top: 16px; }
 @media (max-width: 1000px) { .tp-project-grid { grid-template-columns: 1fr; } .tp-shell { grid-template-columns: 220px minmax(0, 1fr); } .tp-topbar, .tp-content { padding-inline: 24px; } }

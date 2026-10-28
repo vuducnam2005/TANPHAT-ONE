@@ -63,7 +63,7 @@ tp.acceptance / tp.payment.request -- bridge --> account.move / account.payment
 - Catalog hạng mục khác dòng phạm vi hợp đồng; nhiều hợp đồng cùng đối tác/hạng mục vẫn có ID riêng.
 - Giao khoán con liên kết cha bằng ID, cùng company/project; kiểm tra vòng lặp và vượt khoán tại model. Tổng công ty chỉ tính cấp 1.
 - Sản lượng, nghiệm thu, hóa đơn, tiền thu/chi và giữ lại là các khái niệm riêng. Kế toán là nguồn chính thức cho posting và reconciliation.
-- Phụ lục lưu loại điều chỉnh và ngày hiệu lực. Prototype đang giả định số thay thế; cần đối chiếu hồ sơ và chốt quy tắc trước khi xây model. Không lấy điều kiện “dòng dương cuối cùng” làm quy tắc chung.
+- BIZ-001 đối chiếu S03 xác định giá cập nhật của PKH là tổng mới theo phạm vi hạng mục/đơn vị, không phải delta. Đề xuất revision snapshot đầy đủ được dựng từ bản trước và phần thay đổi; không lấy một giá trị hạng mục làm tổng hợp đồng hoặc lấy “dòng dương cuối” làm quy tắc. Hiệu lực pháp lý/ngày hồi tố vẫn cần hồ sơ đại diện xác nhận.
 - Nháp sửa được theo quyền; chứng từ đã chốt cần revision/cancellation có lý do và bản trước. Phần này chưa được áp dụng cho hợp đồng vì addon đó chưa triển khai.
 
 ## 4. Quy tắc dữ liệu và hiệu năng
@@ -91,13 +91,14 @@ Runtime dev chỉ bind loopback, chưa là triển khai production. Khi triển 
 
 ## 7. Đề xuất chi tiết cho phần nghiệp vụ tiếp theo
 
-Các model trong phần này chưa được tạo. Chốt ví dụ giao dịch và quy tắc phê duyệt trước khi tạo schema để tránh cố định sai cách hiểu từ Excel.
+Các model trong phần này chưa được tạo. [Baseline BIZ-001](TP_KD_WORKFLOW_AND_PERMISSIONS.md) và [nguồn/ca nghiệm thu](TP_KD_EVIDENCE_AND_ACCEPTANCE.md) là đầu vào hiện hành. Có thể triển khai read slice với dữ liệu giả; action chốt/pháp lý đợi cổng thẩm quyền và hồ sơ thực tế. Không copy cấu trúc nhật ký Excel thành bảng transaction đa năng.
 
 | Model đề xuất | Trường/quan hệ cốt lõi | Vai trò |
 | --- | --- | --- |
 | `tp.contract` | company, project, partner, direction, code, currency | Danh tính ổn định của hợp đồng chủ đầu tư/thầu phụ |
-| `tp.contract.revision` | contract, sequence, effective_date, state, revision_kind, previous_revision | Bản gốc/phụ lục, hiệu lực và lịch sử; xác định rõ thay thế hay điều chỉnh delta |
+| `tp.contract.revision` | contract, sequence, signed_date, effective_date, review_state, revision_kind, previous_revision, recorded_at, verification_status | Snapshot bản gốc/phụ lục, review và căn cứ hiệu lực; ngày ký khác ngày nhập/ngày hiệu lực |
 | `tp.contract.line` | revision, work_item, description, quantity, uom, unit_price, tax | Phạm vi và giá trị của một phiên bản hợp đồng |
+| `tp.approval.reference` | company/project, business document/version, BASE reference, decision, evidence hash, decided/recorded/verified actor/time, authority_status | Kết quả BASE theo đúng hồ sơ; khai báo khác xác minh; không thay bản ký |
 | `tp.allocation` | project, contract/revision, parent_allocation, assignee, kind, state | Giao khoán; phân biệt phòng nội bộ với đối tác bên ngoài |
 | `tp.allocation.line` | allocation, contract_line, work_item, quantity, value | Dòng phạm vi khoán và nguồn hợp đồng tương ứng |
 | `tp.production.entry` | project, work_item, period, quantity, source | Sản lượng thực hiện; chưa đồng nhất với nghiệm thu |
@@ -106,16 +107,18 @@ Các model trong phần này chưa được tạo. Chốt ví dụ giao dịch v
 | Liên kết kế toán | source document ↔ `account.move`/`account.payment` | Kế toán quản lý bút toán, thuế, hóa đơn và đối soát chính thức |
 | Import staging | batch, file hash, sheet, row, parser version, source binding | Truy vết và nhập lại an toàn, không cộng trùng |
 
-`revision` tham chiếu hợp đồng, dòng phạm vi tham chiếu revision. Không móc phụ lục dưới một dòng hợp đồng cụ thể. Trước khi mở nghiệp vụ cần chốt cách lưu snapshot đầy đủ hay delta và cách xử lý phụ lục có hiệu lực muộn/thu hồi; chưa áp dụng ngầm quy tắc fixture.
+`revision` tham chiếu hợp đồng, dòng phạm vi tham chiếu revision. Không móc phụ lục dưới một dòng hợp đồng cụ thể. Đề xuất snapshot đầy đủ có provenance từ phụ lục và bản trước; xử lý hiệu lực muộn/thu hồi phải có policy trước khi mở action. Approval reference gắn đúng phiên bản bất biến/hash/phạm vi/amount/currency; BASE approved không tự cho signed/effective. Bản thiếu chứng cứ được đọc với nhãn chưa xác minh, không giả approval.
+
+Financial read/edit là capability riêng theo project. Ưu tiên record tài chính có scope được bảo vệ riêng hoặc cơ chế ORM tương đương; field group toàn cục chưa đủ cho user chỉ được xem tiền một phần các project đang đọc metadata. Phải kiểm ORM read/search/read_group/RPC/API/export; lọc DTO frontend chưa đủ. Attachment/evidence chứa tiền, related fields và audit before/after chịu cùng policy. Admin/superuser có khả năng bypass kỹ thuật nên cần audit, không coi là quyền nghiệp vụ. Cách biểu diễn null/zero trong ORM phải dùng trạng thái xác nhận nếu field chuẩn chuyển giá trị thiếu thành zero/False; decimal string của API không tự giải quyết vấn đề này.
 
 Mỗi giao dịch mang company và project. Liên kết cha-con, hợp đồng, hạng mục và acceptance phải cùng phạm vi hợp lệ, được kiểm bằng ORM/constraint. Không chỉ dựa vào bộ lọc dropdown trên frontend. `department_id` biểu diễn đơn vị chịu trách nhiệm; assignment/role biểu diễn quyền, không thay thế lẫn nhau.
 
-### Điều kiện khóa thiết kế trước khi viết tp_contract
+### Điều kiện theo cổng triển khai tp_contract
 
-1. Chọn 2–3 hồ sơ dự án giả lập/đã khử dữ liệu nhạy cảm có phụ lục, giao khoán cấp 2 và hủy chứng từ.
-2. Chốt tiền trước/sau thuế, tiền tệ, rounding và cách biểu diễn dữ liệu chưa xác nhận. `fields.Monetary` của Odoo dùng giá trị số thực ở lớp Python; API decimal string không tự giải quyết sai số. Cần test theo currency precision và nghiệp vụ thay vì sửa kiểu cột chuẩn bằng SQL.
-3. Chốt ngày ký, ngày nghiệp vụ, ngày hiệu lực và thời điểm ghi nhận; chọn cách hỏi số liệu tại một thời điểm.
-4. Chốt ai nhập, ai chốt, ai duyệt và quyền sửa/hủy ở từng trạng thái. Posted không xóa vật lý; thao tác thay đổi lưu lý do và phiên bản trước.
+1. Read slice dùng ca giả lập BIZ-001, field policy và scope đã thiết kế. Trước pilot bổ sung 2–3 bộ hồ sơ thực tế khử dữ liệu có phụ lục, cấp 2 và correction/void để chủ nghiệp vụ nghiệm thu.
+2. Lưu tiền trước/sau thuế, currency, rounding và trạng thái chưa xác nhận; unknown không suy công nợ. Chốt basis/thuế trước tính toán chính thức/import thật. `fields.Monetary` dùng số thực Python; decimal string không tự giải quyết sai số; test currency precision, không sửa kiểu cột chuẩn bằng SQL.
+3. Tách ngày ký/nghiệp vụ/hiệu lực và recorded_at; báo cáo nêu as-of nghiệp vụ và thời điểm dữ liệu đã biết. Policy hồi tố/kỳ khóa cần xác nhận trước action liên quan.
+4. BASE giữ phê duyệt chính thức. Read/draft development không cần phát minh hạn mức; action xác minh/chốt pháp lý cần Q1–Q3 của BIZ-001. Posted không xóa vật lý; correction/reversal có reason/version trước.
 5. Dùng unique key theo company + mã nghiệp vụ, và contract + sequence cho revision. Thêm index cho company/project/state/date khi truy vấn thực tế cần; chưa tạo partition hoặc reporting database riêng.
 6. Một thao tác chốt chạy trong một transaction Odoo. Thêm kiểm soát cập nhật đồng thời và idempotency cho API ghi trước khi dùng cho chứng từ thật.
 

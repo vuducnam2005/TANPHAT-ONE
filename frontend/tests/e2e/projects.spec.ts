@@ -11,7 +11,7 @@ const localCredentials = existsSync(credentialPath)
 async function login(page: Page, role: 'planner' | 'admin' = 'planner') {
   if (!localCredentials) throw new Error('Run scripts/dev.ps1 setup before the live browser tests.');
   await page.goto('/work/');
-  await page.getByRole('link', { name: 'Đăng nhập', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Chào mừng trở lại.' })).toBeVisible();
   await page.locator('input[name="login"]').fill(role === 'planner' ? 'planner.dev' : 'admin');
   await page.locator('input[name="password"]').fill(localCredentials[role]);
   await page.locator('button[type="submit"]').click();
@@ -19,7 +19,7 @@ async function login(page: Page, role: 'planner' | 'admin' = 'planner') {
   await expect(page.getByRole('heading', { name: 'Dự án đang theo dõi' })).toBeVisible();
 }
 
-test('native login, assigned project, detail reload, search, and CSRF logout', async ({ page }) => {
+test('TANPHAT ONE login, assigned project, detail reload, search, and CSRF logout', async ({ page }) => {
   await login(page);
   const card = page.locator('.tp-project-card');
   await expect(card).toHaveCount(1);
@@ -41,7 +41,7 @@ test('native login, assigned project, detail reload, search, and CSRF logout', a
   expect(rejectedLogout.status()).toBe(400);
   expect((await page.request.get('/api/v1/me')).status()).toBe(200);
   await page.getByRole('button', { name: 'Đăng xuất' }).click();
-  await expect(page.getByRole('heading', { name: 'Đăng nhập để tiếp tục' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Chào mừng trở lại.' })).toBeVisible();
   expect((await page.request.get('/api/v1/me')).status()).toBe(401);
 });
 
@@ -69,6 +69,6 @@ test('expired session clears project content; mobile view does not overflow', as
   await page.screenshot({ path: '../.local/frontend-projects.png', fullPage: true });
   await context.clearCookies();
   await page.getByRole('button', { name: 'Làm mới', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Đăng nhập để tiếp tục' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Chào mừng trở lại.' })).toBeVisible();
   await expect(page.locator('.tp-project-card')).toHaveCount(0);
 });

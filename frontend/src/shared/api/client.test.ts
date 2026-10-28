@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { api, ApiError } from './client';
+import { api, ApiError, LoginError } from './client';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -31,5 +31,53 @@ describe('business API transport', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html>internal proxy details</html>', { status: 502 })));
     await expect(api.projects()).rejects.toBeInstanceOf(ApiError);
     await expect(api.projects()).rejects.toMatchObject({ status: 502, message: 'Không thể đọc dữ liệu.' });
+  });
+});
+
+describe('Odoo session authentication', () => {
+  it('uses the same-origin session endpoint and preserves password whitespace', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({ result: { uid: 7 } }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(api.authenticate('  planner.dev  ', ' sample password ')).resolves.toEqual({ requiresVerification: false });
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(url).toBe('/web/session/authenticate');
+    expect(options).toMatchObject({ method: 'POST', credentials: 'same-origin', cache: 'no-store' });
+    expect(JSON.parse(options.body)).toMatchObject({
+      jsonrpc: '2.0', method: 'call', params: { login: 'planner.dev', password: ' sample password ' },
+    });
+  });
+
+  it('treats HTTP 200 JSON-RPC credential errors as failed authentication', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({
+      error: { data: { name: 'odoo.exceptions.AccessDenied', debug: 'private server traceback' } },
+    })));
+    await expect(api.authenticate('planner.dev', 'invalid')).rejects.toMatchObject({ code: 'credentials' });
+  });
+
+  it('keeps MFA as an explicit verification step instead of granting access', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ result: { uid: null } })));
+    await expect(api.authenticate('planner.dev', 'sample')).resolves.toEqual({ requiresVerification: true });
+  });
+
+  it('returns a useful rate-limit message', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 429 })));
+    await expect(api.authenticate('planner.dev', 'sample')).rejects.toMatchObject({ code: 'rate_limit' });
+  });
+
+  it('does not expose proxy HTML or internal errors', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html>private gateway details</html>', { status: 502 })));
+    await expect(api.authenticate('planner.dev', 'sample')).rejects.toMatchObject({ code: 'connection' });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ error: { data: { name: 'InternalError', debug: 'private stack' } } })));
+    await expect(api.authenticate('planner.dev', 'sample')).rejects.toMatchObject({ code: 'connection' });
+  });
+
+  it('rejects malformed success responses', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ result: {} })));
+    await expect(api.authenticate('planner.dev', 'sample')).rejects.toBeInstanceOf(LoginError);
+  });
+
+  it('handles a lost connection without retaining network error details', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('network details')));
+    await expect(api.authenticate('planner.dev', 'sample')).rejects.toMatchObject({ code: 'connection' });
   });
 });

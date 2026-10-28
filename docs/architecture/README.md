@@ -6,6 +6,8 @@ Từ quyết định ngày 28/10/2026, frontend chính là web riêng gọi API 
 
 Thiết kế hiện hành: [Cấu trúc source nền tảng Tấn Phát](TP_PLATFORM_SOURCE_STRUCTURE.md).
 
+Baseline nghiệp vụ hiện hành: [BIZ-001 — workflow và ma trận quyền KD](TP_KD_WORKFLOW_AND_PERMISSIONS.md), kèm [bằng chứng nguồn và ca nghiệm thu](TP_KD_EVIDENCE_AND_ACCEPTANCE.md). Phần phân tích hoàn tất; thẩm quyền ký/duyệt và nghiệm thu chủ nghiệp vụ còn chờ. BASE giữ phê duyệt chính thức, TANPHAT ONE ghi nhận hồ sơ/kết quả; bước tiếp theo là TP Contracts read slice.
+
 - `odoo/` và `addons/` giữ layout upstream.
 - `custom_addons/` dành cho backend riêng.
 - `frontend/` là app React/TypeScript/Vite gọi API thật; `frontend/prototype/` giữ dashboard mẫu cũ.
@@ -14,6 +16,6 @@ Thiết kế hiện hành: [Cấu trúc source nền tảng Tấn Phát](TP_PLAT
 
 Các tài liệu `docs/dashboard/` giữ giá trị khảo sát dữ liệu và prototype. Phương án OWL client action trong các tài liệu đó là định hướng cũ cho phạm vi dashboard, đã được thay bằng thiết kế hiện hành cho toàn nền tảng.
 
-Vertical slice nền đầu tiên có addon cài được (`tp_core`, `tp_organization`, `tp_project`, `tp_api`, `tp_planning_api`) và app React đọc dự án trên database dev. Login native, phân quyền, search, detail, logout và session hết hạn đã có browser tests. Chưa triển khai production, hợp đồng/nghiệm thu, import Excel hoặc dữ liệu doanh nghiệp thật.
+Vertical slice nền đầu tiên có addon cài được (`tp_core`, `tp_organization`, `tp_project`, `tp_api`, `tp_planning_api`) và app React đọc dự án trên database dev. Login React riêng dùng session Odoo, native MFA fallback, phân quyền, search/detail, logout/session hết hạn đã có browser tests. Chưa triển khai production, hợp đồng/nghiệm thu, import Excel hoặc dữ liệu doanh nghiệp thật.
 
 Thiết kế database: [TP_DATABASE_DESIGN.md](TP_DATABASE_DESIGN.md). Cách chạy nền: [LOCAL_DEVELOPMENT.md](../../ops/runbooks/LOCAL_DEVELOPMENT.md).

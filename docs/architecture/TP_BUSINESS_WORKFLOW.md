@@ -1,94 +1,75 @@
 # TANPHAT ONE — Workflow nghiệp vụ và quy tắc chuyển trạng thái
 
-Đây là blueprint để chốt nghiệp vụ trước khi tạo model/action. Phần nào ghi “thiết kế” chưa phải chức năng đã có. Nền hiện tại mới kiểm chứng đọc project theo quyền.
+Đây là blueprint trước khi tạo model/action, không phải danh sách chức năng đã triển khai. Nền hiện tại kiểm chứng đọc project theo quyền; workflow hợp đồng/giao khoán chưa có runtime.
+
+Baseline chi tiết hiện hành cho Ban Kinh doanh/Kế hoạch:
+
+- [BIZ-001: workflow, BASE, state, ma trận quyền và cổng triển khai](TP_KD_WORKFLOW_AND_PERMISSIONS.md).
+- [Bằng chứng nguồn và ca nghiệm thu giả lập](TP_KD_EVIDENCE_AND_ACCEPTANCE.md).
+
+Khi code phần KD/Contracts, đọc hai tài liệu này cùng database design. Các đề xuất tuyến tính cũ về hợp đồng bị thay bằng baseline BIZ-001; không lấy chữ approved làm bằng chứng đã ký/có hiệu lực.
 
 ## 1. Luồng tổng thể
 
-```text
-TP Projects → TP Survey → TP Design → TP Contracts → TP Tasks
-                                      ↓             ↓
-                                  TP Documents  TP Finance
-                                      ↓             ↓
-                                  TP Dashboard (đọc/tổng hợp theo quyền)
-```
+~~~mermaid
+flowchart LR
+    A[Cơ hội / dự thầu] --> B[Hợp đồng / phụ lục]
+    B --> C[Kế hoạch / giao việc / giao khoán]
+    C --> D[Khảo sát / thiết kế / BIM / KCS]
+    D --> E[Nghiệm thu]
+    E --> F[Hóa đơn / thu chi / đối chiếu]
+    F --> G[Hoàn thành / thanh lý / lưu]
+~~~
 
-Một module chỉ phát hành dữ liệu cho module sau khi hồ sơ đạt state cho phép. Dashboard không tạo trạng thái riêng và không trở thành nơi duyệt.
+Project có thể mở từ cơ hội/dự thầu; có đường giao trực tiếp, nhiều đợt thực hiện và tạm ứng. Đây không phải dependency bắt buộc giữa addon theo thứ tự menu. TP Documents liên kết hồ sơ xuyên suốt; TP Dashboard chỉ tổng hợp trong scope, không tạo quyết định phê duyệt.
+
+**BASE giữ phê duyệt chính thức trong giai đoạn đầu.** TANPHAT ONE quản trị hồ sơ/rà soát và ghi nhận kết quả. Chưa có tích hợp BASE; không nhận approved từ frontend rồi tự coi là quyết định có thẩm quyền.
 
 ## 2. Nguyên tắc chung
 
-- Mỗi model có state riêng; không dùng một state chung cho mọi phân hệ.
-- Mọi transition chạy ở backend Odoo, trong một transaction.
-- Frontend gọi command/action; không gửi state tùy ý qua PATCH.
-- Transition kiểm actor capability, company, department, project scope và điều kiện dữ liệu.
-- Submit/approve/reject/cancel có lịch sử, người thao tác, thời gian, lý do và request ID.
-- Bản đã chốt không xóa vật lý. Revise/cancel tạo lịch sử hoặc chứng từ đảo.
-- Approver không được là người nhập/chốt cùng action nếu ma trận quyền cấm.
-- Retry chỉ thực hiện với command có idempotency key hoặc đã chứng minh an toàn.
-- Tài liệu và file luôn kiểm quyền theo bản ghi nghiệp vụ, không cấp quyền bằng đường dẫn UNC.
+- Mỗi đối tượng có workflow riêng. Review, quyết định BASE, chữ ký/hiệu lực và revision là các chiều khác nhau.
+- Transition ở backend Odoo, transaction nguyên tử; frontend gọi command, không ghi state tùy ý.
+- Kiểm actor/capability, company/project và department scope áp dụng, state trước, field/evidence và điều kiện sau.
+- Nhật ký có actor/time/reason/request ID/version; người không có quyền tiền không thấy before/after tiền.
+- Draft sửa theo quyền. Hồ sơ gửi đi/chốt giữ bất biến; correction/revision/void có lý do, không xóa bản cũ.
+- Thu hồi bằng chứng BASE không tự đảo kế toán posted; cần quy trình xử lý tác động.
+- Retry phải có idempotency hoặc được chứng minh an toàn; command nhạy cảm có version/concurrency check.
+- Metadata/task không cấp quyền xem tiền hoặc tải bản hợp đồng có giá trị. Scope áp dụng cho RPC/native Odoo/API/export/attachment.
+- Authority chưa biết thì lưu unconfirmed; không phát minh hạn mức hay quy chế bốn mắt. 1.000 VND trong Master chỉ là ngưỡng đối chiếu.
+- Chứng từ kế toán/hóa đơn/tiền theo Odoo accounting; request/BASE approved không tạo tiền đã thu/chi.
 
-## 3. Role/capability nền
+## 3. Quyền hiện có và thiết kế mới
 
-| Capability | Ý nghĩa |
+| Phần | Trạng thái |
 | --- | --- |
-| `project_reader` | Đọc project và dữ liệu được cấp scope |
-| `project_coordinator` | Điều phối dữ liệu draft trong project được giao |
-| `department_manager` | Rà soát dữ liệu thuộc phòng ban |
-| `contract_creator` | Tạo/sửa draft hợp đồng trong scope |
-| `contract_reviewer` | Rà soát và trả lại hồ sơ |
-| `contract_approver` | Phê duyệt theo company/giá trị/thẩm quyền |
-| `finance_reader` | Đọc số liệu tài chính được cấp quyền |
-| `platform_manager` | Cấu hình catalog, project metadata và assignment |
-| `system_admin` | Quản trị kỹ thuật, không mặc nhiên là người duyệt nghiệp vụ |
+| Project Reader và assignment reader/coordinator | Đã triển khai đọc project được phân công; coordinator hiện vẫn chỉ đọc |
+| Platform Manager | Quản lý project metadata/catalog/assignment nền; không ngầm là reviewer/approver hợp đồng |
+| KD_HEAD, PROJECT_OWNER, PLANNING, SUPPORT, TECHNICAL, FINANCE, EXECUTIVE | Preset đề xuất của BIZ-001, chưa thành group/XML ID |
+| financial.read, financial.draft_edit, base_result.record/verify và các capability khác | Thiết kế, phải triển khai/test trong domain tương ứng |
+| Người duyệt chính thức | Trên BASE theo văn bản thẩm quyền; không có quyền duyệt song song trong Odoo |
 
-Role là capability; scope company/project/department và trạng thái bản ghi mới quyết định quyền thực tế. Không hardcode user ID.
+ACL/group rules Odoo có tính cộng quyền, global rules giới hạn giao nhau; không giả định role hạn chế tự thắng. Kiểm quyền theo capability/scope của record. Admin/superuser có khả năng truy cập kỹ thuật; dùng quản trị riêng/audit, API nghiệp vụ không sudo để né scope.
 
-## 4. TP Projects
+## 4. Project, contract và các đối tượng tiếp theo
 
-| State | Ý nghĩa | Chuyển tiếp hợp lệ |
-| --- | --- | --- |
-| `draft` | Hồ sơ đang tạo | `submit_review`, `cancel` |
-| `review` | Chờ phòng có trách nhiệm rà soát | `activate`, `return_draft`, `cancel` |
-| `active` | Được dùng làm hồ sơ chung | `hold`, `complete`, `cancel` |
-| `hold` | Tạm dừng có lý do | `resume`, `cancel` |
-| `complete` | Đã kết thúc | `reopen` chỉ theo quyền đặc biệt và lý do |
-| `cancelled` | Không tiếp tục | Không sửa nghiệp vụ, chỉ đọc lịch sử |
+- Project dự kiến draft → review → active/on_hold → completed/cancelled; chưa triển khai ngoài active flag chuẩn/tp_managed và assignment. Không thêm state chỉ để mở CTR-001.
+- Hợp đồng giữ danh tính ổn định; version hồ sơ/review, approval reference, chữ ký, lifecycle và snapshot revision hiệu lực liên kết rõ.
+- Phụ lục PKH là tổng giá trị mới ở phạm vi hạng mục/đơn vị được cập nhật; thiết kế snapshot đầy đủ phải ghép với phạm vi không đổi. Không cộng như delta.
+- Giao khoán cấp 1 gồm thầu phụ công ty và khoán nội bộ; cấp 2 thuộc khoán nội bộ cha, cùng company/project, không cộng tổng lần hai.
+- Sản lượng, nghiệm thu, hóa đơn, tiền và giữ lại tách riêng. Nghiệm thu cần căn cứ chuyên môn/bên ký; không mặc định mọi biên bản đều phải có một quyết định BASE riêng.
+- Đề nghị thanh toán có workflow review/BASE riêng; thực trả/đối chiếu từ chứng từ tiền được phân bổ, gồm tạm ứng và trả nhiều đợt.
+- Xem ma trận action/guard và quyền chi tiết tại tài liệu BIZ-001, không duy trì thêm bảng trạng thái cạnh tranh ở đây.
 
-Điều kiện `activate`: mã project, company, phòng chủ trì và người/role scope hợp lệ. Reader không được sửa state. Nền hiện tại mới có `tp_managed` và assignment; state workflow này chưa triển khai.
+## 5. Cổng triển khai
 
-## 5. TP Contracts
+| Phạm vi | Đầu vào tối thiểu |
+| --- | --- |
+| CTR-001 đọc | Baseline BIZ-001, typed schema, field/scope/attachment policy, test dữ liệu giả, API DTO |
+| Draft/submit/return trên test | Action matrix, capability, CSRF/version/idempotency/audit và negative tests |
+| Xác minh BASE/hiệu lực pháp lý trên pilot | Văn bản thẩm quyền, phân công record/verify, hồ sơ BASE thực tế, quy tắc ngày và correction liên quan |
+| Allocation/acceptance/finance/import | Quy chế và hồ sơ đại diện đúng domain; mapping/reconcile, owner nghiệp vụ nghiệm thu |
 
-| State | Ý nghĩa | Chuyển tiếp hợp lệ |
-| --- | --- | --- |
-| `draft` | Bản nháp | `submit_review`, `cancel` |
-| `review` | Rà soát nội bộ | `return_draft`, `submit_approval`, `reject` |
-| `approval` | Chờ người có thẩm quyền | `approve`, `reject` |
-| `approved` | Được phép thực hiện | `start_execution`, `cancel` |
-| `executing` | Đang thực hiện | `complete`, `suspend`, `cancel` |
-| `suspended` | Tạm dừng | `resume`, `cancel` |
-| `completed` | Hoàn tất | Chỉ revise/cancel theo chính sách |
-| `rejected` | Bị trả lại | `revise` tạo phiên bản draft mới |
-| `cancelled` | Hủy có lý do | Chỉ đọc lịch sử |
+BIZ-001 hoàn tất phần phân tích, còn nghiệm thu chủ nghiệp vụ và Q1–Q8 theo cổng. Có thể làm read slice trước; không dùng việc còn thiếu hạn mức làm lý do ngừng mọi thiết kế/draft development độc lập.
 
-Điều kiện `submit_approval`: đối tác, project, company, currency, dòng phạm vi, giá trị và hồ sơ bắt buộc hợp lệ. Phụ lục không sửa trực tiếp bản đã duyệt; tạo `tp.contract.revision` với sequence và ngày hiệu lực.
-
-## 6. Giao khoán và nghiệm thu
-
-- Giao khoán bên ngoài khác giao khoán nội bộ; không tạo PO/vendor bill giả cho khoán nội bộ.
-- `parent_allocation_id` bắt buộc cùng company/project; không cho vòng lặp.
-- Cấp 2 không cộng vào tổng cấp 1; mỗi dòng phải có nguồn phạm vi.
-- Nghiệm thu tách khỏi sản lượng, hóa đơn, tiền thu/chi và giữ lại.
-- Acceptance chỉ được chốt khi phạm vi, kỳ, project và bên liên quan hợp lệ; chỉnh sửa sau chốt bằng revise/cancel.
-
-## 7. Cổng triển khai workflow
-
-Trước mỗi workflow phải có:
-
-1. State/transition matrix được chủ nghiệp vụ xác nhận.
-2. Role/capability và scope được xác nhận.
-3. Điều kiện dữ liệu, trường bắt buộc và lý do reject/cancel.
-4. ORM constraint, record rule, action test và API contract.
-5. Test valid/invalid transition, user khác scope, retry và lịch sử.
-6. UI chỉ hiển thị command người dùng có quyền; trạng thái lấy từ backend.
-
-Thứ tự triển khai: `tp_contract` → `tp_allocation` → `tp_settlement`/reporting → staging import → accounting bridge → mở workspace các phòng tiếp theo.
+Thứ tự: tp_contract → tp_allocation → settlement/reporting → staging import → accounting bridge → các phòng tiếp theo theo nhu cầu. Không tạo engine tổng quát hoặc reporting database trước khi có nhu cầu đã kiểm chứng.
 

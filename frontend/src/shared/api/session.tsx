@@ -13,6 +13,7 @@ export function sessionScope(session: SessionBootstrap) {
   return ['v1', session.user.id, session.company.id, session.companies.map((company) => company.id).sort((a, b) => a - b).join(',')];
 }
 
+// Only used when a user explicitly chooses Odoo's MFA/passkey flow.
 export function loginUrl() {
   const redirect = window.location.pathname.startsWith('/work/')
     ? window.location.pathname + window.location.search

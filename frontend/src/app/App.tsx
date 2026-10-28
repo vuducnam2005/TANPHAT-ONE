@@ -1,10 +1,11 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './shell/AppShell';
 import { ProjectsPage, ProjectDetailPage } from '../features/projects';
+import { LoginPage } from '../features/auth';
 import { useSession } from '../shared/api/hooks';
-import { loginUrl, SessionContext } from '../shared/api/session';
+import { SessionContext } from '../shared/api/session';
 import { StatusPanel } from '../shared/ui/StatusPanel';
-import { product, subsystems } from '../shared/config/product';
+import { subsystems } from '../shared/config/product';
 
 export function App() {
   const session = useSession();
@@ -25,14 +26,7 @@ export function App() {
     );
   }
   if (!session.data) {
-    return (
-      <div className="tp-session-page">
-        <div className="tp-login-brand">{product.name} <span>Không gian làm việc</span></div>
-        <StatusPanel title="Đăng nhập để tiếp tục" description="Mở các dự án được phân công và làm việc cùng phòng Kế hoạch Kinh doanh.">
-          <a className="tp-primary-button" href={loginUrl()}>Đăng nhập</a>
-        </StatusPanel>
-      </div>
-    );
+    return <LoginPage />;
   }
 
   return (

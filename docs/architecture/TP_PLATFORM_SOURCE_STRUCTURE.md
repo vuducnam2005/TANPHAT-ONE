@@ -110,7 +110,7 @@ Phụ thuộc `crm` và nền dự án khi liên kết đã được chốt. `cr
 
 Hợp đồng pháp lý bên ngoài là model riêng (`tp.contract`, scope line, amendment), vì không phải hợp đồng nào cũng là `sale.order` hoặc `purchase.order`. Loại hợp đồng ban đầu gồm chủ đầu tư, tổng thầu và thầu phụ. **Giao khoán nội bộ không phải loại hợp đồng pháp lý**; nó nằm ở `tp_allocation` và không tự tạo PO/vendor bill giả.
 
-Phụ lục lưu giá trị, chế độ điều chỉnh, ngày hiệu lực, lý do, người duyệt và chứng từ. Với nguồn Excel đã khảo sát, giá trị cập nhật là số thay thế tổng hợp đồng; không cộng như delta. Nếu sau này hỗ trợ phụ lục điều chỉnh chênh lệch, phải khai báo loại rõ ràng rồi backend quy đổi. Không dùng “dòng dương cuối cùng” làm quy tắc nghiệp vụ chung. Nhiều hợp đồng cùng dự án, đối tác hoặc hạng mục vẫn là các bản ghi riêng.
+Phụ lục lưu giá trị, loại điều chỉnh, ngày ký/hiệu lực, lý do và chứng từ. BIZ-001 xác định giá cập nhật PKH thay thế giá trị ở phạm vi hạng mục/đơn vị được cập nhật; không coi một giá trị hạng mục là tổng hợp đồng hoặc cộng như delta. Đề xuất snapshot revision đầy đủ dựng từ bản trước + thay đổi có provenance; điều kiện hiệu lực/hồi tố cần hồ sơ pháp lý xác nhận. BASE giữ phê duyệt chính thức; reference đúng version/evidence tách khỏi review, chữ ký và hiệu lực. Xem [baseline BIZ-001](TP_KD_WORKFLOW_AND_PERMISSIONS.md). Không dùng “dòng dương cuối cùng” làm quy tắc chung. Nhiều hợp đồng cùng dự án, đối tác/hạng mục vẫn có ID riêng.
 
 ### `tp_allocation`
 
@@ -186,15 +186,15 @@ OpenAPI tại `contracts/openapi/tanphat-v1.yaml` mô tả endpoint, input, DTO,
 Khuyến nghị triển khai cùng origin qua reverse proxy; frontend và backend có thể là hai process/container riêng nhưng browser thấy một hostname HTTPS:
 
 ```text
-/work/      -> static frontend
 /api/v1/    -> custom HTTP JSON routes trong Odoo
-/web/login  -> login/MFA native Odoo
+/work/      -> TANPHAT ONE React login + workspace
+/web/login  -> native Odoo MFA/passkey fallback and admin UI
 /odoo/      -> native admin UI theo quyền
 ```
 
-Proxy tiếp tục chuyển các route native/assets cần thiết sang Odoo; SPA fallback chỉ áp dụng trong `/app/`, không bắt nhầm API hoặc asset. Khi dev, Vite proxy các route cần thiết để kiểm thử cùng cơ chế session; port dev không trở thành kiến trúc production.
+Proxy tiếp tục chuyển các route native/assets cần thiết sang Odoo; SPA fallback chỉ áp dụng trong `/work/`, không bắt nhầm API hoặc asset. Khi dev, Vite proxy các route cần thiết để kiểm thử cùng cơ chế session; port dev không trở thành kiến trúc production.
 
-Browser dùng session Odoo qua HTTPS; login/logout/MFA đi qua cơ chế native. `GET /api/v1/me` trả user, company, capability và session bootstrap/CSRF; response session không được cache công khai. Capability phục vụ hiển thị, quyền vẫn được kiểm lại ở mỗi action. Session cookie của source có HttpOnly; Secure, SameSite, path và proxy headers cần cấu hình/kiểm tra ở môi trường triển khai. Không nhúng service key hoặc bearer token dùng chung vào bundle/localStorage.
+Browser dùng session Odoo qua HTTPS; form login riêng gọi endpoint session native cùng origin, còn MFA/passkey fallback đi qua `/web/login`. `GET /api/v1/me` trả user, company, capability và session bootstrap/CSRF; response session không được cache công khai. Capability phục vụ hiển thị, quyền vẫn được kiểm lại ở mỗi action. Session cookie của source có HttpOnly; Secure, SameSite, path và proxy headers cần cấu hình/kiểm tra ở môi trường triển khai. Không nhúng service key hoặc bearer token dùng chung vào bundle/localStorage.
 
 Custom route chọn `type='http'`, `auth='user'` và response JSON. Cần lớp xử lý lỗi giới hạn trong `/api/v1/` để session hết hạn trả 401 JSON thay vì redirect HTML; kiểm thử các lỗi phát sinh trước khi controller được gọi. Trường hợp bearer server-to-server tách route/scope riêng, khai báo `bearer_scope`; không mở CORS rộng cho SPA.
 

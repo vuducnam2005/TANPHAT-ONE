@@ -2,6 +2,25 @@
 
 Mỗi lượt thay đổi code hoặc quyết định kiến trúc ghi một mục ngắn. Không ghi credential, dữ liệu thật hoặc log chứa bí mật.
 
+## CHG-20261028-005 — BIZ-001: baseline workflow và ma trận quyền Ban Kinh doanh
+
+- Phạm vi: phân tích năm nguồn S01–S05 và cập nhật tài liệu workflow/database/status/roadmap/decision; không sửa model, API, frontend, runtime hoặc import dữ liệu.
+- Đã chốt theo yêu cầu người dùng: BASE là nơi phê duyệt chính thức giai đoạn đầu; TANPHAT ONE quản trị hồ sơ và ghi nhận kết quả; quyền xem tiền mặc định cho người quản trị dự án đúng scope, Trưởng ban, QT-TC và lãnh đạo, hỗ trợ cần cấp riêng; hạn mức ký/duyệt chưa biết nên không đặt giả.
+- Đã làm rõ: review nội bộ, BASE decision/evidence verification, chữ ký/hiệu lực pháp lý, revision snapshot và trạng thái thực hiện là các lớp riêng; contract/production/acceptance/invoice/cash/retention là domain record riêng; khoán cấp 2 không cộng trùng cấp 1; nhãn “GT phải xuất hóa đơn” trong mẫu được map là invoice issued thực tế.
+- Tài liệu: `docs/architecture/TP_KD_WORKFLOW_AND_PERMISSIONS.md`, `docs/architecture/TP_KD_EVIDENCE_AND_ACCEPTANCE.md`; cập nhật `TP_BUSINESS_WORKFLOW.md`, `TP_DATABASE_DESIGN.md`, `TP_PLATFORM_SOURCE_STRUCTURE.md`, `DECISIONS.md`, `ROADMAP.md`, `PROJECT_STATUS.md` và architecture index.
+- Kiểm tra: đọc/đối chiếu source snapshot và hash manifest; hash bản NAS hiện tại vẫn khớp cả 5 source; đọc các range S03/S05 liên quan, xem trang phân công S02; `verify_baseline.py` đạt 27 link tương đối, 26 bảng Markdown nhất quán, 0 cell dữ liệu kế toán thực tế trong bản S05 đọc, 10 phép tính Decimal giả lập; `git diff --check` đạt. Không chạy macro/external link và không chạy bộ ứng dụng vì lượt này chỉ thay tài liệu.
+- Giới hạn: chưa có 2–3 hồ sơ thật đã khử dữ liệu, văn bản hạn mức/bốn mắt/ủy quyền, BASE ID/evidence chuẩn hoặc feed kế toán thực tế; state/capability/ca nghiệm thu là thiết kế, chưa chạy Odoo. Chưa commit/push; giữ nguyên thay đổi login AUTH-001.
+- Next: `CTR-001` read-only contract/revision/line + approval reference, field/attachment security và negative tests bằng dữ liệu giả; thu thập Q1–Q3 trước action ghi/chốt pháp lý.
+
+## CHG-20261028-004 — Giao diện đăng nhập riêng TANPHAT ONE
+
+- Phạm vi: `frontend/src/features/auth`, transport session frontend, visual design, E2E và tài liệu; không sửa Odoo core, model nghiệp vụ hoặc database.
+- Đã thay đổi: `/work/` hiển thị cổng login React hai cột với minh họa cầu dây văng SVG, Be Vietnam Pro, hover/focus, animation vẽ cáp, reduced-motion, responsive mobile, hiện/ẩn mật khẩu, trạng thái pending/error và hướng dẫn hỗ trợ. Form gọi `/web/session/authenticate` same-origin, sau đó đọc `/api/v1/me`; không lưu password/token vào storage. MFA trả `uid: null` được giữ là bước xác thực bổ sung và có link native Odoo với redirect hiện tại.
+- Quyết định: DEC-012. Database login không hardcode production: dev có fallback `tp_tanphat_dev`, production build yêu cầu `VITE_ODOO_DATABASE` khớp dbfilter.
+- Kiểm thử thực chạy: `npm.cmd run typecheck --prefix frontend` đạt; `npm.cmd test --prefix frontend` đạt 10 tests; `VITE_ODOO_DATABASE=tp_tanphat_dev npm.cmd run build --prefix frontend` đạt; `npm.cmd run test:e2e --prefix frontend` đạt 8 tests (login, invalid credential, MFA handoff, gateway error, deep link, responsive, reduced-motion, permission/session regression); `git diff --check` đạt.
+- Giới hạn: build production cần CI/release cung cấp `VITE_ODOO_DATABASE`; MFA code/passkey vẫn do native Odoo xử lý. Chưa đổi logo/branding ở native `/web/login`.
+- Next: quay lại BIZ-001 — đối chiếu 2–3 hồ sơ đại diện và chốt state/role matrix.
+
 ## CHG-20261028-003 — OPS-001: backup và phục hồi dev cô lập
 
 - Phạm vi: script backup/restore, hướng dẫn vận hành và bằng chứng thực chạy; không sửa model/API/frontend hoặc seed dữ liệu vào dev.
