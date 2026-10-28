@@ -71,6 +71,15 @@ Mỗi change batch dùng ID mới `CHG-YYYYMMDD-NNN`; status phải có dòng đ
 - Không cài hook toàn máy, watcher, CI hoặc automation trong lượt này. AI phải thực hiện quy trình; editor/công cụ bỏ qua `AGENTS.md` cũng có thể bỏ qua checker. Khi Git đã ổn, tích hợp lệnh `check` vào quy trình review/CI phù hợp.
 - Nếu đã sửa code trước `start`, ghi lại điều đó trong changelog và kiểm lại diff; không giả vờ có checkpoint trước khi sửa. Khi state chưa tồn tại, lượt thiết lập đầu tiên tạo baseline sau khi kiểm chứng tài liệu/tooling.
 
+### Khi nhiệm vụ chỉ thiết kế nghiệp vụ (BIZ-002)
+
+1. Đọc status/source/checkpoint bằng thao tác đọc; lập bảng đã có–còn thiếu–tài liệu giải quyết–thứ tự. Nếu còn batch code chưa kiểm chứng, giữ checkpoint đó và ghi rõ lệch; không `finish` thay batch để làm checker hết lỗi.
+2. Đối chiếu hash nguồn trước khi tái sử dụng trích xuất; không chạy macro/external link hoặc đưa file nguồn/dữ liệu thật vào Git. Tách quyết định người dùng, quan sát nguồn, đề xuất, chưa đủ căn cứ và runtime đã kiểm.
+3. Hoàn thiện theo bộ [BIZ-002](architecture/TP_BIZ002_DESIGN_PACKAGE.md): bản đồ/RACI → workflow/transition → dữ liệu/quyền → tích hợp/KPI → ca giả lập/câu hỏi/readiness. Mỗi domain thiếu căn cứ ghi owner xác nhận và cổng bị chặn, không tự đặt ngưỡng/thẩm quyền.
+4. Walkthrough normal, sửa sai và ngoại lệ từng quy trình; kiểm scope/field/file, BASE/review/chữ ký/hiệu lực/phát sinh kế toán riêng. Walkthrough không được gọi là UAT hoặc test ứng dụng.
+5. Kiểm link, bảng/fence, tính nhất quán state/nguồn/câu hỏi và `git diff --check`; xác nhận code/runtime không đổi. Không chạy cả bộ ứng dụng cho tài liệu đơn thuần. Checker hiện chỉ hash policy cố định; tài liệu mới phải kiểm nội dung riêng.
+6. Cập nhật PROJECT_STATUS/ROADMAP/DECISIONS/CHANGELOG và workflow chủ trong cùng lượt. Nếu baseline/checkpoint chỉ có tài liệu đã được kiểm thì có thể `finish/check` cho đúng batch tài liệu; không ghi đè state JSON thủ công. Ưu tiên hiện tại là nghiệm thu BIZ-002, người dùng quyết định khi nào tiếp tục code.
+
 ### Khi kết quả không đạt
 
 1. Giữ nguyên thay đổi đang có, đọc lỗi và cập nhật đúng status/changelog hoặc sửa code/test.

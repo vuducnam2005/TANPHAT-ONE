@@ -2,7 +2,7 @@
 
 Ngày thiết kế và triển khai nền: 28/10/2026, Asia/Saigon. Tài liệu ghi ranh giới kiến trúc và lộ trình; các module nghiệp vụ tương lai được phân biệt với nền đã chạy.
 
-**Trạng thái hiện tại:** đã có 5 addon nền, database dev/test, API đọc dự án và frontend React/TypeScript/Vite tại `/work/`. Dashboard cũ nằm trong `frontend/prototype/`. Đã kiểm thử login native, danh sách/chi tiết theo quyền, logout CSRF và session hết hạn qua trình duyệt. Xem [hướng dẫn chạy nền](../../ops/runbooks/LOCAL_DEVELOPMENT.md) và [thiết kế database](TP_DATABASE_DESIGN.md). Hợp đồng/nghiệm thu, import dữ liệu thật và triển khai production vẫn là giai đoạn sau.
+**Trạng thái hiện tại:** đã có 5 addon nền, database dev/test, API đọc dự án và frontend React/TypeScript/Vite tại `/work/`; CTR-001 đã thêm TP Contracts read slice cho hợp đồng/revision/phạm vi/BASE reference/tài liệu với grant tiền theo project. Dashboard cũ nằm trong `frontend/prototype/`. Đã kiểm thử login native, danh sách/chi tiết theo quyền, logout CSRF và session hết hạn qua trình duyệt. Xem [hướng dẫn chạy nền](../../ops/runbooks/LOCAL_DEVELOPMENT.md), [thiết kế database](TP_DATABASE_DESIGN.md) và [bộ thiết kế BIZ-002](TP_BIZ002_DESIGN_PACKAGE.md). Action ghi hợp đồng/nghiệm thu, import dữ liệu thật và triển khai production vẫn là giai đoạn sau.
 
 ## 1. Hướng đã xác nhận và kiến trúc đề xuất
 
@@ -303,7 +303,7 @@ Khi có runtime, CI tập trung vào cài/upgrade addon, security/transaction te
 
 ## 10. Phạm vi lượt thiết kế này
 
-Lượt dựng nền triển khai tổ chức/hạng mục/dự án, phân công và API đọc, kèm React workspace nối Odoo thật trên database dev/test. CTR-001 sau đó thêm `tp_contract` read slice (hợp đồng/revision/dòng phạm vi/BASE/tài liệu, grant tiền theo project) với dữ liệu giả lập. Giao khoán, nghiệm thu, reporting và import trong tài liệu vẫn là thiết kế cho giai đoạn tiếp theo; chưa có dữ liệu nghiệp vụ thật. Chưa triển khai production hoặc quy trình backup/restore.
+Lượt dựng nền triển khai tổ chức/hạng mục/dự án, phân công và API đọc, kèm React workspace nối Odoo thật trên database dev/test. CTR-001 sau đó thêm `tp_contract` read slice (hợp đồng/revision/dòng phạm vi/BASE/tài liệu, grant tiền theo project) với dữ liệu giả lập. Giao khoán, nghiệm thu, reporting và import trong tài liệu vẫn là thiết kế cho giai đoạn tiếp theo; chưa có dữ liệu nghiệp vụ thật. OPS-001 đã diễn tập backup/restore local theo status; chưa triển khai production/backup ngoài máy. BIZ-002 hiện ưu tiên review thiết kế toàn công ty trước code, không tự thực hiện tiếp giai đoạn 2–5 từ lộ trình mục 8.
 
 ## 11. Cơ sở kiểm tra và phần cần xác minh khi triển khai
 

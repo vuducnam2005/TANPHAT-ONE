@@ -87,3 +87,5 @@ Ba hồ sơ giả lập đại diện được diễn giải để chuyển thà
 - Chưa test vì chưa có action ghi: sửa giảm/về 0 của phụ lục, hủy draft, record/verify BASE, make_effective, idempotency, audit break-glass; C2–C4, C6 và P-B/P-C thuộc CTR-002/ALC/STL.
 - Khi thu thập hồ sơ đại diện, ghi source hash, che tên/số tiền nếu đưa vào test, và cập nhật câu hỏi Q1–Q8 trong workflow chính.
 
+Lượt CHG-20261028-013 kiểm lại năm hash **bản sao cục bộ** và inventory tài liệu được cung cấp; chưa nhận thêm bundle hợp đồng thực tế khử dữ liệu đủ chuỗi, không xác nhận hash trực tiếp trên NAS trong lượt này. [Readiness 7.1.2](TP_BIZ002_ACCEPTANCE_AND_READINESS.md#712-inventory-hồ-sơ-còn-cần-và-ba-bundle-mô-phỏng-sim-p1) giữ danh sách hồ sơ còn cần, ba walkthrough SIM-P1 có từng chặng/guard/evidence/gap và nhật ký riêng. Không đưa hồ sơ thật/hash giả vào các ca mô phỏng, không nhận SIM-P1 là nghiệm thu hoặc test action.
+

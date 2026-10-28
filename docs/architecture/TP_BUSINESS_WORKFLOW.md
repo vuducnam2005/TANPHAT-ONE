@@ -1,11 +1,12 @@
 # TANPHAT ONE — Workflow nghiệp vụ và quy tắc chuyển trạng thái
 
-Đây là blueprint trước khi tạo model/action, không phải danh sách chức năng đã triển khai. Nền hiện tại kiểm chứng đọc project theo quyền; workflow hợp đồng/giao khoán chưa có runtime.
+Đây là blueprint cho workflow/action mới, không phải danh sách chức năng đã triển khai. Nền và CTR-001 đã kiểm chứng đọc project/hợp đồng theo quyền; action ghi hợp đồng và workflow giao khoán chưa có runtime.
 
 Baseline chi tiết hiện hành cho Ban Kinh doanh/Kế hoạch:
 
 - [BIZ-001: workflow, BASE, state, ma trận quyền và cổng triển khai](TP_KD_WORKFLOW_AND_PERMISSIONS.md).
 - [Bằng chứng nguồn và ca nghiệm thu giả lập](TP_KD_EVIDENCE_AND_ACCEPTANCE.md).
+- [BIZ-002 — bộ thiết kế nghiệp vụ, bản đồ A–M, workflow, dữ liệu/quyền, tích hợp và readiness](TP_BIZ002_DESIGN_PACKAGE.md).
 
 Khi code phần KD/Contracts, đọc hai tài liệu này cùng database design. Các đề xuất tuyến tính cũ về hợp đồng bị thay bằng baseline BIZ-001; không lấy chữ approved làm bằng chứng đã ký/có hiệu lực.
 
@@ -72,5 +73,5 @@ ACL/group rules Odoo có tính cộng quyền, global rules giới hạn giao nh
 
 BIZ-001 hoàn tất phần phân tích, còn nghiệm thu chủ nghiệp vụ và Q1–Q8 theo cổng. Có thể làm read slice trước; không dùng việc còn thiếu hạn mức làm lý do ngừng mọi thiết kế/draft development độc lập.
 
-Thứ tự: tp_contract → tp_allocation → settlement/reporting → staging import → accounting bridge → các phòng tiếp theo theo nhu cầu. Không tạo engine tổng quát hoặc reporting database trước khi có nhu cầu đã kiểm chứng.
+Ưu tiên hiện tại: review BIZ-002 → hồ sơ đại diện/câu hỏi theo slice → người dùng quyết định chuyển code. Thứ tự triển khai sau đó là đề xuất trong [readiness BIZ-002](TP_BIZ002_ACCEPTANCE_AND_READINESS.md); không tự tiếp tục CTR-002 từ next action cũ. Không tạo engine tổng quát hoặc reporting database trước khi có nhu cầu đã kiểm chứng.
 

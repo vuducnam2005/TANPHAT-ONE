@@ -44,7 +44,7 @@ erDiagram
 
 Không dùng tên hiển thị làm khóa. ID nội bộ là khóa quan hệ; `tp_code` là mã nghiệp vụ, không phải khóa chính để join/import. Mã ngoài được mapping có provenance khi xây `tp_import`. Company, phòng ban và assignment là các chiều khác nhau, không được đồng nhất.
 
-## 3. Mô hình nghiệp vụ tiếp theo (chưa tạo bảng)
+## 3. Mô hình tổng thể (contract read đã có, các domain tiếp theo chưa tạo bảng)
 
 ```text
 project.project
@@ -99,7 +99,7 @@ Bốn dòng đầu (hợp đồng, revision, dòng phạm vi, approval reference
 | `tp.contract.revision` (đã có) | contract, sequence (unique theo contract), revision_kind original/amendment/correction, previous_revision, reference, signed_date, effective_date, recorded_at, review_state, signature_status, signature_authority_status, effectivity_status, legacy_unverified | Snapshot bản gốc/phụ lục, review và căn cứ hiệu lực; ngày ký khác ngày nhập/ngày hiệu lực; trùng ngày hiệu lực được báo, không tự chọn |
 | `tp.contract.line` (đã có) | revision, scope_key, name, work_item, change_kind original/unchanged/amended/added, previous_line | Phạm vi của một phiên bản; provenance tới dòng bản trước. Khối lượng/đơn giá chưa có trong read slice |
 | `tp.contract.line.amount` (đã có) | line, project, company, currency, amount_state confirmed/unconfirmed, amount, tax_basis | Giá trị dòng nằm ở model riêng, chỉ đọc khi có grant `financial_read` của project; unconfirmed lưu không có amount |
-| `tp.approval.reference` (đã có) | revision/contract/project/company, purpose, reference_kind, base_reference, source_url, decision, decided_by_name/decided_at, evidence_sha256, submitted_document_sha256, recorded_by/at, verification_state declared/verified, verified_by/at, authority_status/source, previous_reference | Kết quả BASE theo đúng hồ sơ; khai báo khác xác minh; không thay bản ký |
+| `tp.approval.reference` (đã có) | revision/contract/project/company, purpose, reference_kind, base_reference, source_url, decision, decided_by_name/decided_at, evidence_sha256, submitted_document_sha256, recorded_by/at, verification_state `pending/verified/disputed`, verified_by/at, authority_status/source, previous_reference | Kết quả BASE theo đúng hồ sơ; kết quả khai báo khác xác minh; không thay bản ký |
 | `tp.approval.reference.amount` (đã có) | reference, project, company, currency, amount_state, amount, tax_basis | Giá trị được duyệt trên BASE, cùng policy tiền với dòng hợp đồng |
 | `tp.contract.document` (đã có) | contract, revision, project, company, document_kind, confidentiality general/financial, file (attachment) | Tệp hồ sơ; hợp đồng ký/phụ lục/evidence BASE luôn là financial |
 | `tp.project.grant` (đã có, `tp_project`) | user, project, company, capability `financial_read`, reason, granted_by, date_end, active | Quyền xem tiền theo từng project; superuser cấp khi Q2 chưa chốt |
@@ -129,3 +129,5 @@ Trạng thái CTR-001: mục 1 đạt cho dữ liệu giả lập (hồ sơ th�
 6. Một thao tác chốt chạy trong một transaction Odoo. Thêm kiểm soát cập nhật đồng thời và idempotency cho API ghi trước khi dùng cho chứng từ thật.
 
 **Thứ tự triển khai:** `tp_contract` → `tp_allocation` → `tp_settlement`/reporting → staging import → accounting bridge → workspace các phòng tiếp theo. Schema được tạo/nâng cấp bằng addon và migration có version, không bằng script SQL phát sinh ngoài ORM.
+
+**Cổng BIZ-002 hiện hành:** [dictionary/ERD/ma trận truy cập](TP_DATA_DICTIONARY_AND_ACCESS_MATRIX.md) bổ sung khái niệm A–M và phân biệt field runtime với proposed/unconfirmed; [readiness](TP_BIZ002_ACCEPTANCE_AND_READINESS.md) xác định câu hỏi trước từng slice. Thiết kế database này giữ schema/constraint thực tế; không tạo bảng từ ERD hoặc mở tiếp code cho đến khi người dùng quyết định chuyển giai đoạn. Q4/Q6/Q8 còn chặn tính/import số tài chính chính thức.

@@ -2,12 +2,12 @@
 
 **Cập nhật:** 28/10/2026 (Asia/Saigon)  
 **Thư mục:** `C:\TANPHAT ONE`  
-**Mục tiêu hiện tại:** xây nền tảng quản trị doanh nghiệp theo module Odoo + web frontend riêng, bắt đầu từ phòng Kế hoạch Kinh doanh.
-Last change: `CHG-20261028-008`
+**Mục tiêu hiện tại:** BIZ-002 — chuẩn bị và nghiệm thu thiết kế nghiệp vụ toàn công ty trước khi tiếp tục code; bắt đầu chi tiết từ Kế hoạch Kinh doanh. Odoo + React/TypeScript riêng giữ nguyên.
+Last change: `CHG-20261028-013`
 
-**Phase:** TP Contracts read slice → nghiệm thu nghiệp vụ và draft trên test.
-**Task vừa hoàn tất:** CTR-001 — TP Contracts đọc hợp đồng, revision, dòng phạm vi, kết quả BASE và tài liệu từ Odoo đến React; quyền tiền theo grant từng project được kiểm ở ORM/RPC, API và tệp; đã kiểm chứng trên dev với dữ liệu giả lập.
-**Next task:** nghiệm thu BIZ-001/CTR-001 với chủ nghiệp vụ và chốt Q2 (người cấp grant); sau đó CTR-002 draft/submit/return trên test. Chưa có action ghi/duyệt/ký/xác nhận hiệu lực.
+**Phase:** thiết kế và nghiệm thu nghiệp vụ, chưa chuyển sang phát triển ứng dụng.
+**Task hiện tại:** BIZ-002 — đã lập bộ thiết kế A–M, RACI, workflow, dữ liệu/quyền, tích hợp/KPI, kịch bản giả lập và checklist theo slice; đây là baseline đề xuất để công ty review, chưa phải quy chế/UAT được duyệt. [Điểm vào bộ tài liệu](architecture/TP_BIZ002_DESIGN_PACKAGE.md).
+**Next task:** tiếp tục Q2 theo ma trận đề xuất Q2-P1, thu thập vai trò/căn cứ công ty và bundle thực tế khử dữ liệu; sau đó điền nhật ký 7.1. SIM-P1 đã chuẩn bị ba bundle mô phỏng và đặc tả CTR-002a-P1 để review, không phải UAT/test. Người dùng quyết định khi nào chuyển sang code; không cần đóng cả Q1–Q14 cùng lúc. CTR-001 read slice giữ nguyên; CTR-002 và mở rộng CTR-001 chờ chuyển giai đoạn, chưa có action ghi/duyệt/ký/xác nhận hiệu lực.
 
 ## Trạng thái tổng quan
 
@@ -22,6 +22,7 @@ Last change: `CHG-20261028-008`
 | TP Contracts read slice | Đã kiểm chứng dev | CTR-001: contract/revision/line/approval reference/document, grant `financial_read` theo project, 4 API GET, 3 màn hình React; chỉ đọc, dữ liệu giả lập |
 | Giao khoán/nghiệm thu/thanh toán | Chưa triển khai | Đã có thiết kế database; ghi/duyệt hợp đồng chưa mở |
 | Workflow và ma trận quyền KD | Baseline phân tích hoàn tất | BIZ-001: BASE phê duyệt chính thức, tiền theo scope, hạn mức chưa biết; model/state/capability mới là đề xuất |
+| Bộ thiết kế nghiệp vụ toàn công ty | BIZ-002 Q2-P1/SIM-P1/CTR-002a-P1; chờ công ty review | Ma trận 11 hành động Q2; inventory thiếu bundle thực tế; 3 bundle mô phỏng có đường bình thường/trả-sửa-gửi lại/correction-bàn giao; action/version/actor/test gate CTR-002a. Không triển khai chức năng hoặc chốt quy chế |
 | Production | Chưa triển khai | Chưa có HTTPS, backup production, staging migration hoặc dữ liệu thật |
 | Git history | Đã push | `main` và `origin/main` đồng bộ đến `00d4ddc7`: `395be562` (AUTH-001 + BIZ-001), `807018b9` (CTR-001), `00d4ddc7` (CHG-20261028-007). Commit tài liệu CHG-20261028-008 push trong cùng lượt; hai ID foundation cũ không tìm thấy |
 | AI handoff workflow | Đã thiết lập | `AGENTS.md`, status, changelog, business workflow và local checker |
@@ -47,6 +48,24 @@ Last change: `CHG-20261028-008`
 - Dev seed có ba hợp đồng giả lập (`HD-DEV-001/002/003`) và grant dev cho admin trên DEV-001; không có hồ sơ doanh nghiệp thật.
 
 ## Kiểm chứng gần nhất
+
+Lượt `CHG-20261028-013` chỉ phân tích/tài liệu: baseline giữ 18 đường dẫn đã sửa/chưa tracked từ các lượt trước tại HEAD `0c3083fb`, không checkpoint cũ, checker CHG-012 đạt; Odoo/PostgreSQL đều dừng. Đối chiếu tĩnh source xác nhận API hợp đồng chỉ có GET và ACL chỉ đọc, chưa có action ghi, aggregate version, snapshot submit, idempotency hay audit transition. Chưa phát hiện sai lệch runtime mới ngoài các giới hạn đã ghi; không setup/upgrade/seed hoặc chạy lại app tests.
+
+Đã lập Q2-P1 (11 action), SIM-P1 (3 bundle/19 chặng mô phỏng), CTR-002a-P1 (6 action + actor fixture + CSRF/version/idempotency/audit/outbox + ca kiểm). Phản hồi người dùng chỉ giao tiếp tục phân tích, không chốt quyền công ty; nhật ký 7.1 đều `proposed`, business acceptance pending. Kiểm tài liệu bằng `.local/biz-002/review_q2.py`: 19 tài liệu, 134 link tương đối, 104 bảng nhất quán, 9 liên kết heading, 6 dòng log proposed, 19 chặng SIM và 10 phép tính Decimal giả lập đạt; 5 hash bản sao S01–S05 khớp registry, không xác minh NAS hiện hành. Maintained code 108 file không đổi so checkpoint; `git diff --check` đạt. Báo cáo `.local/biz-002/q2_review_validation.json` ngoài Git; handoff cuối lượt theo CHG-013, không dùng checker hoặc mô phỏng làm nghiệm thu nghiệp vụ.
+
+Lượt `CHG-20261028-012` rà soát lại toàn bộ handoff BIZ-002 bằng validator riêng: 19 tài liệu, 121 liên kết tương đối, 95 bảng có header/fence đúng, 13 cặp walkthrough normal/rejected, 13 ca correction A–M và Q1–Q14 đều có trong readiness; hash bản sao nguồn S01–S05 trong `.local/biz-001` vẫn khớp registry. Lượt này không xác nhận lại hash trực tiếp trên NAS; báo cáo nói rõ giới hạn đó tại `.local/biz-002/review_validation.json` (ngoài Git). Maintained code vẫn 108 file không đổi; business acceptance vẫn pending và các dòng nhật ký còn `open`. Đây là kiểm tra tài liệu/handoff, không phải UAT.
+
+Lượt `CHG-20261028-011` theo yêu cầu kiểm tra source và bước tiếp theo: rà soát read slice CTR-001, model/quyền/API/test và BIZ-002; chưa phát hiện lỗi chặn trong phạm vi đọc hiện tại. Kiểm tra thực chạy: `npm.cmd run typecheck --prefix frontend` đạt; `npm.cmd test --prefix frontend` đạt 14 tests; Ruff trên `custom_addons`, `scripts/dev.py`, `scripts/check_contract.py` đạt; `dev.ps1 test` chạy trên DB tách biệt `tp_tanphat_test`, summary **0 failed, 0 error(s) of 53 tests**. Vẫn có INFO filestore GC `WinError 5`; không coi test đạt là đã xử lý ổn định filestore production. Không chạy lại build/E2E trong lượt này; các kết quả đó ở CHG-006 là lịch sử. Odoo/PostgreSQL ban đầu đều dừng; test có khởi động PostgreSQL và đã `dev.ps1 stop`/`status` xác nhận cả hai dừng lại sau kiểm tra. Không upgrade/seed dev hoặc đổi credential.
+
+Lượt CHG-011 bổ sung nhật ký kết luận thực tế theo Q/slice/bundle trong [readiness mục 7.1](architecture/TP_BIZ002_ACCEPTANCE_AND_READINESS.md): RACI/người xác nhận bằng mã nội bộ, scope/môi trường, trạng thái, bằng chứng/hash, ngày/phiên bản, gap và bước tiếp theo; khi đó tất cả dòng nghiệp vụ vẫn `open`. Làm rõ thứ tự Q2 → walkthrough 2–3 bundle → ghi kết luận/gap → người dùng quyết định chuyển code → CTR-002a test. Phân biệt technical check với business acceptance và quyền mở code; phần giao khoán/nghiệm thu/thanh toán chưa runtime chỉ review tài liệu. Code ứng dụng không đổi; kiểm tài liệu và handoff cuối lượt ghi tại CHG-011.
+
+Lượt `CHG-20261028-009` (BIZ-002) chỉ tài liệu. Baseline trước sửa: Git sạch tại `0c3083fb` (CHG-008), không checkpoint cũ; `ai_workflow.py check` đạt; `dev.ps1 status` xác nhận Odoo/PostgreSQL dev đang lắng nghe. Không có draft code `tp_contract`/`tp.project.grant` chưa bàn giao; không đóng thay batch code nào. Đã start checkpoint tài liệu riêng. Hash 5 nguồn NAS + bản sao khớp registry; tái sử dụng trích xuất BIZ-001, không chạy macro/external link hoặc đưa dữ liệu thật vào Git.
+
+BIZ-002 bổ sung 7 tài liệu: bản đồ A–M, workflow A–E/F–M, dictionary/ERD/quyền, tích hợp/KPI/màn hình/API thiết kế, kịch bản/readiness và chỉ mục/gap analysis. Sửa mô tả cũ nói hợp đồng chưa có runtime và `verification_state declared/verified` thành read slice đã có và `pending/verified/disputed` đúng code. Q1–Q8 giữ nguyên; Q9–Q14 bổ sung project/task, kỹ thuật/KCS, HR/hồ sơ, import, KPI và vận hành. Kết quả kiểm tài liệu lượt này được ghi tại CHANGELOG CHG-009; không chạy bộ ứng dụng vì không đổi code, schema hoặc runtime, không nhận walkthrough giả lập là UAT/Odoo tests.
+
+Lượt `CHG-20261028-010` tiếp tục chỉ tài liệu: đồng bộ enum/state giữa workflow và dictionary (task return, payment request, acceptance signature, lifecycle A–M), thống nhất unique key allocation theo company, bổ sung đường returned → revision → resubmit/handover/revoke, tách BASE rejected khỏi verification disputed, và ghi các công thức kiểm soát Decimal/known-at/aging/advance/retention/phân bổ nhiều payment ở mức đề xuất. Không đổi source/runtime; chỉ cập nhật sau rà soát consistency, chưa chạy application tests.
+
+Kiểm cuối CHG-010: 19 tài liệu duy nhất, 119 link/94 bảng có header và fence đúng; đủ walkthrough normal/rejected + correction A–M và Q1–Q14; 10 phép tính Decimal bổ sung đạt. Validator BIZ-001 riêng đạt 5 source hash, 48 link/28 bảng, 10 Decimal checks; 108 file maintained code so checkpoint không đổi. `git diff --check` đạt; handoff `finish/check` theo CHG-010. Báo cáo kiểm tài liệu ở `.local/biz-002/validation.json` ngoài Git; chưa UAT công ty hoặc chạy Odoo/frontend tests trong lượt tài liệu này.
 
 Lượt `CHG-20261028-008` chỉ đổi tài liệu: thêm mục 4.4 trong [workflow KD](architecture/TP_KD_WORKFLOW_AND_PERMISSIONS.md) ánh xạ tên trạng thái nghiệp vụ sang field/giá trị trong code, đối chiếu trực tiếp với model `tp_contract` và DTO API; ghi nhận đã push `00d4ddc7`. Không chạy lại test ứng dụng vì không đổi code.
 
@@ -100,9 +119,9 @@ npm.cmd run test:e2e --prefix frontend
 
 ## Next action bắt buộc
 
-1. **Nghiệm thu BIZ-001/CTR-001:** cho chủ nghiệp vụ xem read slice bằng dữ liệu giả lập; bổ sung 2–3 bộ hồ sơ khử dữ liệu có phụ lục, khoán cấp 2 và correction/void. Chốt Q2: ai cấp/thu hồi grant `financial_read` theo project và ai record/verify BASE. Trước khi có câu trả lời, grant chỉ do superuser tạo; không tự gán cho Trưởng ban/QT-TC/lãnh đạo.
-2. **CTR-002:** phát triển draft/submit/return hợp đồng trên test (capability, CSRF, version, idempotency, audit, negative tests). Chưa mở record/verify BASE, ký hoặc xác nhận hiệu lực pháp lý khi Q1–Q3 còn mở. Dùng đúng field/giá trị ở mục 4.4 của workflow KD; trước khi viết action, chốt transition hủy revision (`review_state = cancelled`: ai hủy, lý do).
-3. **Sau Q2:** màn hình/API quản trị grant có audit; trước đó không mở API ghi grant. **PRJ-002** và các task còn lại theo [roadmap](ROADMAP.md).
+1. **Bước kế tiếp cụ thể — Q2-A:** chủ nghiệp vụ KD/chủ nguồn BASE review 5 action hồ sơ/BASE trong Q2-P1, cung cấp vai trò theo scope và căn cứ phân công; ghi accepted/rejected/gap riêng từng nội dung vào [nhật ký readiness 7.1](architecture/TP_BIZ002_ACCEPTANCE_AND_READINESS.md). Xong khi có người xác nhận được ủy quyền, phạm vi, bằng chứng, ngày/phiên bản; không cần đóng toàn Q1–Q14. Q2-B quyền/grant/bàn giao tiếp nhận theo nhóm sau, không gán quyền người thật từ chức danh.
+2. **Đối chiếu thực tế thay SIM-P1:** theo danh sách 7.1.2, KD-OWNER tập hợp B01/B02 và HR/owner quyền tập hợp B03 khử dữ liệu; đi từng chặng contract→phụ lục→khoán→NT→request→chứng từ nếu có căn cứ, ghi thiếu nếu chưa có. Chưa bundle thực tế đủ điều kiện; 3 bundle mô phỏng/19 chặng hiện không thay UAT. F/G/J/K/M vẫn chờ chủ chuyên môn; khi chỉ nói “tiếp tục”, tiếp tục review/gap, không mở module/action.
+3. **Chỉ sau yêu cầu chuyển giai đoạn rõ của người dùng:** CTR-002a-P1 tại readiness 7.1.3 là đầu vào phát triển thử test giả lập; thực thi snapshot S1/S2 riêng với revision pháp lý, guard backend/CSRF/version/idempotency/audit/outbox và test hợp lệ/sai quyền/sai state/stale/retry. Không BASE/legal/payment/cancel/grant admin; Q2 trước người dùng thật/pilot, Q1–Q4/Q8 theo action phụ thuộc. Không mở đồng loạt các slice.
 
 ## Không được làm ở bước hiện tại
 
@@ -113,6 +132,16 @@ npm.cmd run test:e2e --prefix frontend
 - Không triển khai production từ database dev.
 
 ## Blocker/rủi ro
+
+**BIZ-002:** hoàn tất baseline tài liệu không có nghĩa công ty chốt toàn bộ quy trình. Q1–Q14 có đầu mối theo vai trò, chưa có tên người chịu trách nhiệm được bổ nhiệm hoặc văn bản xác nhận. Q2 chặn pilot cấp quyền/ghi; Q1/Q3 chặn pháp lý/evidence; Q4/Q6/Q8 chặn số tài chính chính thức; Q9–Q14 chặn các slice mở rộng/vận hành tương ứng.
+
+Lượt CHG-013 giữ Q2 ở `proposed/open`: phản hồi của người dùng cho phép tiếp tục phân tích nhưng chưa bổ nhiệm vai trò, chưa xác nhận căn cứ ủy quyền hoặc quy tắc cùng/khác người. `TP_BIZ002_ACCEPTANCE_AND_READINESS.md` mục 7.1 ghi Q2-A/Q2-B, SIM-P1 B01–B03 và CTR-002a-P1; không có bundle thực tế khử dữ liệu đủ chuỗi trong inventory lượt này. Đây là gap đầu vào, không phải bằng chứng công ty không có hồ sơ.
+
+CTR-002a-P1 hiện đủ làm tài liệu chuẩn bị cho development test sau khi người dùng mở giai đoạn: create/edit draft, submit/return/rework/resubmit, actor fixture, scope/capability, version/snapshot, CSRF, idempotency, transaction/audit/outbox và ca negative/concurrent/retry. Chưa code, chưa chạy test action ghi, chưa mở grant admin/BASE/legal/payment/pilot.
+
+**Sai lệch policy mục tiêu so với runtime đọc hiện có:** grant có reason/date_end/active/granted_by nhưng chưa có date_start/revoked_by/at/reason, delegation hay audit action riêng; superuser có thể unlink grant, không phải ledger bất biến. `financial.export` chưa là capability runtime: export group chuẩn + grant đọc có thể export trong scope. DTO metadata BASE vẫn trả provenance/decision_reason/authority_source/tên người quyết định/hash cho project reader; text tự do chưa quét tiền. BIZ-002 yêu cầu review allowlist/redaction/field policy và audit trước pilot; không sửa code hoặc tự nhận các đề xuất đã được enforce.
+
+Checker dùng danh sách policy cố định; các tài liệu BIZ-002 mới được kiểm riêng link/bảng/bao phủ/nội dung, không tự hash mọi Markdown liên kết. `finish/check` chỉ chứng minh maintained code/handoff trong phạm vi checker, không thay kiểm thiết kế hoặc chấp thuận công ty. Không commit/push trong lượt này.
 
 Git metadata từng bị tách trong lần đổi thư mục trước. Ghi chú phục hồi cũ trong `.local/git-recovery/STATUS.txt` mô tả thời điểm chỉ có `ea975fb`; không dùng ghi chú đó thay cho trạng thái kiểm chứng hiện tại.
 
