@@ -1,0 +1,9 @@
+id,name,model_id,group_id/id,operation,domain
+project_platform_reader,Platform project reader,project.project,tp_core.group_user,r,"[('tp_managed', '=', True)]"
+project_platform_scope,Managed project read scope,project.project,,r,"[] if user.has_group('tp_core.group_manager') else ['|', ('tp_managed', '=', False), ('tp_assignment_ids', 'any', [('user_id', '=', user.id), ('active', '=', True)])]"
+project_platform_write_scope,Managed project write scope,project.project,,cud,"[] if user.has_group('tp_core.group_manager') else [('tp_managed', '=', False)]"
+task_platform_scope,Managed task read scope,project.task,,r,"['|', ('project_id.tp_managed', '=', False), ('project_id', 'access', 'read')]"
+task_platform_write_scope,Managed task write scope,project.task,,cud,"[] if user.has_group('tp_core.group_manager') else [('project_id.tp_managed', '=', False)]"
+assignment_reader,Assignment reader,tp.project.assignment,tp_core.group_user,r,"[('user_id', '=', user.id)]"
+assignment_manager,Assignment manager,tp.project.assignment,tp_core.group_manager,crud,
+assignment_company,Assignment company restriction,tp.project.assignment,,crud,"[('company_id', 'in', company_ids)]"

@@ -1,0 +1,4 @@
+id,name,model_id,group_id/id,operation,domain
+work_item_reader,Work item reader,tp.work.item,tp_core.group_user,r,
+work_item_manager,Work item manager,tp.work.item,tp_core.group_manager,crud,
+work_item_company,Work item company restriction,tp.work.item,,crud,"[('company_id', 'in', company_ids)]"

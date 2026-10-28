@@ -1,0 +1,17 @@
+[options]
+; Copy/generate into .local/odoo.conf; never put actual secrets in this file.
+addons_path = addons,custom_addons
+data_dir = .local/odoo
+db_host = 127.0.0.1
+db_port = 55432
+db_user = tp_odoo
+db_password = REPLACE_LOCALLY
+db_name = tp_tanphat_dev
+dbfilter = ^tp_tanphat_dev$
+list_db = False
+admin_passwd = REPLACE_LOCALLY
+http_interface = 127.0.0.1
+http_port = 18069
+workers = 0
+max_cron_threads = 0
+proxy_mode = False

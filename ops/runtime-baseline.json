@@ -1,0 +1,7 @@
+{
+  "python": "3.12.6",
+  "postgres": "postgres (PostgreSQL) 18.1",
+  "odoo_series": "20.0",
+  "upstream_commit": "f03f160f13cc86364161f79182ba18fc19a134ed",
+  "odoo_tree": "3e4bc9a2f58b2a09c5dbc90f69e2a46ac44af0cb"
+}

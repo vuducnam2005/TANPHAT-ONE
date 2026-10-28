@@ -1,0 +1,2 @@
+id,name,model_id,group_id/id,operation,domain
+department_platform_manager,Platform department management,hr.department,tp_core.group_manager,crud,

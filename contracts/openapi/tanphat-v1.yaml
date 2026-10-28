@@ -1,0 +1,151 @@
+openapi: 3.0.3
+info:
+  title: TANPHAT ONE API
+  version: 1.0.0
+  description: Read-only project foundation. Browser uses the native Odoo session on the same origin.
+servers:
+  - url: /
+security:
+  - OdooSession: []
+paths:
+  /api/v1/me:
+    get:
+      operationId: getCurrentSession
+      responses:
+        '200':
+          description: Authenticated session bootstrap. Must not be cached.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    required: [user, company, companies, csrf_token, api_version]
+                    properties:
+                      user: { $ref: '#/components/schemas/NameRef' }
+                      company: { $ref: '#/components/schemas/NameRef' }
+                      companies:
+                        type: array
+                        items: { $ref: '#/components/schemas/NameRef' }
+                      csrf_token: { type: string, minLength: 1 }
+                      api_version: { type: string, enum: ['1'] }
+                  meta: { $ref: '#/components/schemas/Meta' }
+        '401': { $ref: '#/components/responses/ApiError' }
+  /api/v1/projects:
+    get:
+      operationId: listProjects
+      description: Returns only active managed projects visible to the current platform user and active companies.
+      parameters:
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - { in: query, name: offset, schema: { type: integer, minimum: 0, maximum: 10000, default: 0 } }
+        - { in: query, name: q, schema: { type: string, maxLength: 100 } }
+      responses:
+        '200':
+          description: Permission-scoped page of projects.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Project' }
+                  meta:
+                    allOf:
+                      - { $ref: '#/components/schemas/Meta' }
+                      - type: object
+                        required: [pagination]
+                        properties:
+                          pagination:
+                            type: object
+                            required: [limit, offset, has_more]
+                            properties:
+                              limit: { type: integer, minimum: 1, maximum: 100 }
+                              offset: { type: integer, minimum: 0, maximum: 10000 }
+                              has_more: { type: boolean }
+        '400': { $ref: '#/components/responses/ApiError' }
+        '401': { $ref: '#/components/responses/ApiError' }
+        '403': { $ref: '#/components/responses/ApiError' }
+  /api/v1/projects/{project_id}:
+    get:
+      operationId: getProject
+      description: Invisible and nonexistent projects both return 404. Unknown query parameters are rejected.
+      parameters:
+        - { in: path, name: project_id, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200':
+          description: Project detail DTO.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data: { $ref: '#/components/schemas/Project' }
+                  meta: { $ref: '#/components/schemas/Meta' }
+        '400': { $ref: '#/components/responses/ApiError' }
+        '401': { $ref: '#/components/responses/ApiError' }
+        '403': { $ref: '#/components/responses/ApiError' }
+        '404': { $ref: '#/components/responses/ApiError' }
+components:
+  securitySchemes:
+    OdooSession:
+      type: apiKey
+      in: cookie
+      name: session_id
+      description: Native Odoo login/MFA. No shared browser API key. Write endpoints will require CSRF and are not implemented yet.
+  schemas:
+    NameRef:
+      type: object
+      required: [id, name]
+      additionalProperties: false
+      properties:
+        id: { type: integer, minimum: 1 }
+        name: { type: string }
+    Meta:
+      type: object
+      required: [request_id]
+      properties:
+        request_id: { type: string, format: uuid }
+    Project:
+      type: object
+      required: [id, code, name, active, company, department, customer, updated_at]
+      additionalProperties: false
+      properties:
+        id: { type: integer, minimum: 1 }
+        code: { type: string, minLength: 1 }
+        name: { type: string }
+        active: { type: boolean }
+        company: { $ref: '#/components/schemas/NameRef' }
+        department: { $ref: '#/components/schemas/NullableNameRef' }
+        customer: { $ref: '#/components/schemas/NullableNameRef' }
+        updated_at: { type: string, format: date-time }
+    NullableNameRef:
+      type: object
+      nullable: true
+      required: [id, name]
+      additionalProperties: false
+      properties:
+        id: { type: integer, minimum: 1 }
+        name: { type: string }
+    ErrorEnvelope:
+      type: object
+      required: [error, meta]
+      properties:
+        error:
+          type: object
+          required: [code, message, details]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { nullable: true }
+        meta: { $ref: '#/components/schemas/Meta' }
+  responses:
+    ApiError:
+      description: Structured error with request ID. No HTML redirect or traceback in API responses.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }

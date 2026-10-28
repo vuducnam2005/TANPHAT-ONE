@@ -1,38 +1,37 @@
-# Tadic Management
+# Odoo
 
-Workspace khởi tạo cho hệ thống quản trị nội bộ. Tháng 1 tập trung vào đọc tài liệu nghiệp vụ, khảo sát, thiết kế khung hệ thống và chọn techstack; chưa triển khai code chức năng nghiệp vụ.
+[![Build Status](https://runbot.odoo.com/runbot/badge/flat/1/master.svg)](https://runbot.odoo.com/runbot)
+[![Tech Doc](https://img.shields.io/badge/master-docs-875A7B.svg?style=flat&colorA=8F8F8F)](https://www.odoo.com/documentation/master)
+[![Help](https://img.shields.io/badge/master-help-875A7B.svg?style=flat&colorA=8F8F8F)](https://www.odoo.com/forum/help-1)
+[![Nightly Builds](https://img.shields.io/badge/master-nightly-875A7B.svg?style=flat&colorA=8F8F8F)](https://nightly.odoo.com/)
 
-## Cấu trúc
+Odoo is a suite of web based open source business apps.
 
-- `frontend/`: trang mẫu ReactJS + TypeScript + Vite.
-- `custom_addons/`: addon `tadic_core` mới là khung tối thiểu; chưa có nghiệp vụ hay model.
-- `docs/`: biểu mẫu khảo sát và phác thảo dữ liệu cần xác nhận.
-- `DESIGN.md`: quy ước giao diện dùng chung cho giai đoạn xây dựng React.
-- `odoo/`: source Odoo 20 từ upstream, được giữ riêng khỏi Git của dự án.
-- `venv/`: môi trường Python cục bộ, không đưa lên Git.
-- `odoo.conf`: cấu hình cục bộ chứa thông tin truy cập database, không đưa lên Git.
+The main Odoo Apps include an [Open Source CRM](https://www.odoo.com/page/crm),
+[Website Builder](https://www.odoo.com/app/website),
+[eCommerce](https://www.odoo.com/app/ecommerce),
+[Warehouse Management](https://www.odoo.com/app/inventory),
+[Project Management](https://www.odoo.com/app/project),
+[Billing &amp; Accounting](https://www.odoo.com/app/accounting),
+[Point of Sale](https://www.odoo.com/app/point-of-sale-shop),
+[Human Resources](https://www.odoo.com/app/employees),
+[Marketing](https://www.odoo.com/app/social-marketing),
+[Manufacturing](https://www.odoo.com/app/manufacturing),
+[...](https://www.odoo.com/)
 
-Repository GitHub của dự án: [vuducnam2005/TadicManagement](https://github.com/vuducnam2005/TadicManagement).
+Odoo Apps can be used as stand-alone applications, but they also integrate seamlessly so you get
+a full-featured [Open Source ERP](https://www.odoo.com) when you install several Apps.
 
-## Chạy giao diện mẫu
+## Getting started with Odoo
 
-```powershell
-cd frontend
-npm install
-npm run dev
-```
+For a standard installation please follow the [Setup instructions](https://www.odoo.com/documentation/master/administration/install/install.html)
+from the documentation.
 
-Mở URL mà Vite in ra trong terminal (mặc định `http://localhost:5173`). Kiểm tra chất lượng với `npm run lint` và `npm run build`.
+To learn the software, we recommend the [Odoo eLearning](https://www.odoo.com/slides),
+or [Scale-up, the business game](https://www.odoo.com/page/scale-up-business-game).
+Developers can start with [the developer tutorials](https://www.odoo.com/documentation/master/developer/howtos.html).
 
-## Chạy Odoo cục bộ trên Windows
+## Security
 
-1. Dùng source Odoo nhánh `20.0` trong `odoo/`, Python virtual environment trong `venv/`, và PostgreSQL đã chạy.
-2. Sao chép `odoo.conf.example` thành `odoo.conf`, điền tài khoản PostgreSQL cục bộ và đổi master password. File thật được Git bỏ qua.
-3. Chạy `start.bat` từ thư mục gốc. Script tự nhận đường dẫn workspace hiện tại và mở database `tadic_demo` tại `http://127.0.0.1:8069`.
-4. Database `tadic_demo` đã được khởi tạo trong workspace này. Ở máy khác, tạo database thử nghiệm trước khi chạy script hoặc điều chỉnh tên database trong `start.bat`. Chỉ dùng dữ liệu giả lập cho bản thử nghiệm.
-
-Nếu Odoo báo `password authentication failed`, cần kiểm tra mật khẩu của role PostgreSQL trong `odoo.conf`. Thông tin đăng nhập Odoo thử nghiệm trên máy này nằm trong `LOCAL-ACCESS.txt`, được Git bỏ qua.
-
-## Kế hoạch tháng đầu
-
-Xem [kế hoạch tổng thể điều chỉnh](docs/ke-hoach-tong-the.md), [kế hoạch tháng 1](docs/ke-hoach-thang-1.md), [checklist tuần 1](docs/tuan-1-checklist.md), [phân tích mẫu PKH](docs/phan-tich-mau-pkh.md) và [phân tích nghiệp vụ KHKD](docs/phan-tich-nghiep-vu-khkd.md). Các biểu mẫu trong `docs/` là bản nháp để thu thập và xác nhận yêu cầu, chưa đại diện cho quy trình đã được phê duyệt.
+If you believe you have found a security issue, check our [Responsible Disclosure page](https://www.odoo.com/security-report)
+for details and get in touch with us via email.
