@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-10-28T14:00:32.756525+00:00",
-  "last_change_id": "CHG-20261028-014",
+  "updated_at": "2026-10-28T14:12:35.997772+00:00",
+  "last_change_id": "CHG-20261028-015",
   "code_digest": "304742556c9552233e2fe2b1ce62453c07874a8c56eba7e6f48e256080119a07",
   "code_file_count": 126,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "d79016dad41a582c7fb0dea34aeb0985315f5dfa7ca7ecb0cf18fd3836dec880",
-    "docs/CHANGELOG.md": "cc41d185dc27b6fcc32ff309a56132b4f05ced23a64863543c5a4d64a3fd3f01",
+    "docs/PROJECT_STATUS.md": "0368cee573805dae3b34bbcb599785037a7d7954dd227764fb32e7c8f8f6f1b4",
+    "docs/CHANGELOG.md": "3252fb22b265f0540a43ba6c17810c1838c919a64ebe3fe398add67638ec51bb",
     "AGENTS.md": "2474c035b6823d7157f6c8afd17b7cadc8aded79fa45ac8505d7f561f01bf0cf",
     "README_TANPHAT.md": "7b12ef66c29f0cbecb53096a3115e6199ea014cde2eb59e550221e9001f41f47",
     "docs/AI_CHANGE_WORKFLOW.md": "219f6734fdf845995bf4b2323cbe18e4e73b317d767552b7f43a2f1088890d34",
-    "docs/ROADMAP.md": "ad501f2483f51c762586096b8ef5242ca62928f7797938a817f1c15fa982ff97",
+    "docs/ROADMAP.md": "f4683522cb01377950d6e651b06baca379ac8e6b59a6cb9984f6a6ece4f3668c",
     "docs/DECISIONS.md": "ae959c80d4c7e142da6121cd2f3a87fde7fc9cf5f5096358a4fb0af255631901",
     "docs/HANDOFF_TEMPLATE.md": "7a98efbd7a557efe789b51fefbf5c4072908f9d9f29a21e0c76d012cbddf3d32",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "991ebb78279c46a7fb9b30f756887ecf17bbe5e0073000eb627be2f031669612",
@@ -20,12 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "b93114db49706b3ad642335c58fa67339ab0fdd8880b7a83ef8e8e1f514af3a3"
   },
   "reported_checks": [
-    "scripts/dev.py test (tp_tanphat_test): 0 failed, 0 error(s) of 72 tests; no backend/OpenAPI file changed after the run",
-    "ruff check tp_api tp_contract tp_planning_api tp_project: passed",
-    "npm run api:types + typecheck: passed; vitest: 22 passed (3 files)",
-    "npm run build (VITE_ODOO_DATABASE=tp_tanphat_test): passed",
-    "playwright tests/e2e/contract-workflow.spec.ts: 3 passed (mocked /api/v1, no Odoo/DB)",
-    "doc link/table/line-ending check on 11 updated docs: passed; git diff --check: passed",
-    "not run: parallel race test, UI against live Odoo; tp_tanphat_dev not upgraded/seeded"
+    "Docs-only: status/changelog/roadmap ghi commit 02c9e18a + a2f29f2e; doccheck link/bảng đạt; git diff --check đạt; không đổi code, không chạy test ứng dụng"
   ]
 }

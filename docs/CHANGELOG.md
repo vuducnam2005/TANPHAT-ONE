@@ -2,6 +2,14 @@
 
 Mỗi lượt thay đổi code hoặc quyết định kiến trúc ghi một mục ngắn. Không ghi credential, dữ liệu thật hoặc log chứa bí mật.
 
+## CHG-20261028-015 — Commit và push BIZ-002 và CTR-002a
+
+- Phạm vi: Git history và tài liệu bàn giao; không đổi model, API, frontend, runtime hoặc database.
+- Đã làm: `02c9e18a` gồm tài liệu BIZ-002 (CHG-009..013) ở trạng thái trước CHG-014; `a2f29f2e` gồm CTR-002a (CHG-014). Stage theo từng đường dẫn, không `git add .`; status/roadmap ghi hash; push `main` lên `origin` trong cùng lượt.
+- Kiểm tra: dựng lại file dùng chung bằng cách đảo chỉnh sửa CHG-014, 0 lỗi, `frontend/README.md` trùng HEAD cũ; link/bảng tài liệu của `02c9e18a` đạt; `git diff --cached --check` của `a2f29f2e` đạt; sau `a2f29f2e` working tree sạch, `ai_workflow.py check` đạt.
+- Giới hạn: `02c9e18a` giữ `AI_WORKFLOW_STATE.json` của CHG-008 (state CHG-013 bị `finish` CHG-014 ghi đè trước khi commit) nên checker tại commit đó lệch. `git diff --check` của commit đó báo hai dấu cách xuống dòng Markdown và dòng trống cuối file trong tài liệu BIZ-002, giữ nguyên. Không chạy lại test ứng dụng vì không đổi code.
+- Next: người dùng review nghiệp vụ CTR-002a; Q2-A/Q2-B và bundle thực tế trước pilot.
+
 ## CHG-20261028-014 — CTR-002a: draft → gửi rà soát → trả lại → sửa → gửi lại (chỉ test)
 
 - Phạm vi: code CTR-002a-P1 theo DEC-020, chỉ trên `tp_tanphat_test` với dữ liệu giả và actor fixture. Không upgrade/seed `tp_tanphat_dev`, không cấp grant cho người dùng thật, không đổi credential. Ngoài phạm vi và vẫn đóng: complete_review, cancel revision, record/verify BASE, chữ ký/thẩm quyền ký, hiệu lực, giao khoán/nghiệm thu/thanh toán, quản trị grant người dùng thật.
