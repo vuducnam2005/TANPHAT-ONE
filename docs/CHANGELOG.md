@@ -2,6 +2,14 @@
 
 Mỗi lượt thay đổi code hoặc quyết định kiến trúc ghi một mục ngắn. Không ghi credential, dữ liệu thật hoặc log chứa bí mật.
 
+## CHG-20261028-007 — Commit local AUTH-001, BIZ-001 và CTR-001
+
+- Phạm vi: Git history và tài liệu bàn giao; không đổi model, API, frontend, runtime hoặc database.
+- Đã làm: `395be562` gồm login AUTH-001 (CHG-004) và baseline BIZ-001 (CHG-005) ở đúng trạng thái trước CTR-001; `807018b9` gồm CTR-001 (CHG-006). Stage theo từng đường dẫn, không `git add .`; chưa push.
+- Kiểm tra: dựng lại file dùng chung bằng cách đảo chỉnh sửa CTR-001, áp lại khớp 18/18 file; export `395be562` typecheck đạt, Vitest 10 đạt; sau `807018b9` `git diff HEAD` rỗng, `ai_workflow.py check` đạt; quét diff không có credential/dữ liệu thật.
+- Giới hạn: `395be562` giữ `AI_WORKFLOW_STATE.json` của `03702d24` nên checker tại commit đó báo lệch; không chạy lại Odoo tests cho commit này vì không đổi backend. Hai tài liệu TP_KD có xuống dòng Markdown bằng hai dấu cách như các tài liệu sẵn có.
+- Next: push khi người dùng yêu cầu; nghiệm thu BIZ-001/CTR-001 và chốt Q2.
+
 ## CHG-20261028-006 — CTR-001: TP Contracts read slice
 
 - Phạm vi: addon mới `tp_contract`, grant `financial_read` trong `tp_project`, API đọc trong `tp_planning_api`, OpenAPI, frontend TP Contracts, dev seed/smoke/checker và tài liệu. Không sửa `odoo/`/`addons/`, không mở API ghi/duyệt/ký/xác nhận hiệu lực, không đổi xác thực.
