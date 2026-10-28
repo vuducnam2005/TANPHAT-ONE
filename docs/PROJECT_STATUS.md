@@ -3,6 +3,11 @@
 **Cập nhật:** 28/10/2026 (Asia/Saigon)  
 **Thư mục:** `C:\TANPHAT ONE`  
 **Mục tiêu hiện tại:** xây nền tảng quản trị doanh nghiệp theo module Odoo + web frontend riêng, bắt đầu từ phòng Kế hoạch Kinh doanh.
+Last change: `CHG-20261028-002`
+
+**Phase:** Foundation hardening.
+**Task vừa hoàn tất:** GIT-001 — kiểm chứng baseline Git local/remote và chuẩn bị publish handoff.
+**Next task:** OPS-001 — diễn tập backup/restore database, filestore và source/config.
 
 ## Trạng thái tổng quan
 
@@ -16,7 +21,8 @@
 | Vertical slice đọc dự án | Đã kiểm chứng | login → `/me` → list/detail theo quyền → logout/session expiry |
 | Hợp đồng/giao khoán/nghiệm thu | Chưa triển khai | Đã có thiết kế database, chưa có model nghiệp vụ |
 | Production | Chưa triển khai | Chưa có HTTPS, backup production, staging migration hoặc dữ liệu thật |
-| Git history | Cần xử lý | Metadata hiện khôi phục từ baseline cũ; không được coi là lịch sử đầy đủ của foundation commit |
+| Git history | Đã chốt baseline publish | `main` và `origin/main` đã đối chiếu ở `a25a0182`; các thay đổi handoff hiện tại được gom vào commit/push của CHG-20261028-002; hai ID foundation cũ không tìm thấy |
+| AI handoff workflow | Đã thiết lập | `AGENTS.md`, status, changelog, business workflow và local checker |
 
 ## Đã triển khai
 
@@ -29,10 +35,11 @@
 - Frontend có project list/detail, search, pagination, loading/empty/error/permission state.
 - Browser test kiểm tra reader/manager scope, 404, reload, search, CSRF logout, session hết hạn và mobile overflow.
 - Tên sản phẩm/phân hệ và đường dẫn runtime đã đổi sang `C:\TANPHAT ONE`.
+- Quy trình bàn giao AI bắt buộc đọc status trước khi làm và cập nhật status/changelog sau mỗi code change.
 
 ## Kiểm chứng gần nhất
 
-Các kiểm tra nền đã đạt ở phiên trước:
+Các kiểm tra nền sau được ghi nhận từ các lượt trước trong ngày 28/10/2026, không được hiểu là vừa chạy lại trong lượt AI-001:
 
 ```text
 Odoo tests: 0 failed, 0 error(s) of 10 tests
@@ -43,6 +50,8 @@ Prototype tests: 6 passed
 Browser E2E: 3 passed
 Smoke login/API: passed
 ```
+
+Trong lượt AI-001 chỉ thay đổi tài liệu và tooling bàn giao, không đổi model/API/giao diện hoặc dữ liệu. Checker unit test đã đạt 11/11, Ruff và `git diff --check` đã đạt. GIT-001 đã fetch `origin`, xác nhận `main` và `origin/main` cùng ở `a25a0182` trước khi publish; commit/push CHG-20261028-002 là baseline handoff mới. Test ứng dụng sẽ chạy lại khi phạm vi code tương ứng thay đổi, không tự nhận kết quả cũ là kết quả mới.
 
 Lệnh kiểm tra nhanh:
 
@@ -58,11 +67,10 @@ npm.cmd run test:e2e --prefix frontend
 
 ## Next action bắt buộc
 
-1. Giữ nguyên tên kỹ thuật và hoàn thiện baseline Git trước khi có nhiều thay đổi mới.
-2. Đọc `docs/architecture/TP_BUSINESS_WORKFLOW.md` và đối chiếu với hồ sơ nghiệp vụ thật/đã khử dữ liệu.
-3. Chốt ma trận role/capability và state/transition cho TP Projects, TP Contracts.
-4. Tạo addon `tp_contract` theo vertical slice: model → security → test → API read → frontend read.
-5. Sau khi read flow ổn định, mới mở các action ghi `submit`, `approve`, `reject`, `cancel`.
+1. **OPS-001:** lập và kiểm chứng backup/restore DB + filestore + phiên bản source/config trong môi trường tách biệt.
+2. **BIZ-001:** đối chiếu blueprint với 2–3 hồ sơ đại diện; quyết định quyền, trạng thái, nguồn duyệt BASE/Odoo, giá thay thế/delta và sửa/hủy.
+3. **CTR-001:** làm `tp_contract` theo vertical slice: model → security → test → API read → frontend read. **PRJ-002** được triển khai khi vòng đời project đã chốt, không bắt buộc phát minh thêm state để mở hợp đồng.
+4. **CTR-002** và các task sau theo [roadmap](ROADMAP.md). Không mở action ghi trước khi backend kiểm quyền, transition và lịch sử.
 
 ## Không được làm ở bước hiện tại
 
@@ -74,5 +82,11 @@ npm.cmd run test:e2e --prefix frontend
 
 ## Blocker/rủi ro
 
-Git metadata bị tách trong lần đổi thư mục trước. Source, database dev/test và runtime đã được kiểm tra nhưng lịch sử foundation gần nhất chưa được khôi phục đầy đủ. Trước khi bắt đầu chuỗi thay đổi lớn cần tạo bản snapshot Git sạch hoặc khôi phục đúng repository baseline; mọi phiên AI phải ghi rõ nếu blocker này chưa xử lý.
+Git metadata từng bị tách trong lần đổi thư mục trước. Ghi chú phục hồi cũ trong `.local/git-recovery/STATUS.txt` mô tả thời điểm chỉ có `ea975fb`; không dùng ghi chú đó thay cho trạng thái kiểm chứng hiện tại.
+
+Kiểm tra chỉ đọc trong lượt AI-001/GIT-001 xác nhận `main` và `origin/main` đều có `a25a0182` trước khi publish; remote là `https://github.com/vuducnam2005/TANPHAT-ONE.git`. Diff model/API/frontend nền với HEAD rỗng; working tree chỉ có tài liệu/tooling handoff đang sửa/thêm. `git cat-file -e` không tìm thấy `fbad3686`/`4e47fddb`, nên không dựng lại hai ID này. Commit/push CHG-20261028-002 tạo mốc publish cho source hiện tại; điều đó không thay thế backup/restore hoặc bảo đảm production.
+
+Lượt AI-001 không sửa Git metadata, không stage hoặc commit và không xử lý migration thư mục. Checker bàn giao dùng hash source độc lập; không dùng kết quả hash để kết luận Git đã đồng bộ hoặc production đã sẵn sàng.
+
+Các điểm chưa xác minh: workflow duyệt chính thức, bốn mắt/ngưỡng duyệt, backup/restore thực tế, staging và production. Odoo test trên Windows từng có log INFO về filestore GC `WinError 5`; chưa coi kiểm tra dự án/API là bằng chứng toàn bộ hồ sơ tệp vận hành ổn định.
 

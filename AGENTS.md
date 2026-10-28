@@ -10,8 +10,10 @@ Theo thứ tự:
 2. Đọc `docs/PROJECT_STATUS.md` để biết đã làm đến đâu và bước kế tiếp.
 3. Đọc `docs/AI_CHANGE_WORKFLOW.md` để biết quy trình cập nhật bắt buộc.
 4. Đọc `docs/architecture/TP_PRODUCT_NAMING.md` để dùng đúng tên TANPHAT ONE và phân hệ.
-5. Đọc tài liệu phù hợp với phạm vi: database, kiến trúc source, workflow nghiệp vụ, OpenAPI, backend hoặc frontend README.
-6. Kiểm tra `git status`, runtime status và test liên quan trước khi sửa.
+5. Đọc `docs/ROADMAP.md`, `docs/DECISIONS.md` và `docs/HANDOFF_TEMPLATE.md`.
+   Đọc mục mới nhất trong `docs/CHANGELOG.md`; chỉ đọc sâu lịch sử khi phạm vi yêu cầu cần.
+6. Đọc tài liệu phù hợp với phạm vi: database, kiến trúc source, workflow nghiệp vụ, OpenAPI, backend hoặc frontend README.
+7. Kiểm tra `git status`, runtime status và test liên quan trước khi sửa.
 
 Nếu trạng thái trong tài liệu khác source/runtime, không đoán. Ghi nhận sai lệch trong `docs/PROJECT_STATUS.md`, kiểm chứng bằng lệnh và báo rõ trước khi mở phạm vi mới.
 
@@ -51,8 +53,9 @@ Tên kỹ thuật như `tp_project`, `tp.project.assignment`, XML ID và `/api/v
 1. Phân loại yêu cầu: thay đổi sản phẩm, nghiệp vụ, dữ liệu, bảo mật, giao diện hay vận hành.
 2. Xác định file/model/API bị ảnh hưởng và đọc test hiện có.
 3. Viết kế hoạch ngắn trong commentary, nêu giả định và rủi ro.
+   Chạy `scripts/ai_workflow.py start` trước lần sửa đầu tiên; nếu còn checkpoint thì tiếp tục checkpoint đó, không xóa hoặc ghi đè.
 4. Sửa theo vertical slice nhỏ nhất: model → security → API → frontend → test.
-5. Chạy kiểm tra phù hợp, ít nhất là typecheck/build hoặc Odoo test theo phạm vi.
+5. Chạy kiểm tra phù hợp với phần thay đổi: frontend thì typecheck/build; model/security thì Odoo tests; tooling thì unit test/lint; tài liệu thì kiểm liên kết/nội dung. Không chạy cả bộ ứng dụng cho một sửa đổi tài liệu đơn thuần.
 6. Cập nhật trong cùng lượt:
    - `docs/PROJECT_STATUS.md`: trạng thái, việc đã làm, việc tiếp theo, rủi ro.
    - `docs/CHANGELOG.md`: một dòng thay đổi có ngày, phạm vi, test.
@@ -61,6 +64,17 @@ Tên kỹ thuật như `tp_project`, `tp.project.assignment`, XML ID và `/api/v
 8. Báo cuối lượt: kết quả, file chính, test, giới hạn còn lại và bước tiếp theo.
 
 Không kết thúc lượt với code đã đổi nhưng status/workflow chưa phản ánh thay đổi. Nếu chưa thể chạy test, ghi lý do cụ thể.
+
+Checker local:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\ai_workflow.py start
+# sửa code và cập nhật status/changelog
+.\.venv\Scripts\python.exe scripts\ai_workflow.py finish --change-id CHG-YYYYMMDD-NNN --check "<lệnh đã chạy và kết quả>"
+.\.venv\Scripts\python.exe scripts\ai_workflow.py check
+```
+
+`start` tạo checkpoint local tại `.local/ai-workflow/active.json`. `finish` bắt buộc status/changelog đổi và ghi snapshot hash vào `docs/AI_WORKFLOW_STATE.json` để bàn giao cùng source. `check` báo lỗi nếu code, policy docs hoặc handoff trong phạm vi theo dõi đã đổi sau lần bàn giao. Không dùng checker để tuyên bố test nghiệp vụ đạt.
 
 ## 5. Quy tắc workflow nghiệp vụ
 
@@ -71,6 +85,8 @@ Một transition phải xác định: actor/capability, scope company/project/de
 ## 6. Handoff cho phiên AI mới
 
 Phiên mới phải bắt đầu bằng câu trả lời nội bộ: “Đã đọc status; mục tiêu hiện tại là …; bước kế tiếp là …; blocker là …”. Không tự mở module mới khi `PROJECT_STATUS.md` còn blocker chưa đánh giá.
+
+Không chạy `setup`/`upgrade`, seed password hoặc sửa database chỉ để mở một phiên chat. Không đổi thư mục gốc, không thay `.git`, không phục hồi metadata từ một repository cũ và không `git add .` để che trạng thái lỗi. Kiểm chứng baseline bằng lệnh và đối chiếu status hiện tại; phân biệt thay đổi có sẵn với thay đổi do mình tạo. Tài liệu và kiểm thử local vẫn có thể tiến hành trong phạm vi yêu cầu người dùng.
 
 Khi người dùng chỉ nói “tiếp tục”, thực hiện `Next action` trong `docs/PROJECT_STATUS.md`. Khi người dùng yêu cầu khác, ưu tiên yêu cầu mới nhưng vẫn cập nhật status và không bỏ qua test/security.
 

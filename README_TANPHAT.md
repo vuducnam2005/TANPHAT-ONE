@@ -29,5 +29,8 @@ Tài khoản dev `planner.dev` và `admin` có mật khẩu tương ứng trong 
 - [Trạng thái dự án](docs/PROJECT_STATUS.md)
 - [Quy trình bàn giao cho AI](docs/AI_CHANGE_WORKFLOW.md)
 - [Workflow nghiệp vụ](docs/architecture/TP_BUSINESS_WORKFLOW.md)
+- [Roadmap và cổng nghiệm thu](docs/ROADMAP.md)
+- [Sổ quyết định](docs/DECISIONS.md)
+- [Mẫu bàn giao AI](docs/HANDOFF_TEMPLATE.md)
 
 Hợp đồng, giao khoán, nghiệm thu, import Excel, tích hợp kế toán và triển khai production là các giai đoạn tiếp theo. Nền hiện tại chưa thay thế quy trình vận hành doanh nghiệp.

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "scope_version": 1,
+  "updated_at": "2026-10-28T06:09:19.007154+00:00",
+  "last_change_id": "CHG-20261028-002",
+  "code_digest": "36624ee63e64981ebc4295f0b29aab2985ef684ef9cc5c4350d648766c1c553b",
+  "code_file_count": 74,
+  "documentation": {
+    "docs/PROJECT_STATUS.md": "7414523cb7a102deab48184e395dac8ae717c48d1aa245a69d8bc85f68c1b548",
+    "docs/CHANGELOG.md": "0317fb8caa88bb4b84215f8adc246b3d5fa605e22cef62cf8e35fbefecf2a43d",
+    "AGENTS.md": "2474c035b6823d7157f6c8afd17b7cadc8aded79fa45ac8505d7f561f01bf0cf",
+    "README_TANPHAT.md": "e04f6b809cbdb8b0da8ef907d30e10643a40a3f1ab024c32d5d9e78ad4a3a56c",
+    "docs/AI_CHANGE_WORKFLOW.md": "ecd678252dc1333b30d1de1254c7407631695ca900a2cea36e10757516a4b25d",
+    "docs/ROADMAP.md": "6dfafdbfe67711d82716904c7408a92cf561d07ae311b29484a38119a63ae1e7",
+    "docs/DECISIONS.md": "d268fdcedc764f3045974d44be9895e626eced1e3524fbde4d1d35da53964b37",
+    "docs/HANDOFF_TEMPLATE.md": "7a98efbd7a557efe789b51fefbf5c4072908f9d9f29a21e0c76d012cbddf3d32",
+    "docs/architecture/TP_BUSINESS_WORKFLOW.md": "77fcd3bf1b34b6af8884456083115fb03d966fd9eb25934f339783e33683af9b",
+    "docs/architecture/TP_DATABASE_DESIGN.md": "21ee03ebb3c73397856f1e9ff8bcb8704945be80bbd6badc337df76d40c143a8",
+    "docs/architecture/TP_PLATFORM_SOURCE_STRUCTURE.md": "cf8357b39feaba6ce56ee3ab49ce43fe0c73f656ba0f6a1fabaeab2031b2c3f9",
+    "docs/architecture/TP_PRODUCT_NAMING.md": "b93114db49706b3ad642335c58fa67339ab0fdd8880b7a83ef8e8e1f514af3a3"
+  },
+  "reported_checks": [
+    "git fetch --prune origin: main and origin/main both a25a0182 before publish",
+    "git fsck --full --no-reflogs: passed",
+    "Git bundle verify before-publish-a25a0182.bundle: passed",
+    "scripts/tests: 11 unit tests passed",
+    "ruff check scripts/ai_workflow.py scripts/tests/test_ai_workflow.py: passed",
+    "documentation links: 14 checked, 0 issues",
+    "git diff --check: passed",
+    "credential/runtime audit: no private runtime files in intended commit"
+  ]
+}

@@ -91,3 +91,7 @@ npm.cmd run test:e2e --prefix frontend
 Browser test dùng credential trong `.local/dev-secrets.json`, không lưu trace/video. Test kiểm quyền manager/reader, reload detail, search, 404, logout CSRF, session hết hạn và mobile overflow. Kết quả và ảnh QA nằm ngoài Git trong `.local/`.
 
 Dashboard mẫu cũ nằm ở `frontend/prototype/`; chạy bằng `npm.cmd run prototype --prefix frontend`. Cả prototype và Vite mặc định chọn 4173, nên chỉ chạy một hoặc đặt `PORT=4174` khi chạy prototype.
+
+## Handoff cho AI
+
+Mỗi phiên code bắt đầu bằng `scripts\ai_workflow.py start` và kết thúc bằng `finish`/`check` sau khi cập nhật `docs\PROJECT_STATUS.md` và `docs\CHANGELOG.md`. Xem `AGENTS.md`, `docs\AI_CHANGE_WORKFLOW.md` và `docs\HANDOFF_TEMPLATE.md`; checkpoint nằm trong `.local\ai-workflow\` và không chứa credential.
