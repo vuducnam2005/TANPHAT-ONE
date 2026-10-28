@@ -64,6 +64,8 @@ Nếu PowerShell chặn script local, có thể chạy `.venv\Scripts\python.exe
 
 ## Phạm vi production
 
+Backup và phục hồi dev đã được diễn tập local ở OPS-001; xem [BACKUP_RESTORE.md](BACKUP_RESTORE.md) để chạy lại và xem giới hạn. Lượt diễn tập dùng cluster/source/data-dir riêng và giữ nguyên dữ liệu nghiệp vụ/cấu hình dev gốc.
+
 Chưa triển khai production, lịch backup, HTTPS reverse proxy, import Excel hoặc kế toán. Trước pilot cần thử backup/restore database + filestore, kiểm migration trên staging và chọn RPO/RTO. Xem `docs/architecture/TP_DATABASE_DESIGN.md` cho phương án dữ liệu và mở rộng.
 
 Trong lần test Windows, Odoo upstream có log INFO về filestore GC không xóa được một số file `.__gc` do Windows giữ handle (WinError 5). Các test nền vẫn hoàn thành; chưa sửa core để tránh thay đổi upstream. Cần kiểm chứng lưu/xóa/backup/restore hồ sơ trong môi trường triển khai trước khi đưa dữ liệu thật vào.

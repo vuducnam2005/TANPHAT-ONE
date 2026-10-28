@@ -22,6 +22,7 @@ Web riêng: <http://127.0.0.1:4173/work/>. Odoo quản trị: <http://127.0.0.1:
 Tài khoản dev `planner.dev` và `admin` có mật khẩu tương ứng trong `.local/dev-secrets.json`. Không dùng credential hoặc cluster dev làm production. Hiện chỉ có dữ liệu seed giả lập.
 
 - [Hướng dẫn chạy và nâng cấp](ops/runbooks/LOCAL_DEVELOPMENT.md)
+- [Backup và diễn tập phục hồi](ops/runbooks/BACKUP_RESTORE.md)
 - [Thiết kế database](docs/architecture/TP_DATABASE_DESIGN.md)
 - [Cấu trúc source](docs/architecture/TP_PLATFORM_SOURCE_STRUCTURE.md)
 - [OpenAPI v1](contracts/openapi/tanphat-v1.yaml)

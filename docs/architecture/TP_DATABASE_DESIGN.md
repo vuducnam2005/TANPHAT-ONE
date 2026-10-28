@@ -85,6 +85,8 @@ Database chỉ lưu metadata hồ sơ; binary dùng filestore/adapter tài liệ
 
 Một bộ phục hồi Odoo gồm database dump, filestore tương ứng, phiên bản source/addon và cấu hình cần thiết. Trước pilot dữ liệu thật phải thử restore ở môi trường khác. Đề xuất ban đầu: backup hằng ngày, giữ nhiều thế hệ và bản ngoài máy chủ; chốt RPO/RTO theo vận hành thực tế, bổ sung PITR khi cần. Chưa thiết lập lịch backup production.
 
+OPS-001 ngày 28/10/2026 đã kiểm chứng local: chụp dev nhất quán khi tạm dừng riêng Odoo, khôi phục DB/filestore và source commit `d9e8ccdc` vào cluster/HTTP/data-dir mới, đối chiếu 314 bảng và 37 tham chiếu attachment, kiểm login/API/quyền/tải tệp. Script ở `scripts/backup_restore.py`, hướng dẫn tại [BACKUP_RESTORE.md](../../ops/runbooks/BACKUP_RESTORE.md). Backup/credential nằm `.local/ops-001` có giới hạn ACL, chưa mã hóa. Đây là diễn tập cùng máy dùng lại `.venv`; backup ngoài máy, host khác, lịch/retention và RPO/RTO vẫn cần hoàn thiện trước production.
+
 Runtime dev chỉ bind loopback, chưa là triển khai production. Khi triển khai thật: HTTPS cùng origin cho SPA/Odoo, secrets riêng, không mở database manager công khai, staging kiểm migration và đủ test quyền/CSRF/MFA. Cấu hình mẫu nằm ở `ops/config/`, cấu hình/mật khẩu thật nằm trong `.local/` ngoài Git.
 
 ## 7. Đề xuất chi tiết cho phần nghiệp vụ tiếp theo

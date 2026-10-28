@@ -3,11 +3,11 @@
 **Cập nhật:** 28/10/2026 (Asia/Saigon)  
 **Thư mục:** `C:\TANPHAT ONE`  
 **Mục tiêu hiện tại:** xây nền tảng quản trị doanh nghiệp theo module Odoo + web frontend riêng, bắt đầu từ phòng Kế hoạch Kinh doanh.
-Last change: `CHG-20261028-002`
+Last change: `CHG-20261028-003`
 
 **Phase:** Foundation hardening.
-**Task vừa hoàn tất:** GIT-001 — kiểm chứng baseline Git local/remote và chuẩn bị publish handoff.
-**Next task:** OPS-001 — diễn tập backup/restore database, filestore và source/config.
+**Task vừa hoàn tất:** OPS-001 — backup và phục hồi dev đã kiểm chứng trong môi trường cô lập.
+**Next task:** BIZ-001 — chốt workflow Kế hoạch Kinh doanh và ma trận quyền trên hồ sơ đại diện.
 
 ## Trạng thái tổng quan
 
@@ -23,6 +23,7 @@ Last change: `CHG-20261028-002`
 | Production | Chưa triển khai | Chưa có HTTPS, backup production, staging migration hoặc dữ liệu thật |
 | Git history | Đã chốt baseline publish | `main` và `origin/main` đã đối chiếu ở `a25a0182`; các thay đổi handoff hiện tại được gom vào commit/push của CHG-20261028-002; hai ID foundation cũ không tìm thấy |
 | AI handoff workflow | Đã thiết lập | `AGENTS.md`, status, changelog, business workflow và local checker |
+| Backup/restore dev | Đã kiểm chứng local | `scripts/backup_restore.py`; backup `20261028T062821364112Z`; final restore report `20261028T064405723351Z`; nghiệp vụ/config dev giữ nguyên |
 
 ## Đã triển khai
 
@@ -51,7 +52,7 @@ Browser E2E: 3 passed
 Smoke login/API: passed
 ```
 
-Trong lượt AI-001 chỉ thay đổi tài liệu và tooling bàn giao, không đổi model/API/giao diện hoặc dữ liệu. Checker unit test đã đạt 11/11, Ruff và `git diff --check` đã đạt. GIT-001 đã fetch `origin`, xác nhận `main` và `origin/main` cùng ở `a25a0182` trước khi publish; commit/push CHG-20261028-002 là baseline handoff mới. Test ứng dụng sẽ chạy lại khi phạm vi code tương ứng thay đổi, không tự nhận kết quả cũ là kết quả mới.
+Trong lượt AI-001/GIT-001 chỉ thay đổi tài liệu và tooling bàn giao, không đổi model/API/giao diện hoặc dữ liệu dev. OPS-001 bổ sung script/runbook và đã đạt 21 unit tests, Ruff, backup checksum, 314 bảng/fingerprint, 37 attachment tham chiếu, login/API/quyền/tải tệp trên Odoo restore; dev gốc smoke lại đạt. Test ứng dụng sẽ chạy lại khi phạm vi code tương ứng thay đổi, không tự nhận kết quả cũ là kết quả mới.
 
 Lệnh kiểm tra nhanh:
 
@@ -67,10 +68,9 @@ npm.cmd run test:e2e --prefix frontend
 
 ## Next action bắt buộc
 
-1. **OPS-001:** lập và kiểm chứng backup/restore DB + filestore + phiên bản source/config trong môi trường tách biệt.
-2. **BIZ-001:** đối chiếu blueprint với 2–3 hồ sơ đại diện; quyết định quyền, trạng thái, nguồn duyệt BASE/Odoo, giá thay thế/delta và sửa/hủy.
-3. **CTR-001:** làm `tp_contract` theo vertical slice: model → security → test → API read → frontend read. **PRJ-002** được triển khai khi vòng đời project đã chốt, không bắt buộc phát minh thêm state để mở hợp đồng.
-4. **CTR-002** và các task sau theo [roadmap](ROADMAP.md). Không mở action ghi trước khi backend kiểm quyền, transition và lịch sử.
+1. **BIZ-001:** đối chiếu blueprint với 2–3 hồ sơ đại diện; quyết định quyền, trạng thái, nguồn duyệt BASE/Odoo, giá thay thế/delta và sửa/hủy.
+2. **CTR-001:** làm `tp_contract` theo vertical slice: model → security → test → API read → frontend read. **PRJ-002** được triển khai khi vòng đời project đã chốt, không bắt buộc phát minh thêm state để mở hợp đồng.
+3. **CTR-002** và các task sau theo [roadmap](ROADMAP.md). Không mở action ghi trước khi backend kiểm quyền, transition và lịch sử.
 
 ## Không được làm ở bước hiện tại
 
@@ -88,5 +88,5 @@ Kiểm tra chỉ đọc trong lượt AI-001/GIT-001 xác nhận `main` và `ori
 
 Lượt AI-001 không sửa Git metadata, không stage hoặc commit và không xử lý migration thư mục. Checker bàn giao dùng hash source độc lập; không dùng kết quả hash để kết luận Git đã đồng bộ hoặc production đã sẵn sàng.
 
-Các điểm chưa xác minh: workflow duyệt chính thức, bốn mắt/ngưỡng duyệt, backup/restore thực tế, staging và production. Odoo test trên Windows từng có log INFO về filestore GC `WinError 5`; chưa coi kiểm tra dự án/API là bằng chứng toàn bộ hồ sơ tệp vận hành ổn định.
+Các điểm chưa xác minh: workflow duyệt chính thức, bốn mắt/ngưỡng duyệt, backup ngoài máy, mã hóa/retention/RPO/RTO, phục hồi trên host khác, staging và production. Backup local hiện chưa mã hóa; credential chỉ nằm trong thư mục private ngoài Git. Odoo test trên Windows từng có log INFO về filestore GC `WinError 5`; chưa coi kiểm tra dự án/API là bằng chứng toàn bộ hồ sơ tệp vận hành ổn định.
 
