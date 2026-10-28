@@ -4,6 +4,8 @@ from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import float_repr
 
+from .tp_contract import WORKFLOW_CONTEXT
+
 REVIEW_STATES = [
     ('draft', 'Draft'),
     ('in_review', 'In Review'),
@@ -55,6 +57,7 @@ class TpContractRevision(models.Model):
     legacy_unverified = fields.Boolean()
     line_ids = fields.One2many('tp.contract.line', 'revision_id', string='Scope Lines')
     approval_reference_ids = fields.One2many('tp.approval.reference', 'revision_id', string='BASE References')
+    submission_ids = fields.One2many('tp.contract.submission', 'revision_id', string='Review Submissions')
 
     _sequence_unique = models.Constraint(
         'UNIQUE(contract_id, sequence)', 'Each revision sequence must be unique within its contract.',
@@ -86,8 +89,43 @@ class TpContractRevision(models.Model):
 
     @api.ondelete(at_uninstall=False)
     def _unlink_only_drafts(self):
-        if any(revision.review_state != 'draft' or revision.signature_status != 'unsigned' for revision in self):
+        if any(
+            revision.review_state != 'draft' or revision.signature_status != 'unsigned' or revision.submission_ids
+            for revision in self
+        ):
             raise UserError(self.env._('Submitted or signed revisions keep their history and cannot be deleted.'))
+
+    def write(self, vals):
+        self._tp_check_protected_write(vals)
+        return super().write(vals)
+
+    def _tp_check_protected_write(self, vals):
+        frozen = any(revision._tp_is_frozen() for revision in self)
+        if not frozen and not {'review_state', 'contract_id'} & set(vals):
+            return
+        self.check_access('write')
+        if 'contract_id' in vals and any(revision.contract_id.id != vals['contract_id'] for revision in self):
+            raise UserError(self.env._('A revision cannot move to another contract.'))
+        if 'review_state' in vals and not self.env.context.get(WORKFLOW_CONTEXT):
+            raise UserError(self.env._('Review states change only through workflow actions.'))
+        if frozen and set(vals) - {'review_state'}:
+            raise UserError(self.env._('Submitted revision content cannot be changed.'))
+
+    def _tp_is_frozen(self):
+        """Whether the content is locked by a review submission.
+
+        Content stays locked while in review or returned; it opens again only
+        when rework moves the revision back to draft. Submission snapshots keep
+        their own copy, so later edits never change what was reviewed.
+        """
+        self.ensure_one()
+        return self.review_state in ('in_review', 'returned') or (
+            self.review_state != 'draft' and bool(self.sudo().submission_ids)
+        )
+
+    def _tp_check_content_editable(self):
+        if any(revision._tp_is_frozen() for revision in self):
+            raise UserError(self.env._('Submitted revision content cannot be changed.'))
 
     def _amount_summary(self):
         """Return the snapshot total from line amounts readable by the current user.

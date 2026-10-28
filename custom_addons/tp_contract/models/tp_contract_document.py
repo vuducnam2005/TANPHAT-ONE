@@ -1,5 +1,5 @@
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 FINANCIAL_KINDS = ('signed_contract', 'amendment', 'base_evidence')
 
@@ -33,6 +33,27 @@ class TpContractDocument(models.Model):
     ], required=True, default='financial')
     file = fields.Binary(attachment=True)
     file_name = fields.Char()
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        documents = super().create(vals_list)
+        documents.sudo().revision_id._tp_check_content_editable()
+        return documents
+
+    def write(self, vals):
+        self.check_access('write')
+        self._tp_check_not_submitted()
+        return super().write(vals)
+
+    @api.ondelete(at_uninstall=False)
+    def _unlink_except_submitted(self):
+        self._tp_check_not_submitted()
+
+    def _tp_check_not_submitted(self):
+        # A submission snapshot references the file by checksum; a later round
+        # adds a new document instead of replacing the submitted one.
+        if any(document.revision_id and document.revision_id.submission_ids for document in self.sudo()):
+            raise UserError(self.env._('Documents of a submitted revision cannot be changed or deleted.'))
 
     @api.constrains('document_kind', 'confidentiality', 'revision_id', 'contract_id')
     def _check_classification(self):

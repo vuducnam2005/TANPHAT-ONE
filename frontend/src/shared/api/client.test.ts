@@ -43,6 +43,33 @@ describe('business API transport', () => {
     expect(api.contractDocumentUrl(12, 56)).toBe('/api/v1/contracts/12/documents/56/content');
   });
 
+  it('sends workflow writes as same-origin JSON with the CSRF token and idempotency key', async () => {
+    const result = { data: { contract_id: 12, revision_id: 34, submission_id: 5, version: 3, review_state: 'in_review', replayed: false }, meta: { request_id: 'r' } };
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(Response.json(result)));
+    vi.stubGlobal('fetch', fetchMock);
+    const options = { csrfToken: 'csrf-1', idempotencyKey: 'intent-0001' };
+    await expect(api.submitReview(12, 34, { expected_version: 2, reviewer_id: 9 }, options)).resolves.toEqual(result);
+    await api.editDraft(12, 34, { expected_version: 3, revision: { name: 'R1' } }, options);
+    await api.createContract({ project_id: 7, code: 'HD-01', name: 'Draft', contract_type: 'owner', currency: 'VND' }, options);
+    const calls = fetchMock.mock.calls.map(([url, init]) => [url, init.method, JSON.parse(init.body)]);
+    expect(calls).toEqual([
+      ['/api/v1/contracts/12/revisions/34/submit', 'POST', { expected_version: 2, reviewer_id: 9 }],
+      ['/api/v1/contracts/12/revisions/34', 'PATCH', { expected_version: 3, revision: { name: 'R1' } }],
+      ['/api/v1/contracts', 'POST', { project_id: 7, code: 'HD-01', name: 'Draft', contract_type: 'owner', currency: 'VND' }],
+    ]);
+    const [, init] = fetchMock.mock.calls[0];
+    expect(init).toMatchObject({ credentials: 'same-origin', cache: 'no-store' });
+    expect(init.headers).toMatchObject({ 'Content-Type': 'application/json', 'X-CSRF-Token': 'csrf-1', 'Idempotency-Key': 'intent-0001' });
+  });
+
+  it('keeps the error code and details of a rejected write', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({
+      error: { code: 'stale_version', message: 'Changed', details: { current_version: 4 } }, meta: { request_id: 'trace-9' },
+    }, { status: 409 })));
+    await expect(api.beginRework(1, 2, { expected_version: 3, reason: 'x' }, { csrfToken: 't', idempotencyKey: 'intent-0002' }))
+      .rejects.toMatchObject({ status: 409, code: 'stale_version', details: { current_version: 4 }, requestId: 'trace-9' });
+  });
+
   it('handles an HTML gateway failure without exposing the HTML', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html>internal proxy details</html>', { status: 502 })));
     await expect(api.projects()).rejects.toBeInstanceOf(ApiError);

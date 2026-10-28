@@ -4,6 +4,7 @@ import { ApiError } from '../../../shared/api/client';
 import { StatusPanel } from '../../../shared/ui/StatusPanel';
 import { BaseReferences } from '../components/BaseReferences';
 import { MoneyValue } from '../components/MoneyValue';
+import { RevisionWorkflow } from '../components/RevisionWorkflow';
 import {
   changeKindLabels, effectivityLabels, formatDate, formatDateTime, reviewLabels, revisionKindLabels,
   signatureAuthorityLabels, signatureLabels,
@@ -52,6 +53,7 @@ export function ContractRevisionPage() {
         <Fact label="Thời điểm ghi nhận" value={formatDateTime(revision.recorded_at)} />
         <Fact label="Số dòng phạm vi" value={String(revision.line_count)} />
       </dl>
+      <RevisionWorkflow revision={revision} />
 
       <section className="tp-panel" aria-labelledby="scope-title">
         <h3 id="scope-title">Phạm vi công việc</h3>

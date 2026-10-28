@@ -2,12 +2,12 @@
 
 **Cập nhật:** 28/10/2026 (Asia/Saigon)  
 **Thư mục:** `C:\TANPHAT ONE`  
-**Mục tiêu hiện tại:** BIZ-002 — chuẩn bị và nghiệm thu thiết kế nghiệp vụ toàn công ty trước khi tiếp tục code; bắt đầu chi tiết từ Kế hoạch Kinh doanh. Odoo + React/TypeScript riêng giữ nguyên.
-Last change: `CHG-20261028-013`
+**Mục tiêu hiện tại:** CTR-002a trên test (DEC-020) song song BIZ-002 — action draft/submit/return/rework của TP Contracts chạy với dữ liệu giả và actor fixture; Q2 và hồ sơ thực tế vẫn là cổng trước người dùng thật/pilot. Odoo + React/TypeScript riêng giữ nguyên.
+Last change: `CHG-20261028-014`
 
-**Phase:** thiết kế và nghiệm thu nghiệp vụ, chưa chuyển sang phát triển ứng dụng.
-**Task hiện tại:** BIZ-002 — đã lập bộ thiết kế A–M, RACI, workflow, dữ liệu/quyền, tích hợp/KPI, kịch bản giả lập và checklist theo slice; đây là baseline đề xuất để công ty review, chưa phải quy chế/UAT được duyệt. [Điểm vào bộ tài liệu](architecture/TP_BIZ002_DESIGN_PACKAGE.md).
-**Next task:** tiếp tục Q2 theo ma trận đề xuất Q2-P1, thu thập vai trò/căn cứ công ty và bundle thực tế khử dữ liệu; sau đó điền nhật ký 7.1. SIM-P1 đã chuẩn bị ba bundle mô phỏng và đặc tả CTR-002a-P1 để review, không phải UAT/test. Người dùng quyết định khi nào chuyển sang code; không cần đóng cả Q1–Q14 cùng lúc. CTR-001 read slice giữ nguyên; CTR-002 và mở rộng CTR-001 chờ chuyển giai đoạn, chưa có action ghi/duyệt/ký/xác nhận hiệu lực.
+**Phase:** phát triển thử trên test cho CTR-002a; phần còn lại vẫn ở thiết kế/nghiệm thu nghiệp vụ BIZ-002.
+**Task hiện tại:** CTR-002a đã code và kiểm trên `tp_tanphat_test` (CHG-20261028-014), chưa commit; chờ người dùng review. BIZ-002 giữ baseline đề xuất cho công ty review. [Điểm vào bộ tài liệu](architecture/TP_BIZ002_DESIGN_PACKAGE.md).
+**Next task:** người dùng review diff CTR-002a và quyết định commit; muốn xem UI với Odoo thật thì cần cho phép upgrade database dev (hoặc dựng instance test riêng). Song song tiếp tục Q2-A/Q2-B và bundle thực tế khử dữ liệu theo nhật ký 7.1. Chưa có action BASE/ký/hiệu lực/thanh toán/cancel hay grant người dùng thật.
 
 ## Trạng thái tổng quan
 
@@ -19,8 +19,9 @@ Last change: `CHG-20261028-013`
 | Database dev/test | Đã chạy | PostgreSQL 18, `tp_tanphat_dev`, `tp_tanphat_test` |
 | Frontend nền | Đã chạy | React/TypeScript/Vite tại `/work/`, login riêng TANPHAT ONE gọi session Odoo; MFA/passkey có native fallback |
 | Vertical slice đọc dự án | Đã kiểm chứng | login → `/me` → list/detail theo quyền → logout/session expiry |
-| TP Contracts read slice | Đã kiểm chứng dev | CTR-001: contract/revision/line/approval reference/document, grant `financial_read` theo project, 4 API GET, 3 màn hình React; chỉ đọc, dữ liệu giả lập |
-| Giao khoán/nghiệm thu/thanh toán | Chưa triển khai | Đã có thiết kế database; ghi/duyệt hợp đồng chưa mở |
+| TP Contracts read slice | Đã kiểm chứng dev | CTR-001: contract/revision/line/approval reference/document, grant `financial_read` theo project, 4 API GET, 3 màn hình React; dữ liệu giả lập |
+| TP Contracts draft/review (CTR-002a) | Đã kiểm chứng test, chưa commit | T1–T6 draft/phụ lục/sửa/gửi/trả lại/mở lại sửa; capability theo project + phòng ban; version, idempotency, audit/outbox, CSRF; 72 Odoo tests trên `tp_tanphat_test`, UI kiểm bằng mock. Dev DB chưa upgrade; chỉ actor fixture, không người dùng thật |
+| Giao khoán/nghiệm thu/thanh toán | Chưa triển khai | Đã có thiết kế database; BASE/ký/hiệu lực/thanh toán chưa mở |
 | Workflow và ma trận quyền KD | Baseline phân tích hoàn tất | BIZ-001: BASE phê duyệt chính thức, tiền theo scope, hạn mức chưa biết; model/state/capability mới là đề xuất |
 | Bộ thiết kế nghiệp vụ toàn công ty | BIZ-002 Q2-P1/SIM-P1/CTR-002a-P1; chờ công ty review | Ma trận 11 hành động Q2; inventory thiếu bundle thực tế; 3 bundle mô phỏng có đường bình thường/trả-sửa-gửi lại/correction-bàn giao; action/version/actor/test gate CTR-002a. Không triển khai chức năng hoặc chốt quy chế |
 | Production | Chưa triển khai | Chưa có HTTPS, backup production, staging migration hoặc dữ liệu thật |
@@ -46,8 +47,22 @@ Last change: `CHG-20261028-013`
 - API đọc `GET /api/v1/contracts`, `/contracts/{id}?as_of=`, `/contracts/{id}/revisions/{rid}`, `/contracts/{id}/documents/{did}/content`; ngoài scope trả 404, `Cache-Control: no-store`, field tiền bị bỏ khi thiếu grant. OpenAPI và TypeScript types đã cập nhật.
 - TP Contracts frontend: danh sách có tìm kiếm/lọc theo project, chi tiết với bản áp dụng theo ngày, lịch sử revision, nhãn BASE đã/chưa xác minh, tài liệu, trang phạm vi công việc; số tiền định dạng từ decimal string, không đổi sang số JavaScript.
 - Dev seed có ba hợp đồng giả lập (`HD-DEV-001/002/003`) và grant dev cho admin trên DEV-001; không có hồ sơ doanh nghiệp thật.
+- CTR-002a (CHG-20261028-014, chỉ test theo DEC-020): `tp.project.grant` thêm `financial.draft_edit`, `contract.draft_edit`, `contract.submit`, `contract.review_commercial` theo project + phòng ban; `tp.contract` có `department_id` và `aggregate_version`. Model mới submission (snapshot S1/S2 bất biến, tiền tách riêng), audit append-only, outbox và idempotency. Action create draft/amendment, edit draft, submit (`draft` → `in_review`), return có lý do (`in_review` → `returned`), begin rework (`returned` → `draft`) và resubmit, mỗi action một transaction có kiểm scope/capability, `expected_version`, idempotency, audit/outbox. API ghi kiểm same-origin + `X-CSRF-Token` + `Idempotency-Key`; OpenAPI/types cập nhật. Frontend có form tạo hợp đồng/phụ lục nháp, trình sửa nháp, gửi/trả lại/mở lại sửa và lịch sử các lần gửi; nút theo `allowed_actions` của backend.
 
 ## Kiểm chứng gần nhất
+
+Lượt `CHG-20261028-014` (CTR-002a) chạy mới, không dùng kết quả cũ:
+
+```text
+Odoo tests (dev.py test trên tp_tanphat_test, grep log): 0 failed, 0 error(s) of 72 tests
+  workflow ORM 16 (T-P01, T-N01…T-N06, T-N08, T-N09) + HttpCase 3 (T-P01, T-N07, T-N01/N02) + regression CTR-001/project
+Ruff tp_api tp_contract tp_planning_api tp_project: passed
+npm run api:types + typecheck: passed; Vitest: 22 passed (3 files)
+build (VITE_ODOO_DATABASE=tp_tanphat_test): passed
+Playwright contract-workflow.spec.ts: 3 passed (mock /api/v1/**, không Odoo/DB)
+```
+
+Không có source backend/OpenAPI nào đổi sau lần chạy Odoo tests. T-N05 kiểm stale version và submit lần hai theo tuần tự; khóa `FOR UPDATE` có trong code nhưng chưa có test race hai process song song. UI chưa chạy với Odoo live vì DEC-020 giới hạn ở test và database dev chưa upgrade lên `tp_contract` 20.0.1.1.0. Không seed/upgrade dev, không đổi credential. Kiểm `finish/check` và `git diff --check` ghi trong state bàn giao CHG-014.
 
 Lượt `CHG-20261028-013` chỉ phân tích/tài liệu: baseline giữ 18 đường dẫn đã sửa/chưa tracked từ các lượt trước tại HEAD `0c3083fb`, không checkpoint cũ, checker CHG-012 đạt; Odoo/PostgreSQL đều dừng. Đối chiếu tĩnh source xác nhận API hợp đồng chỉ có GET và ACL chỉ đọc, chưa có action ghi, aggregate version, snapshot submit, idempotency hay audit transition. Chưa phát hiện sai lệch runtime mới ngoài các giới hạn đã ghi; không setup/upgrade/seed hoặc chạy lại app tests.
 
@@ -121,7 +136,7 @@ npm.cmd run test:e2e --prefix frontend
 
 1. **Bước kế tiếp cụ thể — Q2-A:** chủ nghiệp vụ KD/chủ nguồn BASE review 5 action hồ sơ/BASE trong Q2-P1, cung cấp vai trò theo scope và căn cứ phân công; ghi accepted/rejected/gap riêng từng nội dung vào [nhật ký readiness 7.1](architecture/TP_BIZ002_ACCEPTANCE_AND_READINESS.md). Xong khi có người xác nhận được ủy quyền, phạm vi, bằng chứng, ngày/phiên bản; không cần đóng toàn Q1–Q14. Q2-B quyền/grant/bàn giao tiếp nhận theo nhóm sau, không gán quyền người thật từ chức danh.
 2. **Đối chiếu thực tế thay SIM-P1:** theo danh sách 7.1.2, KD-OWNER tập hợp B01/B02 và HR/owner quyền tập hợp B03 khử dữ liệu; đi từng chặng contract→phụ lục→khoán→NT→request→chứng từ nếu có căn cứ, ghi thiếu nếu chưa có. Chưa bundle thực tế đủ điều kiện; 3 bundle mô phỏng/19 chặng hiện không thay UAT. F/G/J/K/M vẫn chờ chủ chuyên môn; khi chỉ nói “tiếp tục”, tiếp tục review/gap, không mở module/action.
-3. **Chỉ sau yêu cầu chuyển giai đoạn rõ của người dùng:** CTR-002a-P1 tại readiness 7.1.3 là đầu vào phát triển thử test giả lập; thực thi snapshot S1/S2 riêng với revision pháp lý, guard backend/CSRF/version/idempotency/audit/outbox và test hợp lệ/sai quyền/sai state/stale/retry. Không BASE/legal/payment/cancel/grant admin; Q2 trước người dùng thật/pilot, Q1–Q4/Q8 theo action phụ thuộc. Không mở đồng loạt các slice.
+3. **CTR-002a (đã code trên test, CHG-014):** người dùng review diff và quyết định commit; chưa commit/push. Muốn kiểm UI với Odoo thật cần người dùng cho phép upgrade `tp_tanphat_dev` lên `tp_contract` 20.0.1.1.0 (hoặc dựng instance test riêng) rồi chạy Playwright có backend. Trước pilot còn: Q2, outbox delivery/inbox, retention idempotency, test race song song, quản trị grant có ledger. Không BASE/legal/payment/cancel/grant người dùng thật; Q1–Q4/Q8 theo action phụ thuộc. Không mở đồng loạt các slice.
 
 ## Không được làm ở bước hiện tại
 
@@ -137,7 +152,13 @@ npm.cmd run test:e2e --prefix frontend
 
 Lượt CHG-013 giữ Q2 ở `proposed/open`: phản hồi của người dùng cho phép tiếp tục phân tích nhưng chưa bổ nhiệm vai trò, chưa xác nhận căn cứ ủy quyền hoặc quy tắc cùng/khác người. `TP_BIZ002_ACCEPTANCE_AND_READINESS.md` mục 7.1 ghi Q2-A/Q2-B, SIM-P1 B01–B03 và CTR-002a-P1; không có bundle thực tế khử dữ liệu đủ chuỗi trong inventory lượt này. Đây là gap đầu vào, không phải bằng chứng công ty không có hồ sơ.
 
-CTR-002a-P1 hiện đủ làm tài liệu chuẩn bị cho development test sau khi người dùng mở giai đoạn: create/edit draft, submit/return/rework/resubmit, actor fixture, scope/capability, version/snapshot, CSRF, idempotency, transaction/audit/outbox và ca negative/concurrent/retry. Chưa code, chưa chạy test action ghi, chưa mở grant admin/BASE/legal/payment/pilot.
+CTR-002a (CHG-014) đã code theo DEC-020 và đạt test trên `tp_tanphat_test`; business acceptance vẫn pending, Q2 chặn người dùng thật/pilot. Giới hạn đã biết:
+
+- Grant capability mới chỉ superuser/fixture tạo; mỗi (project, user, capability) chỉ một grant hiệu lực. Chưa có màn hình/API quản trị grant, ledger revoke hay delegation.
+- Scope phòng ban của hợp đồng lấy từ phòng chủ trì project khi tạo (migration gán cho hợp đồng cũ); đổi phòng chủ trì project sau đó không đổi scope hợp đồng đã có. Project chưa có phòng chủ trì thì action trả `scope_incomplete`.
+- Outbox ghi event trong transaction và có hàm giao retry, nhưng chưa có cron, kênh gửi ra ngoài hay inbox UI/API; idempotency key chưa có hạn lưu.
+- Chưa test race hai process song song; UI chỉ kiểm bằng mock API, chưa chạy với Odoo live. Database dev chưa upgrade: khởi động Odoo dev với source mới cần upgrade trước.
+- UI chưa có chọn đối tác; form tạo chỉ liệt kê 20 project đầu; người chỉ sửa metadata không xóa được dòng đã có tiền (backend trả 403). Văn bản tự do (lý do, issue, fix summary) vẫn không quét số tiền.
 
 **Sai lệch policy mục tiêu so với runtime đọc hiện có:** grant có reason/date_end/active/granted_by nhưng chưa có date_start/revoked_by/at/reason, delegation hay audit action riêng; superuser có thể unlink grant, không phải ledger bất biến. `financial.export` chưa là capability runtime: export group chuẩn + grant đọc có thể export trong scope. DTO metadata BASE vẫn trả provenance/decision_reason/authority_source/tên người quyết định/hash cho project reader; text tự do chưa quét tiền. BIZ-002 yêu cầu review allowlist/redaction/field policy và audit trước pilot; không sửa code hoặc tự nhận các đề xuất đã được enforce.
 

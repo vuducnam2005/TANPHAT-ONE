@@ -1,25 +1,31 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-10-28T09:31:54.256543+00:00",
-  "last_change_id": "CHG-20261028-008",
-  "code_digest": "d13b5d40bbb1aec56b9bcf0a3489fa23047eab95447380094888f52ecf442c00",
-  "code_file_count": 108,
+  "updated_at": "2026-10-28T14:00:32.756525+00:00",
+  "last_change_id": "CHG-20261028-014",
+  "code_digest": "304742556c9552233e2fe2b1ce62453c07874a8c56eba7e6f48e256080119a07",
+  "code_file_count": 126,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "aecb875ecdc2616660e0cb21ddcf13d0c90ad64d8b4f3988ec9122fadb56d87e",
-    "docs/CHANGELOG.md": "78c322eefbe18f974e8b50f486e6da12a605bdc2e2ab9ce16496f78a9505cedd",
+    "docs/PROJECT_STATUS.md": "d79016dad41a582c7fb0dea34aeb0985315f5dfa7ca7ecb0cf18fd3836dec880",
+    "docs/CHANGELOG.md": "cc41d185dc27b6fcc32ff309a56132b4f05ced23a64863543c5a4d64a3fd3f01",
     "AGENTS.md": "2474c035b6823d7157f6c8afd17b7cadc8aded79fa45ac8505d7f561f01bf0cf",
     "README_TANPHAT.md": "7b12ef66c29f0cbecb53096a3115e6199ea014cde2eb59e550221e9001f41f47",
-    "docs/AI_CHANGE_WORKFLOW.md": "ecd678252dc1333b30d1de1254c7407631695ca900a2cea36e10757516a4b25d",
-    "docs/ROADMAP.md": "58587566b564a1e1af2068b9fbf75690e18dca7a13f3963315b798cc4ac53b2a",
-    "docs/DECISIONS.md": "ec400bb32b9edc56f423020ea3dc90a6815dc59a95c7e85023cf915699cd1ddf",
+    "docs/AI_CHANGE_WORKFLOW.md": "219f6734fdf845995bf4b2323cbe18e4e73b317d767552b7f43a2f1088890d34",
+    "docs/ROADMAP.md": "ad501f2483f51c762586096b8ef5242ca62928f7797938a817f1c15fa982ff97",
+    "docs/DECISIONS.md": "ae959c80d4c7e142da6121cd2f3a87fde7fc9cf5f5096358a4fb0af255631901",
     "docs/HANDOFF_TEMPLATE.md": "7a98efbd7a557efe789b51fefbf5c4072908f9d9f29a21e0c76d012cbddf3d32",
-    "docs/architecture/TP_BUSINESS_WORKFLOW.md": "557d15cf85e1865206487abfaaa58e912374a21ecbcea66cba1e30f46b809d05",
-    "docs/architecture/TP_DATABASE_DESIGN.md": "3487f0b33b79cee0d3bd74675da26b7db67e26b0c0c870e621763022a6e68bad",
-    "docs/architecture/TP_PLATFORM_SOURCE_STRUCTURE.md": "5616f3c764c6a8465a8a4dc25a364065ee56bf0a20d3f18343051594edf829d0",
+    "docs/architecture/TP_BUSINESS_WORKFLOW.md": "991ebb78279c46a7fb9b30f756887ecf17bbe5e0073000eb627be2f031669612",
+    "docs/architecture/TP_DATABASE_DESIGN.md": "f52e3e30162df7850d531ab5b58fda46fe151d2a55cca23450c3203dfdbc956f",
+    "docs/architecture/TP_PLATFORM_SOURCE_STRUCTURE.md": "8f5314e421caf904d681ac66ab6ebd1e6cea6377d813f025a232c4e3d2d1dd59",
     "docs/architecture/TP_PRODUCT_NAMING.md": "b93114db49706b3ad642335c58fa67339ab0fdd8880b7a83ef8e8e1f514af3a3"
   },
   "reported_checks": [
-    "Docs-only: KD workflow section 4.4 state mapping checked against tp_contract models, tp_planning_api DTO and frontend label; doccheck CRLF/tables/relative links passed on 4 docs; git diff --check passed; app tests not rerun (no code change)"
+    "scripts/dev.py test (tp_tanphat_test): 0 failed, 0 error(s) of 72 tests; no backend/OpenAPI file changed after the run",
+    "ruff check tp_api tp_contract tp_planning_api tp_project: passed",
+    "npm run api:types + typecheck: passed; vitest: 22 passed (3 files)",
+    "npm run build (VITE_ODOO_DATABASE=tp_tanphat_test): passed",
+    "playwright tests/e2e/contract-workflow.spec.ts: 3 passed (mocked /api/v1, no Odoo/DB)",
+    "doc link/table/line-ending check on 11 updated docs: passed; git diff --check: passed",
+    "not run: parallel race test, UI against live Odoo; tp_tanphat_dev not upgraded/seeded"
   ]
 }

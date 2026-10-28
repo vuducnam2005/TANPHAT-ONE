@@ -78,7 +78,7 @@ Mỗi hồ sơ có các chiều riêng: review nội bộ; decision/evidence BAS
 
 **Q:** giữ Q1–Q4/Q8. Chủ nghiệp vụ phải xác nhận quyền hủy bản gửi, cách xác nhận hiệu lực đồng thời hai field và correction/void sau chốt; không dùng D bổ sung này để tuyên bố đã đóng Q.
 
-**Chuẩn bị CTR-002a-P1:** [readiness mục 7.1.3](TP_BIZ002_ACCEPTANCE_AND_READINESS.md#713-đặc-tả-chuẩn-bị-ctr-002a-p1--test-giả-lập-chưa-code) chi tiết create/edit draft, submit/return/rework/resubmit bằng fixture, CSRF/version/idempotency/audit và ca kiểm. Đề xuất giữ snapshot mỗi vòng gửi review bất biến trong cùng revision chưa ký/hiệu lực; vòng sửa do bị trả không tự tạo amendment/correction pháp lý. Còn Q2 theo [KD 7.4](TP_KD_WORKFLOW_AND_PERMISSIONS.md#74-ma-trận-q2-p1--trách-nhiệm-và-quyền-cần-xác-nhận); chưa triển khai action hoặc mở pilot.
+**Chuẩn bị CTR-002a-P1:** [readiness mục 7.1.3](TP_BIZ002_ACCEPTANCE_AND_READINESS.md#713-đặc-tả-chuẩn-bị-ctr-002a-p1--đã-code-trên-test) chi tiết create/edit draft, submit/return/rework/resubmit bằng fixture, CSRF/version/idempotency/audit và ca kiểm. Đề xuất giữ snapshot mỗi vòng gửi review bất biến trong cùng revision chưa ký/hiệu lực; vòng sửa do bị trả không tự tạo amendment/correction pháp lý. Còn Q2 theo [KD 7.4](TP_KD_WORKFLOW_AND_PERMISSIONS.md#74-ma-trận-q2-p1--trách-nhiệm-và-quyền-cần-xác-nhận). CHG-20261028-014 đã triển khai các action này trên database test với actor fixture (DEC-020); chưa mở pilot hoặc người dùng thật.
 
 ## D. Kế hoạch công việc, giao/nhận, phối hợp và nghiệm thu kết quả
 

@@ -1,5 +1,7 @@
 import type {
-  ApiEnvelope, ApiErrorBody, ContractDetail, ContractSummary, Project, RevisionDetail, SessionBootstrap,
+  ApiEnvelope, ApiErrorBody, BeginReworkRequest, ContractDetail, ContractSummary, CreateAmendmentRequest,
+  CreateContractRequest, EditDraftRequest, NameRef, Project, ReturnReviewRequest, RevisionDetail, SessionBootstrap,
+  SubmitReviewRequest, WorkflowResult,
 } from './types';
 
 export class ApiError extends Error {
@@ -43,6 +45,41 @@ async function get<T>(path: string, signal?: AbortSignal): Promise<T> {
   if (body === undefined) throw new ApiError(response.status, undefined, 'API trả về dữ liệu không hợp lệ.');
   return body as T;
 }
+
+/** One key per user intent: a retry of the same intent reuses it so the server applies it once. */
+export interface WriteOptions {
+  csrfToken: string;
+  idempotencyKey: string;
+}
+
+// Writes go only to the /api/v1 business endpoints; the server rechecks scope,
+// capability, state and version on every call.
+async function send<T>(method: 'POST' | 'PATCH', path: string, body: object, options: WriteOptions): Promise<T> {
+  const response = await fetch(path, {
+    method,
+    credentials: 'same-origin',
+    cache: 'no-store',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'X-Request-ID': requestId(),
+      'X-CSRF-Token': options.csrfToken,
+      'Idempotency-Key': options.idempotencyKey,
+    },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(30000),
+  });
+  const parsed = await readJson<T | ApiErrorBody>(response);
+  if (!response.ok) {
+    const errorBody = parsed && typeof parsed === 'object' && 'error' in parsed ? parsed as ApiErrorBody : undefined;
+    throw new ApiError(response.status, errorBody, 'Chưa lưu được thay đổi.');
+  }
+  if (parsed === undefined) throw new ApiError(response.status, undefined, 'API trả về dữ liệu không hợp lệ.');
+  return parsed as T;
+}
+
+type WorkflowResponse = Promise<ApiEnvelope<WorkflowResult>>;
+const revisionPath = (contractId: number, revisionId: number) => `/api/v1/contracts/${contractId}/revisions/${revisionId}`;
 
 type LoginResult = { requiresVerification: boolean };
 type OdooLoginResponse = {
@@ -125,4 +162,18 @@ export const api = {
   // Downloads are plain same-origin links so the browser sends the Odoo session cookie.
   contractDocumentUrl: (contractId: number, documentId: number) =>
     `/api/v1/contracts/${contractId}/documents/${documentId}/content`,
+  contractReviewers: (contractId: number, signal?: AbortSignal) =>
+    get<ApiEnvelope<NameRef[]>>(`/api/v1/contracts/${contractId}/reviewers`, signal),
+  createContract: (body: CreateContractRequest, options: WriteOptions): WorkflowResponse =>
+    send('POST', '/api/v1/contracts', body, options),
+  createAmendment: (contractId: number, body: CreateAmendmentRequest, options: WriteOptions): WorkflowResponse =>
+    send('POST', `/api/v1/contracts/${contractId}/amendments`, body, options),
+  editDraft: (contractId: number, revisionId: number, body: EditDraftRequest, options: WriteOptions): WorkflowResponse =>
+    send('PATCH', revisionPath(contractId, revisionId), body, options),
+  submitReview: (contractId: number, revisionId: number, body: SubmitReviewRequest, options: WriteOptions): WorkflowResponse =>
+    send('POST', `${revisionPath(contractId, revisionId)}/submit`, body, options),
+  returnReview: (contractId: number, revisionId: number, body: ReturnReviewRequest, options: WriteOptions): WorkflowResponse =>
+    send('POST', `${revisionPath(contractId, revisionId)}/return`, body, options),
+  beginRework: (contractId: number, revisionId: number, body: BeginReworkRequest, options: WriteOptions): WorkflowResponse =>
+    send('POST', `${revisionPath(contractId, revisionId)}/rework`, body, options),
 };

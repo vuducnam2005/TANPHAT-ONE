@@ -1,4 +1,5 @@
 import hashlib
+from uuid import uuid4
 
 from odoo import Command, fields
 from odoo.tests.common import new_test_user
@@ -113,3 +114,77 @@ class TpContractCommon(BaseCommon):
     @staticmethod
     def _link_group(user, xmlid):
         user.sudo().group_ids = [Command.link(user.env.ref(xmlid).id)]
+
+
+class TpContractWorkflowCommon(TpContractCommon):
+    """Synthetic CTR-002a actors (DEC-020): grants are fixtures, never job titles."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        Department = cls.env['hr.department']
+        cls.dept_kd = Department.create({'name': 'KD (synthetic)', 'company_id': cls.company.id})
+        cls.dept_other = Department.create({'name': 'Other department (synthetic)', 'company_id': cls.company.id})
+        (cls.project_a | cls.project_b).tp_department_id = cls.dept_kd
+        # One-time scope backfill of an existing contract, as the 20.0.1.1.0 migration does.
+        (cls.contract_a | cls.contract_b).department_id = cls.dept_kd
+
+        def actor(login, project=None):
+            user = new_test_user(cls.env, login=login, groups='tp_core.group_user', company_id=cls.company.id)
+            if project:
+                cls._assign(project, user)
+            return user
+
+        cls.editor = actor('tp_wf_editor', cls.project_a)
+        cls.meta_editor = actor('tp_wf_meta_editor', cls.project_a)
+        cls.reviewer = actor('tp_wf_reviewer', cls.project_a)
+        cls.other_dept = actor('tp_wf_other_dept', cls.project_a)
+        cls.other_project = actor('tp_wf_other_project', cls.project_b)
+        cls.grants = {
+            'editor': cls._caps(cls.editor, 'contract_draft_edit', 'contract_submit', 'financial_read', 'financial_draft_edit'),
+            'meta_editor': cls._caps(cls.meta_editor, 'contract_draft_edit'),
+            'reviewer': cls._caps(cls.reviewer, 'contract_review_commercial', 'financial_read'),
+            'other_dept': cls._caps(
+                cls.other_dept, 'contract_draft_edit', 'contract_submit', 'financial_read', 'financial_draft_edit',
+                department=cls.dept_other,
+            ),
+            'other_project': cls._caps(
+                cls.other_project, 'contract_draft_edit', 'contract_submit', 'financial_read', 'financial_draft_edit',
+                project=cls.project_b,
+            ),
+        }
+        cls._assign(cls.project_a, cls.manager)
+
+    @classmethod
+    def _caps(cls, user, *capabilities, project=None, department=None):
+        grants = cls.env['tp.project.grant']
+        for capability in capabilities:
+            vals = {
+                'project_id': (project or cls.project_a).id, 'user_id': user.id, 'capability': capability,
+                'reason': 'Synthetic CTR-002a test actor (DEC-020)',
+            }
+            if capability != 'financial_read':
+                vals['department_id'] = (department or cls.dept_kd).id
+            grants |= grants.create(vals)
+        return grants
+
+    def _run(self, user, action, payload, *, key=None, contract=None, revision=None):
+        return self.env['tp.contract.workflow'].with_user(user)._tp_run(
+            action, payload, key=key or f'test-{uuid4().hex}',
+            contract_id=contract.id if contract else None, revision_id=revision.id if revision else None,
+        )
+
+    @staticmethod
+    def _amount(value, *, state='confirmed', tax_basis='excluding_tax'):
+        return {'state': state, 'value': value, 'tax_basis': tax_basis}
+
+    def _new_contract(self, user=None, **extra):
+        payload = {
+            'project_id': self.project_a.id, 'code': 'HD-WF-01', 'name': 'Synthetic survey contract',
+            'contract_type': 'owner', 'currency': 'VND',
+            'lines': [
+                {'scope_key': 'L1', 'name': 'Survey', 'amount': self._amount('100')},
+                {'scope_key': 'L2', 'name': 'Design', 'amount': self._amount(None, state='unconfirmed')},
+            ],
+        } | extra
+        return self._run(user or self.editor, 'create_contract', payload)

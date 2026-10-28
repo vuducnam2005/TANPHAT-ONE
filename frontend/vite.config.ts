@@ -16,7 +16,18 @@ export default defineConfig(({ command, mode }) => {
       port: 4173,
       strictPort: true,
       proxy: {
-        '/api': { target: odooOrigin, changeOrigin: true },
+        '/api': {
+          target: odooOrigin,
+          changeOrigin: true,
+          configure: (proxy) => {
+            // changeOrigin points Host at Odoo; give same-origin dev requests the
+            // matching Origin so the API write guard (Origin = Host) accepts them.
+            proxy.on('proxyReq', (proxyReq, req) => {
+              const origin = req.headers.origin;
+              if (origin && new URL(origin).host === req.headers.host) proxyReq.setHeader('origin', odooOrigin);
+            });
+          },
+        },
         '/web': { target: odooOrigin, changeOrigin: true },
         '/odoo': { target: odooOrigin, changeOrigin: true },
         '/longpolling': { target: odooOrigin, changeOrigin: true, ws: true },

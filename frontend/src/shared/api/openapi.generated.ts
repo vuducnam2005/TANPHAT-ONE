@@ -64,7 +64,8 @@ export interface paths {
         /** @description TP Contracts metadata visible through project scope and active companies. Never contains amounts; search matches code and name only. */
         get: operations["listContracts"];
         put?: never;
-        post?: never;
+        /** @description Creates a contract with its original revision R0 in `draft`, scoped to the project lead department. Needs `contract.draft_edit`; any `lines[].amount` also needs `financial.read` and `financial.draft_edit`. A project without a lead department returns 422 `scope_incomplete`. An invisible project returns 404. */
+        post: operations["createContract"];
         delete?: never;
         options?: never;
         head?: never;
@@ -97,6 +98,92 @@ export interface paths {
         };
         /** @description One full revision snapshot with its scope lines. `lines[].amount` and `total` are present only with `permissions.financial_read`. A revision of another contract returns 404. */
         get: operations["getContractRevision"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Edits a `draft` revision. `contract` header fields change only with the original revision (422 `header_locked` otherwise). `lines` replaces the whole line set by `scope_key`; omitted lines are removed. Adding, changing or removing an amount, or changing the currency, needs `financial.read` and `financial.draft_edit`. Other states return 409 `invalid_state`. */
+        patch: operations["editContractDraft"];
+        trace?: never;
+    };
+    "/api/v1/contracts/{contract_id}/amendments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Creates the next amendment revision in `draft`, copying the lines and amounts of the latest non-cancelled revision as `unchanged`. Needs `contract.draft_edit`. A contract with a revision still in draft/in_review/returned returns 409 `invalid_state`. */
+        post: operations["createContractAmendment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{contract_id}/revisions/{revision_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description `draft` → `in_review`. Needs `contract.submit` and `financial.read`. Records an immutable submission snapshot; amounts go to the financial part only. A resubmission after a return requires `fix_summary`. The reviewer must hold `contract.review_commercial` and `financial.read` in the contract scope with an active assignment (422 `reviewer_ineligible`). Lines missing, unconfirmed amounts or mixed tax bases return 422 `submission_incomplete` with `details.problems`. */
+        post: operations["submitContractRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{contract_id}/revisions/{revision_id}/return": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description `in_review` → `returned` with a required reason. Only the reviewer assigned to the pending submission, still holding `contract.review_commercial` and `financial.read`, may return it (403 `not_assigned_reviewer`). Issue `scope_key` values must exist in the submitted snapshot. */
+        post: operations["returnContractRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{contract_id}/revisions/{revision_id}/rework": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description `returned` → `draft` with a required reason so the draft can be fixed and resubmitted. Needs `contract.draft_edit`. The returned submission stays unchanged in history. */
+        post: operations["reworkContractRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{contract_id}/reviewers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Users who may receive a submission of this contract. Only callers holding `contract.submit` in the contract scope may list them (403 otherwise). Eligibility is rechecked when the submission is recorded. */
+        get: operations["listContractReviewers"];
         put?: never;
         post?: never;
         delete?: never;
@@ -173,9 +260,131 @@ export interface components {
             /** @enum {string} */
             tax_basis: "unknown" | "excluding_tax" | "including_tax" | "mixed";
         } | null;
+        /** @description Grants the current user holds in the contract project and department, with an active assignment. UI hints only; every action rechecks them on the server. */
         ContractPermissions: {
             /** @description Active financial.read grant on the contract project. */
             financial_read: boolean;
+            /** @description contract.draft_edit */
+            draft_edit: boolean;
+            /** @description financial.draft_edit (also needs financial_read to edit amounts). */
+            financial_draft_edit: boolean;
+            /** @description contract.submit */
+            submit: boolean;
+            /** @description contract.review_commercial */
+            review_commercial: boolean;
+        };
+        /**
+         * @description Action the current user may try now on this object. Recomputed on every read.
+         * @enum {string}
+         */
+        WorkflowAction: "create_amendment" | "edit_draft" | "submit_review" | "return_review" | "begin_rework";
+        /** @description One review round of a revision. Immutable except the return and rework fields, each recorded once. Carries no amount; `payload_sha256` covers the metadata hash and a salted financial hash. */
+        ContractSubmission: {
+            id: number;
+            sequence: number;
+            submitted_by: components["schemas"]["NullableNameRef"];
+            /** Format: date-time */
+            submitted_at: string | null;
+            reviewer: components["schemas"]["NullableNameRef"];
+            contract_version: number;
+            fix_summary: string | null;
+            /** @enum {string} */
+            outcome: "pending" | "returned";
+            returned_by: components["schemas"]["NullableNameRef"];
+            /** Format: date-time */
+            returned_at: string | null;
+            return_reason: string | null;
+            return_issues: components["schemas"]["ReturnIssue"][];
+            rework_started_by: components["schemas"]["NullableNameRef"];
+            /** Format: date-time */
+            rework_started_at: string | null;
+            rework_reason: string | null;
+            payload_sha256: string;
+        };
+        ReturnIssue: {
+            /** @description Line of the submitted snapshot */
+            scope_key?: string | null;
+            note: string;
+        };
+        /** @description Line amount. `value` is a decimal string in the contract currency precision, required when confirmed and null when unconfirmed. Negative values return 422. Sending `null` for the whole amount removes it. */
+        AmountInput: {
+            /** @enum {string} */
+            state: "confirmed" | "unconfirmed";
+            value: string | null;
+            /** @enum {string} */
+            tax_basis: "unknown" | "excluding_tax" | "including_tax";
+        } | null;
+        /** @description Omit `amount` to keep the stored amount; any amount change needs financial.draft_edit. */
+        LineInput: {
+            scope_key: string;
+            name: string;
+            amount?: components["schemas"]["AmountInput"];
+        };
+        /** @description Full line set of the draft, ordered; scope keys are unique. */
+        LineSetInput: components["schemas"]["LineInput"][];
+        RevisionFieldsInput: {
+            name?: string;
+            reference?: string | null;
+        };
+        ContractHeaderInput: {
+            code?: string;
+            name?: string;
+            /** @enum {string} */
+            contract_type?: "owner" | "general_contractor" | "subcontractor";
+            partner_id?: number | null;
+            currency?: string;
+        };
+        CreateContractRequest: {
+            project_id: number;
+            /** @description Unique per company (409 duplicate_code). */
+            code: string;
+            name: string;
+            /** @enum {string} */
+            contract_type: "owner" | "general_contractor" | "subcontractor";
+            partner_id?: number | null;
+            currency: string;
+            revision?: components["schemas"]["RevisionFieldsInput"];
+            lines?: components["schemas"]["LineSetInput"];
+        };
+        CreateAmendmentRequest: {
+            expected_version: number;
+            name: string;
+            reference?: string | null;
+        };
+        /** @description At least one of `contract`, `revision` or `lines` is required. */
+        EditDraftRequest: {
+            expected_version: number;
+            contract?: components["schemas"]["ContractHeaderInput"];
+            revision?: components["schemas"]["RevisionFieldsInput"];
+            lines?: components["schemas"]["LineSetInput"];
+        };
+        SubmitReviewRequest: {
+            expected_version: number;
+            reviewer_id: number;
+            /** @description Required when resubmitting. */
+            fix_summary?: string | null;
+        };
+        ReturnReviewRequest: {
+            expected_version: number;
+            /** @description Required; blank returns 422 reason_required. */
+            reason: string | null;
+            issues?: components["schemas"]["ReturnIssue"][];
+        };
+        BeginReworkRequest: {
+            expected_version: number;
+            /** @description Required; blank returns 422 reason_required. */
+            reason: string | null;
+        };
+        /** @description IDs and the new state only. Reload the contract or revision to read the full DTO. */
+        WorkflowResultData: {
+            contract_id: number;
+            revision_id: number;
+            submission_id: number | null;
+            /** @description Contract aggregate version to send as expected_version next. */
+            version: number;
+            /** @enum {string} */
+            review_state: "draft" | "in_review" | "returned" | "review_complete" | "cancelled";
+            replayed: boolean;
         };
         RevisionStatus: {
             id: number;
@@ -336,7 +545,13 @@ export interface components {
             latest_revision: components["schemas"]["NullableRevisionStatus"];
             /** Format: date-time */
             updated_at: string;
+            /** @description Aggregate version; send as expected_version. */
+            version: number;
+            department: components["schemas"]["NullableNameRef"];
             permissions: components["schemas"]["ContractPermissions"];
+            allowed_actions: components["schemas"]["WorkflowAction"][];
+            /** @description Revision in draft, in_review or returned, if any. */
+            working_revision_id: number | null;
             effective_snapshot: components["schemas"]["EffectiveSnapshot"];
             revisions: components["schemas"]["Revision"][];
             documents: components["schemas"]["ContractDocument"][];
@@ -382,20 +597,47 @@ export interface components {
             line_count: number;
             base_references: components["schemas"]["ApprovalReference"][];
             contract_id: number;
+            /** @description Aggregate contract version; send as expected_version. */
+            contract_version: number;
             permissions: components["schemas"]["ContractPermissions"];
+            allowed_actions: components["schemas"]["WorkflowAction"][];
             lines: components["schemas"]["ContractLine"][];
             total?: components["schemas"]["NullableMoney"];
+            submissions: components["schemas"]["ContractSubmission"][];
         };
+        /** @description Write errors: 400 `invalid_request` (shape, `details.field`/`fields`), 403 `forbidden` (`details.missing_capabilities`), `not_assigned_reviewer`, `csrf_invalid`, `cross_origin`, 404 `not_found`, 409 `stale_version` (`details.current_version`), `invalid_state` (`details.review_state`), `duplicate_code`, `idempotency_conflict`, 415 `unsupported_media_type`, 422 business rules such as `reason_required`, `scope_incomplete`, `header_locked`, `reviewer_ineligible`, `fix_summary_required`, `submission_incomplete` (`details.problems`), `unknown_currency`, `unknown_partner`, `unknown_scope_key` and `amount_*`. */
         ErrorEnvelope: {
             error: {
                 code: string;
                 message: string;
-                details: unknown;
+                details: ({
+                    field?: string;
+                    fields?: string[];
+                    missing_capabilities?: string[];
+                    current_version?: number;
+                    review_state?: string;
+                    problems?: ("no_lines" | "amounts_not_confirmed" | "tax_basis_mixed")[];
+                } & {
+                    [key: string]: unknown;
+                }) | null;
             };
             meta: components["schemas"]["Meta"];
         };
     };
     responses: {
+        /** @description Action applied (or replayed). Never cached. `Idempotency-Replayed: true` marks a replay of an earlier identical request. */
+        WorkflowResult: {
+            headers: {
+                "Idempotency-Replayed"?: "true";
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["WorkflowResultData"];
+                    meta: components["schemas"]["Meta"];
+                };
+            };
+        };
         /** @description Structured error with request ID. No HTML redirect or traceback in API responses. */
         ApiError: {
             headers: {
@@ -406,7 +648,12 @@ export interface components {
             };
         };
     };
-    parameters: never;
+    parameters: {
+        /** @description Session CSRF token from `GET /api/v1/me`. Missing or invalid returns 403 `csrf_invalid`. */
+        CsrfToken: string;
+        /** @description One key per user intent. Repeating the same request with the same key returns the first result with `Idempotency-Replayed: true` and writes nothing; reusing it for a different request returns 409 `idempotency_conflict`. A replay rechecks the caller's current capabilities. */
+        IdempotencyKey: string;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -540,6 +787,34 @@ export interface operations {
             403: components["responses"]["ApiError"];
         };
     };
+    createContract: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Session CSRF token from `GET /api/v1/me`. Missing or invalid returns 403 `csrf_invalid`. */
+                "X-CSRF-Token": components["parameters"]["CsrfToken"];
+                /** @description One key per user intent. Repeating the same request with the same key returns the first result with `Idempotency-Replayed: true` and writes nothing; reusing it for a different request returns 409 `idempotency_conflict`. A replay rechecks the caller's current capabilities. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateContractRequest"];
+            };
+        };
+        responses: {
+            201: components["responses"]["WorkflowResult"];
+            400: components["responses"]["ApiError"];
+            401: components["responses"]["ApiError"];
+            403: components["responses"]["ApiError"];
+            404: components["responses"]["ApiError"];
+            409: components["responses"]["ApiError"];
+            415: components["responses"]["ApiError"];
+            422: components["responses"]["ApiError"];
+        };
+    };
     getContract: {
         parameters: {
             query?: {
@@ -592,6 +867,189 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["RevisionDetail"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            400: components["responses"]["ApiError"];
+            401: components["responses"]["ApiError"];
+            403: components["responses"]["ApiError"];
+            404: components["responses"]["ApiError"];
+        };
+    };
+    editContractDraft: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Session CSRF token from `GET /api/v1/me`. Missing or invalid returns 403 `csrf_invalid`. */
+                "X-CSRF-Token": components["parameters"]["CsrfToken"];
+                /** @description One key per user intent. Repeating the same request with the same key returns the first result with `Idempotency-Replayed: true` and writes nothing; reusing it for a different request returns 409 `idempotency_conflict`. A replay rechecks the caller's current capabilities. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                contract_id: number;
+                revision_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EditDraftRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["WorkflowResult"];
+            400: components["responses"]["ApiError"];
+            401: components["responses"]["ApiError"];
+            403: components["responses"]["ApiError"];
+            404: components["responses"]["ApiError"];
+            409: components["responses"]["ApiError"];
+            415: components["responses"]["ApiError"];
+            422: components["responses"]["ApiError"];
+        };
+    };
+    createContractAmendment: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Session CSRF token from `GET /api/v1/me`. Missing or invalid returns 403 `csrf_invalid`. */
+                "X-CSRF-Token": components["parameters"]["CsrfToken"];
+                /** @description One key per user intent. Repeating the same request with the same key returns the first result with `Idempotency-Replayed: true` and writes nothing; reusing it for a different request returns 409 `idempotency_conflict`. A replay rechecks the caller's current capabilities. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                contract_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAmendmentRequest"];
+            };
+        };
+        responses: {
+            201: components["responses"]["WorkflowResult"];
+            400: components["responses"]["ApiError"];
+            401: components["responses"]["ApiError"];
+            403: components["responses"]["ApiError"];
+            404: components["responses"]["ApiError"];
+            409: components["responses"]["ApiError"];
+            415: components["responses"]["ApiError"];
+            422: components["responses"]["ApiError"];
+        };
+    };
+    submitContractRevision: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Session CSRF token from `GET /api/v1/me`. Missing or invalid returns 403 `csrf_invalid`. */
+                "X-CSRF-Token": components["parameters"]["CsrfToken"];
+                /** @description One key per user intent. Repeating the same request with the same key returns the first result with `Idempotency-Replayed: true` and writes nothing; reusing it for a different request returns 409 `idempotency_conflict`. A replay rechecks the caller's current capabilities. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                contract_id: number;
+                revision_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitReviewRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["WorkflowResult"];
+            400: components["responses"]["ApiError"];
+            401: components["responses"]["ApiError"];
+            403: components["responses"]["ApiError"];
+            404: components["responses"]["ApiError"];
+            409: components["responses"]["ApiError"];
+            415: components["responses"]["ApiError"];
+            422: components["responses"]["ApiError"];
+        };
+    };
+    returnContractRevision: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Session CSRF token from `GET /api/v1/me`. Missing or invalid returns 403 `csrf_invalid`. */
+                "X-CSRF-Token": components["parameters"]["CsrfToken"];
+                /** @description One key per user intent. Repeating the same request with the same key returns the first result with `Idempotency-Replayed: true` and writes nothing; reusing it for a different request returns 409 `idempotency_conflict`. A replay rechecks the caller's current capabilities. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                contract_id: number;
+                revision_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReturnReviewRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["WorkflowResult"];
+            400: components["responses"]["ApiError"];
+            401: components["responses"]["ApiError"];
+            403: components["responses"]["ApiError"];
+            404: components["responses"]["ApiError"];
+            409: components["responses"]["ApiError"];
+            415: components["responses"]["ApiError"];
+            422: components["responses"]["ApiError"];
+        };
+    };
+    reworkContractRevision: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Session CSRF token from `GET /api/v1/me`. Missing or invalid returns 403 `csrf_invalid`. */
+                "X-CSRF-Token": components["parameters"]["CsrfToken"];
+                /** @description One key per user intent. Repeating the same request with the same key returns the first result with `Idempotency-Replayed: true` and writes nothing; reusing it for a different request returns 409 `idempotency_conflict`. A replay rechecks the caller's current capabilities. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                contract_id: number;
+                revision_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BeginReworkRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["WorkflowResult"];
+            400: components["responses"]["ApiError"];
+            401: components["responses"]["ApiError"];
+            403: components["responses"]["ApiError"];
+            404: components["responses"]["ApiError"];
+            409: components["responses"]["ApiError"];
+            415: components["responses"]["ApiError"];
+            422: components["responses"]["ApiError"];
+        };
+    };
+    listContractReviewers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Eligible reviewers. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["NameRef"][];
                         meta: components["schemas"]["Meta"];
                     };
                 };

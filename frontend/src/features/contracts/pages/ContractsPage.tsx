@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { parseRouteId, useContracts } from '../queries';
 import { ApiError } from '../../../shared/api/client';
 import { StatusPanel } from '../../../shared/ui/StatusPanel';
 import { ContractCard } from '../components/ContractCard';
+import { CreateContractForm } from '../components/CreateContractForm';
 
 export function ContractsPage() {
   const [parameters, setParameters] = useSearchParams();
+  const [creating, setCreating] = useState(false);
   const search = (parameters.get('q') ?? '').slice(0, 100);
   const projectId = parseRouteId(parameters.get('project_id'));
   const rawOffset = Number(parameters.get('offset') ?? 0);
@@ -31,6 +34,9 @@ export function ContractsPage() {
         </div>
         {query.isSuccess && <div className="tp-count-block"><strong>{records.length}</strong><span>hợp đồng trên trang</span></div>}
       </div>
+      {creating
+        ? <CreateContractForm defaultProjectId={projectId} onClose={() => setCreating(false)} />
+        : <button className="tp-primary-button tp-self-start" type="button" onClick={() => setCreating(true)}>Tạo hợp đồng nháp</button>}
       <form className="tp-toolbar" key={`${search}-${projectId ?? ''}`} onSubmit={(event) => {
         event.preventDefault();
         const value = String(new FormData(event.currentTarget).get('search') ?? '').trim();

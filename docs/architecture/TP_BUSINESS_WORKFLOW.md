@@ -1,6 +1,6 @@
 # TANPHAT ONE — Workflow nghiệp vụ và quy tắc chuyển trạng thái
 
-Đây là blueprint cho workflow/action mới, không phải danh sách chức năng đã triển khai. Nền và CTR-001 đã kiểm chứng đọc project/hợp đồng theo quyền; action ghi hợp đồng và workflow giao khoán chưa có runtime.
+Đây là blueprint cho workflow/action mới, không phải danh sách chức năng đã triển khai. Nền và CTR-001 đã kiểm chứng đọc project/hợp đồng theo quyền; CTR-002a có action draft/submit/return/rework hợp đồng trên database test với actor fixture (DEC-020). Action BASE/ký/hiệu lực và workflow giao khoán chưa có runtime.
 
 Baseline chi tiết hiện hành cho Ban Kinh doanh/Kế hoạch:
 
@@ -47,7 +47,8 @@ Project có thể mở từ cơ hội/dự thầu; có đường giao trực ti�
 | Platform Manager | Quản lý project metadata/catalog/assignment nền; không ngầm là reviewer/approver hợp đồng |
 | KD_HEAD, PROJECT_OWNER, PLANNING, SUPPORT, TECHNICAL, FINANCE, EXECUTIVE | Preset đề xuất của BIZ-001, chưa thành group/XML ID |
 | financial.read | Đã triển khai cho TP Contracts (CTR-001): `tp.project.grant` theo user + project, superuser cấp khi Q2 chưa chốt; Platform Manager/admin không có tiền mặc định |
-| financial.draft_edit, base_result.record/verify và các capability khác | Thiết kế, phải triển khai/test trong domain tương ứng |
+| financial.draft_edit, contract.draft_edit, contract.submit, contract.review_commercial | Đã triển khai trên test (CTR-002a, CHG-20261028-014): grant theo project + phòng ban, chỉ superuser/fixture cấp; chưa cấp cho người dùng thật (Q2) |
+| base_result.record/verify và các capability khác | Thiết kế, phải triển khai/test trong domain tương ứng |
 | Người duyệt chính thức | Trên BASE theo văn bản thẩm quyền; không có quyền duyệt song song trong Odoo |
 
 ACL/group rules Odoo có tính cộng quyền, global rules giới hạn giao nhau; không giả định role hạn chế tự thắng. Kiểm quyền theo capability/scope của record. Admin/superuser có khả năng truy cập kỹ thuật; dùng quản trị riêng/audit, API nghiệp vụ không sudo để né scope.
@@ -55,7 +56,7 @@ ACL/group rules Odoo có tính cộng quyền, global rules giới hạn giao nh
 ## 4. Project, contract và các đối tượng tiếp theo
 
 - Project dự kiến draft → review → active/on_hold → completed/cancelled; chưa triển khai ngoài active flag chuẩn/tp_managed và assignment. Không thêm state chỉ để mở CTR-001.
-- Hợp đồng giữ danh tính ổn định; version hồ sơ/review, approval reference, chữ ký, lifecycle và snapshot revision hiệu lực liên kết rõ. CTR-001 đã có các trường này ở dạng chỉ đọc; chưa có transition submit/review/sign/make_effective. Ánh xạ tên trạng thái nghiệp vụ sang field/giá trị trong code nằm ở mục 4.4 của [workflow KD](TP_KD_WORKFLOW_AND_PERMISSIONS.md).
+- Hợp đồng giữ danh tính ổn định; version hồ sơ/review, approval reference, chữ ký, lifecycle và snapshot revision hiệu lực liên kết rõ. CTR-001 đã có các trường này ở dạng chỉ đọc. CTR-002a (chỉ test) thêm transition review: tạo/sửa draft, submit → `in_review`, return có lý do → `returned`, begin rework → `draft` và gửi lại; chưa có complete review, cancel, BASE, sign hay make_effective. Ánh xạ tên trạng thái nghiệp vụ sang field/giá trị trong code nằm ở mục 4.4 của [workflow KD](TP_KD_WORKFLOW_AND_PERMISSIONS.md).
 - Phụ lục PKH là tổng giá trị mới ở phạm vi hạng mục/đơn vị được cập nhật; thiết kế snapshot đầy đủ phải ghép với phạm vi không đổi. Không cộng như delta.
 - Giao khoán cấp 1 gồm thầu phụ công ty và khoán nội bộ; cấp 2 thuộc khoán nội bộ cha, cùng company/project, không cộng tổng lần hai.
 - Sản lượng, nghiệm thu, hóa đơn, tiền và giữ lại tách riêng. Nghiệm thu cần căn cứ chuyên môn/bên ký; không mặc định mọi biên bản đều phải có một quyết định BASE riêng.
@@ -67,11 +68,11 @@ ACL/group rules Odoo có tính cộng quyền, global rules giới hạn giao nh
 | Phạm vi | Đầu vào tối thiểu |
 | --- | --- |
 | CTR-001 đọc | Baseline BIZ-001, typed schema, field/scope/attachment policy, test dữ liệu giả, API DTO — đạt trên dev (CHG-20261028-006) |
-| Draft/submit/return trên test | Action matrix, capability, CSRF/version/idempotency/audit và negative tests |
+| Draft/submit/return trên test | Action matrix, capability, CSRF/version/idempotency/audit và negative tests — đạt trên `tp_tanphat_test` với actor fixture (CHG-20261028-014, DEC-020); chưa pilot |
 | Xác minh BASE/hiệu lực pháp lý trên pilot | Văn bản thẩm quyền, phân công record/verify, hồ sơ BASE thực tế, quy tắc ngày và correction liên quan |
 | Allocation/acceptance/finance/import | Quy chế và hồ sơ đại diện đúng domain; mapping/reconcile, owner nghiệp vụ nghiệm thu |
 
 BIZ-001 hoàn tất phần phân tích, còn nghiệm thu chủ nghiệp vụ và Q1–Q8 theo cổng. Có thể làm read slice trước; không dùng việc còn thiếu hạn mức làm lý do ngừng mọi thiết kế/draft development độc lập.
 
-Ưu tiên hiện tại: review BIZ-002 → hồ sơ đại diện/câu hỏi theo slice → người dùng quyết định chuyển code. Thứ tự triển khai sau đó là đề xuất trong [readiness BIZ-002](TP_BIZ002_ACCEPTANCE_AND_READINESS.md); không tự tiếp tục CTR-002 từ next action cũ. Không tạo engine tổng quát hoặc reporting database trước khi có nhu cầu đã kiểm chứng.
+Ưu tiên hiện tại: review BIZ-002 → hồ sơ đại diện/câu hỏi theo slice → người dùng quyết định chuyển code. Người dùng đã mở CTR-002a trên test (DEC-020); các phần CTR-002 còn lại và pilot theo thứ tự đề xuất trong [readiness BIZ-002](TP_BIZ002_ACCEPTANCE_AND_READINESS.md), không tự mở tiếp. Không tạo engine tổng quát hoặc reporting database trước khi có nhu cầu đã kiểm chứng.
 

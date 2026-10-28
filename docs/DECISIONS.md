@@ -35,3 +35,9 @@ DEC-013–017 cụ thể hóa baseline ở DEC-007 và thay phần chưa chốt 
 | DEC-019 | Nguyên tắc thiết kế đã yêu cầu; chi tiết là đề xuất | Một nguồn sự thật theo phần: workflow KD giữ mapping contract/Q1–Q8, BIZ-002 mở rộng A–M/RACI/dictionary/tích hợp/KPI/scenario/readiness; phân biệt U quyết định người dùng, O quan sát nguồn, D thiết kế, Q chưa đủ căn cứ, R runtime | [Bộ thiết kế BIZ-002](architecture/TP_BIZ002_DESIGN_PACKAGE.md); Q9–Q14 bổ sung theo domain. Không coi source Excel/ảnh, walkthrough hoặc checker là quy chế được công ty duyệt; không ledger/workflow engine song song |
 
 RACI/capability/transition mới, policy field/export/attachment, SLA/threshold/retention và mô hình tích hợp chỉ trở thành quy tắc được áp dụng sau cổng theo [readiness](architecture/TP_BIZ002_ACCEPTANCE_AND_READINESS.md); chưa có quyết định nào đóng Q1–Q14 trong lượt tài liệu này. DEC-013–017 tiếp tục hiệu lực trong phạm vi đã ghi.
+
+## CTR-002a — Mở code draft/submit/return chỉ trên test (28/10/2026)
+
+| ID | Trạng thái | Quyết định | Cơ sở/ảnh hưởng |
+| --- | --- | --- | --- |
+| DEC-020 | Người dùng xác nhận 28/10/2026 | Cho phép chuyển CTR-002a-P1 sang code chỉ trên database test với dữ liệu giả và actor fixture, dù Q2 còn mở: draft/sửa draft, submit → `in_review`, trả lại có lý do → `returned`, sửa và submit lại. Q2 vẫn chặn người dùng thật/pilot | Capability CTR-002a là grant theo project + phòng ban do superuser/fixture tạo; không cấp cho user thật, không suy từ chức danh. Ngoài phạm vi: BASE approved/verified, chữ ký/thẩm quyền ký, effectivity, nghiệm thu/thanh toán/giao khoán, cancel revision, quản trị grant người dùng thật |

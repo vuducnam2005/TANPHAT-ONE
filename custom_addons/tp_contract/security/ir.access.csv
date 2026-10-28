@@ -13,3 +13,13 @@ approval_amount_financial_reader,BASE approved amount financial reader,tp.approv
 approval_amount_company,BASE approved amount company restriction,tp.approval.reference.amount,,crud,"[('company_id', 'in', company_ids)]"
 document_reader,Contract document reader,tp.contract.document,tp_core.group_user,r,"[('project_id', 'access', 'read'), '|', ('confidentiality', '=', 'general'), ('project_id.tp_financial_read_granted', '=', True)]"
 document_company,Contract document company restriction,tp.contract.document,,crud,"[('company_id', 'in', company_ids)]"
+submission_reader,Contract review submission metadata reader,tp.contract.submission,tp_core.group_user,r,"[('project_id', 'access', 'read')]"
+submission_company,Contract review submission company restriction,tp.contract.submission,,crud,"[('company_id', 'in', company_ids)]"
+submission_amount_financial_reader,Contract submission amount financial reader,tp.contract.submission.amount,tp_core.group_user,r,"[('project_id', 'access', 'read'), ('project_id.tp_financial_read_granted', '=', True)]"
+submission_amount_company,Contract submission amount company restriction,tp.contract.submission.amount,,crud,"[('company_id', 'in', company_ids)]"
+audit_reader,Contract workflow audit reader,tp.contract.audit,tp_core.group_user,r,"[('project_id', 'access', 'read')]"
+audit_company,Contract workflow audit company restriction,tp.contract.audit,,crud,"[('company_id', 'in', company_ids)]"
+outbox_recipient,Contract notification recipient,tp.contract.outbox,tp_core.group_user,r,"[('recipient_id', '=', user.id), ('project_id', 'access', 'read')]"
+outbox_company,Contract notification company restriction,tp.contract.outbox,,crud,"[('company_id', 'in', company_ids)]"
+idempotency_admin,Contract idempotency key administrator,tp.contract.idempotency,base.group_system,r,
+idempotency_company,Contract idempotency key company restriction,tp.contract.idempotency,,crud,"[('company_id', 'in', company_ids)]"

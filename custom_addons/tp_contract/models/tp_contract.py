@@ -1,5 +1,10 @@
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
+
+# Context key set only by tp.contract.workflow when it writes guarded fields.
+WORKFLOW_CONTEXT = 'tp_contract_workflow'
+# Contract fields captured by review snapshots.
+HEADER_FIELDS = frozenset({'code', 'name', 'partner_id', 'contract_type', 'currency_id'})
 
 CONTRACT_TYPES = [
     ('owner', 'With Project Owner'),
@@ -32,6 +37,14 @@ class TpContract(models.Model):
     contract_type = fields.Selection(CONTRACT_TYPES, required=True)
     currency_id = fields.Many2one('res.currency', required=True, default=lambda self: self.env.company.currency_id)
     lifecycle_state = fields.Selection(LIFECYCLE_STATES, required=True, default='not_effective')
+    department_id = fields.Many2one(
+        'hr.department', ondelete='restrict', index=True, check_company=True,
+        help='Department scope of contract workflow grants, copied from the project lead department at creation.',
+    )
+    aggregate_version = fields.Integer(
+        required=True, default=1, copy=False,
+        help='Raised by every workflow mutation of the contract or its children; writers send it back as expected_version.',
+    )
     legacy_unverified = fields.Boolean(help='Historical record kept without verified legal or approval evidence.')
     revision_ids = fields.One2many('tp.contract.revision', 'contract_id', string='Revisions')
     active = fields.Boolean(default=True)
@@ -48,12 +61,33 @@ class TpContract(models.Model):
         for vals in vals_list:
             if vals.get('code'):
                 vals['code'] = vals['code'].strip().upper()
+            if not vals.get('department_id') and vals.get('project_id'):
+                vals['department_id'] = self.env['project.project'].browse(vals['project_id']).sudo().tp_department_id.id
         return super().create(vals_list)
 
     def write(self, vals):
+        self._tp_check_protected_write(vals)
         if vals.get('code'):
             vals = dict(vals, code=vals['code'].strip().upper())
         return super().write(vals)
+
+    def _tp_check_protected_write(self, vals):
+        # Scope fields never move a contract out of its grants; the version only
+        # changes inside workflow actions; the header is part of every review
+        # snapshot. Access is checked first so callers without write rights
+        # still get the access error.
+        if not {'project_id', 'department_id', 'aggregate_version', *HEADER_FIELDS} & set(vals):
+            return
+        self.check_access('write')
+        if HEADER_FIELDS & set(vals) and any(revision._tp_is_frozen() for revision in self.sudo().revision_ids):
+            raise UserError(self.env._('The contract header cannot change while a revision is under review.'))
+        for contract in self:
+            if 'project_id' in vals and vals['project_id'] != contract.project_id.id:
+                raise UserError(self.env._('A contract cannot move to another project.'))
+            if 'department_id' in vals and contract.department_id and vals['department_id'] != contract.department_id.id:
+                raise UserError(self.env._('The department scope of a contract cannot be changed.'))
+        if 'aggregate_version' in vals and not self.env.context.get(WORKFLOW_CONTEXT):
+            raise UserError(self.env._('The contract version changes only through workflow actions.'))
 
     @api.constrains('project_id')
     def _check_managed_project(self):

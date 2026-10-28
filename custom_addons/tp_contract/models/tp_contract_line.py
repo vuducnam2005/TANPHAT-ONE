@@ -1,5 +1,5 @@
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 TAX_BASES = [
     ('unknown', 'Unknown'),
@@ -36,6 +36,23 @@ class TpContractLine(models.Model):
         'UNIQUE(revision_id, scope_key)', 'A scope key appears once per revision.',
     )
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        lines = super().create(vals_list)
+        lines.sudo().revision_id._tp_check_content_editable()
+        return lines
+
+    def write(self, vals):
+        self.check_access('write')
+        if 'revision_id' in vals and any(line.revision_id.id != vals['revision_id'] for line in self):
+            raise UserError(self.env._('A scope line cannot move to another revision.'))
+        self.sudo().revision_id._tp_check_content_editable()
+        return super().write(vals)
+
+    @api.ondelete(at_uninstall=False)
+    def _unlink_except_submitted(self):
+        self.sudo().revision_id._tp_check_content_editable()
+
     @api.constrains('previous_line_id', 'revision_id', 'change_kind', 'scope_key')
     def _check_line_provenance(self):
         for line in self:
@@ -71,6 +88,23 @@ class TpContractLineAmount(models.Model):
     tax_basis = fields.Selection(TAX_BASES, required=True, default='unknown')
 
     _line_unique = models.Constraint('UNIQUE(line_id)', 'A scope line has one amount record.')
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        amounts = super().create(vals_list)
+        amounts.sudo().line_id.revision_id._tp_check_content_editable()
+        return amounts
+
+    def write(self, vals):
+        self.check_access('write')
+        if 'line_id' in vals and any(amount.line_id.id != vals['line_id'] for amount in self):
+            raise UserError(self.env._('An amount cannot move to another scope line.'))
+        self.sudo().line_id.revision_id._tp_check_content_editable()
+        return super().write(vals)
+
+    @api.ondelete(at_uninstall=False)
+    def _unlink_except_submitted(self):
+        self.sudo().line_id.revision_id._tp_check_content_editable()
     _unconfirmed_is_empty = models.Constraint(
         "CHECK(amount_state = 'confirmed' OR COALESCE(amount, 0) = 0)",
         'An unconfirmed amount must not carry a value.',

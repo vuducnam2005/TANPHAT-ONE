@@ -121,6 +121,8 @@ Tên ở 4.1–4.3 là tên nghiệp vụ. CTR-001 đã có các field dưới �
 | Hiệu lực của bản | `tp.contract.revision.effectivity_status` | `not_effective`, `effective_recorded` | confirm_effectivity, phía revision | `effective_recorded` cần `signed_recorded`, `effective_date` và bản không `cancelled`. Chỉ bản này được chọn cho snapshot theo ngày; BASE approved không làm bản có hiệu lực |
 | Lifecycle hợp đồng | `tp.contract.lifecycle_state` | `not_effective`, `effective`, `suspended`, `execution_completed`, `liquidated`, `terminated` | confirm_effectivity phía hợp đồng; suspend/resume, complete_execution, record_liquidation, terminate | Khác `not_effective` cần ít nhất một bản `effective_recorded`. Chưa ràng buộc thứ tự chuyển giữa các giá trị |
 
+**CTR-002a (CHG-20261028-014, chỉ test theo DEC-020):** `review_state` đã có action backend `draft` → `in_review` (submit), `in_review` → `returned` (return, lý do bắt buộc) và `returned` → `draft` (begin rework, giữ lịch sử lần gửi). `review_complete` và `cancelled` vẫn chưa có action; ghi `review_state` ngoài workflow bị chặn ở ORM. Các lớp BASE, xác minh, chữ ký, hiệu lực và lifecycle giữ nguyên chỉ đọc. Mỗi lần gửi là một `tp.contract.submission` bất biến; capability theo project + phòng ban trên `tp.project.grant` (chi tiết ở [readiness 7.1.3](TP_BIZ002_ACCEPTANCE_AND_READINESS.md#713-đặc-tả-chuẩn-bị-ctr-002a-p1--đã-code-trên-test)).
+
 “signed → effective” ở 4.3 gộp hai lớp mà code tách riêng: `effectivity_status` của từng bản và `lifecycle_state` của hợp đồng. Cách confirm_effectivity cập nhật hai field này trong cùng transaction được chốt khi thiết kế action, sau khi Q1–Q3 có câu trả lời.
 
 ## 5. Revision, dữ liệu tiền và ngày báo cáo
@@ -295,7 +297,7 @@ Mọi transition phải có actor/capability, scope, state trước/sau, guard, 
 - Tiền theo currency/rounding Odoo, DTO decimal string + currency + basis/verification; JavaScript không tính tiền chính thức.
 - Request không tạo tiền thực tế, ghi BASE không auto-post kế toán.
 
-**Sau baseline được phép:** read-only vertical slice cho tp.contract, tp.contract.revision, tp.contract.line và tp.approval.reference; chưa mở command ghi/chốt pháp lý khi Q1/Q2 chưa đóng. CTR-001 đã làm phần này với 4 endpoint GET; actor lấy từ session, ngoài scope trả 404, `no-store`.
+**Sau baseline được phép:** read-only vertical slice cho tp.contract, tp.contract.revision, tp.contract.line và tp.approval.reference; chưa mở command ghi/chốt pháp lý khi Q1/Q2 chưa đóng. CTR-001 đã làm phần này với 4 endpoint GET; actor lấy từ session, ngoài scope trả 404, `no-store`. CTR-002a (CHG-014, chỉ test) thêm command ghi draft/submit/return/rework với CSRF same-origin, `expected_version`, idempotency key, audit và outbox trong cùng transaction; command chốt pháp lý/BASE vẫn chưa mở.
 
 ## 9. Câu hỏi còn mở và cổng triển khai
 

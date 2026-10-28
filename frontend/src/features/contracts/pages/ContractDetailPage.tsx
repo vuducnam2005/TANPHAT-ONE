@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { parseRouteId, useContract } from '../queries';
 import { api, ApiError } from '../../../shared/api/client';
 import { StatusPanel } from '../../../shared/ui/StatusPanel';
 import type { ContractDetail } from '../../../shared/api/types';
 import { BaseReferences } from '../components/BaseReferences';
+import { CreateAmendmentForm } from '../components/CreateAmendmentForm';
 import { MoneyValue } from '../components/MoneyValue';
 import {
   contractTypeLabels, documentKindLabels, effectivityLabels, formatDate, formatDateTime, lifecycleLabels,
@@ -16,6 +18,8 @@ export function ContractDetailPage() {
   const rawAsOf = parameters.get('as_of');
   const asOf = rawAsOf && /^\d{4}-\d{2}-\d{2}$/.test(rawAsOf) ? rawAsOf : undefined;
   const query = useContract(id, asOf);
+  const [amending, setAmending] = useState(false);
+  const [formGeneration, setFormGeneration] = useState(0);
   const notFound = !id || (query.error instanceof ApiError && query.error.status === 404);
   const badDate = query.error instanceof ApiError && query.error.status === 400;
 
@@ -56,6 +60,8 @@ export function ContractDetailPage() {
         <Fact label="Số bản đã ghi nhận" value={String(contract.revision_count)} />
         <Fact label="Cập nhật gần nhất" value={formatDateTime(contract.updated_at)} />
       </dl>
+      <DraftActions contract={contract} amending={amending} generation={formGeneration}
+        onAmend={setAmending} onReload={() => void query.refetch().then(() => setFormGeneration((value) => value + 1))} />
       <EffectiveSnapshot contract={contract} asOf={asOf} onChange={(value) => setParameters(value ? { as_of: value } : {})} />
 
       <section className="tp-panel" aria-labelledby="revisions-title">
@@ -112,6 +118,26 @@ export function ContractDetailPage() {
         {!financialRead && <p className="tp-muted-note">Tài liệu có thông tin tài chính chỉ hiển thị khi bạn được cấp quyền xem số tiền của dự án.</p>}
       </section>
     </section>
+  );
+}
+
+function DraftActions({ contract, amending, generation, onAmend, onReload }: {
+  contract: ContractDetail; amending: boolean; generation: number; onAmend: (value: boolean) => void; onReload: () => void;
+}) {
+  const working = contract.revisions.find((revision) => revision.id === contract.working_revision_id);
+  const canAmend = contract.allowed_actions.includes('create_amendment');
+  if (!working && !canAmend) return null;
+  if (amending && canAmend) return <CreateAmendmentForm key={generation} contract={contract} onClose={() => onAmend(false)} onReload={onReload} />;
+  return (
+    <div className="tp-notice tp-filter-note">
+      <span>{working
+        ? `Đang soạn: Bản ${working.sequence} · ${working.name} (${reviewLabels[working.review_state]}).`
+        : 'Chưa có bản nháp đang soạn cho hợp đồng này.'}</span>
+      <span className="tp-form-actions">
+        {working && <Link className="tp-quiet-button" to={`/contracts/${contract.id}/revisions/${working.id}`}>Mở bản đang soạn</Link>}
+        {canAmend && <button className="tp-primary-button" type="button" onClick={() => onAmend(true)}>Tạo phụ lục nháp</button>}
+      </span>
+    </div>
   );
 }
 

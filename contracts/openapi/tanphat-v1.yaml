@@ -2,7 +2,11 @@ openapi: 3.0.3
 info:
   title: TANPHAT ONE API
   version: 1.0.0
-  description: Read-only project and TP Contracts foundation. Browser uses the native Odoo session on the same origin.
+  description: >-
+    Project and TP Contracts API. Browser uses the native Odoo session on the same origin. Write endpoints cover
+    the CTR-002a draft and commercial review slice only (create/edit draft, submit, return, rework); BASE approval,
+    signing, effectivity, payment and grant administration have no endpoint. Every write needs `X-CSRF-Token`,
+    `Idempotency-Key`, `Content-Type: application/json` and, except creation, `expected_version`.
 servers:
   - url: /
 security:
@@ -117,6 +121,29 @@ paths:
         '400': { $ref: '#/components/responses/ApiError' }
         '401': { $ref: '#/components/responses/ApiError' }
         '403': { $ref: '#/components/responses/ApiError' }
+    post:
+      operationId: createContract
+      description: >-
+        Creates a contract with its original revision R0 in `draft`, scoped to the project lead department.
+        Needs `contract.draft_edit`; any `lines[].amount` also needs `financial.read` and `financial.draft_edit`.
+        A project without a lead department returns 422 `scope_incomplete`. An invisible project returns 404.
+      parameters:
+        - { $ref: '#/components/parameters/CsrfToken' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateContractRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/WorkflowResult' }
+        '400': { $ref: '#/components/responses/ApiError' }
+        '401': { $ref: '#/components/responses/ApiError' }
+        '403': { $ref: '#/components/responses/ApiError' }
+        '404': { $ref: '#/components/responses/ApiError' }
+        '409': { $ref: '#/components/responses/ApiError' }
+        '415': { $ref: '#/components/responses/ApiError' }
+        '422': { $ref: '#/components/responses/ApiError' }
   /api/v1/contracts/{contract_id}:
     get:
       operationId: getContract
@@ -170,6 +197,129 @@ paths:
         '401': { $ref: '#/components/responses/ApiError' }
         '403': { $ref: '#/components/responses/ApiError' }
         '404': { $ref: '#/components/responses/ApiError' }
+    patch:
+      operationId: editContractDraft
+      description: >-
+        Edits a `draft` revision. `contract` header fields change only with the original revision (422
+        `header_locked` otherwise). `lines` replaces the whole line set by `scope_key`; omitted lines are removed.
+        Adding, changing or removing an amount, or changing the currency, needs `financial.read` and
+        `financial.draft_edit`. Other states return 409 `invalid_state`.
+      parameters:
+        - { in: path, name: contract_id, required: true, schema: { type: integer, minimum: 1 } }
+        - { in: path, name: revision_id, required: true, schema: { type: integer, minimum: 1 } }
+        - { $ref: '#/components/parameters/CsrfToken' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EditDraftRequest' }
+      responses: &workflowResponses
+        '200': { $ref: '#/components/responses/WorkflowResult' }
+        '400': { $ref: '#/components/responses/ApiError' }
+        '401': { $ref: '#/components/responses/ApiError' }
+        '403': { $ref: '#/components/responses/ApiError' }
+        '404': { $ref: '#/components/responses/ApiError' }
+        '409': { $ref: '#/components/responses/ApiError' }
+        '415': { $ref: '#/components/responses/ApiError' }
+        '422': { $ref: '#/components/responses/ApiError' }
+  /api/v1/contracts/{contract_id}/amendments:
+    post:
+      operationId: createContractAmendment
+      description: >-
+        Creates the next amendment revision in `draft`, copying the lines and amounts of the latest non-cancelled
+        revision as `unchanged`. Needs `contract.draft_edit`. A contract with a revision still in
+        draft/in_review/returned returns 409 `invalid_state`.
+      parameters:
+        - { in: path, name: contract_id, required: true, schema: { type: integer, minimum: 1 } }
+        - { $ref: '#/components/parameters/CsrfToken' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateAmendmentRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/WorkflowResult' }
+        '400': { $ref: '#/components/responses/ApiError' }
+        '401': { $ref: '#/components/responses/ApiError' }
+        '403': { $ref: '#/components/responses/ApiError' }
+        '404': { $ref: '#/components/responses/ApiError' }
+        '409': { $ref: '#/components/responses/ApiError' }
+        '415': { $ref: '#/components/responses/ApiError' }
+        '422': { $ref: '#/components/responses/ApiError' }
+  /api/v1/contracts/{contract_id}/revisions/{revision_id}/submit:
+    post:
+      operationId: submitContractRevision
+      description: >-
+        `draft` → `in_review`. Needs `contract.submit` and `financial.read`. Records an immutable submission
+        snapshot; amounts go to the financial part only. A resubmission after a return requires `fix_summary`.
+        The reviewer must hold `contract.review_commercial` and `financial.read` in the contract scope with an
+        active assignment (422 `reviewer_ineligible`). Lines missing, unconfirmed amounts or mixed tax bases return
+        422 `submission_incomplete` with `details.problems`.
+      parameters: &revisionActionParameters
+        - { in: path, name: contract_id, required: true, schema: { type: integer, minimum: 1 } }
+        - { in: path, name: revision_id, required: true, schema: { type: integer, minimum: 1 } }
+        - { $ref: '#/components/parameters/CsrfToken' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubmitReviewRequest' }
+      responses: *workflowResponses
+  /api/v1/contracts/{contract_id}/revisions/{revision_id}/return:
+    post:
+      operationId: returnContractRevision
+      description: >-
+        `in_review` → `returned` with a required reason. Only the reviewer assigned to the pending submission,
+        still holding `contract.review_commercial` and `financial.read`, may return it (403 `not_assigned_reviewer`).
+        Issue `scope_key` values must exist in the submitted snapshot.
+      parameters: *revisionActionParameters
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReturnReviewRequest' }
+      responses: *workflowResponses
+  /api/v1/contracts/{contract_id}/revisions/{revision_id}/rework:
+    post:
+      operationId: reworkContractRevision
+      description: >-
+        `returned` → `draft` with a required reason so the draft can be fixed and resubmitted. Needs
+        `contract.draft_edit`. The returned submission stays unchanged in history.
+      parameters: *revisionActionParameters
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BeginReworkRequest' }
+      responses: *workflowResponses
+  /api/v1/contracts/{contract_id}/reviewers:
+    get:
+      operationId: listContractReviewers
+      description: >-
+        Users who may receive a submission of this contract. Only callers holding `contract.submit` in the contract
+        scope may list them (403 otherwise). Eligibility is rechecked when the submission is recorded.
+      parameters:
+        - { in: path, name: contract_id, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200':
+          description: Eligible reviewers.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/NameRef' }
+                  meta: { $ref: '#/components/schemas/Meta' }
+        '400': { $ref: '#/components/responses/ApiError' }
+        '401': { $ref: '#/components/responses/ApiError' }
+        '403': { $ref: '#/components/responses/ApiError' }
+        '404': { $ref: '#/components/responses/ApiError' }
   /api/v1/contracts/{contract_id}/documents/{document_id}/content:
     get:
       operationId: downloadContractDocument
@@ -196,7 +346,25 @@ components:
       type: apiKey
       in: cookie
       name: session_id
-      description: Native Odoo login/MFA. No shared browser API key. Write endpoints will require CSRF and are not implemented yet.
+      description: >-
+        Native Odoo login/MFA. No shared browser API key. Writes also require the session CSRF token from
+        `/api/v1/me` in `X-CSRF-Token`; a cross-site `Sec-Fetch-Site` or foreign `Origin` returns 403 `cross_origin`.
+  parameters:
+    CsrfToken:
+      in: header
+      name: X-CSRF-Token
+      required: true
+      description: Session CSRF token from `GET /api/v1/me`. Missing or invalid returns 403 `csrf_invalid`.
+      schema: { type: string, minLength: 1 }
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: true
+      description: >-
+        One key per user intent. Repeating the same request with the same key returns the first result with
+        `Idempotency-Replayed: true` and writes nothing; reusing it for a different request returns 409
+        `idempotency_conflict`. A replay rechecks the caller's current capabilities.
+      schema: { type: string, pattern: '^[A-Za-z0-9_.:-]{8,128}$' }
   schemas:
     NameRef:
       type: object
@@ -264,10 +432,166 @@ components:
       properties: *moneyProperties
     ContractPermissions:
       type: object
-      required: [financial_read]
+      description: >-
+        Grants the current user holds in the contract project and department, with an active assignment. UI hints
+        only; every action rechecks them on the server.
+      required: [financial_read, draft_edit, financial_draft_edit, submit, review_commercial]
       additionalProperties: false
       properties:
         financial_read: { type: boolean, description: Active financial.read grant on the contract project. }
+        draft_edit: { type: boolean, description: contract.draft_edit }
+        financial_draft_edit: { type: boolean, description: financial.draft_edit (also needs financial_read to edit amounts). }
+        submit: { type: boolean, description: contract.submit }
+        review_commercial: { type: boolean, description: contract.review_commercial }
+    WorkflowAction:
+      type: string
+      description: Action the current user may try now on this object. Recomputed on every read.
+      enum: [create_amendment, edit_draft, submit_review, return_review, begin_rework]
+    ContractSubmission:
+      type: object
+      description: >-
+        One review round of a revision. Immutable except the return and rework fields, each recorded once. Carries
+        no amount; `payload_sha256` covers the metadata hash and a salted financial hash.
+      required: [id, sequence, submitted_by, submitted_at, reviewer, contract_version, fix_summary, outcome,
+                 returned_by, returned_at, return_reason, return_issues, rework_started_by, rework_started_at,
+                 rework_reason, payload_sha256]
+      additionalProperties: false
+      properties:
+        id: { type: integer, minimum: 1 }
+        sequence: { type: integer, minimum: 1 }
+        submitted_by: { $ref: '#/components/schemas/NullableNameRef' }
+        submitted_at: { type: string, format: date-time, nullable: true }
+        reviewer: { $ref: '#/components/schemas/NullableNameRef' }
+        contract_version: { type: integer, minimum: 1 }
+        fix_summary: { type: string, nullable: true }
+        outcome: { type: string, enum: [pending, returned] }
+        returned_by: { $ref: '#/components/schemas/NullableNameRef' }
+        returned_at: { type: string, format: date-time, nullable: true }
+        return_reason: { type: string, nullable: true }
+        return_issues:
+          type: array
+          items: { $ref: '#/components/schemas/ReturnIssue' }
+        rework_started_by: { $ref: '#/components/schemas/NullableNameRef' }
+        rework_started_at: { type: string, format: date-time, nullable: true }
+        rework_reason: { type: string, nullable: true }
+        payload_sha256: { type: string, pattern: '^[0-9a-f]{64}$' }
+    ReturnIssue:
+      type: object
+      required: [note]
+      additionalProperties: false
+      properties:
+        scope_key: { type: string, maxLength: 64, nullable: true, description: Line of the submitted snapshot, if any. }
+        note: { type: string, minLength: 1, maxLength: 1000 }
+    AmountInput:
+      type: object
+      nullable: true
+      description: >-
+        Line amount. `value` is a decimal string in the contract currency precision, required when confirmed and
+        null when unconfirmed. Negative values return 422. Sending `null` for the whole amount removes it.
+      required: [state, value, tax_basis]
+      additionalProperties: false
+      properties:
+        state: { type: string, enum: [confirmed, unconfirmed] }
+        value: { type: string, nullable: true, pattern: '^-?[0-9]{1,20}(\.[0-9]{1,10})?$' }
+        tax_basis: { type: string, enum: [unknown, excluding_tax, including_tax] }
+    LineInput:
+      type: object
+      description: Omit `amount` to keep the stored amount; any amount change needs financial.draft_edit.
+      required: [scope_key, name]
+      additionalProperties: false
+      properties:
+        scope_key: { type: string, minLength: 1, maxLength: 64 }
+        name: { type: string, minLength: 1, maxLength: 255 }
+        amount: { $ref: '#/components/schemas/AmountInput' }
+    LineSetInput:
+      type: array
+      description: Full line set of the draft, ordered; scope keys are unique.
+      maxItems: 500
+      items: { $ref: '#/components/schemas/LineInput' }
+    RevisionFieldsInput:
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+        reference: { type: string, maxLength: 128, nullable: true }
+    ContractHeaderInput:
+      type: object
+      additionalProperties: false
+      properties:
+        code: { type: string, minLength: 1, maxLength: 64 }
+        name: { type: string, minLength: 1, maxLength: 255 }
+        contract_type: { type: string, enum: [owner, general_contractor, subcontractor] }
+        partner_id: { type: integer, minimum: 1, nullable: true }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+    CreateContractRequest:
+      type: object
+      required: [project_id, code, name, contract_type, currency]
+      additionalProperties: false
+      properties:
+        project_id: { type: integer, minimum: 1 }
+        code: { type: string, minLength: 1, maxLength: 64, description: Unique per company (409 duplicate_code). }
+        name: { type: string, minLength: 1, maxLength: 255 }
+        contract_type: { type: string, enum: [owner, general_contractor, subcontractor] }
+        partner_id: { type: integer, minimum: 1, nullable: true }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        revision: { $ref: '#/components/schemas/RevisionFieldsInput' }
+        lines: { $ref: '#/components/schemas/LineSetInput' }
+    CreateAmendmentRequest:
+      type: object
+      required: [expected_version, name]
+      additionalProperties: false
+      properties:
+        expected_version: { type: integer, minimum: 1 }
+        name: { type: string, minLength: 1, maxLength: 255 }
+        reference: { type: string, maxLength: 128, nullable: true }
+    EditDraftRequest:
+      type: object
+      description: At least one of `contract`, `revision` or `lines` is required.
+      required: [expected_version]
+      additionalProperties: false
+      properties:
+        expected_version: { type: integer, minimum: 1 }
+        contract: { $ref: '#/components/schemas/ContractHeaderInput' }
+        revision: { $ref: '#/components/schemas/RevisionFieldsInput' }
+        lines: { $ref: '#/components/schemas/LineSetInput' }
+    SubmitReviewRequest:
+      type: object
+      required: [expected_version, reviewer_id]
+      additionalProperties: false
+      properties:
+        expected_version: { type: integer, minimum: 1 }
+        reviewer_id: { type: integer, minimum: 1 }
+        fix_summary: { type: string, maxLength: 2000, nullable: true, description: Required when resubmitting. }
+    ReturnReviewRequest:
+      type: object
+      required: [expected_version, reason]
+      additionalProperties: false
+      properties:
+        expected_version: { type: integer, minimum: 1 }
+        reason: { type: string, maxLength: 2000, nullable: true, description: Required; blank returns 422 reason_required. }
+        issues:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/ReturnIssue' }
+    BeginReworkRequest:
+      type: object
+      required: [expected_version, reason]
+      additionalProperties: false
+      properties:
+        expected_version: { type: integer, minimum: 1 }
+        reason: { type: string, maxLength: 2000, nullable: true, description: Required; blank returns 422 reason_required. }
+    WorkflowResultData:
+      type: object
+      description: IDs and the new state only. Reload the contract or revision to read the full DTO.
+      required: [contract_id, revision_id, submission_id, version, review_state, replayed]
+      additionalProperties: false
+      properties:
+        contract_id: { type: integer, minimum: 1 }
+        revision_id: { type: integer, minimum: 1 }
+        submission_id: { type: integer, minimum: 1, nullable: true }
+        version: { type: integer, minimum: 1, description: Contract aggregate version to send as expected_version next. }
+        review_state: { type: string, enum: [draft, in_review, returned, review_complete, cancelled] }
+        replayed: { type: boolean }
     RevisionStatus:
       type: object
       required: [id, sequence, kind, name, review_state, signature_status, effectivity_status]
@@ -399,12 +723,22 @@ components:
     ContractDetail:
       type: object
       required: [id, code, name, contract_type, lifecycle_state, legacy_unverified, active, project, company,
-                 counterparty, currency, revision_count, latest_revision, updated_at, permissions,
-                 effective_snapshot, revisions, documents]
+                 counterparty, currency, revision_count, latest_revision, updated_at, version, department,
+                 permissions, allowed_actions, working_revision_id, effective_snapshot, revisions, documents]
       additionalProperties: false
       properties:
         <<: *contractSummaryProperties
+        version: { type: integer, minimum: 1, description: Aggregate version; send as expected_version. }
+        department: { $ref: '#/components/schemas/NullableNameRef' }
         permissions: { $ref: '#/components/schemas/ContractPermissions' }
+        allowed_actions:
+          type: array
+          items: { $ref: '#/components/schemas/WorkflowAction' }
+        working_revision_id:
+          type: integer
+          minimum: 1
+          nullable: true
+          description: Revision in draft, in_review or returned, if any.
         effective_snapshot: { $ref: '#/components/schemas/EffectiveSnapshot' }
         revisions:
           type: array
@@ -437,18 +771,33 @@ components:
       type: object
       required: [id, sequence, kind, name, review_state, signature_status, effectivity_status, reference,
                  previous_revision_id, signed_date, effective_date, recorded_at, signature_authority_status,
-                 legacy_unverified, line_count, base_references, contract_id, permissions, lines]
+                 legacy_unverified, line_count, base_references, contract_id, contract_version, permissions,
+                 allowed_actions, lines, submissions]
       additionalProperties: false
       properties:
         <<: *revisionProperties
         contract_id: { type: integer, minimum: 1 }
+        contract_version: { type: integer, minimum: 1, description: Aggregate contract version; send as expected_version. }
         permissions: { $ref: '#/components/schemas/ContractPermissions' }
+        allowed_actions:
+          type: array
+          items: { $ref: '#/components/schemas/WorkflowAction' }
         lines:
           type: array
           items: { $ref: '#/components/schemas/ContractLine' }
         total: { $ref: '#/components/schemas/NullableMoney' }
+        submissions:
+          type: array
+          items: { $ref: '#/components/schemas/ContractSubmission' }
     ErrorEnvelope:
       type: object
+      description: >-
+        Write errors: 400 `invalid_request` (shape, `details.field`/`fields`), 403 `forbidden`
+        (`details.missing_capabilities`), `not_assigned_reviewer`, `csrf_invalid`, `cross_origin`, 404 `not_found`,
+        409 `stale_version` (`details.current_version`), `invalid_state` (`details.review_state`), `duplicate_code`,
+        `idempotency_conflict`, 415 `unsupported_media_type`, 422 business rules such as `reason_required`,
+        `scope_incomplete`, `header_locked`, `reviewer_ineligible`, `fix_summary_required`, `submission_incomplete`
+        (`details.problems`), `unknown_currency`, `unknown_partner`, `unknown_scope_key` and `amount_*`.
       required: [error, meta]
       properties:
         error:
@@ -457,9 +806,40 @@ components:
           properties:
             code: { type: string }
             message: { type: string }
-            details: { nullable: true }
+            details:
+              type: object
+              nullable: true
+              additionalProperties: true
+              properties:
+                field: { type: string }
+                fields:
+                  type: array
+                  items: { type: string }
+                missing_capabilities:
+                  type: array
+                  items: { type: string }
+                current_version: { type: integer }
+                review_state: { type: string }
+                problems:
+                  type: array
+                  items: { type: string, enum: [no_lines, amounts_not_confirmed, tax_basis_mixed] }
         meta: { $ref: '#/components/schemas/Meta' }
   responses:
+    WorkflowResult:
+      description: >-
+        Action applied (or replayed). Never cached. `Idempotency-Replayed: true` marks a replay of an earlier
+        identical request.
+      headers:
+        Idempotency-Replayed:
+          schema: { type: string, enum: ['true'] }
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data, meta]
+            properties:
+              data: { $ref: '#/components/schemas/WorkflowResultData' }
+              meta: { $ref: '#/components/schemas/Meta' }
     ApiError:
       description: Structured error with request ID. No HTML redirect or traceback in API responses.
       content:

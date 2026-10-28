@@ -2,7 +2,7 @@
 
 Ngày thiết kế và triển khai nền: 28/10/2026, Asia/Saigon. Tài liệu ghi ranh giới kiến trúc và lộ trình; các module nghiệp vụ tương lai được phân biệt với nền đã chạy.
 
-**Trạng thái hiện tại:** đã có 5 addon nền, database dev/test, API đọc dự án và frontend React/TypeScript/Vite tại `/work/`; CTR-001 đã thêm TP Contracts read slice cho hợp đồng/revision/phạm vi/BASE reference/tài liệu với grant tiền theo project. Dashboard cũ nằm trong `frontend/prototype/`. Đã kiểm thử login native, danh sách/chi tiết theo quyền, logout CSRF và session hết hạn qua trình duyệt. Xem [hướng dẫn chạy nền](../../ops/runbooks/LOCAL_DEVELOPMENT.md), [thiết kế database](TP_DATABASE_DESIGN.md) và [bộ thiết kế BIZ-002](TP_BIZ002_DESIGN_PACKAGE.md). Action ghi hợp đồng/nghiệm thu, import dữ liệu thật và triển khai production vẫn là giai đoạn sau.
+**Trạng thái hiện tại:** đã có 5 addon nền, database dev/test, API đọc dự án và frontend React/TypeScript/Vite tại `/work/`; CTR-001 đã thêm TP Contracts read slice cho hợp đồng/revision/phạm vi/BASE reference/tài liệu với grant tiền theo project. Dashboard cũ nằm trong `frontend/prototype/`. Đã kiểm thử login native, danh sách/chi tiết theo quyền, logout CSRF và session hết hạn qua trình duyệt. Xem [hướng dẫn chạy nền](../../ops/runbooks/LOCAL_DEVELOPMENT.md), [thiết kế database](TP_DATABASE_DESIGN.md) và [bộ thiết kế BIZ-002](TP_BIZ002_DESIGN_PACKAGE.md). CTR-002a (chỉ test, DEC-020) thêm workflow nháp hợp đồng: tạo/sửa draft, gửi rà soát, trả lại, mở lại sửa. Action BASE/ký/hiệu lực, nghiệm thu, import dữ liệu thật và triển khai production vẫn là giai đoạn sau.
 
 ## 1. Hướng đã xác nhận và kiến trúc đề xuất
 
@@ -138,26 +138,33 @@ Source checkout hiện không có `documents`/`approvals` chuẩn dưới `addon
 
 `tp_import` lưu file/hash/schema/batch, đọc Excel ở staging hoặc worker offline, kiểm tra mapping và quarantine dòng lỗi. Import lặp không được cộng trùng và luôn có báo cáo đối chiếu. API web không đọc trực tiếp file Excel trên NAS.
 
-Mỗi addon chỉ tạo các thư mục dùng thật. `tp_contract` của CTR-001 (read slice) hiện có:
+Mỗi addon chỉ tạo các thư mục dùng thật. `tp_contract` sau CTR-001 (read slice) và CTR-002a (workflow nháp, chỉ test) hiện có:
 
 ```text
 tp_contract/
 ├── __init__.py
 ├── __manifest__.py                # depends tp_core, tp_project
+├── exceptions.py                  # lỗi nghiệp vụ workflow, API ánh xạ sang HTTP status
+├── migrations/20.0.1.1.0/         # gán phòng chủ trì project cho hợp đồng cũ
 ├── models/
 │   ├── __init__.py
-│   ├── tp_contract.py             # danh tính, snapshot theo ngày, tổng
+│   ├── tp_contract.py             # danh tính, phòng ban, aggregate_version, snapshot theo ngày, tổng
 │   ├── tp_contract_revision.py    # gốc/phụ lục/đính chính, review/ký/hiệu lực
 │   ├── tp_contract_line.py        # dòng phạm vi + tp.contract.line.amount
 │   ├── tp_approval_reference.py   # kết quả BASE + tp.approval.reference.amount
-│   └── tp_contract_document.py    # tệp general/financial
+│   ├── tp_contract_document.py    # tệp general/financial, khóa sau khi gửi
+│   ├── ir_attachment.py           # chặn thay/xóa binary của tài liệu đã gửi
+│   ├── tp_contract_submission.py  # lần gửi rà soát bất biến + snapshot tiền tách riêng
+│   ├── tp_contract_audit.py       # audit append-only, outbox, idempotency
+│   └── tp_contract_workflow.py    # action T1–T6, scope/capability, version, snapshot
 ├── security/
-│   └── ir.access.csv              # access domain theo project, company, grant financial_read
+│   └── ir.access.csv              # access domain theo project, company, grant
 └── tests/
     ├── __init__.py
     ├── common.py
     ├── test_contract_access.py
-    └── test_contract_model.py
+    ├── test_contract_model.py
+    └── test_contract_workflow.py  # T-P01, T-N01…T-N06, T-N08, T-N09
 ```
 
 Chưa có `views/` hoặc menu native vì người dùng nghiệp vụ đọc qua API/React; grant `financial_read` (`tp.project.grant`) nằm ở `tp_project` để domain khác dùng lại. Thêm view/menu khi có ca quản trị thật.
@@ -303,7 +310,7 @@ Khi có runtime, CI tập trung vào cài/upgrade addon, security/transaction te
 
 ## 10. Phạm vi lượt thiết kế này
 
-Lượt dựng nền triển khai tổ chức/hạng mục/dự án, phân công và API đọc, kèm React workspace nối Odoo thật trên database dev/test. CTR-001 sau đó thêm `tp_contract` read slice (hợp đồng/revision/dòng phạm vi/BASE/tài liệu, grant tiền theo project) với dữ liệu giả lập. Giao khoán, nghiệm thu, reporting và import trong tài liệu vẫn là thiết kế cho giai đoạn tiếp theo; chưa có dữ liệu nghiệp vụ thật. OPS-001 đã diễn tập backup/restore local theo status; chưa triển khai production/backup ngoài máy. BIZ-002 hiện ưu tiên review thiết kế toàn công ty trước code, không tự thực hiện tiếp giai đoạn 2–5 từ lộ trình mục 8.
+Lượt dựng nền triển khai tổ chức/hạng mục/dự án, phân công và API đọc, kèm React workspace nối Odoo thật trên database dev/test. CTR-001 sau đó thêm `tp_contract` read slice (hợp đồng/revision/dòng phạm vi/BASE/tài liệu, grant tiền theo project) với dữ liệu giả lập. Giao khoán, nghiệm thu, reporting và import trong tài liệu vẫn là thiết kế cho giai đoạn tiếp theo; chưa có dữ liệu nghiệp vụ thật. OPS-001 đã diễn tập backup/restore local theo status; chưa triển khai production/backup ngoài máy. BIZ-002 hiện ưu tiên review thiết kế toàn công ty trước code, không tự thực hiện tiếp giai đoạn 2–5 từ lộ trình mục 8; ngoại lệ đã được người dùng mở là CTR-002a trên test (DEC-020, CHG-20261028-014).
 
 ## 11. Cơ sở kiểm tra và phần cần xác minh khi triển khai
 
