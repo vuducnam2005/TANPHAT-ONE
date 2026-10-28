@@ -26,5 +26,8 @@ Tài khoản dev `planner.dev` và `admin` có mật khẩu tương ứng trong 
 - [Cấu trúc source](docs/architecture/TP_PLATFORM_SOURCE_STRUCTURE.md)
 - [OpenAPI v1](contracts/openapi/tanphat-v1.yaml)
 - [Frontend và kiểm thử browser](frontend/README.md)
+- [Trạng thái dự án](docs/PROJECT_STATUS.md)
+- [Quy trình bàn giao cho AI](docs/AI_CHANGE_WORKFLOW.md)
+- [Workflow nghiệp vụ](docs/architecture/TP_BUSINESS_WORKFLOW.md)
 
 Hợp đồng, giao khoán, nghiệm thu, import Excel, tích hợp kế toán và triển khai production là các giai đoạn tiếp theo. Nền hiện tại chưa thay thế quy trình vận hành doanh nghiệp.
