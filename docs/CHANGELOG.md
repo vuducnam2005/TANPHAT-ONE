@@ -2,6 +2,14 @@
 
 Mỗi lượt thay đổi code hoặc quyết định kiến trúc ghi một mục ngắn. Không ghi credential, dữ liệu thật hoặc log chứa bí mật.
 
+## CHG-20261103-001 — Commit và push các lượt CHG-20261028-016..CHG-20261102-014
+
+- Phạm vi: Git history và tài liệu bàn giao; không đổi model, API, frontend, runtime hoặc database.
+- Đã làm: `f54fd83f` gồm 196 đường dẫn (33 sửa, 163 mới) của CHG-20261028-016..CHG-20261102-014: AUTH-002, CTR-002a.1, VI-001/VI-002, các addon demo native và NATIVE-DATA-001..003, tài liệu thiết kế/tham khảo/prompt, 3 báo cáo Word. Một commit vì tài liệu dùng chung bị nhiều phiên sửa xen kẽ. Stage theo danh sách đường dẫn, không `git add .`; status ghi hash; push `main` lên `origin` trong cùng lượt.
+- Kiểm tra: quét tên file và nội dung không thấy credential, dump, filestore hoặc Excel thật; actor/contact demo dùng `example.invalid`; ảnh trong file Word là sơ đồ kiến trúc; `git diff --cached --check` chỉ báo dấu cách xuống dòng Markdown/dòng trống cuối file ở 7 tài liệu kiến trúc, giữ nguyên; sau commit working tree sạch, `ai_workflow.py check` đạt; `main` = `origin/main` = `f54fd83f`.
+- Giới hạn: không chạy lại test ứng dụng vì không đổi code; kết quả test là của lượt gốc. NATIVE-DATA-003 và AUTH-002 slice 2 vẫn chờ audit như status ghi.
+- Next: giữ Next action hiện hành (audit NATIVE-DATA-003 và quyết định policy TASK-001).
+
 ## CHG-20261102-014 — Thực thi dữ liệu mẫu liên thông NATIVE-DATA-003
 
 - Ngày:02/11/2026 (Asia/Saigon). Người dùng chuyển vai trò trực tiếp “Chuyển vai trò: thực thi trong phiên này” (DEC-027); checkpoint start riêng từ baseline CHG-013, giữ195 file maintained cũ và mọi thay đổi có sẵn. Không stage/commit/push/production.

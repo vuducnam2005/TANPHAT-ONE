@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-02T09:14:03.807536+00:00",
-  "last_change_id": "CHG-20261102-014",
+  "updated_at": "2026-11-03T09:06:53.371772+00:00",
+  "last_change_id": "CHG-20261103-001",
   "code_digest": "05ca695d3f6e27fca70e07eb79e003eff9953457df896af034c2e75fef2df56f",
   "code_file_count": 221,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "228da01d22e2806902cc7926d25dd8bad764572f624b5d742fa9246bce6434ad",
-    "docs/CHANGELOG.md": "3bcf91018807ee53386337bc3eede56981a6d2be88c9aba839352444d1e53c4a",
+    "docs/PROJECT_STATUS.md": "35b107c8ada14d9261b0b2d3a735627b83042e0c33cfd882c60a35f8823b49d0",
+    "docs/CHANGELOG.md": "d6e95989bc7003437fd26d94c455e7a574e5967003b935577594a84130b9ee3d",
     "AGENTS.md": "eb8a83dc3557931a20ad0fbe0bdb42872122bce244e5f7496f135276d4f7b5ba",
     "README_TANPHAT.md": "7b12ef66c29f0cbecb53096a3115e6199ea014cde2eb59e550221e9001f41f47",
     "docs/AI_CHANGE_WORKFLOW.md": "bee7a7fc977db3cc9b18bd38c21a166b68f4dbe668102ca3001086e73d6059e8",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "b93114db49706b3ad642335c58fa67339ab0fdd8880b7a83ef8e8e1f514af3a3"
   },
   "reported_checks": [
-    "Odoo clone integration: 0 failed/0 errors of 27; guards unittest: 9/9; Ruff and Node syntax PASS; clone ORM74/dev71 and 8/8 HTTP actors each; clone UI58/dev UI+RPC63 PASS; clone live dashboard84->84.5->84 and injected rollback538 rowsets exact; dev reapply create0/update0/action0 verify0 drift; preservation486 unchanged/52 classified,244 old blobs/249 current refs,195 old code files unchanged; dev.py smoke PASS; docs14/168 links/fences PASS; git diff --check PASS; clone18149 and retired18109/18119 stopped, dev18069/PG55432 active"
+    "git diff --check đạt; main = origin/main = f54fd83f sau push; không đổi code, không chạy lại test ứng dụng"
   ]
 }
