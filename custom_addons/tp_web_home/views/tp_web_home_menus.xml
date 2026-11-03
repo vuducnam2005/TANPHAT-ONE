@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Own client action tag and path: the core "home" tag stays untouched. -->
+    <record id="action_home" model="ir.actions.client">
+        <field name="name">Trang chủ</field>
+        <field name="tag">tp_web_home.home</field>
+        <field name="path">tp-home</field>
+    </record>
+
+    <!-- Lowest root sequence so the native default-app fallback opens Home when /odoo has no action
+         and the user has no Home Action of their own. -->
+    <menuitem id="menu_home"
+              name="Trang chủ"
+              action="action_home"
+              sequence="1"
+              web_icon="tp_web_home,static/description/icon.svg"
+              groups="base.group_user"/>
+</odoo>

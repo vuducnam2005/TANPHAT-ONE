@@ -26,8 +26,9 @@ class TestContractWorkflow(TpContractWorkflowCommon):
 
     @contextmanager
     def _no_side_effects(self):
-        models = ('tp.contract', 'tp.contract.revision', 'tp.contract.submission', 'tp.contract.audit',
-                  'tp.contract.outbox', 'tp.contract.idempotency', 'tp.contract.line.amount')
+        models = ('tp.contract', 'tp.contract.revision', 'tp.contract.line', 'tp.contract.line.amount',
+                  'tp.contract.submission', 'tp.contract.submission.amount', 'tp.contract.audit',
+                  'tp.contract.outbox', 'tp.contract.idempotency')
         before = {model: self.env[model].sudo().with_context(active_test=False).search_count([]) for model in models}
         versions = dict(self.env['tp.contract'].sudo().search([]).mapped(lambda contract: (contract.id, contract.aggregate_version)))
         yield
@@ -222,6 +223,68 @@ class TestContractWorkflow(TpContractWorkflowCommon):
                         contract=contract, revision=revision)
         self.assertEqual(submission.sudo().outcome, 'pending')
 
+    def test_n01_self_review_is_excluded_and_rechecked_on_every_submission(self):
+        self._caps(self.editor, 'contract_review_commercial')
+        self._caps(self.reviewer, 'contract_submit')
+        result = self._new_contract(lines=[{'scope_key': 'L1', 'name': 'Survey', 'amount': self._amount('100')}])
+        contract, revision = result['contract'].sudo(), result['revision'].sudo()
+        workflow = self.env['tp.contract.workflow'].with_user(self.editor)
+        self.assertEqual(workflow._tp_eligible_reviewers(contract), self.reviewer)
+
+        # Even a stale picker cannot bypass the independent action guard.
+        with self._no_side_effects(), patch.object(type(workflow), '_tp_eligible_reviewers', return_value=self.editor | self.reviewer), \
+                patch.object(type(workflow), '_tp_snapshot', side_effect=AssertionError('Self-review must fail before snapshot')):
+            error = self._fails(422, 'reviewer_ineligible', self.editor, 'submit_review',
+                                {'expected_version': 1, 'reviewer_id': self.editor.id}, key='self-submit-retry',
+                                contract=contract, revision=revision)
+            self.assertEqual(error.details, {'field': 'reviewer_id'})
+        self.assertEqual((revision.review_state, contract.aggregate_version), ('draft', 1))
+        # A rejected choice leaves the key available for a corrected request.
+        first = self._run(self.editor, 'submit_review', {'expected_version': 1, 'reviewer_id': self.reviewer.id},
+                          key='self-submit-retry', contract=contract, revision=revision)['submission'].sudo()
+        self._run(self.reviewer, 'return_review', {'expected_version': 2, 'reason': 'Clarify scope'},
+                  contract=contract, revision=revision)
+        self._run(self.editor, 'begin_rework', {'expected_version': 3, 'reason': 'Scope clarified'},
+                  contract=contract, revision=revision)
+        self.assertEqual(workflow.with_user(self.reviewer)._tp_eligible_reviewers(contract), self.editor)
+        with self._no_side_effects(), patch.object(type(workflow), '_tp_snapshot', side_effect=AssertionError('No rejected snapshot')):
+            error = self._fails(422, 'reviewer_ineligible', self.reviewer, 'submit_review', {
+                'expected_version': 4, 'reviewer_id': self.reviewer.id, 'fix_summary': 'Scope clarified',
+            }, key='self-resubmit-retry', contract=contract, revision=revision)
+            self.assertEqual(error.details, {'field': 'reviewer_id'})
+        self.assertEqual((revision.review_state, contract.aggregate_version), ('draft', 4))
+        # Separation follows the actor of each submission, even when the sender changes.
+        second = self._run(self.reviewer, 'submit_review', {
+            'expected_version': 4, 'reviewer_id': self.editor.id, 'fix_summary': 'Scope clarified',
+        }, key='self-resubmit-retry', contract=contract, revision=revision)['submission'].sudo()
+        self.assertEqual((second.submitted_by_id, second.reviewer_id, second.previous_submission_id),
+                         (self.reviewer, self.editor, first))
+        self.assertEqual((revision.review_state, contract.aggregate_version), ('in_review', 5))
+
+    def test_n01_legacy_self_assigned_pending_cannot_return_or_rewrite_history(self):
+        self._caps(self.editor, 'contract_review_commercial')
+        contract, revision, submission = self._submitted()
+        # Simulate a historical self-assignment, bypassing immutable fields only in this fixture.
+        self.env.flush_all()
+        self.env.cr.execute('UPDATE tp_contract_submission SET reviewer_id = %s WHERE id = %s', (self.editor.id, submission.id))
+        submission.invalidate_recordset(['reviewer_id'])
+        workflow = self.env['tp.contract.workflow'].with_user(self.editor)
+        financial = self.env['tp.contract.submission.amount'].sudo().search([('submission_id', '=', submission.id)])
+        outbox = self.env['tp.contract.outbox'].sudo().search([('contract_id', '=', contract.id)])
+        history = (submission, financial, self._audit(contract), outbox)
+        before = [record.read() for record in history]
+        with self._no_side_effects():
+            self.assertNotIn('return_review', workflow._tp_available_actions(contract, revision)[0])
+            error = self._fails(422, 'reviewer_ineligible', self.editor, 'return_review',
+                                {'expected_version': 3, 'reason': 'Cannot review my own submission'},
+                                key='legacy-self-return', contract=contract, revision=revision)
+            self.assertEqual(error.details, {'field': 'reviewer_id'})
+            self.assertNotIn('return_review', workflow.with_user(self.reviewer)._tp_available_actions(contract, revision)[0])
+            self._fails(403, 'not_assigned_reviewer', self.reviewer, 'return_review',
+                        {'expected_version': 3, 'reason': 'Not assigned'}, contract=contract, revision=revision)
+        self.assertEqual((revision.review_state, contract.aggregate_version, submission.outcome), ('in_review', 3, 'pending'))
+        self.assertEqual([record.read() for record in history], before)
+
     # T-N02 money boundary
 
     def test_n02_money_needs_financial_edit_and_is_rechecked(self):
@@ -264,6 +327,68 @@ class TestContractWorkflow(TpContractWorkflowCommon):
                 self.assertNotIn(token, text)
 
     # T-N03 state and validation
+
+    def test_n03_enum_non_strings_fail_before_claim_or_lock(self):
+        contract, revision = self._draft()
+        workflow = self.env['tp.contract.workflow']
+        base = {'project_id': self.project_a.id, 'code': 'HD-ENUM', 'name': 'Enum validation',
+                'contract_type': 'owner', 'currency': 'VND'}
+        with self._no_side_effects(), patch.object(type(workflow), '_tp_claim', side_effect=AssertionError('No invalid claim')), \
+                patch.object(type(workflow), '_tp_lock', side_effect=AssertionError('No invalid lock')):
+            for value in ([], {}, None, True, False):
+                for action in ('create_contract', 'edit_draft'):
+                    for field in ('contract_type', 'state', 'tax_basis'):
+                        with self.subTest(action=action, field=field, value=value):
+                            if field == 'contract_type':
+                                data = {'contract_type': value}
+                                expected_field = f'{"body" if action == "create_contract" else "contract"}.contract_type'
+                            else:
+                                data = {'lines': [{'scope_key': 'L1', 'name': 'Survey', 'amount': self._amount('100') | {field: value}}]}
+                                expected_field = f'lines[0].amount.{field}'
+                            if action == 'create_contract':
+                                payload, targets = base | data, {}
+                            else:
+                                payload = {'expected_version': 1} | ({'contract': data} if field == 'contract_type' else data)
+                                targets = {'contract': contract, 'revision': revision}
+                            error = self._fails(400, 'invalid_request', self.editor, action, payload, key='enum-invalid-retry', **targets)
+                            self.assertEqual(error.details, {'field': expected_field})
+        created = self._run(self.editor, 'create_contract', base, key='enum-invalid-retry')
+        self.assertEqual(created['contract'].sudo().contract_type, 'owner')
+        self._run(self.editor, 'edit_draft', {'expected_version': 1, 'contract': {'contract_type': 'owner'}},
+                  key='enum-invalid-retry', contract=contract, revision=revision)
+        self.assertEqual(contract.aggregate_version, 2)
+
+    def test_n03_blank_currency_fails_before_claim_or_lock(self):
+        contract, revision = self._draft()
+        workflow = self.env['tp.contract.workflow']
+        base = {'project_id': self.project_a.id, 'code': 'HD-CURRENCY', 'name': 'Currency validation', 'contract_type': 'owner'}
+        with self._no_side_effects(), patch.object(type(workflow), '_tp_claim', side_effect=AssertionError('No invalid claim')), \
+                patch.object(type(workflow), '_tp_lock', side_effect=AssertionError('No invalid lock')):
+            for value in ('', '   ', '\t\n', None):
+                with self.subTest(currency=value):
+                    error = self._fails(400, 'invalid_request', self.editor, 'create_contract', base | {'currency': value},
+                                        key='currency-invalid-retry')
+                    self.assertEqual(error.details, {'field': 'body.currency'})
+                    error = self._fails(400, 'invalid_request', self.editor, 'edit_draft',
+                                        {'expected_version': 1, 'contract': {'currency': value}}, key='currency-invalid-retry',
+                                        contract=contract, revision=revision)
+                    self.assertEqual(error.details, {'field': 'contract.currency'})
+        with self._no_side_effects():
+            error = self._fails(422, 'unknown_currency', self.editor, 'create_contract', base | {'currency': 'XXX'},
+                                key='currency-invalid-retry')
+            self.assertEqual(error.details, {'field': 'currency'})
+            error = self._fails(422, 'unknown_currency', self.editor, 'edit_draft',
+                                {'expected_version': 1, 'contract': {'currency': 'XXX'}}, key='currency-invalid-retry',
+                                contract=contract, revision=revision)
+            self.assertEqual(error.details, {'field': 'currency'})
+        created = self._run(self.editor, 'create_contract', base | {'currency': 'vnd'}, key='currency-invalid-retry')
+        self.assertEqual(created['contract'].sudo().currency_id, self.currency)
+        self._run(self.editor, 'edit_draft', {'expected_version': 1, 'contract': {'currency': 'vnd'}},
+                  key='currency-invalid-retry', contract=contract, revision=revision)
+        self.assertEqual(contract.currency_id, self.currency)
+        self._run(self.meta_editor, 'edit_draft', {'expected_version': 2, 'contract': {'name': 'Currency omitted'}},
+                  contract=contract, revision=revision)
+        self.assertEqual((contract.name, contract.currency_id, contract.aggregate_version), ('Currency omitted', self.currency, 3))
 
     def test_n03_state_reason_and_amount_validation(self):
         contract, revision = self._draft()

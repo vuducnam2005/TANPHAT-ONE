@@ -1,0 +1,226 @@
+<odoo>
+    <!-- Read-only views over canonical TP Contracts models. Access rules of
+         tp_contract still decide which records and amounts load. -->
+    <record id="view_demo_contract_list" model="ir.ui.view">
+        <field name="name">tp.contract.tp_demo.list</field>
+        <field name="model">tp.contract</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0" class="o_tp_demo_native">
+                <field name="code" string="Mã hợp đồng"/>
+                <field name="name" string="Tên hợp đồng"/>
+                <field name="project_id" string="Dự án"/>
+                <field name="partner_id" string="Đối tác"/>
+                <field name="contract_type" string="Loại"/>
+                <field name="lifecycle_state" string="Vòng đời" widget="badge"
+                       decoration-success="lifecycle_state == 'effective'" decoration-muted="lifecycle_state == 'not_effective'"/>
+                <field name="currency_id" string="Tiền tệ"/>
+                <field name="legacy_unverified" string="Hồ sơ nhập ban đầu" widget="boolean" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_demo_contract_form" model="ir.ui.view">
+        <field name="name">tp.contract.tp_demo.form</field>
+        <field name="model">tp.contract</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0" duplicate="0" class="o_tp_demo_native">
+                <header>
+                    <field name="lifecycle_state" widget="statusbar" readonly="1"
+                           statusbar_visible="not_effective,effective,execution_completed,liquidated"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="text-muted"><field name="code" readonly="1"/></span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <div class="alert alert-light border small" role="status">
+                        Vòng đời hợp đồng (trên thanh trạng thái) tách riêng với trạng thái rà soát của từng phiên bản (bảng bên dưới).
+                    </div>
+                    <group>
+                        <group>
+                            <field name="project_id" string="Dự án" readonly="1"/>
+                            <field name="partner_id" string="Đối tác" readonly="1"/>
+                            <field name="contract_type" string="Loại hợp đồng" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="department_id" string="Phòng phụ trách" readonly="1"/>
+                            <field name="currency_id" string="Tiền tệ" readonly="1"/>
+                            <field name="legacy_unverified" string="Hồ sơ nhập ban đầu" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="revisions" string="Phiên bản và rà soát">
+                            <field name="revision_ids" readonly="1">
+                                <list>
+                                    <field name="sequence" string="#"/>
+                                    <field name="name" string="Phiên bản"/>
+                                    <field name="revision_kind" string="Loại"/>
+                                    <field name="review_state" string="Rà soát" widget="badge"
+                                           decoration-warning="review_state == 'returned'" decoration-info="review_state == 'in_review'"
+                                           decoration-success="review_state == 'review_complete'"/>
+                                    <field name="signature_status" string="Chữ ký"/>
+                                    <field name="effectivity_status" string="Hiệu lực"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_demo_contract_search" model="ir.ui.view">
+        <field name="name">tp.contract.tp_demo.search</field>
+        <field name="model">tp.contract</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="code" string="Hợp đồng" filter_domain="['|', ('code', 'ilike', self), ('name', 'ilike', self)]"/>
+                <field name="project_id" string="Dự án"/>
+                <field name="partner_id" string="Đối tác"/>
+                <filter name="effective" string="Có hiệu lực" domain="[('lifecycle_state', '=', 'effective')]"/>
+                <filter name="not_effective" string="Chưa có hiệu lực" domain="[('lifecycle_state', '=', 'not_effective')]"/>
+                <group>
+                    <filter name="group_project" string="Dự án" context="{'group_by': 'project_id'}"/>
+                    <filter name="group_lifecycle" string="Vòng đời" context="{'group_by': 'lifecycle_state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_demo_contracts" model="ir.actions.act_window">
+        <field name="name">Hợp đồng</field>
+        <field name="res_model">tp.contract</field>
+        <field name="path">tp-demo-contracts</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('project_id.tp_code', '=like', 'DEMO-%')]</field>
+        <field name="search_view_id" ref="view_demo_contract_search"/>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_demo_contract_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_demo_contract_form')})]"/>
+    </record>
+
+    <record id="view_demo_revision_list" model="ir.ui.view">
+        <field name="name">tp.contract.revision.tp_demo.list</field>
+        <field name="model">tp.contract.revision</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0" class="o_tp_demo_native">
+                <field name="contract_id" string="Hợp đồng"/>
+                <field name="project_id" string="Dự án"/>
+                <field name="name" string="Phiên bản"/>
+                <field name="revision_kind" string="Loại"/>
+                <field name="review_state" string="Rà soát" widget="badge"
+                       decoration-warning="review_state == 'returned'" decoration-info="review_state == 'in_review'"
+                       decoration-success="review_state == 'review_complete'"/>
+                <field name="signature_status" string="Chữ ký" optional="show"/>
+                <field name="effectivity_status" string="Hiệu lực" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_demo_revision_form" model="ir.ui.view">
+        <field name="name">tp.contract.revision.tp_demo.form</field>
+        <field name="model">tp.contract.revision</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0" duplicate="0" class="o_tp_demo_native">
+                <header>
+                    <field name="review_state" widget="statusbar" readonly="1"
+                           statusbar_visible="draft,in_review,returned,review_complete"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="text-muted"><field name="contract_id" readonly="1"/></span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="project_id" string="Dự án" readonly="1"/>
+                            <field name="revision_kind" string="Loại phiên bản" readonly="1"/>
+                            <field name="reference" string="Số văn bản" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="signature_status" string="Chữ ký" readonly="1"/>
+                            <field name="effectivity_status" string="Hiệu lực" readonly="1"/>
+                            <field name="legacy_unverified" string="Hồ sơ nhập ban đầu" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="lines" string="Dòng phạm vi">
+                            <field name="line_ids" readonly="1">
+                                <list>
+                                    <field name="scope_key" string="Mã phạm vi"/>
+                                    <field name="name" string="Nội dung"/>
+                                    <field name="change_kind" string="Thay đổi"/>
+                                </list>
+                            </field>
+                            <p class="text-muted small">Số tiền từng dòng nằm ở TP Finance › Số tiền dòng hợp đồng và chỉ hiện khi có quyền financial.read của dự án.</p>
+                        </page>
+                        <page name="submissions" string="Lần gửi rà soát">
+                            <field name="submission_ids" readonly="1">
+                                <list>
+                                    <field name="sequence" string="Lần"/>
+                                    <field name="submitted_by_id" string="Người gửi"/>
+                                    <field name="reviewer_id" string="Người rà soát"/>
+                                    <field name="submitted_at" string="Thời điểm gửi"/>
+                                    <field name="outcome" string="Kết quả"/>
+                                    <field name="return_reason" string="Lý do trả lại"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_demo_revision_search" model="ir.ui.view">
+        <field name="name">tp.contract.revision.tp_demo.search</field>
+        <field name="model">tp.contract.revision</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="contract_id" string="Hợp đồng"/>
+                <field name="project_id" string="Dự án"/>
+                <filter name="review_cycle" string="Đang trong vòng rà soát" domain="[('review_state', 'in', ['draft', 'in_review', 'returned'])]"/>
+                <filter name="returned" string="Trả lại" domain="[('review_state', '=', 'returned')]"/>
+                <filter name="in_review" string="Đang rà soát" domain="[('review_state', '=', 'in_review')]"/>
+                <group>
+                    <filter name="group_review" string="Trạng thái rà soát" context="{'group_by': 'review_state'}"/>
+                    <filter name="group_project" string="Dự án" context="{'group_by': 'project_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_demo_revisions" model="ir.actions.act_window">
+        <field name="name">Phiên bản rà soát</field>
+        <field name="res_model">tp.contract.revision</field>
+        <field name="path">tp-demo-revisions</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('project_id.tp_code', '=like', 'DEMO-%')]</field>
+        <field name="search_view_id" ref="view_demo_revision_search"/>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_demo_revision_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_demo_revision_form')})]"/>
+    </record>
+
+    <record id="view_demo_line_amount_list" model="ir.ui.view">
+        <field name="name">tp.contract.line.amount.tp_demo.list</field>
+        <field name="model">tp.contract.line.amount</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0" class="o_tp_demo_native">
+                <field name="project_id" string="Dự án"/>
+                <field name="revision_id" string="Phiên bản"/>
+                <field name="line_id" string="Dòng phạm vi"/>
+                <field name="amount_state" string="Trạng thái số tiền"/>
+                <field name="tax_basis" string="Cơ sở thuế"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="amount" string="Số tiền"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_demo_line_amounts" model="ir.actions.act_window">
+        <field name="name">Số tiền dòng hợp đồng</field>
+        <field name="res_model">tp.contract.line.amount</field>
+        <field name="path">tp-demo-line-amounts</field>
+        <field name="view_mode">list</field>
+        <field name="domain">[('project_id.tp_code', '=like', 'DEMO-%')]</field>
+        <field name="view_id" ref="view_demo_line_amount_list"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_empty_folder">Không có số tiền nào bạn được xem.</p>
+            <p>Số tiền dòng hợp đồng chỉ hiện với dự án mà bạn có quyền financial.read; record rule của TP Contracts lọc ở backend.</p>
+        </field>
+    </record>
+</odoo>

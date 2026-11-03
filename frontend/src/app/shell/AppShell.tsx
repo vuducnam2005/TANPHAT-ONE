@@ -40,7 +40,7 @@ export function AppShell() {
             <span><strong>{user?.name ?? 'Đang tải phiên'}</strong><small>{company?.name ?? 'Công ty'}</small></span>
             <form action="/web/session/logout" method="post" onSubmit={() => queryClient.clear()}>
               <input type="hidden" name="csrf_token" value={session.csrf_token} />
-              <input type="hidden" name="redirect" value="/work/" />
+              <input type="hidden" name="redirect" value="/work/?signed_out=1" />
               <button className="tp-quiet-button" type="submit">Đăng xuất</button>
             </form>
           </div>

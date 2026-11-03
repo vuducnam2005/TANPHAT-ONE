@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_demo_workspace.Dashboard">
+        <div class="o_action o_tp_demo o_tp_demo_dashboard">
+            <ControlPanel/>
+            <div class="o_content o_tp_demo_content">
+                <t t-call="tp_demo_workspace.EnvironmentStrip"/>
+                <t t-call="tp_demo_workspace.LoadState"/>
+                <t t-set="data" t-value="this.state.data"/>
+                <t t-if="data">
+                    <header class="o_tp_demo_header">
+                        <div>
+                            <h1 class="o_tp_demo_title">Toàn cảnh TANPHAT ONE</h1>
+                            <p class="o_tp_demo_muted">
+                                <t t-out="data.viewer.name"/> · <t t-out="data.viewer.project_count"/> dự án được giao ·
+                                <t t-if="data.viewer.financial_project_count">xem số tiền ở <t t-out="data.viewer.financial_project_count"/> dự án</t>
+                                <t t-else="">không có quyền xem số tiền</t>
+                            </p>
+                        </div>
+                        <div class="o_tp_demo_lens">
+                            <label for="tp_demo_lens" class="o_tp_demo_lens_label">Góc nhìn</label>
+                            <select id="tp_demo_lens" class="form-select form-select-sm" t-att-value="this.lensValue"
+                                    t-on-change="(ev) => this.onLensChange(ev)" aria-describedby="tp_demo_lens_note">
+                                <t t-foreach="data.lenses" t-as="lens" t-key="lens.key">
+                                    <option t-att-value="lens.key" t-att-selected="lens.key === this.lensValue" t-out="lens.label"/>
+                                </t>
+                            </select>
+                            <span id="tp_demo_lens_note" class="o_tp_demo_lens_note">Chỉ đổi bố cục — quyền dữ liệu không đổi</span>
+                        </div>
+                    </header>
+
+                    <section class="o_tp_demo_kpis" aria-label="Chỉ số chính">
+                        <t t-foreach="data.kpis" t-as="kpi" t-key="kpi.key">
+                            <button type="button" class="o_tp_demo_kpi" t-att-class="{'o_tp_demo_kpi_attention': kpi.attention and kpi.value}"
+                                    t-on-click="() => this.openKpi(kpi)" t-att-aria-label="kpi.label + ': ' + kpi.value + '. Mở danh sách cùng bộ lọc'">
+                                <span class="o_tp_demo_kpi_value" t-out="kpi.value"/>
+                                <span class="o_tp_demo_kpi_label" t-out="kpi.label"/>
+                                <span class="o_tp_demo_kpi_hint" t-out="kpi.hint"/>
+                            </button>
+                        </t>
+                    </section>
+
+                    <div class="o_tp_demo_split">
+                        <section class="o_tp_demo_panel" aria-labelledby="tp_demo_chains_title">
+                            <h2 id="tp_demo_chains_title" class="o_tp_demo_panel_title">Chuỗi liên kết dự án</h2>
+                            <p t-if="!data.chains.length" class="o_tp_demo_muted">Bạn chưa được giao dự án DEMO nào.</p>
+                            <ol class="o_tp_demo_chains">
+                                <t t-foreach="data.chains" t-as="chain" t-key="chain.id">
+                                    <li class="o_tp_demo_chain">
+                                        <div class="o_tp_demo_chain_head">
+                                            <span class="o_tp_demo_code" t-out="chain.code"/>
+                                            <span class="o_tp_demo_chain_name" t-out="chain.name"/>
+                                            <span class="o_tp_demo_muted small"><t t-out="chain.partner"/><t t-if="chain.department"> · <t t-out="chain.department"/></t></span>
+                                        </div>
+                                        <div class="o_tp_demo_chain_nodes">
+                                            <t t-foreach="chain.nodes" t-as="node" t-key="node.key">
+                                                <span t-if="!node_first" class="o_tp_demo_chain_link" t-att-class="{'o_tp_demo_dashed': node.nature === 'illustrative' or chain.nodes[node_index - 1].nature === 'illustrative'}" aria-hidden="true"/>
+                                                <button type="button" class="o_tp_demo_node"
+                                                        t-att-class="{'o_tp_demo_node_illustrative': node.nature === 'illustrative', 'o_tp_demo_node_project': node.key === 'project'}"
+                                                        t-att-title="node.note or ''" t-on-click="() => this.openNode(chain, node)">
+                                                    <span t-if="node.count !== null" class="o_tp_demo_node_count" t-out="node.count"/>
+                                                    <span class="o_tp_demo_node_label" t-out="node.label"/>
+                                                </button>
+                                            </t>
+                                        </div>
+                                    </li>
+                                </t>
+                            </ol>
+                            <p t-if="data.viewer.business" class="o_tp_demo_muted small">Nút “Cơ hội cùng khách hàng” là liên kết minh họa theo khách hàng, chưa có liên kết dữ liệu CRM → hợp đồng.</p>
+                        </section>
+
+                        <section class="o_tp_demo_panel" aria-labelledby="tp_demo_attention_title">
+                            <h2 id="tp_demo_attention_title" class="o_tp_demo_panel_title">Cần chú ý</h2>
+                            <p t-if="!data.attention.length" class="o_tp_demo_muted">Không có mục cần chú ý trong phạm vi bạn được xem.</p>
+                            <ul class="o_tp_demo_attention">
+                                <t t-foreach="data.attention" t-as="item" t-key="item.key">
+                                    <li>
+                                        <button type="button" class="o_tp_demo_attention_item" t-att-class="'o_tp_demo_sev_' + item.severity"
+                                                t-on-click="() => this.openAttention(item)">
+                                            <span class="o_tp_demo_attention_mark" aria-hidden="true"/>
+                                            <span class="o_tp_demo_attention_body">
+                                                <span class="o_tp_demo_attention_title" t-out="item.title"/>
+                                                <span class="o_tp_demo_muted small"><t t-if="item.project"><t t-out="item.project"/> · </t><t t-out="item.detail"/></span>
+                                            </span>
+                                        </button>
+                                    </li>
+                                </t>
+                            </ul>
+                        </section>
+                    </div>
+
+                    <section class="o_tp_demo_panel" aria-labelledby="tp_demo_map_title">
+                        <div class="o_tp_demo_panel_head">
+                            <h2 id="tp_demo_map_title" class="o_tp_demo_panel_title">Bản đồ phân hệ TANPHAT ONE</h2>
+                            <t t-call="tp_demo_workspace.Legend"/>
+                        </div>
+                        <div class="o_tp_demo_lanes">
+                            <t t-foreach="this.lanes" t-as="lane" t-key="lane.key">
+                                <div class="o_tp_demo_lane">
+                                    <h3 class="o_tp_demo_lane_label" t-out="lane.label"/>
+                                    <div class="o_tp_demo_lane_modules">
+                                        <t t-foreach="lane.modules" t-as="module" t-key="module.key">
+                                            <button type="button" class="o_tp_demo_module"
+                                                    t-att-class="'o_tp_demo_nature_' + module.nature + (module.locked ? ' o_tp_demo_module_locked' : '')"
+                                                    t-att-disabled="module.locked" t-on-click="() => this.openModule(module)">
+                                                <span class="o_tp_demo_module_name" t-out="module.name"/>
+                                                <span class="o_tp_demo_module_purpose" t-out="module.purpose"/>
+                                                <span class="o_tp_demo_module_meta">
+                                                    <t t-if="module.locked">Không thuộc quyền của bạn</t>
+                                                    <t t-elif="module.nature === 'real'">Dữ liệu Odoo · <t t-out="module.source"/></t>
+                                                    <t t-elif="module.nature === 'mixed'">Thật + minh họa · <t t-out="module.source"/></t>
+                                                    <t t-else="">Minh họa định hướng</t>
+                                                </span>
+                                            </button>
+                                        </t>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </section>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

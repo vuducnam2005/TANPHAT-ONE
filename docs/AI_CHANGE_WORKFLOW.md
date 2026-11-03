@@ -2,6 +2,8 @@
 
 Tài liệu này biến mỗi phiên chat thành một bước có thể tiếp tục. `AGENTS.md` là luật; `docs/PROJECT_STATUS.md` là trạng thái hiện tại; `docs/CHANGELOG.md` là lịch sử thay đổi; tài liệu architecture là quyết định dài hạn.
 
+Khi làm theo mô hình phiên chính điều phối và Claude triển khai (DEC-022), đọc thêm [quy trình điều phối](AI_COORDINATION_WORKFLOW.md) và [lộ trình code](architecture/TP_CODE_EXECUTION_MASTER_PLAN.md). Phiên chính có thể cập nhật kế hoạch/tài liệu và chạy test cô lập để review; sửa application code được giao lại Claude bằng prompt cụ thể. Quy tắc `start/finish/check` và bàn giao vẫn áp dụng cho batch triển khai.
+
 ## Khi bắt đầu một phiên
 
 1. Đọc `AGENTS.md`, `docs/PROJECT_STATUS.md`, `docs/CHANGELOG.md`.
@@ -93,7 +95,7 @@ Mỗi change batch dùng ID mới `CHG-YYYYMMDD-NNN`; status phải có dòng đ
 | --- | --- |
 | Python/Odoo model/security | Odoo test liên quan, upgrade test DB, ruff |
 | API/DTO/OpenAPI | regenerate types, contract validator, API 401/403/404/validation |
-| Frontend | typecheck, build, unit test; E2E nếu route/session/quyền đổi |
+| Frontend | typecheck, build, unit test; E2E nếu route/session/quyền đổi. Khi đổi session, kiểm 401 của cả query và mutation, dữ liệu cũ bị bỏ, deep link/re-login và không tự gửi lại thao tác ghi; 403/409/422/5xx không được biến thành hết phiên |
 | Workflow/action | transition matrix, quyền actor, history, invalid transition và concurrent/retry case |
 | Database/migration | dev upgrade, test upgrade, backup/restore rehearsal trước pilot |
 | Tài liệu/quy ước | link kiểm tra, không mâu thuẫn `PROJECT_STATUS.md` |

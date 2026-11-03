@@ -1,0 +1,53 @@
+<odoo>
+    <!-- Client actions: read projections rendered by OWL components. -->
+    <record id="action_demo_dashboard" model="ir.actions.client">
+        <field name="name">TP Dashboard</field>
+        <field name="tag">tp_demo_workspace.dashboard</field>
+        <field name="path">tp-demo-dashboard</field>
+    </record>
+    <record id="action_demo_project_overview" model="ir.actions.client">
+        <field name="name">Tổng quan dự án</field>
+        <field name="tag">tp_demo_workspace.project_overview</field>
+        <field name="path">tp-demo-project-overview</field>
+    </record>
+    <record id="action_demo_contract_flow" model="ir.actions.client">
+        <field name="name">Luồng rà soát hợp đồng</field>
+        <field name="tag">tp_demo_workspace.contract_flow</field>
+        <field name="path">tp-demo-contract-flow</field>
+    </record>
+    <record id="action_demo_finance" model="ir.actions.client">
+        <field name="name">Tổng hợp tài chính</field>
+        <field name="tag">tp_demo_workspace.finance</field>
+        <field name="path">tp-demo-finance</field>
+    </record>
+    <record id="action_demo_survey" model="ir.actions.client">
+        <field name="name">Khảo sát hiện trường</field>
+        <field name="tag">tp_demo_workspace.showcase</field>
+        <field name="path">tp-demo-survey</field>
+        <field name="params" eval="{'screen': 'survey'}"/>
+    </record>
+    <record id="action_demo_design" model="ir.actions.client">
+        <field name="name">Hồ sơ thiết kế</field>
+        <field name="tag">tp_demo_workspace.showcase</field>
+        <field name="path">tp-demo-design</field>
+        <field name="params" eval="{'screen': 'design'}"/>
+    </record>
+    <record id="action_demo_request" model="ir.actions.client">
+        <field name="name">Đề nghị BASE</field>
+        <field name="tag">tp_demo_workspace.showcase</field>
+        <field name="path">tp-demo-request</field>
+        <field name="params" eval="{'screen': 'request'}"/>
+    </record>
+    <record id="action_demo_bid" model="ir.actions.client">
+        <field name="name">Dự thầu</field>
+        <field name="tag">tp_demo_workspace.showcase</field>
+        <field name="path">tp-demo-bid</field>
+        <field name="params" eval="{'screen': 'bid'}"/>
+    </record>
+    <record id="action_demo_staffing" model="ir.actions.client">
+        <field name="name">Năng lực và phân bổ</field>
+        <field name="tag">tp_demo_workspace.showcase</field>
+        <field name="path">tp-demo-staffing</field>
+        <field name="params" eval="{'screen': 'staffing'}"/>
+    </record>
+</odoo>

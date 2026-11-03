@@ -8,6 +8,8 @@ Baseline chi tiết hiện hành cho Ban Kinh doanh/Kế hoạch:
 - [Bằng chứng nguồn và ca nghiệm thu giả lập](TP_KD_EVIDENCE_AND_ACCEPTANCE.md).
 - [BIZ-002 — bộ thiết kế nghiệp vụ, bản đồ A–M, workflow, dữ liệu/quyền, tích hợp và readiness](TP_BIZ002_DESIGN_PACKAGE.md).
 
+Native fake-only NATIVE-DATA-003 (CHG-20261102-014, DEC-027) đã áp dụng trên dev18069: employee gửi expense `draft→submitted`, approver native khác actor duyệt `submitted→approved`; approved chỉ tạo receipt **draft**, chưa hoàn trả/post/payment. Actor/scope/hierarchy/domain/history/side effect trong [runbook](../demo/NATIVE_DATA_003_CONNECTED_OPERATIONS.md). Refuse có lý do→manager reset→employee sửa/gửi lại chỉ kiểm clone/rollback. Đây là workflow native đã có trên dữ liệu giả, không mở capability/state TP Contracts/BASE/ký/hiệu lực hoặc thẩm quyền thật. Managed-task progress giữ policy chặn, [TASK-001](RFC_TASK_001_MANAGED_TASK_PROGRESS.md) chờ quyết định.
+
 Khi code phần KD/Contracts, đọc hai tài liệu này cùng database design. Các đề xuất tuyến tính cũ về hợp đồng bị thay bằng baseline BIZ-001; không lấy chữ approved làm bằng chứng đã ký/có hiệu lực.
 
 ## 1. Luồng tổng thể

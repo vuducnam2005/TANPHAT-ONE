@@ -13,6 +13,7 @@ Theo thứ tự:
 5. Đọc `docs/ROADMAP.md`, `docs/DECISIONS.md` và `docs/HANDOFF_TEMPLATE.md`.
    Đọc mục mới nhất trong `docs/CHANGELOG.md`; chỉ đọc sâu lịch sử khi phạm vi yêu cầu cần.
 6. Đọc tài liệu phù hợp với phạm vi: database, kiến trúc source, workflow nghiệp vụ, OpenAPI, backend hoặc frontend README.
+   Với Request/BASE, đọc [kiến thức nghiệp vụ Request](docs/architecture/TP_BASE_REQUEST_BUSINESS_KNOWLEDGE.md) và [sổ nghiên cứu](docs/architecture/TP_REFERENCE_RESEARCH_AND_HANDOFF.md); giữ rõ quan sát UI, thiết kế TANPHAT và phần chưa kiểm chứng.
 7. Kiểm tra `git status`, runtime status và test liên quan trước khi sửa.
 
 Nếu trạng thái trong tài liệu khác source/runtime, không đoán. Ghi nhận sai lệch trong `docs/PROJECT_STATUS.md`, kiểm chứng bằng lệnh và báo rõ trước khi mở phạm vi mới.
@@ -89,4 +90,8 @@ Phiên mới phải bắt đầu bằng câu trả lời nội bộ: “Đã đ�
 Không chạy `setup`/`upgrade`, seed password hoặc sửa database chỉ để mở một phiên chat. Không đổi thư mục gốc, không thay `.git`, không phục hồi metadata từ một repository cũ và không `git add .` để che trạng thái lỗi. Kiểm chứng baseline bằng lệnh và đối chiếu status hiện tại; phân biệt thay đổi có sẵn với thay đổi do mình tạo. Tài liệu và kiểm thử local vẫn có thể tiến hành trong phạm vi yêu cầu người dùng.
 
 Khi người dùng chỉ nói “tiếp tục”, thực hiện `Next action` trong `docs/PROJECT_STATUS.md`. Khi người dùng yêu cầu khác, ưu tiên yêu cầu mới nhưng vẫn cập nhật status và không bỏ qua test/security.
+
+### Vai trò điều phối và thực thi
+
+Người dùng đã chỉ định phiên chính làm điều phối: lập kế hoạch, tổng hợp ý tưởng, phân tích, review/test kết quả Claude và phát prompt; không trực tiếp sửa application code ở vai trò này. Xem `docs/AI_COORDINATION_WORKFLOW.md` và `docs/architecture/TP_CODE_EXECUTION_MASTER_PLAN.md`. Phiên Claude được giao prompt triển khai vẫn được code đúng scope, chạy test và cập nhật handoff theo các quy tắc trên. Technical acceptance, business acceptance và pilot authorization phải được ghi riêng; người dùng có thể đổi vai trò bằng yêu cầu trực tiếp.
 

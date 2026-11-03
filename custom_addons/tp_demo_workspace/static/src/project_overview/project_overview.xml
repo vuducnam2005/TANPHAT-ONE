@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_demo_workspace.ProjectOverview">
+        <div class="o_action o_tp_demo o_tp_demo_overview">
+            <ControlPanel/>
+            <div class="o_content o_tp_demo_content">
+                <t t-call="tp_demo_workspace.EnvironmentStrip"/>
+                <t t-call="tp_demo_workspace.LoadState"/>
+                <t t-set="data" t-value="this.state.data"/>
+                <t t-if="data">
+                    <header class="o_tp_demo_header">
+                        <div class="o_tp_demo_project_picker">
+                            <label for="tp_demo_project" class="o_tp_demo_lens_label">Dự án</label>
+                            <select id="tp_demo_project" class="form-select" t-on-change="(ev) => this.onProjectChange(ev)">
+                                <option t-if="!data.project" value="" selected="selected">Chọn dự án…</option>
+                                <t t-foreach="data.projects" t-as="item" t-key="item.id">
+                                    <option t-att-value="item.id" t-att-selected="item.id === this.selectedId" t-out="item.code + ' · ' + item.name"/>
+                                </t>
+                            </select>
+                        </div>
+                    </header>
+
+                    <div t-if="!data.project" class="o_tp_demo_panel">
+                        <p t-if="data.denied" class="o_tp_demo_error_title">Không có quyền xem dự án này hoặc dự án không tồn tại.</p>
+                        <p t-if="data.projects.length" class="o_tp_demo_muted">Chọn một dự án bạn được giao để xem tổng quan.</p>
+                        <p t-else="" class="o_tp_demo_muted">Bạn chưa được giao dự án DEMO nào.</p>
+                    </div>
+
+                    <t t-if="data.project">
+                        <t t-set="project" t-value="data.project"/>
+                        <section class="o_tp_demo_project_head">
+                            <div>
+                                <span class="o_tp_demo_code" t-out="project.code"/>
+                                <h1 class="o_tp_demo_title" t-out="project.name"/>
+                                <p class="o_tp_demo_muted">
+                                    Khách hàng: <t t-out="project.partner or '—'"/> · Phòng chủ trì: <t t-out="project.department or '—'"/> ·
+                                    Chủ nhiệm: <t t-out="project.manager or '—'"/>
+                                    <t t-if="project.date_start"> · <t t-out="project.date_start"/> → <t t-out="project.date_end or '…'"/></t>
+                                </p>
+                            </div>
+                            <button type="button" class="btn btn-secondary" t-on-click="() => this.openProjectForm()">Mở hồ sơ dự án</button>
+                        </section>
+
+                        <div class="o_tp_demo_grid">
+                            <section class="o_tp_demo_panel o_tp_demo_span_2" aria-labelledby="tp_demo_ov_contracts">
+                                <div class="o_tp_demo_panel_head">
+                                    <h2 id="tp_demo_ov_contracts" class="o_tp_demo_panel_title">Hợp đồng <t t-call="tp_demo_workspace.RealTag"/></h2>
+                                    <button type="button" class="btn btn-link btn-sm" t-on-click="() => this.openSection('contracts', 'Hợp đồng')">Mở danh sách</button>
+                                </div>
+                                <p t-if="!data.contracts.length" class="o_tp_demo_muted">Chưa có hợp đồng.</p>
+                                <div t-else="" class="table-responsive">
+                                    <table class="table table-sm o_tp_demo_table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Hợp đồng</th>
+                                                <th scope="col">Vòng đời</th>
+                                                <th scope="col">Phiên bản mới nhất · rà soát</th>
+                                                <th scope="col">Ký / hiệu lực</th>
+                                                <th scope="col" class="text-end">Giá trị phiên bản</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="data.contracts" t-as="contract" t-key="contract.id">
+                                                <tr>
+                                                    <td>
+                                                        <button type="button" class="o_tp_demo_linkish" t-on-click="() => this.openRecord('tp.contract', contract.id)">
+                                                            <span class="o_tp_demo_code" t-out="contract.code"/>
+                                                            <span t-out="contract.name"/>
+                                                        </button>
+                                                        <span class="o_tp_demo_muted small d-block"><t t-out="contract.contract_type"/><t t-if="contract.partner"> · <t t-out="contract.partner"/></t><t t-if="contract.legacy"> · hồ sơ nhập ban đầu</t></span>
+                                                    </td>
+                                                    <td><span class="o_tp_demo_state" t-att-class="'o_tp_demo_state_' + contract.lifecycle_state" t-out="contract.lifecycle_label"/></td>
+                                                    <td>
+                                                        <t t-if="contract.revision">
+                                                            <button type="button" class="o_tp_demo_linkish" t-on-click="() => this.openRecord('tp.contract.revision', contract.revision.id)" t-out="contract.revision.name"/>
+                                                            <span class="o_tp_demo_state d-inline-block ms-1" t-att-class="'o_tp_demo_state_' + contract.revision.review_state" t-out="contract.revision.review_label"/>
+                                                        </t>
+                                                    </td>
+                                                    <td class="small"><t t-if="contract.revision"><t t-out="contract.revision.signature_label"/> · <t t-out="contract.revision.effectivity_label"/></t></td>
+                                                    <td class="text-end o_tp_demo_num">
+                                                        <t t-if="!project.financial_read"><span class="o_tp_demo_muted small">Cần quyền financial.read</span></t>
+                                                        <t t-elif="contract.revision and contract.revision.value"><t t-out="contract.revision.value"/></t>
+                                                        <t t-else=""><span class="o_tp_demo_muted small" t-out="(contract.revision and contract.revision.value_status) or 'Chưa có số tiền'"/></t>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p class="o_tp_demo_muted small">Vòng đời hợp đồng và trạng thái rà soát phiên bản là hai trục riêng; rà soát xong không đồng nghĩa đã ký hay có hiệu lực.</p>
+                            </section>
+
+                            <section class="o_tp_demo_panel" aria-labelledby="tp_demo_ov_tasks">
+                                <div class="o_tp_demo_panel_head">
+                                    <h2 id="tp_demo_ov_tasks" class="o_tp_demo_panel_title">Công việc <t t-call="tp_demo_workspace.RealTag"/></h2>
+                                    <button type="button" class="btn btn-link btn-sm" t-on-click="() => this.openSection('tasks', 'Công việc')">Mở danh sách</button>
+                                </div>
+                                <div t-if="data.task_stages.length" class="o_tp_demo_stagebar" role="img"
+                                     t-att-aria-label="'Phân bố công việc: ' + data.task_stages.map((s) => s.stage + ' ' + s.count).join(', ')">
+                                    <t t-foreach="data.task_stages" t-as="stage" t-key="stage_index">
+                                        <span class="o_tp_demo_stagebar_seg" t-att-class="'o_tp_demo_seg_' + stage_index" t-att-style="this.stageWidth(stage)" t-att-title="stage.stage + ': ' + stage.count"/>
+                                    </t>
+                                </div>
+                                <ul class="o_tp_demo_stagelegend">
+                                    <t t-foreach="data.task_stages" t-as="stage" t-key="stage_index">
+                                        <li><span class="o_tp_demo_swatch" t-att-class="'o_tp_demo_seg_' + stage_index" aria-hidden="true"/><t t-out="stage.stage"/>: <strong class="o_tp_demo_num" t-out="stage.count"/></li>
+                                    </t>
+                                </ul>
+                                <p t-if="!data.tasks.length" class="o_tp_demo_muted">Không có công việc đang mở.</p>
+                                <ul class="o_tp_demo_rows">
+                                    <t t-foreach="data.tasks" t-as="task" t-key="task.id">
+                                        <li>
+                                            <button type="button" class="o_tp_demo_row" t-on-click="() => this.openRecord('project.task', task.id)">
+                                                <span class="o_tp_demo_row_main" t-out="task.name"/>
+                                                <span class="o_tp_demo_row_meta small">
+                                                    <t t-out="task.stage"/> · <t t-out="task.assignees or 'Chưa giao'"/>
+                                                    <t t-if="task.deadline"> · hạn <span t-att-class="{'o_tp_demo_overdue': task.overdue}" t-out="task.deadline"/></t>
+                                                </span>
+                                            </button>
+                                        </li>
+                                    </t>
+                                </ul>
+                            </section>
+
+                            <section class="o_tp_demo_panel" aria-labelledby="tp_demo_ov_docs">
+                                <div class="o_tp_demo_panel_head">
+                                    <h2 id="tp_demo_ov_docs" class="o_tp_demo_panel_title">Tài liệu <t t-call="tp_demo_workspace.RealTag"/></h2>
+                                    <button type="button" class="btn btn-link btn-sm" t-on-click="() => this.openSection('documents', 'Tài liệu')">Mở danh sách</button>
+                                </div>
+                                <p t-if="!data.documents.length" class="o_tp_demo_muted">Không có tài liệu bạn được xem.</p>
+                                <ul class="o_tp_demo_rows">
+                                    <t t-foreach="data.documents" t-as="doc" t-key="doc.id">
+                                        <li>
+                                            <button type="button" class="o_tp_demo_row" t-on-click="() => this.openRecord('tp.contract.document', doc.id)">
+                                                <span class="o_tp_demo_row_main" t-out="doc.name"/>
+                                                <span class="o_tp_demo_row_meta small">
+                                                    <t t-out="doc.contract"/> · <t t-out="doc.kind"/> ·
+                                                    <span class="o_tp_demo_zone" t-att-class="'o_tp_demo_zone_' + doc.confidentiality" t-out="doc.confidentiality_label"/>
+                                                </span>
+                                            </button>
+                                        </li>
+                                    </t>
+                                </ul>
+                                <p t-if="!project.financial_read" class="o_tp_demo_muted small">Tài liệu vùng tài chính không hiện vì bạn không có quyền financial.read của dự án.</p>
+                            </section>
+
+                            <section class="o_tp_demo_panel o_tp_demo_panel_illustrative" aria-labelledby="tp_demo_ov_survey">
+                                <div class="o_tp_demo_panel_head">
+                                    <h2 id="tp_demo_ov_survey" class="o_tp_demo_panel_title">Khảo sát <t t-call="tp_demo_workspace.IllustrativeTag"/></h2>
+                                    <button type="button" class="btn btn-link btn-sm" t-on-click="() => this.openScreen('tp_demo_workspace.action_demo_survey')">Mở TP Survey</button>
+                                </div>
+                                <p t-if="!data.illustrative.survey.length" class="o_tp_demo_muted">Chưa có kế hoạch khảo sát mẫu.</p>
+                                <ul class="o_tp_demo_plainlist">
+                                    <t t-foreach="data.illustrative.survey" t-as="row" t-key="row.key">
+                                        <li><span t-out="row.name"/> <span class="o_tp_demo_muted small">· <t t-out="row.status"/></span></li>
+                                    </t>
+                                </ul>
+                            </section>
+
+                            <section class="o_tp_demo_panel o_tp_demo_panel_illustrative" aria-labelledby="tp_demo_ov_design">
+                                <div class="o_tp_demo_panel_head">
+                                    <h2 id="tp_demo_ov_design" class="o_tp_demo_panel_title">Thiết kế <t t-call="tp_demo_workspace.IllustrativeTag"/></h2>
+                                    <button type="button" class="btn btn-link btn-sm" t-on-click="() => this.openScreen('tp_demo_workspace.action_demo_design')">Mở TP Design</button>
+                                </div>
+                                <p t-if="!data.illustrative.design.length" class="o_tp_demo_muted">Chưa có hồ sơ thiết kế mẫu.</p>
+                                <ul class="o_tp_demo_plainlist">
+                                    <t t-foreach="data.illustrative.design" t-as="row" t-key="row.key">
+                                        <li><span t-out="row.name"/> <span class="o_tp_demo_muted small">· <t t-out="row.status"/></span></li>
+                                    </t>
+                                </ul>
+                            </section>
+
+                            <section t-if="data.business" class="o_tp_demo_panel o_tp_demo_panel_illustrative" aria-labelledby="tp_demo_ov_leads">
+                                <div class="o_tp_demo_panel_head">
+                                    <h2 id="tp_demo_ov_leads" class="o_tp_demo_panel_title">Cơ hội cùng khách hàng <t t-call="tp_demo_workspace.IllustrativeTag"/></h2>
+                                </div>
+                                <p class="o_tp_demo_muted small">Cơ hội là dữ liệu CRM thật; liên hệ với dự án chỉ là minh họa theo cùng khách hàng.</p>
+                                <p t-if="!data.opportunities.length" class="o_tp_demo_muted">Không có cơ hội cùng khách hàng.</p>
+                                <ul class="o_tp_demo_rows">
+                                    <t t-foreach="data.opportunities" t-as="lead" t-key="lead.id">
+                                        <li>
+                                            <button type="button" class="o_tp_demo_row" t-on-click="() => this.openRecord('crm.lead', lead.id)">
+                                                <span class="o_tp_demo_row_main" t-out="lead.name"/>
+                                                <span class="o_tp_demo_row_meta small" t-out="lead.stage"/>
+                                            </button>
+                                        </li>
+                                    </t>
+                                </ul>
+                            </section>
+                        </div>
+                    </t>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

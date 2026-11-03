@@ -1,0 +1,199 @@
+.o_tp_demo_showcase {
+    .o_tp_demo_filters {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .o_tp_demo_filter {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 180px;
+    }
+
+    .o_tp_demo_filter_grow {
+        flex: 1 1 240px;
+    }
+
+    .o_tp_demo_master {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+        gap: 16px;
+        align-items: start;
+    }
+
+    .o_tp_demo_detail_title {
+        font-family: var(--tp-display);
+        font-weight: 600;
+        font-size: 1.35rem;
+        margin: 4px 0;
+    }
+
+    .o_tp_demo_facts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 8px 16px;
+        margin: 14px 0 4px;
+        padding: 14px 16px;
+        background: var(--tp-paper);
+        border-radius: var(--tp-radius);
+
+        dt {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--tp-steel);
+        }
+
+        dd {
+            margin: 0;
+            font-weight: 600;
+        }
+    }
+
+    // Stepper: solid dots for steps already taken, a ring for the current one.
+    .o_tp_demo_stepper {
+        display: flex;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .o_tp_demo_step {
+        position: relative;
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        padding-right: 8px;
+        font-size: 0.75rem;
+        color: var(--tp-steel);
+
+        &::before {
+            content: "";
+            position: absolute;
+            top: 5px;
+            left: 12px;
+            right: 0;
+            border-top: 2px solid var(--tp-line);
+        }
+
+        &:last-child::before {
+            display: none;
+        }
+    }
+
+    .o_tp_demo_step_dot {
+        position: relative;
+        z-index: 1;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid var(--tp-steel);
+        background: var(--tp-surface);
+    }
+
+    .o_tp_demo_step_done {
+        color: var(--tp-ink);
+
+        &::before {
+            border-top-color: var(--tp-green);
+        }
+
+        .o_tp_demo_step_dot {
+            background: var(--tp-green);
+            border-color: var(--tp-green);
+        }
+    }
+
+    .o_tp_demo_step_current {
+        color: var(--tp-ink);
+        font-weight: 600;
+
+        .o_tp_demo_step_dot {
+            background: var(--tp-ink);
+            border-color: var(--tp-ink);
+            box-shadow: 0 0 0 3px var(--tp-ink-soft);
+        }
+    }
+
+    .o_tp_demo_step_returned {
+        color: var(--tp-amber-text);
+        font-weight: 600;
+
+        .o_tp_demo_step_dot {
+            background: var(--tp-amber);
+            border-color: var(--tp-amber);
+        }
+    }
+
+    .o_tp_demo_section {
+        margin-top: 4px;
+    }
+
+    .o_tp_demo_timeline {
+        list-style: none;
+        margin: 0;
+        padding: 0 0 0 12px;
+        border-left: 2px dashed var(--tp-steel);
+
+        li {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 12px;
+            padding: 2px 0;
+        }
+    }
+
+    .o_tp_demo_timeline_date {
+        color: var(--tp-steel);
+        font-size: 0.8rem;
+        min-width: 80px;
+    }
+
+    .o_tp_demo_scope {
+        border-style: dashed;
+        border-color: var(--tp-steel);
+    }
+}
+
+@media (max-width: 991.98px) {
+    .o_tp_demo_showcase .o_tp_demo_master {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .o_tp_demo_showcase {
+        .o_tp_demo_filter {
+            min-width: 0;
+            flex: 1 1 100%;
+        }
+
+        .o_tp_demo_stepper {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .o_tp_demo_step {
+            flex-direction: row;
+            align-items: center;
+
+            &::before {
+                top: 12px;
+                bottom: -10px;
+                left: 5px;
+                right: auto;
+                border-top: 0;
+                border-left: 2px solid var(--tp-line);
+            }
+        }
+
+        .o_tp_demo_step_done::before {
+            border-left-color: var(--tp-green);
+        }
+    }
+}

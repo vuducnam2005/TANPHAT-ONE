@@ -1,25 +1,25 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-10-28T14:12:35.997772+00:00",
-  "last_change_id": "CHG-20261028-015",
-  "code_digest": "304742556c9552233e2fe2b1ce62453c07874a8c56eba7e6f48e256080119a07",
-  "code_file_count": 126,
+  "updated_at": "2026-11-02T09:14:03.807536+00:00",
+  "last_change_id": "CHG-20261102-014",
+  "code_digest": "05ca695d3f6e27fca70e07eb79e003eff9953457df896af034c2e75fef2df56f",
+  "code_file_count": 221,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "0368cee573805dae3b34bbcb599785037a7d7954dd227764fb32e7c8f8f6f1b4",
-    "docs/CHANGELOG.md": "3252fb22b265f0540a43ba6c17810c1838c919a64ebe3fe398add67638ec51bb",
-    "AGENTS.md": "2474c035b6823d7157f6c8afd17b7cadc8aded79fa45ac8505d7f561f01bf0cf",
+    "docs/PROJECT_STATUS.md": "228da01d22e2806902cc7926d25dd8bad764572f624b5d742fa9246bce6434ad",
+    "docs/CHANGELOG.md": "3bcf91018807ee53386337bc3eede56981a6d2be88c9aba839352444d1e53c4a",
+    "AGENTS.md": "eb8a83dc3557931a20ad0fbe0bdb42872122bce244e5f7496f135276d4f7b5ba",
     "README_TANPHAT.md": "7b12ef66c29f0cbecb53096a3115e6199ea014cde2eb59e550221e9001f41f47",
-    "docs/AI_CHANGE_WORKFLOW.md": "219f6734fdf845995bf4b2323cbe18e4e73b317d767552b7f43a2f1088890d34",
-    "docs/ROADMAP.md": "f4683522cb01377950d6e651b06baca379ac8e6b59a6cb9984f6a6ece4f3668c",
-    "docs/DECISIONS.md": "ae959c80d4c7e142da6121cd2f3a87fde7fc9cf5f5096358a4fb0af255631901",
+    "docs/AI_CHANGE_WORKFLOW.md": "bee7a7fc977db3cc9b18bd38c21a166b68f4dbe668102ca3001086e73d6059e8",
+    "docs/ROADMAP.md": "5551cdd508914d54e1c68e4ccc99db0c10b5ee604c065e48c3085f228a140e3d",
+    "docs/DECISIONS.md": "90935a6314d9660d113f54b0329038938d8c78ff11579ebf2b8001b106ee9c74",
     "docs/HANDOFF_TEMPLATE.md": "7a98efbd7a557efe789b51fefbf5c4072908f9d9f29a21e0c76d012cbddf3d32",
-    "docs/architecture/TP_BUSINESS_WORKFLOW.md": "991ebb78279c46a7fb9b30f756887ecf17bbe5e0073000eb627be2f031669612",
-    "docs/architecture/TP_DATABASE_DESIGN.md": "f52e3e30162df7850d531ab5b58fda46fe151d2a55cca23450c3203dfdbc956f",
-    "docs/architecture/TP_PLATFORM_SOURCE_STRUCTURE.md": "8f5314e421caf904d681ac66ab6ebd1e6cea6377d813f025a232c4e3d2d1dd59",
+    "docs/architecture/TP_BUSINESS_WORKFLOW.md": "d0e4716bf75dd8e96a3d6f2e11cafc10f8a264e4d1e30a004fad52979740eddf",
+    "docs/architecture/TP_DATABASE_DESIGN.md": "d29387915c00015d2faccaa881aa920982d3ffc02b60e7350d653d40ec5675c4",
+    "docs/architecture/TP_PLATFORM_SOURCE_STRUCTURE.md": "a6825e1710d30801b0378360d20b4f81be096dffd91a3e18fab01438c695134c",
     "docs/architecture/TP_PRODUCT_NAMING.md": "b93114db49706b3ad642335c58fa67339ab0fdd8880b7a83ef8e8e1f514af3a3"
   },
   "reported_checks": [
-    "Docs-only: status/changelog/roadmap ghi commit 02c9e18a + a2f29f2e; doccheck link/bảng đạt; git diff --check đạt; không đổi code, không chạy test ứng dụng"
+    "Odoo clone integration: 0 failed/0 errors of 27; guards unittest: 9/9; Ruff and Node syntax PASS; clone ORM74/dev71 and 8/8 HTTP actors each; clone UI58/dev UI+RPC63 PASS; clone live dashboard84->84.5->84 and injected rollback538 rowsets exact; dev reapply create0/update0/action0 verify0 drift; preservation486 unchanged/52 classified,244 old blobs/249 current refs,195 old code files unchanged; dev.py smoke PASS; docs14/168 links/fences PASS; git diff --check PASS; clone18149 and retired18109/18119 stopped, dev18069/PG55432 active"
   ]
 }

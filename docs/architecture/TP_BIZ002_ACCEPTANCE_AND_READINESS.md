@@ -173,7 +173,7 @@ Khuyến nghị Q2-P1 là capability theo công việc + company/project/departm
 | BASE cho các bundle liên quan | BASE-REC/VER + chủ nguồn BASE | ID/link hoặc provenance thực, quyết định/actor/time, hash bộ trình và evidence; thẩm quyền Q1 riêng; hiện chưa có |
 | Hóa đơn/thu chi nếu có căn cứ, điều khoản tạm ứng/giữ lại | ACCOUNTANT + REVIEW-F | Chứng từ/link/phân bổ, currency/basis/kỳ; không có thì ghi missing, không giả chứng từ để đi tiếp |
 
-**Quy ước walkthrough:** các B01–B03 dưới đây là mô phỏng bàn giấy SIM-P1, chưa là hồ sơ thực tế, UAT hoặc test ứng dụng. Tiền theo triệu VND giả lập, cùng basis `excluding_tax` như mục 2; unit/quantity tách riêng. Mã `SIM-*` chỉ là nhãn đầu vào giả định, **không phải hash/bằng chứng đã nhận**. Mỗi chặng được xét riêng với điều kiện giả định có đầu vào hợp lệ; thiếu bằng chứng thật thì chặng thực tế vẫn bị chặn, không tự tạo căn cứ để nối bước. Toàn bộ action mới kể cả draft/submit/return/BASE/legal/grant đều chưa chạy runtime. E/H/I chỉ kiểm logic thiết kế. Kết quả `logic phù hợp` dưới đây chỉ nói quy tắc không mâu thuẫn trong giả định.
+**Quy ước walkthrough:** các B01–B03 dưới đây là mô phỏng bàn giấy SIM-P1, chưa là hồ sơ thực tế, UAT hoặc test ứng dụng. Tiền theo triệu VND giả lập, cùng basis `excluding_tax` như mục 2; unit/quantity tách riêng. Mã `SIM-*` chỉ là nhãn đầu vào giả định, **không phải hash/bằng chứng đã nhận**. Mỗi chặng được xét riêng với điều kiện giả định có đầu vào hợp lệ; thiếu bằng chứng thật thì chặng thực tế vẫn bị chặn, không tự tạo căn cứ để nối bước. Các bundle này không chạy runtime; riêng draft/submit/return/rework đã có test ứng dụng độc lập trong CHG-014/016, không phải bằng chứng bundle thực tế. BASE/legal/grant người thật chưa mở; E/H/I chỉ kiểm logic thiết kế. Kết quả `logic phù hợp` dưới đây chỉ nói quy tắc không mâu thuẫn trong giả định.
 
 **B01 — đường bình thường** (mô phỏng, company C1/project P-A/phòng KD).
 
@@ -284,23 +284,74 @@ Khi submit S1, backend chụp và khóa snapshot/nội dung bản làm việc. R
 | Người dùng thật/pilot | Chưa đạt: Q2 bổ nhiệm/scope/căn cứ, bundle thực tế và owner nghiệm thu, field/free-text redaction, export capability và grant/revoke ledger/audit liên quan chưa đủ. Chỉ những cổng Q của action pilot được chọn mới bắt buộc |
 | Production | Chưa đạt: nghiệm thu pilot, bảo mật/HTTPS, migration/staging, backup ngoài máy/restore/retention và Q14; dev/test không đủ để kết luận production |
 
+### 7.1.4. Review CTR-002a — CHG-20261028-016 (chưa sửa code)
+
+Đây là ảnh chụp kết quả của lượt review ngày 28/10/2026 tại HEAD `95bfc3f4`, trước khi sửa CTR-002a.1; không mô tả trạng thái kỹ thuật hiện tại. Khi đó T1–T6 đúng phạm vi test; Q2-A/Q2-B và B01–B03 vẫn proposed, không có xác nhận công ty hoặc bundle thực tế mới. Kiểm chạy lại đạt 72 Odoo tests trên `tp_tanphat_test`, Vitest 22, typecheck, Ruff, build và Playwright workflow 3 bằng mock API. UI với Odoo live và race hai process chưa được kiểm trong lượt đó; INFO filestore GC `WinError 5` vẫn có. Database dev không upgrade/seed, Odoo/PostgreSQL đã dừng lại sau test.
+
+**Hai lỗi validation P2 còn mở:**
+
+| ID | Đầu vào và vị trí | Tái hiện/kết quả quan sát | Điều kiện sửa và kiểm hồi quy |
+| --- | --- | --- | --- |
+| CTR-002a-V01 | [Workflow parser](../../custom_addons/tp_contract/models/tp_contract_workflow.py), `_choice` dòng 91–94; lấy payload fixture hợp lệ, đổi `contract_type` hoặc `tax_basis` thành list/object | Lookup frozenset thiếu kiểm kiểu; probe gọi hàm source với `[]` và `{}` tái hiện `TypeError: unhashable type` | Kiểm kiểu trước membership; HTTP trả 400 `invalid_request` với error envelope/request_id; không ghi nửa transaction; bổ sung list/object/null/boolean enum regression |
+| CTR-002a-V02 | Cùng file, `_text`/`_parse_header` dòng 80–88/139–148 và `_tp_currency` dòng 451–454; payload fixture có currency rỗng hoặc chỉ whitespace | Parser cho `None`, resolver gọi `.upper()` và probe tái hiện `AttributeError` | Currency blank/whitespace/null trả 400 `invalid_request`; unknown currency đúng kiểu trả 422 `unknown_currency`; có request_id; regression tạo/sửa; không claim idempotency/audit/outbox dở |
+
+Probe dùng AST lấy hàm hiện tại, không import/init Odoo, không kết nối DB hoặc gửi HTTP. [Controller](../../custom_addons/tp_planning_api/controllers/contracts.py) chỉ chuyển `ContractWorkflowError` sang `ApiProblem`; hai exception trên chưa có mapping lỗi dữ liệu. Cần HTTP regression để xác nhận đầy đủ response và rollback, không nhận probe này là kiểm HTTP đã thực thi. Bộ 72 test đang xanh không chứng minh các đầu vào này được xử lý đúng; chưa chốt CTR-002a sạch lỗi.
+
+**Self-review guard cũng là technical acceptance bắt buộc của CTR-002a.1:**
+
+| ID | Điều kiện | Kết quả bắt buộc |
+| --- | --- | --- |
+| CTR-002a-SR01 | Actor có cả `contract_submit` và `contract_review_commercial` không được chọn chính mình khi submit/resubmit | Picker không trả actor hiện tại; API trả `422 reviewer_ineligible` với `field=reviewer_id`; không tạo submission, không tăng version, không audit/outbox |
+| CTR-002a-SR02 | Reviewer hợp lệ khác actor gửi vẫn phải có assignment cùng company/project/department và `financial_read` | Submit thành công chỉ khi đủ scope/capability; `financial_draft_edit` chỉ cần khi sửa tiền, không bắt buộc để submit/review |
+| CTR-002a-SR03 | Bản pending cũ tự gán người gửi làm reviewer (nếu có) | `allowed_actions` không có `return_review`; API trực tiếp trả `422 reviewer_ineligible`; không sửa snapshot/lịch sử cũ và không thêm action reassignment trong slice này |
+
+Mọi ca âm V01/V02/SR01/SR03 phải kiểm nguyên trạng state/version/submission/amount/audit/outbox/idempotency sau rollback. Actor khác reviewer nhưng không đúng người được gán vẫn giữ lỗi `403 not_assigned_reviewer`. Các guard này chỉ áp dụng cho test fixture CTR-002a-P1; không mở quy tắc bốn mắt cho BASE, ký, hiệu lực, thanh toán hoặc người dùng thật.
+
+**Kết quả bước kỹ thuật CTR-002a.1:** phần maintenance V01/V02, self-review, regression model/API, live UI→API→Odoo và race đã được kiểm chứng; xem mục 7.1.6. Q2-A/Q2-B và bundle thực tế vẫn là cổng pilot, không mở lại lựa chọn test đã chốt ở DEC-021.
+
+### 7.1.5. Chính sách test CTR-002a-P1 được người dùng giao AI quyết định
+
+Phạm vi quyết định này chỉ là test fixture cho nháp/gửi rà soát/trả lại/sửa/gửi lại; không phải bổ nhiệm người thật, thẩm quyền pháp lý hoặc quy chế toàn công ty.
+
+| Nội dung | Quyết định thiết kế cho test | Phạm vi không được suy ra |
+| --- | --- | --- |
+| Người lập/sửa/gửi | KD preparer có assignment đúng project/department; `contract_draft_edit` và `contract_submit`; sửa tiền thêm `financial_read` + `financial_draft_edit` | Không suy quyền từ title hoặc cấp grant người thật |
+| Người rà soát/trả lại | Commercial reviewer được chọn từ assignment cùng project/department, có `contract_review_commercial` + `financial_read`; return bắt buộc reason, issue chi tiết optional | Không phải BASE approver, legal signer, effectivity confirmer hay payment approver |
+| Tách người gửi/reviewer | Reviewer phải khác người gửi của từng submission, gồm resubmit; backend từ chối và picker loại người gửi | Không tự đặt quy tắc bốn mắt cho BASE/legal hoặc toàn hệ thống |
+| Nội dung rà soát | Có kiểm tra số tiền; submit/review cần `financial_read`; chỉ sửa tiền mới cần `financial_draft_edit` | Không cho xem/xuất tiền ngoài project grant; không mở `financial.export` |
+| Đối tác/project/amount | Đề xuất: partner optional khi draft nhưng required trước submit; project picker cần search/pagination; submit cần amount confirmed và một tax basis | Đây là đề xuất UI/API phải ghi version/owner trước implementation mở rộng; không biến `unconfirmed` thành 0 |
+
+Trạng thái: **AI-design accepted for CTR-002a test; company confirmation pending for real users/pilot**. Đặc tả này giải quyết lựa chọn cùng/khác người và kiểm tiền theo yêu cầu người dùng; Q2-A/Q2-B về người được công ty bổ nhiệm, grant/revoke/handover và bằng chứng thật vẫn mở.
+
+### 7.1.6. Technical acceptance CTR-002a.1 — CHG-20261028-020
+
+CTR-002a.1 đã hoàn tất trong phạm vi **test fixture** bằng dữ liệu giả, không thay đổi state/capability ngoài DEC-021 và không mở quyền người dùng thật. Bằng chứng:
+
+- Odoo: **0 failed, 0 errors / 79 tests** trên `tp_tanphat_test` (`.local/logs/ctr002a-1-tests-passed.log`).
+- Ruff, OpenAPI/types, frontend typecheck/build: đạt; Vitest **22** đạt; mock E2E **3** đạt; live E2E **2** đạt trên instance riêng `tp_tanphat_ctr002a_verify` (đã dừng).
+- Race report `.local/ctr002a-verify/race-report.json`: request khác key cho `200 + 409 stale_version`, cùng key cho `200 + 200 replay`; mỗi ca chỉ tăng version/audit/outbox/idempotency một lần.
+
+Đã đóng technical acceptance cho V01, V02, SR01, SR02 và SR03 trong test fixture: enum/currency trả lỗi có kiểm soát; self-review bị loại khỏi picker và bị chặn khi submit/resubmit; pending legacy tự gán bị chặn return; các ca âm giữ nguyên dữ liệu và không tạo side effect. Đây không phải nghiệm thu nghiệp vụ công ty.
+
+Q2-A/Q2-B, bundle thực tế, owner/evidence/sign-off và các cổng pilot vẫn `open/proposed`. BASE approval, ký, hiệu lực, thanh toán, nghiệm thu, giao khoán và grant người dùng thật tiếp tục ngoài phạm vi.
+
 ### 7.2. Phân biệt kiểm tra kỹ thuật, nghiệm thu nghiệp vụ và quyền mở code
 
-Kết quả kỹ thuật dưới đây thuộc lượt kiểm tra `CHG-20261028-011` (CTR-001) và `CHG-20261028-014` (CTR-002a) ngày 28/10/2026; không phải kết luận nghiệm thu của công ty.
+Kết quả kỹ thuật dưới đây thuộc lượt kiểm tra `CHG-20261028-011` (CTR-001), `CHG-20261028-014`, review `CHG-20261028-016` và technical acceptance `CHG-20261028-020` (CTR-002a.1) ngày 28/10/2026; không phải kết luận nghiệm thu của công ty.
 
 | Lớp | Kết quả hiện tại | Ý nghĩa |
 | --- | --- | --- |
 | Kiểm tra kỹ thuật nền/CTR-001 | Đã chạy đạt: 53 Odoo tests, 14 frontend tests, frontend typecheck và Ruff; runtime đã dừng sau kiểm tra | Xác nhận read slice và mã hiện tại không có lỗi được phát hiện trong phạm vi test; không xác nhận quy trình công ty |
-| Kiểm tra kỹ thuật CTR-002a trên test | Đã chạy đạt CHG-014: 72 Odoo tests trên `tp_tanphat_test`, Ruff, typecheck, Vitest 22, build, Playwright mock 3 | Xác nhận action T1–T6 và guard trong phạm vi test với actor fixture; không xác nhận quyền người thật, race song song hay UI với Odoo live |
-| Nghiệm thu BIZ-002/Q2 và bundles | `business_acceptance_pending`; nhật ký 7.1 ghi đề xuất Q2-P1/SIM-P1/CTR-002a-P1, chưa dòng nào accepted | Cần người có thẩm quyền review, bằng chứng khử dữ liệu và kết luận từng gap |
+| Kiểm tra kỹ thuật CTR-002a.1 trên test | CHG-020 đạt 79 Odoo tests, Ruff, OpenAPI/types, typecheck/build, Vitest 22, mock E2E 3, live E2E 2 và race report trên instance riêng | Đã đạt technical acceptance cho test fixture; không xác nhận quy trình công ty, quyền người thật hoặc pilot |
+| Nghiệm thu BIZ-002/Q2 và bundles | `business_acceptance_pending`; Q2-A/Q2-B và bundles còn proposed. Dòng CTR-002a gate chỉ accepted cho development trên test, không cho nghiệp vụ/pilot | Cần người có thẩm quyền review, bằng chứng khử dữ liệu và kết luận từng gap |
 | Quyết định chuyển sang code | Đã mở cho CTR-002a trên test (DEC-020); pilot/người dùng thật vẫn `code_phase_unauthorized` | Fixture test không tự tạo quyền grant người dùng thật, phê duyệt BASE, ký, hiệu lực hoặc thanh toán |
 
 ## 8. Thứ tự chuyển giai đoạn đề xuất
 
-1. **Ưu tiên Q2 cho phạm vi gần nhất:** chốt người lập, soát, ghi nhận/xác minh kết quả BASE và người cấp/thu hồi grant; không cần đóng cả Q1–Q14 cùng lúc. Các Q khác vẫn được xử lý tại cổng của slice tương ứng.
+1. **Chuẩn bị Q2 cho pilot/người dùng thật:** chốt người lập, soát, ghi nhận/xác minh kết quả BASE và người cấp/thu hồi grant; không cần đóng cả Q1–Q14 cùng lúc. Chính sách test đã chọn ở DEC-021 không cần hỏi lại và không bị chặn bởi việc chưa bổ nhiệm người thật. Các Q khác vẫn được xử lý tại cổng của slice tương ứng.
 2. SIM-P1 ở 7.1.2 đã chuẩn bị ba bundle mô phỏng trong khi chờ Q2/hồ sơ. Khi có đầu mối và bằng chứng, đối chiếu 2–3 bundle thực tế khử dữ liệu theo chuỗi hợp đồng → phụ lục → giao khoán → nghiệm thu → thanh toán, có ít nhất một đường trả lại và một correction/void hoặc bàn giao. Với phần chưa có runtime, chỉ review logic và gap, không tuyên bố ứng dụng đã chạy.
-3. Điền nhật ký mục 7.1 cho Q2 và từng bundle; giữ hạn mức ký/duyệt, bốn mắt và căn cứ pháp lý ở `open`/`deferred` nếu chưa có văn bản. Sau đó người dùng quyết định có chuyển giai đoạn code hay chưa.
-4. Chỉ khi có quyết định chuyển giai đoạn mới mở CTR-002a draft/submit/return trên test với dữ liệu giả và actor fixture. Q2 vẫn phải được xác nhận trước grant người dùng thật hoặc pilot; fixture không thay cho quyết định quyền công ty.
+3. Điền nhật ký mục 7.1 cho Q2 và từng bundle; giữ hạn mức ký/duyệt, bốn mắt BASE/pháp lý và căn cứ pháp lý ở `open`/`deferred` nếu chưa có văn bản. Đây là cổng mở rộng/pilot, không thu hồi quyền phát triển test của DEC-020/DEC-021.
+4. CTR-002a.1 technical acceptance đã đạt cho test theo 7.1.6. Tiếp theo duy trì Q2-A/Q2-B, bundle thực tế và owner/evidence/sign-off cho cổng pilot/người dùng thật; fixture không thay cho quyết định quyền công ty.
 5. PRJ-002/ALC-001 hoặc Survey/Design theo nhu cầu, mỗi slice có owner nghiệm thu; không mở đồng loạt chín phân hệ.
 6. STL-001 và accounting bridge sau khi Q4/Q6/Q8 có căn cứ; import sau mapping/reconcile/cutover; dashboard sau Q13. Pilot/production chỉ sau Q14, backup/restore ngoài máy, security/attachment, migration và nghiệm thu dữ liệu. Dev/test không là production.
 

@@ -1,0 +1,2 @@
+id,name,model_id,group_id/id,operation,domain
+crm_linked_project_scope,Linked CRM requires project scope,crm.lead,,crud,"['|', ('tp_project_id', '=', False), ('tp_project_id', 'access', 'read')]"

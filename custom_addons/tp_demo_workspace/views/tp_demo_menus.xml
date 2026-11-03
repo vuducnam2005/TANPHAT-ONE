@@ -1,0 +1,45 @@
+<odoo>
+    <!-- One app with one workspace per area; groups only open menus, data
+         scope stays with the canonical access rules. -->
+    <menuitem id="menu_demo_root" name="TANPHAT ONE – Demo" sequence="1"
+              web_icon="tp_demo_workspace,static/description/icon.png"
+              groups="tp_demo_workspace.group_demo_viewer" action="action_demo_dashboard"/>
+
+    <menuitem id="menu_demo_overview_root" name="Tổng quan" parent="menu_demo_root" sequence="1"/>
+    <menuitem id="menu_demo_dashboard" name="Điều hành doanh nghiệp" parent="menu_demo_overview_root" action="action_demo_dashboard" sequence="1"/>
+
+    <menuitem id="menu_demo_delivery_root" name="Dự án và công việc" parent="menu_demo_root" sequence="10"/>
+    <menuitem id="menu_demo_projects_root" name="Dự án" parent="menu_demo_delivery_root" sequence="1"/>
+    <menuitem id="menu_demo_projects" name="Danh sách dự án" parent="menu_demo_projects_root" action="action_demo_projects" sequence="1"/>
+    <menuitem id="menu_demo_project_overview" name="Tổng quan dự án" parent="menu_demo_projects_root" action="action_demo_project_overview" sequence="2"/>
+
+    <menuitem id="menu_demo_survey" name="Khảo sát hiện trường" parent="menu_demo_delivery_root" action="action_demo_survey" sequence="2"/>
+    <menuitem id="menu_demo_design" name="Hồ sơ thiết kế" parent="menu_demo_delivery_root" action="action_demo_design" sequence="3"/>
+
+    <menuitem id="menu_demo_tasks" name="Tiến độ và giao việc" parent="menu_demo_delivery_root" action="action_demo_tasks" sequence="4"/>
+
+    <menuitem id="menu_demo_records_root" name="Hợp đồng và hồ sơ" parent="menu_demo_root" sequence="30"/>
+    <menuitem id="menu_demo_contracts_root" name="Hợp đồng" parent="menu_demo_records_root" sequence="1"/>
+    <menuitem id="menu_demo_contracts" name="Hợp đồng" parent="menu_demo_contracts_root" action="action_demo_contracts" sequence="1"/>
+    <menuitem id="menu_demo_revisions" name="Phiên bản rà soát" parent="menu_demo_contracts_root" action="action_demo_revisions" sequence="2"/>
+    <menuitem id="menu_demo_contract_flow" name="Luồng rà soát" parent="menu_demo_contracts_root" action="action_demo_contract_flow" sequence="3"/>
+
+    <menuitem id="menu_demo_documents" name="Tài liệu và hồ sơ" parent="menu_demo_records_root" action="action_demo_documents" sequence="2"/>
+
+    <menuitem id="menu_demo_resources_root" name="Nguồn lực" parent="menu_demo_root" sequence="50"/>
+    <menuitem id="menu_demo_hr_root" name="Nhân sự" parent="menu_demo_resources_root" sequence="1"/>
+    <menuitem id="menu_demo_employees" name="Danh bạ nhân sự" parent="menu_demo_hr_root" action="action_demo_employees" sequence="1"/>
+    <menuitem id="menu_demo_staffing" name="Năng lực và phân bổ (minh họa)" parent="menu_demo_hr_root" action="action_demo_staffing" sequence="2"/>
+
+    <menuitem id="menu_demo_finance_root" name="Tài chính và chi phí" parent="menu_demo_resources_root" sequence="2"/>
+    <menuitem id="menu_demo_finance" name="Tổng hợp tài chính" parent="menu_demo_finance_root" action="action_demo_finance" sequence="1"/>
+    <menuitem id="menu_demo_line_amounts" name="Số tiền dòng hợp đồng" parent="menu_demo_finance_root" action="action_demo_line_amounts" sequence="2"/>
+
+    <menuitem id="menu_demo_business_root" name="Kinh doanh" parent="menu_demo_root" sequence="40"
+              groups="tp_demo_workspace.group_demo_business"/>
+    <menuitem id="menu_demo_crm" name="Cơ hội kinh doanh (CRM)" parent="menu_demo_business_root" action="action_demo_crm" sequence="1" groups="tp_demo_workspace.group_demo_business"/>
+    <menuitem id="menu_demo_bid" name="Dự thầu (minh họa)" parent="menu_demo_business_root" action="action_demo_bid" sequence="2" groups="tp_demo_workspace.group_demo_business"/>
+
+    <menuitem id="menu_demo_request_root" name="Đề nghị" parent="menu_demo_root" sequence="90"/>
+    <menuitem id="menu_demo_request" name="Đề nghị BASE (minh họa)" parent="menu_demo_request_root" action="action_demo_request" sequence="1"/>
+</odoo>

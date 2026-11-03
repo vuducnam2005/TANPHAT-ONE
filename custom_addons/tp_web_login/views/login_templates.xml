@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="login_layout" inherit_id="web.login_layout" name="TANPHAT ONE native authentication">
+        <xpath expr="//t[@t-set='head']" position="before">
+            <t t-set="tp_auth_page" t-value="request.httprequest.path in ('/web/login', '/web/login/totp')"/>
+        </xpath>
+        <xpath expr="//t[@t-set='head']" position="inside">
+            <t t-if="tp_auth_page" t-call-assets="tp_web_login.assets_login" t-js="false"/>
+        </xpath>
+        <xpath expr="//div[hasclass('container')]" position="attributes">
+            <attribute name="t-attf-class">container py-5 #{'tp-native-login' if tp_auth_page else ''}</attribute>
+            <attribute name="class"/>
+        </xpath>
+        <xpath expr="//div[contains(@t-attf-class, 'o_database_list')]" position="attributes">
+            <attribute name="t-att-style">'max-width: 440px;' if tp_auth_page else 'max-width: 300px;'</attribute>
+            <attribute name="style"/>
+        </xpath>
+        <xpath expr="//div[hasclass('card-body')]/div[@t-if='not res_company.uses_default_logo']" position="before">
+            <div t-if="tp_auth_page" class="tp-native-wordmark" aria-label="TANPHAT ONE" t-translation="off">
+                <span class="tp-native-monogram" aria-hidden="true">
+                    <svg viewBox="0 0 40 40" fill="none"><path d="M5 11h30M20 11v23M7 28l7-11h12l7 11M8 28h24" stroke="currentColor" stroke-width="2.4"/></svg>
+                </span>
+                <span><strong>TANPHAT ONE</strong><small>Không gian làm việc chung</small></span>
+            </div>
+        </xpath>
+        <xpath expr="//div[@t-if='not res_company.uses_default_logo']" position="attributes">
+            <attribute name="t-if">not tp_auth_page and not res_company.uses_default_logo</attribute>
+        </xpath>
+        <xpath expr="//a[starts-with(@href, 'https://www.odoo.com')]" position="attributes">
+            <attribute name="t-if">not tp_auth_page</attribute>
+        </xpath>
+    </template>
+
+    <template id="auth_totp_form" inherit_id="auth_totp.auth_totp_form" name="TANPHAT ONE verification code">
+        <xpath expr="//h5" position="replace">
+            <h5 class="card-title" t-translation="off">Nhập mã xác thực</h5>
+        </xpath>
+        <xpath expr="//form[not(@action)]/div[1] | //form[@action='']/div[1]" position="replace">
+            <div class="mb-2 mt-2 text-muted" t-translation="off">Mở ứng dụng xác thực để xem mã gồm 6 chữ số.</div>
+        </xpath>
+        <xpath expr="//input[@name='totp_token']" position="attributes">
+            <attribute name="placeholder">Mã 6 chữ số</attribute>
+            <attribute name="t-translation">off</attribute>
+            <attribute name="aria-label">Mã 6 chữ số</attribute>
+        </xpath>
+        <xpath expr="//p[@t-if='error']" position="replace">
+            <p class="alert alert-danger" t-if="error" role="alert" t-translation="off">Chưa xác thực được mã. Vui lòng nhập mã mới nhất trên ứng dụng xác thực; nếu đã thử nhiều lần, chờ ít phút rồi thử lại.</p>
+        </xpath>
+        <xpath expr="//label[@for='switch-remember']" position="replace">
+            <label for="switch-remember" t-translation="off">Không hỏi lại trên thiết bị này</label>
+        </xpath>
+        <xpath expr="//button[hasclass('btn-primary')]" position="replace">
+            <button type="submit" class="btn btn-primary" t-translation="off">Xác nhận</button>
+        </xpath>
+        <xpath expr="//form[@action='/web/session/logout']/input[@name='csrf_token']" position="after">
+            <input type="hidden" name="redirect" value="/work/"/>
+        </xpath>
+        <xpath expr="//form[@action='/web/session/logout']//button" position="replace">
+            <button type="submit" class="btn btn-link btn-sm mb-2" t-translation="off">Hủy và quay lại</button>
+        </xpath>
+    </template>
+</odoo>

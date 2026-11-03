@@ -1,0 +1,1127 @@
+# Translation of TANPHAT ONE module tp_contract (VI-001, CHG-20261102-009).
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: tp_contract
+#: model:ir.model.fields,help:tp_contract.field_tp_contract_revision__sequence
+msgid "0 is the original contract; amendments and corrections follow."
+msgstr ""
+"0 là hợp đồng gốc; các phụ lục sửa đổi và bản đính chính đánh số tiếp theo."
+
+#. module: tp_contract
+#: model:ir.model.fields,help:tp_contract.field_tp_contract_submission__sequence
+msgid "1 is the first submission (S1) of the revision."
+msgstr "1 là lần trình đầu tiên (S1) của phiên bản."
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__acted_at
+msgid "Acted At"
+msgstr "Thời điểm thực hiện"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__action
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__action
+msgid "Action"
+msgstr "Thao tác"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__active
+msgid "Active"
+msgstr "Đang hoạt động"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__actor_id
+msgid "Actor"
+msgstr "Người thực hiện"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_line__change_kind__added
+msgid "Added"
+msgstr "Thêm mới"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__aggregate_version
+msgid "Aggregate Version"
+msgstr "Phiên bản tổng hợp"
+
+#. module: tp_contract
+#: model:ir.model.fields,help:tp_contract.field_tp_contract_submission__contract_version
+msgid "Aggregate contract version captured by this submission."
+msgstr "Phiên bản tổng hợp của hợp đồng được ghi nhận trong lần trình này."
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_line__change_kind__amended
+msgid "Amended"
+msgstr "Đã sửa đổi"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_document__document_kind__amendment
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__revision_kind__amendment
+msgid "Amendment"
+msgstr "Phụ lục sửa đổi"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference_amount__amount
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line_amount__amount
+msgid "Amount"
+msgstr "Số tiền"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference_amount__amount_state
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line_amount__amount_state
+msgid "Amount State"
+msgstr "Trạng thái số tiền"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference__decision__approved
+msgid "Approved"
+msgstr "Đã phê duyệt"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__attempt_count
+msgid "Attempt Count"
+msgstr "Số lần thử"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__audit_id
+msgid "Audit"
+msgstr "Nhật ký kiểm soát"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference__authority_status__confirmed
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__signature_authority_status__confirmed
+msgid "Authority Confirmed"
+msgstr "Đã xác nhận thẩm quyền"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__signature_authority_status__pending
+msgid "Authority Pending"
+msgstr "Chờ xác nhận thẩm quyền"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__authority_source
+msgid "Authority Source"
+msgstr "Nguồn thẩm quyền"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__authority_status
+msgid "Authority Status"
+msgstr "Trạng thái thẩm quyền"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference__authority_status__unconfirmed
+msgid "Authority Unconfirmed"
+msgstr "Chưa xác nhận thẩm quyền"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_document__document_kind__base_evidence
+msgid "BASE Evidence"
+msgstr "Bằng chứng BASE"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference__reference_kind__base_id
+msgid "BASE ID"
+msgstr "BASE ID"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__approval_reference_ids
+msgid "BASE References"
+msgstr "Tham chiếu BASE"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__base_reference
+msgid "BASE Task/Approval ID"
+msgstr "ID công việc/phê duyệt BASE"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_audit__action__begin_rework
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_outbox__event_type__begin_rework
+msgid "Begin Rework"
+msgstr "Bắt đầu chỉnh sửa lại"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference__decision__cancelled
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__review_state__cancelled
+msgid "Cancelled"
+msgstr "Đã hủy"
+
+#. module: tp_contract
+#: model:ir.model.fields,help:tp_contract.field_tp_contract_idempotency__required_capabilities
+msgid "Capabilities rechecked before a replay returns the result."
+msgstr "Quyền được kiểm tra lại trước khi yêu cầu gửi lặp trả về kết quả."
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_line__change_kind__unchanged
+msgid "Carried Over"
+msgstr "Chuyển tiếp"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__change_kind
+msgid "Change Kind"
+msgstr "Loại thay đổi"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__code
+msgid "Code"
+msgstr "Mã"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__company_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference_amount__company_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__company_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__company_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_document__company_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__company_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__company_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line_amount__company_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__company_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__company_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__company_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission_amount__company_id
+msgid "Company"
+msgstr "Công ty"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_document__confidentiality
+msgid "Confidentiality"
+msgstr "Mức bảo mật"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference_amount__amount_state__confirmed
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_line_amount__amount_state__confirmed
+msgid "Confirmed"
+msgstr "Đã xác nhận"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__contract_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__contract_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_document__contract_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__contract_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__contract_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__contract_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__contract_id
+msgid "Contract"
+msgstr "Hợp đồng"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__contract_type
+msgid "Contract Type"
+msgstr "Loại hợp đồng"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__contract_version
+msgid "Contract Version"
+msgstr "Phiên bản hợp đồng"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__revision_kind__correction
+msgid "Correction"
+msgstr "Đính chính"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__partner_id
+msgid "Counterparty"
+msgstr "Bên đối tác"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_audit__action__create_amendment
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_outbox__event_type__create_amendment
+msgid "Create Amendment Draft"
+msgstr "Tạo nháp phụ lục sửa đổi"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_audit__action__create_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_outbox__event_type__create_contract
+msgid "Create Contract Draft"
+msgstr "Tạo nháp hợp đồng"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__create_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference_amount__create_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__create_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__create_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_document__create_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__create_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__create_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line_amount__create_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__create_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__create_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__create_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission_amount__create_uid
+msgid "Created by"
+msgstr "Người tạo"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__create_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference_amount__create_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__create_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__create_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_document__create_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__create_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__create_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line_amount__create_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__create_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__create_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__create_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission_amount__create_date
+msgid "Created on"
+msgstr "Ngày tạo"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference_amount__currency_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__currency_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line_amount__currency_id
+msgid "Currency"
+msgstr "Tiền tệ"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__decided_at
+msgid "Decided At"
+msgstr "Thời điểm quyết định"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__decided_by_name
+msgid "Decided By (BASE)"
+msgstr "Người quyết định (BASE)"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__decision
+msgid "Decision"
+msgstr "Quyết định"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__decision_reason
+msgid "Decision Reason"
+msgstr "Lý do quyết định"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_outbox__state__delivered
+msgid "Delivered"
+msgstr "Đã gửi"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__delivered_at
+msgid "Delivered At"
+msgstr "Thời điểm gửi"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__department_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__department_id
+msgid "Department"
+msgstr "Phòng ban"
+
+#. module: tp_contract
+#: model:ir.model.fields,help:tp_contract.field_tp_contract__department_id
+msgid ""
+"Department scope of contract workflow grants, copied from the project lead "
+"department at creation."
+msgstr ""
+"Phạm vi phòng ban của quyền quy trình hợp đồng, sao chép từ phòng ban chủ "
+"trì dự án khi tạo."
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__display_name
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference_amount__display_name
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__display_name
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__display_name
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_document__display_name
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__display_name
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__display_name
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line_amount__display_name
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__display_name
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__display_name
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__display_name
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission_amount__display_name
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_workflow__display_name
+msgid "Display Name"
+msgstr "Tên hiển thị"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference__verification_state__disputed
+msgid "Disputed"
+msgstr "Đang tranh chấp"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_document__document_kind
+msgid "Document Kind"
+msgstr "Loại tài liệu"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__reference
+msgid "Document Number"
+msgstr "Số văn bản"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__review_state__draft
+msgid "Draft"
+msgstr "Nháp"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_audit__action__edit_draft
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_outbox__event_type__edit_draft
+msgid "Edit Draft"
+msgstr "Chỉnh sửa nháp"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__lifecycle_state__effective
+msgid "Effective"
+msgstr "Có hiệu lực"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__effective_date
+msgid "Effective Date"
+msgstr "Ngày hiệu lực"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__effectivity_status__effective_recorded
+msgid "Effectivity Recorded"
+msgstr "Đã ghi nhận hiệu lực"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__effectivity_status
+msgid "Effectivity Status"
+msgstr "Trạng thái hiệu lực"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__event_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__event_id
+msgid "Event"
+msgstr "Sự kiện"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__event_type
+msgid "Event Type"
+msgstr "Loại sự kiện"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__evidence_sha256
+msgid "Evidence SHA-256"
+msgstr "SHA-256 bằng chứng"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference_amount__tax_basis__excluding_tax
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_line_amount__tax_basis__excluding_tax
+msgid "Excluding Tax"
+msgstr "Chưa thuế"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__lifecycle_state__execution_completed
+msgid "Execution Completed"
+msgstr "Hoàn thành thực hiện"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_document__file
+msgid "File"
+msgstr "Tệp"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_document__file_name
+msgid "File Name"
+msgstr "Tên tệp"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_document__confidentiality__financial
+msgid "Financial"
+msgstr "Tài chính"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission_amount__financial_sha256
+msgid "Financial Sha256"
+msgstr "SHA-256 tài chính"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission_amount__financial_snapshot
+msgid "Financial Snapshot"
+msgstr "Ảnh chụp tài chính"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__fingerprint
+msgid "Fingerprint"
+msgstr "Dấu vân tay dữ liệu"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__fix_summary
+msgid "Fix Summary"
+msgstr "Tóm tắt chỉnh sửa"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_document__confidentiality__general
+msgid "General"
+msgstr "Chung"
+
+#. module: tp_contract
+#: model:ir.model.fields,help:tp_contract.field_tp_contract_submission__payload_sha256
+msgid ""
+"Hash over the metadata hash and the salted financial hash; reveals no "
+"amount."
+msgstr ""
+"Hash tính từ hash siêu dữ liệu và hash tài chính có salt; không lộ số tiền."
+
+#. module: tp_contract
+#: model:ir.model.fields,help:tp_contract.field_tp_contract__legacy_unverified
+msgid "Historical record kept without verified legal or approval evidence."
+msgstr ""
+"Hồ sơ lịch sử được giữ lại khi chưa có bằng chứng pháp lý hoặc phê duyệt đã "
+"kiểm chứng."
+
+#. module: tp_contract
+#: model:ir.model.fields,help:tp_contract.field_tp_approval_reference__provenance
+msgid "How a manual reference was obtained when no BASE ID exists."
+msgstr "Cách có được tham chiếu thủ công khi không có BASE ID."
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference_amount__id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_document__id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line_amount__id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission_amount__id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_workflow__id
+msgid "ID"
+msgstr "ID"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__review_state__in_review
+msgid "In Review"
+msgstr "Đang rà soát"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference_amount__tax_basis__including_tax
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_line_amount__tax_basis__including_tax
+msgid "Including Tax"
+msgstr "Gồm thuế"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__key
+msgid "Key"
+msgstr "Khóa"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__last_error
+msgid "Last Error"
+msgstr "Lỗi gần nhất"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__write_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference_amount__write_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__write_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__write_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_document__write_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__write_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__write_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line_amount__write_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__write_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__write_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__write_uid
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission_amount__write_uid
+msgid "Last Updated by"
+msgstr "Người cập nhật cuối"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__write_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference_amount__write_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__write_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__write_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_document__write_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__write_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__write_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line_amount__write_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__write_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__write_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__write_date
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission_amount__write_date
+msgid "Last Updated on"
+msgstr "Cập nhật lần cuối"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__legacy_unverified
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__legacy_unverified
+msgid "Legacy Unverified"
+msgstr "Hồ sơ cũ chưa kiểm chứng"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__lifecycle_state
+msgid "Lifecycle State"
+msgstr "Trạng thái vòng đời"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line_amount__line_id
+msgid "Line"
+msgstr "Dòng"
+
+#. module: tp_contract
+#: model:ir.model.fields,help:tp_contract.field_tp_contract_line_amount__amount
+msgid "Line total of the revision snapshot. Meaningful only when confirmed."
+msgstr "Tổng dòng trong ảnh chụp phiên bản. Chỉ có ý nghĩa khi đã xác nhận."
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__lifecycle_state__liquidated
+msgid "Liquidated"
+msgstr "Đã thanh lý"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference__reference_kind__manual
+msgid "Manual Reference"
+msgstr "Tham chiếu thủ công"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__metadata_sha256
+msgid "Metadata Sha256"
+msgstr "SHA-256 siêu dữ liệu"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__metadata_snapshot
+msgid "Metadata Snapshot"
+msgstr "Ảnh chụp siêu dữ liệu"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__name
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_document__name
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__name
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__name
+msgid "Name"
+msgstr "Tên"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference_amount__amount_state__unconfirmed
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_line_amount__amount_state__unconfirmed
+msgid "Not Confirmed"
+msgstr "Chưa xác nhận"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__lifecycle_state__not_effective
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__effectivity_status__not_effective
+msgid "Not Effective"
+msgstr "Chưa có hiệu lực"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__signature_status__unsigned
+msgid "Not Signed"
+msgstr "Chưa ký"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__object_ref
+msgid "Object Ref"
+msgstr "Tham chiếu đối tượng"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_line__change_kind__original
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__revision_kind__original
+msgid "Original"
+msgstr "Bản gốc"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_document__document_kind__other
+msgid "Other"
+msgstr "Khác"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__outcome
+msgid "Outcome"
+msgstr "Kết quả"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__payload_sha256
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__payload_sha256
+msgid "Payload Sha256"
+msgstr "SHA-256 dữ liệu gửi"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference__decision__pending
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_outbox__state__pending
+msgid "Pending"
+msgstr "Đang chờ"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_submission__outcome__pending
+msgid "Pending Review"
+msgstr "Chờ rà soát"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__previous_line_id
+msgid "Previous Line"
+msgstr "Dòng trước"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__previous_reference_id
+msgid "Previous Reference"
+msgstr "Tham chiếu trước"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__previous_revision_id
+msgid "Previous Revision"
+msgstr "Phiên bản trước"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__previous_submission_id
+msgid "Previous Submission"
+msgstr "Lần trình trước"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__project_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference_amount__project_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__project_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__project_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_document__project_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__project_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__project_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line_amount__project_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__project_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__project_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__project_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission_amount__project_id
+msgid "Project"
+msgstr "Dự án"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__provenance
+msgid "Provenance"
+msgstr "Nguồn gốc"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__purpose
+msgid "Purpose"
+msgstr "Mục đích"
+
+#. module: tp_contract
+#: model:ir.model.fields,help:tp_contract.field_tp_contract__aggregate_version
+msgid ""
+"Raised by every workflow mutation of the contract or its children; writers "
+"send it back as expected_version."
+msgstr ""
+"Tăng sau mỗi thay đổi quy trình của hợp đồng hoặc bản ghi con; bên ghi gửi "
+"lại giá trị này dưới dạng expected_version."
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__reason
+msgid "Reason"
+msgstr "Lý do"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__recipient_id
+msgid "Recipient"
+msgstr "Người nhận"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__recorded_at
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__recorded_at
+msgid "Recorded At"
+msgstr "Thời điểm ghi nhận"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__recorded_by_id
+msgid "Recorded By"
+msgstr "Người ghi nhận"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference_amount__reference_id
+msgid "Reference"
+msgstr "Tham chiếu"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__reference_kind
+msgid "Reference Kind"
+msgstr "Loại tham chiếu"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference__decision__rejected
+msgid "Rejected"
+msgstr "Bị từ chối"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__request_id
+msgid "Request"
+msgstr "Đề nghị"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__required_capabilities
+msgid "Required Capabilities"
+msgstr "Quyền bắt buộc"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_audit__action__resubmit_review
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_outbox__event_type__resubmit_review
+msgid "Resubmit for Review"
+msgstr "Trình rà soát lại"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__result_contract_id
+msgid "Result Contract"
+msgstr "Hợp đồng kết quả"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__result_revision_id
+msgid "Result Revision"
+msgstr "Phiên bản kết quả"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__result_submission_id
+msgid "Result Submission"
+msgstr "Lần trình kết quả"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__return_issues
+msgid "Return Issues"
+msgstr "Vấn đề cần sửa"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__return_reason
+msgid "Return Reason"
+msgstr "Lý do trả lại"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_audit__action__return_review
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_outbox__event_type__return_review
+msgid "Return for Rework"
+msgstr "Trả lại để chỉnh sửa"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__review_state__returned
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_submission__outcome__returned
+msgid "Returned"
+msgstr "Trả lại"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__returned_at
+msgid "Returned At"
+msgstr "Thời điểm trả lại"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__returned_by_id
+msgid "Returned By"
+msgstr "Người trả lại"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__review_state__review_complete
+msgid "Review Complete"
+msgstr "Hoàn tất rà soát"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__review_state
+msgid "Review State"
+msgstr "Trạng thái rà soát"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__submission_ids
+msgid "Review Submissions"
+msgstr "Các lần trình rà soát"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__reviewer_id
+msgid "Reviewer"
+msgstr "Người rà soát"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__revision_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__revision_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_document__revision_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__revision_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line_amount__revision_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__revision_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__revision_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission_amount__revision_id
+msgid "Revision"
+msgstr "Phiên bản"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference__purpose__revision_approval
+msgid "Revision Approval"
+msgstr "Phê duyệt phiên bản"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__revision_kind
+msgid "Revision Kind"
+msgstr "Loại phiên bản"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract__revision_ids
+msgid "Revisions"
+msgstr "Các phiên bản"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__rework_reason
+msgid "Rework Reason"
+msgstr "Lý do chỉnh sửa lại"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__rework_started_at
+msgid "Rework Started At"
+msgstr "Thời điểm bắt đầu chỉnh sửa lại"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__rework_started_by_id
+msgid "Rework Started By"
+msgstr "Người bắt đầu chỉnh sửa lại"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission_amount__salt
+msgid "Salt"
+msgstr "Salt"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__scope_key
+msgid "Scope Key"
+msgstr "Khóa phạm vi"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__line_ids
+msgid "Scope Lines"
+msgstr "Dòng phạm vi"
+
+#. module: tp_contract
+#: model:ir.model.fields,help:tp_contract.field_tp_contract_idempotency__object_ref
+msgid "Scope object the key was used on, e.g. contract:12/revision:30."
+msgstr "Đối tượng phạm vi đã dùng khóa, ví dụ contract:12/revision:30."
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__sequence
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__sequence
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__sequence
+msgid "Sequence"
+msgstr "Thứ tự"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__signature_authority_status
+msgid "Signature Authority Status"
+msgstr "Trạng thái thẩm quyền ký"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__signature_status__signed_recorded
+msgid "Signature Recorded"
+msgstr "Đã ghi nhận chữ ký"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__signature_status
+msgid "Signature Status"
+msgstr "Trạng thái ký"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_document__document_kind__signed_contract
+msgid "Signed Contract"
+msgstr "Hợp đồng đã ký"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_revision__signed_date
+msgid "Signed Date"
+msgstr "Ngày ký"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__source_url
+msgid "Source Url"
+msgstr "URL nguồn"
+
+#. module: tp_contract
+#: model:ir.model.fields,help:tp_contract.field_tp_contract_line__scope_key
+msgid "Stable key of the scope item across revisions of the contract."
+msgstr "Khóa ổn định của hạng mục phạm vi qua các phiên bản hợp đồng."
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_outbox__state
+msgid "State"
+msgstr "Trạng thái"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__state_after
+msgid "State After"
+msgstr "Trạng thái sau"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__state_before
+msgid "State Before"
+msgstr "Trạng thái trước"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__submission_id
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission_amount__submission_id
+msgid "Submission"
+msgstr "Lần trình"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_audit__action__submit_review
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_outbox__event_type__submit_review
+msgid "Submit for Review"
+msgstr "Trình rà soát"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__submitted_at
+msgid "Submitted At"
+msgstr "Thời điểm trình"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_submission__submitted_by_id
+msgid "Submitted By"
+msgstr "Người trình"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__submitted_document_sha256
+msgid "Submitted Document SHA-256"
+msgstr "SHA-256 tài liệu đã trình"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__lifecycle_state__suspended
+msgid "Suspended"
+msgstr "Tạm dừng"
+
+#. module: tp_contract
+#: model:ir.model,name:tp_contract.model_tp_approval_reference
+msgid "Tan Phat BASE Approval Reference"
+msgstr "Tham chiếu phê duyệt BASE Tân Phát"
+
+#. module: tp_contract
+#: model:ir.model,name:tp_contract.model_tp_approval_reference_amount
+msgid "Tan Phat BASE Approved Amount"
+msgstr "Số tiền BASE phê duyệt Tân Phát"
+
+#. module: tp_contract
+#: model:ir.model,name:tp_contract.model_tp_contract
+msgid "Tan Phat Contract"
+msgstr "Hợp đồng Tân Phát"
+
+#. module: tp_contract
+#: model:ir.model,name:tp_contract.model_tp_contract_document
+msgid "Tan Phat Contract Document"
+msgstr "Tài liệu hợp đồng Tân Phát"
+
+#. module: tp_contract
+#: model:ir.model,name:tp_contract.model_tp_contract_line_amount
+msgid "Tan Phat Contract Line Amount"
+msgstr "Số tiền dòng hợp đồng Tân Phát"
+
+#. module: tp_contract
+#: model:ir.model,name:tp_contract.model_tp_contract_outbox
+msgid "Tan Phat Contract Notification Outbox"
+msgstr "Hàng đợi thông báo hợp đồng Tân Phát"
+
+#. module: tp_contract
+#: model:ir.model,name:tp_contract.model_tp_contract_submission
+msgid "Tan Phat Contract Review Submission"
+msgstr "Lần trình rà soát hợp đồng Tân Phát"
+
+#. module: tp_contract
+#: model:ir.model,name:tp_contract.model_tp_contract_revision
+msgid "Tan Phat Contract Revision"
+msgstr "Phiên bản hợp đồng Tân Phát"
+
+#. module: tp_contract
+#: model:ir.model,name:tp_contract.model_tp_contract_line
+msgid "Tan Phat Contract Scope Line"
+msgstr "Dòng phạm vi hợp đồng Tân Phát"
+
+#. module: tp_contract
+#: model:ir.model,name:tp_contract.model_tp_contract_submission_amount
+msgid "Tan Phat Contract Submission Amounts"
+msgstr "Số tiền lần trình hợp đồng Tân Phát"
+
+#. module: tp_contract
+#: model:ir.model,name:tp_contract.model_tp_contract_audit
+msgid "Tan Phat Contract Workflow Audit"
+msgstr "Nhật ký quy trình hợp đồng Tân Phát"
+
+#. module: tp_contract
+#: model:ir.model,name:tp_contract.model_tp_contract_idempotency
+msgid "Tan Phat Contract Workflow Idempotency Key"
+msgstr "Khóa chống trùng quy trình hợp đồng Tân Phát"
+
+#. module: tp_contract
+#: model:ir.model,name:tp_contract.model_tp_contract_workflow
+msgid "Tan Phat Contract Workflow Service"
+msgstr "Dịch vụ quy trình hợp đồng Tân Phát"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference_amount__tax_basis
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line_amount__tax_basis
+msgid "Tax Basis"
+msgstr "Cơ sở thuế"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_document__document_kind__technical_scope
+msgid "Technical Scope"
+msgstr "Phạm vi kỹ thuật"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__lifecycle_state__terminated
+msgid "Terminated"
+msgstr "Đã chấm dứt"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference_amount__tax_basis__unknown
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_line_amount__tax_basis__unknown
+msgid "Unknown"
+msgstr "Chưa xác định"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_idempotency__user_id
+msgid "User"
+msgstr "Người dùng"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference__verification_state__pending
+msgid "Verification Pending"
+msgstr "Chờ kiểm chứng"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__verification_state
+msgid "Verification State"
+msgstr "Trạng thái kiểm chứng"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference__verification_state__verified
+msgid "Verified"
+msgstr "Đã kiểm chứng"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__verified_at
+msgid "Verified At"
+msgstr "Thời điểm kiểm chứng"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_approval_reference__verified_by_id
+msgid "Verified By"
+msgstr "Người kiểm chứng"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__version_after
+msgid "Version After"
+msgstr "Phiên bản sau thao tác"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_audit__version_before
+msgid "Version Before"
+msgstr "Phiên bản trước thao tác"
+
+#. module: tp_contract
+#: model:ir.model.fields,help:tp_contract.field_tp_contract_submission__fix_summary
+msgid "What changed since the previous returned submission."
+msgstr "Những thay đổi kể từ lần trình bị trả lại trước đó."
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__contract_type__general_contractor
+msgid "With General Contractor"
+msgstr "Với tổng thầu"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__contract_type__owner
+msgid "With Project Owner"
+msgstr "Với chủ đầu tư"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__contract_type__subcontractor
+msgid "With Subcontractor"
+msgstr "Với thầu phụ"
+
+#. module: tp_contract
+#: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__work_item_id
+msgid "Work Item"
+msgstr "Hạng mục công việc"

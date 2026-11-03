@@ -1,0 +1,212 @@
+# VI-001 glossary overlay for native Odoo terms (CHG-20261102-009). Source: .local/vi001/build_overlay.py.
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:mail.menu_root_discuss
+#: model:ir.ui.menu,name:mail.mail_menu_technical
+#: model:ir.actions.client,name:mail.action_discuss
+msgid "Discuss"
+msgstr "Trao đổi"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:project_todo.menu_todo_todos
+msgid "To-do"
+msgstr "Việc cá nhân"
+
+#. module: tp_i18n_vi
+#: model:ir.actions.act_window,name:project_todo.project_task_action_todo
+msgid "To-dos"
+msgstr "Việc cá nhân"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:calendar.mail_menu_calendar
+#: model:ir.ui.menu,name:calendar.calendar_event_menu
+msgid "Calendar"
+msgstr "Lịch làm việc"
+
+#. module: tp_i18n_vi
+#: model:ir.actions.act_window,name:calendar.action_calendar_event
+msgid "Meetings"
+msgstr "Lịch làm việc"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:calendar.menu_calendar_calendars
+msgid "Calendars"
+msgstr "Danh sách lịch"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:hr_calendar.menu_hr_homeworking_location_menu
+msgid "Work Locations"
+msgstr "Địa điểm làm việc"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:contacts.menu_contacts
+#: model:ir.ui.menu,name:contacts.res_partner_menu_contacts
+#: model:ir.actions.act_window,name:contacts.action_contacts
+msgid "Contacts"
+msgstr "Khách hàng & đối tác"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:contacts.menu_res_city
+msgid "Cities"
+msgstr "Thành phố"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:spreadsheet_dashboard.spreadsheet_dashboard_menu_root
+#: model:ir.ui.menu,name:spreadsheet_dashboard.spreadsheet_dashboard_menu_dashboard
+#: model:ir.ui.menu,name:spreadsheet_dashboard.spreadsheet_dashboard_menu_configuration_dashboards
+#: model:ir.ui.menu,name:spreadsheet_dashboard.spreadsheet_dashboard_menu_technical
+#: model:ir.actions.client,name:spreadsheet_dashboard.ir_actions_dashboard_action
+#: model:ir.actions.act_window,name:spreadsheet_dashboard.spreadsheet_dashboard_action_configuration_dashboards
+msgid "Dashboards"
+msgstr "Bảng tổng hợp"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:spreadsheet_dashboard.spreadsheet_dashboard_group_menu_configuration_sections
+msgid "Sections"
+msgstr "Nhóm bảng tổng hợp"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:spreadsheet_dashboard.spreadsheet_dashboard_share_menu_configuration_share_links
+msgid "Share links"
+msgstr "Liên kết chia sẻ"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:spreadsheet_dashboard.spreadsheet_dashboard_menu_configuration_global_filters
+msgid "User-defined Dashboard Filters"
+msgstr "Bộ lọc bảng tổng hợp do người dùng tạo"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:hr_timesheet.timesheet_menu_root
+#: model:ir.ui.menu,name:hr_timesheet.menu_hr_time_tracking
+#: model:ir.ui.menu,name:hr_timesheet.menu_timesheets_reports_timesheet
+#: model:ir.actions.act_window,name:hr_timesheet.act_hr_timesheet_line_by_project
+#: model:ir.actions.act_window,name:hr_timesheet.timesheet_action_from_employee
+msgid "Timesheets"
+msgstr "Giờ làm việc"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:hr_timesheet.timesheet_menu_activity_mine
+#: model:ir.ui.menu,name:hr_timesheet.timesheet_menu_activity_user
+#: model:ir.actions.act_window,name:hr_timesheet.act_hr_timesheet_line
+msgid "My Timesheets"
+msgstr "Giờ làm việc của tôi"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:hr.menu_hr_root
+msgid "Employees"
+msgstr "Nhân sự"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:hr.menu_config_working_times
+msgid "Time Management"
+msgstr "Quản lý thời gian"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:hr.menu_view_hr_contract_type
+msgid "Employee Types"
+msgstr "Loại nhân viên"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:hr_skills.menu_learnings_training_attendances
+msgid "Training Attendances"
+msgstr "Tham dự đào tạo"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:hr_expense.menu_hr_product
+msgid "Expense Products"
+msgstr "Danh mục chi phí"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:account.menu_action_rounding_form_view
+msgid "Rounding Methods"
+msgstr "Phương pháp làm tròn"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:base.menu_management
+#: model:ir.actions.act_window,name:base.open_module_tree
+msgid "Apps"
+msgstr "Ứng dụng Odoo"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:base.menu_view_base_module_upgrade
+msgid "Apply Schedule Upgrades"
+msgstr "Áp dụng nâng cấp đã lên lịch"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:base.menu_action_user_session
+msgid "User Sessions"
+msgstr "Phiên đăng nhập"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:base.menu_ir_action_report
+msgid "Report Actions"
+msgstr "Tác vụ báo cáo"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:base.menu_action_res_groups_privilege
+msgid "Scopes"
+msgstr "Phạm vi quyền"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:base.menu_tests
+msgid "Tests"
+msgstr "Kiểm thử"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:iap.iap_account_menu
+msgid "In-App Purchase Accounts"
+msgstr "Tài khoản mua trong ứng dụng (IAP)"
+
+#. module: tp_i18n_vi
+#: model:ir.ui.menu,name:mail.ir_ui_view_menu_usage_mail_post
+msgid "System Notifications"
+msgstr "Thông báo hệ thống"
+
+#. module: tp_i18n_vi
+#: model:ir.model.fields.selection,name:calendar.selection__calendar_event__show_as__free
+msgid "Available"
+msgstr "Rảnh"
+
+#. module: tp_i18n_vi
+#: model:ir.model.fields.selection,name:calendar.selection__calendar_event__privacy__public
+msgid "Public"
+msgstr "Công khai"
+
+#. module: tp_i18n_vi
+#: model:ir.model.fields.selection,name:calendar.selection__calendar_event__privacy__members_only
+msgid "Calendar Members Only"
+msgstr "Chỉ thành viên lịch"
+
+#. module: tp_i18n_vi
+#: model:ir.model.fields.selection,name:mail.selection__discuss_channel__channel_type__group
+msgid "Group Chat"
+msgstr "Nhóm trò chuyện"
+
+#. module: tp_i18n_vi
+#: model:ir.model.fields.selection,name:hr_expense.selection__hr_expense__state__submitted
+msgid "Submitted"
+msgstr "Đã gửi duyệt"
+
+#. module: tp_i18n_vi
+#: model:ir.model.fields.selection,name:hr_expense.selection__hr_expense__state__in_payment
+msgid "In Payment"
+msgstr "Đang thanh toán"
+
+#. module: tp_i18n_vi
+#: model:ir.model.fields.selection,name:hr_expense.selection__hr_expense__state__posted
+#: model:ir.model.fields.selection,name:account.selection__account_move__state__posted
+msgid "Posted"
+msgstr "Đã hạch toán"
+
+#. module: tp_i18n_vi
+#: model:ir.model.fields.selection,name:project.selection__project_task__state__1_done
+msgid "Done"
+msgstr "Hoàn thành"

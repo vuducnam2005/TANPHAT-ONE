@@ -90,11 +90,29 @@ describe('Odoo session authentication', () => {
     });
   });
 
-  it('treats HTTP 200 JSON-RPC credential errors as failed authentication', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({
-      error: { data: { name: 'odoo.exceptions.AccessDenied', debug: 'private server traceback' } },
-    })));
-    await expect(api.authenticate('planner.dev', 'invalid')).rejects.toMatchObject({ code: 'credentials' });
+  it('reports a wrong password and an unknown login with the same credential message (T01)', async () => {
+    for (const login of ['planner.dev', 'no-such-user']) {
+      const error = await failedLogin(accessDenied(['Access Denied']), login);
+      expect(error).toMatchObject({ code: 'credentials', message: 'Tên đăng nhập hoặc mật khẩu chưa đúng. Vui lòng kiểm tra và thử lại.' });
+      expectNoServerText(error, 'Access Denied', 'Odoo Server Error', 'private server traceback');
+    }
+  });
+
+  it('reports the login cooldown instead of a wrong password, whatever its language (T01)', async () => {
+    for (const text of [
+      'Too many login failures, please wait a bit before trying again.',
+      'Đăng nhập thất bại quá nhiều lần, vui lòng chờ một lát trước khi thử lại.',
+    ]) {
+      const error = await failedLogin(accessDenied([text]));
+      expect(error).toMatchObject({ code: 'cooldown', message: 'Tạm thời chưa thể đăng nhập vì đã thử sai nhiều lần. Vui lòng chờ ít phút rồi thử lại.' });
+      expectNoServerText(error, text, 'Odoo Server Error', 'private server traceback');
+    }
+  });
+
+  it('treats AccessDenied with any other arguments as a cooldown, never as credentials', async () => {
+    for (const args of [['Access Denied', 'extra'], 'Access Denied', [], undefined]) {
+      await expect(failedLogin(accessDenied(args))).resolves.toMatchObject({ code: 'cooldown' });
+    }
   });
 
   it('keeps MFA as an explicit verification step instead of granting access', async () => {
@@ -102,16 +120,24 @@ describe('Odoo session authentication', () => {
     await expect(api.authenticate('planner.dev', 'sample')).resolves.toEqual({ requiresVerification: true });
   });
 
-  it('returns a useful rate-limit message', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 429 })));
-    await expect(api.authenticate('planner.dev', 'sample')).rejects.toMatchObject({ code: 'rate_limit' });
+  it('keeps the proxy rate-limit message for HTTP 429 (T01)', async () => {
+    const error = await failedLogin(new Response('<html>private proxy details</html>', { status: 429 }));
+    expect(error).toMatchObject({ code: 'rate_limit', message: 'Đã thử đăng nhập quá nhiều lần. Vui lòng chờ một lúc rồi thử lại.' });
+    expectNoServerText(error, 'private proxy details');
   });
 
-  it('does not expose proxy HTML or internal errors', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html>private gateway details</html>', { status: 502 })));
-    await expect(api.authenticate('planner.dev', 'sample')).rejects.toMatchObject({ code: 'connection' });
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ error: { data: { name: 'InternalError', debug: 'private stack' } } })));
-    await expect(api.authenticate('planner.dev', 'sample')).rejects.toMatchObject({ code: 'connection' });
+  it('does not expose proxy HTML or internal errors (T01)', async () => {
+    const gateway = await failedLogin(new Response('<html>private gateway details</html>', { status: 502 }));
+    expect(gateway).toMatchObject({ code: 'connection', message: 'Chưa kết nối được hệ thống. Vui lòng thử lại sau.' });
+    expectNoServerText(gateway, 'private gateway details');
+    const internal = await failedLogin(Response.json({ error: { message: 'Odoo Server Error', data: { name: 'InternalError', message: 'private message', debug: 'private stack' } } }));
+    expect(internal).toMatchObject({ code: 'connection' });
+    expectNoServerText(internal, 'Odoo Server Error', 'private message', 'private stack');
+  });
+
+  it('treats a broken JSON body as a connection failure (T01)', async () => {
+    const error = await failedLogin(new Response('{"result": {"uid": 7', { headers: { 'Content-Type': 'application/json' } }));
+    expect(error).toMatchObject({ code: 'connection' });
   });
 
   it('rejects malformed success responses', async () => {
@@ -119,8 +145,33 @@ describe('Odoo session authentication', () => {
     await expect(api.authenticate('planner.dev', 'sample')).rejects.toBeInstanceOf(LoginError);
   });
 
-  it('handles a lost connection without retaining network error details', async () => {
+  it('handles a lost connection without retaining network error details (T01)', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('network details')));
-    await expect(api.authenticate('planner.dev', 'sample')).rejects.toMatchObject({ code: 'connection' });
+    const error = await api.authenticate('planner.dev', 'sample').catch((cause: unknown) => cause);
+    expect(error).toMatchObject({ code: 'connection' });
+    expectNoServerText(error as LoginError, 'network details');
   });
 });
+
+/** Odoo's HTTP 200 JSON-RPC error for AccessDenied, as observed in V-B. */
+function accessDenied(args: unknown) {
+  return Response.json({
+    jsonrpc: '2.0', id: 'login',
+    error: {
+      code: 200, message: 'Odoo Server Error',
+      data: { name: 'odoo.exceptions.AccessDenied', message: Array.isArray(args) ? args[0] : 'Access Denied', arguments: args, debug: 'private server traceback' },
+    },
+  });
+}
+
+async function failedLogin(response: Response, login = 'planner.dev') {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response));
+  const error = await api.authenticate(login, 'sample').catch((cause: unknown) => cause);
+  expect(error).toBeInstanceOf(LoginError);
+  return error as LoginError;
+}
+
+function expectNoServerText(error: LoginError, ...texts: string[]) {
+  const exposed = JSON.stringify({ ...error, message: error.message, stack: error.stack, cause: error.cause });
+  for (const text of texts) expect(exposed).not.toContain(text);
+}

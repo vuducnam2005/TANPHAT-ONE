@@ -284,6 +284,18 @@ System administrator/superuser và quản trị database có khả năng truy c�
 
 Cho đến khi có câu trả lời và evidence tương ứng, các dòng trên giữ `D`/`Q`, không chuyển `accepted`, không cấp grant người dùng thật/pilot, không đặt hạn mức ký/duyệt hoặc quy tắc bốn mắt. Nhật ký Q2 và các bundle B01–B03/CTR-002a ở readiness 7.1 phải ghi mã câu hỏi, vai trò xác nhận, phạm vi/môi trường, mã evidence/hash, ngày/phiên bản và gap/bước tiếp theo.
 
+### 7.5. Chính sách đã chọn cho CTR-002a trên test — DEC-021
+
+Người dùng giao AI quyết định vai trò và việc kiểm tra tiền cho luồng nháp. Quyết định này áp dụng cho test fixture, không sửa trạng thái đề xuất của Q2-P1 đối với người thật/BASE/grant/pilot ở mục 7.4.
+
+| Vai trò chức năng | Action/capability | Scope và kiểm soát |
+| --- | --- | --- |
+| Người lập KD | Tạo/sửa/mở lại nháp: `contract_draft_edit`; gửi/gửi lại: `contract_submit` + `financial_read` | Assignment cùng company/project/department; chỉ draft được sửa; sửa/xóa tiền thêm `financial_draft_edit`; không tự cấp grant |
+| Người rà soát thương mại | Reviewer được gán, `contract_review_commercial` + `financial_read`; return cần reason, issue chi tiết optional | Reviewer phải khác người gửi của từng submission/resubmission; kiểm cả backend và picker; không sửa payload gốc |
+| Người hỗ trợ/reader | Chỉ đọc metadata trong scope được giao | Không tự có tiền, quyền submit/review hoặc file financial; title không tự tạo capability |
+
+Review thương mại bao gồm kiểm số tiền nên sender/reviewer phải có `financial_read`; không yêu cầu `financial_draft_edit` chỉ để gửi/rá soát. S1/S2 và lịch sử người gửi/reviewer giữ bất biến. Không suy chính sách này thành thẩm quyền BASE/ký/hiệu lực/thanh toán hoặc quy tắc bốn mắt toàn công ty. **CHG-20261028-020 đã triển khai self-review guard ở backend và reviewer picker**: người gửi không xuất hiện trong danh sách reviewer của chính submission/resubmission; gọi trực tiếp vẫn bị từ chối. Guard này chỉ áp dụng cho fixture CTR-002a-P1, không thêm state/capability và không cấp quyền người thật. Kết quả acceptance nằm ở [Ready for Code mục 2.2–2.3](TP_READY_FOR_CODE_GATE.md#22-handoff-đã-thực-hiện-cho-ctr-002a1).
+
 ## 8. API, audit và đồng thời
 
 Mọi transition phải có actor/capability, scope, state trước/sau, guard, reason/evidence, audit và người nhận thông báo. Các slice ngoài hợp đồng ở mục 6 phải chi tiết hóa action matrix trước khi code action.
@@ -325,7 +337,7 @@ Thiếu Q1 không ngăn đọc hồ sơ/thiết kế schema hoặc draft develop
 
 Đã đọc năm nguồn, đối chiếu dạng phụ lục/sửa sai/khoán cấp 2/tiền và lập [ca nghiệm thu giả lập](TP_KD_EVIDENCE_AND_ACCEPTANCE.md). Đây là hoàn tất baseline phân tích BIZ-001.
 
-Chưa có chủ nghiệp vụ ký xác nhận ma trận, chưa có văn bản hạn mức, chưa đối chiếu 2–3 bộ hợp đồng/biên bản/phiếu duyệt thực tế đầy đủ. Các state/capability/ca test là thiết kế, chưa triển khai/chạy trên Odoo.
+Chưa có chủ nghiệp vụ ký xác nhận ma trận cho người thật, chưa có văn bản hạn mức, chưa đối chiếu 2–3 bộ hợp đồng/biên bản/phiếu duyệt thực tế đầy đủ. CTR-001 đã chạy trên dev; CTR-002a T1–T6 đã code/kiểm trên test theo DEC-020; CHG-20261028-020 đã bổ sung V01/V02 và self-review guard, với 79 Odoo tests, 22 Vitest và 3 E2E mock cùng 2 E2E live đạt. Các domain còn lại vẫn là thiết kế; kết quả test không thay nghiệm thu công ty.
 
-**Bước tiếp theo:** review/nghiệm thu bộ thiết kế BIZ-002 trước code; CTR-001 giữ nguyên read slice trên dev. Bổ sung hồ sơ khử dữ liệu và chốt Q2 (ai cấp/thu hồi `financial_read`, ai record/verify BASE). Chỉ sau quyết định chuyển giai đoạn của người dùng mới chọn CTR-002a hoặc slice đủ checklist. Thu thập Q1–Q4/Q8 liên quan trước action xác minh/chốt pháp lý; không tạo engine chung hoặc mở đủ chín phân hệ.
+**Bước tiếp theo:** maintenance CTR-002a.1 đã đạt technical acceptance trên test. Hoàn thiện Q2/hồ sơ khử dữ liệu/owner trước pilot; thu thập Q1–Q4/Q8 liên quan trước action xác minh/chốt pháp lý. Không mở action hoặc phân hệ mới từ kết quả kỹ thuật của test slice.
 

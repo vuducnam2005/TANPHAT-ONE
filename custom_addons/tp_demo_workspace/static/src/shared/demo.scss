@@ -1,0 +1,674 @@
+// UI-DEMO-001 visual language: drawing ink, galvanised steel, tracing paper,
+// road-marking amber and survey-peg green. Everything is scoped to the demo
+// namespaces so the rest of the Odoo web client keeps its own look.
+
+@font-face {
+    font-family: "TP Demo Display";
+    src: url("/web/static/fonts/google/Oswald/Oswald-Medium.ttf") format("truetype");
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "TP Demo Display";
+    src: url("/web/static/fonts/google/Oswald/Oswald-SemiBold.ttf") format("truetype");
+    font-weight: 600;
+    font-display: swap;
+}
+
+.o_tp_demo,
+.o_tp_demo_badge {
+    --tp-ink: #17324f;
+    --tp-ink-2: #24557f;
+    --tp-ink-soft: rgba(23, 50, 79, 0.07);
+    --tp-accent: #2f6db3;
+    --tp-steel: #5a6a7b;
+    --tp-steel-soft: rgba(90, 106, 123, 0.12);
+    --tp-paper: #f2f5f9;
+    --tp-surface: #ffffff;
+    --tp-line: rgba(23, 50, 79, 0.11);
+    --tp-amber: #d99a1e;
+    --tp-amber-text: #8a5a00;
+    --tp-amber-soft: rgba(217, 154, 30, 0.13);
+    --tp-green: #2e7d5b;
+    --tp-green-soft: rgba(46, 125, 91, 0.11);
+    --tp-display: "TP Demo Display", "Oswald", var(--bs-font-sans-serif);
+    --tp-radius: 8px;
+    --tp-radius-lg: 14px;
+    --tp-shadow: 0 1px 2px rgba(16, 32, 51, 0.05), 0 2px 8px rgba(16, 32, 51, 0.06);
+    --tp-shadow-hover: 0 4px 10px rgba(16, 32, 51, 0.08), 0 12px 28px rgba(16, 32, 51, 0.1);
+    --tp-motion: 180ms;
+    --tp-hazard: repeating-linear-gradient(-45deg, var(--tp-amber) 0 4px, var(--tp-ink) 4px 8px);
+    // Blueprint grid used behind page headers: engineering drawing, not decoration for its own sake.
+    --tp-blueprint:
+        linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px) 0 0 / 24px 24px,
+        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px) 0 0 / 24px 24px,
+        linear-gradient(120deg, var(--tp-ink) 0%, var(--tp-ink-2) 100%);
+}
+
+.o_tp_demo {
+    color: var(--tp-ink);
+
+    .o_tp_demo_content {
+        background:
+            radial-gradient(1200px 400px at 100% 0%, rgba(47, 109, 179, 0.06), transparent 60%),
+            var(--tp-paper);
+        padding: 20px 28px 40px;
+    }
+
+    :is(button, select, input, a):focus-visible {
+        outline: 2px solid var(--tp-ink);
+        outline-offset: 2px;
+        box-shadow: none;
+    }
+
+    button {
+        color: inherit;
+    }
+
+    .o_tp_demo_muted {
+        color: var(--tp-steel);
+        margin-bottom: 0;
+    }
+
+    .o_tp_demo_num {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .o_tp_demo_code {
+        display: inline-block;
+        font-family: var(--tp-display);
+        font-weight: 500;
+        font-size: 0.85em;
+        letter-spacing: 0.04em;
+        color: var(--tp-ink);
+        background: var(--tp-ink-soft);
+        border-radius: 6px;
+        padding: 1px 6px;
+        margin-right: 6px;
+        white-space: nowrap;
+    }
+
+    .o_tp_demo_header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px 24px;
+        margin: 16px 0 20px;
+    }
+
+    .o_tp_demo_title {
+        font-family: var(--tp-display);
+        font-weight: 600;
+        font-size: 2rem;
+        line-height: 1.15;
+        letter-spacing: 0.01em;
+        color: var(--tp-ink);
+        margin: 0 0 6px;
+    }
+
+    // Page headers that carry a title become a dark blueprint band; the
+    // project picker header stays a plain toolbar.
+    .o_tp_demo_header:has(.o_tp_demo_title),
+    .o_tp_demo_project_head {
+        position: relative;
+        overflow: hidden;
+        align-items: center;
+        background: var(--tp-blueprint);
+        color: #fff;
+        border: 0;
+        border-radius: var(--tp-radius-lg);
+        padding: 24px 28px;
+        box-shadow: var(--tp-shadow);
+
+        &::after {
+            content: "";
+            position: absolute;
+            right: -40px;
+            bottom: -60px;
+            width: 260px;
+            height: 160px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50% 50% 0 0;
+            pointer-events: none;
+        }
+
+        > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .o_tp_demo_title,
+        .o_tp_demo_eyebrow {
+            color: #fff;
+        }
+
+        .o_tp_demo_eyebrow {
+            opacity: 0.75;
+        }
+
+        .o_tp_demo_muted,
+        .o_tp_demo_lens_label,
+        .o_tp_demo_lens_note {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .o_tp_demo_muted {
+            max-width: 72ch;
+        }
+
+        .o_tp_demo_code {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .o_tp_demo_tag_illustrative {
+            color: #7a4f00;
+            background: #fdf1d8;
+            border-style: solid;
+        }
+
+        // Odoo's selects are transparent; give them a solid face on the dark band.
+        .form-select {
+            background-color: #fff;
+            color: var(--tp-ink);
+            border: 1px solid #fff;
+            border-radius: var(--tp-radius);
+            padding-left: 10px;
+            font-weight: 600;
+        }
+
+        .btn-secondary {
+            background: #fff;
+            border-color: #fff;
+            color: var(--tp-ink);
+            font-weight: 600;
+
+            &:hover {
+                background: #e8eef6;
+                border-color: #e8eef6;
+            }
+        }
+
+        :is(button, select, input, a):focus-visible {
+            outline-color: #fff;
+        }
+    }
+
+    .o_tp_demo_eyebrow {
+        display: block;
+        font-family: var(--tp-display);
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--tp-steel);
+        font-size: 0.8rem;
+    }
+
+    .o_tp_demo_panel {
+        background: var(--tp-surface);
+        border: 1px solid var(--tp-line);
+        border-radius: var(--tp-radius-lg);
+        box-shadow: var(--tp-shadow);
+        padding: 20px 24px;
+        margin-bottom: 20px;
+        min-width: 0;
+    }
+
+    .o_tp_demo_panel_illustrative {
+        border: 1.5px dashed rgba(90, 106, 123, 0.55);
+        background:
+            repeating-linear-gradient(-45deg, rgba(217, 154, 30, 0.035) 0 10px, transparent 10px 20px),
+            var(--tp-surface);
+    }
+
+    .o_tp_demo_panel_head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 16px;
+        margin-bottom: 12px;
+
+        .o_tp_demo_panel_title {
+            margin-bottom: 0;
+        }
+    }
+
+    .o_tp_demo_panel_title {
+        font-family: var(--tp-display);
+        font-weight: 600;
+        font-size: 1.2rem;
+        letter-spacing: 0.01em;
+        color: var(--tp-ink);
+        margin: 0 0 14px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+
+        &::before {
+            content: "";
+            width: 4px;
+            height: 1.1em;
+            border-radius: 2px;
+            background: linear-gradient(180deg, var(--tp-accent), var(--tp-ink));
+            flex: none;
+        }
+    }
+
+    .o_tp_demo_subtitle {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--tp-steel);
+        margin: 16px 0 8px;
+    }
+
+    .o_tp_demo_split {
+        display: grid;
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        gap: 16px;
+        align-items: start;
+    }
+
+    .o_tp_demo_lens {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 8px;
+
+        .form-select {
+            width: auto;
+            min-width: 160px;
+        }
+    }
+
+    .o_tp_demo_lens_label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--tp-steel);
+        margin: 0;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .o_tp_demo_lens_note {
+        flex-basis: 100%;
+        font-size: 0.75rem;
+        color: var(--tp-steel);
+    }
+
+    .o_tp_demo_table {
+        margin-bottom: 8px;
+        --bs-table-bg: transparent;
+        --bs-table-border-color: var(--tp-line);
+
+        thead th {
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--tp-steel);
+            white-space: nowrap;
+            vertical-align: bottom;
+            border-bottom-width: 1px;
+            padding-bottom: 8px;
+        }
+
+        td {
+            vertical-align: top;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+
+        tbody tr {
+            transition: background-color var(--tp-motion) ease;
+
+            &:hover > * {
+                background: rgba(47, 109, 179, 0.035);
+            }
+        }
+
+        tfoot th,
+        tfoot td {
+            border-top: 2px solid var(--tp-ink);
+            color: var(--tp-ink);
+            font-size: 0.85rem;
+        }
+    }
+
+    .o_tp_demo_linkish {
+        background: none;
+        border: 0;
+        padding: 0;
+        text-align: left;
+        color: var(--tp-ink);
+        font-weight: 600;
+
+        &:hover {
+            color: var(--tp-accent);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+    }
+
+    .o_tp_demo_rows {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .o_tp_demo_row {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: 0;
+        border-left: 3px solid transparent;
+        border-radius: var(--tp-radius);
+        padding: 10px 12px;
+        margin-bottom: 2px;
+        transition: background-color var(--tp-motion) ease, border-color var(--tp-motion) ease;
+
+        &:hover {
+            background: var(--tp-paper);
+        }
+    }
+
+    .o_tp_demo_row_active {
+        background: rgba(47, 109, 179, 0.08);
+        border-left-color: var(--tp-accent);
+    }
+
+    .o_tp_demo_row_main {
+        font-weight: 600;
+    }
+
+    .o_tp_demo_row_meta {
+        color: var(--tp-steel);
+    }
+
+    .o_tp_demo_row_muted {
+        color: var(--tp-steel);
+    }
+
+    .o_tp_demo_plainlist {
+        margin: 0;
+        padding-left: 18px;
+
+        li + li {
+            margin-top: 4px;
+        }
+    }
+
+    .o_tp_demo_overdue {
+        color: var(--tp-amber-text);
+        font-weight: 600;
+    }
+
+    .o_tp_demo_dashed {
+        border-style: dashed !important;
+    }
+}
+
+// ---------------------------------------------------------------- labels
+
+.o_tp_demo .o_tp_demo_strip {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--tp-amber-text);
+    background: #fdf6e7;
+    border: 1px solid rgba(217, 154, 30, 0.35);
+    border-radius: 999px;
+    padding: 4px 12px 4px 6px;
+}
+
+.o_tp_demo .o_tp_demo_strip_marker,
+.o_tp_demo_badge .o_tp_demo_badge_stripe {
+    display: inline-block;
+    width: 20px;
+    height: 10px;
+    background: var(--tp-hazard);
+    border-radius: 999px;
+    flex: none;
+}
+
+.o_tp_demo .o_tp_demo_tag {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--bs-font-sans-serif);
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0;
+    padding: 1px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.o_tp_demo .o_tp_demo_tag_illustrative {
+    color: var(--tp-amber-text);
+    background: var(--tp-amber-soft);
+    border: 1px dashed var(--tp-amber);
+}
+
+.o_tp_demo .o_tp_demo_tag_real {
+    color: var(--tp-green);
+    background: var(--tp-green-soft);
+    border: 1px solid var(--tp-green);
+}
+
+.o_tp_demo .o_tp_demo_tag_absent {
+    color: var(--tp-steel);
+    background: transparent;
+    border: 1px dotted var(--tp-steel);
+}
+
+.o_tp_demo_badge {
+    gap: 6px;
+    margin: 0 8px;
+    padding: 2px 10px 2px 6px;
+    border: 1px solid var(--tp-amber);
+    border-radius: 999px;
+    background: #fdf3e1;
+    color: var(--tp-amber-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    align-self: center;
+}
+
+.o_tp_demo .o_tp_demo_legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    font-size: 0.75rem;
+    color: var(--tp-steel);
+}
+
+.o_tp_demo .o_tp_demo_legend_item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.o_tp_demo .o_tp_demo_legend_line {
+    display: inline-block;
+    width: 24px;
+    border-top: 2px solid var(--tp-ink);
+}
+
+// ---------------------------------------------------------------- state chips
+
+.o_tp_demo .o_tp_demo_state {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 999px;
+    color: var(--tp-steel);
+    background: var(--tp-steel-soft);
+    white-space: nowrap;
+}
+
+.o_tp_demo {
+    .o_tp_demo_state_in_review,
+    .o_tp_demo_state_in_progress,
+    .o_tp_demo_state_in_check,
+    .o_tp_demo_state_awaiting_base,
+    .o_tp_demo_state_finance_review,
+    .o_tp_demo_state_submitted,
+    .o_tp_demo_state_preparing,
+    .o_tp_demo_state_watching,
+    .o_tp_demo_state_suspended {
+        color: var(--tp-ink);
+        background: var(--tp-ink-soft);
+    }
+
+    .o_tp_demo_state_returned,
+    .o_tp_demo_state_commented {
+        color: var(--tp-amber-text);
+        background: var(--tp-amber-soft);
+    }
+
+    .o_tp_demo_state_review_complete,
+    .o_tp_demo_state_effective,
+    .o_tp_demo_state_reported,
+    .o_tp_demo_state_declared,
+    .o_tp_demo_state_handover_ready,
+    .o_tp_demo_state_allocated,
+    .o_tp_demo_state_execution_completed {
+        color: var(--tp-green);
+        background: var(--tp-green-soft);
+    }
+
+    .o_tp_demo_state_cancelled,
+    .o_tp_demo_state_lost,
+    .o_tp_demo_state_released,
+    .o_tp_demo_state_terminated {
+        color: var(--tp-steel);
+        background: transparent;
+        border: 1px solid var(--tp-line);
+    }
+}
+
+// ---------------------------------------------------------------- load states
+
+.o_tp_demo .o_tp_demo_skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 0;
+}
+
+.o_tp_demo .o_tp_demo_skeleton_bar,
+.o_tp_demo .o_tp_demo_skeleton_block {
+    background: linear-gradient(90deg, var(--tp-line) 0%, var(--tp-ink-soft) 50%, var(--tp-line) 100%);
+    background-size: 200% 100%;
+    border-radius: var(--tp-radius);
+    animation: o_tp_demo_shimmer 1.2s linear infinite;
+}
+
+.o_tp_demo .o_tp_demo_skeleton_bar {
+    height: 14px;
+}
+
+.o_tp_demo .o_tp_demo_skeleton_row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.o_tp_demo .o_tp_demo_skeleton_block {
+    height: 88px;
+}
+
+.o_tp_demo .o_tp_demo_error {
+    margin: 16px 0;
+    padding: 16px 20px;
+    background: var(--tp-surface);
+    border: 1px solid var(--tp-line);
+    border-left: 4px solid var(--tp-amber);
+    border-radius: var(--tp-radius-lg);
+    box-shadow: var(--tp-shadow);
+}
+
+.o_tp_demo .o_tp_demo_error_title {
+    font-weight: 600;
+    color: var(--tp-ink);
+    margin-bottom: 4px;
+}
+
+@keyframes o_tp_demo_shimmer {
+    from {
+        background-position: 200% 0;
+    }
+    to {
+        background-position: -200% 0;
+    }
+}
+
+// ---------------------------------------------------------------- responsive & motion
+
+@media (max-width: 991.98px) {
+    .o_tp_demo .o_tp_demo_split {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .o_tp_demo {
+        .o_tp_demo_content {
+            padding: 12px 16px 24px;
+        }
+
+        .o_tp_demo_title {
+            font-size: 1.45rem;
+        }
+
+        .o_tp_demo_header:has(.o_tp_demo_title),
+        .o_tp_demo_project_head {
+            padding: 18px 18px;
+            border-radius: var(--tp-radius);
+
+            &::after {
+                display: none;
+            }
+        }
+
+        .o_tp_demo_panel {
+            padding: 14px 16px;
+            border-radius: var(--tp-radius);
+        }
+
+        // Keep the marker beside the text; a full pill looks odd once the text wraps.
+        .o_tp_demo_strip {
+            display: flex;
+            flex-wrap: nowrap;
+            border-radius: var(--tp-radius);
+            padding: 6px 10px 6px 8px;
+        }
+
+        .o_tp_demo_lens .form-select {
+            min-width: 0;
+            width: 100%;
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .o_tp_demo *,
+    .o_tp_demo *::before,
+    .o_tp_demo *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}

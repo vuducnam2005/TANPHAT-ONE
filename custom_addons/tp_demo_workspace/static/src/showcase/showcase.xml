@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_demo_workspace.Showcase">
+        <div class="o_action o_tp_demo o_tp_demo_showcase" t-att-data-screen="this.screen">
+            <ControlPanel/>
+            <div class="o_content o_tp_demo_content">
+                <t t-call="tp_demo_workspace.EnvironmentStrip">
+                    <t t-set="illustrative" t-value="true"/>
+                </t>
+                <t t-call="tp_demo_workspace.LoadState"/>
+                <t t-set="data" t-value="this.state.data"/>
+                <t t-if="data">
+                    <header class="o_tp_demo_header">
+                        <div>
+                            <span class="o_tp_demo_eyebrow" t-out="data.module"/>
+                            <h1 class="o_tp_demo_title"><t t-out="data.title"/> <t t-call="tp_demo_workspace.IllustrativeTag"/></h1>
+                            <p class="o_tp_demo_muted" t-out="data.purpose"/>
+                        </div>
+                    </header>
+
+                    <div class="o_tp_demo_filters" role="search" aria-label="Lọc danh sách minh họa">
+                        <div t-if="data.projects.length" class="o_tp_demo_filter">
+                            <label for="tp_demo_sc_project" class="o_tp_demo_lens_label">Dự án</label>
+                            <select id="tp_demo_sc_project" class="form-select form-select-sm" t-on-change="(ev) => this.onProjectChange(ev)">
+                                <option value="" t-att-selected="!data.selected_project_id">Tất cả dự án được giao</option>
+                                <t t-foreach="data.projects" t-as="item" t-key="item.id">
+                                    <option t-att-value="item.id" t-att-selected="item.id === data.selected_project_id" t-out="item.code"/>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="o_tp_demo_filter">
+                            <label for="tp_demo_sc_status" class="o_tp_demo_lens_label">Trạng thái</label>
+                            <select id="tp_demo_sc_status" class="form-select form-select-sm" t-on-change="(ev) => this.onStatusChange(ev)">
+                                <option value="" t-att-selected="!this.state.status">Tất cả</option>
+                                <t t-foreach="this.statuses" t-as="item" t-key="item.key">
+                                    <option t-att-value="item.key" t-att-selected="item.key === this.state.status" t-out="item.label"/>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="o_tp_demo_filter o_tp_demo_filter_grow">
+                            <label for="tp_demo_sc_query" class="o_tp_demo_lens_label">Tìm</label>
+                            <input id="tp_demo_sc_query" type="search" class="form-control form-control-sm" placeholder="Mã, tên, người phụ trách…"
+                                   t-att-value="this.state.query" t-on-input="(ev) => this.onQueryInput(ev)"/>
+                        </div>
+                    </div>
+
+                    <t t-set="rows" t-value="this.rows"/>
+                    <t t-set="current" t-value="this.selected"/>
+                    <div class="o_tp_demo_master">
+                        <section class="o_tp_demo_panel o_tp_demo_panel_illustrative o_tp_demo_master_list" aria-labelledby="tp_demo_sc_list">
+                            <div class="o_tp_demo_panel_head">
+                                <h2 id="tp_demo_sc_list" class="o_tp_demo_panel_title">Danh sách mẫu</h2>
+                                <span class="o_tp_demo_muted small" aria-live="polite"><t t-out="rows.length"/> mục</span>
+                            </div>
+                            <p t-if="!rows.length" class="o_tp_demo_muted">Không có mục khớp bộ lọc trong phạm vi bạn được giao.</p>
+                            <ul class="o_tp_demo_rows">
+                                <t t-foreach="rows" t-as="row" t-key="row.key">
+                                    <li>
+                                        <button type="button" class="o_tp_demo_row" t-att-class="{'o_tp_demo_row_active': current and current.key === row.key}"
+                                                t-att-aria-current="current and current.key === row.key ? 'true' : 'false'"
+                                                t-on-click="() => this.select(row)">
+                                            <span class="o_tp_demo_row_main">
+                                                <span class="o_tp_demo_code" t-out="row.key"/>
+                                                <t t-out="row.name"/>
+                                            </span>
+                                            <span class="o_tp_demo_row_meta small">
+                                                <span class="o_tp_demo_state" t-att-class="'o_tp_demo_state_' + row.status" t-out="row.status_label"/>
+                                                <t t-if="row.project"> · <t t-out="row.project"/></t>
+                                            </span>
+                                        </button>
+                                    </li>
+                                </t>
+                            </ul>
+                        </section>
+
+                        <section class="o_tp_demo_panel o_tp_demo_panel_illustrative o_tp_demo_detail" aria-labelledby="tp_demo_sc_detail" aria-live="polite">
+                            <t t-if="current">
+                                <span class="o_tp_demo_code" t-out="current.key"/>
+                                <h2 id="tp_demo_sc_detail" class="o_tp_demo_detail_title" t-out="current.name"/>
+                                <p class="o_tp_demo_muted small">
+                                    <span class="o_tp_demo_state" t-att-class="'o_tp_demo_state_' + current.status" t-out="current.status_label"/>
+                                    <t t-if="current.project"> · <t t-out="current.project"/> — <t t-out="current.project_name"/></t>
+                                </p>
+                                <dl class="o_tp_demo_facts">
+                                    <t t-foreach="data.columns" t-as="column" t-key="column.key">
+                                        <div class="o_tp_demo_fact">
+                                            <dt t-out="column.label"/>
+                                            <dd t-out="current.columns[column.key] or '—'"/>
+                                        </div>
+                                    </t>
+                                </dl>
+                                <t t-if="current.steps.length">
+                                    <h3 class="o_tp_demo_subtitle">Luồng đề xuất (Proposed-TP, không phải state BASE)</h3>
+                                    <ol class="o_tp_demo_stepper">
+                                        <t t-foreach="current.steps" t-as="step" t-key="step_index">
+                                            <li class="o_tp_demo_step" t-att-class="'o_tp_demo_step_' + step.state">
+                                                <span class="o_tp_demo_step_dot" aria-hidden="true"/>
+                                                <span class="o_tp_demo_step_label" t-out="step.label"/>
+                                                <span class="visually-hidden" t-out="this.stepState(step)"/>
+                                            </li>
+                                        </t>
+                                    </ol>
+                                </t>
+                                <t t-foreach="current.sections" t-as="section" t-key="section_index">
+                                    <div class="o_tp_demo_section">
+                                        <h3 class="o_tp_demo_subtitle" t-out="section.title"/>
+                                        <ul t-if="section.lines" class="o_tp_demo_plainlist">
+                                            <t t-foreach="section.lines" t-as="line" t-key="line_index">
+                                                <li t-out="line"/>
+                                            </t>
+                                        </ul>
+                                        <ol t-if="section.timeline" class="o_tp_demo_timeline">
+                                            <t t-foreach="section.timeline" t-as="entry" t-key="entry_index">
+                                                <li>
+                                                    <span class="o_tp_demo_timeline_date o_tp_demo_num" t-out="entry[0]"/>
+                                                    <span t-out="entry[1]"/>
+                                                </li>
+                                            </t>
+                                        </ol>
+                                    </div>
+                                </t>
+                            </t>
+                            <p t-else="" id="tp_demo_sc_detail" class="o_tp_demo_muted">Chọn một mục để xem chi tiết mẫu.</p>
+                        </section>
+                    </div>
+
+                    <section class="o_tp_demo_panel o_tp_demo_scope" aria-labelledby="tp_demo_sc_scope">
+                        <h2 id="tp_demo_sc_scope" class="o_tp_demo_panel_title">Ngoài phạm vi màn hình minh họa này</h2>
+                        <ul class="o_tp_demo_plainlist">
+                            <t t-foreach="data.out_of_scope" t-as="line" t-key="line_index">
+                                <li t-out="line"/>
+                            </t>
+                        </ul>
+                    </section>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

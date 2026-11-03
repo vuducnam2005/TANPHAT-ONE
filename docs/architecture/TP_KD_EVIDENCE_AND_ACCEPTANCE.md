@@ -7,6 +7,8 @@ Gốc nguồn là `\\192.168.1.2\6.3 Tadic_Thu viec\ERP`. S01/S05 ở gốc, S02
 
 ## 1. Registry nguồn
 
+**Lưu ý phiên bản 29/10/2026 (CHG-049):** S03 trong registry dưới là snapshot lịch sử; XL05/PKH hiện trên NAS có SHA-256 đầu `e34052d2986f`, khác bản S03 `4ee0ff275058`. Các bằng chứng/mapping phụ thuộc trực tiếp S03 là `legacy snapshot; current copy pending re-baseline` cho tới khi đối chiếu thay đổi. Hash registry lịch sử giữ nguyên. Không suy toàn bộ BIZ-001 hoặc các DEC đã xác nhận mất hiệu lực; xem [phân tích Excel, cảnh báo phiên bản](TP_EXCEL_REFERENCE_ANALYSIS.md#cảnh-báo-phiên-bản-pkh).
+
 | Mã | Nguồn | SHA-256 | Vai trò |
 | --- | --- | --- | --- |
 | S01 | Quy trinh nghiep vu TanPhat JSC_V1.0.docx | 7b1c94c32c89f02697dac9a4cf9a70f07d61a312d3b14ea73ac7f74d6259b413 | Quy trình cấp công ty, RACI, đấu thầu, hợp đồng, nghiệm thu |

@@ -1,0 +1,250 @@
+# Translation of TANPHAT ONE module tp_project (VI-001, CHG-20261102-009).
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: tp_project
+#: model:ir.model.constraint,message:tp_project.constraint_project_project_tp_managed_identity
+msgid "A Tan Phat project requires a company and a project code."
+msgstr "Dự án Tân Phát cần có công ty và mã dự án."
+
+#. module: tp_project
+#: model:ir.model.constraint,message:tp_project.constraint_tp_project_grant_reason_present
+msgid "A grant requires a reason."
+msgstr "Cấp quyền nghiệp vụ phải có lý do."
+
+#. module: tp_project
+#. odoo-python
+#: code:addons/tp_project/models/tp_project_grant.py:0
+msgid "A user cannot grant a capability to themselves."
+msgstr "Người dùng không thể tự cấp quyền nghiệp vụ cho chính mình."
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_assignment__active
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_grant__active
+msgid "Active"
+msgstr "Đang hoạt động"
+
+#. module: tp_project
+#: model:ir.model.constraint,message:tp_project.constraint_tp_project_grant_active_grant_unique
+msgid "An active grant for this capability already exists on the project."
+msgstr "Dự án đã có quyền nghiệp vụ này đang hiệu lực."
+
+#. module: tp_project
+#: model_terms:ir.ui.view,arch_db:tp_project.view_tp_project_form
+msgid "Assignments"
+msgstr "Phân công"
+
+#. module: tp_project
+#. odoo-python
+#: code:addons/tp_project/models/tp_project_assignment.py:0
+msgid "Assignments require a Tan Phat managed project."
+msgstr "Chỉ dự án do Tân Phát quản lý mới có phân công."
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_grant__capability
+msgid "Capability"
+msgstr "Quyền nghiệp vụ"
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_assignment__company_id
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_grant__company_id
+msgid "Company"
+msgstr "Công ty"
+
+#. module: tp_project
+#. odoo-python
+#: code:addons/tp_project/models/tp_project_grant.py:0
+msgid ""
+"Contract workflow grants require a department; financial.read grants must "
+"not have one."
+msgstr ""
+"Quyền quy trình hợp đồng phải có phòng ban; quyền financial.read không được "
+"gắn phòng ban."
+
+#. module: tp_project
+#: model:ir.model.fields.selection,name:tp_project.selection__tp_project_assignment__role__coordinator
+msgid "Coordinator"
+msgstr "Điều phối"
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_assignment__create_uid
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_grant__create_uid
+msgid "Created by"
+msgstr "Người tạo"
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_assignment__create_date
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_grant__create_date
+msgid "Created on"
+msgstr "Ngày tạo"
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_grant__department_id
+msgid "Department"
+msgstr "Phòng ban"
+
+#. module: tp_project
+#: model:ir.model.fields,help:tp_project.field_tp_project_grant__department_id
+msgid ""
+"Department scope; required by contract workflow capabilities and empty for "
+"financial.read."
+msgstr ""
+"Phạm vi phòng ban; bắt buộc với quyền quy trình hợp đồng và để trống với "
+"financial.read."
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_assignment__display_name
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_grant__display_name
+msgid "Display Name"
+msgstr "Tên hiển thị"
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_project_project__tp_financial_read_granted
+msgid "Financial Read Granted"
+msgstr "Được xem tài chính"
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_grant__granted_by_id
+msgid "Granted By"
+msgstr "Người cấp"
+
+#. module: tp_project
+#. odoo-python
+#: code:addons/tp_project/models/tp_project_grant.py:0
+msgid "Grants require a Tan Phat managed project."
+msgstr "Chỉ dự án do Tân Phát quản lý mới được cấp quyền nghiệp vụ."
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_assignment__id
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_grant__id
+msgid "ID"
+msgstr "ID"
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_assignment__write_uid
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_grant__write_uid
+msgid "Last Updated by"
+msgstr "Người cập nhật cuối"
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_assignment__write_date
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_grant__write_date
+msgid "Last Updated on"
+msgstr "Cập nhật lần cuối"
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_project_project__tp_department_id
+msgid "Lead Department"
+msgstr "Phòng ban chủ trì"
+
+#. module: tp_project
+#. odoo-python
+#: code:addons/tp_project/models/project_project.py:0
+msgid "Only platform managers can configure Tan Phat projects."
+msgstr "Chỉ quản trị nền tảng mới được cấu hình dự án Tân Phát."
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_assignment__project_id
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_grant__project_id
+msgid "Project"
+msgstr "Dự án"
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_project_project__tp_assignment_ids
+msgid "Project Assignments"
+msgstr "Phân công dự án"
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_project_project__tp_code
+msgid "Project Code"
+msgstr "Mã dự án"
+
+#. module: tp_project
+#: model:ir.model.fields.selection,name:tp_project.selection__tp_project_assignment__role__reader
+msgid "Reader"
+msgstr "Người xem"
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_grant__reason
+msgid "Reason"
+msgstr "Lý do"
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_assignment__role
+msgid "Role"
+msgstr "Vai trò"
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_project_project__tp_managed
+msgid "Tan Phat Managed"
+msgstr "Do Tân Phát quản lý"
+
+#. module: tp_project
+#: model:ir.model,name:tp_project.model_tp_project_assignment
+msgid "Tan Phat Project Assignment"
+msgstr "Phân công dự án Tân Phát"
+
+#. module: tp_project
+#: model:ir.model,name:tp_project.model_tp_project_grant
+msgid "Tan Phat Project Capability Grant"
+msgstr "Cấp quyền nghiệp vụ dự án Tân Phát"
+
+#. module: tp_project
+#. odoo-python
+#: code:addons/tp_project/models/tp_project_assignment.py:0
+msgid "The assignee must be a Tan Phat platform user."
+msgstr "Người được phân công phải là người dùng nền tảng Tân Phát."
+
+#. module: tp_project
+#. odoo-python
+#: code:addons/tp_project/models/tp_project_assignment.py:0
+msgid "The assignee must have access to the project company."
+msgstr "Người được phân công phải có quyền truy cập công ty của dự án."
+
+#. module: tp_project
+#. odoo-python
+#: code:addons/tp_project/models/tp_project_grant.py:0
+msgid "The grantee must be a Tan Phat platform user."
+msgstr "Người được cấp quyền phải là người dùng nền tảng Tân Phát."
+
+#. module: tp_project
+#. odoo-python
+#: code:addons/tp_project/models/tp_project_grant.py:0
+msgid "The grantee must have access to the project company."
+msgstr "Người được cấp quyền phải có quyền truy cập công ty của dự án."
+
+#. module: tp_project
+#: model:ir.model.constraint,message:tp_project.constraint_project_project_tp_code_company_unique
+msgid "The project code must be unique within its company."
+msgstr "Mã dự án phải là duy nhất trong công ty."
+
+#. module: tp_project
+#: model:ir.model.constraint,message:tp_project.constraint_tp_project_assignment_assignment_unique
+msgid "This project assignment already exists."
+msgstr "Phân công dự án này đã tồn tại."
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_assignment__user_id
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_grant__user_id
+msgid "User"
+msgstr "Người dùng"
+
+#. module: tp_project
+#: model:ir.model.fields,field_description:tp_project.field_tp_project_grant__date_end
+msgid "Valid Until"
+msgstr "Hiệu lực đến"
+
+#. module: tp_project
+#: model:ir.model.fields,help:tp_project.field_project_project__tp_financial_read_granted
+msgid ""
+"Whether the current user holds an active financial.read grant on this "
+"project."
+msgstr ""
+"Người dùng hiện tại có quyền financial.read còn hiệu lực trên dự án này hay "
+"không."

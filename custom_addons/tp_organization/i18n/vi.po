@@ -1,0 +1,19 @@
+# Translation of TANPHAT ONE module tp_organization (VI-001, CHG-20261102-009).
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: tp_organization
+#: model:ir.model.fields,field_description:tp_organization.field_hr_department__tp_code
+msgid "Tan Phat Code"
+msgstr "Mã Tân Phát"
+
+#. module: tp_organization
+#: model:ir.model.constraint,message:tp_organization.constraint_hr_department_tp_company_code_unique
+msgid "The department code must be unique within its company."
+msgstr "Mã phòng ban phải là duy nhất trong công ty."

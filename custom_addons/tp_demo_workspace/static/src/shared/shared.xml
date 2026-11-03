@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tp_demo_workspace.DemoEnvironmentBadge">
+        <div class="o_tp_demo_badge d-flex align-items-center" role="status"
+             aria-label="Dữ liệu trình diễn, không phải hồ sơ thật" title="Môi trường trình diễn với dữ liệu giả lập">
+            <span class="o_tp_demo_badge_stripe" aria-hidden="true"/>
+            <span class="o_tp_demo_badge_text">Dữ liệu trình diễn</span>
+        </div>
+    </t>
+
+    <!-- Strip on top of every demo screen; the optional slot area holds the lens selector. -->
+    <t t-name="tp_demo_workspace.EnvironmentStrip">
+        <div class="o_tp_demo_strip">
+            <span class="o_tp_demo_strip_marker" aria-hidden="true"/>
+            <span class="o_tp_demo_strip_text">Dữ liệu trình diễn · không phải hồ sơ thật của Tấn Phát</span>
+            <t t-if="illustrative">
+                <span class="o_tp_demo_tag o_tp_demo_tag_illustrative">Minh họa định hướng</span>
+            </t>
+        </div>
+    </t>
+
+    <t t-name="tp_demo_workspace.IllustrativeTag">
+        <span class="o_tp_demo_tag o_tp_demo_tag_illustrative">Minh họa định hướng</span>
+    </t>
+
+    <t t-name="tp_demo_workspace.RealTag">
+        <span class="o_tp_demo_tag o_tp_demo_tag_real">Dữ liệu Odoo</span>
+    </t>
+
+    <t t-name="tp_demo_workspace.LoadState">
+        <div t-if="this.state.loading and !this.state.data" class="o_tp_demo_skeleton" aria-busy="true" aria-live="polite">
+            <span class="visually-hidden">Đang tải dữ liệu…</span>
+            <div class="o_tp_demo_skeleton_bar w-25"/>
+            <div class="o_tp_demo_skeleton_row">
+                <div class="o_tp_demo_skeleton_block"/>
+                <div class="o_tp_demo_skeleton_block"/>
+                <div class="o_tp_demo_skeleton_block"/>
+            </div>
+            <div class="o_tp_demo_skeleton_bar w-75"/>
+            <div class="o_tp_demo_skeleton_bar w-50"/>
+        </div>
+        <div t-elif="this.state.error" class="o_tp_demo_error" role="alert">
+            <p class="o_tp_demo_error_title" t-out="this.state.error.denied ? 'Không có quyền xem' : 'Không tải được dữ liệu'"/>
+            <p class="o_tp_demo_muted" t-out="this.state.error.message"/>
+            <button type="button" class="btn btn-secondary btn-sm" t-on-click="() => this.load()">Tải lại</button>
+        </div>
+    </t>
+
+    <t t-name="tp_demo_workspace.Legend">
+        <div class="o_tp_demo_legend" aria-label="Chú giải">
+            <span class="o_tp_demo_legend_item"><span class="o_tp_demo_legend_line" aria-hidden="true"/>Nét liền: dữ liệu Odoo</span>
+            <span class="o_tp_demo_legend_item"><span class="o_tp_demo_legend_line o_tp_demo_dashed" aria-hidden="true"/>Nét đứt: minh họa định hướng</span>
+        </div>
+    </t>
+</templates>

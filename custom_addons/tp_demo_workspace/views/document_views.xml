@@ -1,0 +1,76 @@
+<odoo>
+    <record id="view_demo_document_list" model="ir.ui.view">
+        <field name="name">tp.contract.document.tp_demo.list</field>
+        <field name="model">tp.contract.document</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0" class="o_tp_demo_native">
+                <field name="name" string="Tài liệu"/>
+                <field name="project_id" string="Dự án"/>
+                <field name="contract_id" string="Hợp đồng"/>
+                <field name="document_kind" string="Loại" width="150px"/>
+                <field name="confidentiality" string="Vùng truy cập" widget="badge" width="130px"
+                       decoration-warning="confidentiality == 'financial'" decoration-info="confidentiality == 'general'"/>
+                <field name="file_name" column_invisible="1"/>
+                <field name="file" string="Tệp" widget="binary" filename="file_name"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_demo_document_form" model="ir.ui.view">
+        <field name="name">tp.contract.document.tp_demo.form</field>
+        <field name="model">tp.contract.document</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0" duplicate="0" class="o_tp_demo_native">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="project_id" string="Dự án" readonly="1"/>
+                            <field name="contract_id" string="Hợp đồng" readonly="1"/>
+                            <field name="revision_id" string="Phiên bản" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="document_kind" string="Loại tài liệu" readonly="1"/>
+                            <field name="confidentiality" string="Vùng truy cập" readonly="1"/>
+                            <field name="file_name" invisible="1"/>
+                            <field name="file" string="Tệp" widget="binary" filename="file_name" readonly="1"/>
+                        </group>
+                    </group>
+                    <p class="text-muted small">Tài liệu vùng tài chính chỉ đọc và tải được khi có quyền financial.read của dự án; kiểm ở backend cho cả liên kết tải trực tiếp.</p>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_demo_document_search" model="ir.ui.view">
+        <field name="name">tp.contract.document.tp_demo.search</field>
+        <field name="model">tp.contract.document</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Tài liệu"/>
+                <field name="project_id" string="Dự án"/>
+                <field name="contract_id" string="Hợp đồng"/>
+                <filter name="general" string="Chung" domain="[('confidentiality', '=', 'general')]"/>
+                <filter name="financial" string="Tài chính" domain="[('confidentiality', '=', 'financial')]"/>
+                <group>
+                    <filter name="group_project" string="Dự án" context="{'group_by': 'project_id'}"/>
+                    <filter name="group_kind" string="Loại tài liệu" context="{'group_by': 'document_kind'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_demo_documents" model="ir.actions.act_window">
+        <field name="name">Tài liệu hồ sơ</field>
+        <field name="res_model">tp.contract.document</field>
+        <field name="path">tp-demo-documents</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('project_id.tp_code', '=like', 'DEMO-%')]</field>
+        <field name="search_view_id" ref="view_demo_document_search"/>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_demo_document_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_demo_document_form')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_empty_folder">Không có tài liệu bạn được xem.</p>
+        </field>
+    </record>
+</odoo>

@@ -69,6 +69,24 @@ npm.cmd run test:e2e --prefix frontend
 
 Browser tests cần Odoo dev, hai project và ba hợp đồng giả lập của `scripts/dev.ps1 setup`/`upgrade`. Test kiểm trang login riêng, sai credential, MFA handoff, lỗi gateway không lộ chi tiết, responsive/reduced-motion, deep link, quyền khác nhau giữa manager/reader, project 404, URL ID không hợp lệ, search, reload detail, CSRF logout, session hết hạn và mobile overflow; TP Contracts kiểm reader không thấy số tiền/tài liệu tài chính, admin có grant thấy phụ lục thay thế giá trị, BASE đã xác minh nhưng chưa ký/hiệu lực, dòng chưa xác nhận, hợp đồng ngoài scope 404 và màn hình 390px. Credential và kết quả browser nằm trong `.local/`, ngoài Git; không lưu trace, video hoặc password. Riêng `tests/e2e/contract-workflow.spec.ts` mock `/api/v1/**`, không cần Odoo hay database: kiểm body PATCH, CSRF/Idempotency-Key khi thử lại, xung đột version, lý do trả lại bắt buộc và màn hình 390px.
 
+### Kiểm tra live CTR-002a (opt-in, instance cô lập)
+
+`tests/e2e/contract-workflow-live.spec.ts` không chạy trong bộ E2E thường. Đây là kiểm tra opt-in trên instance xác minh riêng, không phải bước của `scripts/dev.ps1 setup`/`upgrade` và không dùng database dev. Instance xác minh đã dừng sau lượt CHG-20261028-020; chỉ khởi động lại khi đã chuẩn bị đúng database/data-dir cô lập.
+
+Thiết lập biến môi trường trong PowerShell rồi chạy:
+
+```powershell
+$env:TP_CTR002A_LIVE = '1'
+$env:TP_CTR002A_RACE = '1' # tùy chọn: kiểm tra hai request cùng version
+$env:VITE_ODOO_DATABASE = 'tp_tanphat_ctr002a_verify'
+$env:TP_ODOO_ORIGIN = 'http://127.0.0.1:18089'
+npm.cmd run test:e2e --prefix frontend -- contract-workflow-live.spec.ts
+```
+
+Thông tin đăng nhập chỉ đọc từ file bị bỏ qua Git `.local/ctr002a-verify/credentials.json`. File có dạng JSON gồm `database`, `origin`, `project_id` và `actors.editor`, `actors.reviewer`, tùy chọn `actors.reader`; mỗi actor có `id`, `name`, `login`, `password`. Không ghi password vào tài liệu, log hoặc fixture đã commit. Spec tự từ chối `tp_tanphat_dev`, kiểm tra database/origin khớp và yêu cầu editor/reviewer khác nhau. Helper seed/config của instance này chỉ nằm ở `.local/`, không phải provisioning dùng chung.
+
+CHG-20261028-020 đã kiểm tra luồng thật draft → edit → submit → return → rework → resubmit với 2 E2E live; kiểm tra race ghi nhận các trường hợp key khác nhau `200 + 409` và cùng key `200 + 200` replay, đồng thời đối chiếu version/audit/outbox/idempotency. Đây là kiểm tra kỹ thuật cho fixture CTR-002a-P1, không mở quyền người thật, pilot, BASE, ký hoặc hiệu lực.
+
 Prototype cũ chạy riêng bằng `npm.cmd run prototype --prefix frontend`, mặc định cổng 4173; cần dừng Vite hoặc đặt `PORT=4174` trước. Đây là fixture để tham khảo UI, chưa phải nghiệp vụ backend đã phê duyệt.
 
 ## Phát hành sau này

@@ -1,0 +1,104 @@
+<odoo>
+    <record id="view_demo_task_kanban" model="ir.ui.view">
+        <field name="name">project.task.tp_demo.kanban</field>
+        <field name="model">project.task</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <kanban create="0" edit="0" delete="0" default_group_by="stage_id" records_draggable="0" quick_create="0"
+                    group_create="0" group_delete="0" group_edit="0" archivable="0" class="o_tp_demo_native">
+                <field name="is_closed"/>
+                <templates>
+                    <t t-name="card">
+                        <field name="project_id" class="text-muted small"/>
+                        <field name="name" class="fw-bold"/>
+                        <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                        <footer class="pt-1">
+                            <field name="date_deadline" widget="remaining_days" invisible="is_closed"/>
+                            <field name="user_ids" widget="many2many_avatar_user" class="ms-auto"/>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+    <record id="view_demo_task_list" model="ir.ui.view">
+        <field name="name">project.task.tp_demo.list</field>
+        <field name="model">project.task</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0" class="o_tp_demo_native">
+                <field name="is_closed" column_invisible="1"/>
+                <field name="name" string="Công việc"/>
+                <field name="project_id" string="Dự án"/>
+                <field name="stage_id" string="Giai đoạn"/>
+                <field name="user_ids" string="Người phụ trách" widget="many2many_avatar_user"/>
+                <field name="date_deadline" string="Hạn" widget="remaining_days" invisible="is_closed"/>
+                <field name="tag_ids" string="Nhóm việc" widget="many2many_tags" options="{'color_field': 'color'}"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_demo_task_form" model="ir.ui.view">
+        <field name="name">project.task.tp_demo.form</field>
+        <field name="model">project.task</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0" duplicate="0" class="o_tp_demo_native">
+                <header>
+                    <field name="stage_id" widget="statusbar" readonly="1"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="project_id" string="Dự án" readonly="1"/>
+                            <field name="user_ids" string="Người phụ trách" widget="many2many_avatar_user" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="date_deadline" string="Hạn" readonly="1"/>
+                            <field name="tag_ids" string="Nhóm việc" widget="many2many_tags" readonly="1"/>
+                        </group>
+                    </group>
+                    <field name="description" readonly="1"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_demo_task_search" model="ir.ui.view">
+        <field name="name">project.task.tp_demo.search</field>
+        <field name="model">project.task</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Công việc"/>
+                <field name="project_id" string="Dự án"/>
+                <field name="user_ids" string="Người phụ trách"/>
+                <filter name="open" string="Đang mở" domain="[('is_closed', '=', False)]"/>
+                <filter name="overdue" string="Quá hạn" domain="[('is_closed', '=', False), ('date_deadline', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter name="unassigned" string="Chưa giao" domain="[('user_ids', '=', False)]"/>
+                <separator/>
+                <filter name="mine" string="Việc của tôi" domain="[('user_ids', 'in', uid)]"/>
+                <group>
+                    <filter name="group_project" string="Dự án" context="{'group_by': 'project_id'}"/>
+                    <filter name="group_stage" string="Giai đoạn" context="{'group_by': 'stage_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_demo_tasks" model="ir.actions.act_window">
+        <field name="name">Công việc</field>
+        <field name="res_model">project.task</field>
+        <field name="path">tp-demo-tasks</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('project_id.tp_managed', '=', True), ('project_id.tp_code', '=like', 'DEMO-%')]</field>
+        <field name="search_view_id" ref="view_demo_task_search"/>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_demo_task_kanban')}),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_demo_task_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_demo_task_form')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_empty_folder">Không có công việc phù hợp bộ lọc.</p>
+        </field>
+    </record>
+</odoo>

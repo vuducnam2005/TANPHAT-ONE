@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tp_web_home.HomeButton">
+        <div t-if="this.homeMenu()" class="o_tp_web_home_systray d-flex align-items-center">
+            <a class="o_nav_entry o_tp_web_home_button"
+               t-att-class="{ 'o_tp_web_home_button_active': this.isActive() }"
+               t-att-href="this.href()"
+               t-att-aria-current="this.isActive() ? 'page' : null"
+               title="Trang chủ"
+               aria-label="Trang chủ"
+               t-on-click="this.onClick">
+                <i class="oi" data-icon="home" aria-hidden="true"/>
+            </a>
+        </div>
+    </t>
+
+</templates>

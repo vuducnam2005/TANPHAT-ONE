@@ -84,18 +84,29 @@ const revisionPath = (contractId: number, revisionId: number) => `/api/v1/contra
 type LoginResult = { requiresVerification: boolean };
 type OdooLoginResponse = {
   result?: { uid?: number | null };
-  error?: { data?: { name?: string } };
+  error?: { data?: { name?: string; arguments?: unknown } };
 };
 
+// Fixed copy (AUTH-002 section 6); server messages are never shown.
+const loginErrorMessages = {
+  credentials: 'Tên đăng nhập hoặc mật khẩu chưa đúng. Vui lòng kiểm tra và thử lại.',
+  cooldown: 'Tạm thời chưa thể đăng nhập vì đã thử sai nhiều lần. Vui lòng chờ ít phút rồi thử lại.',
+  rate_limit: 'Đã thử đăng nhập quá nhiều lần. Vui lòng chờ một lúc rồi thử lại.',
+  connection: 'Chưa kết nối được hệ thống. Vui lòng thử lại sau.',
+} as const;
+
 export class LoginError extends Error {
-  constructor(readonly code: 'credentials' | 'connection' | 'rate_limit') {
-    super(code === 'credentials'
-      ? 'Tên đăng nhập hoặc mật khẩu chưa đúng. Vui lòng kiểm tra và thử lại.'
-      : code === 'rate_limit'
-        ? 'Đã thử đăng nhập quá nhiều lần. Vui lòng chờ một lúc rồi thử lại.'
-        : 'Chưa kết nối được hệ thống. Vui lòng thử lại sau.');
+  constructor(readonly code: keyof typeof loginErrorMessages) {
+    super(loginErrorMessages[code]);
     this.name = 'LoginError';
   }
+}
+
+// A wrong login or password raises AccessDenied with Odoo's untranslated default
+// text; the login cooldown raises it with its own, translatable text. Only the
+// default is matched, so a translated cooldown text still reads as a cooldown.
+function isDefaultAccessDenied(args: unknown) {
+  return Array.isArray(args) && args.length === 1 && args[0] === 'Access Denied';
 }
 
 // Authentication alone uses Odoo's native endpoint. Business data stays on /api/v1.
@@ -123,7 +134,9 @@ async function authenticate(login: string, password: string): Promise<LoginResul
   if (!response.ok) throw new LoginError('connection');
   const body = await readJson<OdooLoginResponse>(response);
   if (body?.error) {
-    if (body.error.data?.name === 'odoo.exceptions.AccessDenied') throw new LoginError('credentials');
+    if (body.error.data?.name === 'odoo.exceptions.AccessDenied') {
+      throw new LoginError(isDefaultAccessDenied(body.error.data.arguments) ? 'credentials' : 'cooldown');
+    }
     throw new LoginError('connection');
   }
   if (body?.result?.uid === null) return { requiresVerification: true };

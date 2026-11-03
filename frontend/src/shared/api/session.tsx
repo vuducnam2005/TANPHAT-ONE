@@ -13,10 +13,19 @@ export function sessionScope(session: SessionBootstrap) {
   return ['v1', session.user.id, session.company.id, session.companies.map((company) => company.id).sort((a, b) => a - b).join(',')];
 }
 
-// Only used when a user explicitly chooses Odoo's MFA/passkey flow.
-export function loginUrl() {
-  const redirect = window.location.pathname.startsWith('/work/')
-    ? window.location.pathname + window.location.search
+function workspaceRedirect() {
+  // Build from the browser's own location, never a query-supplied destination.
+  return window.location.pathname.startsWith('/work/')
+    ? window.location.pathname + window.location.search + window.location.hash
     : '/work/';
-  return `/web/login?${new URLSearchParams({ redirect })}`;
+}
+
+// Explicit native sign-in/passkey entry, before Odoo has authenticated a password.
+export function loginUrl() {
+  return `/web/login?${new URLSearchParams({ redirect: workspaceRedirect() })}`;
+}
+
+// Only after native authenticate returned uid: null and kept pre_uid in its session.
+export function totpLoginUrl() {
+  return `/web/login/totp?${new URLSearchParams({ redirect: workspaceRedirect() })}`;
 }

@@ -1,0 +1,414 @@
+.o_tp_demo_dashboard {
+    .o_tp_demo_kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .o_tp_demo_kpi {
+        --tp-kpi-accent: var(--tp-accent);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 3px;
+        text-align: left;
+        background: var(--tp-surface);
+        border: 1px solid var(--tp-line);
+        border-radius: var(--tp-radius-lg);
+        box-shadow: var(--tp-shadow);
+        padding: 18px 18px 16px;
+        transition: transform var(--tp-motion) ease, box-shadow var(--tp-motion) ease, border-color var(--tp-motion) ease;
+
+        // Accent rail on the left and a soft glow in the corner.
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 4px;
+            background: var(--tp-kpi-accent);
+        }
+
+        &::after {
+            content: "";
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: var(--tp-kpi-accent);
+            opacity: 0.07;
+            transition: opacity var(--tp-motion) ease;
+        }
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--tp-shadow-hover);
+            border-color: transparent;
+
+            &::after {
+                opacity: 0.13;
+            }
+
+            .o_tp_demo_kpi_label {
+                color: var(--tp-accent);
+            }
+        }
+    }
+
+    .o_tp_demo_kpi_attention {
+        --tp-kpi-accent: var(--tp-amber);
+
+        .o_tp_demo_kpi_value {
+            color: var(--tp-amber-text);
+        }
+    }
+
+    .o_tp_demo_kpi_value {
+        font-family: var(--tp-display);
+        font-weight: 600;
+        font-size: 2.6rem;
+        line-height: 1.05;
+        font-variant-numeric: tabular-nums;
+        color: var(--tp-ink);
+    }
+
+    .o_tp_demo_kpi_label {
+        font-weight: 600;
+        font-size: 0.88rem;
+        transition: color var(--tp-motion) ease;
+    }
+
+    .o_tp_demo_kpi_hint {
+        font-size: 0.75rem;
+        color: var(--tp-steel);
+    }
+
+    // ------------------------------------------------------------ project chains
+
+    .o_tp_demo_chains {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .o_tp_demo_chain {
+        padding: 14px 16px;
+        margin-bottom: 10px;
+        background: var(--tp-paper);
+        border-radius: var(--tp-radius);
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    .o_tp_demo_chain_head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 4px 8px;
+        margin-bottom: 8px;
+    }
+
+    .o_tp_demo_chain_name {
+        font-weight: 600;
+    }
+
+    .o_tp_demo_chain_nodes {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        row-gap: 8px;
+    }
+
+    .o_tp_demo_chain_link {
+        width: 22px;
+        border-top: 2px solid rgba(23, 50, 79, 0.45);
+        transform-origin: left center;
+        animation: o_tp_demo_draw 300ms ease-out both;
+    }
+
+    .o_tp_demo_chain_link.o_tp_demo_dashed {
+        border-top-color: var(--tp-steel);
+    }
+
+    .o_tp_demo_node {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 6px;
+        background: var(--tp-surface);
+        border: 1px solid rgba(23, 50, 79, 0.25);
+        border-radius: 999px;
+        padding: 5px 14px;
+        font-size: 0.85rem;
+        box-shadow: 0 1px 2px rgba(16, 32, 51, 0.06);
+        transition: background-color var(--tp-motion) ease, border-color var(--tp-motion) ease, transform var(--tp-motion) ease;
+
+        &:hover {
+            border-color: var(--tp-accent);
+            color: var(--tp-accent);
+            transform: translateY(-1px);
+        }
+    }
+
+    .o_tp_demo_node_project {
+        background: linear-gradient(120deg, var(--tp-ink), var(--tp-ink-2));
+        border-color: transparent;
+        color: #fff;
+        font-weight: 600;
+
+        &:hover {
+            color: #fff;
+            border-color: transparent;
+            background: linear-gradient(120deg, var(--tp-ink-2), var(--tp-accent));
+        }
+    }
+
+    .o_tp_demo_node_illustrative {
+        border-style: dashed;
+        border-color: var(--tp-steel);
+        color: var(--tp-steel);
+    }
+
+    .o_tp_demo_node_count {
+        font-family: var(--tp-display);
+        font-weight: 600;
+        font-size: 1.05rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    // ------------------------------------------------------------ attention
+
+    .o_tp_demo_attention {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .o_tp_demo_attention_item {
+        display: flex;
+        align-items: stretch;
+        gap: 12px;
+        width: 100%;
+        text-align: left;
+        background: var(--tp-surface);
+        border: 1px solid var(--tp-line);
+        border-radius: var(--tp-radius);
+        padding: 10px 12px;
+        transition: border-color var(--tp-motion) ease, box-shadow var(--tp-motion) ease, transform var(--tp-motion) ease;
+
+        &:hover {
+            border-color: transparent;
+            box-shadow: var(--tp-shadow-hover);
+            transform: translateX(2px);
+        }
+    }
+
+    .o_tp_demo_attention_mark {
+        flex: none;
+        width: 4px;
+        border-radius: 2px;
+        background: var(--tp-steel);
+    }
+
+    .o_tp_demo_sev_warning {
+        background: linear-gradient(90deg, rgba(217, 154, 30, 0.07), transparent 45%), var(--tp-surface);
+
+        .o_tp_demo_attention_mark {
+            background: var(--tp-amber);
+        }
+    }
+
+    .o_tp_demo_attention_body {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .o_tp_demo_attention_title {
+        font-weight: 600;
+    }
+
+    // ------------------------------------------------------------ module map
+
+    .o_tp_demo_lanes {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .o_tp_demo_lane {
+        display: grid;
+        grid-template-columns: 184px minmax(0, 1fr);
+        gap: 14px;
+        align-items: start;
+        padding-top: 14px;
+        border-top: 1px solid var(--tp-line);
+
+        &:first-child {
+            border-top: 0;
+            padding-top: 0;
+        }
+    }
+
+    .o_tp_demo_lane_label {
+        justify-self: start;
+        font-family: var(--tp-display);
+        font-weight: 500;
+        font-size: 0.8rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        line-height: 1.35;
+        color: var(--tp-ink);
+        background: var(--tp-ink-soft);
+        border-radius: var(--tp-radius);
+        padding: 4px 10px;
+        margin: 8px 0 0;
+    }
+
+    .o_tp_demo_lane_modules {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 10px;
+    }
+
+    .o_tp_demo_module {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 3px;
+        text-align: left;
+        background: var(--tp-surface);
+        border: 1px solid var(--tp-line);
+        border-left: 4px solid var(--tp-ink);
+        border-radius: var(--tp-radius);
+        padding: 10px 12px;
+        transition: border-color var(--tp-motion) ease, box-shadow var(--tp-motion) ease, transform var(--tp-motion) ease;
+
+        &:hover:not(:disabled) {
+            border-color: var(--tp-line);
+            border-left-color: var(--tp-accent);
+            box-shadow: var(--tp-shadow-hover);
+            transform: translateY(-2px);
+        }
+    }
+
+    .o_tp_demo_nature_illustrative {
+        border-style: dashed;
+        border-color: rgba(90, 106, 123, 0.5);
+        border-left-style: dashed;
+        border-left-color: var(--tp-amber);
+        background:
+            repeating-linear-gradient(-45deg, rgba(217, 154, 30, 0.04) 0 8px, transparent 8px 16px),
+            var(--tp-surface);
+    }
+
+    .o_tp_demo_nature_mixed {
+        border-bottom-style: dashed;
+        border-bottom-color: var(--tp-steel);
+    }
+
+    .o_tp_demo_module_locked {
+        opacity: 0.55;
+        cursor: not-allowed;
+        border-left-color: var(--tp-line);
+    }
+
+    .o_tp_demo_module_name {
+        font-weight: 600;
+    }
+
+    .o_tp_demo_module_purpose {
+        font-size: 0.8rem;
+        color: var(--tp-steel);
+    }
+
+    .o_tp_demo_module_meta {
+        font-size: 0.7rem;
+        color: var(--tp-steel);
+        margin-top: 2px;
+    }
+
+    .o_tp_demo_nature_illustrative .o_tp_demo_module_meta {
+        color: var(--tp-amber-text);
+    }
+
+    .o_tp_demo_nature_real {
+        border-left-color: var(--tp-green);
+
+        .o_tp_demo_module_meta {
+            color: var(--tp-green);
+        }
+    }
+}
+
+// Cards rise into place once per load; reduced motion turns this off in demo.scss.
+// Fill "backwards" only, so the finished animation does not pin transform and
+// block the hover lift.
+.o_tp_demo_dashboard :is(.o_tp_demo_kpi, .o_tp_demo_panel) {
+    animation: o_tp_demo_rise 320ms ease-out backwards;
+}
+
+.o_tp_demo_dashboard .o_tp_demo_kpi {
+    @for $i from 2 through 6 {
+        &:nth-child(#{$i}) {
+            animation-delay: #{($i - 1) * 40}ms;
+        }
+    }
+}
+
+@keyframes o_tp_demo_rise {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes o_tp_demo_draw {
+    from {
+        transform: scaleX(0);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
+@media (max-width: 767.98px) {
+    .o_tp_demo_dashboard .o_tp_demo_lane {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 6px;
+    }
+
+    .o_tp_demo_dashboard .o_tp_demo_lane_label {
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .o_tp_demo_dashboard {
+        .o_tp_demo_kpis {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .o_tp_demo_kpi_value {
+            font-size: 1.75rem;
+        }
+
+        .o_tp_demo_kpi_hint {
+            display: none;
+        }
+    }
+}

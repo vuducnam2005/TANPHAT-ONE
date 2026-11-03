@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tp_web_home.HomeIcon">
+        <span class="o_tp_web_home_icon" aria-hidden="true">
+            <img t-if="tile.icon.type === 'image'"
+                 class="o_tp_web_home_icon_img"
+                 t-att-src="tile.icon.src"
+                 alt=""
+                 t-on-error="() => this.onIconError(tile)"/>
+            <span t-elif="tile.icon.type === 'font'"
+                  class="o_tp_web_home_icon_font"
+                  t-attf-style="background-color: {{tile.icon.background}}; color: {{tile.icon.color}};">
+                <i class="oi" t-att-data-icon="tile.icon.icon"/>
+            </span>
+            <span t-else="" class="o_tp_web_home_icon_monogram" t-out="tile.icon.text"/>
+        </span>
+    </t>
+
+    <t t-name="tp_web_home.HomeLauncher">
+        <div class="o_tp_web_home" t-att-class="this.props.className">
+            <div class="o_tp_web_home_inner">
+                <header class="o_tp_web_home_header">
+                    <h1 class="o_tp_web_home_brand">TANPHAT ONE</h1>
+                    <p class="o_tp_web_home_tagline">Không gian làm việc</p>
+                    <div class="o_tp_web_home_search" role="search">
+                        <i class="oi o_tp_web_home_search_icon" data-icon="search" aria-hidden="true"/>
+                        <input type="text"
+                               class="o_tp_web_home_search_input"
+                               placeholder="Tìm ứng dụng…"
+                               aria-label="Tìm ứng dụng"
+                               autocomplete="off"
+                               spellcheck="false"
+                               t-att-value="this.query()"
+                               t-ref="this.searchInput"
+                               t-on-input="this.onSearchInput"
+                               t-on-keydown="this.onSearchKeydown"/>
+                        <button t-if="this.query()"
+                                type="button"
+                                class="o_tp_web_home_search_clear"
+                                title="Xóa từ khóa"
+                                aria-label="Xóa từ khóa tìm"
+                                t-on-click="this.clearSearch">
+                            <i class="oi" data-icon="close" aria-hidden="true"/>
+                        </button>
+                    </div>
+                </header>
+
+                <p class="visually-hidden" role="status" aria-live="polite" t-out="this.resultMessage()"/>
+
+                <t t-foreach="this.groups()" t-as="group" t-key="group.key">
+                    <section class="o_tp_web_home_group" t-att-aria-label="group.label">
+                        <h2 t-if="this.groups().length > 1"
+                            class="o_tp_web_home_group_title"
+                            t-out="group.label"/>
+                        <ul class="o_tp_web_home_grid">
+                            <li t-foreach="group.tiles" t-as="tile" t-key="tile.key" class="o_tp_web_home_cell">
+                                <a class="o_tp_web_home_tile"
+                                   t-att-href="tile.href"
+                                   t-att-title="tile.description or null"
+                                   t-att-data-menu-xmlid="tile.xmlid"
+                                   t-on-click="(ev) => this.onTileClick(ev, tile)">
+                                    <t t-call="tp_web_home.HomeIcon"/>
+                                    <span class="o_tp_web_home_label" t-out="tile.label"/>
+                                    <span t-if="tile.hint" class="o_tp_web_home_hint" t-out="tile.hint"/>
+                                </a>
+                            </li>
+                        </ul>
+                    </section>
+                </t>
+
+                <div t-if="!this.visibleTiles().length" class="o_tp_web_home_empty">
+                    <t t-if="this.query().trim()">
+                        <p class="o_tp_web_home_empty_title">Không tìm thấy ứng dụng phù hợp</p>
+                        <p class="o_tp_web_home_empty_text">Thử từ khóa khác, viết có hoặc không dấu đều được.</p>
+                        <button type="button" class="btn btn-secondary" t-on-click="this.clearSearch">Xóa từ khóa</button>
+                    </t>
+                    <p t-else="" class="o_tp_web_home_empty_title">Tài khoản này chưa được cấp ứng dụng nào.</p>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

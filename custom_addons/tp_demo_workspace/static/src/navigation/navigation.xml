@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-inherit="web.NavBar" t-inherit-mode="extension">
+        <xpath expr="//header" position="attributes">
+            <attribute name="t-att-class">{'o_tp_demo_navbar': this.currentApp?.xmlid === 'tp_demo_workspace.menu_demo_root'}</attribute>
+        </xpath>
+        <xpath expr="//DropdownItem[@t-out='this.currentApp.name']" position="attributes">
+            <attribute name="t-if">!this.ui.isSmall and this.currentApp and this.currentApp.xmlid !== 'tp_demo_workspace.menu_demo_root'</attribute>
+        </xpath>
+        <xpath expr="//t[@t-call='web.NavBar.SectionsMenu']" position="attributes">
+            <attribute name="t-if">this.currentAppSections.length and this.currentApp?.xmlid !== 'tp_demo_workspace.menu_demo_root'</attribute>
+        </xpath>
+        <xpath expr="//div[contains(@class, 'o_navbar_breadcrumbs')]" position="before">
+            <t t-if="this.currentApp?.xmlid === 'tp_demo_workspace.menu_demo_root'">
+                <a class="o_tp_demo_nav_brand" t-att-href="this.getMenuItemHref(this.currentApp)" t-on-click.prevent="() => this.onNavBarDropdownItemSelection(this.currentApp)">
+                    <span>TANPHAT ONE</span><span class="o_tp_demo_nav_badge">Demo</span>
+                </a>
+                <DemoCatalogButton/>
+            </t>
+        </xpath>
+        <xpath expr="//nav" position="after">
+            <DemoNavigation t-if="this.currentApp?.xmlid === 'tp_demo_workspace.menu_demo_root'"/>
+        </xpath>
+    </t>
+
+    <!-- On phones the native application button remains the application
+         switcher. The permission-filtered catalog is the demo navigation. -->
+    <t t-inherit="web.NavBar.AppsMenu.Sidebar" t-inherit-mode="extension">
+        <xpath expr="//ul/t[@t-if='!this.state.isAllAppsMenuOpened']" position="attributes">
+            <attribute name="t-if">!this.state.isAllAppsMenuOpened and this.currentApp?.xmlid !== 'tp_demo_workspace.menu_demo_root'</attribute>
+        </xpath>
+    </t>
+
+    <t t-name="tp_demo_workspace.CatalogButton">
+        <button type="button" class="o_tp_demo_catalog_button" t-on-click="this.open" aria-haspopup="dialog">
+            <i class="oi" data-icon="apps" aria-hidden="true"/><span class="o_tp_demo_catalog_long">Tất cả phân hệ</span><span class="o_tp_demo_catalog_short">Phân hệ</span>
+        </button>
+    </t>
+
+    <t t-name="tp_demo_workspace.Navigation">
+        <nav class="o_tp_demo_navigation" aria-label="Phân hệ TANPHAT ONE">
+            <t t-foreach="this.catalog()" t-as="group" t-key="group.key">
+                <t t-if="group.key === 'overview' or group.key === 'request'">
+                    <t t-set="leaf" t-value="group.modules[0].leaves[0]"/>
+                    <a class="o_tp_demo_group" t-att-class="{'o_tp_demo_group_active': this.active()?.group === group.key}"
+                       t-att-href="this.href(leaf.menu)" t-att-aria-current="this.active()?.group === group.key ? 'page' : undefined"
+                       t-att-data-menu-xmlid="leaf.menu.xmlid" t-on-click.prevent="() => this.select(leaf.menu)"><t t-out="group.label"/></a>
+                </t>
+                <Dropdown t-else="" menuClass="'o_tp_demo_nav_dropdown'">
+                    <button type="button" class="o_tp_demo_group" t-att-class="{'o_tp_demo_group_active': this.active()?.group === group.key}"
+                            t-att-title="group.modules.map(item => item.label).join(', ')"><t t-out="group.label"/><i class="oi" data-icon="expand_more" aria-hidden="true"/></button>
+                    <t t-set-slot="content">
+                        <div class="o_tp_demo_dropdown_title" t-out="group.label"/>
+                        <t t-foreach="group.modules" t-as="item" t-key="item.key">
+                            <div class="o_tp_demo_dropdown_module">
+                                <span t-out="item.label"/><small t-out="item.name"/>
+                                <span t-if="item.illustrative" class="o_tp_demo_nav_note">Minh họa</span>
+                            </div>
+                            <p class="o_tp_demo_dropdown_description" t-out="item.description"/>
+                            <DropdownItem t-foreach="item.leaves" t-as="leaf" t-key="leaf.menu.xmlid" onSelected="() => this.select(leaf.menu)"
+                                          class="{'o_tp_demo_leaf_active': this.active()?.menu.id === leaf.menu.id}"
+                                          attrs="{href: this.href(leaf.menu), 'data-menu-xmlid': leaf.menu.xmlid, 'aria-current': this.active()?.menu.id === leaf.menu.id ? 'page' : undefined}">
+                                <span t-out="leaf.label"/><small t-if="leaf.note" class="o_tp_demo_leaf_note" t-out="leaf.note"/>
+                            </DropdownItem>
+                        </t>
+                    </t>
+                </Dropdown>
+            </t>
+        </nav>
+    </t>
+
+    <t t-name="tp_demo_workspace.ModuleDialog">
+        <Dialog title="'Tất cả phân hệ'" size="'xl'" footer="false" contentClass="'o_tp_demo_module_dialog'" bodyClass="'o_tp_demo_module_body'">
+            <div class="o_tp_demo_catalog_search" role="search" aria-label="Tìm phân hệ và màn hình">
+                <label for="tp_demo_menu_query">Bạn muốn làm gì?</label>
+                <div class="o_tp_demo_catalog_searchbox">
+                    <i class="oi" data-icon="search" aria-hidden="true"/>
+                    <input id="tp_demo_menu_query" type="search" t-ref="this.search" t-att-value="this.state.query" t-on-input="(event) => this.updateQuery(event.target.value)" placeholder="Tìm phân hệ, màn hình…" autocomplete="off"/>
+                    <button t-if="this.state.query" type="button" class="btn" t-on-click="this.clearSearch" aria-label="Xóa tìm kiếm"><i class="oi" data-icon="close" aria-hidden="true"/></button>
+                </div>
+                <p>Chỉ tìm tên và mô tả màn hình bạn được phép mở.</p>
+            </div>
+            <p t-if="!this.results().length" class="o_tp_demo_catalog_empty" role="status">Không có màn hình phù hợp. Thử “dự án”, “hợp đồng” hoặc xóa tìm kiếm để xem các phân hệ được phép mở.</p>
+            <div class="o_tp_demo_catalog_groups">
+                <section t-foreach="this.results()" t-as="group" t-key="group.key" class="o_tp_demo_catalog_group" t-att-data-group="group.key">
+                    <h3 t-out="group.label"/>
+                    <article t-foreach="group.modules" t-as="item" t-key="item.key" class="o_tp_demo_catalog_module" t-att-class="{'o_tp_demo_catalog_active': this.active()?.module === item.key}" t-att-data-module="item.key">
+                        <div class="o_tp_demo_module_heading"><i class="oi" t-att-data-icon="item.icon" aria-hidden="true"/><div><h4 t-out="item.label"/><span t-out="item.name"/></div><span t-if="item.illustrative" class="o_tp_demo_nav_note">Minh họa</span></div>
+                        <p t-out="item.description"/>
+                        <ul>
+                            <li t-foreach="item.leaves" t-as="leaf" t-key="leaf.menu.xmlid">
+                                <button type="button" t-att-data-menu-xmlid="leaf.menu.xmlid" t-on-click="() => this.select(leaf.menu)" t-att-aria-current="this.active()?.menu.id === leaf.menu.id ? 'page' : undefined">
+                                    <span t-out="leaf.label"/><i class="oi" data-icon="chevron_forward" aria-hidden="true"/>
+                                </button>
+                                <small t-if="leaf.note" t-out="leaf.note"/>
+                            </li>
+                        </ul>
+                    </article>
+                </section>
+            </div>
+        </Dialog>
+    </t>
+</templates>

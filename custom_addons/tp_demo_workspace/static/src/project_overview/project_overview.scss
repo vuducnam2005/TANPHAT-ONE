@@ -1,0 +1,119 @@
+.o_tp_demo_overview {
+    .o_tp_demo_project_picker {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .form-select {
+            min-width: 280px;
+        }
+    }
+
+    // Colours, padding and radius come from the shared blueprint header in demo.scss.
+    .o_tp_demo_project_head {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 12px 24px;
+        margin-bottom: 20px;
+    }
+
+    .o_tp_demo_grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 20px;
+        align-items: start;
+    }
+
+    .o_tp_demo_span_2 {
+        grid-column: 1 / -1;
+    }
+
+    .o_tp_demo_stagebar {
+        display: flex;
+        height: 12px;
+        gap: 3px;
+        margin-bottom: 10px;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .o_tp_demo_stagebar_seg {
+        transition: width var(--tp-motion) ease;
+    }
+
+    .o_tp_demo_stagelegend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 16px;
+        list-style: none;
+        margin: 0 0 8px;
+        padding: 0;
+        font-size: 0.8rem;
+        color: var(--tp-steel);
+
+        li {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+    }
+
+    .o_tp_demo_swatch {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .o_tp_demo_seg_0 {
+        background: #9aa6b2;
+    }
+
+    .o_tp_demo_seg_1 {
+        background: var(--tp-ink);
+    }
+
+    .o_tp_demo_seg_2 {
+        background: var(--tp-amber);
+    }
+
+    .o_tp_demo_seg_3 {
+        background: var(--tp-green);
+    }
+
+    .o_tp_demo_seg_4,
+    .o_tp_demo_seg_5 {
+        background: var(--tp-steel);
+    }
+
+    .o_tp_demo_zone {
+        font-weight: 600;
+    }
+
+    .o_tp_demo_zone_financial {
+        color: var(--tp-amber-text);
+    }
+
+    .o_tp_demo_zone_general {
+        color: var(--tp-green);
+    }
+}
+
+@media (max-width: 991.98px) {
+    .o_tp_demo_overview .o_tp_demo_grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .o_tp_demo_overview .o_tp_demo_project_picker {
+        width: 100%;
+        flex-wrap: wrap;
+
+        .form-select {
+            min-width: 0;
+            width: 100%;
+        }
+    }
+}

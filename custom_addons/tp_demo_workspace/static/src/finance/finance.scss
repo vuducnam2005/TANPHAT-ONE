@@ -1,0 +1,40 @@
+.o_tp_demo_finance {
+    .o_tp_demo_fintable {
+        // Same column grid in every project block so amounts line up.
+        table-layout: fixed;
+        min-width: 860px;
+
+        .o_tp_demo_fincol_contract { width: 34%; }
+        .o_tp_demo_fincol_revision { width: 14%; }
+        .o_tp_demo_fincol_value { width: 20%; }
+        .o_tp_demo_fincol_illustrative { width: 16%; }
+
+        .o_tp_demo_col_illustrative {
+            background: var(--tp-amber-soft);
+            border-left: 1px dashed var(--tp-amber);
+            color: var(--tp-amber-text);
+        }
+
+        thead .o_tp_demo_col_illustrative {
+            color: var(--tp-amber-text);
+        }
+
+        th .o_tp_demo_tag {
+            margin-left: 4px;
+        }
+    }
+
+    .o_tp_demo_locked {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 12px 14px;
+        border: 1px dashed var(--tp-steel);
+        border-radius: var(--tp-radius);
+        background: var(--tp-paper);
+    }
+
+    .o_tp_demo_locked_title {
+        font-weight: 600;
+    }
+}

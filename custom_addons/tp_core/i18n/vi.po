@@ -1,0 +1,95 @@
+# Translation of TANPHAT ONE module tp_core (VI-001, CHG-20261102-009).
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: tp_core
+#: model:ir.model.constraint,message:tp_core.constraint_tp_work_item_code_present
+msgid "A work item code is required."
+msgstr "Mã hạng mục công việc là bắt buộc."
+
+#. module: tp_core
+#: model:ir.model.fields,field_description:tp_core.field_tp_work_item__active
+msgid "Active"
+msgstr "Đang hoạt động"
+
+#. module: tp_core
+#: model:ir.model.fields,field_description:tp_core.field_tp_work_item__code
+msgid "Code"
+msgstr "Mã"
+
+#. module: tp_core
+#: model:ir.model.fields,field_description:tp_core.field_tp_work_item__company_id
+msgid "Company"
+msgstr "Công ty"
+
+#. module: tp_core
+#: model:ir.model.fields,field_description:tp_core.field_tp_work_item__create_uid
+msgid "Created by"
+msgstr "Người tạo"
+
+#. module: tp_core
+#: model:ir.model.fields,field_description:tp_core.field_tp_work_item__create_date
+msgid "Created on"
+msgstr "Ngày tạo"
+
+#. module: tp_core
+#: model:ir.model.fields,field_description:tp_core.field_tp_work_item__display_name
+msgid "Display Name"
+msgstr "Tên hiển thị"
+
+#. module: tp_core
+#: model:ir.model.fields,field_description:tp_core.field_tp_work_item__id
+msgid "ID"
+msgstr "ID"
+
+#. module: tp_core
+#: model:ir.model.fields,field_description:tp_core.field_tp_work_item__write_uid
+msgid "Last Updated by"
+msgstr "Người cập nhật cuối"
+
+#. module: tp_core
+#: model:ir.model.fields,field_description:tp_core.field_tp_work_item__write_date
+msgid "Last Updated on"
+msgstr "Cập nhật lần cuối"
+
+#. module: tp_core
+#: model:ir.model.fields,field_description:tp_core.field_tp_work_item__name
+msgid "Name"
+msgstr "Tên"
+
+#. module: tp_core
+#: model:res.groups.privilege,placeholder:tp_core.privilege_platform
+msgid "No"
+msgstr "Không"
+
+#. module: tp_core
+#: model:res.groups,name:tp_core.group_manager
+msgid "Platform Manager"
+msgstr "Quản trị nền tảng"
+
+#. module: tp_core
+#: model:res.groups,name:tp_core.group_user
+msgid "Project Reader"
+msgstr "Người xem dự án"
+
+#. module: tp_core
+#: model:ir.model,name:tp_core.model_tp_work_item
+msgid "Tan Phat Work Item Catalog"
+msgstr "Danh mục công việc Tân Phát"
+
+#. module: tp_core
+#: model:ir.model.constraint,message:tp_core.constraint_tp_work_item_company_code_unique
+msgid "The work item code must be unique within its company."
+msgstr "Mã hạng mục công việc phải là duy nhất trong công ty."
+
+#. module: tp_core
+#: model:ir.actions.act_window,name:tp_core.action_work_items
+#: model:ir.ui.menu,name:tp_core.menu_work_items
+msgid "Work Item Catalog"
+msgstr "Danh mục công việc"

@@ -17,7 +17,13 @@ ROOT = Path(__file__).resolve().parents[1]
 LOCAL = ROOT / '.local'
 PGDATA = LOCAL / 'postgres' / 'data'
 CONFIG = LOCAL / 'odoo.conf'
-MODULES = 'tp_core,tp_organization,tp_project,tp_contract,tp_api,tp_planning_api'
+# Standard Odoo modules from addons/ (CHG-20261029-041, -043). On the VN dev company `account` auto-installs l10n_vn and
+# its chart; a fresh setup installs before seed_dev sets VN, so it gets the generic chart. hr_timesheet links every
+# project to its own analytic account and adds an "Internal" project (not tp_managed). No Request/Bid/purchase.
+STANDARD_MODULES = 'crm,account,hr_timesheet,hr_expense,project_hr_expense'
+# TANPHAT ONE addons from custom_addons/. tp_web_login stays out until it is accepted for dev.
+CUSTOM_MODULES = 'tp_core,tp_organization,tp_project,tp_contract,tp_api,tp_planning_api'
+MODULES = f'{STANDARD_MODULES},{CUSTOM_MODULES}'
 DEV_DB = 'tp_tanphat_dev'
 TEST_DB = 'tp_tanphat_test'
 PG_PORT = 55432

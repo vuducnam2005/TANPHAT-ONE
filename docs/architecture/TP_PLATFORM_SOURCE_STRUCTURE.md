@@ -2,11 +2,13 @@
 
 Ngày thiết kế và triển khai nền: 28/10/2026, Asia/Saigon. Tài liệu ghi ranh giới kiến trúc và lộ trình; các module nghiệp vụ tương lai được phân biệt với nền đã chạy.
 
-**Trạng thái hiện tại:** đã có 5 addon nền, database dev/test, API đọc dự án và frontend React/TypeScript/Vite tại `/work/`; CTR-001 đã thêm TP Contracts read slice cho hợp đồng/revision/phạm vi/BASE reference/tài liệu với grant tiền theo project. Dashboard cũ nằm trong `frontend/prototype/`. Đã kiểm thử login native, danh sách/chi tiết theo quyền, logout CSRF và session hết hạn qua trình duyệt. Xem [hướng dẫn chạy nền](../../ops/runbooks/LOCAL_DEVELOPMENT.md), [thiết kế database](TP_DATABASE_DESIGN.md) và [bộ thiết kế BIZ-002](TP_BIZ002_DESIGN_PACKAGE.md). CTR-002a (chỉ test, DEC-020) thêm workflow nháp hợp đồng: tạo/sửa draft, gửi rà soát, trả lại, mở lại sửa. Action BASE/ký/hiệu lực, nghiệm thu, import dữ liệu thật và triển khai production vẫn là giai đoạn sau.
+**Trạng thái hiện tại:** đã có addon nền, database dev/test, API đọc dự án và frontend React/TypeScript/Vite tại `/work/`; CTR-001 có TP Contracts read slice; CTR-002a/2a.1 có draft → submit → return → rework → resubmit và technical acceptance trên test fixture. Dashboard cũ nằm trong `frontend/prototype/`. Đã kiểm thử login native, scope, logout CSRF, session hết hạn, validation, self-review, live workflow và race/replay. Xem [hướng dẫn chạy nền](../../ops/runbooks/LOCAL_DEVELOPMENT.md), [thiết kế database](TP_DATABASE_DESIGN.md), [bộ thiết kế BIZ-002](TP_BIZ002_DESIGN_PACKAGE.md) và [kế hoạch điều phối code](TP_CODE_EXECUTION_MASTER_PLAN.md). Action BASE/ký/hiệu lực, nghiệm thu, import dữ liệu thật và production vẫn là giai đoạn sau.
 
 ## 1. Hướng đã xác nhận và kiến trúc đề xuất
 
 Người dùng đã xác nhận dùng module Odoo làm backend và **một web frontend độc lập gọi API Odoo**. Thiết kế đề xuất tổ chức backend dạng modular monolith, frontend React/TypeScript/Vite và API nghiệp vụ mỏng trong Odoo. Các tên addon, model và giai đoạn dưới đây là thiết kế đề xuất, chưa phải triển khai có sẵn. Phương án đưa frontend chính vào OWL client action trong các tài liệu dashboard cũ được giữ lại như lịch sử/prototype, không còn là hướng nền tảng.
+
+Theo nguyên tắc đã chốt tại DEC-023, frontend là một ứng dụng chung với common shell; mỗi phòng ban có workspace, menu, dashboard, trường dữ liệu và nút thao tác khác nhau theo vai trò và quyền. Danh mục cụ thể, cách tổ chức route dùng chung bản ghi hay DTO `allowed_actions` là hướng thiết kế đề xuất, phải đặc tả theo từng domain và owner. Backend Odoo/API vẫn là nơi enforce quyền theo các quyết định security hiện hành. Không tạo frontend hoặc addon lặp lại theo từng phòng ban chỉ vì trải nghiệm hiển thị khác nhau.
 
 ```text
 Browser
@@ -86,7 +88,7 @@ Frontend hiện tại là app React/TypeScript/Vite trong `frontend/src/`, còn 
 | Giao khoán nội bộ | không dùng sale/purchase để giả lập | `tp_allocation` |
 | Sản lượng/nghiệm thu/thanh toán dự án | native accounting chỉ bao phủ phần kế toán | `tp_settlement`, sau đó link bằng bridge |
 
-Phân module theo **nghiệp vụ và nguồn dữ liệu**, không tạo một module riêng cho mỗi phòng ban. Phòng ban được biểu diễn bằng workspace, menu, role và phạm vi dữ liệu; các feature dự án/hợp đồng/nghiệm thu có thể được nhiều phòng dùng với quyền khác nhau.
+Phân module theo **nghiệp vụ và nguồn dữ liệu**, không tạo một module riêng cho mỗi phòng ban. Phòng ban được biểu diễn bằng workspace, menu, role và phạm vi dữ liệu; các feature dự án/hợp đồng/nghiệm thu có thể được nhiều phòng dùng với quyền khác nhau. Cấu hình workspace không thay thế ma trận capability × scope × state ở backend.
 
 ## 4. Ranh giới addon backend
 
@@ -324,3 +326,7 @@ Thiết kế được đối chiếu với source hiện tại, không phải k�
 - [.gitignore](../../.gitignore): có exception cho tooling frontend; secrets/runtime không được đưa vào Git.
 
 Có source `account`, `analytic`, `l10n_vn`, `crm`, `project`, `sale`, `purchase`, `hr`, `mail`, `portal`, `auth_oauth` không chứng minh chúng đã cài hoặc đáp ứng đủ kế toán/phê duyệt/hóa đơn điện tử Việt Nam. Edition, license, module cài thực tế và tích hợp liên quan phải được kiểm tra trước khi chọn phạm vi production. Các mô tả trong tài liệu nguồn là bằng chứng nghiệp vụ để phân tích, không phải lệnh triển khai tự động.
+
+## 12. Integration/security addon NATIVE-DATA-003
+
+CHG-20261102-014: `custom_addons/tp_crm_project_bridge` giữ FK optional `crm.lead.tp_project_id` với company/customer integrity và CRM native giao project scope; `tp_timesheet_scope` áp scope managed project lên analytic-line CRUD và create/write target lookup; `tp_dashboard_privacy` chặn public snapshot/token theo cờ nội bộ của dashboard. Ba addon đã clone-test rồi cài dev, không sửa upstream/React/OpenAPI hoặc managed-task write policy. Tooling có ownership/journal/private snapshot tại `scripts/native_data003*`; [runbook](../demo/NATIVE_DATA_003_CONNECTED_OPERATIONS.md) và [TASK-001](RFC_TASK_001_MANAGED_TASK_PROGRESS.md) giữ ranh giới partial/gate nghiệp vụ. Tên kỹ thuật mới không tạo app/menu hoặc phân hệ rỗng.

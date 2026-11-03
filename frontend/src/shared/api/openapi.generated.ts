@@ -133,7 +133,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description `draft` → `in_review`. Needs `contract.submit` and `financial.read`. Records an immutable submission snapshot; amounts go to the financial part only. A resubmission after a return requires `fix_summary`. The reviewer must hold `contract.review_commercial` and `financial.read` in the contract scope with an active assignment (422 `reviewer_ineligible`). Lines missing, unconfirmed amounts or mixed tax bases return 422 `submission_incomplete` with `details.problems`. */
+        /** @description `draft` → `in_review`. Needs `contract.submit` and `financial.read`. Records an immutable submission snapshot; amounts go to the financial part only. A resubmission after a return requires `fix_summary`. The reviewer must hold `contract.review_commercial` and `financial.read` in the contract scope with an active assignment (422 `reviewer_ineligible`). The selected reviewer must differ from the submitting actor; self-review is rejected with 422 `reviewer_ineligible` and `details.field=reviewer_id`. Lines missing, unconfirmed amounts or mixed tax bases return 422 `submission_incomplete` with `details.problems`. */
         post: operations["submitContractRevision"];
         delete?: never;
         options?: never;
@@ -150,7 +150,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description `in_review` → `returned` with a required reason. Only the reviewer assigned to the pending submission, still holding `contract.review_commercial` and `financial.read`, may return it (403 `not_assigned_reviewer`). Issue `scope_key` values must exist in the submitted snapshot. */
+        /** @description `in_review` → `returned` with a required reason. Only the reviewer assigned to the pending submission, still holding `contract.review_commercial` and `financial.read`, may return it (403 `not_assigned_reviewer`). A legacy pending submission whose reviewer equals its submitter is rejected with 422 `reviewer_ineligible`; it is not reassigned by this slice. Issue `scope_key` values must exist in the submitted snapshot. */
         post: operations["returnContractRevision"];
         delete?: never;
         options?: never;
@@ -302,7 +302,7 @@ export interface components {
             payload_sha256: string;
         };
         ReturnIssue: {
-            /** @description Line of the submitted snapshot */
+            /** @description Line of the submitted snapshot, if any. */
             scope_key?: string | null;
             note: string;
         };
@@ -605,7 +605,7 @@ export interface components {
             total?: components["schemas"]["NullableMoney"];
             submissions: components["schemas"]["ContractSubmission"][];
         };
-        /** @description Write errors: 400 `invalid_request` (shape, `details.field`/`fields`), 403 `forbidden` (`details.missing_capabilities`), `not_assigned_reviewer`, `csrf_invalid`, `cross_origin`, 404 `not_found`, 409 `stale_version` (`details.current_version`), `invalid_state` (`details.review_state`), `duplicate_code`, `idempotency_conflict`, 415 `unsupported_media_type`, 422 business rules such as `reason_required`, `scope_incomplete`, `header_locked`, `reviewer_ineligible`, `fix_summary_required`, `submission_incomplete` (`details.problems`), `unknown_currency`, `unknown_partner`, `unknown_scope_key` and `amount_*`. */
+        /** @description Write errors: 400 `invalid_request` (shape, enum/type/blank required fields with `details.field`/`fields`), 403 `forbidden` (`details.missing_capabilities`), `not_assigned_reviewer`, `csrf_invalid`, `cross_origin`, 404 `not_found`, 409 `stale_version` (`details.current_version`), `invalid_state` (`details.review_state`), `duplicate_code`, `idempotency_conflict`, 415 `unsupported_media_type`, 422 business rules such as `reason_required`, `scope_incomplete`, `header_locked`, `reviewer_ineligible` (including self-review), `fix_summary_required`, `submission_incomplete` (`details.problems`), `unknown_currency`, `unknown_partner`, `unknown_scope_key` and `amount_*`. */
         ErrorEnvelope: {
             error: {
                 code: string;

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_demo_workspace.ContractFlow">
+        <div class="o_action o_tp_demo o_tp_demo_flow">
+            <ControlPanel/>
+            <div class="o_content o_tp_demo_content">
+                <t t-call="tp_demo_workspace.EnvironmentStrip"/>
+                <t t-call="tp_demo_workspace.LoadState"/>
+                <t t-set="data" t-value="this.state.data"/>
+                <t t-if="data">
+                    <header class="o_tp_demo_header">
+                        <div>
+                            <h1 class="o_tp_demo_title">Luồng rà soát phiên bản hợp đồng</h1>
+                            <p class="o_tp_demo_muted">Trạng thái do action backend đổi, có kiểm phiên bản và lịch sử. Màn hình này chỉ đọc — không có nút gửi, trả lại hay duyệt.</p>
+                        </div>
+                        <button type="button" class="btn btn-secondary" t-on-click="() => this.openAll()">Mở danh sách phiên bản</button>
+                    </header>
+
+                    <section class="o_tp_demo_panel" aria-labelledby="tp_demo_flow_cycle">
+                        <div class="o_tp_demo_panel_head">
+                            <h2 id="tp_demo_flow_cycle" class="o_tp_demo_panel_title">Chu trình rà soát (review_state) <t t-call="tp_demo_workspace.RealTag"/></h2>
+                            <t t-call="tp_demo_workspace.Legend"/>
+                        </div>
+                        <ol class="o_tp_demo_flowline" aria-label="Chu trình rà soát">
+                            <t t-foreach="this.cycleStates" t-as="item" t-key="item.key">
+                                <li class="o_tp_demo_flowstep">
+                                    <button type="button" class="o_tp_demo_flowbox" t-att-class="'o_tp_demo_state_' + item.key"
+                                            t-on-click="() => this.openState(item)"
+                                            t-att-aria-label="item.label + ': ' + item.count + ' phiên bản. Mở danh sách'">
+                                        <span class="o_tp_demo_flowbox_count o_tp_demo_num" t-out="item.count"/>
+                                        <span class="o_tp_demo_flowbox_label" t-out="item.label"/>
+                                    </button>
+                                    <span t-if="!item_last" class="o_tp_demo_flowarrow" aria-hidden="true"/>
+                                </li>
+                            </t>
+                        </ol>
+                        <p class="o_tp_demo_flowloop small">↺ <t t-out="this.stateLabel('returned')"/> → <t t-out="this.stateLabel('draft')"/>: người lập mở lại để sửa, kèm lý do.</p>
+                        <div class="o_tp_demo_flowouter">
+                            <t t-foreach="this.outerStates" t-as="item" t-key="item.key">
+                                <button type="button" class="o_tp_demo_flowbox o_tp_demo_flowbox_outer"
+                                        t-att-class="'o_tp_demo_state_' + item.key + (item.in_demo ? '' : ' o_tp_demo_dashed')"
+                                        t-on-click="() => this.openState(item)"
+                                        t-att-aria-label="item.label + ': ' + item.count + ' phiên bản'">
+                                    <span class="o_tp_demo_flowbox_count o_tp_demo_num" t-out="item.count"/>
+                                    <span class="o_tp_demo_flowbox_label" t-out="item.label"/>
+                                    <span t-if="item.key === 'review_complete'" class="o_tp_demo_flowbox_note small">Chuyển vào trạng thái này chưa mở trong CTR-002a; bản ghi hiện có là hồ sơ nhập ban đầu.</span>
+                                    <span t-if="item.key === 'cancelled'" class="o_tp_demo_flowbox_note small">Hủy cần lý do; không xóa vật lý.</span>
+                                </button>
+                            </t>
+                        </div>
+                    </section>
+
+                    <div class="o_tp_demo_split">
+                        <section class="o_tp_demo_panel" aria-labelledby="tp_demo_flow_transitions">
+                            <h2 id="tp_demo_flow_transitions" class="o_tp_demo_panel_title">Chuyển trạng thái và người thực hiện</h2>
+                            <table class="table table-sm o_tp_demo_table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Từ → đến</th>
+                                        <th scope="col">Action</th>
+                                        <th scope="col">Ai được làm</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="data.transitions" t-as="step" t-key="step_index">
+                                        <tr t-att-class="{'o_tp_demo_row_muted': !step.in_demo}">
+                                            <td><t t-out="this.stateLabel(step.from)"/> → <t t-out="this.stateLabel(step.to)"/></td>
+                                            <td t-out="step.action"/>
+                                            <td class="small" t-out="step.actor"/>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </section>
+
+                        <section class="o_tp_demo_panel" aria-labelledby="tp_demo_flow_layers">
+                            <h2 id="tp_demo_flow_layers" class="o_tp_demo_panel_title">Bốn lớp không gộp làm một</h2>
+                            <ul class="o_tp_demo_layers">
+                                <t t-foreach="data.layers" t-as="layer" t-key="layer_index">
+                                    <li class="o_tp_demo_layer" t-att-class="{'o_tp_demo_layer_out': layer.state === 'Ngoài phạm vi demo'}">
+                                        <span class="o_tp_demo_layer_title" t-out="layer.title"/>
+                                        <span class="o_tp_demo_layer_state small" t-out="layer.state"/>
+                                        <span class="o_tp_demo_muted small d-block" t-out="layer.detail"/>
+                                    </li>
+                                </t>
+                            </ul>
+                        </section>
+                    </div>
+
+                    <section class="o_tp_demo_panel" aria-labelledby="tp_demo_flow_revisions">
+                        <div class="o_tp_demo_panel_head">
+                            <h2 id="tp_demo_flow_revisions" class="o_tp_demo_panel_title">Phiên bản bạn được xem</h2>
+                        </div>
+                        <p t-if="!data.revisions.length" class="o_tp_demo_muted">Không có phiên bản hợp đồng trong phạm vi được giao.</p>
+                        <div t-else="" class="table-responsive">
+                            <table class="table table-sm o_tp_demo_table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Dự án</th>
+                                        <th scope="col">Hợp đồng · phiên bản</th>
+                                        <th scope="col">Rà soát</th>
+                                        <th scope="col">Vòng đời HĐ</th>
+                                        <th scope="col">Gửi / rà soát</th>
+                                        <th scope="col">Lý do trả lại</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="data.revisions" t-as="revision" t-key="revision.id">
+                                        <tr>
+                                            <td><span class="o_tp_demo_code" t-out="revision.project"/></td>
+                                            <td>
+                                                <button type="button" class="o_tp_demo_linkish" t-on-click="() => this.openRevision(revision)">
+                                                    <span class="o_tp_demo_code" t-out="revision.contract"/>
+                                                    <span t-out="revision.name"/>
+                                                </button>
+                                                <span t-if="revision.legacy" class="o_tp_demo_muted small d-block">Hồ sơ nhập ban đầu, chưa xác minh</span>
+                                            </td>
+                                            <td><span class="o_tp_demo_state" t-att-class="'o_tp_demo_state_' + revision.review_state" t-out="revision.review_label"/></td>
+                                            <td class="small" t-out="revision.lifecycle_label"/>
+                                            <td class="small"><t t-out="revision.submitted_by or '—'"/><t t-if="revision.reviewer"> → <t t-out="revision.reviewer"/></t></td>
+                                            <td class="small" t-out="revision.return_reason or '—'"/>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

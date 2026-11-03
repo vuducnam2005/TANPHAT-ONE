@@ -1,0 +1,174 @@
+.o_tp_demo_flow {
+    .o_tp_demo_flowline {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+        row-gap: 12px;
+        list-style: none;
+        margin: 0 0 8px;
+        padding: 0;
+    }
+
+    .o_tp_demo_flowstep {
+        display: flex;
+        align-items: center;
+    }
+
+    .o_tp_demo_flowbox {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        min-width: 160px;
+        text-align: left;
+        background: var(--tp-surface);
+        border: 2px solid var(--tp-steel);
+        border-radius: var(--tp-radius-lg);
+        box-shadow: var(--tp-shadow);
+        padding: 12px 16px;
+        transition: box-shadow var(--tp-motion) ease, transform var(--tp-motion) ease;
+
+        &:hover {
+            box-shadow: var(--tp-shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        &.o_tp_demo_state_in_review {
+            border-color: var(--tp-ink);
+        }
+
+        &.o_tp_demo_state_returned {
+            border-color: var(--tp-amber);
+        }
+
+        &.o_tp_demo_state_review_complete {
+            border-color: var(--tp-green);
+        }
+    }
+
+    .o_tp_demo_flowbox_count {
+        font-family: var(--tp-display);
+        font-weight: 600;
+        font-size: 2rem;
+        line-height: 1.1;
+    }
+
+    .o_tp_demo_flowbox_label {
+        font-weight: 600;
+    }
+
+    .o_tp_demo_flowbox_note {
+        color: var(--tp-steel);
+        max-width: 260px;
+    }
+
+    .o_tp_demo_flowarrow {
+        position: relative;
+        width: 40px;
+        margin: 0 4px;
+        border-top: 2px solid var(--tp-ink);
+
+        &::after {
+            content: "";
+            position: absolute;
+            right: -1px;
+            top: -6px;
+            border: 5px solid transparent;
+            border-left: 7px solid var(--tp-ink);
+            border-right: 0;
+        }
+    }
+
+    .o_tp_demo_flowloop {
+        color: var(--tp-amber-text);
+        font-weight: 600;
+        margin: 0 0 16px;
+    }
+
+    .o_tp_demo_flowouter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--tp-line);
+    }
+
+    .o_tp_demo_flowbox_outer {
+        border-width: 1px;
+    }
+
+    .o_tp_demo_layers {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .o_tp_demo_layer {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 10px 12px;
+        border: 1px solid var(--tp-line);
+        border-left: 4px solid var(--tp-ink);
+        border-radius: var(--tp-radius);
+        background: var(--tp-surface);
+    }
+
+    .o_tp_demo_layer_out {
+        border-style: dashed;
+        border-left-style: dashed;
+        border-left-color: var(--tp-steel);
+    }
+
+    .o_tp_demo_layer_title {
+        font-weight: 600;
+    }
+
+    .o_tp_demo_layer_state {
+        font-weight: 600;
+        color: var(--tp-steel);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .o_tp_demo_flow {
+        .o_tp_demo_flowline {
+            flex-direction: column;
+        }
+
+        .o_tp_demo_flowstep {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .o_tp_demo_flowbox {
+            min-width: 0;
+            width: 100%;
+        }
+
+        .o_tp_demo_flowarrow {
+            width: 0;
+            height: 20px;
+            margin: 4px 0 0 24px;
+            border-top: 0;
+            border-left: 2px solid var(--tp-ink);
+
+            &::after {
+                right: auto;
+                top: auto;
+                left: -6px;
+                bottom: -1px;
+                border: 5px solid transparent;
+                border-top: 7px solid var(--tp-ink);
+                border-bottom: 0;
+            }
+        }
+
+        .o_tp_demo_layers {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+}

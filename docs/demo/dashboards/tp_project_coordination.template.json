@@ -1,0 +1,456 @@
+{
+ "version": "19.3.10",
+ "sheets": [
+  {
+   "id": "tp_coordination_dashboard",
+   "name": "Dashboard",
+   "colNumber": 8,
+   "rowNumber": 60,
+   "rows": {
+    "0": {
+     "size": 44
+    },
+    "1": {
+     "size": 56
+    },
+    "10": {
+     "size": 400
+    }
+   },
+   "cols": {
+    "0": {
+     "size": 330
+    },
+    "1": {
+     "size": 110
+    },
+    "2": {
+     "size": 90
+    },
+    "3": {
+     "size": 110
+    },
+    "4": {
+     "size": 120
+    },
+    "5": {
+     "size": 110
+    }
+   },
+   "merges": [
+    "A2:F2"
+   ],
+   "cells": {
+    "A1": "Điều phối dự án",
+    "A2": "Bốn dự án mẫu DA-2026-001…004. Số liệu đọc trực tiếp từ Project và Timesheets theo quyền người xem; dữ liệu giả lập phục vụ trình diễn, không phải kết quả vận hành.",
+    "A4": "Dự án",
+    "B4": "Mã dự án",
+    "C4": "Số task",
+    "D4": "Task hoàn tất",
+    "E4": "Giờ làm (giờ)",
+    "F4": "Dòng giờ làm",
+    "A9": "Tổng",
+    "C9": "=SUM(C5:C8)",
+    "D9": "=SUM(D5:D8)",
+    "E9": "=SUM(E5:E8)",
+    "F9": "=SUM(F5:F8)",
+    "A12": "Task theo dự án và giai đoạn",
+    "A13": "=PIVOT(3)",
+    "A24": "Giờ làm theo phòng ban và nhân sự",
+    "A25": "=PIVOT(4)",
+    "A5": "=PIVOT.HEADER(1,\"project_id\",__PID_CAU__)",
+    "B5": "DA-2026-001",
+    "C5": "=IFERROR(PIVOT.VALUE(1,\"__count\",\"project_id\",__PID_CAU__)+0,0)",
+    "D5": "=IFERROR(PIVOT.VALUE(1,\"__count\",\"project_id\",__PID_CAU__,\"state\",\"1_done\")+0,0)",
+    "E5": "=IFERROR(PIVOT.VALUE(2,\"unit_amount:sum\",\"project_id\",__PID_CAU__)+0,0)",
+    "F5": "=IFERROR(PIVOT.VALUE(2,\"__count\",\"project_id\",__PID_CAU__)+0,0)",
+    "A6": "=PIVOT.HEADER(1,\"project_id\",__PID_DUONG__)",
+    "B6": "DA-2026-002",
+    "C6": "=IFERROR(PIVOT.VALUE(1,\"__count\",\"project_id\",__PID_DUONG__)+0,0)",
+    "D6": "=IFERROR(PIVOT.VALUE(1,\"__count\",\"project_id\",__PID_DUONG__,\"state\",\"1_done\")+0,0)",
+    "E6": "=IFERROR(PIVOT.VALUE(2,\"unit_amount:sum\",\"project_id\",__PID_DUONG__)+0,0)",
+    "F6": "=IFERROR(PIVOT.VALUE(2,\"__count\",\"project_id\",__PID_DUONG__)+0,0)",
+    "A7": "=PIVOT.HEADER(1,\"project_id\",__PID_NUT__)",
+    "B7": "DA-2026-003",
+    "C7": "=IFERROR(PIVOT.VALUE(1,\"__count\",\"project_id\",__PID_NUT__)+0,0)",
+    "D7": "=IFERROR(PIVOT.VALUE(1,\"__count\",\"project_id\",__PID_NUT__,\"state\",\"1_done\")+0,0)",
+    "E7": "=IFERROR(PIVOT.VALUE(2,\"unit_amount:sum\",\"project_id\",__PID_NUT__)+0,0)",
+    "F7": "=IFERROR(PIVOT.VALUE(2,\"__count\",\"project_id\",__PID_NUT__)+0,0)",
+    "A8": "=PIVOT.HEADER(1,\"project_id\",__PID_VENBIEN__)",
+    "B8": "DA-2026-004",
+    "C8": "=IFERROR(PIVOT.VALUE(1,\"__count\",\"project_id\",__PID_VENBIEN__)+0,0)",
+    "D8": "=IFERROR(PIVOT.VALUE(1,\"__count\",\"project_id\",__PID_VENBIEN__,\"state\",\"1_done\")+0,0)",
+    "E8": "=IFERROR(PIVOT.VALUE(2,\"unit_amount:sum\",\"project_id\",__PID_VENBIEN__)+0,0)",
+    "F8": "=IFERROR(PIVOT.VALUE(2,\"__count\",\"project_id\",__PID_VENBIEN__)+0,0)"
+   },
+   "styles": {
+    "A1": 1,
+    "A2": 2,
+    "A4:F4": 3,
+    "A9:F9": 4,
+    "A12": 5,
+    "A24": 5
+   },
+   "formats": {
+    "E5:E9": 1
+   },
+   "borders": {},
+   "conditionalFormats": [],
+   "dataValidationRules": [],
+   "figures": [
+    {
+     "id": "tp-coord-tasks",
+     "col": 0,
+     "row": 0,
+     "offset": {
+      "x": 0,
+      "y": 292
+     },
+     "width": 470,
+     "height": 380,
+     "tag": "carousel",
+     "data": {
+      "chartDefinitions": {
+       "tp-coord-tasks-c": {
+        "title": {
+         "text": ""
+        },
+        "legendPosition": "top",
+        "type": "bar",
+        "stacked": true,
+        "humanize": true,
+        "dataSource": {
+         "type": "odoo",
+         "metaData": {
+          "groupBy": [
+           "project_id",
+           "stage_id"
+          ],
+          "measure": "__count",
+          "order": null,
+          "resModel": "project.task",
+          "mode": "bar",
+          "cumulatedStart": false
+         },
+         "searchParams": {
+          "comparison": null,
+          "context": {},
+          "domain": [
+           [
+            "project_id",
+            "in",
+            "__PROJECT_IDS__"
+           ],
+           [
+            "company_id",
+            "=",
+            "__CID__"
+           ]
+          ],
+          "groupBy": [
+           "project_id",
+           "stage_id"
+          ],
+          "orderBy": []
+         }
+        },
+        "dataSetStyles": {}
+       }
+      },
+      "title": {
+       "text": "Task theo dự án và giai đoạn",
+       "bold": true,
+       "fontSize": 16,
+       "color": "#01666B"
+      },
+      "items": [
+       {
+        "type": "chart",
+        "chartId": "tp-coord-tasks-c"
+       }
+      ],
+      "fieldMatching": {}
+     }
+    },
+    {
+     "id": "tp-coord-hours",
+     "col": 0,
+     "row": 0,
+     "offset": {
+      "x": 480,
+      "y": 292
+     },
+     "width": 470,
+     "height": 380,
+     "tag": "carousel",
+     "data": {
+      "chartDefinitions": {
+       "tp-coord-hours-c": {
+        "title": {
+         "text": ""
+        },
+        "legendPosition": "top",
+        "type": "bar",
+        "stacked": false,
+        "humanize": true,
+        "dataSource": {
+         "type": "odoo",
+         "metaData": {
+          "groupBy": [
+           "project_id"
+          ],
+          "measure": "unit_amount",
+          "order": null,
+          "resModel": "account.analytic.line",
+          "mode": "bar",
+          "cumulatedStart": false
+         },
+         "searchParams": {
+          "comparison": null,
+          "context": {},
+          "domain": [
+           [
+            "project_id",
+            "in",
+            "__PROJECT_IDS__"
+           ],
+           [
+            "company_id",
+            "=",
+            "__CID__"
+           ]
+          ],
+          "groupBy": [
+           "project_id"
+          ],
+          "orderBy": []
+         }
+        },
+        "dataSetStyles": {}
+       }
+      },
+      "title": {
+       "text": "Giờ làm theo dự án (giờ)",
+       "bold": true,
+       "fontSize": 16,
+       "color": "#01666B"
+      },
+      "items": [
+       {
+        "type": "chart",
+        "chartId": "tp-coord-hours-c"
+       }
+      ],
+      "fieldMatching": {}
+     }
+    }
+   ],
+   "tables": [],
+   "areGridLinesVisible": false,
+   "isVisible": true,
+   "backgroundColor": "#F9FAFB",
+   "headerGroups": {
+    "ROW": [],
+    "COL": []
+   },
+   "comments": {}
+  }
+ ],
+ "styles": {
+  "1": {
+   "bold": true,
+   "fontSize": 18,
+   "textColor": "#01666B",
+   "verticalAlign": "middle"
+  },
+  "2": {
+   "italic": true,
+   "textColor": "#434343",
+   "verticalAlign": "middle",
+   "wrapping": "wrap"
+  },
+  "3": {
+   "bold": true,
+   "fillColor": "#E6F2F3",
+   "verticalAlign": "middle"
+  },
+  "4": {
+   "bold": true
+  },
+  "5": {
+   "bold": true,
+   "fontSize": 13,
+   "textColor": "#01666B",
+   "verticalAlign": "bottom"
+  }
+ },
+ "formats": {
+  "1": "#,##0.00"
+ },
+ "borders": {},
+ "revisionId": "START_REVISION",
+ "uniqueFigureIds": true,
+ "settings": {},
+ "pivots": {
+  "1": {
+   "type": "ODOO",
+   "id": "1",
+   "formulaId": "1",
+   "name": "Task theo dự án và trạng thái",
+   "model": "project.task",
+   "domain": [
+    [
+     "project_id",
+     "in",
+     "__PROJECT_IDS__"
+    ],
+    [
+     "company_id",
+     "=",
+     "__CID__"
+    ]
+   ],
+   "context": {},
+   "measures": [
+    {
+     "id": "__count",
+     "fieldName": "__count"
+    }
+   ],
+   "rows": [
+    {
+     "fieldName": "project_id"
+    }
+   ],
+   "columns": [
+    {
+     "fieldName": "state"
+    }
+   ],
+   "sortedColumn": null,
+   "fieldMatching": {}
+  },
+  "2": {
+   "type": "ODOO",
+   "id": "2",
+   "formulaId": "2",
+   "name": "Giờ làm theo dự án",
+   "model": "account.analytic.line",
+   "domain": [
+    [
+     "project_id",
+     "in",
+     "__PROJECT_IDS__"
+    ],
+    [
+     "company_id",
+     "=",
+     "__CID__"
+    ]
+   ],
+   "context": {},
+   "measures": [
+    {
+     "id": "unit_amount:sum",
+     "fieldName": "unit_amount",
+     "aggregator": "sum"
+    },
+    {
+     "id": "__count",
+     "fieldName": "__count"
+    }
+   ],
+   "rows": [
+    {
+     "fieldName": "project_id"
+    }
+   ],
+   "columns": [],
+   "sortedColumn": null,
+   "fieldMatching": {}
+  },
+  "3": {
+   "type": "ODOO",
+   "id": "3",
+   "formulaId": "3",
+   "name": "Task theo dự án và giai đoạn",
+   "model": "project.task",
+   "domain": [
+    [
+     "project_id",
+     "in",
+     "__PROJECT_IDS__"
+    ],
+    [
+     "company_id",
+     "=",
+     "__CID__"
+    ]
+   ],
+   "context": {},
+   "measures": [
+    {
+     "id": "__count",
+     "fieldName": "__count"
+    }
+   ],
+   "rows": [
+    {
+     "fieldName": "project_id"
+    }
+   ],
+   "columns": [
+    {
+     "fieldName": "stage_id"
+    }
+   ],
+   "sortedColumn": null,
+   "fieldMatching": {}
+  },
+  "4": {
+   "type": "ODOO",
+   "id": "4",
+   "formulaId": "4",
+   "name": "Giờ làm theo phòng ban và nhân sự",
+   "model": "account.analytic.line",
+   "domain": [
+    [
+     "project_id",
+     "in",
+     "__PROJECT_IDS__"
+    ],
+    [
+     "company_id",
+     "=",
+     "__CID__"
+    ]
+   ],
+   "context": {},
+   "measures": [
+    {
+     "id": "unit_amount:sum",
+     "fieldName": "unit_amount",
+     "aggregator": "sum"
+    }
+   ],
+   "rows": [
+    {
+     "fieldName": "department_id"
+    },
+    {
+     "fieldName": "employee_id"
+    }
+   ],
+   "columns": [],
+   "sortedColumn": null,
+   "fieldMatching": {}
+  }
+ },
+ "pivotNextId": 5,
+ "customTableStyles": {},
+ "namedRanges": {},
+ "globalFilters": [],
+ "lists": {},
+ "listNextId": 1,
+ "odooLinkReferences": {}
+}

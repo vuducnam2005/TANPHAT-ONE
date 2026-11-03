@@ -1,0 +1,17 @@
+<odoo>
+    <!-- Directory over the public employee projection only; no private HR
+         fields, contracts or payroll. -->
+    <record id="action_demo_employees" model="ir.actions.act_window">
+        <field name="name">Danh bạ nhân sự</field>
+        <field name="res_model">hr.employee.public</field>
+        <field name="path">tp-demo-employees</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('name', 'ilike', '(DEMO)')]</field>
+        <field name="context">{'search_default_group_department': 1}</field>
+        <field name="search_view_id" ref="hr.hr_employee_public_view_search"/>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('hr.hr_employee_public_view_kanban')}),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('hr.hr_employee_public_view_tree')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('hr.hr_employee_public_view_form')})]"/>
+    </record>
+</odoo>

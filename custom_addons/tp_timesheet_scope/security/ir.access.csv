@@ -1,0 +1,2 @@
+id,name,model_id,group_id/id,operation,domain
+timesheet_managed_project_scope,Managed project scope for timesheets,account.analytic.line,,crud,"['|', ('project_id', '=', False), '|', ('project_id.tp_managed', '=', False), ('project_id', 'access', 'read')]"

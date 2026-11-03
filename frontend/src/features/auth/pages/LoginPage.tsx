@@ -1,9 +1,11 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { api, LoginError } from '../../../shared/api/client';
-import { loginUrl } from '../../../shared/api/session';
+import { loginUrl, totpLoginUrl } from '../../../shared/api/session';
 import { product } from '../../../shared/config/product';
 import { BridgeIllustration } from '../components/BridgeIllustration';
+import { isSessionExpired } from '../sessionNotice';
 import '@fontsource/be-vietnam-pro/400.css';
 import '@fontsource/be-vietnam-pro/600.css';
 import '@fontsource/be-vietnam-pro/700.css';
@@ -21,15 +23,54 @@ function LoginIcon({ name }: { name: 'user' | 'lock' | 'eye' | 'eye-off' | 'arro
   return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 
+// Fixed copy (AUTH-002 section 6).
+const notices = {
+  expired: 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.',
+  signed_out: 'Bạn đã đăng xuất khỏi TANPHAT ONE.',
+} as const;
+
+// Logout redirects to the fixed /work/?signed_out=1 (L03); no other value is honoured.
+const signedOutParameter = 'signed_out';
+
 export function LoginPage() {
   const queryClient = useQueryClient();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState<keyof typeof notices | null>(() => {
+    if (isSessionExpired()) return 'expired';
+    return new URLSearchParams(location.search).get(signedOutParameter) === '1' ? 'signed_out' : null;
+  });
+  const [capsLock, setCapsLock] = useState(false);
   const [requiresVerification, setRequiresVerification] = useState(false);
   const submitting = useRef(false);
+  const accountRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
+
+  // Drop the logout marker from the address bar without a new history entry, keeping the rest of the deep link.
+  useEffect(() => {
+    const parameters = new URLSearchParams(location.search);
+    if (parameters.get(signedOutParameter) !== '1') return;
+    parameters.delete(signedOutParameter);
+    const search = parameters.toString() ? `?${parameters}` : '';
+    const { pathname } = window.location;
+    navigate({ pathname: location.pathname, search, hash: location.hash }, { replace: true });
+    // The router writes its root as /work; keep the address as the user had it, such as /work/.
+    window.history.replaceState(window.history.state, '', `${pathname}${search}${location.hash}`);
+  }, [location, navigate]);
+
+  // Start in the account field, unless something (such as an error) already holds focus.
+  useEffect(() => {
+    if (!document.activeElement || document.activeElement === document.body) accountRef.current?.focus();
+  }, []);
+
+  // Reads only the key state, never the password value.
+  function trackCapsLock(event: KeyboardEvent<HTMLInputElement>) {
+    setCapsLock(event.getModifierState('CapsLock'));
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,6 +84,7 @@ export function LoginPage() {
     submitting.current = true;
     setPending(true);
     setError('');
+    setNotice(null);
     setRequiresVerification(false);
     try {
       const result = await api.authenticate(login, String(data.get('password') ?? ''));
@@ -104,27 +146,32 @@ export function LoginPage() {
           </header>
 
           <form className="tp-login-form" onSubmit={handleSubmit} aria-busy={pending}>
+            {notice && <div className="tp-login-notice" role="status">{notices[notice]}</div>}
             <div className="tp-login-field">
               <label htmlFor="tp-login-account">Tên đăng nhập</label>
               <div className="tp-login-input-wrap">
                 <LoginIcon name="user" />
-                <input id="tp-login-account" name="login" type="text" placeholder="Nhập tên đăng nhập của bạn" autoComplete="username" autoCapitalize="none" spellCheck={false} required readOnly={pending} aria-describedby={error ? 'tp-login-error' : undefined} />
+                <input ref={accountRef} id="tp-login-account" name="login" type="text" placeholder="Nhập tên đăng nhập của bạn" autoComplete="username" autoCapitalize="none" spellCheck={false} required readOnly={pending} aria-describedby={error ? 'tp-login-error' : undefined} />
               </div>
             </div>
             <div className="tp-login-field">
               <label htmlFor="tp-login-password">Mật khẩu</label>
-              <div className="tp-login-input-wrap">
-                <LoginIcon name="lock" />
-                <input ref={passwordRef} id="tp-login-password" name="password" type={showPassword ? 'text' : 'password'} placeholder="Nhập mật khẩu" autoComplete="current-password" required readOnly={pending} aria-describedby={error ? 'tp-login-error' : undefined} />
-                <button type="button" className="tp-login-reveal" aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} disabled={pending}><LoginIcon name={showPassword ? 'eye-off' : 'eye'} /></button>
+              <div>
+                <div className="tp-login-input-wrap">
+                  <LoginIcon name="lock" />
+                  <input ref={passwordRef} id="tp-login-password" name="password" type={showPassword ? 'text' : 'password'} placeholder="Nhập mật khẩu" autoComplete="current-password" required readOnly={pending} aria-describedby={error ? 'tp-login-error' : undefined} onKeyDown={trackCapsLock} onKeyUp={trackCapsLock} onBlur={() => setCapsLock(false)} />
+                  <button type="button" className="tp-login-reveal" aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} disabled={pending}><LoginIcon name={showPassword ? 'eye-off' : 'eye'} /></button>
+                </div>
+                {/* Present before it has text, so screen readers announce the warning when it appears. */}
+                <div className="tp-login-caps" aria-live="polite">{capsLock && <p>Caps Lock đang bật.</p>}</div>
               </div>
             </div>
 
             {error && <div ref={errorRef} className="tp-login-error" id="tp-login-error" role="alert" tabIndex={-1}>{error}</div>}
             {requiresVerification && <div className="tp-login-verification" role="status">
-              <strong>Tài khoản cần xác thực bổ sung.</strong>
-              <p>Tiếp tục bằng phương thức bảo mật đã thiết lập, sau đó quay lại không gian làm việc.</p>
-              <a href={loginUrl()}>Tiếp tục xác thực bảo mật</a>
+              <strong>Tài khoản cần xác thực hai lớp.</strong>
+              <p>Mở ứng dụng xác thực trên điện thoại để lấy mã, rồi nhập ở bước tiếp theo.</p>
+              <a href={totpLoginUrl()}>Tiếp tục nhập mã xác thực</a>
             </div>}
 
             <button className="tp-login-submit" type="submit" disabled={pending}>

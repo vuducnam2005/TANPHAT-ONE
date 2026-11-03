@@ -89,7 +89,7 @@ def _text(value, field, *, max_length, allow_none=True):
 
 
 def _choice(value, field, choices):
-    if value not in choices:
+    if not isinstance(value, str) or value not in choices:
         raise _error(400, 'invalid_request', f'{field} has an unsupported value.', field=field)
     return value
 
@@ -142,6 +142,8 @@ def _parse_header(value, where):
     for key, max_length in (('code', 64), ('name', 255), ('currency', 3)):
         if key in value:
             result[key] = _text(value[key], f'{where}.{key}', max_length=max_length, allow_none=False)
+            if key == 'currency' and not result[key]:
+                raise _error(400, 'invalid_request', f'{where}.currency must not be blank.', field=f'{where}.currency')
     if 'contract_type' in value:
         result['contract_type'] = _choice(value['contract_type'], f'{where}.contract_type', CONTRACT_TYPE_KEYS)
     if 'partner_id' in value:
@@ -631,7 +633,8 @@ class TpContractWorkflow(models.AbstractModel):
         ])
         # _tp_capabilities rechecks assignment, validity dates and financial.read.
         return grants.user_id.filtered(
-            lambda user: user.active and self._tp_capabilities(contract.project_id, contract.department_id, user) >= REVIEWER_CAPABILITIES,
+            lambda user: user.id != self.env.uid and user.active
+            and self._tp_capabilities(contract.project_id, contract.department_id, user) >= REVIEWER_CAPABILITIES,
         )
 
     def _tp_available_actions(self, contract, revision=None):
@@ -652,7 +655,8 @@ class TpContractWorkflow(models.AbstractModel):
                 actions.append('submit_review')
         elif state == 'in_review':
             pending = revision.sudo().submission_ids.filtered(lambda submission: submission.outcome == 'pending')
-            if held >= REVIEWER_CAPABILITIES and pending.reviewer_id == self.env.user:
+            if (held >= REVIEWER_CAPABILITIES and pending.reviewer_id == self.env.user
+                    and pending.submitted_by_id != self.env.user):
                 actions.append('return_review')
         elif state == 'returned' and 'contract_draft_edit' in held:
             actions.append('begin_rework')
@@ -776,7 +780,7 @@ class TpContractWorkflow(models.AbstractModel):
         if previous and not data['fix_summary']:
             raise _error(422, 'fix_summary_required', 'Describe what was fixed since the returned submission.', field='fix_summary')
         reviewer = self.env['res.users'].sudo().browse(data['reviewer_id']).exists()
-        if not reviewer or reviewer not in self._tp_eligible_reviewers(record):
+        if not reviewer or reviewer.id == self.env.uid or reviewer not in self._tp_eligible_reviewers(record):
             raise _error(422, 'reviewer_ineligible', 'The selected reviewer cannot review this contract.', field='reviewer_id')
         problems = self._tp_submission_problems(rev)
         if problems:
@@ -818,6 +822,8 @@ class TpContractWorkflow(models.AbstractModel):
         pending = rev.submission_ids.filtered(lambda submission: submission.outcome == 'pending')
         if pending.reviewer_id != self.env.user:
             raise _error(403, 'not_assigned_reviewer', 'Only the reviewer assigned to the submission can return it.')
+        if pending.submitted_by_id == self.env.user:
+            raise _error(422, 'reviewer_ineligible', 'The submitter cannot review their own submission.', field='reviewer_id')
         reason = _require_text(data['reason'], 'reason', 'reason_required')
         scope_keys = {line['scope_key'] for line in pending.metadata_snapshot['lines']}
         for index, issue in enumerate(data['issues']):

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_demo_workspace.Finance">
+        <div class="o_action o_tp_demo o_tp_demo_finance">
+            <ControlPanel/>
+            <div class="o_content o_tp_demo_content">
+                <t t-call="tp_demo_workspace.EnvironmentStrip"/>
+                <t t-call="tp_demo_workspace.LoadState"/>
+                <t t-set="data" t-value="this.state.data"/>
+                <t t-if="data">
+                    <header class="o_tp_demo_header">
+                        <div>
+                            <h1 class="o_tp_demo_title">Tổng hợp tài chính theo dự án</h1>
+                            <p class="o_tp_demo_muted">Giá trị hợp đồng, giá trị nghiệm thu và tiền đã thu là ba con số khác nhau. Không cộng khác tiền tệ, không tính lãi/lỗ, không có hóa đơn hay bút toán trong demo.</p>
+                        </div>
+                        <button type="button" class="btn btn-secondary" t-on-click="() => this.openAmounts()">Số tiền dòng hợp đồng</button>
+                    </header>
+
+                    <p t-if="!data.projects.length" class="o_tp_demo_panel o_tp_demo_muted">Bạn chưa được giao dự án DEMO nào.</p>
+
+                    <t t-foreach="data.projects" t-as="project" t-key="project.id">
+                        <section class="o_tp_demo_panel" t-att-aria-labelledby="'tp_demo_fin_' + project.id">
+                            <div class="o_tp_demo_panel_head">
+                                <h2 t-att-id="'tp_demo_fin_' + project.id" class="o_tp_demo_panel_title">
+                                    <span class="o_tp_demo_code" t-out="project.code"/> <t t-out="project.name"/>
+                                </h2>
+                                <span class="o_tp_demo_muted small"><t t-out="project.contract_count"/> hợp đồng</span>
+                            </div>
+
+                            <div t-if="!project.financial_read" class="o_tp_demo_locked" role="note">
+                                <span class="o_tp_demo_locked_title">Không có quyền financial.read cho dự án này</span>
+                                <span class="o_tp_demo_muted small">Máy chủ không trả số tiền, tổng hay tài liệu tài chính cho tài khoản của bạn.</span>
+                            </div>
+
+                            <t t-else="">
+                                <div class="table-responsive">
+                                    <table class="table table-sm o_tp_demo_table o_tp_demo_fintable">
+                                        <colgroup>
+                                            <col class="o_tp_demo_fincol_contract"/>
+                                            <col class="o_tp_demo_fincol_revision"/>
+                                            <col class="o_tp_demo_fincol_value"/>
+                                            <col class="o_tp_demo_fincol_illustrative"/>
+                                            <col class="o_tp_demo_fincol_illustrative"/>
+                                        </colgroup>
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Hợp đồng</th>
+                                                <th scope="col">Phiên bản · rà soát</th>
+                                                <th scope="col" class="text-end">Giá trị hợp đồng <t t-call="tp_demo_workspace.RealTag"/></th>
+                                                <th scope="col" class="text-end o_tp_demo_col_illustrative">Đã nghiệm thu <t t-call="tp_demo_workspace.IllustrativeTag"/></th>
+                                                <th scope="col" class="text-end o_tp_demo_col_illustrative">Đã thu <t t-call="tp_demo_workspace.IllustrativeTag"/></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="project.rows" t-as="row" t-key="row.id">
+                                                <tr>
+                                                    <td>
+                                                        <button type="button" class="o_tp_demo_linkish" t-on-click="() => this.openContract(row)">
+                                                            <span class="o_tp_demo_code" t-out="row.code"/>
+                                                            <span t-out="row.name"/>
+                                                        </button>
+                                                        <span class="o_tp_demo_muted small d-block" t-out="row.currency"/>
+                                                    </td>
+                                                    <td class="small">
+                                                        <t t-out="row.revision or '—'"/>
+                                                        <span t-if="row.review_label" class="o_tp_demo_muted d-block" t-out="row.review_label"/>
+                                                    </td>
+                                                    <td class="text-end o_tp_demo_num">
+                                                        <t t-if="row.value"><t t-out="row.value"/></t>
+                                                        <t t-else=""><span class="o_tp_demo_muted small">—</span></t>
+                                                        <span class="o_tp_demo_muted small d-block"><t t-out="row.value_status"/><t t-if="row.tax_basis"> · <t t-out="row.tax_basis"/></t></span>
+                                                        <span t-if="row.value and !row.reviewed" class="o_tp_demo_muted small d-block">Chưa rà soát xong, không cộng vào tổng</span>
+                                                    </td>
+                                                    <td class="text-end o_tp_demo_num o_tp_demo_col_illustrative" t-out="row.accepted or '—'"/>
+                                                    <td class="text-end o_tp_demo_num o_tp_demo_col_illustrative" t-out="row.collected or '—'"/>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                        <tfoot t-if="project.totals.length">
+                                            <t t-foreach="project.totals" t-as="total" t-key="total.currency">
+                                                <tr>
+                                                    <th scope="row" colspan="2">Tổng phiên bản đã rà soát xong (<t t-out="total.currency"/>)</th>
+                                                    <td class="text-end o_tp_demo_num" t-out="total.value"/>
+                                                    <td colspan="2"/>
+                                                </tr>
+                                            </t>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                                <p t-if="!project.rows.length" class="o_tp_demo_muted">Chưa có hợp đồng.</p>
+                            </t>
+                        </section>
+                    </t>
+
+                    <section class="o_tp_demo_panel" aria-labelledby="tp_demo_fin_sources">
+                        <h2 id="tp_demo_fin_sources" class="o_tp_demo_panel_title">Nguồn số liệu</h2>
+                        <div class="table-responsive">
+                            <table class="table table-sm o_tp_demo_table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Chỉ tiêu</th>
+                                        <th scope="col">Nguồn</th>
+                                        <th scope="col">Tình trạng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="data.sources" t-as="source" t-key="source_index">
+                                        <tr>
+                                            <td t-out="source.name"/>
+                                            <td class="small" t-out="source.source"/>
+                                            <td>
+                                                <t t-if="source.nature === 'real'"><t t-call="tp_demo_workspace.RealTag"/></t>
+                                                <t t-elif="source.nature === 'illustrative'"><t t-call="tp_demo_workspace.IllustrativeTag"/></t>
+                                                <span t-else="" class="o_tp_demo_tag o_tp_demo_tag_absent" t-out="source.state"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

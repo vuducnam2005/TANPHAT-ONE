@@ -1,0 +1,378 @@
+{
+ "version": "19.3.10",
+ "sheets": [
+  {
+   "id": "tp_finance_draft_dashboard",
+   "name": "Dashboard",
+   "colNumber": 8,
+   "rowNumber": 60,
+   "rows": {
+    "0": {
+     "size": 44
+    },
+    "1": {
+     "size": 56
+    },
+    "10": {
+     "size": 400
+    }
+   },
+   "cols": {
+    "0": {
+     "size": 420
+    },
+    "1": {
+     "size": 160
+    },
+    "2": {
+     "size": 140
+    },
+    "3": {
+     "size": 160
+    },
+    "4": {
+     "size": 160
+    }
+   },
+   "merges": [
+    "A2:E2"
+   ],
+   "cells": {
+    "A1": "Hóa đơn và chi phí dự kiến",
+    "A2": "Hóa đơn và khoản chi đang ở trạng thái NHÁP: chưa hạch toán, chưa thu hoặc chi tiền; không phải doanh thu kế toán và không gộp với cơ hội CRM hay giá trị hợp đồng. Dữ liệu giả lập phục vụ trình diễn.",
+    "A4": "Chỉ tiêu (bản nháp)",
+    "B4": "Giá trị",
+    "A5": "Số hóa đơn nháp",
+    "B5": "=IFERROR(PIVOT.VALUE(1,\"__count\")+0,0)",
+    "A6": "Hóa đơn nháp — chưa thuế (VND)",
+    "B6": "=IFERROR(PIVOT.VALUE(1,\"amount_untaxed:sum\")+0,0)",
+    "A7": "Hóa đơn nháp — gồm thuế (VND)",
+    "B7": "=IFERROR(PIVOT.VALUE(1,\"amount_total:sum\")+0,0)",
+    "A8": "Số khoản chi nháp",
+    "B8": "=IFERROR(PIVOT.VALUE(2,\"__count\")+0,0)",
+    "A9": "Khoản chi nháp — tổng (VND)",
+    "B9": "=IFERROR(PIVOT.VALUE(2,\"total_amount:sum\")+0,0)",
+    "A12": "Hóa đơn nháp theo dự án (chưa hạch toán)",
+    "A13": "=PIVOT(1)",
+    "A21": "Khoản chi nháp theo nhân sự",
+    "A22": "=PIVOT(2)"
+   },
+   "styles": {
+    "A1": 1,
+    "A2": 2,
+    "A4:B4": 3,
+    "A12": 4,
+    "A21": 4
+   },
+   "formats": {
+    "B6:B7": 1,
+    "B9": 1
+   },
+   "borders": {},
+   "conditionalFormats": [],
+   "dataValidationRules": [],
+   "figures": [
+    {
+     "id": "tp-fin-invoices",
+     "col": 0,
+     "row": 0,
+     "offset": {
+      "x": 0,
+      "y": 292
+     },
+     "width": 470,
+     "height": 380,
+     "tag": "carousel",
+     "data": {
+      "chartDefinitions": {
+       "tp-fin-invoices-c": {
+        "title": {
+         "text": ""
+        },
+        "legendPosition": "top",
+        "type": "bar",
+        "stacked": false,
+        "humanize": true,
+        "dataSource": {
+         "type": "odoo",
+         "metaData": {
+          "groupBy": [
+           "invoice_origin"
+          ],
+          "measure": "amount_total",
+          "order": null,
+          "resModel": "account.move",
+          "mode": "bar",
+          "cumulatedStart": false
+         },
+         "searchParams": {
+          "comparison": null,
+          "context": {},
+          "domain": [
+           [
+            "id",
+            "in",
+            "__INVOICE_IDS__"
+           ],
+           [
+            "state",
+            "=",
+            "draft"
+           ],
+           [
+            "company_id",
+            "=",
+            "__CID__"
+           ]
+          ],
+          "groupBy": [
+           "invoice_origin"
+          ],
+          "orderBy": []
+         }
+        },
+        "dataSetStyles": {}
+       }
+      },
+      "title": {
+       "text": "Hóa đơn nháp theo dự án (VND)",
+       "bold": true,
+       "fontSize": 16,
+       "color": "#01666B"
+      },
+      "items": [
+       {
+        "type": "chart",
+        "chartId": "tp-fin-invoices-c"
+       }
+      ],
+      "fieldMatching": {}
+     }
+    },
+    {
+     "id": "tp-fin-expenses",
+     "col": 0,
+     "row": 0,
+     "offset": {
+      "x": 480,
+      "y": 292
+     },
+     "width": 470,
+     "height": 380,
+     "tag": "carousel",
+     "data": {
+      "chartDefinitions": {
+       "tp-fin-expenses-c": {
+        "title": {
+         "text": ""
+        },
+        "legendPosition": "top",
+        "type": "bar",
+        "stacked": false,
+        "humanize": true,
+        "dataSource": {
+         "type": "odoo",
+         "metaData": {
+          "groupBy": [
+           "employee_id"
+          ],
+          "measure": "total_amount",
+          "order": null,
+          "resModel": "hr.expense",
+          "mode": "bar",
+          "cumulatedStart": false
+         },
+         "searchParams": {
+          "comparison": null,
+          "context": {},
+          "domain": [
+           [
+            "id",
+            "in",
+            "__EXPENSE_IDS__"
+           ],
+           [
+            "state",
+            "=",
+            "draft"
+           ],
+           [
+            "company_id",
+            "=",
+            "__CID__"
+           ]
+          ],
+          "groupBy": [
+           "employee_id"
+          ],
+          "orderBy": []
+         }
+        },
+        "dataSetStyles": {}
+       }
+      },
+      "title": {
+       "text": "Khoản chi nháp theo nhân sự (VND)",
+       "bold": true,
+       "fontSize": 16,
+       "color": "#01666B"
+      },
+      "items": [
+       {
+        "type": "chart",
+        "chartId": "tp-fin-expenses-c"
+       }
+      ],
+      "fieldMatching": {}
+     }
+    }
+   ],
+   "tables": [],
+   "areGridLinesVisible": false,
+   "isVisible": true,
+   "backgroundColor": "#F9FAFB",
+   "headerGroups": {
+    "ROW": [],
+    "COL": []
+   },
+   "comments": {}
+  }
+ ],
+ "styles": {
+  "1": {
+   "bold": true,
+   "fontSize": 18,
+   "textColor": "#01666B",
+   "verticalAlign": "middle"
+  },
+  "2": {
+   "italic": true,
+   "textColor": "#434343",
+   "verticalAlign": "middle",
+   "wrapping": "wrap"
+  },
+  "3": {
+   "bold": true,
+   "fillColor": "#E6F2F3",
+   "verticalAlign": "middle"
+  },
+  "4": {
+   "bold": true,
+   "fontSize": 13,
+   "textColor": "#01666B",
+   "verticalAlign": "bottom"
+  }
+ },
+ "formats": {
+  "1": "#,##0"
+ },
+ "borders": {},
+ "revisionId": "START_REVISION",
+ "uniqueFigureIds": true,
+ "settings": {},
+ "pivots": {
+  "1": {
+   "type": "ODOO",
+   "id": "1",
+   "formulaId": "1",
+   "name": "Hóa đơn nháp theo dự án",
+   "model": "account.move",
+   "domain": [
+    [
+     "id",
+     "in",
+     "__INVOICE_IDS__"
+    ],
+    [
+     "state",
+     "=",
+     "draft"
+    ],
+    [
+     "company_id",
+     "=",
+     "__CID__"
+    ]
+   ],
+   "context": {},
+   "measures": [
+    {
+     "id": "__count",
+     "fieldName": "__count"
+    },
+    {
+     "id": "amount_untaxed:sum",
+     "fieldName": "amount_untaxed",
+     "aggregator": "sum"
+    },
+    {
+     "id": "amount_total:sum",
+     "fieldName": "amount_total",
+     "aggregator": "sum"
+    }
+   ],
+   "rows": [
+    {
+     "fieldName": "invoice_origin"
+    }
+   ],
+   "columns": [],
+   "sortedColumn": null,
+   "fieldMatching": {}
+  },
+  "2": {
+   "type": "ODOO",
+   "id": "2",
+   "formulaId": "2",
+   "name": "Khoản chi nháp theo nhân sự",
+   "model": "hr.expense",
+   "domain": [
+    [
+     "id",
+     "in",
+     "__EXPENSE_IDS__"
+    ],
+    [
+     "state",
+     "=",
+     "draft"
+    ],
+    [
+     "company_id",
+     "=",
+     "__CID__"
+    ]
+   ],
+   "context": {},
+   "measures": [
+    {
+     "id": "__count",
+     "fieldName": "__count"
+    },
+    {
+     "id": "total_amount:sum",
+     "fieldName": "total_amount",
+     "aggregator": "sum"
+    }
+   ],
+   "rows": [
+    {
+     "fieldName": "employee_id"
+    },
+    {
+     "fieldName": "name"
+    }
+   ],
+   "columns": [],
+   "sortedColumn": null,
+   "fieldMatching": {}
+  }
+ },
+ "pivotNextId": 3,
+ "customTableStyles": {},
+ "namedRanges": {},
+ "globalFilters": [],
+ "lists": {},
+ "listNextId": 1,
+ "odooLinkReferences": {}
+}

@@ -42,6 +42,8 @@ test('TANPHAT ONE login, assigned project, detail reload, search, and CSRF logou
   expect((await page.request.get('/api/v1/me')).status()).toBe(200);
   await page.getByRole('button', { name: 'Đăng xuất' }).click();
   await expect(page.getByRole('heading', { name: 'Chào mừng trở lại.' })).toBeVisible();
+  await expect(page.getByText('Bạn đã đăng xuất khỏi TANPHAT ONE.')).toBeVisible();
+  await expect(page).toHaveURL(/\/work\/$/);
   expect((await page.request.get('/api/v1/me')).status()).toBe(401);
 });
 
