@@ -1,0 +1,367 @@
+<odoo>
+    <!-- HR-UI-002: Employee List View with Login, Account Status, and Action Button -->
+    <record id="employee_list" model="ir.ui.view">
+        <field name="name">tp.hr.employee.list</field>
+        <field name="model">hr.employee</field>
+        <field name="arch" type="xml">
+            <list string="Hồ sơ nhân viên" js_class="tp_hr_table" limit="50" groups_limit="50" expand="1" delete="false" default_order="department_id, tp_employee_code">
+                <field name="department_id" string="Đơn vị / Phòng ban" optional="show"/>
+                <field name="tp_employee_code" string="Mã nhân viên"/>
+                <field name="name" string="Họ và tên"/>
+                <field name="mobile_phone" string="Số điện thoại" optional="show"/>
+                <field name="job_id" string="Chức vụ" optional="show"/>
+                <field name="tp_source_title" string="Chức vụ nguồn" optional="hide" groups="hr.group_hr_user"/>
+                <field name="tp_user_login" string="Tên đăng nhập" optional="show"/>
+                <field name="tp_account_status" string="Tình trạng" widget="badge" decoration-success="tp_account_status == 'active'" decoration-muted="tp_account_status == 'unlinked'" decoration-danger="tp_account_status == 'disabled'" optional="show"/>
+                <field name="active" column_invisible="True"/>
+                <button name="action_open_account_dialog" type="object" string="Xem tài khoản" icon="badge" class="btn btn-sm btn-outline-primary o_tp_hr_account_btn" title="Xem tài khoản cá nhân"/>
+                <field name="work_email" optional="hide"/>
+                <field name="work_phone" optional="hide"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- HR-UI-002: Employee Search View with Account Filters and Group By -->
+    <record id="employee_search" model="ir.ui.view">
+        <field name="name">tp.hr.employee.search</field>
+        <field name="model">hr.employee</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Mã hoặc tên" filter_domain="['|', ('name', 'ilike', self), ('tp_employee_code', 'ilike', self)]"/>
+                <field name="department_id" string="Đơn vị đối chiếu"/>
+                <field name="job_id" string="Chức vụ"/>
+                <field name="tp_user_login" string="Tên đăng nhập"/>
+                <filter name="account_active" string="Tài khoản mở" domain="[('tp_account_status', '=', 'active')]"/>
+                <filter name="account_disabled" string="Tài khoản khóa" domain="[('tp_account_status', '=', 'disabled')]"/>
+                <filter name="account_unlinked" string="Chưa có tài khoản" domain="[('tp_account_status', '=', 'unlinked')]"/>
+                <separator/>
+                <filter name="missing_basic" string="Cần bổ sung cơ bản" domain="['|', '|', ('tp_employee_code', '=', False), ('department_id', '=', False), '&amp;', ('tp_source_title', '=', False), ('job_id', '=', False)]"/>
+                <separator/>
+                <filter name="archived" string="Lưu trữ" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter name="department" string="Đơn vị" context="{'group_by':'department_id'}"/>
+                    <filter name="job" string="Chức vụ" context="{'group_by':'job_id'}"/>
+                    <filter name="account_status" string="Tình trạng" context="{'group_by':'tp_account_status'}"/>
+                    <filter name="status" string="Trạng thái hồ sơ" context="{'group_by':'active'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- HR-ACCOUNT-ROLE-001: Personal identity, five native tabs and guarded administration -->
+    <record id="employee_form" model="ir.ui.view">
+        <field name="name">tp.hr.employee.form</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="attributes"><attribute name="class" add="o_tp_hr_employee_form" separator=" "/><attribute name="js_class">tp_hr_profile</attribute><attribute name="delete">0</attribute></xpath>
+<xpath expr="//header/button[@name='action_send_invitation']" position="attributes"><attribute name="invisible">1</attribute></xpath>
+<xpath expr="//header/field[@name='user_state']" position="attributes"><attribute name="invisible">1</attribute></xpath>
+<xpath expr="//div[@name='employee_photo_and_info']" position="replace">
+ <div class="o_tp_hr_header">
+  <div class="o_tp_hr_avatar"><field name="image_1920" widget="image" options="{'size':[72,72], 'preview_image':'avatar_128'}"/></div>
+  <div class="o_tp_hr_identity"><h1 class="o_tp_hr_name"><field name="name" placeholder="Họ và tên" required="True"/></h1>
+   <div class="o_tp_hr_badges"><span class="o_tp_hr_badge_code"><i class="oi" data-icon="person" aria-hidden="true"/><field name="tp_employee_code" readonly="1"/></span><span><svg class="o_tp_hr_line_icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 10 6-10 6L2 9Z M2 13l10 6 10-6 M2 17l10 6 10-6"/></svg><field name="department_id" readonly="1"/></span><span><i class="oi" data-icon="work" aria-hidden="true"/><field name="job_id" readonly="1"/></span></div>
+  </div>
+  <field name="tp_account_status" widget="badge" decoration-success="tp_account_status == 'active'" decoration-danger="tp_account_status == 'disabled'" decoration-muted="tp_account_status == 'unlinked'"/>
+ </div>
+</xpath>
+<xpath expr="//div[hasclass('o_tp_hr_header')]" position="after"><div class="o_tp_hr_position_entry" groups="base.group_system"><button name="action_change_position" type="object" string="Đổi chức vụ" icon="group" class="btn btn-primary"/><span>Bổ nhiệm, chuyển về nhân viên hoặc đổi chức vụ ghi trong hồ sơ.</span></div></xpath>
+<xpath expr="//notebook" position="before"><div class="alert alert-warning" role="status" invisible="tp_employee_code and department_id and (job_id or tp_source_title)">Cần bổ sung mã nhân viên, phòng ban hoặc chức vụ để hoàn thiện thông tin công việc.</div></xpath>
+<xpath expr="//page[@name='work_information']" position="before">
+ <page name="page_overview" string="Tổng quan">
+  <div class="o_tp_hr_overview_grid">
+   <section class="o_tp_hr_card"><h2 class="o_tp_hr_card_title"><i class="oi" data-icon="work" aria-hidden="true"/>Thông tin công việc</h2><group><field name="department_id" string="Phòng ban"/><field name="job_id" string="Chức vụ nhân sự"/><field name="parent_id" string="Quản lý trực tiếp" widget="many2one_avatar_employee"/><field name="work_location_id" string="Nơi làm việc"/><field name="company_id" groups="base.group_multi_company"/></group></section>
+   <section class="o_tp_hr_card"><h2 class="o_tp_hr_card_title"><i class="oi" data-icon="phone" aria-hidden="true"/>Liên hệ công việc</h2><group><field name="work_email" widget="email"/><field name="work_phone" widget="phone"/><field name="mobile_phone" widget="phone"/></group></section>
+   <div class="o_tp_hr_account_card"><div class="o_tp_hr_account_summary"><i class="oi" data-icon="person" aria-hidden="true"/><div><span class="text-muted">Tài khoản cá nhân</span><div><field name="tp_user_login" readonly="1" invisible="not user_id"/><span invisible="user_id">Chưa có tài khoản</span></div></div></div><div class="o_tp_hr_account_summary"><svg class="o_tp_hr_line_icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 10 6-10 6L2 9Z M2 13l10 6 10-6 M2 17l10 6 10-6"/></svg><div><span class="text-muted">Vai trò nghiệp vụ</span><div><field name="tp_business_role" readonly="1"/></div></div></div><button name="action_open_account_dialog" type="object" string="Quản lý tài khoản" icon="settings" class="btn btn-outline-primary" groups="base.group_system"/></div>
+  </div>
+ </page>
+</xpath>
+<xpath expr="//page[@name='work_information']" position="attributes"><attribute name="string">Công việc &amp; hồ sơ</attribute></xpath>
+<xpath expr="//page[@name='work_information']" position="inside"><xpath expr="//page[@name='resume']/div" position="move"/></xpath>
+<xpath expr="//page[@name='resume']" position="replace"/>
+<xpath expr="//group[@name='schedule']" position="attributes"><attribute name="invisible">1</attribute></xpath>
+<xpath expr="//page[@name='personal_information']" position="attributes"><attribute name="string">Thông tin cá nhân</attribute></xpath>
+<xpath expr="//field[@name='marital']" position="before"><field name="tp_personal_defaults_confirmed"/><div invisible="tp_personal_defaults_confirmed" class="text-muted" colspan="2">Tình trạng gia đình, số con và quãng đường: Chưa có thông tin. Chỉ xác nhận khi đã đối chiếu nguồn.</div></xpath>
+<xpath expr="//field[@name='marital']" position="attributes"><attribute name="invisible">not tp_personal_defaults_confirmed</attribute></xpath>
+<xpath expr="//field[@name='children']" position="attributes"><attribute name="invisible">not tp_personal_defaults_confirmed</attribute></xpath>
+<xpath expr="//div[@name='div_km_home_work']" position="attributes"><attribute name="invisible">not tp_personal_defaults_confirmed</attribute></xpath>
+<xpath expr="//label[@for='distance_home_work']" position="attributes"><attribute name="invisible">not tp_personal_defaults_confirmed</attribute></xpath>
+<xpath expr="//notebook" position="inside">
+ <page name="page_account" string="Tài khoản &amp; phân quyền">
+  <div class="o_tp_hr_account_panel"><field name="tp_role_supported" invisible="1"/>
+   <div class="o_tp_hr_account_empty" invisible="user_id"><h2>Chưa có tài khoản</h2><p>Cấp tài khoản cá nhân khi nhân viên cần sử dụng hệ thống.</p><button name="action_open_account_dialog" type="object" string="Tạo tài khoản riêng" class="btn btn-primary" groups="base.group_system"/></div>
+   <div invisible="not user_id" class="o_tp_hr_account_box"><group><group string="Tài khoản cá nhân"><field name="tp_user_login" readonly="1"/><field name="tp_account_status" widget="badge" decoration-success="tp_account_status == 'active'" decoration-danger="tp_account_status == 'disabled'" decoration-muted="tp_account_status == 'unlinked'"/><field name="department_id" readonly="1"/><field name="job_id" string="Chức vụ nhân sự" readonly="1"/></group><group string="Vai trò và phạm vi"><field name="tp_business_role" readonly="1"/><field name="tp_role_scope" readonly="1"/></group></group>
+    <div class="o_tp_hr_account_actions" groups="base.group_system"><button name="action_change_business_role" type="object" string="Bổ nhiệm / hạ quyền KH-KD" class="btn btn-primary" invisible="not tp_role_supported"/><button name="action_open_account_dialog" type="object" string="Khóa / mở tài khoản" class="btn btn-outline-secondary"/><button name="action_reset_user_password" type="object" string="Đặt lại mật khẩu" class="btn btn-outline-secondary"/></div>
+    <details groups="base.group_system"><summary>Quyền bổ sung đang giữ</summary><field name="tp_extra_access" readonly="1" nolabel="1"/></details>
+   </div>
+   <p class="o_tp_hr_note">Chức vụ nhân sự không tự cấp quyền nghiệp vụ. Quản trị hệ thống được quản lý riêng. Mật khẩu hiện tại không thể xem lại.</p>
+  </div>
+ </page>
+ <page name="tp_history" string="Lịch sử"><div class="o_tp_hr_history"/></page>
+</xpath>
+<xpath expr="//div[hasclass('o_tp_hr_history')]" position="inside"><xpath expr="//chatter" position="move"/></xpath>
+<xpath expr="//page[@name='work_information']" position="inside"><details class="o_tp_hr_provenance" groups="hr.group_hr_user"><summary>Nguồn dữ liệu và thông tin kỹ thuật</summary><group><field name="tp_source_code" readonly="1"/><field name="tp_source_department" readonly="1"/><field name="tp_source_title" readonly="1"/><field name="tp_import_batch_id" readonly="1"/></group></details></xpath>
+<xpath expr="//page[@name='payroll_information']" position="attributes"><attribute name="invisible">1</attribute></xpath>
+<xpath expr="//page[@name='hr_settings']" position="attributes"><attribute name="invisible">1</attribute></xpath>
+<xpath expr="//field[@name='user_id']" position="attributes"><attribute name="readonly">1</attribute></xpath>
+</field>
+    <field name="priority">80</field></record>
+
+    <record id="view_tp_hr_role_wizard" model="ir.ui.view">
+        <field name="name">tp.hr.role.wizard.form</field><field name="model">tp.hr.role.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Đổi chức vụ / Bổ nhiệm và hạ quyền" class="o_tp_hr_account_dialog o_tp_hr_position_dialog">
+                <sheet>
+                    <div class="o_tp_hr_position_summary"><group><field name="employee_id" options="{'no_open': True}"/><field name="department_id" options="{'no_open': True}"/><field name="current_job_id" options="{'no_open': True}"/><field name="current_role"/></group></div>
+                    <field name="company_id" invisible="1"/><field name="role_available" invisible="1"/><field name="account_exists" invisible="1"/>
+                    <group class="o_tp_hr_position_choice" invisible="not role_available"><field name="change_kind" widget="radio"/></group>
+                    <p class="o_tp_hr_position_hint" invisible="role_available or account_exists">Nhân viên chưa có tài khoản. Bạn vẫn có thể đổi chức vụ trong hồ sơ; cần cấp tài khoản trước khi phân quyền.</p>
+                    <p class="o_tp_hr_position_hint" invisible="role_available or not account_exists">Phòng ban chưa triển khai bộ quyền KH-KD. Bạn có thể đổi chức vụ trong hồ sơ; quyền hệ thống được giữ nguyên.</p>
+                    <div invisible="change_kind != 'job'" class="o_tp_hr_position_hint"><strong>Đổi chức vụ trong hồ sơ</strong><p>Chọn chức vụ mới để ghi nhận bổ nhiệm hoặc điều chuyển. Thao tác này không tự cấp hoặc thu hồi quyền sử dụng hệ thống.</p></div>
+                    <div invisible="change_kind != 'role'" class="o_tp_hr_position_role">
+                        <p class="o_tp_hr_position_hint"><strong>Mỗi phòng chỉ có một trưởng phòng.</strong> Nếu phòng đã có trưởng phòng, hãy hạ cấp người đang giữ vai trò trước khi bổ nhiệm người mới.</p>
+                        <group><field name="new_role" widget="radio" required="change_kind == 'role'"/><field name="scope" readonly="1"/><field name="update_job"/></group>
+                        <p class="o_tp_hr_position_hint">Bổ nhiệm trưởng phòng cấp quyền nghiệp vụ trong phòng KH-KD. Chuyển về nhân viên thu hồi quyền từ vai trò trưởng phòng; quyền cấp riêng sẽ được kiểm tra ở bước xem trước.</p>
+                    </div>
+                    <group class="o_tp_hr_position_inputs" col="1"><field name="job_id" invisible="change_kind != 'job' and not update_job" required="change_kind == 'job' or update_job" domain="[('active', '=', True), ('company_id', 'in', [False, company_id]), ('department_id', 'in', [False, department_id])]" options="{'no_create': True, 'no_open': True}" placeholder="Chọn chức vụ mới"/><field name="reason" placeholder="Nêu lý do bổ nhiệm, hạ chức vụ hoặc điều chuyển"/></group>
+                    <field name="expected_digest" invisible="1"/>
+                    <section invisible="not expected_digest" class="o_tp_hr_position_preview"><h3>Kiểm tra trước khi xác nhận</h3><field name="preview" readonly="1" nolabel="1"/><p>Nếu sửa lựa chọn hoặc lý do, hãy bấm Xem trước thay đổi lại.</p></section>
+                </sheet>
+                <footer><button name="action_preview" type="object" string="Xem trước thay đổi" class="btn btn-primary"/><button name="action_apply" type="object" string="Xác nhận đổi chức vụ" class="btn btn-primary" invisible="not expected_digest or change_kind != 'job'"/><button name="action_apply" type="object" string="Xác nhận bổ nhiệm" class="btn btn-primary" invisible="not expected_digest or change_kind != 'role' or new_role != 'head'"/><button name="action_apply" type="object" string="Xác nhận chuyển về nhân viên" class="btn btn-danger" invisible="not expected_digest or change_kind != 'role' or new_role != 'staff'"/><button string="Hủy" special="cancel" class="btn btn-secondary"/></footer>
+            </form>
+        </field>
+    </record>
+    <record id="view_tp_hr_account_wizard_form" model="ir.ui.view">
+        <field name="name">tp.hr.account.wizard.form</field>
+        <field name="model">tp.hr.account.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Tài khoản cá nhân" class="o_tp_hr_account_dialog o_tp_hr_account_manage" js_class="tp_hr_account">
+ <sheet><div class="o_tp_hr_account_grid"><section>
+ <div class="o_tp_hr_account_row"><i class="oi" data-icon="person" aria-hidden="true"/><label for="employee_name" string="Nhân viên"/><field name="employee_name" readonly="1"/></div>
+ <div class="o_tp_hr_account_row"><i class="oi" data-icon="badge" aria-hidden="true"/><label for="tp_employee_code" string="Mã nhân viên"/><field name="tp_employee_code" readonly="1"/></div>
+ <div class="o_tp_hr_account_row"><svg class="o_tp_hr_line_icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 10 6-10 6L2 9Z M2 13l10 6 10-6 M2 17l10 6 10-6"/></svg><label for="department_id" string="Phòng ban"/><field name="department_id" readonly="1"/></div>
+ <div class="o_tp_hr_account_row"><i class="oi" data-icon="work" aria-hidden="true"/><label for="job_id" string="Chức vụ"/><field name="job_id" readonly="1"/></div></section><section>
+ <div class="o_tp_hr_account_row" invisible="not is_linked"><i class="oi" data-icon="person" aria-hidden="true"/><label for="current_login"/><field name="current_login"/></div>
+ <div class="o_tp_hr_account_row"><i class="oi" data-icon="check_circle" aria-hidden="true"/><label for="account_status"/><field name="account_status" widget="badge" decoration-success="account_status == 'active'" decoration-danger="account_status == 'disabled'" decoration-muted="account_status == 'unlinked'"/></div></section></div>
+ <field name="expected_user_id" invisible="1"/><field name="is_linked" invisible="1"/><field name="is_admin" invisible="1"/><field name="employee_id" invisible="1"/>
+ <div invisible="is_linked"><p>Chưa có tài khoản. Quản trị viên có thể tạo thông tin đăng nhập riêng cho nhân viên này.</p><button name="action_prepare_credentials" type="object" string="Tạo tài khoản riêng" class="btn btn-primary" groups="base.group_system"/></div>
+ <div invisible="not is_linked" groups="base.group_system"><div class="o_tp_hr_account_row o_tp_hr_account_reason"><i class="oi" data-icon="edit" aria-hidden="true"/><label for="reason"/><field name="reason" placeholder="Nhập lý do khóa hoặc mở tài khoản"/></div><div class="o_tp_hr_account_actions"><button name="action_lock" type="object" string="Khóa tài khoản" icon="lock" class="btn btn-danger" invisible="account_status != 'active'" confirm="Khóa đăng nhập và kết thúc các phiên hiện có?" confirm-title="Xác nhận khóa tài khoản" confirm-label="Khóa tài khoản" cancel-label="Hủy"/><button name="action_unlock" type="object" string="Mở tài khoản" icon="lock_open" class="btn btn-primary" invisible="account_status != 'disabled'"/><button name="action_reset_password" type="object" string="Đặt lại mật khẩu" icon="refresh" class="btn btn-outline-secondary"/></div></div>
+ </sheet><footer><button string="Đóng" icon="close" special="cancel" class="btn btn-secondary"/></footer></form></field>
+    </record>
+
+    <!-- Native Menu & Action Declarations -->
+    <record id="action_overview" model="ir.actions.client">
+        <field name="name">Tổng quan TP HR</field>
+        <field name="tag">tp_hr_workspace.overview</field>
+        <field name="path">tp-hr</field>
+    </record>
+    <record id="action_employees" model="ir.actions.act_window">
+        <field name="name">Hồ sơ nhân viên</field>
+        <field name="res_model">hr.employee</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="employee_list"/>
+        <field name="view_ids" eval="[(5, 0, 0),             (0, 0, {'view_mode': 'list', 'view_id': ref('employee_list')}),             (0, 0, {'view_mode': 'form', 'view_id': ref('employee_form')})]"/>
+        <field name="search_view_id" ref="employee_search"/>
+        <field name="context">{'tp_hr_workspace': True}</field>
+    </record>
+    <record id="action_missing" model="ir.actions.act_window">
+        <field name="name">Hồ sơ cần bổ sung</field>
+        <field name="res_model">hr.employee</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="employee_list"/>
+        <field name="view_ids" eval="[(5, 0, 0),             (0, 0, {'view_mode': 'list', 'view_id': ref('employee_list')}),             (0, 0, {'view_mode': 'form', 'view_id': ref('employee_form')})]"/>
+        <field name="search_view_id" ref="employee_search"/>
+        <field name="domain">['|', '|', ('tp_employee_code', '=', False), ('department_id', '=', False), '&amp;', ('tp_source_title', '=', False), ('job_id', '=', False)]</field>
+    </record>
+    <record id="action_archived" model="ir.actions.act_window">
+        <field name="name">Hồ sơ lưu trữ</field>
+        <field name="res_model">hr.employee</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="employee_list"/>
+        <field name="view_ids" eval="[(5, 0, 0),             (0, 0, {'view_mode': 'list', 'view_id': ref('employee_list')}),             (0, 0, {'view_mode': 'form', 'view_id': ref('employee_form')})]"/>
+        <field name="search_view_id" ref="employee_search"/>
+        <field name="context">{'active_test': False}</field>
+        <field name="domain">[('active','=',False)]</field>
+    </record>
+    <record id="department_list" model="ir.ui.view">
+        <field name="mode">primary</field>
+        <field name="name">tp.hr.department.list</field>
+        <field name="model">hr.department</field>
+        <field name="inherit_id" ref="hr.view_department_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="js_class">tp_hr_table</attribute>
+                <attribute name="limit">20</attribute>
+            </xpath>
+        </field>
+    </record>
+    <record id="job_list" model="ir.ui.view">
+        <field name="name">tp.hr.job.list</field>
+        <field name="model">hr.job</field>
+        <field name="inherit_id" eval="False"/>
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <list string="Quản lý chức vụ" js_class="tp_hr_table" limit="50" editable="bottom" open_form_view="True">
+                <field name="sequence" widget="handle"/>
+                <field name="name" string="Tên chức vụ"/>
+                <field name="department_id" string="Đơn vị / Phòng ban" optional="show"/>
+                <field name="no_of_employee" string="Số nhân viên" optional="show"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                <field name="active" string="Đang sử dụng" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="job_form" model="ir.ui.view">
+        <field name="name">tp.hr.job.form</field>
+        <field name="model">hr.job</field>
+        <field name="arch" type="xml">
+            <form string="Chức vụ">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Tên chức vụ"/>
+                        <h1>
+                            <field name="name" placeholder="Ví dụ: Trưởng phòng, Kế toán trưởng..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Thông tin tổ chức">
+                            <field name="department_id" string="Đơn vị / Phòng ban mặc định"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="sequence" string="Thứ tự ưu tiên"/>
+                        </group>
+                        <group string="Nhân sự hiện tại">
+                            <field name="no_of_employee" string="Số lượng nhân viên"/>
+                            <field name="active" widget="boolean_toggle" string="Đang sử dụng"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="employees" string="Danh sách nhân viên">
+                            <field name="employee_ids" readonly="1">
+                                <list string="Nhân viên giữ chức vụ này" limit="20">
+                                    <field name="tp_employee_code" string="Mã NV"/>
+                                    <field name="name" string="Họ và tên"/>
+                                    <field name="department_id" string="Đơn vị / Phòng ban"/>
+                                    <field name="mobile_phone" string="Số điện thoại"/>
+                                    <field name="tp_user_login" string="Tên đăng nhập"/>
+                                    <field name="tp_account_status" string="Tình trạng" widget="badge" decoration-success="tp_account_status == 'active'" decoration-muted="tp_account_status == 'unlinked'" decoration-danger="tp_account_status == 'disabled'"/>
+                                    <field name="active" column_invisible="True"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="description" string="Mô tả công việc">
+                            <field name="description" placeholder="Mô tả trách nhiệm, quyền hạn và nhiệm vụ của chức vụ..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="location_list" model="ir.ui.view">
+        <field name="mode">primary</field>
+        <field name="name">tp.hr.location.list</field>
+        <field name="model">hr.work.location</field>
+        <field name="inherit_id" ref="hr.hr_work_location_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="js_class">tp_hr_table</attribute>
+                <attribute name="limit">20</attribute>
+            </xpath>
+        </field>
+    </record>
+    <record id="action_departments" model="ir.actions.act_window">
+        <field name="name">Phòng ban và đơn vị</field>
+        <field name="res_model">hr.department</field>
+        <field name="view_mode">list,form,hierarchy</field>
+        <field name="view_id" ref="department_list"/>
+    </record>
+    <record id="action_jobs" model="ir.actions.act_window">
+        <field name="name">Quản lý chức vụ</field>
+        <field name="res_model">hr.job</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="job_list"/>
+        <field name="view_ids" eval="[(5, 0, 0),             (0, 0, {'view_mode': 'list', 'view_id': ref('job_list')}),             (0, 0, {'view_mode': 'form', 'view_id': ref('job_form')})]"/>
+        <field name="context">{'tp_hr_workspace': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Tạo chức vụ mới</p>
+            <p>Quản lý các vị trí, chức vụ trong công ty và phân công cho nhân viên.</p>
+        </field>
+    </record>
+    <record id="action_locations" model="ir.actions.act_window">
+        <field name="name">Nơi làm việc</field>
+        <field name="res_model">hr.work.location</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="location_list"/>
+    </record>
+    <record id="action_hierarchy" model="ir.actions.act_window">
+        <field name="name">Sơ đồ quản lý đã khai báo</field>
+        <field name="res_model">hr.employee</field>
+        <field name="view_mode">hierarchy,list,form</field>
+        <field name="help" type="html"><p>Chỉ thể hiện quan hệ quản lý đã khai báo. Không tự suy cấp trên từ chức vụ nguồn.</p></field>
+    </record>
+    <record id="import_list" model="ir.ui.view">
+        <field name="name">tp.hr.import.batch.list</field>
+        <field name="model">tp.hr.import.batch</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_hr_table" limit="20" delete="false">
+                <field name="file_name" string="Tệp nguồn"/>
+                <field name="checksum" string="SHA256" optional="hide"/>
+                <field name="state" string="Trạng thái"/>
+                <field name="create_uid" string="Người tạo"/>
+                <field name="create_date" string="Thời điểm tạo"/>
+            </list>
+        </field>
+    </record>
+    <record id="import_form" model="ir.ui.view">
+        <field name="name">tp.hr.import.batch.form</field>
+        <field name="model">tp.hr.import.batch</field>
+        <field name="arch" type="xml">
+            <form string="Nhập và đối chiếu roster" delete="false">
+                <header>
+                    <button name="action_preview" type="object" string="Phân tích và xem trước" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_open_lines" type="object" string="Mở bảng đối chiếu đầy đủ" invisible="state == 'draft'"/>
+                    <button name="action_apply" type="object" string="Áp dụng đối chiếu" class="btn-primary" invisible="state != 'preview'" groups="hr.group_hr_manager" confirm="Áp dụng các dòng đã đối chiếu? Xung đột phải được xử lý trước; không tự liên kết tài khoản." confirm-title="Xác nhận áp dụng đối chiếu" confirm-label="Áp dụng đối chiếu" cancel-label="Hủy"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="file_name" string="Tệp nguồn"/>
+                        <field name="file_data" string="Chọn tệp" filename="file_name" readonly="state != 'draft'"/><field name="checksum" string="SHA256" readonly="1"/><field name="row_count" string="Dòng nguồn" readonly="1"/><field name="applied_by" string="Người áp dụng" readonly="1"/><field name="applied_at" string="Thời điểm áp dụng" readonly="1"/><field name="result" string="Kết quả" readonly="1"/></group><div class="alert alert-info" role="status">Chọn file → phân tích → rà từng dòng và ánh xạ đơn vị → áp dụng → xem kết quả. Không nhập giờ công. Không tự tạo tài khoản hoặc thay đổi danh tính khi nhập hồ sơ.</div><field name="line_ids" readonly="state != 'preview'"><list editable="bottom" create="false" delete="false" limit="20"><field name="source_code" string="Mã nguồn" readonly="1"/><field name="name" readonly="1"/><field name="source_department" string="Đơn vị nguồn" readonly="1"/><field name="source_title" string="Chức vụ nguồn" readonly="1"/><field name="department_id" string="Đơn vị đối chiếu"/><field name="employee_id" string="Hồ sơ hiện có" readonly="1"/><field name="action" string="Hành động" readonly="1"/><field name="review_update" string="Đã rà soát thay đổi" groups="hr.group_hr_manager"/><field name="detail" string="Chi tiết đối chiếu" readonly="1"/></list></field></sheet></form></field></record>
+    <record id="import_lines" model="ir.ui.view"><field name="name">tp.hr.import.line.list</field><field name="model">tp.hr.import.line</field><field name="arch" type="xml"><list js_class="tp_hr_table" limit="20" create="false" delete="false" editable="bottom"><field name="batch_id" readonly="1" optional="hide"/><field name="source_code" string="Mã nguồn" readonly="1"/><field name="name" string="Họ tên nguồn" readonly="1"/><field name="source_department" string="Đơn vị nguồn" readonly="1"/><field name="source_title" string="Chức vụ nguồn" readonly="1"/><field name="department_id" string="Đơn vị đối chiếu"/><field name="employee_id" string="Hồ sơ hiện có" readonly="1" optional="show"/><field name="action" string="Hành động" readonly="1"/><field name="review_update" string="Đã rà soát thay đổi"/><field name="detail" string="Chi tiết đối chiếu" readonly="1"/></list></field></record>
+    <record id="version_list" model="ir.ui.view"><field name="name">tp.hr.version.list</field><field name="model">hr.version</field><field name="inherit_id" ref="hr.hr_version_list_view"/><field name="mode">primary</field><field name="arch" type="xml"><xpath expr="//list" position="attributes"><attribute name="js_class">tp_hr_table</attribute><attribute name="limit">20</attribute></xpath><xpath expr="//field[@name='wage']" position="before"><field name="tp_wage_confirmed" column_invisible="True" groups="hr.group_hr_manager"/></xpath><xpath expr="//field[@name='wage']" position="attributes"><attribute name="invisible">not tp_wage_confirmed</attribute></xpath></field></record>
+    <record id="action_import" model="ir.actions.act_window"><field name="name">Nhập và đối chiếu</field><field name="res_model">tp.hr.import.batch</field><field name="view_mode">list,form</field></record>
+    <record id="action_pending" model="ir.actions.act_window"><field name="name">Chưa có tài khoản</field><field name="res_model">hr.employee</field><field name="view_mode">list,form</field><field name="view_id" ref="employee_list"/><field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('employee_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('employee_form')})]"/><field name="search_view_id" ref="employee_search"/><field name="domain">[('user_id','=',False)]</field><field name="help" type="html"><p>Hồ sơ chưa có tài khoản là trạng thái hợp lệ. Admin mở hồ sơ → Tài khoản &amp; phân quyền → Tạo tài khoản riêng khi cần. Không dùng lại tài khoản của người khác.</p></field></record>
+
+    <!-- Menus -->
+    <menuitem id="menu_hr" name="TP HR" sequence="30" action="action_overview" groups="hr.group_hr_user"/>
+    <menuitem id="menu_overview" name="Tổng quan" parent="menu_hr" action="action_overview" sequence="1"/>
+    <menuitem id="menu_group_employees" name="Nhân viên" parent="menu_hr" sequence="10"/>
+    <menuitem id="menu_employees" name="Danh sách nhân viên" parent="menu_group_employees" action="action_employees"/>
+    <menuitem id="menu_missing" name="Hồ sơ cần bổ sung" parent="menu_group_employees" action="action_missing" sequence="20"/>
+    <menuitem id="menu_archived" name="Lưu trữ" parent="menu_group_employees" action="action_archived" sequence="30"/>
+    <menuitem id="menu_group_organization" name="Tổ chức" parent="menu_hr" sequence="20"/>
+    <menuitem id="menu_departments" name="Phòng ban và đơn vị" parent="menu_group_organization" action="action_departments"/>
+    <menuitem id="menu_jobs" name="Chức vụ" parent="menu_group_organization" action="action_jobs" sequence="20"/>
+    <menuitem id="menu_locations" name="Nơi làm việc" parent="menu_group_organization" action="action_locations" sequence="30"/>
+    <menuitem id="menu_hierarchy" name="Sơ đồ quản lý đã khai báo" parent="menu_group_organization" action="action_hierarchy" sequence="40"/>
+    <menuitem id="menu_group_records" name="Hồ sơ và năng lực" parent="menu_hr" sequence="30"/>
+    <menuitem id="menu_records" name="Hồ sơ, phiên bản và kỹ năng" parent="menu_group_records" action="action_employees"/>
+    <menuitem id="menu_import" name="Nhập và đối chiếu" parent="menu_hr" action="action_import" sequence="40" groups="hr.group_hr_manager"/>
+    <menuitem id="menu_pending" name="Chưa có tài khoản" parent="menu_group_employees" action="action_pending" sequence="40" groups="hr.group_hr_manager"/>
+    <menuitem id="menu_reports" name="Báo cáo cơ cấu và Excel" parent="menu_hr" action="action_overview" sequence="50"/>
+
+    <record id="skill_types_list" model="ir.ui.view"><field name="name">tp.hr.skill_types.list</field><field name="model">hr.skill.type</field><field name="inherit_id" ref="hr_skills.hr_skill_type_view_tree"/><field name="mode">primary</field><field name="arch" type="xml"><xpath expr="//list" position="attributes"><attribute name="js_class">tp_hr_table</attribute><attribute name="limit">20</attribute></xpath></field></record>
+    <record id="action_skill_types" model="ir.actions.act_window"><field name="name">Loại kỹ năng và cấp độ</field><field name="res_model">hr.skill.type</field><field name="view_mode">list,form</field><field name="view_id" ref="skill_types_list"/></record>
+    <record id="resume_types_list" model="ir.ui.view"><field name="name">tp.hr.resume_types.list</field><field name="model">hr.resume.line.type</field><field name="inherit_id" ref="hr_skills.hr_resume_line_type_tree_view"/><field name="mode">primary</field><field name="arch" type="xml"><xpath expr="//list" position="attributes"><attribute name="js_class">tp_hr_table</attribute><attribute name="limit">20</attribute></xpath></field></record>
+    <record id="action_resume_types" model="ir.actions.act_window"><field name="name">Loại hồ sơ năng lực</field><field name="res_model">hr.resume.line.type</field><field name="view_mode">list,form</field><field name="view_id" ref="resume_types_list"/></record>
+    <record id="categories_list" model="ir.ui.view"><field name="name">tp.hr.categories.list</field><field name="model">hr.employee.category</field><field name="inherit_id" ref="hr.view_employee_category_list"/><field name="mode">primary</field><field name="arch" type="xml"><xpath expr="//list" position="attributes"><attribute name="js_class">tp_hr_table</attribute><attribute name="limit">20</attribute></xpath></field></record>
+    <record id="action_categories" model="ir.actions.act_window"><field name="name">Thẻ nhân viên</field><field name="res_model">hr.employee.category</field><field name="view_mode">list,form</field><field name="view_id" ref="categories_list"/></record>
+    <menuitem id="menu_group_config" name="Cấu hình HR" parent="menu_hr" sequence="90" groups="hr.group_hr_manager"/>
+    <menuitem id="menu_skill_types" name="Loại kỹ năng và cấp độ" parent="menu_group_config" action="action_skill_types"/>
+    <menuitem id="menu_resume_types" name="Loại hồ sơ năng lực" parent="menu_group_config" action="action_resume_types" sequence="20"/>
+    <menuitem id="menu_categories" name="Thẻ nhân viên" parent="menu_group_config" action="action_categories" sequence="30"/>
+</odoo>
+

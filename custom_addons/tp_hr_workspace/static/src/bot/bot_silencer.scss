@@ -1,0 +1,10 @@
+/* Global OdooBot Neutralizer Styles */
+
+img[src*="odoobot"],
+.o-mail-Message:has([src*="odoobot"]),
+.o_NotificationItem:has([title*="OdooBot"]),
+.o-mail-NotificationItem:has([title*="OdooBot"]),
+.o-mail-DiscussSidebarChannel:has([title*="OdooBot"]),
+.o-mail-DiscussSidebarCategoryItem:has([title*="OdooBot"]) {
+    display: none !important;
+}

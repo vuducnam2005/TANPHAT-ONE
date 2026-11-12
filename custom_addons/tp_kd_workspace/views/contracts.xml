@@ -1,0 +1,367 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--KD-UI-003/007: workspace-scoped presentation; native controllers and business guards retained.-->
+<odoo>
+  <record id="kd_contract_list_style" model="ir.ui.view">
+    <field name="name">kd.ui003.contract.list.style</field>
+    <field name="model">tp.contract</field>
+    <field name="inherit_id" ref="tp_contract.view_contract_list"/>
+    <field name="arch" type="xml">
+      <xpath expr="/list" position="attributes">
+        <attribute name="class" add="tp_kd_table" separator=" "/>
+      </xpath>
+      <field name="code" position="attributes">
+        <attribute name="class" add="tp_kd_wrap" separator=" "/>
+      </field>
+      <field name="name" position="attributes">
+        <attribute name="class" add="tp_kd_wrap tp_kd_strong" separator=" "/>
+      </field>
+      <field name="project_id" position="attributes">
+        <attribute name="class" add="tp_kd_wrap" separator=" "/>
+      </field>
+      <field name="partner_id" position="attributes">
+        <attribute name="class" add="tp_kd_wrap" separator=" "/>
+      </field>
+      <field name="contract_type" position="attributes">
+        <attribute name="class" add="tp_kd_wrap" separator=" "/>
+      </field>
+      <field name="department_id" position="attributes">
+        <attribute name="class" add="tp_kd_wrap" separator=" "/>
+      </field>
+      <field name="lifecycle_state" position="attributes">
+        <attribute name="class" add="tp_kd_wrap" separator=" "/>
+      </field>
+    </field>
+  </record>
+  <record id="kd_revision_list_style" model="ir.ui.view">
+    <field name="name">kd.ui003.revision.list.style</field>
+    <field name="model">tp.contract.revision</field>
+    <field name="inherit_id" ref="tp_contract.view_revision_list"/>
+    <field name="arch" type="xml">
+      <xpath expr="/list" position="attributes">
+        <attribute name="class" add="tp_kd_table" separator=" "/>
+      </xpath>
+      <field name="contract_id" position="attributes">
+        <attribute name="class" add="tp_kd_wrap" separator=" "/>
+      </field>
+      <field name="name" position="attributes">
+        <attribute name="class" add="tp_kd_wrap tp_kd_strong" separator=" "/>
+      </field>
+      <field name="revision_kind" position="attributes">
+        <attribute name="class" add="tp_kd_wrap" separator=" "/>
+      </field>
+      <field name="reference" position="attributes">
+        <attribute name="class" add="tp_kd_wrap" separator=" "/>
+      </field>
+    </field>
+  </record>
+  <record id="kd_contract_form_style" model="ir.ui.view">
+    <field name="name">kd.ui003.contract.form.style</field>
+    <field name="model">tp.contract</field>
+    <field name="inherit_id" ref="tp_contract.view_contract_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="/form" position="attributes">
+        <attribute name="class" add="tp_kd_form" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="kd_revision_form_style" model="ir.ui.view">
+    <field name="name">kd.ui003.revision.form.style</field>
+    <field name="model">tp.contract.revision</field>
+    <field name="inherit_id" ref="tp_contract.view_revision_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="/form" position="attributes">
+        <attribute name="class" add="tp_kd_form" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="kd_document_list_style" model="ir.ui.view">
+    <field name="name">kd.ui003.document.list.style</field>
+    <field name="model">tp.contract.document</field>
+    <field name="inherit_id" ref="tp_contract.view_document_list"/>
+    <field name="arch" type="xml">
+      <xpath expr="/list" position="attributes">
+        <attribute name="class" add="tp_kd_table" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="kd_amount_list_style" model="ir.ui.view">
+    <field name="name">kd.ui003.amount.list.style</field>
+    <field name="model">tp.contract.line.amount</field>
+    <field name="inherit_id" ref="tp_contract.view_amount_list"/>
+    <field name="arch" type="xml">
+      <xpath expr="/list" position="attributes">
+        <attribute name="class" add="tp_kd_table" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="kd_audit_list_style" model="ir.ui.view">
+    <field name="name">kd.ui003.audit.list.style</field>
+    <field name="model">tp.contract.audit</field>
+    <field name="inherit_id" ref="tp_contract.view_audit_list"/>
+    <field name="arch" type="xml">
+      <xpath expr="/list" position="attributes">
+        <attribute name="class" add="tp_kd_table" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="kd_native_draft_form_style" model="ir.ui.view">
+    <field name="name">kd.ui003.native_draft.form.style</field>
+    <field name="model">tp.contract.native.draft</field>
+    <field name="inherit_id" ref="tp_contract.view_native_draft_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="/form" position="attributes">
+        <attribute name="class" add="tp_kd_form" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="kd_native_amendment_form_style" model="ir.ui.view">
+    <field name="name">kd.ui003.native_amendment.form.style</field>
+    <field name="model">tp.contract.native.amendment</field>
+    <field name="inherit_id" ref="tp_contract.view_native_amendment_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="/form" position="attributes">
+        <attribute name="class" add="tp_kd_form" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="kd_native_submit_form_style" model="ir.ui.view">
+    <field name="name">kd.ui003.native_submit.form.style</field>
+    <field name="model">tp.contract.native.submit</field>
+    <field name="inherit_id" ref="tp_contract.view_native_submit_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="/form" position="attributes">
+        <attribute name="class" add="tp_kd_form" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="kd_native_return_form_style" model="ir.ui.view">
+    <field name="name">kd.ui003.native_return.form.style</field>
+    <field name="model">tp.contract.native.return</field>
+    <field name="inherit_id" ref="tp_contract.view_native_return_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="/form" position="attributes">
+        <attribute name="class" add="tp_kd_form" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="kd_native_rework_form_style" model="ir.ui.view">
+    <field name="name">kd.ui003.native_rework.form.style</field>
+    <field name="model">tp.contract.native.rework</field>
+    <field name="inherit_id" ref="tp_contract.view_native_rework_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="/form" position="attributes">
+        <attribute name="class" add="tp_kd_form" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="kd_scope_line_form_style" model="ir.ui.view">
+    <field name="name">kd.ui003.scope_line.form.style</field>
+    <field name="model">tp.contract.line</field>
+    <field name="inherit_id" ref="tp_contract.view_scope_line_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="/form" position="attributes">
+        <attribute name="class" add="tp_kd_form" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="kd_reference_form_style" model="ir.ui.view">
+    <field name="name">kd.ui003.reference.form.style</field>
+    <field name="model">tp.approval.reference</field>
+    <field name="inherit_id" ref="tp_contract.view_reference_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="/form" position="attributes">
+        <attribute name="class" add="tp_kd_form" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="kd_submission_form_style" model="ir.ui.view">
+    <field name="name">kd.ui003.submission.form.style</field>
+    <field name="model">tp.contract.submission</field>
+    <field name="inherit_id" ref="tp_contract.view_submission_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="/form" position="attributes">
+        <attribute name="class" add="tp_kd_form" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="kd_document_form_style" model="ir.ui.view">
+    <field name="name">kd.ui003.document.form.style</field>
+    <field name="model">tp.contract.document</field>
+    <field name="inherit_id" ref="tp_contract.view_document_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="/form" position="attributes">
+        <attribute name="class" add="tp_kd_form" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="kd_amount_form_style" model="ir.ui.view">
+    <field name="name">kd.ui003.amount.form.style</field>
+    <field name="model">tp.contract.line.amount</field>
+    <field name="inherit_id" ref="tp_contract.view_amount_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="/form" position="attributes">
+        <attribute name="class" add="tp_kd_form" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="kd_audit_form_style" model="ir.ui.view">
+    <field name="name">kd.ui003.audit.form.style</field>
+    <field name="model">tp.contract.audit</field>
+    <field name="inherit_id" ref="tp_contract.view_audit_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="/form" position="attributes">
+        <attribute name="class" add="tp_kd_form" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <record id="ui007_view_contract_list" model="ir.ui.view">
+    <field name="name">kd.ui007.view_contract_list</field>
+    <field name="model">tp.contract</field>
+    <field name="inherit_id" ref="tp_contract.view_contract_list"/>
+    <field name="arch" type="xml">
+      <xpath expr="/list" position="attributes">
+        <attribute name="js_class">tp_kd_table</attribute>
+      </xpath>
+      <xpath expr="//field[@name='lifecycle_state']" position="attributes">
+        <attribute name="widget">tp_kd_selection</attribute>
+      </xpath>
+      <xpath expr="//field[@name='tp_latest_review_state']" position="attributes">
+        <attribute name="widget">tp_kd_badge</attribute>
+      </xpath>
+    </field>
+  </record>
+  <record id="ui007_view_revision_list" model="ir.ui.view">
+    <field name="name">kd.ui007.view_revision_list</field>
+    <field name="model">tp.contract.revision</field>
+    <field name="inherit_id" ref="tp_contract.view_revision_list"/>
+    <field name="arch" type="xml">
+      <xpath expr="/list" position="attributes">
+        <attribute name="js_class">tp_kd_table</attribute>
+      </xpath>
+      <xpath expr="//field[@name='review_state']" position="attributes">
+        <attribute name="widget">tp_kd_selection</attribute>
+      </xpath>
+    </field>
+  </record>
+  <record id="ui007_view_document_list" model="ir.ui.view">
+    <field name="name">kd.ui007.view_document_list</field>
+    <field name="model">tp.contract.document</field>
+    <field name="inherit_id" ref="tp_contract.view_document_list"/>
+    <field name="arch" type="xml">
+      <xpath expr="/list" position="attributes">
+        <attribute name="js_class">tp_kd_table</attribute>
+      </xpath>
+    </field>
+  </record>
+  <record id="ui007_view_amount_list" model="ir.ui.view">
+    <field name="name">kd.ui007.view_amount_list</field>
+    <field name="model">tp.contract.line.amount</field>
+    <field name="inherit_id" ref="tp_contract.view_amount_list"/>
+    <field name="arch" type="xml">
+      <xpath expr="/list" position="attributes">
+        <attribute name="js_class">tp_kd_table</attribute>
+      </xpath>
+      <xpath expr="//field[@name='amount_state']" position="attributes">
+        <attribute name="widget">tp_kd_selection</attribute>
+      </xpath>
+    </field>
+  </record>
+  <record id="ui007_view_audit_list" model="ir.ui.view">
+    <field name="name">kd.ui007.view_audit_list</field>
+    <field name="model">tp.contract.audit</field>
+    <field name="inherit_id" ref="tp_contract.view_audit_list"/>
+    <field name="arch" type="xml">
+      <xpath expr="/list" position="attributes">
+        <attribute name="js_class">tp_kd_table</attribute>
+      </xpath>
+      <xpath expr="//field[@name='state_before']" position="attributes">
+        <attribute name="widget">tp_kd_text_badge</attribute>
+      </xpath>
+      <xpath expr="//field[@name='state_after']" position="attributes">
+        <attribute name="widget">tp_kd_text_badge</attribute>
+      </xpath>
+    </field>
+  </record>
+  <record id="ui007_view_contract_form" model="ir.ui.view">
+    <field name="name">kd.ui007.view_contract_form</field>
+    <field name="model">tp.contract</field>
+    <field name="inherit_id" ref="tp_contract.view_contract_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='revision_ids']" position="attributes">
+        <attribute name="widget">tp_kd_relation</attribute>
+      </xpath>
+      <xpath expr="//field[@name='lifecycle_state']" position="attributes">
+        <attribute name="widget">tp_kd_selection</attribute>
+      </xpath>
+      <xpath expr="//field[@name='review_state']" position="attributes">
+        <attribute name="widget">tp_kd_badge</attribute>
+      </xpath>
+      <xpath expr="//field[@name='signature_status']" position="attributes">
+        <attribute name="widget">tp_kd_selection</attribute>
+      </xpath>
+      <xpath expr="//field[@name='effectivity_status']" position="attributes">
+        <attribute name="widget">tp_kd_selection</attribute>
+      </xpath>
+    </field>
+  </record>
+  <record id="ui007_view_revision_form" model="ir.ui.view">
+    <field name="name">kd.ui007.view_revision_form</field>
+    <field name="model">tp.contract.revision</field>
+    <field name="inherit_id" ref="tp_contract.view_revision_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='line_ids']" position="attributes">
+        <attribute name="widget">tp_kd_relation</attribute>
+      </xpath>
+      <xpath expr="//field[@name='submission_ids']" position="attributes">
+        <attribute name="widget">tp_kd_relation</attribute>
+      </xpath>
+      <xpath expr="//field[@name='approval_reference_ids']" position="attributes">
+        <attribute name="widget">tp_kd_relation</attribute>
+      </xpath>
+      <xpath expr="//field[@name='signature_status']" position="attributes">
+        <attribute name="widget">tp_kd_selection</attribute>
+      </xpath>
+      <xpath expr="//field[@name='effectivity_status']" position="attributes">
+        <attribute name="widget">tp_kd_selection</attribute>
+      </xpath>
+      <xpath expr="//field[@name='outcome']" position="attributes">
+        <attribute name="widget">tp_kd_selection</attribute>
+      </xpath>
+      <xpath expr="//field[@name='decision']" position="attributes">
+        <attribute name="widget">tp_kd_selection</attribute>
+      </xpath>
+      <xpath expr="//field[@name='verification_state']" position="attributes">
+        <attribute name="widget">tp_kd_selection</attribute>
+      </xpath>
+      <xpath expr="//field[@name='authority_status']" position="attributes">
+        <attribute name="widget">tp_kd_selection</attribute>
+      </xpath>
+    </field>
+  </record>
+  <record id="ui007_view_native_draft_form" model="ir.ui.view">
+    <field name="name">kd.ui007.view_native_draft_form</field>
+    <field name="model">tp.contract.native.draft</field>
+    <field name="inherit_id" ref="tp_contract.view_native_draft_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='line_ids']" position="attributes">
+        <attribute name="widget">tp_kd_relation</attribute>
+      </xpath>
+      <xpath expr="//field[@name='amount_input_ids']" position="attributes">
+        <attribute name="widget">tp_kd_relation</attribute>
+      </xpath>
+      <xpath expr="//field[@name='amount_state']" position="attributes">
+        <attribute name="widget">tp_kd_selection</attribute>
+      </xpath>
+    </field>
+  </record>
+  <record id="ui007_view_native_return_form" model="ir.ui.view">
+    <field name="name">kd.ui007.view_native_return_form</field>
+    <field name="model">tp.contract.native.return</field>
+    <field name="inherit_id" ref="tp_contract.view_native_return_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='issue_ids']" position="attributes">
+        <attribute name="widget">tp_kd_relation</attribute>
+      </xpath>
+    </field>
+  </record>
+<record id="ui007_more_view_revision_form" model="ir.ui.view"><field name="name">kd.ui007.more.view_revision_form</field><field name="model">tp.contract.revision</field><field name="inherit_id" ref="tp_contract.view_revision_form"/><field name="arch" type="xml"><xpath expr="//field[@name='signature_authority_status']" position="attributes"><attribute name="widget">tp_kd_selection</attribute></xpath></field></record><record id="ui007_more_view_reference_form" model="ir.ui.view"><field name="name">kd.ui007.more.view_reference_form</field><field name="model">tp.approval.reference</field><field name="inherit_id" ref="tp_contract.view_reference_form"/><field name="arch" type="xml"><xpath expr="//field[@name='decision']" position="attributes"><attribute name="widget">tp_kd_selection</attribute></xpath><xpath expr="//field[@name='verification_state']" position="attributes"><attribute name="widget">tp_kd_selection</attribute></xpath><xpath expr="//field[@name='authority_status']" position="attributes"><attribute name="widget">tp_kd_selection</attribute></xpath></field></record><record id="ui007_more_view_submission_form" model="ir.ui.view"><field name="name">kd.ui007.more.view_submission_form</field><field name="model">tp.contract.submission</field><field name="inherit_id" ref="tp_contract.view_submission_form"/><field name="arch" type="xml"><xpath expr="//field[@name='outcome']" position="attributes"><attribute name="widget">tp_kd_selection</attribute></xpath></field></record><record id="ui007_more_view_amount_form" model="ir.ui.view"><field name="name">kd.ui007.more.view_amount_form</field><field name="model">tp.contract.line.amount</field><field name="inherit_id" ref="tp_contract.view_amount_form"/><field name="arch" type="xml"><xpath expr="//field[@name='amount_state']" position="attributes"><attribute name="widget">tp_kd_selection</attribute></xpath></field></record><record id="ui007_dates_view_revision_form" model="ir.ui.view"><field name="name">kd.ui007.dates.view_revision_form</field><field name="model">tp.contract.revision</field><field name="inherit_id" ref="tp_contract.view_revision_form"/><field name="arch" type="xml"><xpath expr="//field[@name='signed_date']" position="attributes"><attribute name="widget">tp_kd_date</attribute></xpath><xpath expr="//field[@name='effective_date']" position="attributes"><attribute name="widget">tp_kd_date</attribute></xpath><xpath expr="//field[@name='recorded_at']" position="attributes"><attribute name="widget">tp_kd_datetime</attribute></xpath><xpath expr="//field[@name='submitted_at']" position="attributes"><attribute name="widget">tp_kd_datetime</attribute></xpath></field></record><record id="ui007_dates_view_submission_form" model="ir.ui.view"><field name="name">kd.ui007.dates.view_submission_form</field><field name="model">tp.contract.submission</field><field name="inherit_id" ref="tp_contract.view_submission_form"/><field name="arch" type="xml"><xpath expr="//field[@name='submitted_at']" position="attributes"><attribute name="widget">tp_kd_datetime</attribute></xpath><xpath expr="//field[@name='returned_at']" position="attributes"><attribute name="widget">tp_kd_datetime</attribute></xpath><xpath expr="//field[@name='rework_started_at']" position="attributes"><attribute name="widget">tp_kd_datetime</attribute></xpath></field></record><record id="ui007_dates_view_audit_list" model="ir.ui.view"><field name="name">kd.ui007.dates.view_audit_list</field><field name="model">tp.contract.audit</field><field name="inherit_id" ref="tp_contract.view_audit_list"/><field name="arch" type="xml"><xpath expr="//field[@name='acted_at']" position="attributes"><attribute name="widget">tp_kd_datetime</attribute></xpath></field></record><record id="ui007_dates_view_audit_form" model="ir.ui.view"><field name="name">kd.ui007.dates.view_audit_form</field><field name="model">tp.contract.audit</field><field name="inherit_id" ref="tp_contract.view_audit_form"/><field name="arch" type="xml"><xpath expr="//field[@name='acted_at']" position="attributes"><attribute name="widget">tp_kd_datetime</attribute></xpath></field></record></odoo>

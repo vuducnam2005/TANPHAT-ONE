@@ -1,0 +1,39 @@
+<odoo>
+  <record id="head_command_form" model="ir.ui.view">
+    <field name="name">kd.head.command</field><field name="model">tp.kd.head.command</field>
+    <field name="arch" type="xml"><form string="Quản lý nghiệp vụ KH-KD"><group>
+      <field name="operation"/><field name="project_id" invisible="not project_id"/>
+      <field name="lead_id" invisible="not lead_id"/><field name="company_id" readonly="1"/>
+      <field name="department_id" readonly="1"/>
+      <field name="code" invisible="operation != 'project_create'" required="operation == 'project_create'"/>
+      <field name="name" invisible="operation not in ('project_create','partner')" required="operation in ('project_create','partner')"/>
+      <field name="eligible_owner_ids" invisible="1"/>
+      <field name="owner_id" domain="[('id', 'in', eligible_owner_ids)]" invisible="operation not in ('project_create','project_assign','lead_assign')" required="operation in ('project_assign','lead_assign')"/>
+      <field name="partner_id" invisible="operation not in ('project_create','partner')" options="{'no_create': True}"/>
+      <field name="investor_id" invisible="operation != 'project_create'" options="{'no_create': True}"/>
+      <field name="scope" invisible="operation not in ('project_create','lead_comment')" required="operation == 'lead_comment'"/><field name="deadline" invisible="operation != 'project_create'"/>
+      <field name="file_name" invisible="1"/><field name="file" filename="file_name" invisible="operation != 'lead_document_add'" required="operation == 'lead_document_add'"/>
+      <field name="eligible_document_ids" invisible="1"/><field name="document_id" domain="[('id','in',eligible_document_ids)]" options="{'no_create': True}" invisible="operation != 'lead_document_remove'" required="operation == 'lead_document_remove'"/>
+      <field name="email" invisible="operation != 'partner'"/><field name="phone" invisible="operation != 'partner'"/>
+      <field name="reason" required="1"/>
+    </group><footer><button name="action_confirm" type="object" string="Xác nhận" class="btn-primary"/><button special="cancel" string="Hủy"/></footer></form></field>
+  </record>
+  <record id="head_project_governance" model="ir.ui.view"><field name="name">kd.head.project.governance</field><field name="model">project.project</field><field name="inherit_id" ref="project_governance_form"/><field name="arch" type="xml">
+    <xpath expr="//header" position="inside"><field name="tp_head_access" invisible="1"/><button name="action_kd_head_assign" type="object" string="Phân công chủ trì" invisible="not tp_head_access"/><button name="action_kd_head_partner" type="object" string="Đối tác nghiệp vụ" invisible="not tp_head_access"/></xpath>
+  </field></record>
+  <record id="head_project_management" model="ir.ui.view"><field name="name">kd.head.project.management</field><field name="model">project.project</field><field name="inherit_id" ref="project_management_form"/><field name="arch" type="xml"><xpath expr="//header" position="inside"><field name="tp_head_access" invisible="1"/><button name="action_kd_head_assign" type="object" string="Phân công chủ trì" invisible="not tp_head_access"/></xpath></field></record>
+  <record id="head_opportunity_form" model="ir.ui.view"><field name="name">kd.head.opportunity.form</field><field name="model">crm.lead</field><field name="inherit_id" ref="opportunity_form"/><field name="arch" type="xml">
+    <xpath expr="//header" position="inside"><field name="kd_is_head" invisible="1"/><field name="kd_head_version" invisible="1"/><button name="action_kd_head_assign" type="object" string="Phân công hồ sơ" invisible="not kd_is_head or kd_bid_state == 'submitted'"/>
+      <button name="action_kd_head_document_add" type="object" string="Thêm tài liệu" invisible="not id or not kd_is_head or kd_bid_state == 'submitted'"/>
+      <button name="action_kd_head_document_remove" type="object" string="Lưu trữ tài liệu" invisible="not id or not kd_is_head or kd_bid_state == 'submitted'"/>
+      <button name="action_kd_head_comment" type="object" string="Ghi trao đổi" invisible="not id or not kd_is_head or kd_bid_state == 'submitted'"/>
+    </xpath>
+    <xpath expr="//sheet/group" position="inside"><field name="kd_intervention_reason" invisible="not kd_is_head or not id or kd_bid_state == 'submitted'"/></xpath>
+    <xpath expr="//notebook" position="inside"><page string="Tài liệu và trao đổi" invisible="not kd_is_head or not id">
+      <field name="kd_head_document_ids" widget="many2many_binary" readonly="1"/>
+      <field name="kd_head_message_ids" readonly="1"><list create="0" edit="0" delete="0"><field name="date"/><field name="author_id"/><field name="body" widget="html"/></list></field>
+    </page></xpath>
+  </field></record>
+  <record id="head_money_form" model="ir.ui.view"><field name="name">kd.head.opportunity.money</field><field name="model">tp.kd.opportunity.money</field><field name="inherit_id" ref="opportunity_money_form"/><field name="arch" type="xml"><xpath expr="//group" position="inside"><field name="reason"/></xpath></field></record>
+  <record id="head_package_form" model="ir.ui.view"><field name="name">kd.head.package.form</field><field name="model">tp.bid.package</field><field name="inherit_id" ref="package_form"/><field name="arch" type="xml"><xpath expr="//sheet" position="inside"><field name="version" invisible="1"/><field name="can_head_intervene" invisible="1"/><field name="intervention_reason" invisible="not id or not can_head_intervene"/></xpath></field></record>
+</odoo>

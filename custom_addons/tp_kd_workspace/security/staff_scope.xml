@@ -1,0 +1,6 @@
+<odoo>
+    <record id="group_scoped_staff" model="res.groups">
+        <field name="name">KH-KD scoped staff</field>
+        <field name="implied_ids" eval="[(4, ref('tp_core.group_user')), (4, ref('base.group_allow_export'))]"/>
+    </record>
+</odoo>

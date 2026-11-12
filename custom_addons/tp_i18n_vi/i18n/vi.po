@@ -210,3 +210,671 @@ msgstr "Đã hạch toán"
 #: model:ir.model.fields.selection,name:project.selection__project_task__state__1_done
 msgid "Done"
 msgstr "Hoàn thành"
+
+# HR-CORRECTION-008 (CHG-20261112-013): action-menu entries on HR and project lists left empty by the native vi catalog.
+#. module: tp_i18n_vi
+#: model:ir.actions.act_window,name:hr.action_partner_mass_mail
+msgid "Send Email"
+msgstr "Gửi email"
+
+#. module: tp_i18n_vi
+#: model:ir.actions.server,name:hr.action_hr_employee_departure
+msgid "End of Collaboration"
+msgstr "Cho nghỉ việc"
+
+#. module: tp_i18n_vi
+#: model:ir.actions.act_window,name:hr.action_open_hr_employee_create_version_wizard
+#: model:ir.actions.server,name:hr.action_hr_employee_create_versions
+msgid "New Employee Records"
+msgstr "Tạo phiên bản hồ sơ mới"
+
+#. module: tp_i18n_vi
+#: model:ir.actions.server,name:project.action_server_convert_project_to_template
+#: model:ir.actions.server,name:project.action_server_convert_to_template
+msgid "Convert to Template"
+msgstr "Chuyển thành mẫu"
+
+# HR-CORRECTION-008 (CHG-20261112-013): web client strings the native vi catalog leaves empty.
+# The JS lookup falls back to the global term map, so these only fill gaps; placeholders are kept.
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_components/multi_selection_buttons.js:0
+msgid "Are you sure you want to delete the selected record?"
+msgstr "Bạn có chắc muốn xóa hồ sơ đã chọn?"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_components/multi_selection_buttons.js:0
+msgid "Are you sure you want to delete the %(nbSelected)s selected records?"
+msgstr "Bạn có chắc muốn xóa %(nbSelected)s hồ sơ đã chọn?"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_components/multi_selection_buttons.xm:0
+msgid "selected"
+msgstr "đã chọn"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/errors/error_dialogs.js:0
+msgid "Non-deletable records"
+msgstr "Hồ sơ không xóa được"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/errors/error_dialogs.js:0
+msgid "How about archiving it instead?"
+msgstr "Bạn có thể lưu trữ hồ sơ này thay vì xóa."
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/errors/error_dialogs.js:0
+msgid "How about archiving them instead?"
+msgstr "Bạn có thể lưu trữ các hồ sơ này thay vì xóa."
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/errors/error_dialogs.js:0
+msgid "Not possible to delete the record because it is used in %(model_name)s"
+msgstr "Không thể xóa vì hồ sơ đang được dùng trong %(model_name)s"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/errors/error_dialogs.js:0
+msgid "Not possible to delete all the records because some are used in %(model_name)s"
+msgstr "Không thể xóa tất cả vì có hồ sơ đang được dùng trong %(model_name)s"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/errors/error_dialogs.xml:0
+msgid "View non-deletable records"
+msgstr "Xem các hồ sơ không xóa được"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/errors/error_dialogs.xml:0
+msgid "Oops"
+msgstr "Có lỗi"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/form/form_error_dialog/form_error_dialog.x:0
+msgid "Oh snap!"
+msgstr "Có lỗi xảy ra!"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/errors/error_dialogs.xml:0
+msgid "Something went wrong... If you really are stuck, share the report with your friendly support service"
+msgstr "Đã xảy ra lỗi. Nếu không tự xử lý được, hãy gửi báo cáo lỗi cho bộ phận hỗ trợ."
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/errors/error_dialogs.js:0
+msgid "The request sent to the server was too large"
+msgstr "Dữ liệu gửi lên máy chủ quá lớn"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/model/relational_model/record.js:0
+msgid "Missing required fields"
+msgstr "Thiếu thông tin bắt buộc"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/list/list_confirmation_dialog.js:0
+msgid "Are you sure you want to update %(count)s records?"
+msgstr "Bạn có chắc muốn cập nhật %(count)s hồ sơ?"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/list/list_confirmation_dialog.js:0
+msgid "Among the %(total)s selected records, %(valid_count)s are valid for this update."
+msgstr "Trong %(total)s hồ sơ đã chọn, %(valid_count)s hồ sơ hợp lệ cho lần cập nhật này."
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/list/list_confirmation_dialog.xml:0
+msgid "Use the operators \"+=\", \"-=\", \"*=\" and \"/=\" to update the current value."
+msgstr "Dùng toán tử \"+=\", \"-=\", \"*=\" và \"/=\" để cập nhật giá trị hiện tại."
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/model/relational_model/dynamic_list.js:0
+msgid "Duplicate Records"
+msgstr "Nhân bản hồ sơ"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/model/relational_model/dynamic_list.js:0
+msgid "You are about to create a copy of every selected record.\nAre you sure you want to proceed?"
+msgstr "Bạn sắp tạo bản sao cho mọi hồ sơ đã chọn.\nBạn có chắc muốn tiếp tục?"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/model/relational_model/utils.js:0
+msgid "%s Records"
+msgstr "%s hồ sơ"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/multi_drag.js:0
+msgid "Move %(count)s records"
+msgstr "Di chuyển %(count)s hồ sơ"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/list/list_renderer.xml:0
+msgid "Click to collapse all groups"
+msgstr "Bấm để thu gọn tất cả nhóm"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/list/list_renderer.xml:0
+msgid "Click to expand all groups"
+msgstr "Bấm để mở rộng tất cả nhóm"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/list/list_renderer.xml:0
+msgid "Click to edit the row"
+msgstr "Bấm để sửa dòng"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tags_list/tags_list.xml:0
+msgid "Click to show more"
+msgstr "Bấm để xem thêm"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_dialogs/select_create_dialog.xml:0
+msgid "Create New"
+msgstr "Tạo mới"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_dialogs/select_create_dialog.xml:0
+msgid "Select"
+msgstr "Chọn"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/webclient/switch_company_menu/switch_company_men:0
+msgid "Deselect all"
+msgstr "Bỏ chọn tất cả"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/search/search_bar_menu/search_bar_menu.xml:0
+msgid "Custom Date..."
+msgstr "Ngày tùy chọn..."
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/search/search_bar/search_bar.xml:0
+msgid "Next period"
+msgstr "Kỳ sau"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/search/search_bar/search_bar.xml:0
+msgid "Previous period"
+msgstr "Kỳ trước"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/search/utils/dates.js:0
+msgid "This Quarter"
+msgstr "Quý này"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/search/utils/dates.js:0
+msgid "This Year"
+msgstr "Năm nay"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_editor_components.js:0
+msgid "Year to date"
+msgstr "Từ đầu năm đến nay"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_editor_components.js:0
+msgid "Month to date"
+msgstr "Từ đầu tháng đến nay"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_editor_components.js:0
+msgid "Last 365 days"
+msgstr "365 ngày qua"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_editor_components.js:0
+msgid "Relative range"
+msgstr "Khoảng thời gian tương đối"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/datetime/datetime_picker.xml:0
+msgid "Single date"
+msgstr "Một ngày"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_editor_components.js:0
+msgid "day"
+msgstr "ngày"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_editor_components.js:0
+msgid "week"
+msgstr "tuần"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_editor_components.js:0
+msgid "month"
+msgstr "tháng"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_editor_components.js:0
+msgid "year"
+msgstr "năm"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_editor_operator_editor.js:0
+msgid "before"
+msgstr "trước"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_editor_operator_editor.js:0
+msgid "greater or equal to"
+msgstr "lớn hơn hoặc bằng"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_editor_operator_editor.js:0
+msgid "lower or equal to"
+msgstr "nhỏ hơn hoặc bằng"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_editor_operator_editor.js:0
+msgid "lower than"
+msgstr "nhỏ hơn"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/search/custom_favorite_item/custom_favorite_item:0
+msgid "Save search"
+msgstr "Lưu tìm kiếm"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/search/custom_favorite_item/custom_favorite_item:0
+msgid "Filter name"
+msgstr "Tên bộ lọc"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/offline_action_helper.xml:0
+msgid "Reset Filters"
+msgstr "Xóa bộ lọc"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/search/search_bar_menu/search_bar_menu.js:0
+msgid "Share"
+msgstr "Chia sẻ"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/webclient/burger_menu/burger_menu.xml:0
+msgid "Share URL"
+msgstr "Chia sẻ đường dẫn"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/search/search_bar_menu/search_bar_menu.js:0
+msgid "Share the current view"
+msgstr "Chia sẻ màn hình đang xem"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/search/search_bar_menu/search_bar_menu.js:0
+msgid "Link copied to clipboard"
+msgstr "Đã sao chép đường dẫn"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/search/control_panel/control_panel.xml:0
+msgid "Switch view"
+msgstr "Đổi kiểu xem"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/search/control_panel/control_panel.xml:0
+msgid "View related documents"
+msgstr "Xem tài liệu liên quan"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/search/search_bar/search_bar_toggler.xml:0
+msgid "Display search bar"
+msgstr "Hiện thanh tìm kiếm"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/search/search_panel/search_panel.xml:0
+msgid "Open sidebar"
+msgstr "Mở thanh bên"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/domain_selector/domain_selector.xml:0
+msgid "Include archived"
+msgstr "Gồm cả hồ sơ đã lưu trữ"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/domain/domain_field.xml:0
+msgid "Add condition"
+msgstr "Thêm điều kiện"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_editor.xml:0
+msgid "Add nested rule"
+msgstr "Thêm điều kiện lồng"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/domain/domain_field.xml:0
+msgid "Invalid domain"
+msgstr "Điều kiện lọc không hợp lệ"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/domain_selector/domain_selector.xml:0
+msgid "This domain is not supported."
+msgstr "Điều kiện lọc này chưa được hỗ trợ."
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/expression_editor/expression_editor.xml:0
+msgid "This expression is not supported."
+msgstr "Biểu thức này chưa được hỗ trợ."
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/domain/domain_field.xml:0
+msgid "record(s)"
+msgstr "hồ sơ"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_editor_value_editors.js:0
+msgid "Select one or several criteria"
+msgstr "Chọn một hoặc nhiều tiêu chí"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_editor_value_editors.js:0
+msgid "Press \"Enter\" to add criterion"
+msgstr "Nhấn \"Enter\" để thêm tiêu chí"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/tree_editor/tree_processor.js:0
+msgid "Missing record"
+msgstr "Không tìm thấy hồ sơ"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/record_selectors/multi_record_selector.js:0
+msgid "Missing record (ID: %s)"
+msgstr "Không tìm thấy hồ sơ (ID: %s)"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/reference/reference_field.js:0
+msgid "Search a record..."
+msgstr "Tìm hồ sơ..."
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/relational_utils.js:0
+msgid "Start typing %s characters"
+msgstr "Nhập ít nhất %s ký tự"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_dialogs/export_data_dialog.js:0
+msgid "Apply changes"
+msgstr "Áp dụng thay đổi"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_dialogs/export_data_dialog.js:0
+msgid "No changes to apply"
+msgstr "Không có thay đổi để áp dụng"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_dialogs/export_data_dialog.xml:0
+msgid "Save as export template"
+msgstr "Lưu thành mẫu xuất"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_dialogs/export_data_dialog.xml:0
+msgid "Select a template..."
+msgstr "Chọn mẫu xuất..."
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_dialogs/export_data_dialog.xml:0
+msgid "Set the template name..."
+msgstr "Đặt tên mẫu xuất..."
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_dialogs/export_data_dialog.xml:0
+msgid "Edit template name and/or fields"
+msgstr "Sửa tên mẫu hoặc danh sách trường"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_dialogs/export_data_dialog.xml:0
+msgid "Delete the template"
+msgstr "Xóa mẫu xuất"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_dialogs/export_data_dialog.xml:0
+msgid "Search fields"
+msgstr "Tìm trường dữ liệu"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_dialogs/export_data_dialog.xml:0
+msgid "Updatable fields only"
+msgstr "Chỉ trường có thể nhập lại"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_dialogs/export_data_dialog.xml:0
+msgid "Languages"
+msgstr "Ngôn ngữ"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/binary/binary_field.xml:0
+msgid "Upload your file"
+msgstr "Tải tệp lên"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/binary/binary_field.xml:0
+msgid "Replace current file"
+msgstr "Thay tệp hiện tại"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/dropzone/dropzone.xml:0
+msgid "Drag Files Here"
+msgstr "Kéo tệp vào đây"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/file_upload/file_upload_service.js:0
+msgid "An error occurred while uploading."
+msgstr "Có lỗi khi tải tệp lên."
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/contact_image/contact_image_field.x:0
+msgid "Add Photo"
+msgstr "Thêm ảnh"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/utils/files.js:0
+msgid "The file is not an image, resizing is not possible"
+msgstr "Tệp không phải hình ảnh nên không thể đổi kích thước"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/utils/files.js:0
+msgid "The resizing of the image failed"
+msgstr "Không đổi được kích thước ảnh"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/password/password_field.js:0
+msgid "Hide value"
+msgstr "Ẩn giá trị"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/password/password_field.js:0
+msgid "Reveal value"
+msgstr "Hiện giá trị"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/public/caps_lock_warning.xml:0
+msgid "Caps Lock is on!"
+msgstr "Đang bật Caps Lock!"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/session/check_identity.xml:0
+msgid "Verify your identity"
+msgstr "Xác minh danh tính"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/session/check_identity.xml:0
+msgid "Enter your password"
+msgstr "Nhập mật khẩu"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/session/check_identity.xml:0
+msgid "Use your password"
+msgstr "Dùng mật khẩu"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/session/check_identity.xml:0
+msgid "Trouble signing in?"
+msgstr "Không đăng nhập được?"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/datetime/datetime_field.js:0
+msgid "This date is in the past"
+msgstr "Ngày này đã qua"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_components/multi_create_popover.js:0
+msgid "Start time should be before end time"
+msgstr "Giờ bắt đầu phải trước giờ kết thúc"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/core/l10n/dates.js:0
+msgid "Week %(week)s, %(startDate)s - %(endDate)s"
+msgstr "Tuần %(week)s, %(startDate)s - %(endDate)s"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/webclient/settings_form_view/settings_confirmati:0
+msgid "Stay Here"
+msgstr "Ở lại trang này"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/calendar/calendar_controller.xml:0
+msgid "Toggle Side Panel"
+msgstr "Ẩn/hiện bảng bên"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/view_components/view_scale_selector.xml:0
+msgid "Show weekends"
+msgstr "Hiện cuối tuần"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/graph/graph_controller.xml:0
+msgid "Graph actions"
+msgstr "Thao tác biểu đồ"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/calendar/quick_create/calendar_quick_creat:0
+msgid "Name:"
+msgstr "Tên:"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/translation/translation_components.:0
+msgid "Translate into"
+msgstr "Dịch sang"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/translation/translation_model.js:0
+msgid "Apply to all languages"
+msgstr "Áp dụng cho mọi ngôn ngữ"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/translation/translation_button.js:0
+msgid "Save this record and its parent to translate"
+msgstr "Lưu hồ sơ này và hồ sơ cha trước khi dịch"
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/webclient/actions/reports/utils.js:0
+msgid "Unable to find the PDF engine on this system. The report will be shown in html."
+msgstr "Không tìm thấy công cụ tạo PDF trên hệ thống. Báo cáo sẽ hiển thị dạng HTML."
+
+#. module: tp_i18n_vi
+#. odoo-javascript
+#: code:addons/web/static/src/webclient/offline_systray/offline_systray.js:0
+msgid "Working offline"
+msgstr "Đang làm việc ngoại tuyến"

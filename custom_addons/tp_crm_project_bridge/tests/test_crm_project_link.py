@@ -2,6 +2,7 @@ from psycopg2 import IntegrityError
 
 from odoo.exceptions import AccessError, ValidationError
 from odoo.tests import TransactionCase, new_test_user, tagged
+from odoo.tools import mute_logger
 
 
 @tagged('post_install', '-at_install')
@@ -78,6 +79,6 @@ class TestCrmProjectLink(TransactionCase):
 
     def test_project_deletion_restricted(self):
         self.project.collaborator_ids.unlink()
-        with self.assertRaises(IntegrityError) as raised, self.cr.savepoint():
+        with self.assertRaises(IntegrityError) as raised, self.cr.savepoint(), mute_logger('odoo.sql_db'):
             self.project.unlink()
         self.assertEqual(raised.exception.diag.constraint_name, 'crm_lead_tp_project_id_fkey')

@@ -68,3 +68,15 @@ package.json
 /frontend/dist/
 /frontend/test-results/
 /frontend/playwright-report/
+
+# Version only the reviewed project skills; keep other agent config private.
+!/.agents/
+/.agents/*
+!/.agents/skills/
+/.agents/skills/*
+!/.agents/skills/tanphat-odoo-delivery/
+!/.claude/
+/.claude/*
+!/.claude/skills/
+/.claude/skills/*
+!/.claude/skills/tanphat-odoo-delivery/

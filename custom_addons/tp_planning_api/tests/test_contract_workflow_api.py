@@ -368,9 +368,13 @@ class TestContractWorkflowApi(HttpCase, TpContractWorkflowCommon):
         self.assertEqual(self._workflow_counts(), before_legacy_return)
 
     def test_n07_authentication_csrf_origin_and_body_guards(self):
+        # These guards reject before parsing a body. Use a zero-byte body so the
+        # Windows test HTTP server cannot reset the socket with unread bytes.
+        # Malformed/non-object JSON below still exercises actual body parsing.
         Contract = self.env['tp.contract']
         self.authenticate(None, None)
-        self._problem(self.url_open('/api/v1/contracts', json={}, method='POST', allow_redirects=False), 401, 'unauthenticated')
+        self._problem(self.url_open('/api/v1/contracts', data='', method='POST', allow_redirects=False,
+                                    headers={'Content-Type': 'application/json'}), 401, 'unauthenticated')
 
         self._login(self.editor)
         guarded = [
@@ -382,10 +386,15 @@ class TestContractWorkflowApi(HttpCase, TpContractWorkflowCommon):
         ]
         for headers, csrf, status, code in guarded:
             with self.subTest(headers=headers):
-                self._problem(self._send('/api/v1/contracts', {'project_id': self.project_a.id}, headers=headers, csrf=csrf),
-                              status, code)
+                sent = {'Idempotency-Key': f'http-{uuid4().hex}', 'Content-Type': 'application/json'}
+                if csrf:
+                    sent['X-CSRF-Token'] = self.csrf
+                response = self.url_open('/api/v1/contracts', data='', headers=sent | headers,
+                                         method='POST', allow_redirects=False)
+                self.assertEqual(response.headers.get('Cache-Control'), 'no-store')
+                self._problem(response, status, code)
         common = {'X-CSRF-Token': self.csrf, 'Idempotency-Key': f'http-{uuid4().hex}'}
-        plain = self.url_open('/api/v1/contracts', data='{}', method='POST', allow_redirects=False,
+        plain = self.url_open('/api/v1/contracts', data='', method='POST', allow_redirects=False,
                               headers=common | {'Content-Type': 'text/plain'})
         self._problem(plain, 415, 'unsupported_media_type')
         for body in ('{not json', '[]'):

@@ -1,0 +1,4 @@
+interface:
+  display_name: "TANPHAT ONE Delivery"
+  short_description: "Native Odoo changes, UI evidence and AI handoff"
+  default_prompt: "Use $tanphat-odoo-delivery to plan or review this TANPHAT ONE change against the current project status."

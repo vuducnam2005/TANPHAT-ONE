@@ -35,6 +35,7 @@ class TpContractRevision(models.Model):
         ('amendment', 'Amendment'),
         ('correction', 'Correction'),
     ], required=True)
+    business_owner_id = fields.Many2one('res.users', ondelete='restrict', string='Người phụ trách nghiệp vụ', readonly=True)
     name = fields.Char(required=True)
     reference = fields.Char(string='Document Number')
     previous_revision_id = fields.Many2one('tp.contract.revision', ondelete='restrict', index=True)
@@ -96,6 +97,8 @@ class TpContractRevision(models.Model):
             raise UserError(self.env._('Submitted or signed revisions keep their history and cannot be deleted.'))
 
     def write(self, vals):
+        if 'business_owner_id' in vals and not self.env.context.get(WORKFLOW_CONTEXT):
+            raise UserError(self.env._('Business responsibility changes through the scoped assignment action.'))
         self._tp_check_protected_write(vals)
         return super().write(vals)
 
@@ -108,7 +111,8 @@ class TpContractRevision(models.Model):
             raise UserError(self.env._('A revision cannot move to another contract.'))
         if 'review_state' in vals and not self.env.context.get(WORKFLOW_CONTEXT):
             raise UserError(self.env._('Review states change only through workflow actions.'))
-        if frozen and set(vals) - {'review_state'}:
+        allowed = {'review_state', 'business_owner_id'} if self.env.context.get(WORKFLOW_CONTEXT) else {'review_state'}
+        if frozen and set(vals) - allowed:
             raise UserError(self.env._('Submitted revision content cannot be changed.'))
 
     def _tp_is_frozen(self):

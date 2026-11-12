@@ -2,6 +2,13 @@
 
 Tài liệu này biến mỗi phiên chat thành một bước có thể tiếp tục. `AGENTS.md` là luật; `docs/PROJECT_STATUS.md` là trạng thái hiện tại; `docs/CHANGELOG.md` là lịch sử thay đổi; tài liệu architecture là quyết định dài hạn.
 
+[Skill chung Codex/Claude](../.agents/skills/tanphat-odoo-delivery/SKILL.md) và
+[playbook công cụ](AI_TOOLING_PLAYBOOK.md) bổ sung cách dùng browser/source map
+và review theo scope. Với UI, chuẩn bị ảnh trước–sau cùng viewport/role/dataset;
+tách test kỹ thuật, phản hồi hình thức, nghiệm thu nghiệp vụ và cho phép pilot.
+Skill/reference mới chưa nằm hết trong hash checker: kiểm frontmatter, link và
+nội dung riêng khi thay đổi; không coi `check` PASS là mọi file đã được audit.
+
 Khi làm theo mô hình phiên chính điều phối và Claude triển khai (DEC-022), đọc thêm [quy trình điều phối](AI_COORDINATION_WORKFLOW.md) và [lộ trình code](architecture/TP_CODE_EXECUTION_MASTER_PLAN.md). Phiên chính có thể cập nhật kế hoạch/tài liệu và chạy test cô lập để review; sửa application code được giao lại Claude bằng prompt cụ thể. Quy tắc `start/finish/check` và bàn giao vẫn áp dụng cho batch triển khai.
 
 ## Khi bắt đầu một phiên
@@ -30,7 +37,7 @@ Ghi nguồn tài liệu và quyết định diễn giải vào changelog hoặc 
 2. Không thay đổi core Odoo, không đổi technical identifiers vì đổi tên hiển thị.
 3. Làm backend trước frontend với thay đổi nghiệp vụ.
 4. Thêm security và test cùng lượt với model/action.
-5. API phải theo OpenAPI; frontend không gọi generic Odoo RPC để né contract.
+5. Theo DEC-030, ưu tiên view/action native hoặc OWL gọi backend đã kiểm quyền; không ghi trực tiếp state hoặc bypass guard qua RPC. API tích hợp/React legacy vẫn theo OpenAPI, không dùng RPC để né contract. Chỉ bắt buộc cập nhật OpenAPI/types khi thay API.
 6. Giữ backward compatibility hoặc tăng version API khi DTO phá vỡ.
 
 ## Khi kết thúc một phiên

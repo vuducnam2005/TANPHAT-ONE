@@ -29,6 +29,7 @@ class TpContractSubmission(models.Model):
     submitted_by_id = fields.Many2one('res.users', required=True, ondelete='restrict')
     submitted_at = fields.Datetime(required=True)
     reviewer_id = fields.Many2one('res.users', required=True, ondelete='restrict', index=True)
+    assigned_reviewer_id = fields.Many2one('res.users', ondelete='restrict', readonly=True, string='Người nhận rà soát hiện tại')
     contract_version = fields.Integer(required=True, help='Aggregate contract version captured by this submission.')
     fix_summary = fields.Text(help='What changed since the previous returned submission.')
     metadata_snapshot = fields.Json(required=True)
@@ -70,6 +71,8 @@ class TpContractSubmission(models.Model):
             raise UserError(self.env._('Review submissions change only through workflow actions.'))
         keys = set(vals)
         for submission in self:
+            if keys == {'assigned_reviewer_id'} and submission.outcome == 'pending':
+                continue
             if keys <= RETURN_FIELDS and submission.outcome == 'pending' and vals.get('outcome') == 'returned':
                 continue
             if keys <= REWORK_FIELDS and submission.outcome == 'returned' and not submission.rework_started_at:

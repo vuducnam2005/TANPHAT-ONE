@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-inherit="web.WebClient" t-inherit-mode="extension">
+        <xpath expr="//NavBar" position="after">
+            <TpKdSidebar/>
+        </xpath>
+    </t>
+
+    <t t-name="tp_kd_workspace.Prefs">
+        <div class="o_tp_kd_prefs" role="group" aria-label="Tùy chọn hiển thị">
+            <p class="o_tp_kd_prefs_title">Tùy chọn hiển thị</p>
+            <fieldset>
+                <legend>Mật độ</legend>
+                <div class="o_tp_kd_seg" role="radiogroup" aria-label="Mật độ">
+                    <button type="button" role="radio" t-att-aria-checked="(this.prefs.density === 'comfortable') ? 'true' : 'false'"
+                            t-att-class="{'is-on': this.prefs.density === 'comfortable'}"
+                            t-on-click="() => this.setDensity('comfortable')">Thoáng</button>
+                    <button type="button" role="radio" t-att-aria-checked="(this.prefs.density === 'compact') ? 'true' : 'false'"
+                            t-att-class="{'is-on': this.prefs.density === 'compact'}"
+                            t-on-click="() => this.setDensity('compact')">Gọn</button>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Chuyển động</legend>
+                <div class="o_tp_kd_seg" role="radiogroup" aria-label="Chuyển động">
+                    <button type="button" role="radio" t-att-aria-checked="(this.prefs.motion === 'auto') ? 'true' : 'false'"
+                            t-att-class="{'is-on': this.prefs.motion === 'auto'}"
+                            t-on-click="() => this.setMotion('auto')">Theo hệ thống</button>
+                    <button type="button" role="radio" t-att-aria-checked="(this.prefs.motion === 'reduced') ? 'true' : 'false'"
+                            t-att-class="{'is-on': this.prefs.motion === 'reduced'}"
+                            t-on-click="() => this.setMotion('reduced')">Giảm chuyển động</button>
+                </div>
+            </fieldset>
+            <label class="o_tp_kd_prefs_check">
+                <input type="checkbox" t-att-checked="this.prefs.collapsed" t-on-change="this.toggleCollapsed"/>
+                <span>Thu gọn thanh bên trên màn hình rộng</span>
+            </label>
+            <button type="button" class="btn btn-link o_tp_kd_prefs_reset" t-on-click="this.reset">Khôi phục mặc định</button>
+            <p class="o_tp_kd_prefs_note">Chỉ đổi cách hiển thị trên trình duyệt này; không đổi dữ liệu hoặc quyền.</p>
+        </div>
+    </t>
+
+    <t t-name="tp_kd_workspace.Sidebar">
+        <t t-if="this.app()">
+            <div t-if="this.mode() === 'mobile'" class="o_tp_kd_mobilebar">
+                <button type="button" class="o_tp_kd_menu_toggle"
+                        aria-controls="tp_kd_sidebar"
+                        t-att-aria-expanded="(this.state.drawer) ? 'true' : 'false'"
+                        t-on-click="this.openDrawer">
+                    <i class="oi" data-icon="menu" aria-hidden="true"/>
+                    <span>Menu KH-KD</span>
+                </button>
+                <span class="o_tp_kd_mobilebar_title" t-out="this.activeLabel()"/>
+            </div>
+            <div t-if="this.state.drawer" class="o_tp_kd_backdrop" aria-hidden="true" t-on-click="this.closeDrawer"/>
+            <aside id="tp_kd_sidebar"
+                   class="o_tp_kd_sidebar"
+                   t-att-class="{
+                       'is-rail': this.rail(),
+                       'is-drawer': this.state.drawer,
+                       'is-hidden': this.mode() === 'mobile' and !this.state.drawer,
+                   }"
+                   t-att-role="this.state.drawer ? 'dialog' : null"
+                   t-att-aria-modal="this.state.drawer ? 'true' : null"
+                   aria-label="Điều hướng Kế hoạch Kinh doanh"
+                   t-ref="this.panel"
+                   t-on-keydown="this.onKeydown">
+                <div class="o_tp_kd_sb_head">
+                    <span class="o_tp_kd_sb_mark" aria-hidden="true">KD</span>
+                    <span class="o_tp_kd_sb_title">Kế hoạch Kinh doanh</span>
+                    <button t-if="this.state.drawer" type="button" class="o_tp_kd_sb_icon o_tp_kd_sb_close"
+                            title="Đóng menu" aria-label="Đóng menu" t-on-click="this.closeDrawer">
+                        <i class="oi" data-icon="close" aria-hidden="true"/>
+                    </button>
+                    <button t-elif="this.rail()" type="button" class="o_tp_kd_sb_icon o_tp_kd_sb_collapse"
+                            title="Mở rộng thanh bên" aria-label="Mở rộng thanh bên"
+                            aria-controls="tp_kd_sidebar" aria-expanded="false" t-on-click="this.expand">
+                        <i class="oi" data-icon="left_panel_open" aria-hidden="true"/>
+                    </button>
+                    <button t-elif="this.mode() === 'desktop'" type="button" class="o_tp_kd_sb_icon o_tp_kd_sb_collapse"
+                            title="Thu gọn thanh bên" aria-label="Thu gọn thanh bên"
+                            aria-controls="tp_kd_sidebar" aria-expanded="true" t-on-click="this.collapse">
+                        <i class="oi" data-icon="left_panel_close" aria-hidden="true"/>
+                    </button>
+                </div>
+
+                <div t-if="!this.rail()" class="o_tp_kd_sb_search" role="search">
+                    <i class="oi" data-icon="search" aria-hidden="true"/>
+                    <input type="text" placeholder="Tìm chức năng…" aria-label="Tìm chức năng KH-KD"
+                           autocomplete="off" spellcheck="false"
+                           t-att-value="this.state.query" t-ref="this.search"
+                           t-on-input="this.onSearchInput"/>
+                    <button t-if="this.state.query" type="button" class="o_tp_kd_sb_icon"
+                            title="Xóa tìm kiếm" aria-label="Xóa tìm kiếm" t-on-click="this.clearSearch">
+                        <i class="oi" data-icon="close_small" aria-hidden="true"/>
+                    </button>
+                </div>
+
+                <nav class="o_tp_kd_sb_nav" aria-label="Chức năng KH-KD">
+                    <ul class="o_tp_kd_sb_list">
+                        <t t-foreach="this.visible()" t-as="entry" t-key="entry.id">
+                            <li t-if="entry.type === 'leaf'">
+                                <a class="o_tp_kd_sb_leaf o_tp_kd_sb_root"
+                                   t-att-class="{'is-active': entry.id === this.state.active}"
+                                   t-att-href="this.href(entry.leaf)"
+                                   t-att-title="this.rail() ? entry.name : null"
+                                   t-att-aria-current="entry.id === this.state.active ? 'page' : null"
+                                   t-on-click="(ev) => this.onLeafClick(ev, entry.leaf)">
+                                    <i class="oi o_tp_kd_sb_ico" t-att-data-icon="entry.icon" aria-hidden="true"/>
+                                    <span class="o_tp_kd_sb_label" t-out="entry.name"/>
+                                </a>
+                            </li>
+                            <li t-else="" class="o_tp_kd_sb_group"
+                                t-att-class="{'is-open': this.isOpen(entry) and !this.rail(), 'has-active': this.isGroupActive(entry)}">
+                                <button type="button" class="o_tp_kd_sb_group_btn"
+                                        t-att-aria-expanded="(this.isOpen(entry) and !this.rail()) ? 'true' : 'false'"
+                                        t-att-aria-controls="'tp_kd_g_' + entry.id"
+                                        t-att-title="this.rail() ? entry.name : null"
+                                        t-on-click="() => this.onGroupClick(entry)">
+                                    <i class="oi o_tp_kd_sb_ico" t-att-data-icon="entry.icon" aria-hidden="true"/>
+                                    <span class="o_tp_kd_sb_label" t-out="entry.name"/>
+                                    <i class="oi o_tp_kd_sb_chev" data-icon="chevron_forward" aria-hidden="true"/>
+                                </button>
+                                <div class="o_tp_kd_sb_sub" t-att-id="'tp_kd_g_' + entry.id">
+                                    <ul>
+                                        <li t-foreach="entry.leaves" t-as="leaf" t-key="leaf.id">
+                                            <a class="o_tp_kd_sb_leaf"
+                                               t-att-class="{'is-active': leaf.id === this.state.active}"
+                                               t-att-href="this.href(leaf)"
+                                               t-att-aria-current="leaf.id === this.state.active ? 'page' : null"
+                                               t-on-click="(ev) => this.onLeafClick(ev, leaf)">
+                                                <span class="o_tp_kd_sb_label" t-out="leaf.name"/>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </t>
+                    </ul>
+                    <p t-if="!this.visible().length" class="o_tp_kd_sb_empty" role="status">Không tìm thấy chức năng phù hợp.</p>
+                </nav>
+
+                <div class="o_tp_kd_sb_foot">
+                    <button type="button" class="o_tp_kd_sb_leaf o_tp_kd_sb_account"
+                            title="Tài khoản" aria-label="Tài khoản" t-on-click="this.openAccount">
+                        <i class="oi o_tp_kd_sb_ico" data-icon="account_circle" aria-hidden="true"/>
+                        <span class="o_tp_kd_sb_label">Tài khoản</span>
+                    </button>
+                    <Dropdown position="'top-start'" menuClass="'o_tp_kd_prefs_menu'">
+                        <button type="button" class="o_tp_kd_sb_leaf o_tp_kd_sb_prefs" title="Tùy chọn hiển thị">
+                            <i class="oi o_tp_kd_sb_ico" data-icon="settings" aria-hidden="true"/>
+                            <span class="o_tp_kd_sb_label">Tùy chọn hiển thị</span>
+                        </button>
+                        <t t-set-slot="content">
+                            <TpKdPrefs/>
+                        </t>
+                    </Dropdown>
+                </div>
+            </aside>
+        </t>
+    </t>
+
+</templates>

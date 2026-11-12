@@ -1,0 +1,39 @@
+# UI-HOME-004 — Acceptance và Tiêu chí kiểm tra
+
+**Ngày:** 10/11/2026 (Asia/Saigon)  
+**Căn cứ:** DEC-030, DEC-036, [Thiết kế Trang chủ quản trị](../ui/UI_HOME_004_ADMIN_DESIGN.md), [Prompt triển khai](../prompts/CLAUDE_UI_HOME_004_ADMIN_ONLY.md), [Kế hoạch HR-001](../architecture/TP_HR_001_FOUNDATION_PLAN.md).  
+**Trạng thái hiện tại:** VERIFIED_DEV_APPLIED — CHG-20261110-007 (Khắc phục triệt để navbar lặp, khôi phục 3 công cụ quản trị/panel và sửa 7 icon SVG).
+
+Sau review 3 finding tại [UI_HOME_004_SHELL_ICON_REVIEW.md](../reviews/UI_HOME_004_SHELL_ICON_REVIEW.md)
+và prompt [CLAUDE_UI_HOME_004_SHELL_ICON_CORRECTION.md](../prompts/CLAUDE_UI_HOME_004_SHELL_ICON_CORRECTION.md),
+toàn bộ 3 lỗi đã được xử lý triệt để và kiểm chứng trên clone (port 19689) lẫn dev 18069.
+
+---
+
+## 1. Kết quả tổng hợp
+
+| Lớp kiểm tra | Môi trường Clone (`tp_tanphat_home004_20261110`, port 19689) | Môi trường Dev 18069 (`tp_tanphat_dev`, port 18069) |
+| --- | --- | --- |
+| **Odoo Backend Tests** (`/tp_web_home`) | **12/12 PASS** (0 failed, 0 error) | Không chạy test runner trên dev; nâng cấp module thành công (rc 0, 0 error) |
+| **HOOT Unit Tests** (`tp_web_home`) | **27/27 PASS** (100% xanh) | Chạy qua static asset bundle chuẩn |
+| **Playwright Browser Tests** | **PASS 100%** (13 assertions & scenarios, đủ 2 vai admin + thùy anh, 5 viewports) | **PASS 100%** (xác nhận trực tiếp trên dev 18069, 13 screenshots kiểm chứng) |
+| **Ruff / Syntax Check** | **PASS** (100% hợp lệ, không lỗi cú pháp Python/JS/XML) | **PASS** |
+| **Bảo toàn dữ liệu** | Snapshot `snapshot-20261110T064554Z` (592 tables, 295 blobs) | **PASS**: 39 bảng và 944 dòng ACL/domain bảo toàn nguyên vẹn; 0 dòng dữ liệu nghiệp vụ bị thay đổi |
+
+---
+
+## 2. Bảng tiêu chí chi tiết
+
+| ID | Tiêu chí | Mô tả và Hành vi mong đợi | Trạng thái | Bằng chứng thực tế |
+| --- | --- | --- | --- | --- |
+| **ADM01** | Bố cục Trang chủ admin đúng 7 mục | Admin (`base.group_system`) thấy đúng 7 mục trong 2 nhóm: Nhóm 1 "Phòng ban và đơn vị" (Kế hoạch Kinh doanh, Phòng Thiết kế, Phòng Kỹ Thuật, Phòng BIM-QC, TADIC); Nhóm 2 "Nhân sự và tuyển dụng" (Quản lý nhân sự, Tuyển dụng). Có dòng ghi chú chân trang: "Danh mục này chỉ dành cho quản trị hệ thống." Không có thẻ phòng ngoài danh sách này. | **ĐẠT (PASS)** | Check Playwright trên dev 18069: đếm đúng 7 button `[data-module]`, tiêu đề 2 nhóm hiển thị rõ nét, footer chuẩn. Ảnh: `admin-1440-desktop.png`. |
+| **ADM02** | Phân quyền và giữ nguyên non-admin | Người dùng thường không có `base.group_system` (ví dụ `kd.thuyanh`, `kd.tuananh`,...) giữ nguyên Trang chủ và công cụ cá nhân hiện có theo UI-HOME-003. Lối vào KH-KD của các vai trò KH-KD không bị ảnh hưởng. Không sửa tài khoản, mật khẩu hay nhóm quyền. | **ĐẠT (PASS)** | Đăng nhập `kd.thuyanh`: đếm `#tp-admin-home-design` = 0. Hiển thị `.o_tp_web_home_inner` (UI-HOME-003), thanh tìm kiếm, group "Không gian làm việc" và "Công cụ cá nhân". Ảnh: `thuyanh-ui-home-003.png`. |
+| **ADM03** | Thao tác KH-KD | Bấm "Kế hoạch Kinh doanh" mở workspace KH-KD đang hoạt động (`tp_kd_workspace.action_overview` / menu KD). Dữ liệu, quyền và chức năng giữ nguyên. | **ĐẠT (PASS)** | Admin và non-admin bấm thẻ mở đúng URL workspace (`/odoo/action-510/new` / `/odoo/tp-home`). Ảnh: `admin-business-workspace.png`, `thuyanh-kd-workspace.png`. |
+| **ADM04** | Thao tác 4 đơn vị placeholder | Bấm "Phòng Thiết kế", "Phòng Kỹ Thuật", "Phòng BIM-QC", "TADIC" mở trang placeholder có đúng tên đơn vị, trạng thái "Đang phát triển", nội dung "Không gian này đang được chuẩn bị. Các chức năng sẽ được bổ sung sau." và nút "Về Trang chủ". Nút Back, refresh và điều hướng hoạt động bình thường, khi về Trang chủ trả focus về thẻ đã bấm. | **ĐẠT (PASS)** | Kiểm tra cả 4 đơn vị: hiển thị đúng tên, icon, badge, copy. Nút Back dọn sạch hash URL và khôi phục focus. Deep link hash `#unit=design`, `#unit=technical`, `#unit=bim`, `#unit=tadic` hoạt động. Ảnh: `admin-placeholder-*.png`. |
+| **ADM05** | Thao tác Quản lý nhân sự & Tuyển dụng | Module `hr` đã cài và admin có quyền: bấm mở màn hình nhân sự native (`hr.menu_hr_root`). Module `hr_recruitment` chưa cài: thẻ hiển thị trạng thái "Đang phát triển", bấm mở placeholder với thông báo tương ứng. Không tự cài module hoặc cấp quyền ngoài scope. | **ĐẠT (PASS)** | Runtime dev 18069: `hr` đã cài, bấm "Quản lý nhân sự" mở màn hình native `/odoo/employees`. `hr_recruitment` chưa cài, bấm "Tuyển dụng" mở placeholder `#unit=recruitment`. Ảnh: `admin-hr-native.png`, `admin-placeholder-recruitment.png`. |
+| **ADM06** | Giao diện và Responsive | Desktop 1440px: lưới 3 cột, KH-KD chiếm 2 cột; Tablet 768px: lưới 2 cột; Mobile 390px và 320px: lưới 1 cột. Zoom 200% không vỡ giao diện. Hover nhẹ, chuyển cảnh 150–220ms, tôn trọng `prefers-reduced-motion`. Focus bàn phím rõ nét. CSS scoped trong addon, không làm đổi giao diện các phân hệ khác. | **ĐẠT (PASS)** | Chụp và kiểm tra 5 viewports: Desktop 1440px, Tablet 768px, Mobile 390px, Narrow 320px (`scrollWidth <= clientWidth`), không tràn viền. Ảnh: `admin-1440-desktop.png`, `admin-768-tablet.png`, `admin-390-mobile.png`, `admin-320-narrow.png`. |
+| **ADM07** | Đặc tả HR-001 S0 | Cập nhật `docs/architecture/TP_HR_001_FOUNDATION_PLAN.md` theo kết quả kiểm kê thực tế: `hr` 20.0.1.1 đã cài, `hr_recruitment` chưa cài; mô hình Odoo 20 `hr.employee` + `hr.version`; 7 phòng ban hiện có; 12 nhân viên hiện có; ma trận quyền và phân giới hạn hồ sơ riêng tư. | **ĐẠT (PASS)** | Tài liệu `TP_HR_001_FOUNDATION_PLAN.md` đã hoàn thiện đầy đủ schema Odoo 20, tích hợp `tp.credential` canonical, và ma trận 4 vai trò HR S1. |
+| **ADM08** | Quy trình Clone - Backup verified - Áp Dev 18069 | Clone sang DB riêng kiểm tra đạt toàn bộ, tạo bản backup verified, đối chiếu bảo toàn dữ liệu trước khi nâng cấp module `tp_web_home` lên dev 18069. Không mang fixture vào dev. | **ĐẠT (PASS)** | Snapshot clone -> Odoo tests 12/12 -> HOOT 28/28 -> Playwright clone -> Verified backup `backup-pre-apply-20261110T082506Z` -> Preserve before -> Apply dev 18069 -> Preserve after (0 changed rows) -> Playwright dev verification PASS. |
+| **ADM09** | Duy nhất một navbar chung (F-HOME-01) | Loại bỏ header duplicate `.tp-nav` và brand giả bên trong client action Trang chủ admin. Giữ nguyên `.o_main_navbar` native của Odoo chứa app switcher (9 chấm), tên tài khoản thật, avatar, nút Home, công ty và thông báo. Không ẩn navbar Odoo bằng CSS. | **ĐẠT (PASS)** | Playwright dev 18069: kiểm tra `.tp-nav` count = 0, `.o_main_navbar` hiển thị duy nhất và hoạt động bình thường. Ảnh: `admin-1440-desktop.png`. |
+| **ADM10** | Công cụ quản trị & Tất cả ứng dụng (F-HOME-02) | Bên cạnh tiêu đề Trang chủ quản trị hiển thị 3 nút công cụ: "Cài đặt", "Quản lý ứng dụng", "Tất cả ứng dụng". Nút "Tất cả ứng dụng" đóng/mở panel `#tp_home_all_apps` có ô tìm kiếm lọc nhanh ứng dụng. Hai nút Cài đặt và Quản lý ứng dụng điều hướng đến đúng menu Odoo native đã lọc qua quyền. Non-admin không hiển thị các công cụ này. | **ĐẠT (PASS)** | Playwright dev 18069: 3 nút xuất hiện trong `.tp-admin-tools`, click mở `#tp_home_all_apps`, tìm kiếm lọc đúng app, đóng panel trả trạng thái bình thường. Ảnh: `admin-panel-open.png`. Non-admin (`kd.thuyanh`) có 0 `.tp-admin-tools`. |
+| **ADM11** | Đúng hình học SVG cho cả 7 icon (F-HOME-03) | 7 thẻ module hiển thị đúng hình vector đặc trưng: KH-KD (cặp hồ sơ `briefcase`), Thiết kế (thước vẽ kỹ thuật `ruler`), Kỹ Thuật (mũ bảo hộ `hardhat`), BIM-QC (khối mô hình 3D `boxes`), TADIC (tòa nhà `building`), Quản lý nhân sự (nhóm người `users`), Tuyển dụng (người dấu cộng `user-plus`). Không thẻ nào rơi vào hình tròn dự phòng fallback. Kích thước 24–26px trong vùng 42–46px. | **ĐẠT (PASS)** | HOOT unit test kiểm tra explicit call `icon="item.icon"`; Playwright dev 18069 assert 0 circle fallback và assert đúng từng thẻ có SVG geometry tương ứng. Ảnh: `admin-1440-desktop.png`. |

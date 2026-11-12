@@ -1,0 +1,5 @@
+<templates xml:space="preserve">
+<t t-name="tp_hr_workspace.TableTools"><label class="o_tp_hr_page_size d-flex gap-2 align-items-center">Hiển thị<select aria-label="Số dòng mỗi trang" t-on-change="this.changeSize" t-att-disabled="this.props.controller.editedRecord or this.state.busy"><option t-foreach="this.pageSizes" t-as="n" t-key="n" t-att-value="n" t-att-selected="n === this.props.controller.model.root.limit" t-out="n"/></select><span t-out="this.props.controller.model.root.isGrouped ? 'nhóm mỗi trang' : 'dòng mỗi trang'"/></label></t>
+<t t-name="tp_hr_workspace.ListView" t-inherit="web.ListView" t-inherit-mode="primary"><xpath expr="//t[@t-set-slot='control-panel-navigation-additional']" position="inside"><HrTableTools t-if="!this.hasSelectedRecords" controller="this"/></xpath></t>
+</templates>
+

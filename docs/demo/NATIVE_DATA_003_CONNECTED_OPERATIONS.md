@@ -2,6 +2,8 @@
 
 Ngày thực hiện: 02/11/2026, Asia/Saigon. Change `CHG-20261102-014`, quyết định `DEC-027`. Người dùng chuyển phiên chính sang thực thi riêng task này. Trạng thái **PARTIAL_WITH_GAPS — IMPLEMENTED_PENDING_AUDIT**: phần liên kết/actor/chi phí đã áp dụng dev; nhân viên vẫn không đổi được tiến độ managed task theo policy hiện hành. Không gọi đây là end-to-end, nghiệm thu doanh nghiệp hay pilot.
 
+**Cập nhật04/11/2026, DASH-UI-001:** hai dashboard đã đổi lớp trình bày/filter/report nhưng giữ ID/quyền. [Runbook hiện hành](dashboards/README.md) thay hướng dẫn apply dashboard cũ: dùng dash_ui001.py guarded apply; DATA003 links chỉ kiểm cùng template, từ chối drift, không overwrite. Expense11 được Administrator duyệt08:44:55 trước task UI, nên cơ cấu hiện810.000/1.250.000/5.100.000; tổng vẫn7.160.000. Các bảng02/11 bên dưới là mốc lịch sử. Không chạy native_actions verify để ép state quay về; không seed lại dữ liệu. TASK-001 và các gate DATA003 chưa được đóng bởi task UI.
+
 ## 1. Môi trường và cách bắt đầu
 
 - Dev: [Home TANPHAT ONE](http://127.0.0.1:18069/odoo/tp-home), DB `tp_tanphat_dev`, PostgreSQL local 55432. `tp_web_home`/`tp_i18n_vi` giữ nguyên.

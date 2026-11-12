@@ -1,5 +1,16 @@
 # Chạy nền Odoo TANPHAT ONE trên Windows
 
+**Ưu tiên hiện hành 10/11/2026 — DEC-037:** dùng đúng hai DB local: main
+`tp_tanphat_dev`/18069 và test `tp_tanphat_test`/18079. Sau dọn, main không
+còn bộ dữ liệu nghiệp vụ mẫu được mô tả ở phần baseline cũ dưới đây. Giữ tài
+khoản/quyền/cấu hình. Test riêng `.local/test/odoo.conf`, data dir/session riêng,
+cron/SMTP cách ly; đọc [runbook dọn dữ liệu và test](SAMPLE_DATA_CLEANUP_AND_TEST.md).
+Không chạy `setup`/`upgrade`/seed lịch sử chỉ để mở lại vì có thể sinh lại mẫu
+hoặc đồng bộ mật khẩu. Các clone DB đặt tên theo task ở tài liệu cũ chỉ là
+bằng chứng lịch sử, không phải môi trường được giữ sau OPS-CLEAN-001.
+
+**Hướng hiện hành 05/11/2026 — DEC-030:** dùng giao diện Odoo native tại `http://127.0.0.1:18069/odoo`, không cần Vite. Trên workspace đã setup, chỉ dùng `status`/`start` để mở; `setup`/`upgrade` dành cho tác vụ thiết lập/nâng cấp được giao. Các mô tả số addon/API chỉ đọc bên dưới là baseline cũ; hiện trạng theo [PROJECT_STATUS](../../docs/PROJECT_STATUS.md) và [bản đồ hệ thống](../../docs/architecture/TP_NATIVE_ODOO_DIRECTION.md).
+
 Nền dùng Python 3.12 trong `.venv`, PostgreSQL 18 cluster riêng trong `.local`, Odoo 20 và 6 addon Tấn Phát. Không dùng service PostgreSQL khác trên máy và không thay đổi Python global. Đây là môi trường dev dùng loopback.
 
 Chạy từ `C:\TANPHAT ONE`:
@@ -71,7 +82,9 @@ Chưa triển khai production, lịch backup, HTTPS reverse proxy, import Excel 
 Trong lần test Windows, Odoo upstream có log INFO về filestore GC không xóa được một số file `.__gc` do Windows giữ handle (WinError 5). Các test nền vẫn hoàn thành; chưa sửa core để tránh thay đổi upstream. Cần kiểm chứng lưu/xóa/backup/restore hồ sơ trong môi trường triển khai trước khi đưa dữ liệu thật vào.
 
 
-## Web riêng React/TypeScript
+## Web riêng React/TypeScript — legacy theo DEC-030
+
+Từ 05/11/2026, giao diện chính là Odoo native tại `http://127.0.0.1:18069/odoo`; không cần Vite. Phần dưới giữ cách chạy frontend cũ cho tham khảo/hồi quy, không yêu cầu mở rộng React. Xem [hướng hiện hành](../../docs/architecture/TP_NATIVE_ODOO_DIRECTION.md). Các mô tả CTR-001 chỉ đọc ở đầu runbook là baseline lịch sử; trạng thái/action hợp đồng hiện tại theo `docs/PROJECT_STATUS.md`, chưa có menu/form hợp đồng native.
 
 Yêu cầu Node.js 24 LTS và npm. Sau khi Odoo dev chạy:
 

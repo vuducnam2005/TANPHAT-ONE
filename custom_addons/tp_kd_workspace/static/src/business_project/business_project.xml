@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_kd_workspace.BusinessMany2OneField">
+        <Many2One t-props="this.m2oProps"/>
+        <details t-if="!this.props.readonly and this.fullName" class="tp_kd_bp_preview">
+            <summary>Đọc tên đầy đủ</summary>
+            <div class="tp_kd_bp_full_name" t-out="this.fullName"/>
+        </details>
+    </t>
+    <t t-name="tp_kd_workspace.BusinessRelatedBox" t-inherit="web.Form.ButtonBox" t-inherit-mode="primary">
+        <xpath expr="//button[contains(@class, 'o_button_more')]/span" position="replace"><span>Hồ sơ liên quan</span></xpath>
+        <xpath expr="//button[contains(@class, 'o_button_more')]/i" position="replace"/>
+        <xpath expr="//Dropdown" position="attributes">
+            <attribute name="menuClass">'o-form-buttonbox tp_kd_bp_related_menu ' + (!this.ui.isSmall ? 'o_dropdown_more' : 'o-form-buttonbox-small')</attribute>
+        </xpath>
+    </t>
+</templates>

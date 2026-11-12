@@ -16,11 +16,20 @@ Theo thứ tự:
    Với Request/BASE, đọc [kiến thức nghiệp vụ Request](docs/architecture/TP_BASE_REQUEST_BUSINESS_KNOWLEDGE.md) và [sổ nghiên cứu](docs/architecture/TP_REFERENCE_RESEARCH_AND_HANDOFF.md); giữ rõ quan sát UI, thiết kế TANPHAT và phần chưa kiểm chứng.
 7. Kiểm tra `git status`, runtime status và test liên quan trước khi sửa.
 
+Với việc lập kế hoạch, triển khai hoặc review TANPHAT ONE, đọc thêm
+[skill dùng chung Codex/Claude](.agents/skills/tanphat-odoo-delivery/SKILL.md).
+[Playbook công cụ](docs/AI_TOOLING_PLAYBOOK.md) chỉ đọc phần phù hợp task:
+Playwright cho browser evidence, Ponytail cho tái sử dụng/review, Graphify cho
+quan hệ source. Graph là tài liệu hỗ trợ, không thay source/status/quyền Odoo.
+Các skill upstream không tự mở scope, bỏ cổng nghiệp vụ hoặc đổi kiến trúc native.
+
 Nếu trạng thái trong tài liệu khác source/runtime, không đoán. Ghi nhận sai lệch trong `docs/PROJECT_STATUS.md`, kiểm chứng bằng lệnh và báo rõ trước khi mở phạm vi mới.
 
 ## 2. Mục tiêu hệ thống
 
-TANPHAT ONE dùng Odoo làm backend và một web React/TypeScript/Vite độc lập gọi API Odoo. Odoo là nguồn sự thật cho dữ liệu, quyền, trạng thái, lịch sử và công thức nghiệp vụ. Frontend chỉ quản lý trạng thái màn hình, gọi DTO theo OpenAPI và trình bày kết quả.
+Theo DEC-030 ngày 05/11/2026, TANPHAT ONE phát triển giao diện ngay trong Odoo: ưu tiên view/action chuẩn, bổ sung OWL/QWeb/SCSS trong custom addon khi cần. Không tiếp tục phát triển frontend React/TypeScript/Vite độc lập làm giao diện chính. Một nền giao diện chung, workspace/menu/dashboard theo vai trò và quyền; cùng dữ liệu và session Odoo. Odoo là nguồn sự thật cho dữ liệu, quyền, trạng thái, lịch sử và công thức nghiệp vụ.
+
+Source `frontend/`, API và test đã có được giữ để tham khảo/hồi quy; không tự xóa, ngừng route, đổi đăng nhập hoặc gỡ addon. Native UI phải gọi action/model backend đã kiểm quyền; RPC native không được ghi trực tiếp state hoặc bỏ qua workflow. API đang có giữ contract; chỉ cập nhật OpenAPI khi thay API, không bắt mọi màn hình native đi qua REST/React. Đọc [kiến trúc hiện hành](docs/architecture/TP_PLATFORM_SOURCE_STRUCTURE.md) và [kế hoạch chuyển giao diện](docs/architecture/TP_NATIVE_ODOO_DIRECTION.md).
 
 Tên hiển thị phải dùng:
 
@@ -41,6 +50,7 @@ Tên kỹ thuật như `tp_project`, `tp.project.assignment`, XML ID và `/api/v
 
 - Không sửa `odoo/` hoặc `addons/`; code riêng đặt trong `custom_addons/`.
 - Database dùng một PostgreSQL database cho mỗi môi trường, dùng chung các phòng ban; phạm vi được kiểm tra ở Odoo.
+- Theo DEC-037, local chỉ dùng `tp_tanphat_dev` (18069) và `tp_tanphat_test` (18079), trên cluster workspace 55432; giữ các database hệ thống PostgreSQL. Tái sử dụng test với một tác vụ ghi tại một thời điểm, không tự tạo database theo tên task. Đọc [quy trình dữ liệu sạch/test](ops/runbooks/SAMPLE_DATA_CLEANUP_AND_TEST.md); helper clone/seed lịch sử cần đánh giá lại, không tự chạy để mở phiên. Dữ liệu giả chỉ trên test; áp code/migration đã kiểm thử lên main, không restore test đè main.
 - Không dùng Excel, NAS hoặc frontend bundle làm database runtime.
 - Không đưa credential, filestore, database dump hoặc dữ liệu doanh nghiệp thật vào Git.
 - Không dùng tên hiển thị làm khóa. Dùng ID Odoo và mã nghiệp vụ có unique constraint phù hợp.
@@ -55,8 +65,8 @@ Tên kỹ thuật như `tp_project`, `tp.project.assignment`, XML ID và `/api/v
 2. Xác định file/model/API bị ảnh hưởng và đọc test hiện có.
 3. Viết kế hoạch ngắn trong commentary, nêu giả định và rủi ro.
    Chạy `scripts/ai_workflow.py start` trước lần sửa đầu tiên; nếu còn checkpoint thì tiếp tục checkpoint đó, không xóa hoặc ghi đè.
-4. Sửa theo vertical slice nhỏ nhất: model → security → API → frontend → test.
-5. Chạy kiểm tra phù hợp với phần thay đổi: frontend thì typecheck/build; model/security thì Odoo tests; tooling thì unit test/lint; tài liệu thì kiểm liên kết/nội dung. Không chạy cả bộ ứng dụng cho một sửa đổi tài liệu đơn thuần.
+4. Sửa theo vertical slice nhỏ nhất: model/action → security → view/action native hoặc OWL → test; API/OpenAPI chỉ khi phạm vi thay API. Tái sử dụng workflow backend hiện có.
+5. Chạy kiểm tra phù hợp với phần thay đổi: native UI thì kiểm XML/assets/OWL và trình duyệt; model/security thì Odoo tests; tooling thì unit test/lint; tài liệu thì kiểm liên kết/nội dung. React typecheck/build chỉ khi thực sự sửa phần legacy đó. Không chạy cả bộ ứng dụng cho một sửa đổi tài liệu đơn thuần.
 6. Cập nhật trong cùng lượt:
    - `docs/PROJECT_STATUS.md`: trạng thái, việc đã làm, việc tiếp theo, rủi ro.
    - `docs/CHANGELOG.md`: một dòng thay đổi có ngày, phạm vi, test.

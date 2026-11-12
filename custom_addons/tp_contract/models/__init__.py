@@ -1,3 +1,5 @@
+# Native view extensions must load after the original submission and revision models.
+# ruff: noqa: I001
 from . import (
     ir_attachment,
     tp_approval_reference,
@@ -8,4 +10,5 @@ from . import (
     tp_contract_revision,
     tp_contract_submission,
     tp_contract_workflow,
+    tp_contract_native,
 )

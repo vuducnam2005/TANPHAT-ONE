@@ -1,5 +1,7 @@
 # TANPHAT ONE web workspace
 
+**Legacy từ 05/11/2026 — DEC-030:** giao diện chính được phát triển trong native Odoo. Source React và hướng dẫn dưới đây được giữ để tham khảo/hồi quy, không còn là hướng phát triển giao diện chính. Không tự xóa source, ngừng route, gỡ API hoặc đổi đăng nhập. Xem [hướng hiện hành](../docs/architecture/TP_NATIVE_ODOO_DIRECTION.md). Các luồng đã có ở React cần chuyển sang native bằng task riêng, tái sử dụng backend và quyền.
+
 Tên phân hệ dùng chung trong `src/shared/config/product.ts`, theo [quy ước sản phẩm](../docs/architecture/TP_PRODUCT_NAMING.md). Menu dự án dùng tên **TP Projects**.
 
 Frontend React/TypeScript/Vite độc lập gọi API nghiệp vụ `/api/v1` của Odoo bằng session native. Backend quản lý dữ liệu, phân quyền và tính toán nghiệp vụ.

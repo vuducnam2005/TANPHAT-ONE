@@ -1,25 +1,25 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-03T09:06:53.371772+00:00",
-  "last_change_id": "CHG-20261103-001",
-  "code_digest": "05ca695d3f6e27fca70e07eb79e003eff9953457df896af034c2e75fef2df56f",
-  "code_file_count": 221,
+  "updated_at": "2026-11-12T12:55:12.474014+00:00",
+  "last_change_id": "CHG-20261112-015",
+  "code_digest": "dd2363a9c5218e756a36db72f0a44f75b56816517e56b0700524af11b262de6e",
+  "code_file_count": 413,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "35b107c8ada14d9261b0b2d3a735627b83042e0c33cfd882c60a35f8823b49d0",
-    "docs/CHANGELOG.md": "d6e95989bc7003437fd26d94c455e7a574e5967003b935577594a84130b9ee3d",
-    "AGENTS.md": "eb8a83dc3557931a20ad0fbe0bdb42872122bce244e5f7496f135276d4f7b5ba",
-    "README_TANPHAT.md": "7b12ef66c29f0cbecb53096a3115e6199ea014cde2eb59e550221e9001f41f47",
-    "docs/AI_CHANGE_WORKFLOW.md": "bee7a7fc977db3cc9b18bd38c21a166b68f4dbe668102ca3001086e73d6059e8",
-    "docs/ROADMAP.md": "5551cdd508914d54e1c68e4ccc99db0c10b5ee604c065e48c3085f228a140e3d",
-    "docs/DECISIONS.md": "90935a6314d9660d113f54b0329038938d8c78ff11579ebf2b8001b106ee9c74",
+    "docs/PROJECT_STATUS.md": "ad2a7fd4a664baeffadad12bc124b4328e092d78cfdcdc649b4266ff7898df26",
+    "docs/CHANGELOG.md": "0731fc582953caafe0ac48263ab0a21d8526426a40abdc678f6e3001455eaba7",
+    "AGENTS.md": "c7ad5bd0bf2ca4a8c384cc912defb9224fc7c0923d3162c475a4485c23afaccc",
+    "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
+    "docs/AI_CHANGE_WORKFLOW.md": "8f0a7961c56c60ee26063c94b175b9d6d7ea453ded6acb883e9c3bbde894bc63",
+    "docs/ROADMAP.md": "b12f94b1d73406fd81f174c80f3522f6e0783931feae9d9ec98e2db6cbeb7553",
+    "docs/DECISIONS.md": "476eb6f9a413b8250df39c1ddaf2d19680a32e9e73b355e8b6b65931cc9068d7",
     "docs/HANDOFF_TEMPLATE.md": "7a98efbd7a557efe789b51fefbf5c4072908f9d9f29a21e0c76d012cbddf3d32",
-    "docs/architecture/TP_BUSINESS_WORKFLOW.md": "d0e4716bf75dd8e96a3d6f2e11cafc10f8a264e4d1e30a004fad52979740eddf",
-    "docs/architecture/TP_DATABASE_DESIGN.md": "d29387915c00015d2faccaa881aa920982d3ffc02b60e7350d653d40ec5675c4",
-    "docs/architecture/TP_PLATFORM_SOURCE_STRUCTURE.md": "a6825e1710d30801b0378360d20b4f81be096dffd91a3e18fab01438c695134c",
-    "docs/architecture/TP_PRODUCT_NAMING.md": "b93114db49706b3ad642335c58fa67339ab0fdd8880b7a83ef8e8e1f514af3a3"
+    "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
+    "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
+    "docs/architecture/TP_PLATFORM_SOURCE_STRUCTURE.md": "ab116137fac640d5bb583a8a3eb931dde703b0343c6a70ddfa927715e515792b",
+    "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "git diff --check đạt; main = origin/main = f54fd83f sau push; không đổi code, không chạy lại test ứng dụng"
+    "source cleanup dry-run and execution verified, 92 files archived with SHA256 match, 5907 cache/temp files deleted, HTTP 18069 and 18079 smoke pass, git diff check pass"
   ]
 }

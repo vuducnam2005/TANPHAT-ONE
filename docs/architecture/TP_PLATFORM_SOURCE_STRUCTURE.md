@@ -6,20 +6,20 @@ Ngày thiết kế và triển khai nền: 28/10/2026, Asia/Saigon. Tài liệu 
 
 ## 1. Hướng đã xác nhận và kiến trúc đề xuất
 
-Người dùng đã xác nhận dùng module Odoo làm backend và **một web frontend độc lập gọi API Odoo**. Thiết kế đề xuất tổ chức backend dạng modular monolith, frontend React/TypeScript/Vite và API nghiệp vụ mỏng trong Odoo. Các tên addon, model và giai đoạn dưới đây là thiết kế đề xuất, chưa phải triển khai có sẵn. Phương án đưa frontend chính vào OWL client action trong các tài liệu dashboard cũ được giữ lại như lịch sử/prototype, không còn là hướng nền tảng.
+**Cập nhật có hiệu lực 05/11/2026 — DEC-030:** giao diện chính phát triển trong Odoo, ưu tiên view/action chuẩn và bổ sung OWL/QWeb/SCSS trong custom addon. Hướng React/TypeScript/Vite riêng trước đây được thay thế; source/API/test cũ được giữ cho tương thích và hồi quy. Xem [hiện trạng và kế hoạch chuyển giao diện](TP_NATIVE_ODOO_DIRECTION.md). Backend vẫn tổ chức thành các addon nghiệp vụ dùng chung một nền Odoo. Các addon tương lai dưới đây là thiết kế, chưa phải danh sách đã cài.
 
-Theo nguyên tắc đã chốt tại DEC-023, frontend là một ứng dụng chung với common shell; mỗi phòng ban có workspace, menu, dashboard, trường dữ liệu và nút thao tác khác nhau theo vai trò và quyền. Danh mục cụ thể, cách tổ chức route dùng chung bản ghi hay DTO `allowed_actions` là hướng thiết kế đề xuất, phải đặc tả theo từng domain và owner. Backend Odoo/API vẫn là nơi enforce quyền theo các quyết định security hiện hành. Không tạo frontend hoặc addon lặp lại theo từng phòng ban chỉ vì trải nghiệm hiển thị khác nhau.
+Theo DEC-023 và DEC-030, dùng một nền giao diện Odoo chung; mỗi phòng có workspace, menu, dashboard, trường và nút theo vai trò/quyền. Đặc tả view/action theo từng domain và owner; backend vẫn enforce quyền. Không nhân bản addon/model theo phòng ban chỉ vì màn hình khác nhau.
 
 ```text
 Browser
   |
   | same HTTPS origin qua reverse proxy
   v
-Frontend React + TypeScript + Vite
+Odoo native: Home + view/action chuẩn + OWL/QWeb/SCSS
   |
-  | OpenAPI DTO, session Odoo, /api/v1
+  | session Odoo; gọi action/model có kiểm quyền
   v
-Odoo custom API + domain services + ORM
+Odoo domain actions + security + ORM; API giữ cho tích hợp
   |
   +-- Odoo chuẩn: CRM, Project, Sale, Purchase, Account, Analytic, HR, Mail
   +-- Addon Tấn Phát: tổ chức, dự án, hợp đồng, giao khoán, nghiệm thu, báo cáo
@@ -28,11 +28,11 @@ Odoo custom API + domain services + ORM
 PostgreSQL + filestore; adapter NAS/DMS khi được thiết kế
 ```
 
-Odoo là nguồn sự thật cho dữ liệu, tính tiền, trạng thái, lịch sử và phân quyền. Frontend chỉ truy vấn/gửi lệnh qua DTO, quản lý trạng thái màn hình và trình bày. Không đưa công thức tài chính, quyền truy cập hoặc quy tắc hiệu lực giao dịch vào JavaScript.
+Odoo là nguồn sự thật cho dữ liệu, tính tiền, trạng thái, lịch sử và phân quyền. Native UI gọi model/action đã kiểm quyền; không ghi trực tiếp state hoặc bỏ guard workflow bằng RPC. API ngoài giao diện native vẫn theo DTO/OpenAPI. Không đưa quyết định tài chính, quyền hoặc hiệu lực giao dịch vào JavaScript.
 
 Không sửa `odoo/` hoặc `addons/`. Mọi code riêng đặt trong `custom_addons/`. Repository hiện là Odoo 20.0, vì vậy manifest, ORM, route và security phải bám source phiên bản này.
 
-Hướng này phù hợp khi muốn tự chủ trải nghiệm cho toàn công ty. Chi phí đi kèm là phải tự phát triển form, validation hiển thị, bảng, action phê duyệt và trải nghiệm tài liệu trên web riêng; giao diện chuẩn Odoo không tự chuyển thành React. Vẫn nên có native view Odoo tối thiểu cho cấu hình và quản trị. Không cần thêm backend Node, microservices, event bus hoặc hệ đăng nhập riêng trong giai đoạn nền.
+Tận dụng form/list/search và session Odoo để giảm phần giao diện phải xây riêng; Home/dashboard/mobile đã có tùy biến native. Hợp đồng có backend/test và UI React cũ; CHG-20261106-002 thêm `tp_contract_native.py`, XML view/menu và transient adapter trong addon `tp_contract`, gọi sáu action có sẵn bằng user hiện tại. Chỉ upgrade owned clone18169, đã tự kiểm Odoo107/browser42, chờ audit implementation, chưa áp dev. [Bàn giao](../reviews/UI_CTR_NATIVE_001A_IMPLEMENTATION.md). Không cần backend Node, microservices hoặc hệ đăng nhập thứ hai cho hướng này.
 
 ## 2. Cấu trúc source mục tiêu
 
@@ -56,7 +56,7 @@ C:\TANPHAT ONE\
 │   ├── tp_account_bridge/        # nối Account/Analytic, làm sau đối chiếu
 │   ├── tp_sale_bridge/           # nối hợp đồng với Sale khi nghiệp vụ cần
 │   └── tp_purchase_bridge/       # nối hợp đồng thầu phụ với Purchase khi cần
-├── frontend/                     # một ứng dụng web độc lập duy nhất lúc đầu
+├── frontend/                     # React legacy; giữ source/test, không là FE chính
 ├── contracts/openapi/            # tanphat-v1.yaml khi endpoint đầu tiên có thật
 ├── docs/
 │   ├── architecture/             # quyết định kiến trúc và quy tắc phát triển
@@ -73,7 +73,7 @@ C:\TANPHAT ONE\
 
 Đây là cấu trúc mục tiêu, không phải danh sách phải tạo ngay. Chỉ tạo addon khi có mô hình và ca sử dụng thật; không tạo 15 thư mục rỗng để giả lập microservices. Không chuyển `odoo/` và `addons/` vào thư mục `backend/` chỉ để đẹp cây source.
 
-Frontend hiện tại là app React/TypeScript/Vite trong `frontend/src/`, còn dashboard vanilla JS cũ nằm trong `frontend/prototype/`. Chưa tách monorepo `apps/` và `packages/`; chỉ tách package khi có nhu cầu chia sẻ thực sự. `.gitignore` có exception có phạm vi cho manifest, lockfile và tsconfig của frontend; secrets, `node_modules`, dist và kết quả browser vẫn ở ngoài Git.
+Giao diện chính đặt cùng addon nghiệp vụ trong `views/` và `static/src/`; Home/dashboard hiện ở `tp_web_home`/`tp_dashboard_privacy`. React trong `frontend/src/` và prototype trong `frontend/prototype/` được giữ; không tự xóa route/test hoặc đổi runtime. Secrets, `node_modules`, dist và kết quả browser vẫn ngoài Git.
 
 ## 3. Tái sử dụng Odoo và phần phát triển riêng
 
@@ -96,7 +96,9 @@ Phân module theo **nghiệp vụ và nguồn dữ liệu**, không tạo một 
 
 `tp_core` giữ catalog hạng mục `tp.work.item`, alias được duyệt và cấu hình chung. Nó không giữ toàn bộ workflow hoặc tiền của hệ thống. Mã dự án thuộc `tp_project`; binding từ dòng nguồn sang bản ghi nghiệp vụ thuộc `tp_import`. Đối tác dùng `res.partner`; tài khoản truy cập dùng `res.users`, hồ sơ nhân viên dùng `hr.employee` khi cần. Không sao chép các model này sang bộ bảng riêng.
 
-`tp_organization` phụ thuộc `hr` và `tp_core`, mở rộng `hr.department` và phân công vào đơn vị có thời hạn. Role và thành viên trên một dự án thuộc `tp_project`. Không tạo `tp.department` để sao chép `hr.department`, cũng không hardcode tên nhân viên trong rule.
+`tp_organization` phụ thuộc `hr` và `tp_core`, mở rộng `hr.department` và phân công vào đơn vị có thời hạn. HR-001 bổ sung mã TP/source metadata trên `hr.employee`, cờ xác nhận dữ liệu mặc định trên `hr.version`, parser và lịch sử `tp.hr.import.batch/line`; không có model nhân viên song song. Role và thành viên trên một dự án thuộc `tp_project`. Không tạo `tp.department` để sao chép `hr.department`, cũng không hardcode tên nhân viên trong rule.
+
+`tp_hr_workspace` phụ thuộc `tp_organization`, `hr_skills`, `tp_web_home`; chứa view/action/sidebar/table/OWL của TP HR và `tp.hr.workspace` tổng hợp theo quyền/current company. Không phụ thuộc workflow tiền KH-KD để dùng CSS. Dashboard, drill-down và XLSX `/tp_hr/export` dùng cùng population backend không sudo; export whitelist chỉ hồ sơ công việc. Nút chứng chỉ kiểm quyền caller và contact identity trên canonical `tp.credential` nếu có, không cấp thêm quyền KH-KD. [Đặc tả/acceptance HR-001](../demo/HR_001_ACCEPTANCE.md).
 
 Alias đồng nghĩa một-một khác với crosswalk phân bổ một-nhiều. “Khảo sát” và “Khảo sát địa hình” phải được người phụ trách duyệt mapping, không tự gộp bằng so khớp tên. Năm trong mã dự án không tự quyết định kỳ phát sinh giao dịch.
 
@@ -169,7 +171,7 @@ tp_contract/
     └── test_contract_workflow.py  # T-P01, T-N01…T-N06, T-N08, T-N09
 ```
 
-Chưa có `views/` hoặc menu native vì người dùng nghiệp vụ đọc qua API/React; grant `financial_read` (`tp.project.grant`) nằm ở `tp_project` để domain khác dùng lại. Thêm view/menu khi có ca quản trị thật.
+Chưa có `views/` hoặc menu native cho hợp đồng; UI/API React là triển khai cũ. Theo DEC-030, UI-CTR-NATIVE-001 sẽ đặc tả menu/list/form nghiệp vụ native, tái sử dụng action/backend; chưa triển khai trong lượt chốt hướng. Grant `financial_read` (`tp.project.grant`) nằm ở `tp_project` để domain khác dùng lại.
 
 Model/action/constraint giữ nghiệp vụ; route chỉ parse input, gọi action và serialize. Dùng action chuẩn như `sale.order.action_confirm`, `purchase.order.button_confirm`, `account.move.action_post` thay cho ghi thẳng state. Các ràng buộc SQL theo API `models.Constraint`/`Index` của source hiện tại; không sao mẫu `_sql_constraints` cũ. Khai báo dependency trực tiếp thật sự dùng trong manifest.
 
@@ -189,22 +191,22 @@ tp_planning_api/
 └── tests/             # quyền + response contract + nghiệp vụ
 ```
 
-API đầu tiên nên nhỏ: `GET /api/v1/me`, `GET /api/v1/projects`, `GET /api/v1/projects/{id}`. Overview với KPI hợp đồng/nghiệm thu được thêm ở giai đoạn nghiệp vụ tương ứng. Frontend không gọi generic ORM RPC và không gửi model, domain, field hay method tùy ý. Filter/sort/field projection phải được whitelist tại backend.
+API đầu tiên đã có `GET /api/v1/me`, `GET /api/v1/projects`, `GET /api/v1/projects/{id}`; overview theo giai đoạn nghiệp vụ tương ứng. Client ngoài native phải theo API contract, không dùng RPC tùy ý để né contract. Native view/OWL được dùng ORM/RPC Odoo nhưng backend phải kiểm field, action, scope, state và quyền; không dựa vào ẩn nút. Filter/sort/field projection của API phải whitelist tại backend.
 
 OpenAPI tại `contracts/openapi/tanphat-v1.yaml` mô tả endpoint, input, DTO, error, pagination và security; type TypeScript sinh vào `frontend/src/shared/api/openapi.generated.ts`. DTO không phải bản dump field của ORM: money là decimal string kèm currency/precision, date và datetime có quy ước riêng, thiếu dữ liệu trả `null` với trạng thái nguồn. API không trả field nhạy cảm chỉ vì frontend đang ẩn cột. Thay đổi phá vỡ contract đi qua version mới hoặc lộ trình chuyển đổi; CI kiểm schema và generated client.
 
-Khuyến nghị triển khai cùng origin qua reverse proxy; frontend và backend có thể là hai process/container riêng nhưng browser thấy một hostname HTTPS:
+Theo DEC-030, giao diện chính và session do Odoo phục vụ cùng origin; HTTPS/reverse proxy được thiết kế khi triển khai. Route React cũ chỉ giữ cho tương thích, chưa bị tắt hoặc chuyển hướng trong lượt tài liệu này:
 
 ```text
 /api/v1/    -> custom HTTP JSON routes trong Odoo
-/work/      -> TANPHAT ONE React login + workspace
-/web/login  -> native Odoo MFA/passkey fallback and admin UI
-/odoo/      -> native admin UI theo quyền
+/work/      -> React legacy, không là giao diện chính
+/web/login  -> đăng nhập native Odoo, MFA/passkey theo cấu hình
+/odoo/      -> giao diện nghiệp vụ Odoo theo quyền
 ```
 
 Proxy tiếp tục chuyển các route native/assets cần thiết sang Odoo; SPA fallback chỉ áp dụng trong `/work/`, không bắt nhầm API hoặc asset. Khi dev, Vite proxy các route cần thiết để kiểm thử cùng cơ chế session; port dev không trở thành kiến trúc production.
 
-Browser dùng session Odoo qua HTTPS; form login riêng gọi endpoint session native cùng origin, còn MFA/passkey fallback đi qua `/web/login`. `GET /api/v1/me` trả user, company, capability và session bootstrap/CSRF; response session không được cache công khai. Capability phục vụ hiển thị, quyền vẫn được kiểm lại ở mỗi action. Session cookie của source có HttpOnly; Secure, SameSite, path và proxy headers cần cấu hình/kiểm tra ở môi trường triển khai. Không nhúng service key hoặc bearer token dùng chung vào bundle/localStorage.
+Browser dùng session và login native Odoo; React legacy giữ cách gọi endpoint session/MFA cũ. `GET /api/v1/me` phục vụ client API với user/company/capability và bootstrap/CSRF; response session không cache công khai. Quyền phải kiểm lại mỗi action. Cookie Secure/SameSite/path và proxy headers cần cấu hình/kiểm tra khi triển khai HTTPS; dev hiện loopback HTTP. Không nhúng service key hoặc token dùng chung vào bundle/localStorage.
 
 Custom route chọn `type='http'`, `auth='user'` và response JSON. Cần lớp xử lý lỗi giới hạn trong `/api/v1/` để session hết hạn trả 401 JSON thay vì redirect HTML; kiểm thử các lỗi phát sinh trước khi controller được gọi. Trường hợp bearer server-to-server tách route/scope riêng, khai báo `bearer_scope`; không mở CORS rộng cho SPA.
 
@@ -216,7 +218,9 @@ Ma trận quyền được chốt trước model ghi dữ liệu: mỗi dòng l�
 
 Một business operation chạy trong một transaction Odoo; nhiều request liên tiếp từ browser không bảo đảm atomic. Action chốt/duyệt dùng idempotency key khi cần và version token để phát hiện sửa đồng thời; retry chỉ an toàn sau khi xác định tính lặp. Lỗi chuẩn có `{code, message, details, request_id}` và HTTP status phù hợp, không trả traceback cho browser.
 
-## 6. Cấu trúc frontend mục tiêu
+## 6. Cấu trúc React lịch sử — giữ tham khảo và hồi quy
+
+DEC-030 thay hướng triển khai chính của mục này bằng native view/action/OWL trong custom addon. Cây và các thư viện dưới đây mô tả frontend cũ; không giao batch mở rộng React dựa vào mục này. Màn hình native mới cần đặc tả riêng, dùng backend đã có.
 
 Lúc đầu chỉ có **một app** trong `frontend/`, dùng React + TypeScript + Vite. Chưa cần microfrontend, workspace package hay BFF Node.
 
@@ -279,6 +283,8 @@ Dependency đích cho phần nghiệp vụ đầu tiên:
 
 ## 8. Lộ trình dựng nền chính xác
 
+Các giai đoạn dưới đây lưu kế hoạch dựng nền ban đầu. Phần React ở giai đoạn 1 đã thành legacy theo DEC-030; bước hiện hành theo `PROJECT_STATUS.md` và UI-CTR-NATIVE-001, không dựng lại nền từ đầu.
+
 **Giai đoạn 0 - chốt mô hình dữ liệu và baseline.** Khóa commit Odoo, Python/PostgreSQL dev, quy ước ID, mã dự án, work item/crosswalk, ma trận quyền, quy tắc revision và DTO. Chọn 2-3 dự án đại diện; chưa import toàn bộ Excel.
 
 **Giai đoạn 1 - một luồng đọc xuyên suốt.** Tạo `tp_core`, `tp_organization`, `tp_project`, `tp_api`, `tp_planning_api`; làm session, `/me`, danh sách/chi tiết dự án theo quyền với dữ liệu seed. Dựng frontend shell, project selector, loading/error/permission states và client thật theo OpenAPI. Chưa tạo addon contract/reporting rỗng để đủ cây thư mục.
@@ -308,7 +314,7 @@ Dependency đích cho phần nghiệp vụ đầu tiên:
 
 **Cổng nghiệp vụ Kế hoạch:** phụ lục, giao khoán cấp 1/cấp 2, revision/cancellation, import lặp và dữ liệu thiếu có test; overview khớp nguồn trên dự án thí điểm sau đối chiếu. Đạt nền kỹ thuật không đồng nghĩa đủ nghiệp vụ để triển khai toàn công ty.
 
-Khi có runtime, CI tập trung vào cài/upgrade addon, security/transaction tests, frontend typecheck/build và các luồng e2e trọng yếu. Giữ dev, staging, production tách dữ liệu; chỉ config mẫu ở Git. Pin commit Odoo và dependency lockfile; nâng cấp Odoo qua staging và migration, không kéo code upstream trực tiếp vào production.
+Kiểm tra theo scope: addon install/upgrade, security/transaction tests, native XML/assets/OWL và luồng trình duyệt trọng yếu; React typecheck/build khi sửa legacy. Giữ dev/staging/production tách dữ liệu; chỉ config mẫu ở Git. Pin commit Odoo và dependency; nâng cấp qua staging/migration, không kéo upstream trực tiếp vào production.
 
 ## 10. Phạm vi lượt thiết kế này
 
@@ -330,3 +336,7 @@ Có source `account`, `analytic`, `l10n_vn`, `crm`, `project`, `sale`, `purchase
 ## 12. Integration/security addon NATIVE-DATA-003
 
 CHG-20261102-014: `custom_addons/tp_crm_project_bridge` giữ FK optional `crm.lead.tp_project_id` với company/customer integrity và CRM native giao project scope; `tp_timesheet_scope` áp scope managed project lên analytic-line CRUD và create/write target lookup; `tp_dashboard_privacy` chặn public snapshot/token theo cờ nội bộ của dashboard. Ba addon đã clone-test rồi cài dev, không sửa upstream/React/OpenAPI hoặc managed-task write policy. Tooling có ownership/journal/private snapshot tại `scripts/native_data003*`; [runbook](../demo/NATIVE_DATA_003_CONNECTED_OPERATIONS.md) và [TASK-001](RFC_TASK_001_MANAGED_TASK_PROGRESS.md) giữ ranh giới partial/gate nghiệp vụ. Tên kỹ thuật mới không tạo app/menu hoặc phân hệ rỗng.
+
+## KD-NATIVE-001 — Runtime dev18069 (CHG-20261106-017)
+
+`custom_addons/tp_kd_workspace` dùng CRM/project/task/partner/tp_contract canonical, thêm typed allocation/production/acceptance/payment.request/periodic.plan/credential/obligation và helper review/money/event. View/list/form/search, OWL native save-version và SCSS nằm trong addon; quyền/transition ở backend. Registry dataset chỉ operator, seed/inventory/verify/cleanup guarded tại `scripts/kd_native001_dataset.py`. Đã clone-test và cài dev cùng `tp_contract`20.0.1.2.0; không đổi REST/OpenAPI/React. [Workflow](TP_KD_NATIVE_001_WORKFLOW.md), [bàn giao dev](../demo/KD_NATIVE_001_ACCEPTANCE.md). Các đoạn “chưa dev” ở trên là lịch sử trước lô tích hợp.

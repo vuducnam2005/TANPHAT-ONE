@@ -11,7 +11,8 @@ from odoo.tools import BinaryBytes, mute_logger
 from .common import TpContractWorkflowCommon
 from odoo.addons.tp_contract.exceptions import ContractWorkflowError
 
-MONEY_TOKENS = ('100', '150', '"amount"', '"value"')
+# IDs can legitimately equal 100/150; the fixture money values are JSON strings.
+MONEY_TOKENS = ('"100"', '"150"', '"amount"', '"value"')
 
 
 class TestContractWorkflow(TpContractWorkflowCommon):

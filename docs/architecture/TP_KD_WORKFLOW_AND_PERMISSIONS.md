@@ -1,5 +1,37 @@
 # BIZ-001 — Workflow và ma trận quyền Kế hoạch Kinh doanh
 
+**IDENTITY-ORG-001, 12/11/2026:** primary workspace từ HR hiện hành có CRM mapping
+theo ID; HEAD/kiêm nhiệm đã đối chiếu vẫn độc lập với phòng chính. Scoped group
+chung không đủ mở dashboard/report/action KH-KD. Assignment/grant quyết định
+dữ liệu/tiền/tệp. Chuyển phòng qua admin preview mặc định revoke HEAD và kết thúc
+assignment/grant/CRM active trong company; giữ lịch sử. Quyền cấp riêng chỉ giữ
+khi admin xác nhận rõ. Phiên cũ hết hiệu lực; menu/action kiểm backend. Không đổi
+cổng duyệt/ký/hiệu lực/thực trả. [Nguồn danh tính](TP_IDENTITY_ORG_001.md),
+[guide](../demo/IDENTITY_ORG_001_USER_GUIDE.md).
+
+**KD-HEAD-001, 10/11/2026 — riêng HEAD:** DEC-033 cho quản lý nghiệp vụ KH-KD
+toàn phòng, gồm dự án mới và hồ sơ nhân viên khác. Dev18069 đã áp
+role company/phòng có thời hạn, scope động; command can thiệp nháp/
+phân công/nhận reviewer lưu actor, reason, version và trước–sau; không tự cấp
+grant, tự review nội dung cùng vòng gửi hoặc mở BASE/ký/hiệu lực/thực trả.
+Contract giữ reviewer gốc và reviewer hiện hành, báo cáo/inbox theo hiện hành;
+file đã gửi vẫn khóa sau rework. Chi tiết ở [workflow native](TP_KD_NATIVE_001_WORKFLOW.md#delta-head-kd-head-001--source-bản-riêng-ngày10112026)
+và [ma trận HEAD](../security/KD_ACCESS_002_ROLE_MATRIX.md).
+**Full211/211 và dev apply/preservation đã đạt**, xem
+[acceptance](../demo/KD_HEAD_001_ACCEPTANCE.md). Bốn vai khác giữ hiện hữu;
+toàn V2/business acceptance/pilot chưa được delta này duyệt. Các ghi nhận
+09/11 và CTR dưới đây giữ làm lịch sử, không thay verdict KD-HEAD-001.
+
+**Hậu kiểm runtime09/11/2026, CHG-20261109-004:** [KD-ACCESS-002 chưa đạt](../reviews/KD_ACCESS_002_INDEPENDENT_AUDIT.md)
+do3lỗi quyền file/chatter native đã tái hiện trên clone. Quyền đọc metadata/tiền
+và luồng đã có qua hồi quy, nhưng chưa nghiệm thu toàn bộ. Sửa F1–F3 trước
+Project/WBS hoặc pilot; không thay các cổng nghiệp vụ bên dưới.
+
+**Runtime dev09/11/2026:** [KD-ACCESS-002](../demo/KD_ACCESS_002_ACCEPTANCE.md)
+đã mở quyền CRM cho5account theo [ma trận từng vai](../security/KD_ACCESS_002_ROLE_MATRIX.md),
+giữ typed/contract scope/owner/reviewer cũ. Đây là cấu hình dev được giao trực tiếp,
+không biến ma trận đề xuất/nghiệp vụ/BASE/thẩm quyền bên dưới thành Q2 hoặc pilot.
+
 **Phiên bản:** 1.0 — baseline phân tích ngày 28/10/2026 (Asia/Saigon).  
 **Phạm vi:** Ban Kinh doanh/Kế hoạch và các bên phối hợp.  
 **Kết quả:** đủ đầu vào để thiết kế TP Contracts đọc hồ sơ; chưa phải biên bản nghiệm thu nghiệp vụ hoặc văn bản ủy quyền ký/duyệt.
@@ -341,3 +373,14 @@ Chưa có chủ nghiệp vụ ký xác nhận ma trận cho người thật, ch�
 
 **Bước tiếp theo:** maintenance CTR-002a.1 đã đạt technical acceptance trên test. Hoàn thiện Q2/hồ sơ khử dữ liệu/owner trước pilot; thu thập Q1–Q4/Q8 liên quan trước action xác minh/chốt pháp lý. Không mở action hoặc phân hệ mới từ kết quả kỹ thuật của test slice.
 
+
+
+## KD-PROJECT-RESTRUCTURE-001 — implementation theo capability
+
+CHG-20261109-014 đã thêm hai góc nhìn cùng project ID trên dev20.0.1.8.0;
+project lifecycle/investor, gói/lần tham gia, quan hệ vai trò, ba nghĩa tiền và
+command WBS/assign/progress có version/lock/retry/history. Quyền mục tiêu kiểm
+bằng fixture; grant/owner/reviewer và account5vai trên dev giữ nguyên, V2/TASK-001
+vẫn chưa tự duyệt. F1–F3/public-token correction đã hậu kiểm theo scope; không
+nhận đây là audit các batch ngoài phạm vi. Xem [workflow chi tiết](TP_KD_PROJECT_RESTRUCTURE_001_WORKFLOW.md)
+và [acceptance](../demo/KD_PROJECT_RESTRUCTURE_001_ACCEPTANCE.md).

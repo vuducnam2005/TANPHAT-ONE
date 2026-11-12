@@ -4,6 +4,7 @@ from odoo.tests import HttpCase, TransactionCase, new_test_user, tagged
 HOME_RECORDS = {
     ('ir.actions.client', 'action_home'),
     ('ir.ui.menu', 'menu_home'),
+    ('ir.ui.view', 'webclient_bootstrap_user_zoom'),
 }
 
 
@@ -27,6 +28,13 @@ class TestHomeMenu(TransactionCase):
     def test_module_owns_only_the_home_action_and_menu(self):
         owned = self.env['ir.model.data'].search([('module', '=', 'tp_web_home')])
         self.assertEqual({(data.model, data.name) for data in owned}, HOME_RECORDS)
+
+    def test_backend_viewport_keeps_user_zoom(self):
+        # MOBILE-001: same device-width viewport as native, without user-scalable=no.
+        arch = self.env.ref('web.webclient_bootstrap').get_combined_arch()
+        self.assertIn('content="width=device-width, initial-scale=1"', arch)
+        self.assertNotIn('user-scalable', arch)
+        self.assertNotIn('maximum-scale', arch)
 
     def test_home_is_a_root_client_action_for_internal_users(self):
         self.assertFalse(self.home_menu.parent_id)
@@ -62,10 +70,22 @@ class TestHomeMenu(TransactionCase):
             self.env['ir.config_parameter'].with_user(self.employee).search_read([], ['key'])
         self.env['ir.config_parameter'].with_user(self.manager).search_read([], ['key'], limit=1)
 
-    def test_no_user_home_action_and_no_other_menu_points_to_home(self):
-        users = self.env['res.users'].with_context(active_test=False).search(
-            [('action_id', '=', self.home_action.id)])
-        self.assertFalse(users)
+    def test_administration_area_follows_group_system_not_access_rights(self):
+        # UI-HOME-003: Home builds "Quản trị hệ thống" from the session flag is_system
+        # (base.group_system). Access Rights (group_erp_manager, session is_admin) is not enough.
+        rights = new_test_user(
+            self.env, login='home003.rights', groups='base.group_user,base.group_erp_manager')
+        self.assertTrue(rights._is_admin())
+        self.assertFalse(rights._is_system())
+        self.assertFalse(self.employee._is_system())
+        self.assertTrue(self.manager._is_system())
+        # The native switcher still receives Settings for that user; Home simply does not list it.
+        settings = self.env.ref('base.menu_administration').id
+        self.assertIn(settings, self.roots(rights)['root']['children'])
+
+    def test_no_default_home_action_and_no_other_menu_points_to_home(self):
+        # Existing administrators may explicitly assign Home; never forbid their settings.
+        self.assertFalse((self.employee | self.manager | self.portal).filtered('action_id'))
         menus = self.env['ir.ui.menu'].with_context(active_test=False).search(
             [('action', '=', f'ir.actions.client,{self.home_action.id}')])
         self.assertEqual(menus, self.home_menu)

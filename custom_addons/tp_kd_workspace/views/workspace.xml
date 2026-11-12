@@ -1,0 +1,342 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+  <record id="project_form" model="ir.ui.view">
+    <field name="name">kd.project.form</field>
+    <field name="model">project.project</field>
+    <field name="arch" type="xml">
+      <form string="Hồ sơ dự án" class="tp_kd_form tp_kd_bp_project_form" js_class="tp_kd_bp_project_form">
+        <sheet>
+          <div class="oe_title tp_kd_bp_title">
+            <h1>
+              <field name="name" widget="text" rows="1" placeholder="Tên dự án"/>
+            </h1>
+          </div>
+          <div class="tp_kd_bp_primary_actions">
+            <button name="action_kd_opportunities" type="object" class="btn btn-outline-primary" icon="fa-handshake-o" string="Hồ sơ dự án / thầu"/>
+            <button name="action_kd_contracts" type="object" class="btn btn-outline-primary" icon="fa-file-text-o" string="Hợp đồng"/>
+            <button name="action_kd_tasks" type="object" class="btn btn-outline-primary" icon="fa-tasks" string="Kế hoạch / WBS"/>
+          </div>
+          <div class="oe_button_box" name="button_box"/>
+          <field name="tp_managed" invisible="1"/>
+          <div class="tp_kd_bp_columns">
+            <div class="tp_kd_bp_block">
+              <h2>Nhận diện và các bên</h2>
+              <div class="tp_kd_bp_field">
+                <label for="tp_code" string="Mã dự án"/>
+                <field name="tp_code" required="tp_managed" placeholder="Mã dự án trong công ty"/>
+              </div>
+              <div class="tp_kd_bp_field">
+                <label for="partner_id" string="Bên ký / đối tác thương mại"/>
+                <field name="partner_id" widget="tp_kd_bp_many2one"/>
+              </div>
+              <div class="tp_kd_bp_field">
+                <label for="company_id"/>
+                <field name="company_id" widget="tp_kd_bp_many2one"/>
+              </div>
+            </div>
+            <div class="tp_kd_bp_block">
+              <h2>Chủ trì và mốc bàn giao</h2>
+              <div class="tp_kd_bp_field">
+                <label for="tp_department_id"/>
+                <field name="tp_department_id" widget="tp_kd_bp_many2one"/>
+              </div>
+              <div class="tp_kd_bp_field">
+                <label for="user_id"/>
+                <field name="user_id" widget="tp_kd_bp_many2one"/>
+              </div>
+              <div class="tp_kd_bp_field">
+                <label for="kd_deadline"/>
+                <field name="kd_deadline" options="{'numeric': True, 'warning': 'past'}" widget="tp_kd_date"/>
+              </div>
+            </div>
+          </div>
+          <notebook>
+            <page string="Phạm vi / đầu ra" name="kd_scope_page">
+              <div class="tp_kd_bp_page">
+                <label for="kd_scope"/>
+                <field name="kd_scope" rows="3" placeholder="Phạm vi và đầu ra dự kiến"/>
+              </div>
+            </page>
+            <page string="Phân công" name="kd_assignment_page" groups="tp_core.group_manager">
+              <field name="tp_assignment_ids" widget="tp_kd_relation">
+                <list editable="bottom" limit="20">
+                  <field name="user_id"/>
+                  <field name="role"/>
+                  <field name="active"/>
+                </list>
+              </field>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+  <record id="opportunity_list" model="ir.ui.view">
+    <field name="name">kd.opportunity.list</field>
+    <field name="model">crm.lead</field>
+    <field name="arch" type="xml">
+      <list js_class="tp_kd_opportunity_list" class="tp_kd_table tp_kd_bp_opportunity_list" limit="20" delete="false" duplicate="false">
+        <field name="name" class="tp_kd_wrap tp_kd_strong" width="[260,440]"/>
+        <field name="kd_package_id" width="[180,260]" optional="show"/>
+        <field name="kd_investor_id" string="Chủ đầu tư" width="[180,250]" optional="show"/>
+        <field name="partner_id" string="Bên ký / đối tác thương mại" class="tp_kd_wrap" width="[160,260]"/>
+        <field name="kd_bid_state" string="Tình trạng hồ sơ" class="tp_kd_wrap" width="[190,260]" widget="tp_kd_badge"/>
+        <field name="user_id" string="Người phụ trách" class="tp_kd_wrap" width="[130,200]"/>
+        <field name="kd_deadline" width="[130,160]" options="{'numeric': True, 'warning': 'past'}" widget="tp_kd_date"/>
+        <field name="kd_route" width="[100,140]"/>
+        <field name="tp_project_id" string="Dự án liên quan" class="tp_kd_wrap" width="[180,280]" optional="hide"/>
+        <field name="kd_source" class="tp_kd_wrap" width="[200]" optional="hide"/>
+        <field name="kd_scope" width="[240]" optional="hide"/>
+      </list>
+    </field>
+  </record>
+  <record id="opportunity_form" model="ir.ui.view">
+    <field name="name">kd.opportunity.form</field>
+    <field name="model">crm.lead</field>
+    <field name="arch" type="xml">
+      <form string="Hồ sơ dự án và hồ sơ thầu" class="tp_kd_form tp_kd_bp_opportunity_form" js_class="tp_kd_opportunity_form" delete="false" duplicate="false">
+        <header>
+          <button name="action_kd_prepare" type="object" string="Chuẩn bị hồ sơ" class="btn-primary" invisible="kd_bid_state != 'identified' or not kd_can_prepare"/>
+          <button name="action_kd_record_submission" type="object" string="Khai báo đã nộp" invisible="kd_bid_state != 'preparation' or kd_route != 'bid' or not kd_can_submit"/>
+          <field name="kd_can_prepare" invisible="1"/>
+          <field name="kd_can_submit" invisible="1"/>
+          <field name="kd_can_edit" invisible="1"/>
+          <field name="kd_can_read_money" invisible="1"/>
+          <field name="kd_bid_state" widget="statusbar"/>
+          <field name="kd_can_edit_money" invisible="1"/>
+        </header>
+        <sheet>
+          <div class="oe_title tp_kd_bp_title">
+            <h1>
+              <field name="name" widget="text" rows="1" placeholder="Tên hồ sơ dự án hoặc hồ sơ thầu" readonly="id and not kd_can_edit"/>
+            </h1>
+          </div>
+          <p class="tp_kd_bp_notice" invisible="kd_bid_state != 'submitted'">Đã khai báo nộp — chưa xác minh. Khai báo nội bộ không phải quyết định trúng thầu hoặc căn cứ ký.</p>
+          <p class="tp_kd_bp_hint" invisible="kd_route != 'direct'">Giao trực tiếp không cần khai báo nộp hồ sơ thầu.</p>
+          <p class="tp_kd_bp_hint" invisible="kd_can_read_money">Bạn không có quyền xem tiền của hồ sơ dự án này. File và lịch sử CRM chỉ mở khi có quyền tiền và quyền hồ sơ.</p>
+          <field name="type" invisible="1"/>
+          <div class="tp_kd_bp_columns">
+            <div class="tp_kd_bp_block">
+              <h2>Các bên và dự án</h2>
+              <div class="tp_kd_bp_field">
+                <label for="partner_id" string="Bên ký / đối tác thương mại"/>
+                <field name="kd_investor_id" readonly="1"/>
+                <field name="partner_id" widget="tp_kd_bp_many2one" readonly="id and not kd_can_edit"/>
+              </div>
+              <div class="tp_kd_bp_field">
+                <label for="tp_project_id" string="Dự án liên quan"/>
+                <field name="tp_project_id" widget="tp_kd_bp_many2one" readonly="id"/>
+                <field name="kd_package_id" readonly="id and not kd_can_edit" domain="[('project_id','=',tp_project_id)]"/>
+              </div>
+              <div class="tp_kd_bp_field">
+                <label for="kd_source"/>
+                <field name="kd_source" placeholder="Nguồn thông tin về hồ sơ dự án" readonly="id and not kd_can_edit"/>
+              </div>
+              <div class="tp_kd_bp_field">
+                <label for="company_id"/>
+                <field name="company_id" widget="tp_kd_bp_many2one" readonly="id"/>
+              </div>
+            </div>
+            <div class="tp_kd_bp_block">
+              <h2>Phụ trách và kế hoạch</h2>
+              <div class="tp_kd_bp_field">
+                <label for="user_id" string="Người phụ trách"/>
+                <field name="user_id" widget="tp_kd_bp_many2one" readonly="id"/>
+                <label for="team_id" string="Nhóm phụ trách trước dự án"/>
+                <field name="team_id" widget="tp_kd_bp_many2one" readonly="id"/>
+              </div>
+              <div class="tp_kd_bp_field">
+                <label for="kd_route"/>
+                <field name="kd_route" readonly="id and not kd_can_edit"/>
+              </div>
+              <div class="tp_kd_bp_field">
+                <label for="kd_deadline"/>
+                <field name="kd_deadline" options="{'numeric': True, 'warning': 'past'}" widget="tp_kd_date" readonly="id and not kd_can_edit"/>
+              </div>
+            </div>
+          </div>
+          <group>
+            <field name="kd_money_display" readonly="1"/>
+            <button name="action_kd_edit_money" type="object" string="Sửa giá trị dự kiến" invisible="not kd_can_edit_money"/>
+          </group>
+          <notebook>
+            <page string="Phạm vi / gói thầu" name="kd_scope_page">
+              <div class="tp_kd_bp_page">
+                <label for="kd_scope"/>
+                <field name="kd_scope" rows="3" placeholder="Phạm vi công việc, gói thầu, yêu cầu chính…" readonly="id and not kd_can_edit"/>
+              </div>
+            </page>
+            <page string="Checklist hồ sơ" name="kd_checklist_page">
+              <div class="tp_kd_bp_page">
+                <div class="tp_kd_bp_field">
+                  <label for="kd_checklist"/>
+                  <p class="tp_kd_bp_hint">Ghi danh mục hồ sơ và việc cần chuẩn bị.</p>
+                  <field name="kd_checklist" rows="3" placeholder="Nội dung checklist hồ sơ" readonly="id and not kd_can_edit"/>
+                </div>
+                <div class="tp_kd_bp_field">
+                  <label for="kd_receipt"/>
+                  <field name="kd_receipt" placeholder="Căn cứ khai báo nội bộ, chưa xác minh" readonly="id and not kd_can_edit"/>
+                </div>
+                <p class="tp_kd_bp_hint">Khai báo nội bộ chưa xác minh không phải quyết định trúng thầu hoặc căn cứ ký.</p>
+              </div>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+  <record id="task_form_extension" model="ir.ui.view">
+    <field name="name">kd.task.source</field>
+    <field name="model">project.task</field>
+    <field name="inherit_id" ref="project.view_task_form2"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='project_id'][1]" position="after">
+        <field name="kd_contract_id" domain="[('project_id', '=', project_id)]"/>
+        <field name="kd_deliverable"/>
+      </xpath>
+    </field>
+  </record>
+  <record id="overview_form" model="ir.ui.view">
+    <field name="name">kd.overview.form</field>
+    <field name="model">tp.kd.overview</field>
+    <field name="arch" type="xml">
+      <form string="Tổng quan KH-KD" create="false" delete="false" js_class="tp_kd_overview">
+        <field name="name" invisible="1"/>
+        <sheet>
+          <div class="oe_title">
+            <h1>Kế hoạch Kinh doanh</h1>
+            <p>Chuẩn bị hồ sơ, điều phối thực hiện và theo dõi việc cần xử lý.</p>
+          </div>
+          <group>
+            <group>
+              <field name="project_id" placeholder="Tất cả dự án trong quyền"/>
+              <field name="owner_id" placeholder="Tất cả người phụ trách"/>
+            </group>
+            <group>
+              <field name="date_from"/>
+              <field name="date_to"/>
+            </group>
+          </group>
+          <group string="Hồ sơ và công việc" name="sources">
+            <button name="action_projects" type="object" string="Hồ sơ dự án" class="btn-primary"/>
+            <button name="action_opportunities" type="object" string="Hồ sơ dự án và hồ sơ thầu"/>
+            <button name="action_contracts" type="object" string="Hợp đồng và phụ lục — TP Contracts"/>
+            <button name="action_tasks" type="object" string="Kế hoạch và công việc"/>
+          </group>
+          <p class="text-muted">Hồ sơ nội bộ chưa phải quyết định BASE, bản ký, nghiệm thu bên ngoài hoặc tiền đã thu/chi.</p>
+        </sheet>
+      </form>
+    </field>
+  </record>
+  <record id="action_overview" model="ir.actions.act_window">
+    <field name="name">Tổng quan KH-KD</field>
+    <field name="res_model">tp.kd.overview</field>
+    <field name="view_mode">form</field>
+    <field name="view_id" ref="overview_form"/>
+  </record>
+  <record id="kd_project_list" model="ir.ui.view">
+    <field name="name">kd.project.list</field>
+    <field name="model">project.project</field>
+    <field name="inherit_id" ref="project.view_project"/>
+    <field name="mode">primary</field>
+    <field name="priority">90</field>
+    <field name="arch" type="xml">
+      <xpath expr="//list" position="attributes">
+        <attribute name="js_class">tp_kd_project_list</attribute>
+        <attribute name="class">tp_kd_table tp_kd_bp_project_list</attribute>
+        <attribute name="limit">20</attribute>
+      </xpath>
+      <xpath expr="//field[@name='name']" position="before">
+        <field name="tp_code" string="Mã dự án" width="[100,140]"/>
+      </xpath>
+      <xpath expr="//field[@name='name']" position="attributes">
+        <attribute name="string">Tên dự án</attribute>
+        <attribute name="class">tp_kd_wrap tp_kd_strong</attribute>
+        <attribute name="width">[240,360]</attribute>
+      </xpath>
+      <xpath expr="//field[@name='partner_id']" position="attributes">
+        <attribute name="optional"/>
+        <attribute name="class">tp_kd_wrap</attribute>
+        <attribute name="width">[180,280]</attribute>
+      </xpath>
+      <xpath expr="//field[@name='partner_id']" position="after">
+        <field name="tp_department_id" width="[150,240]" optional="hide"/>
+      </xpath>
+      <xpath expr="//field[@name='company_id'][@optional]" position="attributes">
+        <attribute name="optional">hide</attribute>
+      </xpath>
+      <xpath expr="//field[@name='user_id']" position="attributes">
+        <attribute name="optional"/>
+        <attribute name="width">[140,200]</attribute>
+      </xpath>
+      <xpath expr="//field[@name='user_id']" position="after">
+        <field name="kd_deadline" width="[130,160]"/>
+      </xpath>
+      <xpath expr="//field[@name='last_update_status']" position="attributes">
+        <attribute name="optional">hide</attribute>
+      </xpath>
+      <xpath expr="//field[@name='stage_id']" position="attributes">
+        <attribute name="optional">hide</attribute>
+      </xpath>
+    </field>
+  </record>
+  <record id="action_projects" model="ir.actions.act_window">
+    <field name="name">Hồ sơ dự án</field>
+    <field name="res_model">project.project</field>
+    <field name="view_mode">list,form</field>
+    <field name="view_id" ref="kd_project_list"/>
+    <field name="domain">[('tp_managed', '=', True)]</field>
+    <field name="context">{'form_view_ref': 'tp_kd_workspace.project_form', 'default_tp_managed': True}</field>
+  </record>
+  <record id="opportunity_search" model="ir.ui.view">
+    <field name="name">kd.opportunity.search</field>
+    <field name="model">crm.lead</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="name"/>
+        <field name="kd_package_id"/>
+        <field name="partner_id"/>
+        <field name="tp_project_id"/>
+        <field name="user_id"/>
+        <field name="kd_source"/>
+        <filter name="identified" string="Đang tìm hiểu" domain="[('kd_bid_state','=','identified')]"/>
+        <filter name="preparation" string="Đang chuẩn bị" domain="[('kd_bid_state','=','preparation')]"/>
+        <filter name="submitted" string="Đã khai báo nộp — chưa xác minh" domain="[('kd_bid_state','=','submitted')]"/>
+        <separator/>
+        <filter name="bid" string="Đấu thầu" domain="[('kd_route','=','bid')]"/>
+        <filter name="direct" string="Giao trực tiếp" domain="[('kd_route','=','direct')]"/>
+        <separator/>
+        <filter name="by_state" string="Tình trạng hồ sơ" context="{'group_by':'kd_bid_state'}"/>
+        <filter name="by_route" string="Hình thức" context="{'group_by':'kd_route'}"/>
+        <filter name="by_owner" string="Người phụ trách" context="{'group_by':'user_id'}"/>
+        <filter name="by_project" string="Dự án" context="{'group_by':'tp_project_id'}"/>
+      </search>
+    </field>
+  </record>
+  <record id="action_opportunities" model="ir.actions.act_window">
+    <field name="name">Hồ sơ dự án và hồ sơ thầu</field>
+    <field name="res_model">crm.lead</field>
+    <field name="view_mode">list,form</field>
+    <field name="view_id" ref="opportunity_list"/>
+    <field name="domain">[('tp_project_id', '!=', False)]</field>
+    <field name="context">{'form_view_ref': 'tp_kd_workspace.opportunity_form', 'default_type': 'opportunity'}</field>
+    <field name="search_view_id" ref="opportunity_search"/>
+  </record>
+  <record id="action_tasks" model="ir.actions.act_window">
+    <field name="name">Kế hoạch và công việc</field>
+    <field name="res_model">project.task</field>
+    <field name="view_mode">list,form</field>
+    <field name="domain">[('project_id.tp_managed', '=', True)]</field>
+  </record>
+  <menuitem id="menu_kd" name="Kế hoạch Kinh doanh" action="action_overview" groups="tp_core.group_user" sequence="15"/>
+  <menuitem id="menu_group_business" name="Kinh doanh và dự án" parent="menu_kd" sequence="10"/>
+  <menuitem id="menu_group_delivery" name="Hợp đồng và triển khai" parent="menu_kd" sequence="30"/>
+  <menuitem id="menu_group_output" name="Sản lượng và kế hoạch" parent="menu_kd" sequence="60"/>
+  <menuitem id="menu_group_payment" name="Thanh toán và hồ sơ" parent="menu_kd" sequence="80"/>
+  <menuitem id="menu_group_admin" name="Báo cáo và quản trị" parent="menu_kd" sequence="120"/>
+  <menuitem id="menu_overview" name="Tổng quan" parent="menu_kd" action="action_overview" sequence="1"/>
+  <menuitem id="menu_opportunities" name="Hồ sơ dự án và hồ sơ thầu" parent="menu_group_business" action="action_opportunities" sequence="10"/>
+  <menuitem id="menu_projects" name="Hồ sơ dự án" parent="menu_group_business" action="action_projects" sequence="20"/>
+  <menuitem id="menu_contracts" name="Hợp đồng và phụ lục — TP Contracts" parent="menu_group_delivery" action="tp_contract.action_tp_contracts" sequence="10"/>
+  <menuitem id="menu_tasks" name="Kế hoạch và công việc" parent="menu_group_delivery" action="action_tasks" sequence="20"/>
+</odoo>

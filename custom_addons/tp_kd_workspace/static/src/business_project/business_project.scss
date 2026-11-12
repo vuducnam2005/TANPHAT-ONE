@@ -1,0 +1,96 @@
+// KD-UI-005: four views only. No shared form rule or body token is modified.
+body.o_tp_kd_shell {
+    .o_form_view:is(.tp_kd_bp_opportunity_form, .tp_kd_bp_project_form) {
+        .o_form_sheet_bg > .o_form_sheet {
+            max-width: 1440px;
+            padding: 24px;
+            min-width: 0;
+        }
+        .tp_kd_bp_title {
+            max-width: none;
+            margin: 0 0 20px;
+            border-left: 4px solid #255f85;
+            padding-left: 16px;
+            h1 { font-size: 26px; line-height: 1.35; margin: 0; }
+            .o_field_widget, textarea { width: 100%; max-width: 100%; }
+            textarea { font-size: 26px; font-weight: 600; line-height: 1.35; padding: 0 0 4px; }
+        }
+        .tp_kd_bp_columns {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .tp_kd_bp_block {
+            min-width: 0;
+            h2 {
+                font-size: 16px;
+                color: #17324d;
+                font-weight: 600;
+                padding: 0 0 10px;
+                margin: 0 0 14px;
+                border-bottom: 1px solid #d9e2ec;
+            }
+        }
+        .tp_kd_bp_field {
+            min-width: 0;
+            margin-bottom: 16px;
+            > .o_form_label { display: block; font-size: 13px; color: #526579; margin: 0 0 5px; }
+            > .o_field_widget { display: block; width: 100%; font-size: 15px; }
+            .o_input { min-height: 36px; }
+            .o_form_uri { white-space: normal; overflow-wrap: anywhere; }
+        }
+        .tp_kd_bp_preview {
+            font-size: 13px;
+            margin-top: 4px;
+            summary { cursor: pointer; color: #255f85; min-height: 32px; padding: 6px 0; width: fit-content; }
+        }
+        .tp_kd_bp_full_name { white-space: pre-wrap; overflow-wrap: anywhere; padding: 8px 12px; background: #f4f6f8; border-left: 2px solid #d9e2ec; }
+        .tp_kd_bp_page { max-width: 1000px; padding: 16px 0 0; }
+        .tp_kd_bp_hint { color: #526579; font-size: 13px; line-height: 1.5; margin: 4px 0 12px; }
+        .tp_kd_bp_notice { border-left: 3px solid #b47716; background: #fff8e9; padding: 10px 14px; margin-bottom: 20px; color: #705018; }
+        .tp_kd_bp_primary_actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; .btn { min-height: 44px; text-align: left; white-space: normal; } }
+        .tp_kd_bp_related_label { font-size: 13px; color: #526579; margin: 4px 0; }
+        .o-form-buttonbox .oe_stat_button, .o-form-buttonbox .o_button_more { min-height: 44px; }
+        .o_control_panel_breadcrumbs { min-width: 0; flex: 1 1 0; }
+        .o_control_panel_navigation { flex-grow: 0 !important; }
+        .o_breadcrumb { min-width: 0; max-width: 100%; }
+        .o_breadcrumb .active { min-width: 0; }
+        .o_last_breadcrumb_item { white-space: normal; overflow-wrap: anywhere; }
+        .o_last_breadcrumb_item > span { white-space: normal; overflow-wrap: anywhere; }
+        .o_statusbar_status { flex-wrap: wrap; min-width: 0; .o_arrow_button { white-space: normal; } }
+        .o_form_statusbar { flex-wrap: wrap; gap: 8px; }
+        .o_statusbar_buttons .btn { min-height: 44px; }
+        :is(button, summary, input, textarea, select, .nav-link) { transition: background-color 120ms, border-color 140ms, color 140ms; }
+        :is(button, summary, input, textarea, select, .nav-link):focus-visible { outline: 2px solid #255f85; outline-offset: 2px; }
+        .nav-link { min-height: 44px; display: flex; align-items: center; }
+        @container (max-width: 760px) { .tp_kd_bp_columns { grid-template-columns: minmax(0, 1fr); gap: 8px; } }
+        @include media-breakpoint-down(lg) {
+            .tp_kd_bp_columns { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+        }
+        @include media-breakpoint-down(md) {
+            .o_form_sheet_bg > .o_form_sheet { padding: 16px 12px; }
+            .tp_kd_bp_title { padding-left: 12px; h1, textarea { font-size: 22px; } }
+            .tp_kd_bp_field .o_input { min-height: 44px; }
+            .tp_kd_bp_preview summary { min-height: 44px; padding: 12px 0; }
+            .tp_kd_bp_primary_actions .btn { flex: 1 1 100%; }
+            .o_form_label { position: static; transform: none; background: transparent; }
+        }
+    }
+    .o_list_view:is(.tp_kd_bp_opportunity_list, .tp_kd_bp_project_list) {
+        .o_data_row { transition: background-color 120ms; }
+        .o_data_row:hover td { background-color: #edf4f9; }
+        td.tp_kd_strong { color: #17324d; }
+        .o_control_panel_main_buttons .btn, .o_tp_kd_list_tools .btn { min-height: 44px; }
+    }
+}
+.tp_kd_bp_related_menu {
+    width: 440px;
+    max-width: 95vw;
+    .oe_stat_button { min-height: 44px; width: 100%; white-space: normal; text-align: left; }
+    .o_stat_text { white-space: normal; overflow-wrap: anywhere; }
+}
+@media (prefers-reduced-motion: reduce) {
+    body.o_tp_kd_shell :is(.tp_kd_bp_opportunity_form, .tp_kd_bp_project_form, .tp_kd_bp_opportunity_list, .tp_kd_bp_project_list) * { transition: none !important; animation: none !important; }
+}
+body.o_tp_kd_shell.o_tp_kd_reduce_motion :is(.tp_kd_bp_opportunity_form, .tp_kd_bp_project_form, .tp_kd_bp_opportunity_list, .tp_kd_bp_project_list) * { transition: none !important; animation: none !important; }

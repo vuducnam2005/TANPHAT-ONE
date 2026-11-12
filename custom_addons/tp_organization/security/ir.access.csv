@@ -1,2 +1,8 @@
 id,name,model_id,group_id/id,operation,domain
 department_platform_manager,Platform department management,hr.department,tp_core.group_manager,crud,
+hr_import_manager,HR import manager,tp.hr.import.batch,hr.group_hr_manager,crud,
+hr_import_company,HR import company,tp.hr.import.batch,,crud,"[('company_id', 'in', company_ids)]"
+hr_import_line_manager,HR import line manager,tp.hr.import.line,hr.group_hr_manager,crud,
+hr_import_line_company,HR import line company,tp.hr.import.line,,crud,"[('company_id', 'in', company_ids)]"
+employee_audit_admin,Employee deletion and code audit,tp.hr.employee.audit,base.group_system,r,
+employee_audit_company,Employee audit company,tp.hr.employee.audit,,r,"[('company_id', 'in', company_ids)]"

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- MOBILE-001: keep the native backend viewport but stop disabling the user's pinch zoom
+         (WCAG 1.4.4). Only the content attribute of the existing meta tag changes. -->
+    <template id="webclient_bootstrap_user_zoom" inherit_id="web.webclient_bootstrap">
+        <xpath expr="//meta[@name='viewport']" position="attributes">
+            <attribute name="content">width=device-width, initial-scale=1</attribute>
+        </xpath>
+    </template>
+</odoo>

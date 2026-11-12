@@ -1,0 +1,7 @@
+.o_tp_identity_check {
+    color: #17324d;
+    h3 { font-size: 20px; margin-bottom: 12px; }
+    p { color: #526477; line-height: 1.6; font-size: 14px; max-width: 65ch; margin-bottom: 20px; }
+    .o_field_widget[name=password] { border: 1px solid #9fb0c0; border-radius: 6px; background: #fff; padding: 0 12px !important; min-height: 46px; input { min-height: 44px; font-size: 16px; background: transparent; } }
+    input:focus-visible { outline: 2px solid #087f8c; outline-offset: 3px; }
+}

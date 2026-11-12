@@ -175,8 +175,33 @@ def finance_connected():
     return result
 
 
+def connected_view(kind):
+    """Native spreadsheet envelope, with live OWL presentation for these exact XML IDs.
+
+    Pivots remain inspectable native data sources. Project allocation and all displayed
+    figures/tables are calculated once by the permission-scoped report model.
+    """
+    result = coordination() if kind == 'coordination' else finance_connected()
+    sheet = result['sheets'][0]
+    # Do not mask RPC/ACL failures as legitimate zero values in the native fallback.
+    for cell, value in sheet['cells'].items():
+        if isinstance(value, str) and value.startswith('=IFERROR('):
+            sheet['cells'][cell] = '=' + value[len('=IFERROR('):-3]
+    config = {'version': 1, 'kind': kind, 'company_id': '__CID__', 'project_ids': '__PROJECT_IDS__'}
+    if kind == 'finance':
+        config.update(invoice_ids='__INVOICE_IDS__', expense_ids='__EXPENSE_IDS__')
+        sheet['cells']['A1'] = 'Tổng quan hóa đơn và chi phí'
+        # invoice_origin is free text, not a project relationship.
+        result['pivots']['1']['rows'] = []
+        sheet['figures'] = []
+        sheet['cells']['A12'] = 'Hóa đơn nháp — tổng theo phạm vi chứng từ'
+    result['settings']['tpDashboard'] = config
+    return result
+
+
 if __name__ == '__main__':
-    for name, builder in (('tp_project_coordination', coordination), ('tp_invoice_expense_draft', finance),
-                          ('tp_invoice_expense_connected', finance_connected)):
+    for name, builder in (('tp_project_coordination', lambda: connected_view('coordination')),
+                          ('tp_invoice_expense_draft', finance),
+                          ('tp_invoice_expense_connected', lambda: connected_view('finance'))):
         (OUT / f'{name}.template.json').write_text(json.dumps(builder(), ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
         print('wrote', name)

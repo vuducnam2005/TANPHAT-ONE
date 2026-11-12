@@ -1,1 +1,1 @@
-from . import spreadsheet_dashboard
+from . import dashboard_report, spreadsheet_dashboard

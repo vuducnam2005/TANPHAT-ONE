@@ -38,30 +38,30 @@
     "A2:E2"
    ],
    "cells": {
-    "A1": "Hóa đơn và chi phí dự kiến",
+    "A1": "Tổng quan hóa đơn và chi phí",
     "A2": "Hóa đơn còn nháp; chi phí đang soạn, chờ duyệt hoặc đã duyệt với chứng từ nháp. Chưa hạch toán, chưa thu/chi tiền; không phải doanh thu kế toán, không cộng với CRM/hợp đồng. Dữ liệu giả lập.",
     "A4": "Chỉ tiêu theo nguồn",
     "B4": "Giá trị",
     "A5": "Số hóa đơn nháp",
-    "B5": "=IFERROR(PIVOT.VALUE(1,\"__count\")+0,0)",
+    "B5": "=PIVOT.VALUE(1,\"__count\")+0",
     "A6": "Hóa đơn nháp — chưa thuế (VND)",
-    "B6": "=IFERROR(PIVOT.VALUE(1,\"amount_untaxed:sum\")+0,0)",
+    "B6": "=PIVOT.VALUE(1,\"amount_untaxed:sum\")+0",
     "A7": "Hóa đơn nháp — gồm thuế (VND)",
-    "B7": "=IFERROR(PIVOT.VALUE(1,\"amount_total:sum\")+0,0)",
+    "B7": "=PIVOT.VALUE(1,\"amount_total:sum\")+0",
     "A8": "Số khoản chi trong ba giai đoạn",
-    "B8": "=IFERROR(PIVOT.VALUE(2,\"__count\")+0,0)",
+    "B8": "=PIVOT.VALUE(2,\"__count\")+0",
     "A9": "Tổng khoản chi (VND)",
-    "B9": "=IFERROR(PIVOT.VALUE(2,\"total_amount:sum\")+0,0)",
-    "A12": "Hóa đơn nháp theo dự án (chưa hạch toán)",
+    "B9": "=PIVOT.VALUE(2,\"total_amount:sum\")+0",
+    "A12": "Hóa đơn nháp — tổng theo phạm vi chứng từ",
     "A13": "=PIVOT(1)",
     "A21": "Chi phí theo nhân sự và trạng thái",
     "A22": "=PIVOT(2)",
     "A30": "Đang soạn",
-    "B30": "=IFERROR(PIVOT.VALUE(2,\"total_amount:sum\",\"state\",\"draft\")+0,0)",
+    "B30": "=PIVOT.VALUE(2,\"total_amount:sum\",\"state\",\"draft\")+0",
     "A31": "Chờ duyệt",
-    "B31": "=IFERROR(PIVOT.VALUE(2,\"total_amount:sum\",\"state\",\"submitted\")+0,0)",
+    "B31": "=PIVOT.VALUE(2,\"total_amount:sum\",\"state\",\"submitted\")+0",
     "A32": "Đã duyệt, chờ hoàn trả",
-    "B32": "=IFERROR(PIVOT.VALUE(2,\"total_amount:sum\",\"state\",\"approved\")+0,0)"
+    "B32": "=PIVOT.VALUE(2,\"total_amount:sum\",\"state\",\"approved\")+0"
    },
    "styles": {
     "A1": 1,
@@ -77,166 +77,7 @@
    "borders": {},
    "conditionalFormats": [],
    "dataValidationRules": [],
-   "figures": [
-    {
-     "id": "tp-fin-invoices",
-     "col": 0,
-     "row": 0,
-     "offset": {
-      "x": 0,
-      "y": 292
-     },
-     "width": 470,
-     "height": 380,
-     "tag": "carousel",
-     "data": {
-      "chartDefinitions": {
-       "tp-fin-invoices-c": {
-        "title": {
-         "text": ""
-        },
-        "legendPosition": "top",
-        "type": "bar",
-        "stacked": false,
-        "humanize": true,
-        "dataSource": {
-         "type": "odoo",
-         "metaData": {
-          "groupBy": [
-           "invoice_origin"
-          ],
-          "measure": "amount_total",
-          "order": null,
-          "resModel": "account.move",
-          "mode": "bar",
-          "cumulatedStart": false
-         },
-         "searchParams": {
-          "comparison": null,
-          "context": {},
-          "domain": [
-           [
-            "id",
-            "in",
-            "__INVOICE_IDS__"
-           ],
-           [
-            "state",
-            "=",
-            "draft"
-           ],
-           [
-            "company_id",
-            "=",
-            "__CID__"
-           ]
-          ],
-          "groupBy": [
-           "invoice_origin"
-          ],
-          "orderBy": []
-         }
-        },
-        "dataSetStyles": {}
-       }
-      },
-      "title": {
-       "text": "Hóa đơn nháp theo dự án (VND)",
-       "bold": true,
-       "fontSize": 16,
-       "color": "#01666B"
-      },
-      "items": [
-       {
-        "type": "chart",
-        "chartId": "tp-fin-invoices-c"
-       }
-      ],
-      "fieldMatching": {}
-     }
-    },
-    {
-     "id": "tp-fin-expenses",
-     "col": 0,
-     "row": 0,
-     "offset": {
-      "x": 480,
-      "y": 292
-     },
-     "width": 470,
-     "height": 380,
-     "tag": "carousel",
-     "data": {
-      "chartDefinitions": {
-       "tp-fin-expenses-c": {
-        "title": {
-         "text": ""
-        },
-        "legendPosition": "top",
-        "type": "bar",
-        "stacked": false,
-        "humanize": true,
-        "dataSource": {
-         "type": "odoo",
-         "metaData": {
-          "groupBy": [
-           "state"
-          ],
-          "measure": "total_amount",
-          "order": null,
-          "resModel": "hr.expense",
-          "mode": "bar",
-          "cumulatedStart": false
-         },
-         "searchParams": {
-          "comparison": null,
-          "context": {},
-          "domain": [
-           [
-            "id",
-            "in",
-            "__EXPENSE_IDS__"
-           ],
-           [
-            "state",
-            "in",
-            [
-             "draft",
-             "submitted",
-             "approved"
-            ]
-           ],
-           [
-            "company_id",
-            "=",
-            "__CID__"
-           ]
-          ],
-          "groupBy": [
-           "state"
-          ],
-          "orderBy": []
-         }
-        },
-        "dataSetStyles": {}
-       }
-      },
-      "title": {
-       "text": "Chi phí theo trạng thái (VND)",
-       "bold": true,
-       "fontSize": 16,
-       "color": "#01666B"
-      },
-      "items": [
-       {
-        "type": "chart",
-        "chartId": "tp-fin-expenses-c"
-       }
-      ],
-      "fieldMatching": {}
-     }
-    }
-   ],
+   "figures": [],
    "tables": [],
    "areGridLinesVisible": false,
    "isVisible": true,
@@ -279,7 +120,16 @@
  "borders": {},
  "revisionId": "START_REVISION",
  "uniqueFigureIds": true,
- "settings": {},
+ "settings": {
+  "tpDashboard": {
+   "version": 1,
+   "kind": "finance",
+   "company_id": "__CID__",
+   "project_ids": "__PROJECT_IDS__",
+   "invoice_ids": "__INVOICE_IDS__",
+   "expense_ids": "__EXPENSE_IDS__"
+  }
+ },
  "pivots": {
   "1": {
    "type": "ODOO",
@@ -321,11 +171,7 @@
      "aggregator": "sum"
     }
    ],
-   "rows": [
-    {
-     "fieldName": "invoice_origin"
-    }
-   ],
+   "rows": [],
    "columns": [],
    "sortedColumn": null,
    "fieldMatching": {}

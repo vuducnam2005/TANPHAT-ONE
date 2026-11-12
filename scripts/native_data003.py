@@ -23,6 +23,7 @@ import backup_restore as backup
 import dev
 import psutil
 import psycopg2
+from dashboard_templates import render_connected
 from psycopg2 import sql
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -552,7 +553,6 @@ def native_actions(env, target, mode):
 
 
 def link_data(env, target, mode):
-    import re
     require(env['ir.module.module'].search([('name', '=', 'tp_crm_project_bridge')]).state == 'installed', 'Install tested bridge first.')
     changes = []
     for project_key, lead_index in (('cau', 0), ('duong', 2), ('nut', 4), ('venbien', 7)):
@@ -574,20 +574,13 @@ def link_data(env, target, mode):
             changes.append({'model': dashboard._name, 'id': dashboard.id, 'field': 'tp_internal_only', 'before': False, 'after': True})
             dashboard.write({'tp_internal_only': True})
     bindings = inventory(env)['bindings']
-    replacements = {'__CID__': 1, '__EXPENSE_IDS__': [r['id'] for r in bindings if r['model'] == 'hr.expense'],
-                    '__INVOICE_IDS__': [r['id'] for r in bindings if r['model'] == 'account.move']}
-    text = (ROOT / 'docs/demo/dashboards/tp_invoice_expense_connected.template.json').read_text(encoding='utf-8')
-    for key, value in replacements.items():
-        text = text.replace('"' + key + '"', json.dumps(value))
-    require(not re.search(r'__[A-Z_]+__', text), 'Unresolved dashboard domain tokens.')
-    expected = json.dumps(json.loads(text), ensure_ascii=False)
-    dashboard = env.ref(OLD_NS[3] + '.dashboard_finance_draft')
-    current = json.dumps(json.loads(dashboard.spreadsheet_data), ensure_ascii=False)
-    if current != expected:
-        require(mode != 'verify', 'Dashboard source drift.')
-        changes.append({'model': dashboard._name, 'id': dashboard.id, 'field': 'spreadsheet_data',
-                        'before': current, 'after': expected})
-        dashboard.with_user(env.ref('base.user_admin')).write({'spreadsheet_data': expected})
+    for dashboard_key, data in render_connected(bindings).items():
+        dashboard = env.ref(OLD_NS[3] + '.' + dashboard_key)
+        expected = json.dumps(data, ensure_ascii=False)
+        current = json.dumps(json.loads(dashboard.spreadsheet_data), ensure_ascii=False)
+        # DASH-UI-001 owns guarded apply. This broad linkage tool must never
+        # overwrite a user's edited dashboard or silently revert its UI.
+        require(current == expected, 'Dashboard drift: use dash_ui001.py apply/verify; do not reseed.')
     key = NEW_NS + '.linkage'
     if not env['ir.config_parameter'].search_count([('key', '=', key)]):
         require(mode != 'verify', 'Missing linkage journal.')

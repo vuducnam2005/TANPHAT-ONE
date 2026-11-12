@@ -88,11 +88,14 @@ class TestContractAccess(TpContractCommon):
         self.assertTrue(self._amounts(self.finance_a))
 
     def test_platform_manager_and_admin_get_no_money_by_default(self):
+        # A reused test clone may contain explicit admin grants on other projects.
+        # This assertion concerns only the fresh synthetic projects, where neither actor has a grant.
+        domain = [('project_id', 'in', (self.project_a | self.project_b).ids)]
         for user in (self.manager, self.env.ref('base.user_admin')):
             with self.subTest(user=user.login):
                 self.assertIn(self.contract_b, self.env['tp.contract'].with_user(user).search([]))
-                self.assertFalse(self._amounts(user))
-                self.assertFalse(self.env['tp.contract.document'].with_user(user).search([('confidentiality', '=', 'financial')]))
+                self.assertFalse(self.env['tp.contract.line.amount'].with_user(user).search(domain))
+                self.assertFalse(self.env['tp.contract.document'].with_user(user).search(domain + [('confidentiality', '=', 'financial')]))
 
     def test_financial_attachment_requires_grant(self):
         Attachment = self.env['ir.attachment']

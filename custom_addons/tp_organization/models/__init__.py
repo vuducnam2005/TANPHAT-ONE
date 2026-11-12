@@ -1,1 +1,1 @@
-from . import hr_department
+from . import employee_audit, hr_department, hr_employee, hr_import

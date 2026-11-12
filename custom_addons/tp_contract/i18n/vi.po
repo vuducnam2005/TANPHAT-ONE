@@ -148,6 +148,7 @@ msgstr "Bắt đầu chỉnh sửa lại"
 #. module: tp_contract
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference__decision__cancelled
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__review_state__cancelled
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__tp_latest_review_state__cancelled
 msgid "Cancelled"
 msgstr "Đã hủy"
 
@@ -195,6 +196,7 @@ msgstr "Mức bảo mật"
 #. module: tp_contract
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference_amount__amount_state__confirmed
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_line_amount__amount_state__confirmed
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_amount_input__amount_state__confirmed
 msgid "Confirmed"
 msgstr "Đã xác nhận"
 
@@ -359,6 +361,12 @@ msgstr "Số văn bản"
 
 #. module: tp_contract
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__review_state__draft
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_draft__state__draft
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_amendment__state__draft
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_submit__state__draft
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_return__state__draft
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_rework__state__draft
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__tp_latest_review_state__draft
 msgid "Draft"
 msgstr "Nháp"
 
@@ -407,6 +415,7 @@ msgstr "SHA-256 bằng chứng"
 #. module: tp_contract
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference_amount__tax_basis__excluding_tax
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_line_amount__tax_basis__excluding_tax
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_amount_input__tax_basis__excluding_tax
 msgid "Excluding Tax"
 msgstr "Chưa thuế"
 
@@ -494,12 +503,14 @@ msgstr "ID"
 
 #. module: tp_contract
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__review_state__in_review
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__tp_latest_review_state__in_review
 msgid "In Review"
 msgstr "Đang rà soát"
 
 #. module: tp_contract
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference_amount__tax_basis__including_tax
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_line_amount__tax_basis__including_tax
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_amount_input__tax_basis__including_tax
 msgid "Including Tax"
 msgstr "Gồm thuế"
 
@@ -790,6 +801,7 @@ msgstr "Trả lại để chỉnh sửa"
 #. module: tp_contract
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__review_state__returned
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_submission__outcome__returned
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__tp_latest_review_state__returned
 msgid "Returned"
 msgstr "Trả lại"
 
@@ -805,6 +817,7 @@ msgstr "Người trả lại"
 
 #. module: tp_contract
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_revision__review_state__review_complete
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__tp_latest_review_state__review_complete
 msgid "Review Complete"
 msgstr "Hoàn tất rà soát"
 
@@ -1058,6 +1071,7 @@ msgstr "Đã chấm dứt"
 #. module: tp_contract
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_approval_reference_amount__tax_basis__unknown
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_line_amount__tax_basis__unknown
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_amount_input__tax_basis__unknown
 msgid "Unknown"
 msgstr "Chưa xác định"
 
@@ -1108,16 +1122,19 @@ msgstr "Những thay đổi kể từ lần trình bị trả lại trước đ�
 
 #. module: tp_contract
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__contract_type__general_contractor
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_draft__contract_type__general_contractor
 msgid "With General Contractor"
 msgstr "Với tổng thầu"
 
 #. module: tp_contract
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__contract_type__owner
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_draft__contract_type__owner
 msgid "With Project Owner"
 msgstr "Với chủ đầu tư"
 
 #. module: tp_contract
 #: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract__contract_type__subcontractor
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_draft__contract_type__subcontractor
 msgid "With Subcontractor"
 msgstr "Với thầu phụ"
 
@@ -1125,3 +1142,17 @@ msgstr "Với thầu phụ"
 #: model:ir.model.fields,field_description:tp_contract.field_tp_contract_line__work_item_id
 msgid "Work Item"
 msgstr "Hạng mục công việc"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_amount_input__amount_state__unconfirmed
+msgid "Unconfirmed"
+msgstr "Chưa xác nhận"
+
+#. module: tp_contract
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_draft__state__done
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_amendment__state__done
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_submit__state__done
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_return__state__done
+#: model:ir.model.fields.selection,name:tp_contract.selection__tp_contract_native_rework__state__done
+msgid "Done"
+msgstr "Hoàn tất"

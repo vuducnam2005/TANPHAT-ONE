@@ -64,3 +64,25 @@ class TestVietnameseCatalog(TransactionCase):
     def test_translation_only_addon(self):
         owned = self.env['ir.model.data'].search([('module', '=', 'tp_i18n_vi')])
         self.assertFalse(owned, 'the overlay must not own models, views, menus, data or access rules')
+
+    def test_web_client_gaps_filled_with_placeholders(self):
+        """HR-CORRECTION-008: delete confirmations and selection texts reach the web client in Vietnamese."""
+        import re  # noqa: PLC0415
+
+        with file_open(CATALOG, 'rb') as fileobj:
+            rows = [row for row in translation_file_reader(fileobj, fileformat='po') if row.get('type') == 'code']
+        self.assertGreater(len(rows), 80)
+        placeholder = re.compile(r'%\([a-zA-Z_]+\)s|%s')
+        for row in rows:
+            self.assertIn('odoo-javascript', row['comments'], row['src'])
+            self.assertTrue(row['value'] and row['value'] != row['src'], row['src'])
+            self.assertEqual(sorted(placeholder.findall(row['src'])), sorted(placeholder.findall(row['value'])), row['src'])
+        self.env['res.lang']._activate_lang('vi_VN')
+        modules, _params = self.env['ir.http']._get_translations_for_webclient(['web', 'tp_i18n_vi'], 'vi_VN')
+        served = {message['id']: message['string'] for message in modules['tp_i18n_vi']['messages']}
+        web = {message['id'] for message in modules['web']['messages']}
+        self.assertEqual(served['Are you sure you want to delete the selected record?'], 'Bạn có chắc muốn xóa hồ sơ đã chọn?')
+        self.assertEqual(served['Are you sure you want to delete the %(nbSelected)s selected records?'],
+                         'Bạn có chắc muốn xóa %(nbSelected)s hồ sơ đã chọn?')
+        # Only gaps: a term web already translates keeps the native wording.
+        self.assertFalse(set(served) & web)

@@ -1,0 +1,27 @@
+// HR-CORRECTION-008 (CHG-20261112-013): shared density tokens for the backend client.
+// Only custom properties are declared on the client root; screens opt in with var(--tp-ui-*, fallback),
+// so nothing changes the root font-size, zoom or scale. The HR/KH-KD sidebars and their mobile bars
+// never read these tokens and keep their own sizes. Phones and touch screens keep 44px targets and
+// 16px inputs (no focus zoom on iOS).
+.o_web_client {
+    --tp-ui-text: 14px;
+    --tp-ui-text-strong: 15px;
+    --tp-ui-input-text: 15px;
+    --tp-ui-title: clamp(24px, 1.9vw, 28px);
+    --tp-ui-control-h: 34px;
+    --tp-ui-row-h: 40px;
+    --tp-ui-navbar-h: 48px;
+    --tp-ui-nav-entry-h: 40px;
+    // Native Odoo hook read by every dialog (default 16px): about 12% less padding.
+    --Dialog-padding: 14px;
+}
+
+@media (max-width: 767.98px), (pointer: coarse) {
+    .o_web_client {
+        --tp-ui-input-text: 16px;
+        --tp-ui-control-h: 44px;
+        --tp-ui-row-h: 44px;
+        --tp-ui-navbar-h: 56px;
+        --tp-ui-nav-entry-h: 44px;
+    }
+}

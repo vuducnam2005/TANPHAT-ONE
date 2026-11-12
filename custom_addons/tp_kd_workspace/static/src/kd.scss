@@ -1,0 +1,13 @@
+.tp_kd_queue {
+    max-width: 100%;
+    overscroll-behavior-inline: contain;
+    table { min-width: 680px; }
+    button { min-width: 44px; min-height: 44px; }
+    th { font-weight: 600; vertical-align: middle; }
+}
+.tp_kd_dossier .o_statusbar_buttons .btn { min-height: 44px; }
+@media (prefers-reduced-motion: reduce) {
+    .tp_kd_queue *, .tp_kd_dossier * { transition-duration: 0s !important; }
+}
+
+// KD-UI-002 list/form polish moved to table/table.scss (KD-UI-003 tokens, scoped by view class).

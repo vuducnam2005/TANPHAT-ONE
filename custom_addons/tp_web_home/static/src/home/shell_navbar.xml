@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-inherit="web.SwitchCompanyMenu" t-inherit-mode="extension">
+        <xpath expr="//span[hasclass('oe_topbar_name')]" position="attributes">
+            <attribute name="class">oe_topbar_name d-none</attribute>
+        </xpath>
+        <xpath expr="//i[@data-icon='business']" position="attributes">
+            <attribute name="class">oi</attribute>
+        </xpath>
+        <xpath expr="//button[hasclass('o_switch_company_menu')]" position="attributes">
+            <attribute name="aria-label">Công ty đang hoạt động</attribute>
+        </xpath>
+    </t>
+    <t t-inherit="web.NavBar" t-inherit-mode="extension">
+        <xpath expr="//nav[hasclass('o_main_navbar')]" position="attributes">
+            <attribute name="class" add="tp-shell-navbar" separator=" "/>
+        </xpath>
+        <xpath expr="//t[@t-call='web.NavBar.AppsMenu']" position="after">
+            <div class="tp-shell-brand" title="TANPHAT ONE">
+                <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 23h26M6 23V10m20 13V10M6 12c6 11 14 11 20 0M11 18v5m5-3v3m5-5v5"/></svg>
+                <span class="tp-shell-wordmark">TANPHAT ONE</span>
+                <span class="tp-shell-shortmark">TP ONE</span>
+            </div>
+            <span t-if="this.ui.isSmall" class="tp-shell-mobile-context" t-att-title="this.currentApp?.name" t-out="this.currentApp?.name"/>
+        </xpath>
+        <xpath expr="//DropdownItem[contains(@class, 'o_menu_brand')]" position="attributes">
+            <attribute name="attrs">{ href: this.getMenuItemHref(this.currentApp), title: this.currentApp.name, 'data-menu-xmlid': this.currentApp.xmlid, 'data-section': this.currentApp.id }</attribute>
+        </xpath>
+    </t>
+    <t t-inherit="web.UserMenu" t-inherit-mode="extension">
+        <xpath expr="//button[hasclass('o_user_menu')]" position="attributes">
+            <attribute name="t-att-title">this.userName</attribute>
+            <attribute name="aria-label">Tài khoản</attribute>
+        </xpath>
+        <xpath expr="//button[hasclass('o_user_menu')]" position="inside">
+            <span class="tp-shell-user-name" t-out="this.userName"/>
+            <i class="oi tp-shell-user-chevron" data-icon="expand_more" aria-hidden="true"/>
+        </xpath>
+        <xpath expr="//t[@t-set-slot='content']/t[@t-foreach]" position="before">
+            <div class="tp-shell-user-heading"><small>Đang đăng nhập</small><strong t-out="this.userName"/></div>
+        </xpath>
+        <xpath expr="//DropdownItem" position="attributes">
+            <attribute name="class">'tp-shell-user-item'</attribute>
+        </xpath>
+        <xpath expr="//t[@t-out='element.description']" position="replace">
+            <span t-if="element.id === 'logout'">Đăng xuất</span>
+            <span t-elif="element.id === 'preferences'">Tài khoản và tùy chọn</span>
+            <t t-else="" t-out="element.description"/>
+        </xpath>
+    </t>
+</templates>

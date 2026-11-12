@@ -1,0 +1,16 @@
+<odoo>
+    <record id="identitycheck_vi" model="ir.ui.view">
+        <field name="name">TANPHAT ONE — Xác nhận danh tính tiếng Việt</field>
+        <field name="model">res.users.identitycheck</field>
+        <field name="inherit_id" ref="base.res_users_identitycheck_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="attributes"><attribute name="string">Xác nhận danh tính</attribute><attribute name="class" add="o_tp_identity_check" separator=" "/><attribute name="js_class">tp_identity_check</attribute></xpath>
+            <xpath expr="//h3" position="replace"><h3 class="fw-semibold">Xác nhận đây là bạn</h3><p>Để bảo vệ tài khoản, hãy nhập <strong>mật khẩu của tài khoản bạn đang đăng nhập</strong>. Khi cấp tài khoản nhân viên, đây là mật khẩu của quản trị viên đang thao tác.</p></xpath>
+            <xpath expr="//field[@name='password']" position="attributes"><attribute name="string">Mật khẩu của bạn</attribute><attribute name="placeholder">Nhập mật khẩu của bạn</attribute><attribute name="class">o_field_highlight w-100 px-0</attribute></xpath>
+            <xpath expr="//field[@name='password']" position="before"><label for="password" string="Mật khẩu của bạn"/></xpath>
+            <xpath expr="//a[@href='/web/reset_password/']" position="replace"><a href="/web/reset_password/" class="btn btn-link ps-0" role="button">Quên mật khẩu của bạn?</a></xpath>
+            <xpath expr="//button[@name='run_check']" position="attributes"><attribute name="string">Xác nhận danh tính</attribute></xpath>
+            <xpath expr="//button[@special='cancel']" position="attributes"><attribute name="string">Hủy</attribute></xpath>
+        </field>
+    </record>
+</odoo>

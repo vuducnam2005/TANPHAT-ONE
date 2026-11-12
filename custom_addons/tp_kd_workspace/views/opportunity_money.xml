@@ -1,0 +1,12 @@
+<odoo>
+  <record id="opportunity_money_form" model="ir.ui.view">
+    <field name="name">kd.opportunity.money.form</field>
+    <field name="model">tp.kd.opportunity.money</field>
+    <field name="arch" type="xml">
+      <form create="false" delete="false">
+        <group><field name="lead_id"/><field name="currency_id" invisible="1"/><field name="amount"/></group>
+        <footer><button name="action_confirm" type="object" string="Lưu giá trị dự kiến" class="btn-primary"/><button special="cancel" string="Hủy"/></footer>
+      </form>
+    </field>
+  </record>
+</odoo>

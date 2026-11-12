@@ -1,5 +1,77 @@
 # TANPHAT ONE — Workflow nghiệp vụ và quy tắc chuyển trạng thái
 
+**IDENTITY-ORG-001, 12/11/2026:** chuyển phòng hiệu lực ngay là action admin đúng
+company tại chi tiết nhân viên. Input: target department/role/job/lý do/kiêm nhiệm/
+bàn giao. Preview digest HR versions, quyền, target HEAD và việc đang phụ trách;
+apply khóa, kiểm snapshot mới, savepoint đổi version + revoke/cấp quyền + audit +
+session revision. Stale/race/retry hoặc audit lỗi bị từ chối/rollback. HEAD cũ luôn
+revoke; HEAD đích có incumbent thì block; không tự cấp tiền/đổi owner/reviewer.
+History/future không đổi scope current; đa công ty hoặc future khác phòng cần rà
+riêng. Tên HR là chính thức; ảnh sync employee/user/partner duy nhất; không fallback
+email cá nhân. [Nguồn field và guide](TP_IDENTITY_ORG_001.md).
+
+**HR-POSITION-004, CHG-20261112-007:** thay entry list của CHG006: chỉ mở Đổi
+chức vụ trong chi tiết nhân viên, ngay dưới tên. Mỗi company/department chỉ có
+một HEAD active chưa thu hồi. Khi đã có người giữ vai trò, preview/apply bổ
+nhiệm người khác báo tên và yêu cầu hạ trước; không tự thay thế. Hạ HEAD cũ
+với lý do/preview/guard/thu hồi quyền/audit thành công rồi mới bổ nhiệm HEAD
+mới. Unique index bảo vệ cả provisioning trực tiếp/reactivation/hai yêu cầu
+đồng thời; snapshot thêm incumbent của phòng. Khóa account/hết hạn không tự
+nhường vị trí chưa thu hồi. Đổi job HR riêng vẫn giữ quyền, không suy từ tên.
+
+**HR-POSITION-003, CHG-20261112-006:** admin vào Đổi chức vụ từ list/đầu hồ sơ.
+Nhánh job: chức vụ hiện tại → chọn chức vụ mới active đúng company/phòng hoặc
+danh mục chung → lý do → preview → kiểm digest/snapshot/khóa employee-resource-
+user-version → job và audit cùng transaction; quyền hệ thống giữ nguyên,
+không yêu cầu nhân viên có account. Không tự suy thứ bậc chức vụ từ tên.
+Nhánh role KH-KD giữ staff↔HEAD và guard cũ, có lựa chọn cập nhật chức vụ cùng
+transaction. Phòng chưa có bộ quyền hoặc chưa account được giải thích rõ;
+không giả lập quyền của phòng khác. Hủy chưa áp không ghi thay đổi.
+
+**HR-ACCOUNT-ROLE-001, 12/11/2026:** admin đúng company tạo user mới + map
+employee + mật khẩu + audit trong một transaction. CHG-20261112-005 thay bước
+nhập mật khẩu riêng: xác thực admin native trước → form OWL nhập login/mật
+khẩu/nhập lại → backend kiểm quyền/session 10 phút → lưu nguyên tử. Hủy chưa
+lưu không tạo user. Đặt lại dùng cùng form với login chỉ đọc; hash/policy native.
+Không có transition link/unlink user cũ. Guard native/import/resource giữ
+identity; superuser migration là thao tác có kiểm chứng riêng.
+Đổi staff ↔ HEAD: chọn role/lý do/job HR tùy chọn → xem trước snapshot nguồn
+quyền → khóa và kiểm snapshot → áp role/job/session revision/audit nguyên tử.
+Stale preview hoặc quyền quản lý riêng xung đột khi hạ thì dừng, không tự retry.
+HEAD giữ scope/policy DEC-033, không tự cấp HR/Settings/ký/thanh toán. Khóa/mở
+vẫn có lý do và vô hiệu phiên; archive HR độc lập. Xem [quyền](../security/HR_ACCOUNT_ROLE_001_SECURITY.md)
+và [hướng dẫn admin](../demo/HR_ACCOUNT_ROLE_001_USER_GUIDE.md).
+
+**HR-001, 11/11/2026 — CHG-20261111-002:** roster nhập vào `hr.employee/version`
+qua batch `draft → preview → applied`. HR manager trong company chọn file,
+xem lỗi/delta/mapping rồi gọi action áp dụng; không ghi trực tiếp kết quả/state.
+Preview không tạo employee; checksum/sheet/dòng/actor/kết quả được giữ. Khóa
+batch/company và unique database chống retry/trùng mã. Nguồn thay đổi phải rà
+soát; chỉnh tay giữ nguyên và báo conflict; dòng độc lập an toàn được áp dụng
+với số conflict rõ, không gọi toàn batch thành công hoàn toàn nếu còn lỗi.
+Không xóa người vắng khỏi file kỳ sau. Mã đã cấp và lịch sử nhập không được sửa
+bằng RPC thường. Lưu trữ/khôi phục hồ sơ chỉ HR manager, không tự khóa user hoặc
+quyết định nghỉ việc; imported employee không hard-delete. Nạp scenario mẫu
+qua public action bị chặn ở backend. Native `hr.version` là lịch sử hồ sơ;
+ngày phiên bản không tự xác nhận ngày vào làm/hợp đồng. Cờ xác nhận riêng giữ
+default gia đình/lương khác dữ liệu đã xác nhận, kể cả mức lương0 hợp lệ.
+Liên kết tài khoản phải có bằng chứng danh tính và giữ quyền hiện hữu;
+HR-001 không tự match alias, tạo39users hay cấp HR cho KH-KD. Xem
+[acceptance](../demo/HR_001_ACCEPTANCE.md),
+[hướng dẫn](../demo/HR_001_USER_GUIDE.md).
+
+**KD-HEAD-001, 10/11/2026:** DEC-033 đã cho triển khai riêng quyền HEAD toàn
+phòng KH-KD. Dev18069 đã áp role company/phòng có thời hạn và scope
+động, can thiệp nháp có actor/reason/version/snapshot trước–sau; phân công và
+nhận reviewer qua action có audit, không tự cấp grant hoặc bỏ bốn mắt cùng
+vòng gửi. Reviewer hiện hành đi cùng inbox/báo cáo; file đã gửi vẫn khóa sau
+rework, file mới ở nháp rework có thể lưu trữ có lịch sử. Xem
+[workflow as-built](TP_KD_NATIVE_001_WORKFLOW.md#delta-head-kd-head-001--source-bản-riêng-ngày10112026)
+và [ma trận](../security/KD_ACCESS_002_ROLE_MATRIX.md). **Full211/211 và dev apply/preservation đã đạt**, xem [acceptance](../demo/KD_HEAD_001_ACCEPTANCE.md).
+Bốn vai khác, business acceptance/pilot và BASE/ký/hiệu lực/kế toán không được
+delta này mở. Các đoạn CTR-001/CTR-002a bên dưới là baseline thiết kế/lịch sử;
+không dùng để phủ định các slice native đã ghi riêng trong workflow KD.
+
 Đây là blueprint cho workflow/action mới, không phải danh sách chức năng đã triển khai. Nền và CTR-001 đã kiểm chứng đọc project/hợp đồng theo quyền; CTR-002a có action draft/submit/return/rework hợp đồng trên database test với actor fixture (DEC-020). Action BASE/ký/hiệu lực và workflow giao khoán chưa có runtime.
 
 Baseline chi tiết hiện hành cho Ban Kinh doanh/Kế hoạch:
@@ -78,3 +150,6 @@ BIZ-001 hoàn tất phần phân tích, còn nghiệm thu chủ nghiệp vụ v�
 
 Ưu tiên hiện tại: review BIZ-002 → hồ sơ đại diện/câu hỏi theo slice → người dùng quyết định chuyển code. Người dùng đã mở CTR-002a trên test (DEC-020); các phần CTR-002 còn lại và pilot theo thứ tự đề xuất trong [readiness BIZ-002](TP_BIZ002_ACCEPTANCE_AND_READINESS.md), không tự mở tiếp. Không tạo engine tổng quát hoặc reporting database trước khi có nhu cầu đã kiểm chứng.
 
+
+
+IDENTITY-ORG-001 CHG-20261112-012: phiên bản hiện hành phải thuộc chính nhân viên; không chuyển lịch sử giữa nhân viên hoặc tạo version sai company. Native khởi tạo delegated version trước employee được giữ đúng initialbacklink; không cấp đường rebind hoặc đổi scope ngoài luồng chuyển phòng.

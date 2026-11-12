@@ -5,11 +5,13 @@
 
 `PROJECT_STATUS.md` là trạng thái hiện hành; `ROADMAP.md` là danh mục task. Tài liệu này giữ thứ tự phụ thuộc, đầu ra và tiêu chí nghiệm thu dự kiến. Các mốc tương lai là đề xuất, không tự chốt nghiệp vụ công ty hoặc mở pilot.
 
+**Cập nhật có hiệu lực 05/11/2026 — DEC-030:** frontend chính chuyển sang native Odoo. Các batch C00–C17 giữ thứ tự phụ thuộc nghiệp vụ; nội dung React/API UI bên dưới là kế hoạch lịch sử, phải đặc tả lại cho native trước khi giao code. Test React đã có không xác nhận UI native chưa xây. [UI-CTR-NATIVE-001 trong roadmap](../ROADMAP.md) là đề xuất đặc tả gần nhất, không mở action pháp lý hoặc pilot; xem [hướng native](TP_NATIVE_ODOO_DIRECTION.md).
+
 ## 1. Điểm xuất phát đã có bằng chứng
 
 | Nội dung | Thực tế đã có | Ý nghĩa đối với lộ trình |
 | --- | --- | --- |
-| Nền | Odoo 20 + React/TypeScript/Vite riêng; một PostgreSQL database mỗi môi trường; API session/scope | Kế thừa source; không xây lại auth/backend/database từ đầu |
+| Nền | Odoo 20 native là hướng chính DEC-030; Home/dashboard/mobile đã có; React/API cũ giữ lại; một PostgreSQL database mỗi môi trường | Kế thừa backend/data/session; không xây lại nền; hợp đồng còn thiếu UI native |
 | Đọc dự án/hợp đồng | CTR-001, project list/detail, quyền tiền theo project | Mở rộng vertical slice đang có |
 | Nháp hợp đồng | Create/edit/amendment, submit, return, begin rework và resubmit | Không code lại CTR-002a |
 | Sửa lỗi gần nhất | CHG-020: enum/currency, self-review picker/backend, legacy pending guard | Baseline kỹ thuật cho các batch sau |
@@ -34,11 +36,11 @@ AUTH-002 là một batch F độc lập được theo dõi trong [đặc tả AU
 
 ## 3. Cách tổ chức một batch Claude
 
-Một batch làm một kết quả dùng được xuyên backend → security → API → React → test. Không giao một prompt xây cả phân hệ lớn hoặc viết toàn bộ backend rồi để frontend/security đến cuối.
+Một batch làm một kết quả dùng được xuyên backend/action → security → native view/OWL → test. API/OpenAPI chỉ tham gia khi batch thay API; React legacy chỉ sửa khi scope nêu rõ. Không giao một prompt xây cả phân hệ lớn hoặc viết toàn bộ backend rồi để UI/security đến cuối.
 
 1. **Baseline:** đọc instructions/status/decision/readiness, Git status/diff, checkpoint và runtime. Nếu có code Claude chưa bàn giao, audit batch đó trước; không reset, không `finish` thay để che lệch.
 2. **Gate:** nêu rõ làn, scope, action/field/capability nào đã chốt và phần nào còn Q. Prompt triển khai chỉ phát khi acceptance của batch đủ cụ thể.
-3. **Implementation:** start checkpoint; tận dụng model/rule/API đã có; schema/ORM → quyền → action transaction/version/idempotency/audit → OpenAPI/types → UI.
+3. **Implementation:** start checkpoint; tận dụng model/rule/action đã có; schema/ORM → quyền → action transaction/version/idempotency/audit → native view/OWL → test. OpenAPI/types và test tương thích chỉ khi thay API. Không đưa guard backend vào nút UI hoặc bỏ qua khi gọi RPC native.
 4. **Technical acceptance:** test có ý nghĩa cho ca bình thường, bị từ chối, scope, state, rollback, retry/race và field/file theo phần thay đổi. Không lấy số lượng test làm mục tiêu.
 5. **Handoff:** source diff + lệnh/log thực chạy + giới hạn + status/changelog/architecture và `finish/check` đúng change ID.
 6. **Audit phiên chính:** review code/test độc lập và chạy lại phần cần thiết trên test cô lập; nếu thiếu bằng chứng ghi chưa kiểm. Trả correction prompt khi có lỗi. Phiên chính không tự sửa code ứng dụng.

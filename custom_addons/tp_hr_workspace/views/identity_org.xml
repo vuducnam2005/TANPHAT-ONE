@@ -1,0 +1,57 @@
+<odoo>
+    <record id="employee_identity_org_form" model="ir.ui.view">
+        <field name="name">tp.hr.employee.identity.org</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="tp_hr_workspace.employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//section[hasclass('o_tp_hr_card')][1]/group" position="after">
+                <button name="action_transfer_department" type="object" string="Chuyển phòng ban" icon="swap_horiz" class="btn btn-outline-primary" groups="base.group_system"/>
+            </xpath>
+            <xpath expr="//page[@name='page_account']/div[last()]" position="inside">
+                <button name="action_reconcile_identity" type="object" string="Đối chiếu tên và ảnh" class="btn btn-outline-secondary" groups="base.group_system" invisible="not user_id"/>
+            </xpath>
+            <xpath expr="//field[@name='department_id']" position="attributes"><attribute name="readonly">1</attribute></xpath>
+        </field>
+    </record>
+    <record id="role_transfer_form" model="ir.ui.view">
+        <field name="name">tp.hr.role.transfer.form</field>
+        <field name="model">tp.hr.role.wizard</field>
+        <field name="inherit_id" ref="tp_hr_workspace.view_tp_hr_role_wizard"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='change_kind']" position="attributes"><attribute name="invisible">change_kind == 'transfer'</attribute></xpath>
+            <xpath expr="//div[hasclass('o_tp_hr_position_summary')]" position="after">
+                <group invisible="change_kind != 'transfer'">
+                    <field name="target_role_supported" invisible="1"/>
+                    <field name="target_department_id" domain="[('company_id', '=', company_id), ('active', '=', True)]" options="{'no_create': True, 'no_open': True}" required="change_kind == 'transfer'"/>
+                    <field name="target_role" required="change_kind == 'transfer'"/>
+                    <p colspan="2" invisible="target_role_supported">Phòng chưa triển khai nghiệp vụ: workspace sẽ hiện Đang phát triển; không cấp bộ quyền KH-KD.</p>
+                    <field name="update_job"/>
+                    <field name="keep_cross_department"/>
+                    <field name="acknowledge_handover"/>
+                    <p colspan="2">Mặc định kết thúc mọi phân công/grant/CRM cũ, thu hồi HEAD. Chỉ giữ kiêm nhiệm khi đã rà toàn bộ quyền trong bản xem trước; xác nhận bàn giao sau khi xử lý các việc đang phụ trách. Tài khoản cá nhân được giữ; phiên cũ phải đăng nhập lại.</p>
+                </group>
+            </xpath>
+            <xpath expr="//p[contains(@invisible, 'account_exists')][1]" position="attributes"><attribute name="invisible">change_kind == 'transfer' or role_available or account_exists</attribute></xpath>
+            <xpath expr="//p[contains(@invisible, 'not account_exists')]" position="attributes"><attribute name="invisible">change_kind == 'transfer' or role_available or not account_exists</attribute></xpath>
+            <xpath expr="//field[@name='job_id']" position="attributes">
+                <attribute name="domain">[('active', '=', True), ('company_id', 'in', [False, company_id]), ('department_id', 'in', [False, target_department_id if change_kind == 'transfer' else department_id])]</attribute>
+            </xpath>
+            <xpath expr="//footer" position="inside">
+                <button name="action_apply" type="object" string="Xác nhận chuyển phòng ban" class="btn-primary" invisible="change_kind != 'transfer' or not expected_digest"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="identity_reconcile_form" model="ir.ui.view">
+        <field name="name">tp.hr.identity.wizard.form</field>
+        <field name="model">tp.hr.identity.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Đối chiếu danh tính"><sheet>
+                <field name="employee_id" readonly="1"/>
+                <group><group string="Ảnh hồ sơ HR"><field name="employee_image" widget="image" nolabel="1"/></group><group string="Ảnh tài khoản"><field name="account_image" widget="image" nolabel="1"/></group></group>
+                <field name="choice"/><field name="reason"/><field name="preview" readonly="1"/><field name="expected_digest" invisible="1"/>
+            </sheet><footer><button name="action_preview" type="object" string="Xem trước lại"/><button name="action_apply" type="object" string="Xác nhận đối chiếu" class="btn-primary"/><button special="cancel" string="Hủy"/></footer></form>
+        </field>
+    </record>
+    <record id="action_department_workspace" model="ir.actions.client"><field name="name">Phòng ban của tôi</field><field name="tag">tp_department_workspace</field></record>
+    <menuitem id="menu_department_workspace" name="Phòng ban của tôi" action="action_department_workspace" groups="base.group_user" sequence="16"/>
+</odoo>

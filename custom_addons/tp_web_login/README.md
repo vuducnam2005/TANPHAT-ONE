@@ -1,19 +1,30 @@
 # TANPHAT ONE Login
 
-Template/configuration addon for the native `/web/login` and `/web/login/totp`
-pages. It keeps Odoo authentication, fields, CSRF, captcha, cooldown, passkey and
-trusted-device behavior. No model, controller, or route is defined.
+Native authentication UI for `/web/login`, `/web/login/totp`, `/web/signup` and
+`/web/reset_password` (UI-SHELL-AUTH-001). It keeps Odoo authentication, fields, CSRF, captcha, cooldown, passkey and
+trusted-device behavior. The HR lock model extends native active users and session-token revision; no authentication controller or new route is defined.
 
-The monogram matches React. Native pages use the local system font stack
-(`system-ui`, Segoe UI, sans-serif), which supports Vietnamese and requires no
-CDN or duplicate font files. CSS is served through the dedicated
-`tp_web_login.assets_login` Odoo bundle and loaded only by the two native login
-routes; portal/backend pages retain their layout.
+The two-region desktop layout uses a local bridge drawing and Segoe UI/system
+fonts. Mobile prioritizes the single-column form. Remembered users use the
+native public OWL component and storage, with separate accessible remove controls.
+The dedicated `tp_web_login.assets_login` bundle loads only on the four auth
+routes. Public JS preserves native show-password, adds ARIA state and a retry
+timeout for stalled submits. Reduced motion and keyboard focus are supported.
 
-On initial installation, `noupdate` data sets the D6-a policy: invitation scope
-`b2b` and password reset disabled. Subsequent upgrades preserve administrator
-changes. The database manager link is controlled by Odoo `list_db`, not removed
-by this addon.
+Installation and upgrade do not set auth policy parameters, including absent
+keys. The old `data/ir_config_parameter_data.xml` is retained as AUTH-002 history
+and deliberately not loaded. Enabled signup/reset links retain native handlers.
+The database manager link stays controlled by Odoo `list_db`. TOTP cancel uses
+POST logout + CSRF and returns to `/web/login`; full logout retains Odoo's
+service-worker/PWA callback. No new auth endpoint or credential storage.
 
-AUTH-002 installs this addon only on the owned isolated test database. It is not
-included in the development module list.
+AUTH-002's earlier test-only acceptance remains historical. UI-SHELL-AUTH-001
+separately authorizes clone verification, fresh verified backup and dev installation.
+It is not added to default setup modules. See docs/demo/UI_SHELL_AUTH_001_ACCEPTANCE.md.
+
+HR-ACCOUNT-ROLE-001 keeps the explicit locked-account message “Tài khoản đã bị khóa. Vui lòng gửi phản hồi.” after valid credentials. Wrong passwords stay generic. Feedback remains an informational placeholder without outgoing requests. Role changes also increment the existing lock revision to invalidate prior sessions; native password/TOTP/CSRF behavior remains in place.
+
+HR-AUTH-FOCUS-009 (20.0.1.4.1) adds a native identity form controller: submit
+focuses the enabled password input before RPC so closing a native error restores
+that input. The shared opener hook listens to native UI ownership events.
+Native check_identity, current-password, expiry, server checks and MFA are unchanged.

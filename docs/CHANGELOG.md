@@ -1,6 +1,817 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261112-015 — SOURCE-CLEANUP-001: Kiểm kê, lưu trữ và dọn dẹp file không cần thiết
+
+- Ngày 12/11/2026 (Asia/Saigon), task SOURCE-CLEANUP-001; không commit/push. Lập manifest kiểm kê chi tiết tại `.local/source-cleanup001/manifest.json` và `manifest.md`; chạy dry-run trước khi thực hiện.
+- Lưu trữ bảo toàn 92 tệp (10.43 MB) sang `C:\TANPHAT ONE ARCHIVE\SOURCE-CLEANUP-001\20261112T194934` (kiểm 92/92 SHA-256 và ghi `recovery-mapping.json`) trước khi đưa khỏi workspace: 35 prompt cũ đã hoàn thành (giữ 2 prompt hiệu lực và lập chỉ mục [docs/prompts/README.md](prompts/README.md)), 52 tệp render cuối/so sánh ấn bản và 5 tệp ghi chú nghiên cứu ban đầu.
+- Xóa 5.907 tệp (534.26 MB) đã xác minh an toàn: `.ruff_cache`, `__pycache__` trong vùng custom/công cụ, `.tmp` (`.local-setup-output.tmp`, `.local/c1-access.tmp`), bản render/ảnh nháp trung gian/trùng lặp, và 14 browser profile/cache tạm của Playwright thuộc các task đã hoàn tất. Tổng đưa ra khỏi source 544.68 MB; dung lượng trống ổ C thực tế giải phóng 541.64 MB (16.51 GB → 17.04 GB).
+- Giữ nguyên toàn bộ phần bảo vệ (`.git`, `odoo/`, `addons/`, `custom_addons/`, `.venv/`, `deliverables/`, `scripts/`, tests, `frontend/node_modules`, `.local/postgres/data`, filestore 18069/18079, logs đang mở, rollback packages gần nhất, `ops-clean001/database-archives/`, `.local/git-baselines/`). Các thư mục `.local/<task>/data`, `.local/hr001`, `.local/ops-001/rehearsals` giữ lại do đối chiếu archive có sai lệch số lượng blob hoặc có tham chiếu tài liệu.
+- Kiểm chứng: `recovery-mapping.json` 92/92 SHA-256 đạt; cổng 18069 HTTP 200 `/web/login` và assets; cổng 18079 đăng nhập read-only `focus009.admin` và HTTP 200 `/odoo`; `git diff --check` đạt. Không thay đổi dữ liệu DB, tài khoản, quyền hay cấu hình.
+
+## CHG-20261112-014 — HR-AUTH-FOCUS-009: Autofill sidebar và focus xác minh tài khoản
+
+- Ngày12/11/2026 Asia/Saigon, yêu cầu triển khai trực tiếp, không commit/push. HR20.0.1.8.1/Login20.0.1.4.1. Chrome157 password manager thật với credential giả tái hiện trusted input/change tự điền username vào sidebar dù focus ở password; chỉ type=search chưa đủ. Form search riêng/id/name/type đúng semantic giải quyết, giữ filter rỗng/có sẵn. Không credential giả trong DOM hoặc xóa filter sau dialog.
+- Tái hiện thêm focus body sau sai mật khẩu/hủy: controller native focus password enabled trước RPC để error dialog khôi phục đúng ô; UI bus trả opener; native autofocus form tạo/reset; sidebar nhường focus cho dialog. Không đổi backend/auth/600s/CSRF/session/MFA/transaction, danh tính, quyền hoặc DEC-040; hạ riêng trước chuyển là phương án đổi quy trình, không phải lỗi hiện hành.
+- Kiểm: saved Chrome password8nhóm/0errors (create/reset/login, đúng/sai/retry/cancel/expiry, clipboard, Enter/Tab/Shift+Tab/Escape, filter empty/existing, desktop/rail/mobile). HOOT18079/18069 đều25tests105assertions gồm4testmới; XML13/manifest2/Node syntax/diff đạt. Không backend Odoo/React tests vì không sửa phần đó. Backup main120334281779Z600bảng661blob→upgrade2addon→main smoke4nhóm0errors chỉ đọc/Hủy;9bảng nghiệp vụ và nhóm/grant/role nguyên; source seal khớp. Hai runtime chạy, fixture giả giữ riêng test; rollback9fileđổi+3filemới từ archive66gốc có hash. Password manager mới kiểm Chrome tích hợp headless, chưa extension/browser khác/mobile thật. [Acceptance](demo/HR_AUTH_FOCUS_009_ACCEPTANCE.md), [rollback](../ops/runbooks/HR_AUTH_FOCUS_009_DEPLOY_AND_ROLLBACK.md). Next: Ctrl+F5 main, sử dụng luồng và phản hồi nếu browser/extension khác tái hiện; visual/business/pilot riêng.
+
+## CHG-20261112-013 — HR-CORRECTION-008: Xóa hồ sơ nhập nhầm, mã nhân viên, Việt hóa, thu gọn
+
+- Ngày 12/11/2026 Asia/Saigon, yêu cầu trực tiếp. `tp_organization` 20.0.2.1.0, `tp_hr_workspace` 20.0.1.8.0; nạp lại `tp_i18n_vi`/`tp_web_home`. “Xóa hồ sơ nhập nhầm” chỉ admin cùng công ty: backend kiểm điều kiện, lý do bắt buộc, lô tất cả-hoặc-không, audit độc lập; hồ sơ đã dùng bị chặn kèm lý do tiếng Việt và gợi ý lưu trữ. Native Delete/RPC/context bị chặn, binding xóa của `hr_timesheet` gỡ, không cascade user/partner/tài liệu.
+- Mã nhân viên: nguyên nhân `employee_sequence.xml` number_next=20000 noupdate. Sửa thành mã hợp lệ cao nhất (gồm lưu trữ/audit)+1, khóa advisory, unique giữ; migration đổi mã nhập tay chưa dùng có audit, xung đột chỉ báo cáo. Main/test: id 67 `TP20000→TP10070`, mã kế tiếp TP10071. Migration HR chuyển 1 tài khoản cá nhân en_US sang vi_VN.
+- Việt hóa 111 mục overlay (action HR/project, chuỗi `web` còn thiếu), bộ đếm “Đã chọn 1 hồ sơ”, xác nhận có nút cụ thể. Thu gọn bằng token SCSS: navbar 56→48, ô nhập 46→36.5/15px, chi tiết HR 1280 772→684px, dòng KH-KD 49.7→43.7; root font/zoom giữ, sidebar giống hệt (chỉ thêm mục nhật ký), mobile ≥44px.
+- Kiểm: 18079 Odoo 84 tests 0 failed/0 error, Ruff/XML/diff, HOOT 30/173-21/86-22/85, browser xóa/chặn/lưu trữ bằng dữ liệu giả, người dùng thường, zoom 200%, 18 điểm Tab, layout 8 route×4 viewport, 0 lỗi console. Diễn tập backup main→test 597/653/430 khớp, neutralize, upgrade, 191 tests đạt. Main backup cuối 101939483900Z→upgrade→smoke chỉ đọc/Hủy; delta bảng/cột bằng diễn tập. Main không xóa/lưu trữ hồ sơ nào. Rollback 26 file gốc+10 file mới, zip/hash. Gap còn: hộp xóa native model khác có văn phong vui của catalog `web`. Tự review, không stage/commit/push. [Acceptance](demo/HR_CORRECTION_008_ACCEPTANCE.md), [runbook](../ops/runbooks/HR_CORRECTION_008_DEPLOY_AND_ROLLBACK.md).
+
+## CHG-20261112-012 — IDENTITY-ORG-001: Khóa gán chéo phiên bản HR
+
+- Ngày12/11/2026 Asia/Saigon, cùngtask011. Chặn current_version_id khác chủ hồ sơ dù cùng phòng, chặn rebind hr.version.employee_id và company sai khi tạo version; native back-link ban đầu của version chưa có owner vào employee chưa có lịch sử vẫn được giữ. Thêm regression có same-departmentforeignversion/historyrebind/company. Không schema/assets/menu/datachange, HR20.0.1.7.0 giữ.
+- HRfilter41tests0failed0errors (`backend-version-final2.log`), Ruff/cleanbrowser5mỗicổng0errors/source209seal/preservation88rowsets-auth627blobPASS. Guardđầu4setUpClass fail vì chặn nativebacklink đã sửa/rerunđạt trướcmain; không tính fail là pass. Reuse restore596/653/429 và HEAD/KD109/HOOT21-29 của011 do scopekhôngđổi. Exactmainstop/backup080056033059Z(597tables653blobrefs)/restart/smoke, khôngupgrade/restore/seed/quyềnngườithật. Rollback2fileversion012→011 zip/hash riêng, khôngresetdirtyworktree; toàntask16fileđổi9mới. Status/acceptance/architecture/security/workflow/runbook cập nhật. Khôngstage/commit/push. Next: adminreview18069; visual/business/pilot riêng, selfreviewkhôngauditđộc lập.
+
+## CHG-20261112-011 — IDENTITY-ORG-001: Danh tính chung và chuyển phòng có kiểm quyền
+
+- Ngày12/11/2026 Asia/Saigon. Thực thi trực tiếp của người dùng; HR20.0.1.7.0: officialnameHR, ảnh2chiều/fallback/navbarbus, mappingIDduynhất/workcontactpartner/privateemailguard. Chuyển phòng ngay bằng adminpreview/lýdo/kiêmnhiệm/bàngiao/locks/freshsnapshot/savepoint/audit/sessionrevision; defaultstaff/revokeHEAD-old/assignment-grant-CRM, incumbentHEAD/multicompany/future/history/directwrite/contextguard. Servermenu/action/dashboard/report cùngscope, projectcapability data/tiền/tệp giữ; generic own-departmentworkspace, admin tools/profilecompact/sidebar giữ. DEC040/workflow/security/guide/acceptance/runbook/roadmap/status/README đã cập nhật.
+- Test: baselineHR26; sourcecuối HRfilter40 và saurestoreHEAD/KD109tests0failed0errors, HOOTHR21/86-Home29/166, Ruff/XML8/diffPASS, browserfixture7/race2→1/freshcursorstale/clean5mỗicổng/profile7viewports0errors. Các lượt KDfixture cũ chưa explicit scope, outsider policy mới, fixture signed_date thiếu và harness nhãn/selector đã sửa rồi rerun; giữ failevidence, không hạguard/constraint. Mobile giảlập, tựreview do modelsubagentkhôngkhảdụng; business/visual/pilot riêng.
+- Restoremain072712247123Z→test596rowsets653blobrefs429sequence khớp, neutralize/upgrade/test; fixturegiả bị loại. Gỡ đúng transient/FKtargetdepartment mới saubackup/kiểm, khôngCASCADE; lượtđầuFKblocked đã ghi. Main exactstop/backup074626870983Z→upgradechỉHRnoHTTP/reconcile/start/smoke; previewtextpolishcuối testHR40/cleanbrowser, backup075053704012Z/restartkhôngschema. Source209files6addons seal, rollback16đổi9mới. Main40employee thay39status010 đã ghi drift trước task, khôngxóa/restoreép bằng.
+- Main7identity reconcile theoID đã thửtrêntest:4accountnames theoHR,1ảnh thật account→HR/6fallback,0pending/conflict/mismatch. Auth/login/MFA/ID/mapping/department/job/role/grant/snapshot thậtgiữ;88rowsets/627nonassetblobpreservation đạt với delta tên/ảnh/native-derivedname/timestamp+1adminACLmới táchrõ. Cả2DB40employees27users7mapping/1HEAD; GCWindowswarning có blobSHA/sizekiểmriêng. KhôngDBthứ3/restoretest→main/stage/commit/push. Next: adminreview18069 theo [guide](demo/IDENTITY_ORG_001_USER_GUIDE.md); [acceptance](demo/IDENTITY_ORG_001_ACCEPTANCE.md) ghi test/ảnh/giới hạn.
+
+## CHG-20261112-010 — HR-COMPACT-007: Thu gọn chi tiết nhân viên
+
+- Ngày12/11/2026 Asia/Saigon. Theo phản hồi trực tiếp, giảm avatar110→88px, tên tối đa40→32px, tab17→15px, thông tin17→16px và khoảng cách; sheet1672 từ852.5→715px (16.1%). Giữ sidebar006 và modal005, mobile nút chức vụ44px. Sửa min-width nhóm action native gây tràn toolbar1280px; chỉ SCSS/README, không model/quyền/API/schema/manifest change.
+- Kiểm: compact2nhóm + sidebar5nhóm mỗi18079/18069,7viewport1672–320,0console/pageerror; tab/edit-cancel/account/role-cancel/mở-thu/reload/drawer đạt. Before–after main cùngrole/dataset/viewport đã xem. Asset compile thật; không chạy backend/HOOT/DBupgrade cho CSS. Một lượt cold-start session timeout, rerun tuần tự đạt; lỗi tràn trước sửa không tính pass.
+- Test đạt → seal53file → exactmainstop/backup063854566975Z(596tables/643blobrefs) → restart/main smoke đạt. Main79bảng617nonassetblob khớp snapshot đầu, ACL0delta; haiDB39employee27user7mapping1HEAD giữ. Rollback2filegốc SHA256; reuse restore rehearsal005 cùngschema, không restore/fixture/DBthứ3. Status/guide/design/roadmap/runbook/[acceptance007](demo/HR_COMPACT_007_ACCEPTANCE.md) cập nhật. Chỉ tự review vì model subagent không khả dụng; mobile giả lập/visual-business-pilot riêng. Không stage/commit/push. Next: Ctrl+F5/review độ gọn18069.
+
+## CHG-20261112-009 — HR-SIDEBAR-006: Giữ sidebar khi mở chi tiết
+
+- Ngày12/11/2026 Asia/Saigon. Phản hồi trực tiếp sửa lựa chọn005: bỏ trạng thái/hook/bodyclass/nhánh hrProfileLayout và CSS palette/rail riêng; sidebar giữ màu/chiều rộng/mở-thu theo preference chung, chỉ vùng nội dung hồ sơ đổi. Giữ profile/modal005 và backend/HEAD004; không XML/Python/manifest/API/schema change, HR20.0.1.6.0/login20.0.1.4.0 giữ.
+- Kiểm: HOOTHR filter21tests86assertions(gồm2KD)/Home29tests166assertions đạt; browser5nhóm mỗi18079/18069 exact sidebar style/list-detail-account/back/manualcollapse-expand/reload/mobile390 đạt0errors; before/after cùngadmin/employee63/1672×1040 đã xem. Không chạy backend/upgradeDB cho staticfix. Restarttest→testđạt→exactmainstop/backup062555343599Z→restart/assets/smoke; reuse restore rehearsal005 cùngschema, không restore DB/fixture/DBthứ3.
+- Source53seal/main79bảng617blob khớp snapshot đầu, ACL0delta, cả2DB39employee27user7mapping1HEAD giữ. Rollback6filegốc SHA256. Status/guide/README/design005/roadmap/runbook/[acceptance006](demo/HR_SIDEBAR_006_ACCEPTANCE.md) cập nhật, private `.local/hr-sidebar006/`. Harness đầu wait visible chohidden sai đã sửa/rerun đạt; subagent modelkhông khảdụng/chỉtựreview, mobile giảlập/visual-business-pilot riêng. Không stage/commit/push. Next: Ctrl+F5/review sidebar18069.
+
+## CHG-20261112-008 — HR-PROFILE-005: Hồ sơ và quản lý tài khoản theo ảnh mẫu
+
+- Ngày12/11/2026 Asia/Saigon. Yêu cầu trực tiếp tiếp tục taskHR/quyền thực thi-test-backup-restore-áp main; HR20.0.1.6.0/login giữ20.0.1.4.0. Hồ sơ nền xanh băng/sheet trắng/avatar/tên lớn/metadata icon/5tab icon/2card/footer; native rail teal transient không ghi preference, reset khi unmount. Modal2cột/nhãnViệt/ô lý do/nút khóa-mở-reset-Đóng và xác nhận khóa tiếng Việt; mobile1cột/focus/reduced motion. Giữ shared native navbar/menu/version/history, backend account/identity/protected-user và mộtHEAD004. Không React/API/model/ACL/core change.
+- Kiểm thực: XML10/upgrade đạt; backend sau restoreHR26/0/0, HOOTHR filter22tests90assertions (gồm2KD)/Home29-166 đạt. Browser6nhóm mỗi cổng18079/18069 desktop1672/modal1024-390-320/profile390-320 đạt0errors; fixture3nhóm khóa-mở-xác nhận khóa/unlinked-identity-credentials-cancel đạt. Browser005 không đặt mật khẩu mới; guard/backend giữ test. SQL uniqueHEAD/0duplicate2DB; ảnhmain trước-sau cùng actor/route/dataset/viewport đã mở xem.
+- Rehearsal main055849147435Z/testbackup060701112831Z, restore596rowsets643blobrefs429sequences khớp/neutralize/test lại; fixture đã loại. Main exactPIDstop/backupcuối061141441037Z/upgrade chỉHRnoHTTP/start/smoke. Seal53file/617nonassetblob;79bảng khớp backupcuối trước apply, ACL chỉ2write metadata. HaiDB39employee27user8active13phòng7mapping1HEAD. Snapshotđầu task có2write_date drift employee63/resource64 trước apply, nguyên nhân chưa quy thuộc; soarchive có fingerprint khớp đầu chỉ2timestamps đổi, không báo raw equality/không sửa baseline. Sauapply79bảng kểcảwrite_date khớp backupcuối.
+- Status/roadmap/guide/README/design/acceptance/runbook cập nhật, evidence private `.local/hr-profile005/`; rollback53filegốc0filemới, giữ index/policy004. Lượt backend đầu5teardown lỗi ReadOnly uploadtest, sửa thuộc tính đúngfile/rerun đạt; GCassetrename/markdown2warning còn, blobkiểm riêng. HOOT import/selector timing/fixture encoding sửa và rerun; giữ logfail. Chỉ tự review vì subagentmodel không khả dụng; mobile giả lập, visual/business/pilot chờ người dùng. Không stage/commit/push. Next: review18069 chi tiết và Quản lý tài khoản.
+
+## CHG-20261112-007 — HR-POSITION-004: Đổi chức vụ trong chi tiết và một trưởng phòng
+
+- Ngày12/11/2026 Asia/Saigon. Yêu cầu trực tiếp tiếp tục taskHR, quyền thực thi/test/backup-restore/áp main trong task; không stage/commit/push. Bỏ Đổi chức vụ khỏi list và CSS xếp hai nút; giữ ngay dưới tên trong chi tiết. HR20.0.1.5.0/login giữ20.0.1.4.0, không React/API/core/project source.
+- Extension modelrole hiện có thêm unique index company/department WHEREactive, một HEAD chưa thu hồi giữ vị trí dù user khóa hoặc thời hạn chưa tới/hết. Preview/apply bổ nhiệm người khác báo tên trưởng phòng hiện tại và yêu cầu hạ trước; không tự thay thế. Snapshot thêm HEAD của phòng/cursor mới; chặn provisioning trực tiếp/reactivation/race, giữ scope/revocation/audit. Job HR không tự cấp quyền; không mở bộ quyền phòng khác/model/ACL mới. Preflight main0duplicate scope, không sửa người thật để upgrade.
+- Test: final HR26ca0failed0errors sau restore, HEAD regression4ca0failed0errors; HOOTHR20tests83assertions/Home29tests166assertions đạt. Browser8nhóm và HTTP2session/2promotion→1success/1deny/1HEAD đạt; clean smoke4nhóm mỗi cổng18079/18069 desktop/mobile/focus/nooverflow/cancel đạt0errors. Ruff/XML10/diff đạt; unique index/0duplicate scopes xác nhận cả2DB, ảnh thật đã mở tự đánh giá.
+- Rehearsal backup051846939786Z, test backup051912135070Z/restore596rowsets643blobrefs429sequences khớp rồi neutralize/test lại; fixture đã loại. Main backup cuối052315995362Z sau exactPIDstop; upgrade chỉHRnoHTTP/start/smoke. Seal53file,79bảng617nonassetblob bảo toàn; ACL policy giữ,2write_date đổi. Cả2cổng39employee27user8active13phòng7mapping1HEAD; không đổi job/account/password/role/grant thật, không DBthứ3/restore test sang main.
+- Cập nhật status/roadmap/DEC039/workflow/guide/security/design/acceptance/runbook/README. Rollback53filegốc0filemới; trả policy003 cần migration gỡ đúng index mới đã review, source rollback không tự gỡ. Evidence private `.local/hr-position004/`. Fixture/selector/picker và import lỗi đã sửa/rerun; một race chồng lúc browser đang đợi được rerun tuần tự. Clean smoke cùng HOOT gặp500 asset WinError5; lượt chạy riêng sau đó đạt0errors, không tính fail là pass. GC/markdown2warning còn; chưa điện thoại thật/audit độc lập do subagent model không khả dụng. Next: người dùng review18069, visual/business/pilot riêng.
+
+## CHG-20261112-006 — HR-POSITION-003: Đổi chức vụ và bổ nhiệm/hạ quyền dễ tìm
+
+- Ngày12/11/2026 Asia/Saigon. Phản hồi trực tiếp tiếp tục task HR-ACCOUNT-ROLE-001 và quyền thực thi/test/áp main trong task; không stage/commit/push. HR20.0.1.4.0 native Odoo/custom addon; login giữ20.0.1.4.0, không React/API/core.
+- Nút Đổi chức vụ trên từng dòng và đầu hồ sơ, tái dùng role wizard. Nhánh đổi job HR dùng được khi chưa account, job active đúng company/phòng hoặc danh mục chung, lý do/preview/xác nhận/audit; quyền giữ nguyên. Nhánh quyền có lựa chọn Bổ nhiệm Trưởng phòng / Trưởng ban KH-KD hoặc Chuyển về Nhân viên KH-KD, tùy chọn đổi cả chức vụ nguyên tử. Giữ adapter/guard/revocation staff↔HEAD; digest gồm change_kind, khóa/snapshot mới, chặn dữ liệu/lựa chọn đổi sau preview. Không thêm model/ACL/bộ quyền phòng khác.
+- Test: Odoo HR24ca0failed0errors trước/sau restore; login backend không chạy lại. HOOT sau restore HR20tests83assertions/Home29tests166assertions; browser fixture6nhóm và clean smoke4nhóm mỗi cổng18079/18069 đạt0console/pageerror. Đã kiểm cấp access đúng scope/hạ quyền phiên cũ, noaccount mobile job picker không tạo user, cancel không ghi; desktop/mobile/focus/nooverflow. Ruff/XML10/diff đạt; ảnh trước–sau cùng route/role/dataset/viewport đã mở tự đánh giá.
+- Rehearsal backup045025670054Z restoretest596rowsets/643blobrefs/429sequences khớp và neutralize; fixture giả đã loại. Backup main cuối050005254157Z, exactPIDstop/upgrade chỉHRnoHTTP/start/smoke. Source53file seal khớp,79bảng/617nonassetblob bảo toàn; ACL policy giữ,2write metadata đổi. Hai cổng39employee/27user/8active/13phòng/7mapping/1HEAD; không thay chức vụ/tài khoản/quyền người thật hoặc tạo DBthứ3/restore test sang main.
+- Status/roadmap/DEC039/workflow/guide/security/design/acceptance/runbook/README cập nhật. Evidence private `.local/hr-position003/`, rollback53filegốc/0filemới. Sửa harness role search_count theo scope và mobile picker rồi rerun; không tính fail là pass. GCassetsWinError5/markdown2warning còn, blob kiểm riêng; subagent model không khả dụng nên chưa audit độc lập, chưa điện thoại vật lý. Next: người dùng review18069; visual/business/pilot riêng.
+
+## CHG-20261112-005 — HR-ACCOUNT-002: Form tài khoản rõ input và thông báo tiếng Việt
+
+- Ngày12/11/2026 Asia/Saigon. Phản hồi trực tiếp tiếp tục taskHR-ACCOUNT-ROLE-001, ngoại lệ thực thi/áp main trong task; không stage/commit/push. Native Odoo/custom addons, không React/API/core.
+- HR20.0.1.3.0: xác thực admin trước → OWL dialog login/password/confirmation cùng màn hình, label/chú thích/viền46px/Hiện-Ẩn/inline error/loading/cancel/focus/reduced/mobile. Create/password/mapping/audit nguyên tử; reset cùng form loginreadonly. Password mới chỉ RAM/RPC, không transient/context/native identityrequest/chatter; submit kiểm native sessionTTL600giây, forgedcontext/noHTTP bị chặn. Native hash/policy và guard role/company/protected user giữ. Login20.0.1.4.0 Việt hóa native identity/view/wrongpassword; role preview dịch capability, giữ domain/department/projectscope.
+- Test: final Odoo sau restore28ca0failed0errors; Ruff/XML10/JS đạt; HOOTHR20tests83assertions/Home29tests166assertions đạt lại sau restore. Browser8nhóm create/login/reset/oldpassworddeny/noauth/nonadmin/validation/duplicate/loading/cancel/tworaces/retry, secrets checks đạt0console/pageerror. CleanUI5nhóm mỗi cổng1440/390/320/focus/reduced/one-modal/clearlabels/cancel đạt. Ảnh main trước–sau cùng hồ sơ28/role/viewport/dataset đã mở tự đánh giá.
+- Backup rehearsal041738740882Z restoretest596rowsets/643blobrefs/429sequence khớp và neutralize; fixture giả đã loại. Backup main cuối042518138326Z, exactPIDstop/upgradeHR+loginnoHTTP/start/smoke. Seal53file,79bảng nghiệp vụ/quyền và617nonassetblob giữ; ACL policy giữ,2write metadata đổi do upgrade. Bảo toàn39employee/27user/8active/13phòng/7mapping/1HEAD, đúng baseline trước sửa; số26users/6mapping/612blob trong CHG004 là lịch sử. Không đổi tài khoản/mật khẩu/quyền người thật hoặc DBthứ3.
+- Cập nhật status/roadmap/DEC039/workflow/guide/security/design/acceptance/runbook/README. Evidence private`.local/hr-account002/`, rollback46filegốc+7mới. Lỗi testAPI/minlength,OWL4/modal/matcher/timing và harness baseline đã sửa rồi rerun; GCassetsWinError5/markdown2warning còn, blob kiểm riêng. Subagent lỗi model kế thừa nên chưa audit độc lập; chưa điện thoại vật lý. Việt hóa trong luồng tài khoản/quyền/xác thực; chưa kiểm kê dịch toàn bộ addon khác. Next: người dùng review18069; visual/business/pilot riêng.
+
+## CHG-20261112-004 — HR-ACCOUNT-ROLE-001: Tài khoản cá nhân, vai trò KH-KD và hồ sơ native
+
+- Ngày: 12/11/2026 Asia/Saigon. Yêu cầu triển khai trực tiếp file đính kèm, ngoại lệ DEC-022 trong task; DEC-039. Không stage/commit/push; giữ dirty worktree có sẵn.
+- HR20.0.1.2.0 bỏ chọn/link/unlink user và chặn RPC/native/import/resource/res.users binding/email-onchange; create/map/audit nguyên tử, lock employee/login, unique native theo company, password native. Giữ mapping/account/system hợp lệ, không bulk tạo user.
+- Adapter admin staff↔HEAD tái sử dụng tp.kd.department.role/CRM scope, preview+reason+snapshot/locks/snapshot đọc mới/audit actor thật; revoke HEAD, chặn nguồn quản lý riêng xung đột, giữ financial_read riêng, bump session revision. Không cấp quyền qua chức vụ hoặc tên phòng; không mở HR/Settings/ký/thanh toán cho HEAD.
+- Form5tab/header/edit-save-cancel/history/light+navy/mobile/focus/reduced; labels Mở/Khóa/Chưa có tài khoản đồng bộ. Login20.0.1.3.0 giữ thông báo khóa đúng câu người dùng; feedback placeholder. API/React/core không đổi.
+- Test thực chạy: Odoo source cuối sau restore26tests0failed0errors; HEAD regression14tests0failed0errors; Ruff/XML6/JS đạt; HOOT19tests78assertions HR/29tests166assertions Home; Playwright actions8, entries/status7, UI desktop/mobile/keyboard/reduced/error validation/no picker, clean test/main smoke và mobile toolbar/account modal đạt. Concurrent same employee/same login khác employee không duplicate/orphan, retry denied; stale transaction bắt grant commit; revoke chặn RPC/API/export/file/chatter và giữ quyền financial_read cấp riêng.
+- Restore rehearsal backup032800001448Z595tables638blobrefs428sequences khớp, neutralize và test sạch. Main backup cuối `backup-tp_tanphat_dev-20261112T034224215080Z` sau dừng đúng runtime; upgrade HR/login không seed/tests, start/smoke18069.79bảng/612nonassetblob/source46file seal bảo toàn; cả2DB39employee26users7active13departments6mappings1HEAD. Không thay account/password/role thật, không DB thứ3/restore test sang main.
+- Fail trước sửa không tính đạt: socket Windows, attachment return contract và browser harness; hai test-run chồng bị hủy rồi chạy tuần tự. GC Windows/markdown2 warning có ghi. Chưa thiết bị thật/audit độc lập, visual/business/pilot cần người dùng. Bằng chứng private `.local/hr-account001/`; [acceptance](demo/HR_ACCOUNT_ROLE_001_ACCEPTANCE.md), [guide](demo/HR_ACCOUNT_ROLE_001_USER_GUIDE.md), [runbook](../ops/runbooks/HR_ACCOUNT_ROLE_001_DEPLOY_AND_ROLLBACK.md). Next: người dùng review18069, workflow finish/check.
+
+## CHG-20261112-003 — HR-UI-006: Xóa placeholder "Ví dụ: kd.doanh..." & Thay chữ "records" thành "thành viên"
+
+- **Ngày:** 12/11/2026 (Asia/Saigon). Theo yêu cầu trực tiếp của người dùng.
+- **Phạm vi thay đổi (`custom_addons/tp_hr_workspace`):**
+  + `views/workspace.xml`: Xóa bỏ thuộc tính `placeholder="Ví dụ: kd.doanh..."` trên trường `new_user_login` (Tên đăng nhập mới) trong modal Cấp tài khoản & mật khẩu (`tp.hr.account.wizard`).
+  + `static/src/table/table.js`: Triển khai `HrListRenderer` kế thừa `ListRenderer` và patch `ListRenderer.prototype.getGroupText` trả về `${group.count} thành viên`, thay thế toàn bộ chữ tiếng Anh `record`/`records` trên dải tiêu đề gom nhóm danh sách bằng tiếng Việt chuẩn `thành viên` (ví dụ: `Ban Giám đốc 4 thành viên`, `Kế hoạch Kinh doanh 6 thành viên`, `TACICO 1 thành viên`).
+  + `static/tests/hr_workspace.test.js`: Bổ sung HOOT unit test xác minh `getGroupText` trả về đúng chuỗi `thành viên`.
+- **Kiểm thử & Áp dụng:**
+  + Linter: Ruff check `custom_addons/tp_hr_workspace` đạt 100% PASS.
+  + Backend Odoo tests: 15/15 PASS trên `tp_tanphat_test` (`0 failed, 0 error(s)`).
+  + HOOT frontend tests: `tp_hr_workspace` và `tp_web_home` 100% PASS.
+  + Playwright E2E (`.local/hr_verification/verify_ui_polish.cjs`): PASS 100% trên cả test (18079) và dev (18069); xác nhận 9/9 nhóm phòng ban hiển thị "thành viên", 0 chữ "record(s)", trường `new_user_login` sạch placeholder.
+  + Backup dev DB: `.local/tp_tanphat_dev_pre_ui_polish.dump` (8.15 MB, exit code 0). Nâng cấp `tp_hr_workspace` trên `tp_tanphat_dev` (18069) thành công. Bảo toàn 100% 39 nhân sự và 6 tài khoản KD liên kết hoạt động. Không commit/push.
+
+## CHG-20261112-002 — HR-DASH-002: sidebar giống Kinh doanh và icon nhân viên
+
+- Ngày12/11/2026 Asia/Saigon; theo phản hồi trực tiếp, sidebar HR đổi từ trắng sang palette Kinh doanh `#17324D/#22476A/#7FB3D5`, chữ sáng/search/hover/mobile đồng bộ; dashboard giữ sáng. Icon trước “Nhân viên” đổi mapping `people` không có trong catalog sang native `group`; không thêm dependency hoặc đổi model/security/API/dữ liệu.
+- Test18079 trước main18069: Playwright1440/390, glyph/font/vị trí icon, rail/drawer/search/focus/Escape/nav-list/quay dashboard, darkCSS thực/reduced-motion và0console/pageerror đạt mỗi cổng. HOOT HR17tests72assertions + Home29tests166assertions; XML/Node syntax/diff đạt. Đã mở ảnh thật. Không chạy backend Odoo/React, chưa điện thoại vật lý/audit độc lập; visual/business/pilot riêng.
+- Backup trước restart main `.local/hr001/backup-tp_tanphat_dev-20261112T020356030758Z`595bảng/638blobrefs+dump/source/config/filestore/checksum; rollback scoped3file trước sửa `.local/hr-sidebar002/rollback-source/`. Đúng parent/child/config, không upgrade/migration/restore/DBthứba. Seal SCSS/JS/CJS và preservation79bảng/612nonassetblob đạt; chỉ5bảng kỹ thuật assets/bus/presence/device/login đổi. Evidence `.local/hr-sidebar002/`; guide/design/acceptance/README/roadmap/runbook cập nhật.
+- Tiếp tục checkpoint có sẵn01:57UTC; giữ dirty worktree, không stage/commit/push. Verifier lỗi kỳ vọng glyph codepoint/đợi hidden và allowlist dùng nhầm tên bảng presence đã sửa theo source, rerun đạt; không tính fail là pass. Subagent không khởi tạo được với model kế thừa. Bước tiếp: người dùng review18069.
+
+## CHG-20261112-001 — HR-DASH-002: dashboard sáng và biểu đồ trực quan
+
+- Ngày12/11/2026 Asia/Saigon; tiếp tục yêu cầu thực thi trực tiếp đã nhận11/11. Native OWL/QWeb/SCSS: sidebar sáng/header gọn/5KPI iconSVG, donut lớn/legend14px/tooltip đồng bộ/keyboard, màu ID theo toàn catalog, thanh chức vụ18px cùng thang0 đủ nhóm; bảng tìm riêng và account Mở/Khóa thuộc linked. Xóa dark override HR, scoped light kể cả bundle Odoo dark; motion180–200ms/reduced-motion.
+- Không đổi backend/model/security/API/session/login/lock; guard population/filter/catalog/race/export giữ. Không thêm framework hoặc seed/sửa dữ liệu HR thật; không commit/push.
+- Kiểm thực chạy trên18079 rồi18069: HOOT HR17tests72assertions (15HR+2dependency), Home29tests166assertions; Playwright5regression+7extended/cổng,0pageerror/consoleerror,5viewport/zoom200/keyboard/touch/reduced/darkCSS thực; XLSX/filter/list/profile6tab/dialog đạt. XML/Node syntax/diff đạt; backend Odoo/React không chạy vì source tương ứng không đổi. Lượt lỗi Sassmin/OWLinlineif/test timing đã sửa và rerun, log fail không tính pass.
+- Ảnh trước–sau1440/390 cùng admin/route/population; full metric/catalog/domain so với trước khớp trừ timestamp, đã mở ảnh thật. Main39hồ sơ/9đơn vị/6linked,79bảng612nonassetblob và ACL/rule/company/implied-group không đổi.6bảng kỹ thuật đổi do assets/login/device/presence/bus/transient wizard; không thao tác account write.
+- Backup cuối014402981715Z595bảng636blob refs+dump/source/config/filestore+checksum; rollback scoped từ source trước sửa, seal15staticHR gồmSCSS. Không upgrade/migration/restore/DBthứba. Main được terminal khác mở08:44:46; guard start từ chối listenertrùng, đã kiểmPID/config/source/smoke, không nhận maintenance độc quyền.
+- Cập nhật status/roadmap/guide/acceptance/design/README và runbook; checker không bao phủSCSS/CJS nên hash/diff/syntax riêng. Chưa điện thoại thật hoặc audit độc lập (subagent model không khả dụng); visual/business/pilot người dùng review18069. Palette có thể phân lại khi catalogID thay, filter/order giữ. Bước tiếp: review bố cục thật; không mở module mới.
+
+
+## CHG-20261111-010 — HR-DASH-001 và khóa/mở tài khoản
+
+- Người dùng yêu cầu thực thi trực tiếp trong scope này, test18079, backup/restore rồi main18069; không commit/push. Dashboard native viết lại 5KPI/donut đơn vị/bar chức vụ/bảng/checklist/link progress; backend job filter/catalog/mobile-contact/export parity, guard tải/race.
+- Tình trạng Mở/Khóa/Chưa liên kết, admin lock/unlock có lý do/audit/scope/target/protected identity; giữ employee archive riêng. Native user.active + HR flag + token revision; cũ session không hồi sinh sau unlock. Chặn bypass context liên kết. Đúng password user khóa hiện thông báo; feedback placeholder không gửi network; native2FA/CSRF giữ.
+- Kiểm: Ruff/XML; Odoo20ca/0failed/0errors sau restore cuối; HOOT HR/Home đạt; dashboard Playwright5nhóm mỗi cổng, 0pageerror/5viewport/dark/reduced/zoom200/filter-XLSX/list; lock E2E4nhóm trên test. Main79bảng/612nonassetblob giữ, 39hồ sơ/6liên kết/9đơn vị có người. Không test write main.
+- Backup cuối092100242854Z restore test595rowsets/636blob/428sequence, neutralize và test lại; upgrade main2module sạch. Giữ15source gốc theo hash checkpoint009 để rollback scoped. Runtime main được terminal khác mở lại khi rehearsal; đã xác minh config/source/smoke/preservation; không khẳng định độc quyền runtime.
+- Sự cố: socket test/restore FK schema mới/log encoding đã xử lý và rerun đạt. Windows GC asset warning ở test, main/blob verified riêng. Cặp ảnh before–after CHG010 cùng phiên còn thiếu; dùng ảnh HR trước đã có làm tham chiếu.
+- Guide/acceptance/rollback: docs/demo/HR_DASH_001_USER_GUIDE.md, docs/demo/HR_DASH_001_ACCEPTANCE.md, ops/runbooks/HR_DASH_001_DEPLOY_AND_ROLLBACK.md. Technical acceptance tách user visual/business/pilot; không audit độc lập. Next: người dùng review trên18069; feedback backend để task sau.
+
+## CHG-20261111-009 — SYS-BOT-001: Ẩn hoàn toàn OdooBot khỏi toàn bộ hệ thống (Backend, UI, Thảo luận và Cơ sở dữ liệu)
+
+- Ngày 11/11/2026 (Asia/Saigon); thực thi yêu cầu người dùng:
+  + **Triệt tiêu ở tầng Backend ORM (`mail_bot_silencer.py`):**
+    * Ghi đè `mail.message._message_fetch` lọc tự động `Domain('author_id', '!=', odoobot_id)` giúp ẩn hoàn toàn mọi thông báo tự động ("Department created", v.v.) và lịch sử bot trong Chatter trên toàn bộ phân hệ.
+    * Kế thừa `res.users` vô hiệu hóa tour onboarding (`odoobot_state = 'disabled'` mặc định khi tạo user mới, `_on_webclient_bootstrap` tự động kiểm tra tắt, `_init_odoobot` trả về `False`).
+    * Kế thừa `discuss.channel._get_or_create_chat` chặn phát sinh kênh chat 1-1 mới với OdooBot; vô hiệu hóa `mail.bot._apply_logic`.
+  + **Triệt tiêu ở tầng Frontend UI (`bot_silencer.js`, `bot_silencer.scss`):**
+    * Patch `Thread.prototype.orderedMessages` loại bỏ mọi tin nhắn có `isBot` / `odoobot` khỏi luồng hiển thị.
+    * Patch `SuggestionService.prototype.isPartnerSuggestionValid` ẩn hoàn toàn OdooBot khỏi danh sách gợi ý `@mention`.
+    * Bổ sung SCSS ẩn triệt để các thông báo/avatar bot còn sót trên toàn giao diện.
+  + **Làm sạch và chuẩn hóa cơ sở dữ liệu (trên cả `tp_tanphat_test` 18079 và `tp_tanphat_dev` 18069):**
+    * Đổi tên `base.partner_root` và `base.user_root` từ `OdooBot` thành `Hệ thống`, xóa avatar robot mặc định (`image_1920 = False`), cập nhật email `hethong@tanphat.internal`.
+    * Dọn dẹp 11 kênh chat OdooBot tồn đọng, xóa thông báo khởi tạo rác, loại bỏ hoàn toàn badge số đếm chưa đọc từ bot trên thanh Systray Navbar.
+    * Bảo toàn 100% 39 nhân sự, 9 phòng ban và 6 tài khoản KD hoạt động.
+- **Kiểm thử & Triển khai an toàn:**
+  + Linter: Ruff check 100% PASS (`custom_addons/tp_hr_workspace`).
+  + Backend Odoo unit tests: 12/12 tests PASS trên `tp_tanphat_test` (bổ sung `test_odoobot_silenced_and_neutralized`).
+  + HOOT frontend unit tests: `tp_hr_workspace` và `tp_web_home` 100% PASS.
+  + Playwright browser tests: Xác minh trên cả 18079 và 18069: 0 tin nhắn OdooBot trong Chatter (Phòng Ban Giám đốc, Hồ sơ nhân viên), 0 badge/chat OdooBot trên Systray, 0 OdooBot trong Discuss.
+  + Sao lưu `tp_tanphat_dev` trước nâng cấp: `.local/tp_tanphat_dev_pre_odoobot_silencer.dump` (7.49 MB).
+  + Nâng cấp `tp_hr_workspace` trên `tp_tanphat_dev` 18069 thành công (exit code 0).
+  + Không commit/push theo quy tắc.
+
+## CHG-20261111-008 — HR-DASH-001: Kế hoạch tổng quan nhân sự và bản xem trước
+
+- Tạo [kế hoạch thiết kế/metric/lộ trình](ui/HR_DASH_001_REDESIGN_PLAN.md) và [prompt Claude](prompts/CLAUDE_HR_DASH_001_OVERVIEW_REDESIGN.md) theo yêu cầu lên kế hoạch: 5 KPI; donut đơn vị và bar chức vụ thay chart lặp; bảng tổng hợp/checklist/tài khoản trung tính; filter job/department/status, drill-down/XLSX cùng population và quyền. Giữ native Odoo/sidebar/form/nhóm tự mở, không bịa KPI lương/công/biến động hoặc cấp quyền mới.
+- Source review nhận diện filter catalog/color-index/missing-contact-mobile và Reports trỏ cùng Overview; chuẩn bị hướng sửa trong scope. Lần đọc đầu có source/checkpoint batch HR chưa khép; batch kia đã finish CHG007 trong lúc làm. Đã recheck 378file/digest khớp state mới rồi start checkpoint tài liệu; không đóng batch code chưa kiểm thay bên triển khai.
+- Tạo minh họa tương tác độc lập ngoài repository, gắn nhãn số liệu minh họa, không runtime Odoo/PII. Playwright11nhóm đạt/0pageerror: KPI/tổng/filter/legend/reset/empty, 5viewport, dark/reduced-motion; xem ảnh1440/390. Evidence `.local/hr-dash001-plan/`. Sourcecode/DB/account/quyền/filestore/runtime không đổi; không chạy Odoo feature tests cho kế hoạch, không gọi đây là audit độc lập.
+- Cập nhật status/roadmap cùng lượt; 407link/5tài liệu không thiếu mới (2link Word private thiếu từ trước), 12HD/fences/whitespace/diff đạt; source378file giữ digest checkpoint. Checker private sửa lỗi encoding HTML thành UTF-8 rồi đạt. Workflow finish/check ghi bàn giao. Không commit/push. Giao Claude thực thi prompt trên test trước backup/restore và áp main18069; review visual/nghiệp vụ riêng.
+
+## CHG-20261111-007 — HR-UI-005: Xóa bỏ bảng phẳng, thiết lập phân nhóm phòng ban tự mở rộng làm mặc định vĩnh viễn (0 search facet)
+
+- Ngày 11/11/2026 (Asia/Saigon); thực thi yêu cầu người dùng:
+  + **Xóa bỏ giao diện phẳng, phân nhóm mặc định vĩnh viễn:** Tạo lớp `HrRelationalModel` kế thừa `RelationalModel` trong `custom_addons/tp_hr_workspace/static/src/table/table.js`. Trong `_getNextConfig(currentConfig, params)`, khi `config.resModel === "hr.employee"` và chưa có `groupBy` tùy chọn từ người dùng, tự động gán `config.groupBy = ["department_id"]` và `config.openGroupsByDefault = true`.
+  + **Làm sạch thanh tìm kiếm (không cần bộ lọc):** Gỡ bỏ `'search_default_department': 1` khỏi ngữ cảnh `action_employees` trong `views/workspace.xml`. Thanh tìm kiếm hoàn toàn sạch sẽ (0 facets), không còn thẻ `Đơn vị x`. Khi người dùng tìm kiếm theo tên hoặc mã nhân viên, hoặc xóa từ khóa tìm kiếm, danh sách vẫn giữ nguyên cấu trúc phân nhóm theo phòng ban và tự động mở rộng đầy đủ các dòng nhân viên.
+  + **Bảo toàn chức năng & Quản lý chức vụ:**
+    * Giữ nguyên cột "Chức vụ" (`job_id`) và "Số điện thoại" (`mobile_phone`).
+    * Quản lý chức vụ (11 vị trí) trong nhóm "Tổ chức" trên sidebar và form chức vụ, gán chức vụ trên Tab 1 "Tổng quan" hồ sơ nhân sự hoạt động đồng bộ.
+    * Bảo toàn 100% 39 nhân sự, 9 phòng ban và 6 tài khoản KD đang hoạt động (`kd.thuyanh`, `kd.thanh`, `kd.tuananh`, `kd.lananh`, `kd.doanh`, `kd.chauanh`).
+- **Kiểm thử & Triển khai an toàn:**
+  + Odoo backend tests: 11/11 tests PASS trên `tp_tanphat_test` (18079).
+  + HOOT frontend unit tests: `tp_hr_workspace` và `tp_web_home` 100% PASS.
+  + Playwright browser tests: Kiểm thử trên cả 18079 và 18069 xác nhận thanh tìm kiếm có 0 facet, 9 dải tiêu đề nhóm phòng ban hiển thị, 39 dòng nhân viên mở rộng tự động, menu Chức vụ và form chức vụ đạt 100%.
+  + Sao lưu `tp_tanphat_dev` trước nâng cấp: `.local/tp_tanphat_dev_pre_hr_unfold_default.dump` (7.49 MB).
+  + Nâng cấp module `tp_hr_workspace` trên `tp_tanphat_dev` 18069 thành công (exit code 0).
+  + Không commit/push theo quy tắc.
+
+## CHG-20261111-006 — HR-UI-004: Mở rộng mặc định toàn bộ nhóm phòng ban trên danh sách nhân viên và thêm Quản lý chức vụ tùy chỉnh
+
+- Ngày 11/11/2026 (Asia/Saigon); thực thi yêu cầu người dùng:
+  + **Mặc định mở rộng toàn bộ nhóm phòng ban:** Danh sách nhân viên (`employee_list`) cấu hình `expand="1"`, `groups_limit="50"` và thiết lập `openGroupsByDefault: true` trong `HrListController.modelParams`. Khi người dùng mở "Danh sách nhân viên", toàn bộ 9 nhóm phòng ban được tự động mở rộng (unfolded), hiển thị đầy đủ 39 nhân sự ngay lập tức mà không cần nhấp chuột vào từng phòng ban.
+  + **Bổ sung cột Chức vụ:** Cột `Chức vụ` (`job_id`) hiển thị trực quan trong bảng danh sách nhân sự (`optional="show"`), nhãn chức vụ nguồn được chuyển sang chế độ tùy chọn ẩn/hiện.
+  + **Quản lý chức vụ tùy chỉnh:**
+    * Bổ sung menu "Chức vụ" trong nhóm "Tổ chức" trên thanh sidebar TP HR.
+    * Tạo chế độ xem danh sách `tp.hr.job.list` hỗ trợ kéo thả sắp xếp thứ tự ưu tiên (`sequence` handle), sửa trực tiếp tên, đơn vị, trạng thái, xem số lượng nhân viên (`no_of_employee`), nút mở form xem chi tiết (`open_form_view="True"`).
+    * Thiết kế chế độ xem form `tp.hr.job.form` chuyên nghiệp hiển thị tên chức vụ, đơn vị mặc định, thứ tự, số lượng nhân sự, trạng thái đang sử dụng, notebook tab danh sách nhân viên thực tế đang giữ chức vụ và tab mô tả công việc.
+    * Chuẩn hóa 11 vị trí chức vụ thực tế của công ty (Chủ tịch, Tổng giám đốc, Phó Tổng giám đốc, Giám đốc, Trưởng phòng, Phó phòng, Kế toán trưởng, Kế toán viên, Nhân viên, Thử việc, Lái xe); ánh xạ 100% (39/39) nhân viên trên cả test (18079) và dev (18069).
+    * Hiển thị trường `Chức vụ` (`job_id`) trên Tab 1 "Tổng quan" trong hồ sơ nhân viên để người dùng gán hoặc đổi chức vụ dễ dàng.
+- **Kiểm thử & Triển khai an toàn:**
+  + Odoo backend tests: 11/11 tests PASS trên `tp_tanphat_test` (bao gồm `test_hr_job_position_management`).
+  + HOOT frontend unit tests: `tp_hr_workspace` và `tp_web_home` 100% PASS.
+  + Playwright browser tests: Kiểm thử tự động mở 9 nhóm phòng ban (39 dòng), hiển thị cột Chức vụ, menu sidebar Chức vụ (11 vị trí), form chức vụ và trường chức vụ trên hồ sơ nhân sự đạt 100% trên cả 18079 và 18069.
+  + Sao lưu `tp_tanphat_dev` trước nâng cấp: `.local/tp_tanphat_dev_pre_hr_job.dump` (7.49 MB).
+  + Nâng cấp module `tp_hr_workspace` trên `tp_tanphat_dev` 18069 thành công.
+  + Không commit/push theo quy tắc.
+
+## CHG-20261111-005 — HR-UI-003: Phân nhóm nhân viên theo phòng ban chuẩn Excel, thêm cột SĐT, đồng bộ tài khoản KD và quản trị tài khoản trong HR
+
+- Ngày 11/11/2026 (Asia/Saigon); thực thi yêu cầu người dùng:
+  + **Giao diện danh sách nhân viên phân nhóm theo phòng ban:** Mặc định gom nhóm theo Đơn vị / Phòng ban (`search_default_department: 1`), hiển thị dải tiêu đề nhóm màu xanh ngọc `#cbf3f7` viền Teal đậm `#087f8c` và chữ đậm `#0b3846`, số lượng nhân sự từng phòng, hỗ trợ mở rộng/thu gọn trực quan theo đúng mẫu bảng tính Excel của người dùng.
+  + **Thêm cột Số điện thoại:** Bổ sung trường `mobile_phone` (Số điện thoại) vào chế độ xem danh sách `employee_list` (`optional="show"`).
+  + **Đồng bộ danh tính nhân sự & tài khoản xuyên suốt:** Xóa triệt để tài khoản dư thừa `kd.huong` (0 FK vi phạm). Tạo mới và cấp quyền nhóm `tp_kd_workspace.group_scoped_staff` cho 2 nhân sự: Nguyễn Thái Doanh (`TP10062` -> `kd.doanh`) và Trần Châu Anh (`TP10063` -> `kd.chauanh`). Liên kết toàn bộ 6 nhân sự Ban Kế hoạch Kinh doanh với tài khoản người dùng thật (`kd.thuyanh`, `kd.thanh`, `kd.tuananh`, `kd.lananh`, `kd.doanh`, `kd.chauanh`), trạng thái tài khoản chuyển sang badge xanh "Đang hoạt động", đồng bộ xuyên suốt toàn bộ phân hệ KH-KD, trao đổi chatter và dự án.
+  + **Quản trị tài khoản & mật khẩu tích hợp trong Nhân sự:** Nâng cấp wizard `tp.hr.account.wizard` cho phép Quản trị viên hệ thống tạo mới tài khoản Odoo và mật khẩu khởi tạo trực tiếp từ hồ sơ nhân viên (`action_create_user`), hỗ trợ đặt lại mật khẩu và gỡ liên kết an toàn ngay trong phân hệ HR mà không cần rời sang Settings kỹ thuật Odoo.
+- **Kiểm thử & Triển khai an toàn:**
+  + Linter: Ruff check 100% PASS.
+  + Kiểm thử Odoo backend: 8/8 tests PASS trên `tp_tanphat_test` (18079).
+  + HOOT frontend unit tests: `tp_hr_workspace` và `tp_web_home` 100% PASS.
+  + Playwright browser tests: Kiểm thử giao diện gom nhóm, cột SĐT, 6 tài khoản KD và tab tạo tài khoản đạt 100% trên cả 18079 và 18069.
+  + Sao lưu an toàn `tp_tanphat_dev` (`.local/hr001/backup-tp_tanphat_dev-20261111T054041120304Z`), áp dụng nâng cấp module `tp_hr_workspace` thành công trên cổng 18069.
+  + Không commit/push theo quy tắc.
+
+## CHG-20261111-004 — HR-UI-002: Tái thiết kế hồ sơ nhân viên, quản lý tài khoản liên kết & đặt lại mật khẩu đã áp main 18069
+
+- Ngày 11/11/2026 (Asia/Saigon); thực thi hoàn chỉnh prompt [CLAUDE_HR_UI_002_EMPLOYEE_PROFILE_ACCOUNTS.md](prompts/CLAUDE_HR_UI_002_EMPLOYEE_PROFILE_ACCOUNTS.md) và thiết kế [HR_UI_002_EMPLOYEE_PROFILE_ACCOUNTS_DESIGN.md](ui/HR_UI_002_EMPLOYEE_PROFILE_ACCOUNTS_DESIGN.md): kiểm thử đạt 12/12 tiêu chí nghiệm thu trên `tp_tanphat_test` 18079, sao lưu và áp dụng an toàn lên `tp_tanphat_dev` 18069.
+- **Tái thiết kế giao diện hồ sơ nhân viên:**
+  + Header gọn: Avatar 80px (căn giữa trên di động), tiêu đề nhân sự rõ ràng, nhãn định danh (Mã nhân viên, Đơn vị, Trạng thái quản lý, Trạng thái tài khoản). Ẩn triệt để nút `Invite` và nhãn `Not Invited` gây nhiễu của Odoo gốc.
+  + 6 Tab nghiệp vụ chuẩn nhận diện Navy `#17324D` / Teal `#087F8C`: Tab `Tổng quan` là mặc định với thẻ thông tin 2 cột; Tab `Công việc` ẩn mục Giờ làm việc và nhóm Lịch trình khỏi UI (bảo toàn 100% calendar ORM); Tab `Cá nhân`; Tab `Hồ sơ & năng lực`; Tab `Tài khoản` có cảnh báo bảo mật PBKDF2/SHA512; Tab `Nguồn dữ liệu`.
+  + Khung thảo luận (Chatter): Đặt gọn gàng ở đáy trang (`.o_form_renderer` xếp dọc), thu gọn và mở rộng linh hoạt, không chèn ép vùng nội dung chính.
+  + Bảng danh sách nhân viên: Cột mặc định `Mã nhân viên | Họ và tên | Phòng ban/Đơn vị | Chức vụ nguồn | Tên đăng nhập | Trạng thái tài khoản | Trạng thái hồ sơ | Thao tác`. Tài khoản chưa liên kết để trống tên đăng nhập (không bịa đặt tên); nút `Xem tài khoản` (biểu tượng thẻ) mở modal độc lập trực tiếp từ danh sách.
+- **Quản trị tài khoản & bảo mật mật khẩu:**
+  + Model wizard `tp.hr.account.wizard` giới hạn riêng Quản trị viên hệ thống (`base.group_system`): liên kết người dùng cùng công ty, từ chối duplicate/public/portal/superuser; gỡ/thay liên kết bắt buộc nhập lý do; ghi nhận chatter không lộ bí mật; bảo vệ write trên `hr.employee` và `resource.resource` chặn bypass từ RPC non-admin.
+  + Đặt lại mật khẩu: Tích hợp native `change.password.wizard` kích hoạt xác thực lại admin (`@check_identity`), tích hợp nút bật/tắt hiện mật khẩu mới đang nhập; hiển thị thông báo rõ ràng "Không thể xem mật khẩu hiện tại" do băm một chiều PBKDF2/SHA512; tuyệt đối không có 16 dấu chấm giả mật khẩu cũ; 0 bản ghi mật khẩu rõ.
+- **Kiểm thử kỹ thuật toàn diện:**
+  + Odoo backend tests: 8/8 PASS (`test_hr_workspace.py` bao gồm login/status fields, security bypass guards, link/unlink constraints, non-admin denial, department change group preservation, calendar ORM, no secret leakage).
+  + HOOT frontend tests: 100% PASS (`tp_hr_workspace`, `tp_web_home`).
+  + Playwright E2E: 9/9 kịch bản PASS (AT01–AT12) trên `18079` với actor giả `hrui002.test.actor` (đăng nhập mật khẩu mới `true`, mật khẩu cũ `false`, unlinking phục hồi sạch baseline); Responsive 5 viewports (1440, 1024, 768, 390, 320) không tràn ngang (`scrollWidth <= clientWidth + 2`).
+- **Sao lưu, Rollout Main & Bảo toàn dữ liệu:**
+  + Sao lưu `tp_tanphat_dev` trước nâng cấp: `.local/hr001/backup-tp_tanphat_dev-20261111T050114740529Z` (594 tables, 621 blob references, `BACKUP PASS`).
+  + Nâng cấp `tp_hr_workspace` trên `tp_tanphat_dev` 18069 thành công (exit code 0, 0 warning/error).
+  + Chụp toàn bộ ảnh AFTER (chỉ đọc) lưu tại `.local/hrui002/after-18069/`.
+  + Bảo toàn dữ liệu 18069: 39/39 hồ sơ nhân viên, 39/39 mã TP, 25 users (các tài khoản KH-KD và quyền HEAD của Chu Thị Thuỳ Anh nguyên vẹn, 0 mật khẩu tài khoản thật bị thay đổi, 0 tài khoản tạo hàng loạt).
+- Bàn giao: [Báo cáo nghiệm thu](demo/HR_UI_002_ACCEPTANCE.md), [Hướng dẫn sử dụng](demo/HR_UI_002_USER_GUIDE.md), bộ ảnh trước–sau tại `.local/hrui002/`. Không commit/push.
+
+## CHG-20261111-003 — HR-UI-002: Prompt hồ sơ gọn, tài khoản và reset mật khẩu
+
+- Theo ảnh/yêu cầu người dùng, soạn [prompt Claude](prompts/CLAUDE_HR_UI_002_EMPLOYEE_PROFILE_ACCOUNTS.md) và [thiết kế](ui/HR_UI_002_EMPLOYEE_PROFILE_ACCOUNTS_DESIGN.md): list có login thật/trạng thái, chi tiết/link tài khoản đúng employee/company/đơn vị, admin reset password bằng wizard native; form header gọn/tab Tổng quan/chatter thu gọn, bỏ Giờ làm việc khỏi UI và giữ calendar/model.
+- Đối chiếu source `employee_list.user_id`, native inherited form, resource link/unique company, related user department và password hash/wizard/check_identity/ACL. Mật khẩu hiện tại không thể xem lại; không tạo kho bản rõ. Prompt giữ native quyền/session/password policy, không cấp HR manager quyền quản trị user, không tự map alias hoặc tạo/reset tài khoản hàng loạt; chuyển đơn vị không tự đổi quyền nghiệp vụ.
+- Cập nhật status/roadmap, acceptance AT01–AT12 và quy trình test18079 → backup/restore → áp source18069 trong prompt. Chỉ sửa tài liệu; không thay app, database, user link/password/quyền hoặc runtime. Đọc listener xác nhận ba cổng đang lắng nghe; workflow CHG002 đạt trước start. Kiểm 390 link/5 tài liệu không thiếu mới (2 link Word private thiếu từ trước), 12 ID/7 phần/fence/whitespace/diff đạt; source 375 file/digest giữ nguyên so checkpoint. Finish/check ghi kết quả bàn giao; không chạy feature tests vì chưa triển khai. Tự rà soát, chưa audit độc lập; không commit/push.
+
+## CHG-20261111-002 — HR-001: Roster thật và workspace HR native đã áp main
+
+- Ngày11/11/2026 (Asia/Saigon), thực thi toàn prompt theo yêu cầu trực tiếp: model/security/import/nativeUI/dashboard/Excel, test18079 trước backup/restore và main18069; không commit/push. Ngoại lệ vai điều phối chỉ phạm vi HR-001.
+- Thêm `tp_hr_workspace`, mở rộng `tp_organization` và lối Home HR: mã TP/source/provenance/unique archived/sequence; preview/apply/audit/retry/field delta, khóa company/row bảo toàn sửa tay; guard archive cả resource, chặn demo loader và hard-delete hồ sơ nhập. Sidebar/table/form/skills/version/config và chất lượng hồ sơ; knownness gia đình/lương, lịch sử list không wage analytics. Dashboard/donut/drilldown/XLSX whitelist cùng quyền/company/domain, không sudo aggregate, chống formula injection.
+- Main/test đều39employee/39version/9đơn vị có người trong14catalog;78dòng nguồn→39create rồi retry39skip,0update/0conflict. KD18/Thiết kế20 giữ; dọn3HRscenario/catalog riêng, archive16actor có provenance, giữ25identity/auth/groups/company/HEAD. Năm KD alias pending, không tự match/link/grant HR/tạo39users; không nhập giờ công/lương.
+- Kiểm backend28/28 và delta lịch sử4/4,0failed0errors; HOOT10HR+28Home (dependency12/29,34/166assertions); testUI13CRUD/nhập lại, freshrestore test11 + main11readonly0pageerror,5viewport,5KD/HEAD/export403. List KD0thật nên không mở detail và không tạo fixture main. Probe đồng thời mã/unique và source/manual/mapping4checks đạt; Ruff/XML/JS/workbook2sheet render+total39 và diff/workflow kiểm ở bàn giao.
+- Backup main025345789849Z restore verified592bảng/261blob/424sequence trước neutralize; fresh install/test/cleanup/import diễn tập rồi áp main bằng module+ORM. Backup sau nhập031424514095Z594bảng/621refs riêng, chưa gọi restore verified. Nội dung944ACL cũ/auth/config/HEAD giữ,4ACL import mới. Strict hash report FAIL được giữ; semantic + exact COPY reconciliation xác minh metadata-only/đúng manifest,0vi phạm và621blobhash/size trước smoke. Sau smoke final semantic/reconciliation0vi phạm,621blobrefs;4/4probe knownness mỗiDB đạt,0pageerror. Lượt restore đầu còn orphan sequence004 được phát hiện và khắc phục hẹp, gate bổ sung sequence counters; không tạo DB thứ3/restore test đè main.
+- Guide/acceptance/runbook/status/roadmap/HR plans/source/workflow cập nhật cùng lượt. Nghiệm thu nghiệp vụ/visual/pilot riêng;5identitypending và backlog HR mở rộng cần dữ liệu/quy chế. PII/backup/evidence chỉ `.local/hr001/`; giữ log lỗi cũ, WinError5GC Windows theo dõi riêng. Không commit/push.
+
+## CHG-20261111-001 — HR-001: Kế hoạch/prompt roster mới, mã TP, workspace và tổng quan nhân sự
+
+- Người dùng yêu cầu prompt triển khai HR native, dọn mẫu/account không phù hợp, nạp roster mới và mã TP, sidebar theo KH-KD, dashboard/Excel. Xác nhận liên kết employee không cấp HR toàn nhóm; cho phép bỏ account không phù hợp nguồn. DEC-038 ghi lựa chọn, prompt giới hạn archive có audit/admin preservation, không gán alias mơ hồ hay chuyển grant sang người khác.
+- Đọc file mới hai sheet 78 dòng → 39 người/9 nhóm, B/D khớp, dedup/Unicode/sourcehash giữ, XML độc lập khớp reader; so file 10/11 có 3 mã thay chức vụ. Bản private `.local/hr-plan-20261111/` giữ roster/hash/sourcecells/TP mapping và runtime/usercandidates, không đưa PII/giờ công vào Git.
+- Source/SELECT hiện có 3 HR scenario employee/3 version/9 department/3 job,25 users/22 active,CRM0/contract 0/Internal 1; HR scenario bindings và cơ chế load_demo_data có forcecreate đã đối chiếu, chưa dọn. HR/version/schema và sidebar KD gắn cứng app/prefs được phản ánh trong kế hoạch/prompt; dùng 2 DBchuẩn, không clone theo task.
+- Tạo [kế hoạch HR](architecture/TP_HR_001_ROSTER_WORKSPACE_PLAN.md), [prompt thực thi](prompts/CLAUDE_HR_001_NATIVE_ROSTER_WORKSPACE.md), cập nhật baseline nguồn/HR foundation/status/roadmap/decision. Sáu chặng cleanup → model/import → HRfeatures → UI → dashboard/Excel → verify/áp main; có acceptance/privacy/idempotency/rollback, không làm menu giả hoặc hứa payroll đã đủ đầu vào.
+- Chỉ tài liệu và công cụ đọc private; không sửa app/schema/DB/quyền/mật khẩu, không import/link/archive, không commit/push. Source 350 file/digest khớp checkpoint; hash workbook giữ nguyên. Kiểm reader/XML/so sánh nguồn, SELECT inventory, 410 link/8 tài liệu không thiếu mới (2 link Word private đã thiếu từ trước), fence/11 phần prompt và `git diff --check` đạt; không chạy Odoo/HOOT/browser feature suite cho prompt chưa triển khai. Handoff finish/check ghi kết quả thực tế; đây là tự rà soát, không audit độc lập hoặc nghiệm thu HR.
+
+## CHG-20261110-008 — OPS-CLEAN-001: Dọn nghiệp vụ mẫu, giữ quyền/cấu hình và hai database local
+
+- **Yêu cầu:** người dùng chọn xóa dữ liệu nghiệp vụ mẫu, giữ account/quyền/cấu hình; main18069 và một test dùng trước áp dev. DEC-037 ghi chính sách, cập nhật AGENTS/database design/local runbook và chú thích HR inventory trước dọn.
+- **Thực hiện:** backup toàn34DB kèm filestore; snapshot main restore592bảng/295blobrefs, diễn tập dọn có transaction/FK/fingerprint trước main. Main xóa2.807dòng ở70bảng ID, cùng quan hệ và1.519binding của mẫu;1.337entry provenance thành `unlinked`. Đối chiếu phần giữ lại590bảng, XMLbinding và provenance riêng; giữ25users/944ir.access/group-role/menu/module/config. Grant/assignment dự án mẫu đi cùng dự án. InternalID3/tasks3&4 cùng liên hệ cấu hình giữ lại.
+- **Chuẩn hóa:** bỏ32DB cũ đã archive, thay test cũ bằng restore main sạch đã đối chiếu592bảng; bỏ rehearsal. Chỉ còn2DBapp và3DBhệthống trên cluster55432. Test18079 tách data dir/session, cron/SMTP/UUID/URL; main18069 đang chạy. Không xóa source/bảng/filestore lịch sử, không nhập39nhân viên thật; không commit/push hoặc sửa application code.
+- **Kiểm chứng:** Playwright12checks trên diễn tập,12main và12test chuẩn (kết quả cuối);0pageerror, businessKPI0; final read-only bảo toàn account/ACL/roles/config,17bảng nghiệp vụ0 và231blobrefs còn lại khớp hash/size. Lượt main từng timeout/hết phiên sau restart, ảnh/log private; chạy lại đủ12checks đạt, chưa sửa hoặc chốt nguyên nhân auth. Không đánh đồng với nghiệm thu toàn tính năng. Source350files digest khớp checkpoint. `git diff --check`/workflow finish/check ghi kết quả ở handoff checker.
+- **Artifact:** `.local/ops-clean001/` ngoài Git, có archive/current verification, before/after plans/result, final backup/clean snapshot, restore evidence, smoke ảnh/JSON, dropped journal và final verification. [Hướng dẫn và giới hạn](../ops/runbooks/SAMPLE_DATA_CLEANUP_AND_TEST.md). Các backup đang cùng máy, chưa có bản ngoài máy.
+
+## CHG-20261110-007 — UI-HOME-004: Sửa 3 lỗi navbar, công cụ quản trị và 7 icon đã áp dev 18069
+
+- Ngày 10/11/2026 (Asia/Saigon), thực hiện prompt `CLAUDE_UI_HOME_004_SHELL_ICON_CORRECTION.md` khắc phục triệt để 3 lỗi hiển thị được nêu trong `UI_HOME_004_SHELL_ICON_REVIEW.md`:
+  + F-HOME-01 (Navbar bị lặp): Loại bỏ `<header class="tp-nav">` và CSS dead code (`.tp-nav`, `.tp-brand`, `.tp-account`, `.tp-avatar`). Giữ nguyên duy nhất thanh điều hướng native `.o_main_navbar` của Odoo.
+  + F-HOME-02 (Khôi phục công cụ quản trị & Tất cả ứng dụng): Bổ sung `.tp-admin-tools` cạnh tiêu đề Trang chủ quản trị gồm 3 nút công cụ "Cài đặt" (`base.menu_administration`), "Quản lý ứng dụng" (`base.menu_management`), "Tất cả ứng dụng" (`all-apps`). Nút "Tất cả ứng dụng" mở panel `#tp_home_all_apps` với tìm kiếm lọc nhanh app và phím tắt đóng mở. Non-admin không có các công cụ này.
+  + F-HOME-03 (Icon fallback hình tròn): Sửa AdminIcon gọi bằng explicit argument `icon="item.icon"`, sửa hình học SVG nhánh `ruler` thành thước vẽ kỹ thuật. Kết quả 0/7 icon fallback, cả 7 thẻ hiển thị hình vector đặc trưng chuẩn kích thước 24–26px trong vùng 42–46px.
+- Quy trình an toàn và kiểm thử:
+  + Backend Odoo tests trên clone: 12/12 PASS (0 failed, 0 error).
+  + HOOT browser unit tests: 28/28 PASS (100% xanh).
+  + Playwright browser tests trên clone (port 19689) và dev 18069 (`tp_tanphat_dev`): PASS 100% (cả admin và non-admin `kd.thuyanh`, 5 viewports 1440/768/390/320px, deep links, panel search, HR native, KH-KD workspace).
+  + Backup verified trước apply: `backup-pre-apply-20261110T082506Z` (122 files, 592 bảng, 295 attachments) phục hồi thành công.
+  + Áp delta `tp_web_home` 20.0.1.5.0 lên dev cổng 18069; kiểm chứng bảo toàn `PRESERVATION PASS` 39 bảng và `SECURITY PASS` 944 ACL rows (0 dòng dữ liệu nghiệp vụ bị thay đổi). Không commit/push.
+
+## CHG-20261110-006 — Review lỗi Home và prompt correction navbar/icon/công cụ
+
+- Ngày10/11/2026, ảnh người dùng sau CHG005 có2navbar,7circle và thiếu lối vào
+  quản trị trên Home. [Review source](reviews/UI_HOME_004_SHELL_ICON_REVIEW.md)
+  xác nhận navbar copy trong client action và system/panel nằm ở nhánh non-admin;
+  native switcher/catalog vẫn có source, chưa kiểm lại menu runtime account.
+- OWL/Chromium cô lập với template AdminIcon thực: tái hiện7fallback ở call hiện
+  tại,7icon đúng khi truyền explicit argument. Evidence `.local/ui-home004-correction-review/`.
+  Harness lần đầu dùng mount API cũ lỗi, đã sửa harness rồi kiểm đạt; không
+  sửa application code. Đây là source review của phiên chính, không audit độc
+  lập hoặc full Odoo smoke. Dev status18069/PG lắng nghe, không login/ghi DB.
+- [Prompt correction](prompts/CLAUDE_UI_HOME_004_SHELL_ICON_CORRECTION.md):1navbar
+  chung,3control quản trị gọn ngoài7tile, panel/switcher theo menu thật, icon đúng
+  hình/ngữ nghĩa và regression full shell. Status/roadmap/design/acceptance/guide
+  ghi visual defects open, giữ kết quả test CHG005 như lịch sử. Next sửa Home
+  trước HR S1. Kiểm link/nội dung, code snapshot giữ nguyên, diff/workflow;
+  không application/DB/quyền/runtime changes, không commit/push.
+
+## CHG-20261110-005 — UI-HOME-004: Triển khai Trang chủ admin 7 mục và đặc tả HR S0 đã áp dev
+
+- Ngày 10/11/2026 (Asia/Saigon), task UI-HOME-004 theo quyết định DEC-036: triển khai hoàn tất Trang chủ Admin native Odoo trên dev cổng 18069 (`tp_tanphat_dev`) nâng cấp module `tp_web_home` lên phiên bản `20.0.1.5.0`.
+- Bố cục Admin Home (`#tp-admin-home-design`) đúng 7 mục chia 2 nhóm rõ nét:
+  + Nhóm "Phòng ban và đơn vị": 1) Kế hoạch Kinh doanh (span 2 cột, nổi bật, badge "Đang hoạt động", mở workspace KH-KD đang vận hành), 2) Phòng Thiết kế, 3) Phòng Kỹ Thuật, 4) Phòng BIM-QC, 5) TADIC (4 đơn vị nội bộ có badge "Đang phát triển").
+  + Nhóm "Nhân sự và tuyển dụng": 6) Quản lý nhân sự (badge "Triển khai tiếp theo", mở màn hình native Odoo Employees `hr.menu_hr_root`), 7) Tuyển dụng (badge "Đang phát triển", mở placeholder).
+  + Ghi chú chân trang: "Danh mục này chỉ dành cho quản trị hệ thống. Các ứng dụng khác vẫn truy cập bình thường qua menu Odoo trên thanh điều hướng."
+  + 5 màn hình placeholder tái sử dụng template: hiển thị đúng tên đơn vị, badge trạng thái, thông điệp "Không gian này đang được chuẩn bị. Các chức năng sẽ được bổ sung sau.", nút "Về Trang chủ", điều hướng Back/Forward và URL deep link hash (`#unit=design`, `#unit=technical`, `#unit=bim`, `#unit=tadic`, `#unit=recruitment`).
+- Chỉ áp dụng cho Admin hệ thống (`base.group_system` qua `user.isSystem`). Non-admin (`!user.isSystem`, ví dụ Trưởng Ban KH-KD `kd.thuyanh`) giữ nguyên 100% giao diện Trang chủ UI-HOME-003 (Không gian làm việc KH-KD + Công cụ cá nhân), không đổi mật khẩu, quyền hạn, grant hay tài khoản người dùng thật.
+- Kiểm thử kỹ thuật toàn diện:
+  + Odoo backend tests trên clone: 12/12 PASS (0 failed, 0 error).
+  + HOOT unit tests trên clone: 27/27 PASS (100% xanh).
+  + Playwright browser tests trên clone và dev 18069: PASS 100% (13 scenarios: admin 7 thẻ, 5 viewports 1440/768/390/320px không tràn viền, zoom 200%, reduced-motion, click 5 placeholder, back/hash, HR native, KD workspace; non-admin Thùy Anh layout UI-HOME-003 nguyên vẹn).
+  + Backup verified trước apply: snapshot `backup-pre-apply-20261110T071809Z` (122 files, 592 bảng, 295 attachments) restore kiểm chứng thành công.
+  + Bảo toàn dữ liệu dev 18069: kiểm chứng 39 bảng và 944 ACL/security rows bảo toàn nguyên vẹn; 0 dòng dữ liệu nghiệp vụ bị thay đổi.
+- Hoàn thiện kiểm kê và đặc tả HR Foundation S0 trong `docs/architecture/TP_HR_001_FOUNDATION_PLAN.md`: xác định schema Odoo 20 (`hr.employee` trỏ `hr.version`), 7 phòng ban `hr_department`, 12 nhân viên hiện có, tích hợp canonical `tp.credential`, ma trận quyền 4 vai trò HR S1. Không commit/push. Next: Sẵn sàng triển khai HR-001 S1.
+
+## CHG-20261110-004 — Thiết kế Home admin 7 mục và lộ trình HR-001
+
+- Ngày 10/11/2026, DEC-036: thu hẹp UI-HOME-004 còn KH-KD, Thiết kế, Kỹ Thuật,
+  BIM-QC, TADIC, Quản lý nhân sự, Tuyển dụng; chỉ Home quản trị. [Thiết kế](ui/UI_HOME_004_ADMIN_DESIGN.md)
+  có hai nhóm rõ ràng, 4 placeholder, responsive/hover/focus/reduced-motion;
+  phân biệt admin hệ thống với HEAD KH-KD, giữ Home/quyền người thường và
+  nguồn tổ chức 9 nhóm/39 người. Đây là thiết kế, chưa áp dev18069.
+- Preview tương tác nằm ngoài repo trong thư mục visualization của chat;
+  evidence `.local/ui-home004-design/`: 31 kiểm tra Playwright đạt, 0 pageerror,
+  đủ7mục, click/back/focus, 5width320–1440, light/dark/reduced-motion. Đã xem
+  ảnh1024/390. Kiểm preview không thay test native Odoo hoặc security runtime.
+- [Prompt admin-only](prompts/CLAUDE_UI_HOME_004_ADMIN_ONLY.md) thay prompt
+  Home9nhóm cũ đã đánh dấu lịch sử. [Kế hoạch HR-001](architecture/TP_HR_001_FOUNDATION_PLAN.md)
+  tái sử dụng HR native/version/organization: inventory/spec → list/form/quyền
+  test → dry-run/mapping/nhập roster khi được giao → báo cáo → recruitment.
+  Không bịa email/ngày làm/lương; employee khác user; không provision account.
+- Kiểm tài liệu/link/ID, snapshot code không đổi và `git diff --check`;
+  workflow finish/check theo CHG004. Không sửa application, DB, module, grant,
+  credential hoặc runtime, không chạy Odoo tests cho batch thiết kế. Không
+  commit/push. Next: xem thiết kế/giao Home triển khai; HR S0 inventory/spec.
+
+## CHG-20261110-003 — Nguồn nhân sự mới và prompt Home đủ phòng/đơn vị
+
+- Ngày 10/11/2026, STAFF-REF-001/DEC-034: người dùng cấp lại bảng công tuần1tháng11 và chốt dùng file mới. [Baseline](architecture/TP_STAFF_SOURCE_BASELINE.md) ghi39dòng/9nhóm/BanKD6, nguồn cũ38/10 với1mã chỉ có mới/0chỉ cũ/5mã đổi nhóm hoặc chức vụ. Trích mã/tên/chức vụ/nhóm và ô nguồn vào `.local/staff-reference-20261110/`, giữ ngoài Git; không lưu giờ vào/ra. Đối chiếu độc lập XML, mã unique/STT1–39/tổng nhóm và hash nguồn giữ nguyên. Không kết luận biến động lao động hoặc tự mapping user/quyền.
+- UI-HOME-004/DEC-035: [prompt Claude](prompts/CLAUDE_UI_HOME_004_DEPARTMENTS_HR_RECRUITMENT.md) cho Home18069 gọn/có màu/responsive, 9nhóm (KH-KD thật+8placeholder riêng), hai lối vào Nhân sự/Tuyển dụng theo module/quyền thực, phân biệt đang phát triển/chưa cấp quyền. Giữ app switcher/personal/HEAD và quyền hiện có; không cài thêm module, không HR/grant/data import. Nguồn tổ chức cũ đánh dấu lịch sử; status/roadmap cập nhật cùng lượt.
+- Kiểm tài liệu/liên kết/manifest, source workbook trước–sau, snapshot code và git diff --check/workflow. Lượt này chỉ source analysis/prompt/docs, không test Odoo/browser mới, không sửa application/DB/runtime/credential/grant, không stage/commit/push. Next Claude triển khai UI-HOME-004 trên clone, backup/restore verified trước áp dev; không tự thực thi prompt báo cáo.
+
+## CHG-20261110-002 — KD-HEAD-001: HEAD quản lý KH-KD toàn phòng đã áp dev
+
+- Ngày10/11/2026 (Asia/Saigon), thực hiện trực tiếp prompt KD-HEAD-001: role HEAD động theo user/company/phòng; tạo/sửa dự án/WBS/công việc, nháp nhân viên,7typed domain/contract/phụ lục/CRM/gói, tiền/file/report/XLSX và phân công/reviewer có reason/version/audit. Giữ state/bốn mắt/căn cứ đã gửi;4actor khác giữ quyền, không mở admin/pháp lý/toàn V2. [Ma trận và acceptance](demo/KD_HEAD_001_ACCEPTANCE.md), [guide](demo/KD_HEAD_001_USER_GUIDE.md).
+- Clone:211/211 Odoo, HOOT22tests85assertions, native11+15, browser51, HTTP54;6Excel toàn page/cell/type/tổng và revoke/expiry cùng session PASS. Ruff/AST31Python,11XML,4JS.49files3addon hash6061d667e40765433b13a61ad74686462eef047acf08c7817cc72c504ea5fe24 test=seal=applied.
+- Backup045731Z/restore045742 verified586tables295attachment refs122checksums rồi áp18069: workspace20.0.1.9.0/contract20.0.1.3.0; đúng HEAD96legacy inactive+1role+1event. Preservation277table7819oldrow/auth/config/owner và295blob cũ đạt,28audit ACL chuẩn và1assetJS ref mới có journal. Sai lệch hash Decimal→float được đối chiếu SQL/restore độc lập, không sửa số liệu DB. Dev5login51checks0JSerror/6040permission parity PASS; không fixture dev.
+-7CRM+1project thiếu scope giữ chờ đối chiếu; warning markdown2/WindowsGC và giới hạn staff native Send UI được ghi trong acceptance. Business/visual/pilot riêng. Checker finish/check cùng batch; không commit/push.
+
+## CHG-20261110-001 — Prompt HEAD toàn quyền nghiệp vụ KH-KD
+
+- Ngày 10/11/2026 (Asia/Saigon), người dùng yêu cầu Thuỳ Anh/trưởng phòng toàn quyền trong phòng Kinh doanh. DEC-033 ghi yêu cầu; [KD-HEAD-001](prompts/CLAUDE_KD_HEAD_001_DEPARTMENT_FULL_CONTROL.md) giao triển khai clone-test → backup/restore verified → delta HEAD dev18069. Quyền toàn phòng gồm dữ liệu mới, nháp người khác, Project/WBS, điều phối, tiền/file/báo cáo/XLSX; giữ state/audit/bốn mắt, pháp lý và scope. Chưa duyệt V2 cho bốn actor còn lại hoặc cấp admin/grant administration.
+- Đối chiếu source policy hiện hữu, ma trận/V2 và trạng thái CHG014/016; `dev.py status` báo HTTP18069/Postgres lắng nghe. Lượt này chỉ prompt/DEC/status/roadmap; không cấp role/grant, sửa source ứng dụng hoặc DB/runtime, không chạy test business/action/export thật. Kiểm tài liệu/liên kết, diff và snapshot workflow; không commit/push. Next Claude thực thi prompt và bàn giao quyền thực cùng acceptance.
+
+## CHG-20261109-016 — KD-REPORT-UI-002: kế hoạch, preview desktop/mobile và hai mẫu Excel
+
+- Ngày 09/11/2026 (Asia/Saigon); task KD-REPORT-UI-002, `DESIGN_PREVIEW_READY_PENDING_USER_REVIEW`. [Kế hoạch](ui/KD_REPORT_UI_002_REDESIGN_PLAN.md) đánh giá 6 báo cáo, so A/B và đề xuất A, ma trận KPI/chart/cột/ngày/drilldown/Excel, token màu/contrast, filter pending/applied, workbook và lộ trình S0–S5/17 acceptance. [Prompt triển khai](prompts/CLAUDE_KD_REPORT_UI_002_IMPLEMENT.md) là tài liệu chuẩn bị, chưa giao chạy.
+- Artifact local `.local/kd-report-ui002/`: preview HTML tương tác A/B và 6 báo cáo, 12 ảnh desktop/mobile cùng ảnh dialog/chooser/states; hai workbook R01/R05 dữ liệu giả lập, mỗi file Tong_quan/Tong_hop_nhom/Chi_tiet. XLSX typed number/date/text0001, tổng tách currency/basis, gốc/phụ lục/hiệu lực không cộng trùng, màu/filter/freeze/print được kiểm bằng openpyxl; artifact-tool import/render đủ 6 sheet. Renderer làm mất hiển thị số 0 đầu trong PNG, XLSX gốc đã kiểm giữ text; chưa mở Excel desktop/in giấy. Preview dùng fixture khác workbook, không nhận web–file parity đã đạt.
+- Kiểm mới: `dev.py status`, SELECT read-only module20.0.1.8.0; Playwright baseline 6 report × desktop/mobile + 6 vùng bảng (18 ảnh, 0 pageerror), cùng phiên/quyền/bộ lọc; `node .local/kd-report-ui002/verify_preview.cjs` **63 checks PASS/0 JS errors** cho preview; builder/reader XLSX và render checks đạt; kiểm hash ứng dụng, links/artifacts, `git diff --check`, workflow finish/check. Không chạy lại Odoo/HOOT hoặc tải export thật từ dev. Login chỉ tạo session/log kỹ thuật; không ghi nghiệp vụ/đổi account/grant/DB/config/restart/upgrade dev. Preview HTTP riêng localhost18762 chỉ phục vụ file tĩnh; source ứng dụng trước–sau giữ nguyên; không stage/commit/push.
+- Ghi nhận source gaps chưa tái hiện regression: search thu hẹp bảng nhưng KPI/chart chưa tính lại cùng tập; vài sortable header thiếu whitelist; chuyển report áp pending; metadata can_view_money thiếu key; ngày/transport khác thiết kế cũ. R02 vẫn CRM, không thống kê package/attempt; export dùng financial_read, chưa financial_export guard riêng. Giữ nguyên policy/công thức và gate; không mở lại F1–F3 restructure đã sửa. Next người dùng xem thiết kế/mẫu rồi giao S0–S4 trên clone; dev apply, visual/business/pilot riêng.
+
+## CHG-20261109-015 — Prompt lên kế hoạch làm lại giao diện báo cáo và xuất Excel
+
+- Ngày09/11/2026; [KD-REPORT-UI-002 plan](prompts/CLAUDE_KD_REPORT_UI_002_PLAN.md) theo ảnh người dùng: bố cục thoáng, tên tab đủ, token màu, chữ/số rõ, KPI ngắn, bảng cột tách chỉ tiêu, biểu đồ đúng6report, bộ lọc và luồng xuất Excel toàn kết quả có xác nhận phạm vi. Đã đọc source export hiện có, không nhận đang thiếu XLSX. Đầu ra giao Claude: kế hoạch/wireframe/preview, hai mẫu workbook giả3sheet có màu/kiểu ô/filter/freeze và acceptance/prompt code tiếp.
+- Chỉ prompt/status/roadmap; baseline CHG014 hiện20.0.1.8.0, không sửa code/DB/account/quyền/runtime/DEC hoặc commit/push. Kiểm tham chiếu/nội dung/diff/digest và workflow; không chạy Odoo/browser/XLSX export trong lượt này, không nhận đã audit file tải thật hoặc thiết kế đã triển khai. Next Claude làm plan+preview/mẫu local trước khi nhận lệnh code.
+
+## CHG-20261109-014 — KD-PROJECT-RESTRUCTURE-001 S4
+
+- Ngày: 09/11/2026 (Asia/Saigon).
+- Kết quả/test/giới hạn: IMPLEMENTED_VERIFIED_DEV_PENDING_BUSINESS_VISUAL_PILOT. Applied58file tp_kd_workspace20.0.1.8.0 to dev18069 after final185/1850failed0error,HOOT20/78,UI61+extra10+related25+productionpagingBack29,independentpermission110 with explicit runtime assurance. Final tree89c17f28511daceaf3f064faecad6064517756c50de04dcab8d52d827f0df927 test=seal=applied. Freshbackup131132Z/restore131138 verified122files578tables295attachments. Upgrade0error;83tables4529oldrows/account/auth/MFA/passkey/grants/assignments/owner/config/modules retained before-after-upgrade/smoke;295fileshashsizeverified;newbusinessmodels0rows. Dev53checks5existinglogin0JSerror/noUImutation;wrapper25404listener10096PG13900,clone19489stopped/evidencekept. No real-user grants/password/owner changes;14project25CRM investor/package mapping unresolved NULL, legacyowner handoff pending. Guide/9requirements16AT/migration/rollback/actualdevscreenshots documented. Warnings markdown2/WinError5GC retained; Chromium not physicaldevice; transient native reload facets require Favorites; no committed winner-loser race. V2/business/visual/pilot separate; no commit/push. Root tooling baseline unchanged; Next user walkthrough and approved mapping/grant delta only.
+- Không commit/push; trạng thái dev18069 theo kết quả chặng trên; V2/người thật/business/pilot riêng.
+
+
+## CHG-20261109-013 — KD-PROJECT-RESTRUCTURE-001 S3
+
+- Ngày: 09/11/2026 (Asia/Saigon).
+- Kết quả/test/giới hạn: S3_NATIVE_VERIFIED_TEST_ONLY. Hai menu/action/landing/detail native dung chung project ID; WBS/task va7nguon quan tri khac muc dich;9yeu cau/model/capability/mapping/list/detail wired. Final185/185 Odoo0failed0error, HOOT20/78, UI61/extra10, pagingBack29/29production, related25;20XML10JS/Ruff22/patchcheck. Audit110assertion PASS with final runtime comparison after public-token correction and native Back hook. Seal89c17f28511daceaf3f064faecad6064517756c50de04dcab8d52d827f0df927,58file private workspace. Root addon/dev20.0.1.7.0 still unchanged; next S4 fresh backup verified, gated apply/preservation/5login read-only. No real grants/owners/V2 approval/commit/push.
+- Không commit/push; dev18069 chưa đổi; V2/người thật/business/pilot riêng.
+
+
+## CHG-20261109-012 — KD-PROJECT-RESTRUCTURE-001 S2
+
+- Ngày: 09/11/2026 (Asia/Saigon).
+- Kết quả/test/giới hạn: S2_BACKEND_VERIFIED_TEST_ONLY. Model project lifecycle/investor/version; package/attempts; participation roles; separate package_total/company_offer/company_share; append-only project/task history, capability commands WBS/assignment/progress implemented only .local/kd-project-restructure001/workspace/custom_addons. Targeted8/8 and full5addon176/176 (0failed/0error). Unknown/0, A/B counterparty, 2packages/attempts, submitted note snapshot, stale/retry/reopen denial, task vs money verified. Initial ACL operation typo and wizard reason required corrected before final tests. Migration automatic schema only; 25CRM package/investor unresolved kept NULL, no inferred data/owner/grant delta. Mapping apply/rollback non-empty and security independent audit still pending; no dev apply. Next S3 native2landings/lists/details and browser.
+- Không commit/push; dev18069 chưa đổi; V2/người thật/business/pilot riêng.
+
+
+## CHG-20261109-011 — KD-PROJECT-RESTRUCTURE-001 S1
+
+- Ngày: 09/11/2026 (Asia/Saigon).
+- Kết quả/test/giới hạn: S1_TECHNICAL_VERIFIED_TEST_ONLY_PENDING_INDEPENDENT_AUDIT. F1-F3 tái hiện 3 failed/4 trước sửa; sau sửa 4/4 và hồi quy targeted12/12, full5addon168/168 (0failed/0error). HTTP native mới17assertion đạt: PDF/download đọc đúng quyền; update/post/upload pending/delete/thumbnail submitted bị chặn, response không chứa marker bí mật. Sửa chỉ source riêng models/native_content_security.py và controllers/native_security.py cùng test. Regression ban đầu2error automatic creation chatter đã sửa bằng mail_create_nolog trong scoped create; log markdown2/WinError5 còn. Chưa đủ hậu kiểm độc lập/race/revoke HTTP nên chưa đóng audit hoặc áp dev. Next S2 dữ liệu/action/guard trên test, giữ đường file/chatter mới đóng.
+- Không commit/push; dev18069 chưa đổi; V2/người thật/business/pilot riêng.
+
+
+## CHG-20261109-010 — KD-PROJECT-RESTRUCTURE-001 S0
+
+- Ngày: 09/11/2026 (Asia/Saigon).
+- Kết quả/test/giới hạn: S0_VERIFIED_TEST_ONLY. Inventory/design/16 AT trước code tại docs/ui/KD_PROJECT_RESTRUCTURE_001_DESIGN.md trong workspace riêng .local/kd-project-restructure001/workspace. Snapshot/restore exact 578 bảng/295 attachment; dry-run 14 project/25 CRM, không suy investor/gói/kết quả. Baseline Odoo 164/164 (0 failed/0 errors), có markdown2 warning và WinError5 filestore GC. Root checker CHG009 đạt, không checkpoint ngoài scope. Dev PID/source/quyền giữ. Next S1 tái hiện và sửa F1-F3 trên clone19489.
+- Không commit/push; dev18069 chưa đổi; V2/người thật/business/pilot riêng.
+
+
 Mỗi lượt thay đổi code hoặc quyết định kiến trúc ghi một mục ngắn. Không ghi credential, dữ liệu thật hoặc log chứa bí mật.
+
+## CHG-20261109-009 — KD-REPORT-001: Tách Trung tâm Báo cáo KH-KD (OWL native) và xuất Excel an toàn
+
+- Ngày 09/11/2026; theo yêu cầu người dùng và prompt [CLAUDE_KD_REPORT_001_SEPARATE_REPORT_CENTER.md](prompts/CLAUDE_KD_REPORT_001_SEPARATE_REPORT_CENTER.md), tách Báo cáo KH-KD thành phân hệ riêng biệt (`tp.kd.report.center`, `js_class="tp_kd_report_center"`), nâng cấp `tp_kd_workspace` 20.0.1.7.0 trên dev18069 (`tp_tanphat_dev`). Hai menu độc lập: Tổng quan (`action_overview`) phục vụ theo dõi hằng ngày, Báo cáo KH-KD (`action_reports`) phục vụ tổng hợp kỳ, đối chiếu và xuất Excel.
+- Xây dựng đủ 6 nhóm báo cáo R01–R06: R01 Hợp đồng (không cộng trùng phụ lục, chỉ tính bản hiệu lực); R02 Cơ hội/thầu (>100 leads, phân trang 10/20/50/100, lọc unassigned); R03 Đối chiếu 4 chặng Kế hoạch – Sản lượng – Nghiệm thu – Đề nghị thanh toán (không cộng dồn chéo); R04 Giao khoán cấp 1 và cấp 2 (tách biệt tiền khoán con khỏi cha, cảnh báo vượt khoán); R05 10 nguồn hồ sơ và trách nhiệm/SLA; R06 Năng lực, chứng chỉ và nghĩa vụ (tách cá nhân/tổ chức, ngưỡng cảnh báo 30 ngày, đếm chính xác).
+- Đầy đủ tính năng báo cáo chuyên nghiệp: bộ lọc kỳ/dự án/người phụ trách, pending filter notice trước khi Apply, drill-down mở bản ghi nguồn Odoo, phân trang 10/20/50/100, nhóm dữ liệu và tổng nhóm. Tích hợp controller `/tp_kd/report/export` xuất Excel định dạng chuẩn OpenPyXL với công thức chống injection ký tự rủi ro. Cơ chế bảo mật tiền: tài khoản không có quyền tài chính (`fin_pids` rỗng) được che toàn bộ số tiền trên giao diện, summary cards và metadata Excel.
+- Kiểm thử & Bảo toàn: HOOT tests 14/14 PASS (57 assertions); Odoo tests 164/164 PASS; Clone Playwright 109/109 PASS; Dev Playwright 105/105 PASS. Hiệu năng dưới 1.5s cho toàn bộ 6 báo cáo và xuất Excel. Backup snapshot verified trước apply và restore kiểm chứng thành công vào `tp_tanphat_kdreport001_backup_110322` (577 bảng, 295 attachments). Bảo toàn dev database sau apply: 37 bảng/3.467 dòng (chính xác +1 dòng `ir_access` cho model mới, 0 dòng nghiệp vụ thay đổi). Dev server running trên port 18069.
+- Tài liệu bàn giao: [User Guide](demo/KD_REPORT_001_USER_GUIDE.md), [Acceptance Report](demo/KD_REPORT_001_ACCEPTANCE.md), 86 ảnh kiểm chứng tại `.local/kd-report001/shots/`, 16 file Excel tại `.local/kd-report001/excel/`. Không commit/push.
+
+## CHG-20261109-008 — Prompt tách Quản lý/Quản trị dự án và hoàn thiện các ý sau họp
+
+- Ngày09/11/2026; theo yêu cầu trực tiếp, ghi DEC-032 tách hai khu vực chức năng cùng project ID và soạn [prompt KD-PROJECT-RESTRUCTURE-001](prompts/CLAUDE_KD_PROJECT_RESTRUCTURE_001.md): sidebar/action/landing/detail riêng,9ý và2làm rõ, dữ liệu project/gói/đối tác/giá/tình trạng-note, mapping/migration/rollback/quyền,16AT và chặng S0–S4. Bao gồm dependency F1–F3, owner/reviewer mẫu cũ và hướng dẫn nút/state; đích18069 qua test/audit/backup restore, không tự duyệt V2/TASK-001/grant người thật hoặc BASE/ký/hiệu lực/hạch toán.
+- Áp dụng skill delivery/Ponytail/frontend-design để chuẩn bị prompt; subagent lỗi model nên tự kiểm tài liệu. Cập nhật status/roadmap/ghi chú phân tích; kiểm link/AT/scope/diff và digest384file trước–sau: có delta đồng thời scripts/kd_report001.py ngoài batch,383file còn lại giữ; không nhận toàn bộ code bất biến hoặc kiểm hộ delta đó. Phiên này không sửa application/DB/account/quyền/runtime, không chạy Odoo/browser tests cho lượt tài liệu, không commit/push. Checkpoint công việc khác không finish thay; Next Claude đối chiếu bàn giao report/source mới rồi thực thi đúng nguồn/test và bàn giao từng chặng.
+
+## CHG-20261109-007 — Phân tích yêu cầu KH-KD sau cuộc họp
+
+- Ngày09/11/2026; ghi9ý và2trả lời trực tiếp: Người phụ trách trước Hạn nộp, đối tác nhiều loại có vai trò. [Phân tích](architecture/TP_KD_MEETING_REFINEMENT_20261109.md) tách yêu cầu ghi nhận với thiết kế đề xuất: project/gói, chủ đầu tư khác bên ký, lifecycle khác thầu/rà soát, note có lịch sử, giá gói khác doanh thu/giá chào/hợp đồng, quản lý thực hiện khác quản trị KH-KD. Đối chiếu source/bridge/guard tiền, chưa duyệt model/state mới.
+- Cập nhật status/roadmap; kiểm link/nội dung/diff và digest app/tooling trước–sau, không Odoo test cho tài liệu. Không code/DB/account/quyền/runtime/DEC/commit/push. F1–F3/V2/gate cũ giữ; checkpoint công việc khác không finish thay. Next đặc tả/mapping/acceptance trước prompt code.
+
+## CHG-20261109-006 — Kiểm chứng phản ánh HEAD/SUPPORT lệch tác vụ
+
+- Ngày09/11/2026; kiểm UI đăng nhập riêng và RPC chỉ đọc trên dev18069: SUPPORT tạo CRM/credential, HEAD chỉ CRM; cả hai không được create/write/unlink Project/Contract. Clone source ba addon khớp dev,14thử ghi/xóa và xác nhận wizard hợp đồng bị AccessError; rollback và đối chiếu giữ bản ghi. [Kết quả, nguyên nhân preset và giới hạn](reviews/KD_ROLE_UI_VERIFICATION_20261109.md). Chưa tái hiện SUPPORT lưu Project/Contract theo phản ánh; xác nhận HEAD hiện thiếu quyền chuẩn bị hồ sơ so với hướng trưởng ban quản lý toàn Ban.
+- Evidence JSON/támảnh private ignored; một lỗi console encoding sau khi ghi JSON đã đọc lại, cảnh báo markdown2 giữ. Không sửa application/quyền/account/password/dữ liệu dev hoặc runtime, không commit/push. V2 vẫn chờ người dùng duyệt, chưa prompt triển khai; audit F1–F3 và các gap khác giữ mở. Không finish checkpoint công việc khác; kiểm diff/link/JSON giới hạn trong batch này.
+
+## CHG-20261109-005 — Đề xuất V2 phân quyền KH-KD, chờ người dùng duyệt
+
+- Ngày09/11/2026, Asia/Saigon; chỉ thiết kế theo yêu cầu, chưa viết prompt triển khai mới. Đọc lại phân công S02 snapshot/registry và workflow KD/BIZ002; NAS không truy cập được, không nhận bản trích là văn bản nhân sự hiện hành. [Đề xuất V2](security/KD_ROLE_POLICY_V2_PROPOSAL.md) có ma trận xem/ghi/tiền/tài liệu/Project–WBS/nhập-xuất/review/phân công và ví dụ5vai, tách thẩm quyền BASE/ký/kế toán và IT. HEAD mở phạm vi quản lý nghiệp vụ đề xuất, không nhận quyền đã cấp.
+- Cập nhật status/roadmap và link đề xuất; không đổi ma trận runtime hoặc DEC thành đã chấp thuận. Kiểm link/nội dung/diff và source không đổi trong lượt; không cần test Odoo cho tài liệu. F1–F3 audit004 vẫn mở. Không sửa ứng dụng/database/quyền/password, không commit/push. Checkpoint công việc khác giữ, không finish thay batch code chưa bàn giao. Next user duyệt ma trận rồi mới viết prompt V2.
+
+## CHG-20261109-004 — Hậu kiểm KD-ACCESS-002: ba lỗi quyền native cần correction
+
+- Ngày09/11/2026, Asia/Saigon; kiểm source/runtime và chạy lại Odoo157/157, quyền dev1426/clone1426,274 assertion nghiệp vụ rollback + kiểm bảo toàn account/rights, browser dev112 và native flows clone30, source clone=seal=dev. Không sửa application code/core, không cấp quyền/password hay ghi nghiệp vụ trên dev; không restart/upgrade dev, không commit/push.
+- Các kiểm tra native bổ sung xác nhận3lỗi P1: preview PDF lộ nội dung khi thiếu quyền tiền; upload/delete thay file trên CRM submitted qua nhánh nâng quyền; update chatter trả nội dung đang bị chặn đọc. Hạ kết luận KD-ACCESS-002 thành `AUDIT_FAILED_SECURITY_CORRECTION_REQUIRED`, A06 chưa đạt. [Audit](reviews/KD_ACCESS_002_INDEPENDENT_AUDIT.md), [prompt sửa](prompts/CLAUDE_KD_ACCESS_002_SECURITY_CORRECTION.md); evidence riêng `.local/kd-access002-audit-20261109/`. Cập nhật status/roadmap/acceptance/ma trận và lưu giới hạn Project/WBS, phân loại tài liệu, Q2/business/pilot. Không sửa lịch sử test CHG003 thành kết quả mới.
+- Lượt Odoo có PermissionError khi dọn filestore clone và cảnh báo markdown2 dù157test0fail/error; chưa thay filesystem ACL. Không chạy lại HOOT/backup/restore/full rollback, số cũ chỉ là bằng chứng triển khai. Subagent không chạy được do lỗi model; không tính là review. Resume checkpoint có code/docs khớp baseline003, giữ checkpoint gốc; handoff chỉ tài liệu audit. Cuối lượt có delta đồng thời scripts/kd_report001.py ngoài scope; không finish/check PASS thay batch đó, giữ checkpoint và state cũ. Next sửa F1–F3 trên test cô lập, hậu kiểm lại trước áp18069 hoặc mở Project/WBS.
+
+## CHG-20261109-003 — KD-ACCESS-002: quyền KH-KD và CRM scoped trên dev18069
+
+- Ngày09/11/2026, Asia/Saigon; user giao thực thi toàn prompt, chờ navbar/login bàn giao rồi dùng checkpoint riêng và áp18069 sau clone/backup. Workspace20.0.1.6.0/Home20.0.1.4.1;5account nhận42grant cơ hội,1native team/5membership và export implication. Reader8/4/4/4/2 và grant/owner/reviewer cũ giữ; không sales/admin/manager. Native `sale_team_id`5user tự tính theo team mới, journal/test rollback; các cột tài khoản nội dung/bảo mật khác/password/TOTP/config giữ, tách dấu vết ORM write_uid/write_date. Bỏ nhãn công ty ở navbar, không đổi tên công ty trong data.
+- CRM owner-only, prepare/submit tách; scope project/company và pre-project owner/team/đơn vị/capability; submitted freeze;6money/derived field/domain/order/group/export/related guard, money wizard kiểm lại khi lưu; attachment/chatter parent+financial, direct/token/public của actor scoped không bypass, write/file/submit row lock. Form sạch refresh5giây, dirty input giữ và backend kiểm ngay. Trước sửa tái hiện prepare-only submit/native-money leak trên clone rồi rollback.
+- Clone Odoo157/157, quyền1426, mutation275rollback, browser175/5context/desktop-mobile, native write30, HOOT11+25; exact rights/source rollback/reapply và idempotency đạt. Dev1426quyền/112browser/4auth,0error, chỉ đọc nghiệp vụ. Backup122file/checksum/restore576bảng/295refs; exact17file apply/233file addon khác nguyên. Preservation244bảng/6094dòng ngoài delta,282nonasset attachments/295reference/116blob unique và password/config đạt. Tool hash default binding cũ sửa+rerun; apply đầu registry cũ làm cấp quyền rollback0grant, recovery tiến trình mới đúng42grant sau kiểm source/upgrade; không restore DB đè writer. Ruff/XML4/JS/diff/workflow checker ở handoff.
+- [Ma trận](security/KD_ACCESS_002_ROLE_MATRIX.md), [inventory](security/KD_ACCESS_002_INVENTORY.md), [acceptance/rollback](demo/KD_ACCESS_002_ACCEPTANCE.md), [guide5vai](demo/KD_ACCESS_002_USER_GUIDE.md), [ảnh](../.local/kd-access002/comparison/index.html). Clone19289 dừng, dev18069/PG55432 chạy. Project/WBS scoped write chưa có, [follow-up](prompts/CLAUDE_KD_SCOPED_PROJECT_TASK_FOLLOWUP.md); file/chatter coarse, report hiện dùng Tổng quan. Chưa import CSV wizard/Safari/thiết bị thật/multi-company E2E; spawn lỗi model nên chưa audit độc lập, business/Q2/pilot riêng. Không commit/push. Next người dùng kiểm guide/ảnh5vai; chỉ mở follow-up khi được giao.
+
+## CHG-20261109-002 — Navbar và bộ xác thực native mới trên dev18069
+
+- Ngày09/11/2026, Asia/Saigon; người dùng giao thực thi toàn UI-SHELL-AUTH-001, clone/backup verified/áp18069; ngoại lệ vai trò giới hạn task. Home20.0.1.4.0/Login20.0.1.1.0: navbar56px navy/wordmark/app/context/user; login hai vùng, chooser/TOTP/signup/reset cùng nhận diện, mobile/hover/focus/motion180ms/reduced-motion. Giữ native NavBar/adapt/More/section/systray/Home/dirty guard và logout POST+CSRF/service-worker/PWA. Không model/controller/API/quyền/nghiệp vụ mới; Login manifest bỏ data ghi auth policy, TOTP cancel về `/web/login`.
+- Clone owned19189/source/config/filestore riêng: Odoo62/62 (Home12/Login5/Workspace45), browser120, failure15, zoom200% thật5, bổ sung18, passkey virtual authenticator6bước; TOTP/trusted-device/session/CSRF/deep-link/native form đạt. Policy clone khác giữ absent-install/disabled-upgrade. Source cuối đã chỉnh placeholder4,94:1, test=seal=dev. Dev browser110+bổ sung18/sáu actor,0console/pageerror, chỉ đọc/nghiệp vụ. Timeout selector/animation/session-ready trong harness được sửa/chạy lại; không lấy report cũ làm gate.
+- Backup cuối `backup-pre-apply-20261109T025630Z`:122file checksum/576bảng/295reference, restore owned verified; apply chỉ hai addon rc0/0error. Sau smoke267bảng/8.144dòng,282attachment ngoài assets, config/account/password/quyền/HomeAction giữ;295reference/116blob unique checksum+size và blob cũ còn;213file addon khác nguyên. Một native profile writer trong apply đầu thay5ảnh avatar đã được phát hiện/đối chiếu/giữ, backup cuối chứa ảnh mới; không restore DB đè writer. Dev18948/PG55432 listener13900 chạy, clone dừng, DB/evidence giữ.
+- [Thiết kế](ui/UI_SHELL_AUTH_001_DESIGN.md), [acceptance A01–A12](demo/UI_SHELL_AUTH_001_ACCEPTANCE.md), [guide5bước/rollback](demo/UI_SHELL_AUTH_001_USER_GUIDE.md), [ảnh trước–sau](../.local/ui-shell-auth001/comparison/index.html), scripts `ui_shell_auth001*`; Ruff/JS/XML8/diff/workflow checker. Không React/core/dev.py/commit/push. Subagent không chạy được do model kế thừa: tự kiểm, visual acceptance/audit độc lập/business/pilot vẫn riêng. Chưa thiết bị thật/Safari/scoped PWA/full multi-company/password-manager UI; OAuth uninstalled, signup/reset giữ native GET/form không gửi mail test. Next người dùng Ctrl+F5/kiểm5bước và phản hồi thiết kế.
+
+## CHG-20261109-001 — Prompt làm lại navbar và bộ giao diện xác thực native
+
+- Ngày09/11/2026, Asia/Saigon; phiên điều phối soạn [UI-SHELL-AUTH-001](prompts/CLAUDE_UI_SHELL_AUTH_001_NAVBAR_LOGIN_LOGOUT.md) theo ba ảnh: navbar navy đồng bộ sidebar, login hai vùng, chooser/TOTP/logout cùng nhận diện, mobile/hover/focus/motion. Skill frontend-design và delivery của repo; A01–A12, clone/test/backup/apply18069 và evidence trước–sau cho Claude. Chưa sửa giao diện hoặc triển khai.
+- Đối chiếu native NavBar/UserSwitch/UserMenu/templates và addon: login custom còn uninstalled trên dev; data lần cài mới có tác dụng đổi signup/reset policy, TOTP cancel còn `/work/`. Prompt xử lý bảo toàn config và đường native, giữ logout POST/CSRF/service-worker/PWA, nguồn remembered-user native và quyền/dữ liệu hiện hữu; không mở business gate hoặc nghiệm thu AUTH-002 lịch sử.
+- Chỉ đọc source/runtime/SELECT và sửa prompt/status/changelog/roadmap; không application code, DB mutation, setup/upgrade/seed/restart, tài khoản/quyền hoặc commit/push. Kiểm nội dung/link/fence/ID, source digest bằng checkpoint, diff và workflow finish/check; không application tests cho tài liệu. Spawn subagent lỗi model kế thừa nên không có audit độc lập. Next: giao Claude prompt, nhận ảnh/diff/log rồi audit delta và visual feedback.
+
+## CHG-20261108-005 — Word trình bày và hướng dẫn sử dụng KH-KD với ảnh giao diện thật
+
+- Ngày08/11/2026, Asia/Saigon; tạo [Word local](../.local/khkd-word-manual/TANPHAT_ONE_Huong_dan_trinh_bay_va_su_dung_KHKD.docx)29trang/25hình, kịch bản20phút, luồng/phân quyền/phạm vi năm vai trò, từng nhóm hồ sơ, thêm/sửa/gửi/trả/gửi lại, bộ lọc/phân trang, tài khoản/mobile, xóa và lỗi thường gặp. Danh tính/login nằm ignored `.local/`, không mật khẩu, không nhân sự vào tracked fixture. Dùng skills documents, playwright-cli và delivery của repo; giữ native Odoo, không sửa application code hoặc quyền. Không coi dữ liệu tổng hợp hoặc quyền kỹ thuật là phân công thật/duyệt ký/pilot.
+- Dev36ảnh mới/năm phiên vai trò+actor CRM kỹ thuật,0pageerror; clone owned19089 minh họa credential draft→in_review→returned→draft→in_review/version6 bằng hai tài khoản. Ghi rõ Xóa/Nhân bản đang ẩn ở typed dossier/TP Contracts, dấu X là discard. Một nháp thử riêng trên clone được xóa qua backend guarded, hồ sơ có lịch sử giữ; dev chỉ đọc/mở-hủy, không seed. Evidence/scripts/Word private `.local/khkd-word-manual/`.
+- Khởi động PG hiện hữu sau crash recovery và start dev bằng helper có sẵn, không setup/upgrade/reset/config; clone19089 dừng cuối lượt, dev18069/PG55432 chạy. Code digest306file bằng checkpoint; renderer thường thiếu LibreOffice, dùng Word COM chỉ tài liệu task-owned rồi rasterize bằng renderer đóng gói;29trang kiểm ảnh,25inline/no title border/password scan đạt. Kiểm link/ignore/diff/workflow finish/check, không test lại cả ứng dụng cho lượt tài liệu, không commit/push. Spawn subagent không khả dụng do model kế thừa, không gọi kiểm này là audit độc lập. Next người dùng tập trình bày từ trang3, đối chiếu quyền trang6 và ghi góp ý; các gate nghiệp vụ/audit UI/Q2/pilot và gap CRM/handoff hỗ trợ giữ riêng.
+
+## CHG-20261108-004 — Thêm Tài khoản trong thanh bên KH-KD
+
+- Ngày08/11/2026, Asia/Saigon; theo yêu cầu trực tiếp và ảnh, thêm **Tài khoản** trên **Tùy chọn hiển thị**. Workspace20.0.1.5.2 reuse native `preferencesItem()` cho đúng user; profile ảnh/tên/email/điện thoại/tùy chọn/lịch/bảo mật, giữ style/rail/keyboard và đóng mobile drawer trước modal. Không backend/security/API/schema hoặc password/grant mới; không commit/push. [Cách dùng và acceptance](demo/KD_ACCOUNT_001_ACCEPTANCE.md); tooling clone/backup/apply tái sử dụng có exact hash/fresh backup/baseline guard, lỗi browser redact password.
+- Clone19089 restore576table/294reference; Odoo45/45, browser107/6actor/0error ở lượt cuối, save/restore phone và dirty dossier chỉ clone. Backup verified116file rồi apply riêng workspace lên18069 rc0/0error/changed_tables{}; dev browser103/6actor/0error chỉ mở/hủy. Sau browser37table3.416row/282nonassetattachment/93module/5group tables nguyên,294reference/110blob checksum/kích thước đạt,181file addon khác nguyên và source=seal; clone19089 dừng, dev18069/PG55432 chạy. Subagent review source/tooling không còn finding; native session transient, lỗi catch harness và thử chặn serviceworker ở lượt thăm dò không là gate. Giữ audit UI cũ/business/Q2/pilot riêng, chưa thiết bị thật/rollback dev. Ruff/JS/XML/diff/workflow và status/roadmap/handoff cùng lượt; Next người dùng Ctrl+F5 kiểm Tài khoản.
+
+## CHG-20261108-003 — Provision năm tài khoản KH-KD trên dev sau clone và backup
+
+- Bổ sung60kiểm file HTTP/RPC trên clone cho5role: normal/revoked/expired/unassigned, hai URL binary/attachment và direct RPC; checksum actor đúng quyền, support/ngoài scope/mất quyền bị chặn; quyền restore trong finally. File probe chỉ clone, journal private, không business-write dev.
+
+- Ngày08/11/2026, Asia/Saigon; KD-ACCESS-001, thực hiện prompt theo yêu cầu trực tiếp, không commit/push. Clone18989/source riêng rồi backup verified112file/576table/269attachmentreference; áp riêng `tp_kd_workspace`20.0.1.5.1 và5user/22reader assignment/64project grant/258typed grant lên `tp_tanphat_dev`18069/55432. Password riêng dev/clone, không reset/adopt account mẫu, gửi thư hoặc tạo HR employee; danh tính/credential/delta private ACL hạn chế, tracked chỉ role alias.
+- Security nhỏ: nhóm scoped staff implies TP reader, hai restriction đọc Project/Task theo active assignment/company; giữ actor cũ. CRM/cơ hội giữ chưa cấp vì prepare gộp khai báo nộp và thiếu owner/tiền guard; không manager/all-leads hoặc mở project-create/WBS-write. Workflow/schema/API/UI assets giữ. [Acceptance](demo/KD_ACCESS_001_ACCEPTANCE.md), [guide](demo/KD_ACCESS_001_USER_GUIDE.md), native workflow/status/roadmap cập nhật; tooling `scripts/kd_access001*` reuse clone/backup/ORM hiện có, rollback archive/revoke exact delta.
+- Test cuối: Odoo118/118 (45workspace+73contract), clone/dev audit1426 mỗi môi trường, mutation/rollback clone276, browser98 mỗi môi trường/5session/25ảnh/0error. Ca lỗi export test đầu và browser timeout được sửa/chạy lại, không dùng lượt fail để apply. Dev upgrade rc0/0error/changed_tables{};93table4.165→4.574row/0oldmissing-changed ngoài write metadata; account/password/group/grant cũ giữ nội bộ,106unique blob/269reference/source/module registry giữ đúng đối chiếu.5welcome task+35personal stage+5relation do Odoo hooks giống clone, journal và giữ, không tính hồ sơ KH-KD. Normalize riêng5timezone sau first-login alias, password giữ. Ruff/JS/XML/diff/workflow checker; không React/core. Tự kiểm, subagent lỗi model; audit độc lập/business/Q2/pilot riêng. Next: người dùng đổi5vai theo guide; CRM còn gap rõ.
+
+## CHG-20261108-002 — Kiểm kê tài khoản KH-KD và prompt phân quyền năm vai trò
+
+- Ngày08/11/2026, Asia/Saigon; đáp ứng yêu cầu kiểm tra tài khoản riêng cho năm nhân sự và viết prompt nếu thiếu. SELECT read-only trên dev `tp_tanphat_dev`/55432 xác nhận20user, bốn actor KH-KD tổng hợp, chưa có năm login đề xuất; actor mẫu tên gần không được coi là danh tính nhân sự thực. Không tạo/đổi account, password, group, assignment/grant hoặc dữ liệu nghiệp vụ.
+- Thêm [KD-ACCESS-001](prompts/CLAUDE_KD_ACCESS_001_STAFF_ACCOUNTS.md): ma trận năm role, quyền tiền/capability/owner/reviewer riêng, scope minh họa có provenance, không copy quyền quản trị fixture; clone/test/backup rồi áp delta18069, credential private/idempotency/rollback và hướng dẫn đăng nhập. Mapping nhân sự và evidence chỉ lưu ignored `.local/kd-access001/`, không fixture tên thật vào Git; phân công dev không là bổ nhiệm thực tế hoặc đóng Q2/pilot. Status/roadmap cập nhật, UI audit pending giữ riêng.
+- Kiểm source/caller, link/fence/mapping/ignore/digest/diff và workflow finish/check. Không application test vì không sửa app; không restart/upgrade/seed/commit/push. Subagent lỗi model kế thừa, tự kiểm tài liệu, không gọi audit độc lập. Next: Claude thực hiện prompt, bàn giao5account/quyền thực tế và cách đổi vai sau kiểm chứng dev.
+
+## CHG-20261108-001 — Tổng hợp nghiệp vụ KH-KD, vai trò và thông tin còn thiếu
+
+- Ngày08/11/2026, Asia/Saigon; theo yêu cầu người dùng phân tích lại tài liệu đã gửi, thêm [bản tổng hợp có căn cứ](architecture/TP_KD_BUSINESS_RECAP_AND_GAPS.md):4mảng/8chặng vận hành,5vị trí theo phân công tháng4/2026, bên phối hợp, dữ liệu/nguyên tắc đã có và gap theo Q1–Q14. Không đổi workflow master/DEC hoặc coi đề xuất/fixture là bổ nhiệm quyền thật. Nêu rõ NAS chưa truy cập được, nhân sự hiện hành cần xác nhận và PKH snapshot khác bản tham khảo sau; không đưa dữ liệu nhân sự thô vào Git.
+- Đọc lại S01/S02 extract và ảnh phân công;5hash local sources khớp manifest lịch sử, không chạy macro/refresh link hoặc import. Link/fence/diff/digest và workflow finish/check; không sửa app hoặc chạy application test, không DB/runtime/commit/push. Bàn giao UI KD-UI-007 giữ pending audit/visual/business/pilot riêng. Next nghiệp vụ: cập nhật phân công/quyền và kiểm2–3chuỗi hồ sơ thực tế khử dữ liệu, ghi owner/evidence/kết luận/gap.
+
+## CHG-20261107-012 — Triển khai tất cả bảng KH-KD: lọc, phân trang và trạng thái
+
+- Ngày07/11/2026, Asia/Saigon; KD-UI-007 theo yêu cầu trực tiếp thực hiện đủ [prompt](prompts/CLAUDE_KD_UI_007_ALL_TABLES_FILTERS_STATUS.md), clone-test rồi áp18069; quyền triển khai riêng cho lượt này. Native `tp_kd_workspace`20.0.1.5.0:36resolvedview/41tablepositions (15list+26relation), đủ11nhóm hồ sơ +Tổng quan/Báo cáo/smart/dialog/history/audit/snapshot. Shared SearchModel/filter/facet thật, server10/20/50/100/default20/prefs riêng/grouped, relation toàncurrentIds và dirty guard; badge semantic/returned không đỏ cả dòng, ngày có năm, mobile search full row. Giữ sidebar/Tổng quan/controller/version/save/beacon/quyền và businessdata; backend chỉ PAGE_MAX50→100 có test, MERGE_MAX500 giữ. Ngoại lệ cấu trúc10nguồn/preview12plan/5credential ghi rõ và có drilldown; [inventory](ui/KD_UI_007_TABLE_INVENTORY.md), [design](ui/KD_UI_007_DESIGN.md), [acceptance](demo/KD_UI_007_ACCEPTANCE.md), [guide](demo/KD_UI_007_USER_GUIDE.md). Thay hướng4màn KD-UI-006; chưa nghiệm thu mockup.
+- Kiểm thực source cuối clone18889: Odoo117/117 (44workspace+73contract, log `20261107T103648592721Z`), HOOT11/40assertions, UI353, hồi quy332, zoom thật24, race/error/recovery3;0failure/error trong kết quả cuối; Ruff/nodecheck/XML/assets và157XMLpresentationchanges/0unexpected đạt. Đã mở ảnh từng nhóm và sửa clipping nhãn/mobile search thật; các lượt timeout/lỗi trước được chạy lại, không dùng gate fail để apply. Backup `backup-pre-apply-20261107T104300Z`112file/576table/269blob verified; seal exacthash rồi apply riêng workspace rc0/0error/`changed_tables {}`, SQL installed20.0.1.5.0, dev18069 restart wrapper16896/listener20112. Dev chỉ đọc verify329 +regression325/0error;63table/3.602row gồm history, quyền/accounts/modules257nonassetattachments/269blob/181otheraddonfiles giữ; PG/clone khác PID giữ. Ảnh dev-before/dev-verify cùng actor/dataset/viewport; evidence private `.local/kd-ui007/`, rollback delta giữ. Workflow finish/check và diff cuối lượt.
+- Nghiệp vụ/quyền/API/schema không đổi; không sửa core/React, không fixture/cleanup/devbusinesswrite/commit/push. Đã triển khai và tự kiểm kỹ thuật, multi-agent lỗi model nên không gọi audit độc lập; Chromium/emulation chưa Safari/thiết bị thật. Visual acceptance/user, business/Q2/G7/pilot riêng. Next: Ctrl+F5, kiểm5bước theo guide và phản hồi thị giác/audit độc lập.
+
+## CHG-20261107-011 — Prompt bộ lọc, số dòng và màu cho mọi bảng KH-KD
+
+- Ngày07/11/2026, Asia/Saigon; KD-UI-007 theo phản hồi3ảnh và yêu cầu người dùng. Thêm [prompt Claude](prompts/CLAUDE_KD_UI_007_ALL_TABLES_FILTERS_STATUS.md): inventory toàn workspace/list/form/x2many/report, toolbar/filter native dễ thấy,10/20/50/100record/trang, màu trạng thái/action có ngữ nghĩa, ảnh thật từng tab trước–sau; clone/test/backup trước áp18069. Hướng mới thay phạm vi4màn KD-UI-006, giữ mockup và chưa xác nhận visual acceptance.
+- Source read xác nhận search views typed có filter, toolbar chỉ density/reset, prefs OWL10/20/50 và backend PAGE_MAX50/MERGE_MAX500; prompt xử lý tích hợp limit100 có test, giữ nhóm/unsaved/context/quyền/công thức. Không đổi app/DB/runtime hoặc làm UI trong lượt điều phối này. Kiểm link/fence/ID/diff/digest và workflow finish/check; không application test vì chỉ tài liệu; multi-agent lỗi model, tự kiểm tài liệu. Không commit/push. Next: Claude thực thi KD-UI-007, bàn giao đủ bảng thay vì chỉ hai list.
+
+## CHG-20261107-010 — Áp dụng bộ công cụ và skill AI vào dự án
+
+- Ngày07/11/2026, Asia/Saigon; AI-TOOLING-001 theo yêu cầu người dùng. Thêm [skill dự án](../.agents/skills/tanphat-odoo-delivery/SKILL.md), metadata, Claude entrypoint/adapter, [playbook](AI_TOOLING_PLAYBOOK.md) có revision/nguồn và lệnh; AGENTS/workflow liên kết cùng quy tắc; gitignore chỉ mở đúng skill đã review. Cài skill Codex Playwright CLI/Ponytail/Ponytail Review/Anthropic webapp-testing bằng helper pin revision, không cài hooks hoặc thay core/business. OmniRoute là hướng adapter/provider đề xuất, chưa tích hợp runtime.
+- Kiểm thực tế: PlaywrightCLI0.1.23 login18069 chỉ đọc desktop1440/mobile390/input/submit visible/nooverflow/toggle mật khẩu rỗng đạt,0pageerror/0consolewarning-error, emulation reduced motion hoạt động; không đăng nhập/submit, phiên đã đóng. Graphify0.9.101 local AST150code/1.547node/3.039edge, query seed/treeHTML đạt; không semantic/cloud/DBscan; ghi rõ thiếu XML/SCSS/ORM động. Hai skill dự án validate đạt; kiểm link/ignore/diff, hash246file addon+mockup và digest296file nguyên, PID18069/55432 giữ; workflow finish/check. Không Odoo suite vì không sửa app. Multi-agent review không khả dụng do lỗi model kế thừa; chỉ self-review, không gọi audit độc lập. Bằng chứng `.local/ai-tooling/`, không commit/push. Next sản phẩm vẫn review KD-UI-006, không tự coi mẫu đã được duyệt.
+
+## CHG-20261107-009 — Bản mẫu đề xuất lại giao diện KH-KD (KD-UI-006)
+
+- Ngày07/11/2026, Asia/Saigon; theo yêu cầu đề xuất của người dùng sau khi không ưng KD-UI-005. Dùng frontend-design, lập [hướng thiết kế](ui/KD_UI_006_VISUAL_PROPOSAL.md) trước dựng [HTML4màn và8ảnh](../deliverables/kd-ui006-proposal/index.html): tiêu đề/tìm-lọc tách rõ, tên+khách hàng hai tầng, nhãn tình trạng, form2/3nội dung+1/3metadata; chỉ dữ liệu minh họa, không nghiệp vụ mới.
+- Prototype Playwright14kiểm đạt,8layout1440/390không tràn trang, tìm tiếng Việt/lọc/row/tab/7link/Escape; review ảnh desktop/mobile. Chỉ mockup, chưa Odoo tests/visual acceptance/deploy. Source addon bằng sealed CHG007, không query/ghi DB/upgrade/restart hoặc đổi18069; không commit/push. Cập nhật status/roadmap; links/diff/workflow checker cho handoff. Next: review thị giác rồi triển khai native theo scope đã giao; business/pilot riêng.
+
+## CHG-20261107-008 — Đính chính mức hoàn thiện thị giác KD-UI-005
+
+- Ngày07/11/2026, Asia/Saigon; người dùng phản hồi danh sách Cơ hội18069 gần như không khác. Đối chiếu ảnh `shots/dev-before/list-opportunities-1440.png` / `shots/dev-verify/list-opportunities-1440.png` và XML baseline/as-applied: Cơ hội chỉ đổi width2cột/date numeric/search/hover/target; Dự án chỉ thêm scope class. Bố cục bảng/toolbar/sidebar giữ. Hai form chi tiết có thay đổi lớn hơn. Đính chính báo cáo “làm lại cả bốn màn”; trạng thái `TECHNICALLY_VERIFIED_VISUAL_REWORK_REQUIRED`, người dùng chưa chấp nhận phần thiết kế danh sách.
+- Giữ nguyên kết quả test chức năng CHG007 nhưng không dùng làm bằng chứng nghiệm thu thị giác. Cập nhật PROJECT_STATUS/ROADMAP/acceptance; next action là redesign2list có ảnh trước–sau cùng viewport/dataset rồi clone-test/backup/apply. Chỉ tài liệu, không applicationcode/DB/runtime/restart/commit/push; kiểm XML diff/ảnh/link/nội dung/diff và workflow finish/check. Không chạy lại bộ test ứng dụng cho đính chính tài liệu.
+
+## CHG-20261107-007 — Bốn màn Kinh doanh và dự án (KD-UI-005)
+
+- Ngày07/11/2026, Asia/Saigon; thực thi [prompt](prompts/CLAUDE_KD_UI_005_BUSINESS_PROJECT.md) tuần tự A–D sau Home003 CHG006/checkerPASS, áp dụng frontend-design. `tp_kd_workspace`20.0.1.4.0: hai list/hai form Cơ hội và hồ sơ thầu/Hồ sơ dự án có scope riêng, search cơ hội, nhãn trên ô/tên wrap, disclosure many2one native/không RPC,3action chính+7action trong Dropdown native. Giữ ProjectListController, FormController/save/discard/dirty/validation, anchor7inherit,10object action/private credential; backend chỉ thêm search_view_id ở helper, không đổi ACL/rule/state/model/API.
+- Clone owned18789: Odoo116/116 (workspace43+contract73), HOOT5/5/15assertions, browser161/161+session/unique4/4, scope3/3 rollback, hồi quy270/270; Ruff/XML/JS/signatures đạt. Source hash55file test=áp. `scripts/kd_ui005.py`, `kd_ui005_ui.cjs`, `kd_ui005_checks.cjs`; regression driver `kd_ui003_ui_after.cjs` mở action bằng numeric ID để kiểm điều hướng lặp. [Design/as-built](ui/KD_UI_005_BUSINESS_PROJECT_DESIGN.md), [acceptance/ảnh/log/rollback](demo/KD_UI_005_ACCEPTANCE.md), [guide](demo/KD_UI_005_USER_GUIDE.md); kế hoạch cập nhật link trạng thái thực thi.
+- Backup `backup-pre-apply-20261107T075325Z`verified112file/576bảng/269attachment; apply chỉ workspace rc0/0error/changed_tables{}, dev b,c,d,h chỉ đọc130/130;37bảng/3.050dòng,257attachment ngoài asset,93module và nhóm quyền giữ,269blob kiểm checksum/kích thước;181file addon khác bằng snapshot. Hồi quy dev269/269, tổng399/399chỉ đọc; đối chiếu lại37bảng/3.050dòng và attachment/module/groups giữ. PG/clone khác giữ PID, chỉ restart Odoo dev có chủ đích. Không seed/cleanup dữ liệu dev, không commit/push. Tự kiểm; audit độc lập/business/pilot vẫn pending.
+
+## CHG-20261107-006 — Trang chủ KH-KD trước, quản trị có Tất cả ứng dụng (UI-HOME-003)
+
+- Ngày 07/11/2026, Asia/Saigon; thực thi [prompt UI-HOME-003](prompts/CLAUDE_UI_HOME_003_KD_FIRST.md) theo DEC-031. `tp_web_home` 20.0.1.3.0: Home còn Không gian làm việc (KH-KD), Công cụ cá nhân và Quản trị hệ thống chỉ cho `base.group_system` (Tất cả ứng dụng trong trang, Cài đặt, Quản lý ứng dụng); bỏ lưới Ứng dụng nghiệp vụ, app khác qua switcher native. Search chỉ mục hiển thị, khớp đầu từ. Không sửa `tp_kd_workspace`, không đổi menu/action/quyền/dữ liệu, chỉ depends `web`.
+- Test: clone 18689 Odoo 12/12, HOOT 24/24 (143 assertion), browser 229/229, Ruff/`node --check` đạt; dev 18069 backup verify `backup-pre-apply-20261107T065916Z`, apply upgrade chỉ `tp_web_home` rc 0/0 error/`changed_tables {}`, verify chỉ đọc 152/152, 39 bảng + 908 ACL + 257 attachment + 93 module = trước. [Acceptance](demo/UI_HOME_003_ACCEPTANCE.md), [hướng dẫn](demo/UI_HOME_003_USER_GUIDE.md), [thiết kế](ui/UI_HOME_003_DESIGN.md). Tooling `scripts/ui_home003.py`, `scripts/ui_home003_ui.cjs`, `scripts/ui_home003_checks.cjs`. Tự kiểm; audit/business/pilot riêng. Không commit/push.
+
+## CHG-20261107-005 — Prompt Trang chủ logic, tập trung KH-KD
+
+- Ngày07/11/2026, Asia/Saigon; vai trò điều phối, tiếp tục frontend-design. Theo yêu cầu đã làm rõ, ghi DEC-031 và [prompt UI-HOME-003](prompts/CLAUDE_UI_HOME_003_KD_FIRST.md): Home workspace KH-KD/cá nhân, quản trị có Tất cả ứng dụng; app ngoài KH-KD vẫn có lối native. Chưa dựng workspace/nghiệp vụ phòng khác; quay lại hoàn thiện KH-KD sau sửa Home.
+- Đối chiếu catalog/launcher/button/burger patch/sidebar và baseline004; giữ dữ liệu/quyền/workflow/path/Home Action/reload actor. Inventory/acceptance H01–H10, search/catalog/admin gates, responsive/guard/coverage và clone/backup/apply18069 cho Claude thực thi. [10 nhãn tổ chức nguồn](architecture/TP_ORGANIZATION_SOURCE_BASELINE.md) lưu ô/hash, không có dữ liệu nhân viên; không tự đổi tên hoặc cây tổ chức.
+- Chỉ tài liệu; checkpoint tài liệu của lượt này giữ nguyên từ start, source291file/digest bằng checkpoint. Kiểm hash nguồn Excel, nội dung/link/fence/diff, finish/check; không test ứng dụng/ghi DB/restart/upgrade/seed/cleanup/commit/push. Các UI đã triển khai vẫn pending audit độc lập; business/pilot/gate nghiệp vụ giữ. Next: Claude thực thi UI-HOME-003 rồi quay lại audit/hoàn thiện KH-KD.
+
+## CHG-20261107-004 — Trang chủ bốn khu theo workspace (UI-HOME-002)
+
+- Ngày 07/11/2026, Asia/Saigon; thực thi theo [prompt](prompts/CLAUDE_UI_HOME_002_WORKSPACE_ORGANIZATION.md) sau khi KD-UI-004 đóng checkpoint/checker 003 PASS. Áp dụng frontend-design, thiết kế/acceptance trước code. `tp_web_home`20.0.1.1.0→20.0.1.2.0: catalog 4 khu theo menu server, thẻ KH-KD nổi bật, TP Projects/TP Contracts/Công việc dự án rõ mô tả; 4 SVG local, responsive, search/IME, loading/error/retry. Không đổi menu/action/XMLID/path/ACL/rule/grant/Home Action/schema/API/nghiệp vụ, không thêm depends/module hoặc workspace giả.
+- Source chỉ `home_catalog.js`, `home_launcher.js/xml/scss`, 4 SVG, manifest, test HOOT và README; giữ home_button/burger_menu/mobile viewport. Tooling `scripts/ui_home002.py`, `scripts/ui_home002_ui.cjs`, `scripts/ui_home002_checks.cjs`; [thiết kế](ui/UI_HOME_002_DESIGN.md), [acceptance/ảnh](demo/UI_HOME_002_ACCEPTANCE.md), [hướng dẫn](demo/UI_HOME_002_USER_GUIDE.md); status/roadmap/runbook cũ cập nhật.
+- Test clone 18589: Odoo 11/11, HOOT 19/19(84 assertions), browser 90/90, 0 console error; 7 viewport, zoom thật 125/150, 4 actor, cached menu/error/retry/user/company/Home Action/guard/native menu/unknown icon. Ruff/XML/SVG/JS đạt. Sass incompatibility và test HOOT setup lần đầu đã sửa/chạy xanh. Không React/core changes.
+- Dev 18069: backup verified `backup-pre-apply-20261107T050542Z`112 file / 576 table/269 attachment; apply rc 0 `changed_tables {}`; smoke đọc 73/73, 0 error. 34 bảng 1.402 dòng giữ, 908 ACL/domain so backup giữ nội dung và 4 bảng group relation nguyên; 93 module installed trước=sau, menu payload admin/KH-KD trước=sau. Chỉ Odoo dev restart, PG/clone khác giữ PID; không seed/cleanup dev/commit/push. Chromium emulation chưa thiết bị thật; audit/business/pilot riêng. Next: Ctrl+F5 Trang chủ và kiểm 7 bước trong guide.
+
+## CHG-20261107-003 — Làm lại Tổng quan KH-KD (KD-UI-004)
+
+- Ngày 07/11/2026, Asia/Saigon; phiên Claude thực thi [prompt KD-UI-004](prompts/CLAUDE_KD_UI_004_OVERVIEW_REDESIGN.md) lô A–D. `tp_kd_workspace` 20.0.1.2.1 → 20.0.1.3.0, chỉ `overview.js/.xml/.scss`, `models/dashboard.py` (3 khóa đọc `kpis.due_window`, credential `bounds`, plan `currency`/`basis_label`), `tests/test_dashboard.py`. Đầu trang gọn + dải quy mô, một hàng lọc, 4 KPI cá nhân, vòng khuyên ↔ thanh 7 nhóm (hover không RPC, chọn giữ mẫu số + khung chọn nhóm, bàn phím/chạm), công việc, cơ hội/hồ sơ thầu, tab kế hoạch/chứng chỉ tải khi mở; motion một lần + giảm chuyển động; gen/seq, stale khi lỗi mạng, xóa số khi lỗi quyền. Không đổi domain/quyền/công thức/state/drilldown, không API/CDN/framework mới.
+- Tooling `scripts/kd_ui004.py`, `scripts/kd_ui004_ui.cjs`, `scripts/kd_ui004_ui_overview.cjs`; tài liệu [thiết kế + §11](ui/KD_UI_004_OVERVIEW_DESIGN.md), [acceptance + evidence](demo/KD_UI_004_ACCEPTANCE.md), [hướng dẫn](demo/KD_UI_004_USER_GUIDE.md).
+- Test: clone 18489 Odoo 114/114, Ruff sạch, browser 823/823 0 lỗi console (Tổng quan 489 + hồi quy KD-UI-003 334). Dev 18069: backup `backup-pre-apply-20261107T042737Z` verify, apply rc 0 `changed_tables {}`, verify chỉ đọc 806/806 0 lỗi console, rowset 30 bảng/1118 dòng không đổi. Không seed/cleanup dev, không commit/push; audit/business acceptance/pilot vẫn pending.
+
+## CHG-20261107-002 — Kế hoạch và prompt làm lại Tổng quan KH-KD
+
+- Ngày07/11/2026, Asia/Saigon; phiên điều phối áp dụng frontend-design. Tạo [kế hoạch KD-UI-004](ui/KD_UI_004_OVERVIEW_REDESIGN_PLAN.md) và [prompt Claude](prompts/CLAUDE_KD_UI_004_OVERVIEW_REDESIGN.md): D01 vòng khuyên + D02 thanh ngang cùng nguồn, bố cục gọn, tách cá nhân/phạm vi, D03–D06 chuyên đề và motion/reduced-mode.
+- Đối chiếu dashboard/domain/overview và web.chartjs_lib/chart_hook thực: tránh recreate mỗi patch, stale main/lazy/partial, multi-model drilldown, filter/date/owner khác nhau, tiền/unknown/topN/ngày. Giữ table/form KD-UI-003 và fix scroll CHG001; không sửa nghiệp vụ/quyền/dữ liệu hoặc khép audit/business/pilot.
+- Checker001 đạt trước start; TCP chỉ đọc18069/18169/18269/18389/55432 listen. Chỉ kế hoạch/prompt/status/roadmap/changelog, kiểm link/fence/ma trận/hash/diff/checker; không test ứng dụng hoặc restart/upgrade/seed/cleanup/commit/push. Next: Claude A–D, clone-test/visual QA/backup trước áp18069.
+
+## CHG-20261107-001 — Sửa lăn chuột ở Tổng quan KH-KD
+
+- Ngày 07/11/2026, Asia/Saigon; phản hồi người dùng trên dev 18069 "ở phần tổng quan tôi k thể kéo lăn chuột được". Nguyên nhân: gốc `.o_tp_kd_ov` cũng là `.o_action`, rule layout desktop của Odoo (`.o_action { overflow: hidden }`, 0-3-1) đè `overflow: auto` của Tổng quan; lỗi có từ KD-UI-002, <992px không bị. Sửa một selector trong `custom_addons/tp_kd_workspace/static/src/overview/overview.scss` (chỉ phần tử Tổng quan: `overflow: auto`, `overscroll-behavior-y: contain`, scrollbar mảnh), module 20.0.1.2.1; thêm check lăn chuột và bề rộng 1600 vào B19 `scripts/kd_ui003_ui_after.cjs`. Không đổi model/ACL/rule/state/công thức/API.
+- Test: clone 18389 Odoo 114/114, archdiff ok, browser 326/326 (bỏ chuỗi ghi hợp đồng/dossier), 0 lỗi console; lăn chuột 1440/1600/390 cuộn 600px. Dev 18069: backup `backup-pre-apply-20261107T021338Z` verify 112 tệp; apply rc 0, `changed_tables {}`; verify chỉ đọc 324/324, 0 lỗi; số bản ghi/registry bằng baseline. Không commit/push.
+
+## CHG-20261106-022 — Bảng có đường kẻ và màn hình chi tiết theo từng tab KH-KD (KD-UI-003)
+
+- Ngày 06–07/11/2026, Asia/Saigon; phiên Claude thực thi prompt KD-UI-003. Chỉ sửa `custom_addons/tp_kd_workspace` (20.0.1.2.0: `static/src/table/*`, view list/form 12 nhóm màn, `views/contracts.xml` inherit chỉ thêm class cho TP Contracts, hint `tp_kd_leaf` cho sidebar, `test_ui_layout`), script `scripts/kd_ui003*.{py,cjs}` và tài liệu; không sửa odoo/addons/React, model dữ liệu, ACL/rule, state/transition hay công thức.
+- Bảng native kẻ ô kiểu Ant Design (scope `body.o_tp_kd_shell` + `tp_kd_table`/`tp_kd_form`), header wrap, cột chính/tùy chọn theo nghiệp vụ, Thoáng/Gọn và Khôi phục cột, pager 20 server, sticky header; form có khối tiêu đề/separator/notebook, ô trống chỉ đọc "—", bảng con kẻ như bảng chính; sidebar tô đúng lá. Sửa sau kiểm: "——" ở ô Char trống chỉ đọc; script chờ mọi hộp thoại, SelectMenu, drawer mobile, B18 đo đường kẻ.
+- Test clone 18389: Odoo 114/114 (41 + 73), archdiff ok, Ruff sạch, browser 328/328, 0 lỗi console (chuỗi hợp đồng, dossier, quyền, responsive 360–1920/zoom, không rò style, Tổng quan). Dev 18069: backup `backup-pre-apply-20261107T013632Z` 112 tệp đã verify; apply rc 0, 0 lỗi, rowset 30 bảng 1118 dòng không đổi; verify chỉ đọc 320/320, 0 lỗi console; số bản ghi sau verify bằng baseline, không ghi nghiệp vụ. Không commit/push.
+
+## CHG-20261106-021 — Prompt bảng và màn hình chi tiết theo từng tab KH-KD
+
+- Ngày 06/11/2026, Asia/Saigon; vai trò điều phối, áp dụng frontend-design. Gộp phản hồi bảng dày/khó đọc, form chi tiết thiếu phân vùng và yêu cầu phù hợp từng tab vào [KD-UI-003](prompts/CLAUDE_KD_UI_003_TABLES_AND_DETAILS.md); chỉ tài liệu, không sửa application/data/runtime.
+- Thiết kế bảng có viền theo cách trình bày Ant Design Table bằng native Odoo; cột chính/tùy chọn, wrap, header/status đọc đủ, density/resize/sticky/pager theo ngữ cảnh. Ma trận 12 nhóm màn, form riêng theo nghiệp vụ, bảng con/wizard/OWL và menu active cần tái hiện; giữ controller/version/quyền/nghiệp vụ và Tổng quan G01–G05.
+- Checker020 đạt trước start; đọc source/style/controller và runtime TCP, không restart/upgrade/seed. Cập nhật status/roadmap, kiểm link/fence/ma trận/source hash/diff và finish/check; không test ứng dụng cho batch prompt, không commit/push. Next: Claude inventory/acceptance, triển khai A–D, snapshot/clone-test rồi áp dev18069; audit nghiệp vụ và audit KD-UI-002 còn pending.
+
+## CHG-20261106-020 — Triển khai sidebar và Tổng quan KH-KD (KD-UI-002)
+
+- Ngày06/11/2026, Asia/Saigon; phiên Claude thực thi prompt KD-UI-002 (CHG018 + mục5A CHG019), skill frontend-design. Start checkpoint trước sửa; chỉ sửa `custom_addons/tp_kd_workspace`, script `scripts/kd_ui002*.{py,cjs}` và tài liệu; không sửa odoo/addons/React/core.
+- Sidebar5nhóm + Tổng quan, tìm/thu gọn/active/deep link/mobile drawer, prefs cá nhân, hover/animation reduced-motion. Tổng quan: toolbar, KPI, G01–G05, bảng dự án có Thao tác ▾, Việc của tôi, bảng nguồn cũ; helper report read-only theo quyền, chưa đủ căn cứ khác0, không vẽ tiền thực thu/lợi nhuận/công nợ. Sửa sau test clone: `props.className`, `withViews` cho action từ `orm.call`, layout1760px, wait patch async.
+- Test clone: Odoo33/33 + tp_contract73/73, browser231/231, chart193/193; dev18069 sau snapshot112/112: apply rc0, rowset31bảng không đổi, verify230/230, chart193/193. 254seed+14UI/quyền/state giữ. Ảnh trước–sau, hướng dẫn, acceptance; cập nhật status/roadmap/presentation. Không commit/push.
+
+## CHG-20261106-019 — Bổ sung biểu đồ và bảng điều hành Tổng quan KH-KD
+
+- Ngày06/11/2026, Asia/Saigon; vai trò điều phối, tiếp tục frontend-design. User yêu cầu Tổng quan đẹp nhất trong phạm vi KH-KD, biểu đồ tổng thể/chi tiết dễ hiểu, cột bảng rõ, nhiều thao tác với nút gọn. Checker018PASS, start trước sửa; chỉ tài liệu.
+- Bổ sung5A vào [prompt KD-UI-002](prompts/CLAUDE_KD_UI_002_SIDEBAR_POLISH.md): G01typed-state/G02WBS-project/G03CRM/G04plan-production/G05credential-expiry;3chart chính và tabchi tiết, bảng dự án/việc cá nhân, toolbar/create dropdown/row action, search/sort/pagination/column picker và drilldown. Không thêm chức năng ký/duyệt/tiền thật để đủ nút.
+- Report helper read-only được phép khi có guard/test; metric catalog xác định grain/domain/ngày/đơn vị/source/action. Không sudo aggregate, leak tiền/cache, đếm trùng, cộng tháng-quý-năm, biến unknown thành0hoặc gọi tỷ lệtask là tiến độ dự án. Không đổi254seed/14UI, policy hoặc đóng audit nghiệp vụ. Yêu cầu testreport/phân quyền/biênngày/async/UI cùng ảnh Tổng quan thực tế.
+- Cập nhật status/roadmap, kiểm link/fence/5chartID/hash/diff/checker; không chạy applicationtest hoặc DBwrites cho batchprompt. Next: Claude tiếp tục chính prompt đã cập nhật, testclone rồi tích hợp18069. Không codeapp/upgrade/restart/seed/commit/push ở lượt019.
+
+## CHG-20261106-018 — Prompt sidebar và hoàn thiện giao diện KH-KD
+
+- Ngày06/11/2026, Asia/Saigon; vai trò điều phối DEC-022, skill frontend-design. Người dùng yêu cầu sidebar trái có tab con xổ ra, giao diện KH-KD đẹp hơn cùng hover/animation. Baseline checker017 đạt, start trước sửa; không application code/runtime/data.
+- Tạo [prompt KD-UI-002](prompts/CLAUDE_KD_UI_002_SIDEBAR_POLISH.md): sidebar mọi màn KH-KD,5nhóm+Tổng quan từ cây menu native theo quyền, thu gọn/tìm/active/deep link/unsaved guard; Tổng quan/list/form nhất quán, prefs cá nhân, hover/animation có reduced-motion và mobile drawer. Đối chiếu source WebClient/NavBar/menu service thực tế, lưu ý2menu dùng chung action; chỉ custom assets/view có scope, không core/theme ngoài/React mới.
+- Giữ254seed+14UI, mọi policy/workflow/quyền/công thức và6phụ lục còn thiếu; không đổi audit nghiệp vụ pending. Prompt yêu cầu backup/clone-test trước áp18069, kiểm menu/form/quyền/mobile/baseline và rollback delta; chưa tạo sidebar hoặc hai tài liệu thiết kế/acceptance của phiên thực thi.
+- Kiểm link/fence/nội dung/diff và hash maintained source không đổi, finish/check. TCP chỉ đọc18069/18269/55432 hoạt động,18109 không listen. Không test ứng dụng cho batch tài liệu, không restart/upgrade/seed/commit/push. Next: Claude thực thi prompt mới, tránh sửa chồng cùng checkout.
+
+## CHG-20261106-017 — KD-NATIVE-001 tích hợp dev18069 và bàn giao
+
+- Ngày06/11/2026. A–D/DATA254đã lên dev sau backup/restore538rowsets/249blob; tái sử dụng UI001a. Sửa import test runtime và context view/default khi action đổi model, thêm test tái hiện.254seed +14UI riêng, thiếu6phụ lục theo user; registry/manifest/dry-run và hướng dẫn đăng nhập/3tình huống.
+- Kiểm: clone133/133, fresh install98/98, dev159/159browser + restart/fresh login; seedlặp0, preservation22bảng/249blob, Ruff/XML/assets/diff. Đối chiếu source clone/main không lệch, liên kết/ảnh bàn giao tồn tại, HTTP dev200.3assetcache tái tạo là delta dự kiến; không dữ liệu nghiệp vụ cũ mất/đổi.
+- Sự cố đã xử lý: CLI dev stop vô tình dừngPG khi kiểm restart; khởi động lại và đối chiếu config/secrets/DB/blob, ghi đầy đủ acceptance. Không tuyên bố không restartPG. Session-expired chập chờn là giới hạn còn mở; không sửa core/session.
+- Dev giữ chạy; không cleanup, commit/push, business/pilot hoặc mở gate pháp lý/tiền thật/grant thật/TASK-001. Next review trình diễn/audit độc lập; không tự tạo6phụ lục ngoài gate.
+
+## CHG-20261106-016 — KD-NATIVE-001 DATA254 trên clone
+
+- Ngày06/11/2026. Registry operator-only, ORM seed254, manifest/dependency/drift, cleanup dry-run/apply clone guards; user chọn thiếu6phụ lục, không vượt gate workflow.
+- Test: Odoo132/132; browser26/26 + relogin/restart; rehearsal13check,15unlink/0archive/1117retained/3referenced đã rollback; seed2lần không trùng/reset password/overwrite. Ruff/XML/diff đạt.
+- Copy addon đã kiểm về main; dev18069 chưa tích hợp. Next backup/restore mới, migration/seed/UI dev. Không cleanup dev/commit/push/business/pilot.
+
+## CHG-20261106-015 — KD-NATIVE-001 D3
+
+- Ngày: 06/11/2026, Asia/Saigon. Nghĩa vụ có lịch sử checklist; hộp việc/report count và drilldown cùng quyền; form WBS manager tạo/sửa/giao/cha-con, staff deny; regression131 và browserWBS5.
+- Model/action/security/native; không API/React/core. Spec/test trước implementation.
+- Test: backend131/131, browser18/18 `d3-browser.json`, Ruff/XML/diff; clone18269. Không dev/business/pilot hoặc commit/push.
+- Next: Dataset260 registry/seed/inventory/verify/cleanup rehearsal; rồi tích hợp dev sau backup.
+
+## CHG-20261106-014 — KD-NATIVE-001 D2
+
+- Ngày: 06/11/2026, Asia/Saigon. Hồ sơ năng lực tổ chức/cá nhân với private restriction, ngày/hạn minh họa, liên kết cơ hội đã kiểm quyền và drilldown native.
+- Model/action/security/native; không API/React/core. Spec/test trước implementation.
+- Test: backend21/21, browser15/15 `d2-browser.json`, Ruff/XML/diff; clone18269. Không dev/business/pilot hoặc commit/push.
+- Next: D3 nghĩa vụ/báo cáo và hoàn thiện tổng quan; dataset260/dev.
+
+## CHG-20261106-013 — KD-NATIVE-001 D1
+
+- Ngày: 06/11/2026, Asia/Saigon. Kế hoạch tháng/quý/năm với hai chỉ tiêu riêng, đối chiếu sản lượng cùng kỳ/state/currency/basis và drilldown; doanh thu chưa có chứng từ.
+- Model/action/security/native; không API/React/core. Spec/test trước implementation.
+- Test: backend19/19, browser12/12 `d1-browser.json`, Ruff/XML/diff; clone18269. Không dev/business/pilot hoặc commit/push.
+- Next: D2 năng lực/chứng chỉ; D3 nghĩa vụ/báo cáo; dataset260/dev.
+
+## CHG-20261106-012 — KD-NATIVE-001 C4
+
+- Ngày: 06/11/2026, Asia/Saigon. Đề nghị thu/chi theo đợt hoặc tạm ứng, căn cứ/checklist/đối chiếu và tiền riêng; không paid/posting.
+- Model/action/security/native; không API/React/core. Spec/test trước implementation.
+- Test: backend17/17, browser12/12 `c4-browser.json`, Ruff/XML/diff; clone18269. Không dev/business/pilot hoặc commit/push.
+- Next: D1 kế hoạch định kỳ; D2 chứng chỉ; D3 nghĩa vụ/báo cáo; dataset260/dev.
+
+## CHG-20261106-011 — KD-NATIVE-001 C3
+
+- Ngày: 06/11/2026, Asia/Saigon. Hồ sơ nghiệm thu nội bộ theo đợt, phạm vi/khối lượng/kỳ thuộc sản lượng nguồn và guard hai chiều.
+- Model/action/security/native; không API/React/core. Spec/test trước implementation.
+- Test: backend15/15, browser12/12 `c3-browser.json`, Ruff/XML/diff; clone18269. Không dev/business/pilot hoặc commit/push.
+- Next: C4 đề nghị thanh toán/đối chiếu; D/dataset260/dev còn tiếp tục.
+
+## CHG-20261106-010 — KD-NATIVE-001 C2
+
+- Ngày: 06/11/2026, Asia/Saigon. Sản lượng theo kỳ, nguồn khoán/hợp đồng có guard hai chiều, metadata/tiền riêng và workflow hai actor.
+- Model/action/security/native; không API/React/core. Spec/test trước implementation.
+- Test: backend13/13, browser12/12 `c2-browser.json`, Ruff/XML/diff; clone18269. Không dev/business/pilot hoặc commit/push.
+- Next: C3 nghiệm thu theo nguồn; C4/D/dataset260/dev còn tiếp tục.
+
+## CHG-20261106-009 — KD-NATIVE-001 C1 giao khoán trên clone
+
+- Ngày: 06/11/2026, Asia/Saigon. Scope model/action/security/native trong `tp_kd_workspace`, không API/React/core.
+- Typed allocation/amount/event; workflow gửi/trả/mở sửa/gửi lại, scope/cycle/version/replay và snapshot bất biến. Adapter form gửi phiên bản đã đọc, không bỏ concurrency guard.
+- Test: Odoo10/10 log061214047444Z; browser12/12 `c1-browser.json`, gồm stale hai tab và responsive390/768/1440; Ruff/XML/diff. Chỉ clone18269, không dev/business/pilot. Không commit/push.
+- Next: C2 theo spec/test trước implementation, rồi C3/C4/D/dataset260 và tích hợp dev có backup.
+
+## CHG-20261106-008 — KD-NATIVE-001 lô B, dùng lại hợp đồng native đã audit
+
+- Ngày06/11/2026 Asia/Saigon; start riêng sau handoff007. Không thay source001a hoặc mở lại correction D1/D2. Clone18269 chạy regression111 ở007 (contracts73/project12/planning22/workspace4) và browser42/42 bằng script001a đổi đúng target/path trong bản private.
+- Browser đầy đủ nháp→sửa→gửi→reviewer trả→mở sửa→gửi lại; metadata/stale/retry/files/scope/responsive5viewport/zoom125/150 thật,0 console/network error. Task manager fixture thao tác theo quyền hiện hành; staff deny TASK-001. Evidence `.local/kd-native001/ctr-native001/` riêng, không ghi đè audit003.
+- Chỉ bàn giao test, chưa upgrade/seed dev hoặc tạo dataset260. C1–C4/D và tích hợp dev còn mở. Không BASE/ký/hiệu lực/tiền thật/grant người thật/pilot/commit/push. Next C1 theo workflow đã viết.
+
+## CHG-20261106-007 — KD-NATIVE-001 lô A, workspace trên clone riêng
+
+- Ngày06/11/2026 Asia/Saigon; yêu cầu trực tiếp chuyển phiên chính sang thực thi KD-NATIVE-001 gồm7A–7C/CHG006. Start trước sửa, giữ toàn bộ dirty baseline; không commit/push. Thêm addon workspace native/CRM/checklist/target guards/task source và tooling owned clone; thiết kế, acceptance, workflow fixture. Source được phát triển trong bản custom riêng trước copy delta addon mới vào checkout; chưa cài dev.
+- Snapshot DB/filestore/private config/source dirty/upstream/frontend có checksum; restore538 bảng/249blob exact, clone18269/source riêng, cron0/SMTPloopback. Backend111/111, browserA10/10, Ruff/XML/compile đạt. Lượt77 không được runner chấp nhận vì tag project0; probe lỗi chờ save/tab đã giữ evidence và chạy lại đạt. Snapshot có password private nhưng không in/Git; tài liệu chỉ nêu đường dẫn.
+- Dev18069 PID23452 và audit18169 giữ nguyên, chưa upgrade/seed dev. C1–C4/D/dataset260 chưa triển khai, chưa nghiệm thu toàn task. TASK-001/Q2/pháp lý/BASE/ký/hiệu lực/tiền thật/pilot giữ gate riêng. Next B regression 001a rồi C1.
+
+## CHG-20261106-006 — Sửa cơ cấu và kiểm lại mục tiêu260record
+
+- Ngày06/11/2026, Asia/Saigon; chỉ tài liệu. Assertion tổng của005 fail vì cơ cấu thực là240; shell tiếp tục finish/check nên checker005 chỉ xác nhận hash/handoff, không chứng minh kiểm cơ cấu đạt. Ghi nhận sai lệch thay vì giữ lời báo cáo kiểm đã đạt.
+- Tăng mục tiêu WBS/công việc trong prompt từ80 lên100, tổng12nhóm là260. Cập nhật status/roadmap; không sửa code hoặc DB. Chạy lại validation links/fences/tổng12nhóm260 và maintained-code equality, diff trước finish riêng006; không chạy test ứng dụng.
+- Next: Claude thực thi cùng prompt7A–7C với cơ cấu đã sửa, bàn giao số record thực tế. Số260 vẫn là mục tiêu, không phải dữ liệu đã được tạo.
+
+## CHG-20261106-005 — Bổ sung bộ dữ liệu KH-KD sát thực tế lưu database
+
+- Ngày06/11/2026, Asia/Saigon; DEC-022 điều phối; checker004 đạt, start trước sửa. Người dùng yêu cầu nhiều bản ghi tự tạo giống thật, lưu DB để thao tác và có thể dọn sau. Chỉ cập nhật tài liệu giao việc, không tuyên bố đã seed.
+- [Prompt KH-KD](../deliverables/PROMPT_KHKD_NATIVE_18069.md) thêm7A–7C: cơ cấu mục tiêu260 record gồm12đối tác/12cơ hội/8dự án/16hợp đồng-phụ lục/80task/16khoán/24sản lượng/16nghiệm thu/20đề nghị/16kế hoạch/12năng lực-chứng chỉ/8checklist. Tên tiếng Việt tự nhiên, dữ liệu tổng hợp và ngày tương đối, ít nhất3 chuỗi liên thông; trạng thái hợp lệ, không giả chứng từ pháp lý/tiền thật.
+- Bổ sung persistence qua phiên/restart, provenance/external key trong DB và manifest private, seed lặp không trùng/không ghi đè sửa đổi/không đổi password, không gửi ra ngoài. Dọn riêng có dry-run/ownership/reference guards; hồ sơ đã trình/audit theo policy archive/retained, không hứa xóa vật lý tất cả. Không cho phép cleanup apply dev trong task tạo dữ liệu.
+- Cập nhật status/roadmap; kiểm liên kết/fence/cơ cấu số lượng/diff/checker và maintained code không đổi. Không chạy application test cho batch tài liệu; không ghi/xóa DB, không sửa application/security/core/React, không restart/upgrade/commit/push. Next: đưa yêu cầu bổ sung vào chính phiên Claude đang triển khai; báo số thực và runbook dataset sau khi hoàn thành.
+
+## CHG-20261106-004 — Cụ thể hóa prompt giao diện và thao tác KH-KD trên18069
+
+- Ngày06/11/2026, Asia/Saigon; vai trò điều phối DEC-022, baseline checker003 PASS và start trước sửa. Người dùng yêu cầu dựng nghiệp vụ KH-KD trực quan, thao tác như thực trên dữ liệu giả, trình bày trực tiếp dev18069.
+- Bổ sung [prompt KD-NATIVE-001](../deliverables/PROMPT_KHKD_NATIVE_18069.md): baseline hợp đồng đã audit003, thiết kế Tổng quan/hồ sơ dự án/list/form/mobile, ma trận12 nhóm nghiệp vụ và acceptance theo actor/action/môi trường. Chia C1–C4 và D theo phụ thuộc; phải làm action persist và hồ sơ tự tạo ngoài seed, không chỉ menu/ảnh hoặc đường bấm hardcode. Yêu cầu hai đầu ra thiết kế/acceptance và kịch bản12–15phút; chưa tạo các đầu ra của phiên thực thi.
+- Cập nhật PROJECT_STATUS/ROADMAP và đồng bộ tài liệu hướng native với audit003. Không đặt policy/thẩm quyền mới, không đóng Q2/G7 hoặc business/pilot. Áp dev chỉ sau snapshot khớp dirty/untracked source và restore/clone-test; quyền trình diễn18069 đã có, không mở BASE/ký/hiệu lực/tiền thật/upload ngoài gate/grant thật hoặc TASK-001.
+- Kiểm nội dung/ma trận/liên kết, diff và workflow checker; không chạy Odoo/browser test cho batch tài liệu. TCP chỉ đọc:18069/18169/55432 đang listen,18109 không listen. Không sửa application/test/security/API/core/React, không thao tác database/process, không commit/push. Next: Claude thực thi từng lô theo prompt; verdict hiện tại chỉ `PROMPT_READY_FOR_EXECUTION`.
+
+## CHG-20261106-003 — Audit độc lập UI-CTR-NATIVE-001a trên DB test
+
+- Ngày06/11/2026, Asia/Saigon; vai trò điều phối DEC-022, start checkpoint riêng sau checker002 PASS. Verdict `TECHNICAL_ACCEPTED_TEST_ONLY` cho001a; [báo cáo](reviews/UI_CTR_NATIVE_001A_INDEPENDENT_AUDIT.md). Không có finding cần correction trong scope đã kiểm; business/pilot/G7 không đóng.
+- Chạy lại owned clone18169: Odoo107/107 (`run-20261106T045827388402Z`), runner18/18, native browser42/42 cùng full flow/stale/retry/metadata/file/quyền/responsive/zoom; ảnh đã xem. Ruff/XML/manifest/Node/OpenAPI/diff đạt. D1/D2/owner/group/đối chứng và AT-17 đạt; AT-17 mô phỏng request bằng env.clear, không write grant lúc chuyển ngày. React9+6 giữ evidence CHG002, không chạy lại.
+- Source238 file/digest `ac21fef5…bbe25af` và hash riêng browser/vi.po giữ nguyên. Không sửa application/tooling test/core/API/React/ACL; chỉ audit/status/roadmap/spec và evidence/helper local, không ghi đè evidence thực thi.
+- Dev chỉ probe SQL read-only:1.1.0,0 model native/0 actor test,3contract/0submission trước-sau; không claim fingerprint mọi bảng. Clone1.2.0 giữ10 model/5 actor, browser thêm1 contract/2 submission giả; clone cuối chạy phục vụ review. Không upgrade/restart/seed/apply dev18069, không mở demo18109, không commit/push. Next tích hợp KH-KD tái sử dụng001a, apply dev là batch riêng có backup/test; BASE/ký/hiệu lực/thanh toán/upload/grant thật/TASK-001 vẫn ngoài audit.
+
+## CHG-20261106-002 — Tiếp tục Claude: UI native TP Contracts trên DB test
+
+- Ngày06/11/2026, Asia/Saigon; người dùng giao trực tiếp ngoại lệ thực thi UI001a. Resume checkpoint Claude, giữ mọi thay đổi sẵn có; baseline code234/digest audit001, delta có sẵn là test native/import. Không commit/push.
+- Thêm 5 header transient, draft.line/return.issue/amount.input, global owner/company/project restrictions (D1), guard tiền bằng capability hiện tại (D2), target/key/result do server quản lý, Decimal validation, cleanup/retry, error tiếng Việt. Gọi lại sáu action CTR-002a bằng user; không mở ACL hợp đồng gốc hoặc sửa API/OpenAPI/React/core.
+- Menu TP Contracts/Home, list/search/form chỉ đọc, wizard create/edit/amendment/submit/return/rework; số tiền/tệp theo grant, lần trình/BASE read-only/audit. Phiên bản addon20.0.1.2.0, chỉ upgrade owned test clone18169. Dữ liệu và 5 credential actor giả ở `.local/native-stabilize001/ctr-native001`, ngoài Git.
+- Test trước implementation: RED mới22 failed/0 errors do thiếu chức năng; hai GREEN cuối107/107 (`run-20261106T035229356222Z`, `run-20261106T035740655789Z`), native22/runner18/React contracts9 unit+6 mock E2E, Ruff/XML/manifest/OpenAPI/diff đạt. Ma trận24 AT/evidence trong [báo cáo](reviews/UI_CTR_NATIVE_001A_IMPLEMENTATION.md). Fixture admin chỉ xét project giả mới; cấp export group test để thật sự kiểm restriction. Các lượt N07 WinError10054 được giữ; test guard kiểm trước body dùng zero-byte body để tránh socket reset, giữ status/code/no-store và ca malformed JSON, không retry write/nới security/đổi API.
+- Browser42/42: đầy đủ luồng, metadata-only/stale/retry/binary,5 viewport và zoom Chromium thật125/150; ảnh đã xem,0 console/network lỗi. Sửa reviewer virtual form, recompute theo project, readonly version web_save (force_save), version context khi mở wizard và action kết quả để tránh đọc cache cũ. G8/AT-17 đạt kỹ thuật không write grant khi đổi ngày; G7/Q2/business/pilot giữ mở. Clone18169 để review; dev18069/PG55432 có sẵn không khởi động/chỉnh, không snapshot dev mới. Next: audit implementation bởi phiên khác; không stage/commit/push.
+
+## CHG-20261106-001 — Audit đạt đặc tả D1/D2 và phát prompt code UI-CTR-NATIVE-001a
+
+- Ngày06/11/2026, Asia/Saigon. Vai trò điều phối DEC-022; baseline checker CHG006 đạt, start trước sửa bàn giao. Chỉ audit đúng D1/D2, không mở lại toàn batch nền.
+- **Kết luận:** D1/D2 `PASS_SPEC`, UI-CTR-NATIVE-001a `READY_FOR_TEST_CODE`; 24 AT chưa chạy trên wizard thật vì chưa implementation. [Audit](reviews/NATIVE_STABILIZE_001_D1_D2_ACCEPTANCE_AUDIT.md), [prompt code test/AT trước](prompts/CLAUDE_UI_CTR_NATIVE_001A.md). Cập nhật status/roadmap/spec và ghi kết luận vào correction report; giữ các báo cáo audit lịch sử.
+- **Kiểm thực:** source helper/rule khớp restriction scope child và guard assignment/grant; evidence rollback005 được đối chiếu, không chạy lại. Code digest `6abcc74a…d957d`234 file giữ nguyên; 24 ID không trùng; link/format/diff và workflow checker được kiểm trước bàn giao. Không chạy test ứng dụng cho batch tài liệu.
+- **Runtime:** TCP18069/18169/18109/55432 không mở tại lần kiểm, ghi sai lệch so handoff ngày05/11; không khởi động dịch vụ. Không sửa application/tooling/ACL/core/React, cấu hình/tài khoản/DB; không upgrade/seed/apply dev, commit/push.
+- **Next:** Claude code UI001a trên DB test với fixture; AT-17/G8 phải kiểm trước nghiệm thu chức năng tiền. G7 policy gốc và Q2 người thật/pilot còn mở; BASE/ký/hiệu lực/thanh toán/upload/grant thật/TASK-001 và apply F-DASH dev ngoài scope.
+
+## CHG-20261105-006 — Correction delta D1/D2 đặc tả UI-CTR-NATIVE-001a
+
+- Ngày 05/11/2026, Asia/Saigon. Baseline checker CHG-20261105-005 đạt; `start` trước khi sửa. Chỉ sửa tài liệu.
+- **D1** ([spec](architecture/TP_UI_CTR_NATIVE_001_SPEC.md) mục 9.2, AT-18):
+  - thêm restriction `crud` `[('wizard_id', 'access', 'read')]` cho `draft.line`/`return.issue`, giữ owner/company;
+  - AT-18 kiểm owner mất project access, có đối chứng gỡ riêng restriction.
+- **D2** (mục 9.3 bước 2–3, mục 12, AT-10a..AT-10d, AT-10g, AT-17, G7, mục 16):
+  - guard `_tp_amount_display_allowed()` (project readable + `financial_read` trong `_tp_capabilities`) trước khi tính `current_amount_text`;
+  - tách AT-10 thành revoke, expiry, staff mất assignment, manager mất assignment (tiền gốc theo baseline G7);
+  - ca metadata đổi ID thành AT-10g.
+- **Kiểm:**
+  - code digest `6abcc74a…57d` (234 file) khớp CHG-005;
+  - ID acceptance không trùng, link không hỏng, `git diff --check` đạt.
+  - Không chạy test ứng dụng/Odoo vì batch chỉ sửa tài liệu.
+- **Giữ nguyên:** không sửa `custom_addons`/runner/API/ACL; không apply dev; không commit/push.
+- **Trạng thái:** `CORRECTED_PENDING_AUDIT_DELTA_D1_D2`; chờ audit hai delta. [Báo cáo](reviews/NATIVE_STABILIZE_001_CORRECTION.md) mục 7.
+
+## CHG-20261105-005 — Audit delta correction NATIVE-STABILIZE-001
+
+- Ngày05/11/2026, Asia/Saigon. Baseline CHG004 checker đạt; `start` trước sửa bàn giao. Không sửa application/tooling/ACL/core/React, không apply dev hoặc commit/push.
+- **Kết luận:** A3 đạt; A1/A2 còn D1/P2 (dòng con thiếu restriction scope) và D2/P2 (compute tiền/AT-10 mâu thuẫn quyền tiền gốc của manager sau mất assignment). Spec001a `NEEDS_FIX`; không phát prompt code trước khi hai delta đạt. [Audit](reviews/NATIVE_STABILIZE_001_DELTA_AUDIT.md), [prompt correction hẹp](prompts/CLAUDE_NATIVE_STABILIZE_001_DELTA_CORRECTION.md).
+- **Kiểm thực chạy:** unit18/18, Ruff; runner clone Odoo29/29 exit0; tag không có test → exit1 dù Odoo process exit0. Probe dữ liệu giả/rollback: parent deny nhưng child read/search vẫn được, thêm access restriction thì deny; manager mất assignment vẫn đọc tiền gốc nhưng không còn workflow capability. Evidence `.local/native-stabilize001-delta-audit/`, log runner mới riêng từng lượt.
+- **Bàn giao:** cập nhật status/roadmap/spec/correction report, giữ lịch sử. Code234 file/digest nguyên so CHG004; dev18069 vẫn chạy, clone18169/demo18109 không listen. G7/G8, business/pilot và toàn DASH/MOBILE/DATA003 chưa được nghiệm thu. Next correction D1/D2 chỉ tài liệu, audit delta rồi mới giao code test/AT trước; F-DASH áp dev cần yêu cầu riêng.
+
+## CHG-20261105-004 — Correction NATIVE-STABILIZE-001 A1/A2/A3
+
+- Ngày 05/11/2026, Asia/Saigon. Baseline checker CHG-20261105-003 đạt; `start` trước khi sửa. Không đổi F-DASH-01/02, application/ACL/core/React hay user/grant.
+- **A1** ([spec](architecture/TP_UI_CTR_NATIVE_001_SPEC.md) mục 9.1/9.2/9.4/9.5, AT-09/14/15/16):
+  - restriction owner, company và project tường minh cho wizard/wizard-line;
+  - target do server xác định; `action_confirm()` không tham số, kiểm owner/target/payload.
+- **A2** (mục 8/9.3/10/12, AT-03/10..10f/17, G7/G8):
+  - không lưu baseline; tiền hiện tại qua compute không lưu bằng quyền user;
+  - tiền mới chỉ ở `amount.input` với restriction grant + assignment, xóa khi thành công;
+  - target bất biến; luồng metadata giữ nguyên.
+- **A3:** `scripts/native_stabilize001.py` thêm `evaluate_test_run`, kiểm identity clone, log/verdict riêng cho mỗi lần chạy, exit nonzero, `--expect-tests`. Test mới `scripts/tests/test_native_stabilize001.py`.
+- **Test:**
+  - unit 18/18, tooling 63/63, mutation 14/14, Ruff và `git diff --check` đạt;
+  - clone 18169: pass EXIT 0 với 29/29 (`run-20261105T125703971580Z.log`); tag không có test → EXIT 1;
+  - log thật cũ run1/run2 → `tests_errored`.
+- **Trạng thái:** dev 18069 không apply, demo 18109 không dựng, clone đã dừng. Chờ audit delta; không ghi acceptance, không mở pilot, không commit/push. [Báo cáo](reviews/NATIVE_STABILIZE_001_CORRECTION.md).
+
+## CHG-20261105-003 — Audit độc lập NATIVE-STABILIZE-001
+
+- Ngày05/11/2026, Asia/Saigon. Baseline checker CHG-20261105-002 đạt; không sửa application/tooling code. Snapshot107 checksum khớp, diff bốn file khớp hai sửa dashboard và một regression test.
+- Chạy độc lập clone18169: Odoo29/29 bằng lệnh trực tiếp/log riêng; browser78/78 (chỉ đổi output trong bộ nhớ); ORM9 actor×2 dashboard và assertion số liệu/denial; Ruff/XML5/Node syntax/diff đạt. Evidence `.local/native-stabilize001-independent-audit/`; giữ evidence Claude.
+- Verdict: F-DASH-01/02 đạt kiểm chứng hẹp; toàn batch/đặc tả `NEEDS_FIX`. A1/P1 sai giả định owner rule transient (rollback probe xác nhận); A2/P2 thiếu bảo vệ bản sao tiền wizard sau revoke; A3/P2 runner không fail khi process/summary lỗi,0 test hoặc thiếu summary (fault injection4 ca). Không kết luận có lỗ hổng wizard hợp đồng hiện hữu vì chưa triển khai.
+- Thêm audit report/prompt correction, override READY ở spec/báo cáo tự kiểm, cập nhật status/roadmap. Clone đã dừng, revocations `{}`, ACL/wizard thử rollback. Dev18069 vẫn chạy, read-only538 bảng so snapshot chỉ3 bảng phiên khác; không apply/upgrade dev, commit/push hoặc mở pilot. Giới hạn Chromium emulation, không test timeout thật/full login form hoặc audit toàn bộ batch cũ. Next correction A1/A2/A3 rồi audit delta.
+
+## CHG-20261105-002 — NATIVE-STABILIZE-001: audit/ổn định nền Odoo native, đặc tả UI native TP Contracts
+
+- Ngày 05/11/2026, Asia/Saigon; theo yêu cầu trực tiếp của người dùng. Start checkpoint trước sửa; không nhận thay đổi chưa commit của các batch trước là của lượt này.
+- Môi trường: snapshot dev có sha256 (`snapshot-20261105T095544Z`), clone sở hữu `tp_tanphat_stab001_20261105`/18169, data_dir riêng, cron/SMTP/list_db tắt; restore evidence 538 bảng/249 blob. Dev 18069 chỉ đọc, không upgrade/seed/apply.
+- `tp_dashboard_privacy` (chỉ clone): F-DASH-01 thêm `detail` phạm vi trạng thái cho hai thẻ chi phí (không đổi tên/công thức/giá trị); F-DASH-02 trạng thái lỗi khi đang lọc dự án hiện “Dự án đã chọn” thay vì “Tất cả dự án được phép”; thêm test hồi quy expense draft/approved/refused.
+- Tooling `scripts/native_stabilize001.py` + `native_stabilize001_ui.cjs`; RFC TASK-001 thêm đề xuất action hẹp + 7 câu hỏi (deny giữ nguyên); đặc tả `TP_UI_CTR_NATIVE_001_SPEC.md` READY_FOR_TEST_CODE cho 001a; báo cáo `docs/reviews/NATIVE_STABILIZE_001_REPORT.md`; runbook dashboard ghi nhãn mới.
+- Kiểm: Ruff đạt; XML 5 file; `node --check` probe + dashboard.js ESM; Odoo clone 29/29 (2 lần fail trước do fixture test mới, đã sửa); UI probe 78/78 (Chromium emulation); ORM audit 9 actor; TASK-001 deny; dev drift chỉ `bus_bus`/`mail_presence`/`res_device_log`; `git diff --check` đạt. Không React build (không đổi legacy). Không commit/push/deploy dev.
+
+## CHG-20261105-001 — Chốt giao diện chính native Odoo, làm rõ hiện trạng
+
+- Ngày05/11/2026, Asia/Saigon: người dùng xác nhận không phát triển FE tách riêng; DEC-030 thay hướng frontend của DEC-001/012, giữ backend/data/session/quyền/BASE và workspace theo vai trò.
+- Cập nhật AGENTS, status/roadmap, hướng source, quy trình AI, tên phân hệ, database và README legacy React; thêm bản hiện trạng/kế hoạch chuyển native. Không xóa React/API/test, đổi route/login, cài/gỡ module, sửa application code hoặc thao tác dữ liệu.
+- Baseline checker đạt CHG-20261104-005 dù working tree có thay đổi application của các batch trước; không nhận các thay đổi đó là của lượt này. Start checkpoint mới trước sửa tài liệu. SQL read-only kiểm module installed và4 invoice draft801 triệu; dev18069/PG55432 đang chạy. Không chạy lại application tests vì không đổi code/runtime; kiểm tài liệu/diff và handoff riêng, không nghiệm thu DASH/MOBILE hoặc mở pilot.
+- Next: đặc tả UI-CTR-NATIVE-001 cho backend hợp đồng đã có; giữ TASK-001 và các gate nghiệp vụ, audit riêng. Không commit/push.
+- Kiểm tài liệu: 184 đích liên kết file local tồn tại (không kiểm nội dung anchor); DEC-030 có đúng một heading; `git diff --check` đạt. Snapshot 232 file application/tooling khớp checkpoint đầu lượt: không đổi code từ baseline đã bàn giao; kết quả này không audit lại nội dung DASH/MOBILE. Handoff bằng `finish/check` riêng CHG-20261105-001.
+
+## CHG-20261104-005 — MOBILE-001: Giao diện mobile/tablet/desktop cho TANPHAT ONE native
+
+- Ngày 04/11/2026, Asia/Saigon; theo yêu cầu trực tiếp của người dùng.
+- `tp_web_home` 20.0.1.1.0:
+  - view viewport cho phép phóng to;
+  - Home 2 cột thẻ trên điện thoại;
+  - nút ≥44 px; drawer Escape/focus.
+- `tp_dashboard_privacy` (chỉ static):
+  - bộ lọc gập có đếm/Xóa lọc; input 16/44 px; chỉ số 2/1 cột;
+  - bảng cuộn trong vùng riêng, cột dự án dính trái;
+  - chống chạm kép; bộ chọn bảng toàn màn hình; `fa` → `oi`; giảm chuyển động.
+- Thêm `scripts/mobile001*.{py,cjs}`.
+- Không đổi backend, quyền, công thức, workflow, API, React, prototype hoặc core; không PWA/offline.
+- Kiểm:
+  - Odoo tests clone 28/28;
+  - luồng clone 20/20 (dữ liệu giả) và dev 20/20 chỉ đọc;
+  - khảo sát 252 ô mỗi môi trường, 0 tràn trang;
+  - zoom thật 125/150% 12/12 mỗi môi trường;
+  - ruff, `node --check`, XML parse, SCSS compile.
+- Dev chỉ `-u tp_web_home`, PostgreSQL vẫn chạy; bảo toàn 522/538 bảng nguyên, delta upgrade/asset/telemetry đã đối chiếu.
+- Chỉ Chromium; chưa kiểm WebKit hoặc thiết bị thật.
+- [Nghiệm thu](ui/MOBILE_001_ACCEPTANCE.md). Không commit/push.
+
+## CHG-20261104-004 — DASH-UI-001: Biểu đồ trực quan và hover/focus
+
+- Ngày04/11/2026, Asia/Saigon; yêu cầu tiếp nối trong scope thực thi DEC-028. Chỉ sửa JS/XML/SCSS custom dashboard và probe: thanh25px/lưới5 mốc, vòng chi phí ba trạng thái, đồng bộ hover/chú giải/tâm vòng, tooltip exact backend, focus/Tab/Escape, tap nguồn, giảm chuyển động. Tỷ trọng/độ dài/tick chỉ là hình học hiển thị; tiền và tổng vẫn từ backend. Không đổi backend/quyền/công thức/filter/workbook/React/core; không commit/push.
+- Backup3 source và hash538 bảng trước sửa, thử clone owned18159 trước dev; dev chỉ restart riêng Odoo để nạp asset, không upgrade/seed. UI/RPC60 + probe biểu đồ43 mỗi môi trường;1440/1280/390, zoom125/150 thật, SCSS compile/XML parse/Node syntax đạt. Probe không console error; ma trận hồi quy vẫn1 network error cố ý mỗi môi trường. Ảnh thật desktop/mobile/hover đã xem, GIF ghép hai trạng thái thật tại `.local/dash-hover001/finance-hover.gif`.
+- Bảo toàn527/538 bảng nguyên; chứng từ/workbook/user/password/group/ACL/rule/assignment nguyên,249 blob gốc/reference hiện kiểm đạt.3 asset regeneration và telemetry tách khỏi Settings từ phiên Odoo khác lúc13:35:44 (30 config parameter mới/settings/company write_date/cron29/signaling), giữ nguyên thao tác đồng thời. Lỗi SCSS min/calc được bắt/sửa ở clone trước dev; một probe dev cold-load timeout khi kiểm song song đã chạy tuần tự lại đạt.
+- [Bàn giao](demo/DASH_UI_001_HANDOFF.md#bổ-sung-biểu-đồ-và-hover-chg-20261104-004). Next action: audit độc lập DASH-UI-001; không đổi gate nghiệp vụ/pilot.
+
+## CHG-20261104-003 — Hiệu chỉnh mốc Git trong bàn giao DASH-UI-001
+
+- Ngày04/11/2026, Asia/Saigon; kiểm `git log/reflog` cuối cho thấy HEAD là `e1dacf4d` từ03/11 16:07:01+07:00, sau commit nguồn `f54fd83f`. Sửa nhầm lẫn baseline trong handoff, không sửa lịch sử hoặc tạo commit.
+- Giữ nguyên tài liệu CHG-20261104-002 từ phiên khác trong workspace. Bàn giao/checker chụp trạng thái tài liệu hiện tại, không tự nghiệm thu nhánh tổ chức. Không đổi application code/runtime, không chạy lại test ứng dụng; kết quả DASH-UI-001 vẫn theo CHG-20261104-001.
+- Kiểm: log/reflog, diff, local Markdown link/fence và workflow finish/check. Next action: audit độc lập DASH-UI-001; không commit/push.
+
+## CHG-20261104-002 — Xác nhận TADIC/TACICO cùng công ty
+
+- Ngày 04/11/2026, Asia/Saigon: người dùng xác nhận hai nhóm là đơn vị nội bộ cùng công ty. Ghi DEC-029, bổ sung thiết kế database và ghi chú status; không tự suy cây cấp trên, người quản lý hoặc quyền duyệt.
+- Giữ một database mỗi môi trường, cùng company và workspace/phạm vi theo quyền; không tạo company/database/khách hàng/dự án trùng. Không đổi application code, schema, dữ liệu, credential hoặc quyền runtime; không commit/push.
+- Kiểm tra tài liệu: đối chiếu DEC-002/023 và mô hình tổ chức hiện có; kiểm diff/đường dẫn liên kết. Không chạy lại application tests vì chỉ cập nhật quyết định. Checkpoint DASH-UI-001 đã có từ trước; `start` trả RESUME, giữ nguyên checkpoint và không chạy `finish` thay batch code chưa audit. `ai_workflow.py check` trước sửa đã báo application/tooling code lệch bàn giao; không coi ghi nhận này là nghiệm thu dashboard hoặc làm checker đạt.
+
+## CHG-20261104-001 — DASH-UI-001: Dashboard native rõ số liệu, bộ lọc và thao tác
+
+- Ngày04/11/2026, Asia/Saigon; người dùng cho thực thi riêng task (DEC-028), không commit/push. Baseline Git sạch/check CHG-20261103-001 đạt; start checkpoint trước sửa, snapshot130 checksum/clone18159 restore538 bảng249 blob reference exact trước neutralize.
+- Chênh chart xác minh bằng nguồn và tracking: expense11/An Hòa1.850.000 được Administrator duyệt08:44:55 trước task; cơ cấu hiện810.000/1.250.000/5.100.000, tổng7.160.000. Giữ nguyên dữ liệu người dùng;4 invoice nháp801 triệu.
+- Addon privacy20.0.1.1.0 thêm report read-only theo ORM/quyền actor, phân bổ analytic từng dòng/currency Odoo/unique count, bộ lọc project/ngày và native source action recheck scope. OWL chỉ2 binding hiện có,4 chỉ số, chart thanh ngang từ0/triệu đồng/tên đầy đủ, bảng dự án, refresh/timestamp thật, lỗi/empty/denied/retry. Share nội bộ ẩn + backend guard cũ; standard Share giữ native. Không sudo nguồn nghiệp vụ, thêm ACL/group/allowlist, đổi workflow/schema nguồn, React/prototype/core hoặc seed chứng từ/user/password.
+- Generator/templates và renderer dùng chung; guarded apply/verify giữ ID/quyền, từ chối user drift; DATA003 links chỉ verify, không overwrite dashboard. Upgrade đúng privacy và apply2 dashboard lên18069; chạy lại0 create/update, links verify0 drift.
+- Kiểm: Odoo17 test0 failed/0 error, guard5+9/Ruff/Node syntax; UI/RPC clone/dev60 mỗi môi trường1440/1280/390, zoom Chromium thật125/150% không overflow;0 console lỗi không mong đợi,1 network fault cố ý mỗi ma trận. Clone refresh nguồn84→84,5→84 và810.000→820.000→810.000, restore; clone revoke dashboard/project/raw/drilldown/cache thử rồi khôi phục. Smoke native/API/contract/financial scope đạt. Ảnh trước/sau cả hai/bảng đã xem; [runbook](demo/dashboards/README.md), [handoff](demo/DASH_UI_001_HANDOFF.md).
+- Vận hành: một lần CLI dev.py stop dừng cảPG làm upgrade không kết nối DB; đã bật lại, kiểm538/538 bảng/config/credential/catalog/roles nguyên, sau đó dùng stop_server chỉ dừng Odoo để nâng cấp. Audit bảo toàn cuối đạt:528/538 bảng nguyên,10 delta dashboard/asset/module metadata/telemetry đã đối chiếu;249 blob gốc/249 reference hiện kiểm đạt, chứng từ/quyền/config nguyên. Clone18159 đã dừng, dev18069/PG55432 chạy; không dựng demo18109/18119.
+- Giới hạn: drilldown nguyên chứng từ khác phần phân bổ, chưa multi-currency conversion, Edit spreadsheet không sửa OWL; Windows filestore GC WinError5 cũ vẫn còn. Implementation verified dev/chờ audit độc lập, không business/pilot acceptance. Next: audit DASH-UI-001; giữ TASK-001/DATA003/Q2 và audit khác riêng.
 
 ## CHG-20261103-001 — Commit và push các lượt CHG-20261028-016..CHG-20261102-014
 

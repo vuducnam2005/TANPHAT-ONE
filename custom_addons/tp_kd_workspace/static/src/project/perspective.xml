@@ -1,0 +1,46 @@
+<templates xml:space="preserve">
+<t t-name="tp_kd_workspace.ProjectPerspective">
+<main class="tp_project_perspective" t-att-aria-busy="this.state.busy ? 'true' : 'false'">
+    <header class="tp_project_heading">
+        <div><h1 t-out="this.mode === 'management' ? 'Tổng quan thực hiện' : 'Tổng quan quản trị'"/>
+            <p t-out="this.mode === 'management' ? 'Ai phụ trách, việc nào đến hạn và đầu ra cần bàn giao?' : 'Hợp đồng, cam kết và hồ sơ nào đang cần xử lý?'"/></div>
+        <button type="button" class="btn btn-outline-primary" t-on-click="() => this.navigate(this.mode === 'management' ? 'governance' : 'management')" t-out="this.mode === 'management' ? 'Sang quản trị' : 'Sang quản lý'"/>
+    </header>
+    <div class="tp_project_controls">
+        <label for="tp_current_project">Dự án</label>
+        <select id="tp_current_project" class="form-select" t-on-change="(ev) => this.selectProject(ev)" t-att-disabled="this.state.busy">
+            <option value="" t-att-selected="!this.state.project">Tất cả dự án trong quyền</option>
+            <option t-foreach="this.state.data?.projects || []" t-as="p" t-key="p.id" t-att-value="p.id" t-att-selected="p.id === this.state.project" t-out="p.code + ' — ' + p.name"/>
+        </select>
+        <button type="button" class="btn btn-primary" t-att-disabled="!this.state.project || this.state.busy" t-on-click="() => this.navigate(this.mode, true)">Mở chi tiết dự án</button>
+        <button type="button" class="btn btn-outline-secondary" t-on-click="() => this.load()" t-att-disabled="this.state.busy">Làm mới</button>
+    </div>
+    <p role="alert" class="alert alert-danger" t-if="this.state.error" t-out="this.state.error"/>
+    <p role="status" t-if="this.state.busy">Đang tải dữ liệu theo quyền…</p>
+    <t t-if="this.state.data">
+        <p class="text-muted"><t t-out="this.state.data.project_count"/> dự án trong bộ lọc. Số liệu từ hồ sơ nguồn; bấm từng nhóm để đối chiếu.</p>
+        <div class="tp_project_metrics">
+            <button t-foreach="this.state.data.counts" t-as="metric" t-key="metric.key" type="button" t-on-click="() => this.open(metric.key)">
+                <strong t-out="metric.count"/><span t-out="metric.label"/>
+            </button>
+        </div>
+        <t t-if="this.mode === 'management'">
+            <div class="tp_project_section_heading"><h2>Công việc và đầu ra</h2><button type="button" class="btn btn-outline-primary" t-on-click="() => this.open('wbs')">Mở cấu trúc WBS</button></div>
+            <p>Hoàn tất công việc không là nghiệm thu. Chưa có trọng số để tính tỷ lệ hoàn thành toàn dự án.</p>
+            <div class="tp_project_table_scroll"><table class="table tp_project_table"><thead><tr><th>Công việc</th><th>Dự án / hạng mục cha</th><th>Người phụ trách</th><th>Hạn</th><th>Tiến độ</th><th>Đầu ra</th></tr></thead><tbody>
+                <tr t-foreach="this.state.data.rows" t-as="row" t-key="row.id"><td><button type="button" class="btn btn-link" t-on-click="() => this.open('task', row.id)" t-out="row.name"/></td><td><t t-out="row.project"/><div class="text-muted" t-out="row.parent"/></td><td t-out="row.owner"/><td t-out="this.deadline(row.deadline)"/><td><span class="tp_project_state" t-att-class="this.taskTone(row)" t-out="this.taskLabel(row)"/></td><td t-out="row.output"/></tr>
+                <tr t-if="!this.state.data.rows.length"><td colspan="6">Chưa có công việc trong bộ lọc. Chọn dự án rồi mở chi tiết để đối chiếu phân công và đầu ra.</td></tr>
+            </tbody></table></div>
+            <div class="tp_project_pager"><label for="tp_project_page_size">Số dòng</label><select id="tp_project_page_size" class="form-select" t-on-change="(ev) => this.size(ev)"><option t-foreach="[10,20,50,100]" t-as="n" t-key="n" t-att-value="n" t-att-selected="n === this.state.limit" t-out="n"/></select><span><t t-out="this.state.data.total ? this.state.offset + 1 : 0"/>–<t t-out="Math.min(this.state.offset + this.state.limit, this.state.data.total)"/> / <t t-out="this.state.data.total"/></span><button class="btn btn-outline-secondary" t-att-disabled="!this.state.offset || this.state.busy" t-on-click="() => this.page(-1)">Trước</button><button class="btn btn-outline-secondary" t-att-disabled="this.state.offset + this.state.limit >= this.state.data.total || this.state.busy" t-on-click="() => this.page(1)">Sau</button></div>
+        </t>
+        <t t-else="">
+            <h2>Hồ sơ thương mại và nghĩa vụ</h2>
+            <div class="tp_project_table_scroll"><table class="table tp_project_table"><thead><tr><th>Nhóm hồ sơ</th><th>Số hồ sơ</th><th>Có hạn đã qua</th><th>Thiếu hồ sơ</th><th>Đối chiếu</th></tr></thead><tbody>
+                <tr t-foreach="this.state.data.rows" t-as="row" t-key="row.key"><th t-out="row.label"/><td t-out="row.total"/><td t-out="row.overdue === null ? 'Không áp dụng' : row.overdue"/><td t-out="row.missing === null ? 'Xem hồ sơ nguồn' : row.missing"/><td><button class="btn btn-outline-primary" t-on-click="() => this.open(row.key)">Mở hồ sơ</button></td></tr>
+            </tbody></table></div>
+            <p class="tp_project_caveat">Số hồ sơ không là tổng giá trị. Sản lượng, nghiệm thu và đề nghị thanh toán là các nguồn riêng. Đề nghị thanh toán không là tiền đã trả; số tiền chỉ mở trong hồ sơ nguồn theo quyền.</p>
+        </t>
+    </t>
+</main>
+</t>
+</templates>

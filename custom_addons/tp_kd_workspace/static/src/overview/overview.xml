@@ -1,0 +1,787 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tp_kd_workspace.Overview">
+        <div class="o_tp_kd_ov" t-att-class="this.rootClass()" t-att-aria-busy="(this.state.loading) ? 'true' : 'false'">
+            <t t-set="d" t-value="this.state.data"/>
+
+            <!-- Header: title, data time, scale strip, compact toolbar -->
+            <header class="o_tp_kd_ov_head">
+                <div class="o_tp_kd_ov_heading">
+                    <h1>Tổng quan KH-KD</h1>
+                    <div class="o_tp_kd_ov_meta">
+                        <p class="o_tp_kd_ov_sub">
+                            <t t-if="d">
+                                <span class="o_tp_kd_stamp" t-att-class="{'is-stale': this.state.stale}">
+                                    Dữ liệu lúc <t t-out="d.updated_at"/><t t-if="this.state.stale"> — chưa làm mới được</t>
+                                </span>
+                                <span> · trong phạm vi quyền của bạn</span>
+                            </t>
+                            <span t-else="">Số liệu trong phạm vi quyền của bạn</span>
+                        </p>
+                        <ul t-if="d" class="o_tp_kd_scale" aria-label="Quy mô dữ liệu">
+                            <li t-foreach="this.scaleItems" t-as="item" t-key="item.key">
+                                <button type="button" class="o_tp_kd_scale_btn" t-att-data-key="item.key" t-att-data-tooltip="item.hint"
+                                        t-att-aria-describedby="'tp_kd_scale_' + item.key"
+                                        t-att-disabled="!d.readable[item.key]"
+                                        t-on-click="() => this.open('list', {name: item.key})">
+                                    <span t-out="item.label"/> <b t-out="d.kpis[item.key]"/>
+                                </button>
+                                <span class="visually-hidden" t-att-id="'tp_kd_scale_' + item.key" t-out="item.hint"/>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="o_tp_kd_toolbar" role="toolbar" aria-label="Thao tác Tổng quan">
+                    <Dropdown t-if="d and d.create.length" menuClass="'o_tp_kd_menu'">
+                        <button type="button" class="btn btn-primary o_tp_kd_tb_create">
+                            <i class="oi" data-icon="add" aria-hidden="true"/><span class="o_tp_kd_tb_text"> Tạo hồ sơ</span> <i class="oi" data-icon="arrow_drop_down" aria-hidden="true"/>
+                        </button>
+                        <t t-set-slot="content">
+                            <DropdownItem t-foreach="d.create" t-as="item" t-key="item.kind"
+                                          onSelected="() => this.create(item.kind)">
+                                <t t-out="item.label"/>
+                            </DropdownItem>
+                        </t>
+                    </Dropdown>
+                    <button type="button" class="btn btn-secondary o_tp_kd_tb_refresh" t-on-click="() => this.reload()"
+                            t-att-disabled="this.state.loading" title="Tải lại số liệu" aria-label="Làm mới">
+                        <i class="oi" data-icon="refresh" aria-hidden="true"/><span class="o_tp_kd_tb_text"> Làm mới</span>
+                    </button>
+                    <Dropdown menuClass="'o_tp_kd_menu'">
+                        <button type="button" class="btn btn-secondary o_tp_kd_tb_lists" title="Mở danh sách hồ sơ" aria-label="Xem dữ liệu">
+                            <i class="oi" data-icon="database" aria-hidden="true"/><span class="o_tp_kd_tb_text"> Xem dữ liệu</span>
+                            <i class="oi" data-icon="arrow_drop_down" aria-hidden="true"/>
+                        </button>
+                        <t t-set-slot="content">
+                            <DropdownItem t-foreach="this.listLinks.filter((l) => !d or d.readable[l.name])" t-as="link" t-key="link.name"
+                                          onSelected="() => this.open('list', {name: link.name})">
+                                <t t-out="link.label"/>
+                            </DropdownItem>
+                        </t>
+                    </Dropdown>
+                    <Dropdown position="'bottom-end'" menuClass="'o_tp_kd_prefs_menu'">
+                        <button type="button" class="btn btn-secondary o_tp_kd_tb_prefs" title="Tùy chọn hiển thị" aria-label="Tùy chọn hiển thị">
+                            <i class="oi" data-icon="tune" aria-hidden="true"/>
+                        </button>
+                        <t t-set-slot="content">
+                            <TpKdPrefs/>
+                        </t>
+                    </Dropdown>
+                </div>
+            </header>
+
+            <div t-if="this.state.denied" class="o_tp_kd_denied" role="alert">
+                <i class="oi" data-icon="lock" aria-hidden="true"/>
+                <div>
+                    <strong>Không hiển thị số liệu.</strong>
+                    <span t-out="this.state.error"/>
+                    <span> Dữ liệu đang hiện đã được ẩn; đăng nhập lại hoặc liên hệ quản trị nếu bạn cần quyền xem.</span>
+                </div>
+                <button type="button" class="btn btn-secondary" t-on-click="() => this.reload()">Thử lại</button>
+            </div>
+            <div t-elif="this.state.error" class="o_tp_kd_alert" role="alert">
+                <i class="oi" data-icon="warning" aria-hidden="true"/>
+                <span>
+                    <strong t-if="this.state.stale">Chưa làm mới được — đang hiện dữ liệu lúc <t t-out="d.updated_at"/>. </strong>
+                    <t t-out="this.state.error"/>
+                </span>
+                <button type="button" class="btn btn-link" t-on-click="() => this.reload()">Thử lại</button>
+            </div>
+
+            <!-- Filters: one row on desktop, collapsible with a count chip on mobile -->
+            <section t-if="!this.state.denied" class="o_tp_kd_filters" t-att-class="{'is-open': this.state.filtersOpen}" aria-label="Bộ lọc">
+                <button type="button" class="o_tp_kd_filters_toggle" aria-controls="tp_kd_filters_body"
+                        t-att-aria-expanded="(this.state.filtersOpen) ? 'true' : 'false'" t-on-click="() => this.toggleFilters()">
+                    <i class="oi" data-icon="filter_alt" aria-hidden="true"/>
+                    <span>Bộ lọc</span>
+                    <span t-if="this.activeFilters()" class="o_tp_kd_chip"><t t-out="this.activeFilters()"/> đang áp</span>
+                    <i class="oi o_tp_kd_filters_caret" data-icon="arrow_drop_down" aria-hidden="true"/>
+                </button>
+                <div id="tp_kd_filters_body" class="o_tp_kd_filters_body">
+                    <label class="o_tp_kd_f_wide">
+                        <span>Dự án</span>
+                        <select class="o_input" t-on-change="(ev) => this.setFilter('project_id', ev)">
+                            <option value="" t-att-selected="!this.state.filters.project_id">Tất cả dự án trong quyền</option>
+                            <t t-if="d">
+                                <option t-foreach="d.options.projects" t-as="p" t-key="p.id" t-att-value="p.id"
+                                        t-att-selected="p.id === this.state.filters.project_id" t-out="p.label"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label class="o_tp_kd_f_wide">
+                        <span>Người phụ trách</span>
+                        <select class="o_input" t-on-change="(ev) => this.setFilter('owner_id', ev)">
+                            <option value="" t-att-selected="!this.state.filters.owner_id">Tất cả người phụ trách</option>
+                            <t t-if="d">
+                                <option t-foreach="d.options.owners" t-as="u" t-key="u.id" t-att-value="u.id"
+                                        t-att-selected="u.id === this.state.filters.owner_id" t-out="u.label"/>
+                            </t>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Từ ngày</span>
+                        <input type="date" class="o_input" t-att-value="this.state.filters.date_from or ''"
+                               t-att-aria-invalid="(this.state.dateError) ? 'true' : 'false'"
+                               t-on-change="(ev) => this.setFilter('date_from', ev)"/>
+                    </label>
+                    <label>
+                        <span>Đến ngày</span>
+                        <input type="date" class="o_input" t-att-value="this.state.filters.date_to or ''"
+                               t-att-aria-invalid="(this.state.dateError) ? 'true' : 'false'"
+                               t-on-change="(ev) => this.setFilter('date_to', ev)"/>
+                    </label>
+                    <button type="button" class="btn btn-secondary o_tp_kd_tb_clear" t-on-click="() => this.clearFilters()"
+                            t-att-disabled="!this.hasFilters()" title="Bỏ toàn bộ bộ lọc">
+                        <i class="oi" data-icon="close" aria-hidden="true"/> Xóa lọc
+                    </button>
+                    <p class="o_tp_kd_filters_note">
+                        <span class="o_tp_kd_info" tabindex="0" t-att-data-tooltip="this.dateNote" aria-describedby="tp_kd_date_note">
+                            <i class="oi" data-icon="info" aria-hidden="true"/> Ngày lọc tùy nguồn
+                        </span>
+                        <span id="tp_kd_date_note" class="visually-hidden" t-out="this.dateNote"/>
+                    </p>
+                    <p t-if="this.state.dateError" class="o_tp_kd_field_error" role="alert" t-out="this.state.dateError"/>
+                </div>
+            </section>
+
+            <div t-if="d" class="o_tp_kd_data">
+                <!-- Personal KPIs (can overlap; never added together) -->
+                <section class="o_tp_kd_mykpi" aria-labelledby="tp_kd_kpi_t">
+                    <h2 id="tp_kd_kpi_t" class="o_tp_kd_section_t">Việc của tôi — trong phạm vi đang chọn</h2>
+                    <div class="o_tp_kd_kpis">
+                        <button type="button" class="o_tp_kd_kpi is-review" data-kpi="review" t-on-click="() => this.setTab('review', true)">
+                            <span class="o_tp_kd_kpi_label">Chờ rà soát</span>
+                            <t t-foreach="[d.kpis.review]" t-as="v" t-key="v"><span class="o_tp_kd_kpi_value" t-out="v"/></t>
+                            <span class="o_tp_kd_kpi_note">Hồ sơ đang chờ bạn rà soát</span>
+                        </button>
+                        <button type="button" class="o_tp_kd_kpi is-returned" data-kpi="returned" t-on-click="() => this.setTab('returned', true)">
+                            <span class="o_tp_kd_kpi_label">Bị trả lại</span>
+                            <t t-foreach="[d.kpis.returned]" t-as="v" t-key="v"><span class="o_tp_kd_kpi_value" t-out="v"/></t>
+                            <span class="o_tp_kd_kpi_note">Hồ sơ của bạn bị trả lại</span>
+                        </button>
+                        <button type="button" class="o_tp_kd_kpi is-warn" data-kpi="overdue" t-on-click="() => this.setTab('due', true)">
+                            <span class="o_tp_kd_kpi_label">Quá hạn</span>
+                            <t t-foreach="[d.kpis.overdue]" t-as="v" t-key="v"><span class="o_tp_kd_kpi_value" t-out="v"/></t>
+                            <span class="o_tp_kd_kpi_note">Bạn phụ trách, hạn trước <t t-out="this.formatDate(d.today)"/></span>
+                        </button>
+                        <button type="button" class="o_tp_kd_kpi is-draft" data-kpi="due" t-on-click="() => this.setTab('due', true)">
+                            <span class="o_tp_kd_kpi_label">Đến hạn trong 3 ngày</span>
+                            <t t-foreach="[d.kpis.due]" t-as="v" t-key="v"><span class="o_tp_kd_kpi_value" t-out="v"/></t>
+                            <span class="o_tp_kd_kpi_note">Hạn <t t-out="this.formatWindow(d.kpis.due_window)"/></span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Main pair: donut (state share) + bars (state by business group), linked by state -->
+                <t t-set="info" t-value="this.g01Info()"/>
+                <div class="o_tp_kd_pair" t-att-data-sel="this.state.sel or ''" t-on-keydown="(ev) => this.onPairKey(ev)">
+                    <section class="o_tp_kd_card o_tp_kd_d01" aria-labelledby="tp_kd_d01_t">
+                        <div class="o_tp_kd_card_head">
+                            <div>
+                                <h2 id="tp_kd_d01_t">Hồ sơ đang xử lý</h2>
+                                <p>Nháp, đang rà soát và trả lại trong phạm vi bạn được xem.</p>
+                            </div>
+                        </div>
+                        <p t-if="info.none" class="o_tp_kd_empty o_tp_kd_noaccess">Bạn chưa có quyền xem các loại hồ sơ này.</p>
+                        <t t-else="">
+                            <div class="o_tp_kd_donut_box">
+                                <div class="o_tp_kd_donut" t-att-class="{'is-empty': !info.total}">
+                                    <svg viewBox="0 0 42 42" role="img"
+                                         t-att-aria-label="'Hồ sơ đang xử lý: ' + info.total + '. Nháp ' + d.g01.totals.draft + ', đang rà soát ' + d.g01.totals.in_review + ', trả lại ' + d.g01.totals.returned + '.'">
+                                        <defs>
+                                            <mask t-att-id="'tp_kd_mask_' + this.uid" maskUnits="userSpaceOnUse" x="0" y="0" width="42" height="42">
+                                                <circle class="o_tp_kd_donut_reveal" cx="21" cy="21" r="16" pathLength="100" transform="rotate(-90 21 21)"/>
+                                            </mask>
+                                        </defs>
+                                        <circle class="o_tp_kd_donut_track" cx="21" cy="21" r="16"/>
+                                        <g t-att-mask="'url(#tp_kd_mask_' + this.uid + ')'">
+                                            <circle t-foreach="this.donut(this.g01Parts())" t-as="sl" t-key="sl.key"
+                                                    class="o_tp_kd_slice" t-att-class="'is-' + sl.tone" t-att-data-state="sl.key"
+                                                    cx="21" cy="21" r="16" pathLength="100" transform="rotate(-90 21 21)"
+                                                    t-att-stroke-dasharray="sl.dash" t-att-stroke-dashoffset="sl.offset"
+                                                    t-on-click="() => this.select(sl.key)"/>
+                                        </g>
+                                    </svg>
+                                    <div class="o_tp_kd_donut_center" aria-hidden="true">
+                                        <t t-foreach="[info.total]" t-as="v" t-key="v"><b t-out="v"/></t>
+                                        <span>Hồ sơ đang xử lý</span>
+                                    </div>
+                                </div>
+                                <ul class="o_tp_kd_dlegend" aria-label="Chú giải trạng thái hồ sơ">
+                                    <li t-foreach="this.states" t-as="st" t-key="st">
+                                        <button type="button" class="o_tp_kd_dleg" t-att-class="'is-' + this.stateMeta[st].tone"
+                                                t-att-data-state="st" t-att-disabled="!d.g01.totals[st]"
+                                                t-att-aria-pressed="(this.state.sel === st) ? 'true' : 'false'"
+                                                t-att-aria-label="this.stateMeta[st].label + ': ' + d.g01.totals[st] + ' hồ sơ, ' + this.percent(d.g01.totals[st], info.total) + (d.g01.totals[st] ? ' — chọn để xem theo loại hồ sơ' : '')"
+                                                t-on-click="() => this.select(st)">
+                                            <i aria-hidden="true"/>
+                                            <span class="o_tp_kd_dleg_label" t-out="this.stateMeta[st].label"/>
+                                            <b t-out="d.g01.totals[st]"/>
+                                            <small t-out="this.percent(d.g01.totals[st], info.total)"/>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                            <p t-if="!info.total" class="o_tp_kd_empty">Chưa có hồ sơ nháp, đang rà soát hoặc trả lại trong phạm vi lọc.</p>
+                            <p t-elif="!this.state.sel" class="o_tp_kd_hint">Chọn một trạng thái để xem nó nằm ở loại hồ sơ nào.</p>
+                            <p t-if="info.blocked" class="o_tp_kd_hint"><t t-out="info.blocked"/> nhóm không có quyền xem, không tính vào tổng.</p>
+                        </t>
+                    </section>
+
+                    <section class="o_tp_kd_card o_tp_kd_g01" aria-labelledby="tp_kd_g01_t">
+                        <div class="o_tp_kd_card_head">
+                            <div>
+                                <h2 id="tp_kd_g01_t">Hồ sơ đang xử lý theo nhóm nghiệp vụ</h2>
+                                <p>Cùng một thang cho các nhóm. Bấm một đoạn để mở đúng danh sách; bấm tên nhóm để mở toàn bộ.</p>
+                            </div>
+                            <ul class="o_tp_kd_legend" aria-hidden="true">
+                                <li t-foreach="this.states" t-as="st" t-key="st" t-att-data-state="st"><i t-att-class="'is-' + this.stateMeta[st].tone"/><t t-out="this.stateMeta[st].label"/></li>
+                            </ul>
+                        </div>
+                        <p t-if="info.none" class="o_tp_kd_empty o_tp_kd_noaccess">Bạn chưa có quyền xem các loại hồ sơ này.</p>
+                        <p t-elif="!info.total" class="o_tp_kd_empty">Chưa có hồ sơ nháp, đang rà soát hoặc trả lại trong phạm vi lọc.</p>
+                        <ol t-else="" class="o_tp_kd_bars">
+                            <t t-set="g01max" t-value="this.barMax(d.g01.rows)"/>
+                            <li t-foreach="d.g01.rows" t-as="row" t-key="row.source" class="o_tp_kd_bar_row" t-att-data-source="row.source" t-att-style="'--i:' + row_index">
+                                <button t-if="row.available" type="button" class="o_tp_kd_bar_label btn btn-link"
+                                        t-on-click="() => this.open('list', {name: row.source})"
+                                        t-att-aria-label="'Mở toàn bộ ' + row.label">
+                                    <t t-out="row.label"/>
+                                </button>
+                                <span t-else="" class="o_tp_kd_bar_label" title="Bạn chưa có quyền xem loại hồ sơ này">
+                                    <t t-out="row.label"/> <small>(không có quyền xem)</small>
+                                </span>
+                                <div class="o_tp_kd_bar_track">
+                                    <t t-foreach="this.states" t-as="st" t-key="st">
+                                        <button t-if="row[st]" type="button" class="o_tp_kd_seg_btn"
+                                                t-att-class="'is-' + this.stateMeta[st].tone" t-att-data-state="st"
+                                                t-att-style="'width:' + this.width(row[st], g01max)"
+                                                t-att-title="row.label + ': ' + row[st] + ' ' + this.stateMeta[st].label"
+                                                t-att-aria-label="row.label + ': ' + row[st] + ' hồ sơ ' + this.stateMeta[st].label + ' — mở danh sách'"
+                                                t-on-click="() => this.open('g01', {source: row.source, state: st})">
+                                            <span t-out="row[st]"/>
+                                        </button>
+                                    </t>
+                                </div>
+                                <span class="o_tp_kd_bar_total" t-out="row.total"/>
+                            </li>
+                        </ol>
+                    </section>
+
+                    <!-- Selected state: same denominator, choose the business group before opening a list -->
+                    <section t-if="this.state.sel and info.total" class="o_tp_kd_card o_tp_kd_pick"
+                             t-att-class="'is-' + this.stateMeta[this.state.sel].tone" aria-labelledby="tp_kd_pick_t">
+                        <t t-set="sel" t-value="this.state.sel"/>
+                        <div class="o_tp_kd_pick_head">
+                            <p id="tp_kd_pick_t" aria-live="polite">
+                                <i t-att-class="'o_tp_kd_dot is-' + this.stateMeta[sel].tone" aria-hidden="true"/>
+                                <strong>Đang chọn: <t t-out="this.stateMeta[sel].label"/> <t t-out="d.g01.totals[sel]"/> · <t t-out="this.percent(d.g01.totals[sel], info.total)"/></strong>
+                                <span> trên <t t-out="info.total"/> hồ sơ — chọn loại hồ sơ để mở</span>
+                            </p>
+                            <button type="button" class="btn btn-link o_tp_kd_pick_clear" t-on-click="() => this.clearSelection()">
+                                <i class="oi" data-icon="close" aria-hidden="true"/> Bỏ chọn
+                            </button>
+                        </div>
+                        <ul class="o_tp_kd_pick_list">
+                            <li t-foreach="d.g01.rows" t-as="row" t-key="row.source" t-att-data-source="row.source">
+                                <button t-if="row.available and row[sel]" type="button" class="o_tp_kd_pick_btn"
+                                        t-att-class="'is-' + this.stateMeta[sel].tone"
+                                        t-att-aria-label="row.label + ': ' + row[sel] + ' hồ sơ ' + this.stateMeta[sel].label + ' — mở danh sách'"
+                                        t-on-click="() => this.open('g01', {source: row.source, state: sel})">
+                                    <span t-out="row.label"/> <b t-out="row[sel]"/>
+                                </button>
+                                <span t-elif="row.available" class="o_tp_kd_pick_off"><span t-out="row.label"/> <b>0</b></span>
+                                <span t-else="" class="o_tp_kd_pick_off"><span t-out="row.label"/> <small>không có quyền xem</small></span>
+                            </li>
+                        </ul>
+                    </section>
+                </div>
+
+                <div class="o_tp_kd_grid2">
+                    <!-- Tasks by project -->
+                    <section class="o_tp_kd_card o_tp_kd_tasks" aria-labelledby="tp_kd_task_t">
+                        <div class="o_tp_kd_card_head">
+                            <div>
+                                <h2 id="tp_kd_task_t">Công việc theo dự án</h2>
+                                <p>Số công việc, không phải tiến độ khối lượng; mỗi việc chỉ nằm ở một nhóm.</p>
+                            </div>
+                            <ul class="o_tp_kd_legend" aria-label="Chú giải công việc">
+                                <li t-foreach="this.taskMeta" t-as="m" t-key="m.key"><i t-att-class="'is-' + m.tone"/><t t-out="m.label"/> <b t-out="d.g02.totals[m.key]"/></li>
+                            </ul>
+                        </div>
+                        <p t-if="!d.g02.available" class="o_tp_kd_empty o_tp_kd_noaccess">Bạn chưa có quyền xem công việc.</p>
+                        <p t-elif="!d.g02.rows.length" class="o_tp_kd_empty">Chưa có công việc trong phạm vi lọc.</p>
+                        <ol t-else="" class="o_tp_kd_bars">
+                            <t t-set="taskmax" t-value="this.barMax(d.g02.rows)"/>
+                            <li t-foreach="this.taskRows()" t-as="row" t-key="row.project_id" class="o_tp_kd_bar_row" t-att-data-project="row.project_id" t-att-style="'--i:' + row_index">
+                                <button type="button" class="o_tp_kd_bar_label btn btn-link"
+                                        t-att-title="row.name"
+                                        t-on-click="() => this.open('task', {bucket: 'all', project_id: row.project_id})">
+                                    <t t-out="row.code or row.name"/>
+                                </button>
+                                <div class="o_tp_kd_bar_track">
+                                    <t t-foreach="this.taskMeta" t-as="m" t-key="m.key">
+                                        <button t-if="row[m.key]" type="button" class="o_tp_kd_seg_btn"
+                                                t-att-class="'is-' + m.tone" t-att-data-bucket="m.key"
+                                                t-att-style="'width:' + this.width(row[m.key], taskmax)"
+                                                t-att-title="(row.code or row.name) + ': ' + row[m.key] + ' ' + m.label"
+                                                t-att-aria-label="(row.code or row.name) + ': ' + row[m.key] + ' công việc ' + m.label + ' — mở danh sách'"
+                                                t-on-click="() => this.open('task', {bucket: m.key, project_id: row.project_id})">
+                                            <span t-out="row[m.key]"/>
+                                        </button>
+                                    </t>
+                                </div>
+                                <span class="o_tp_kd_bar_total" t-out="row.total"/>
+                            </li>
+                        </ol>
+                        <div t-if="d.g02.available and d.g02.rows.length" class="o_tp_kd_card_foot">
+                            <span class="o_tp_kd_range">Đang xem <t t-out="this.taskRows().length"/>/<t t-out="d.g02.rows.length"/> dự án</span>
+                            <button t-if="d.g02.rows.length > 8" type="button" class="btn btn-link"
+                                    t-on-click="() => this.toggleTasks()">
+                                <t t-if="this.state.taskAll">Thu gọn</t>
+                                <t t-else="">Xem toàn bộ <t t-out="d.g02.rows.length"/> dự án</t>
+                            </button>
+                        </div>
+                        <p t-if="d.g02.no_deadline" class="o_tp_kd_hint">
+                            Trong nhóm Đang mở còn lại có <t t-out="d.g02.no_deadline"/> việc chưa có hạn.
+                        </p>
+                    </section>
+
+                    <!-- Opportunities and bid preparation -->
+                    <section class="o_tp_kd_card o_tp_kd_leads" aria-labelledby="tp_kd_lead_t">
+                        <div class="o_tp_kd_card_head">
+                            <div>
+                                <h2 id="tp_kd_lead_t">Hồ sơ dự án và chuẩn bị hồ sơ thầu</h2>
+                                <p>Theo hình thức và bước chuẩn bị nội bộ; chưa phải kết quả trúng thầu.</p>
+                            </div>
+                            <button t-if="d.g03.available" type="button" class="btn btn-link o_tp_kd_total_btn" t-on-click="() => this.open('lead', {})">
+                                Tổng <b t-out="d.g03.total"/>
+                            </button>
+                        </div>
+                        <p t-if="!d.g03.available" class="o_tp_kd_empty o_tp_kd_noaccess">Bạn chưa có quyền xem hồ sơ dự án và hồ sơ thầu.</p>
+                        <p t-elif="!d.g03.total" class="o_tp_kd_empty">Chưa có hồ sơ dự án trong phạm vi lọc.</p>
+                        <t t-else="">
+                            <t t-set="leadmax" t-value="this.leadMax()"/>
+                            <h3 class="o_tp_kd_subhead">Đấu thầu</h3>
+                            <ol class="o_tp_kd_bars">
+                                <li t-foreach="['identified', 'preparation', 'submitted']" t-as="bs" t-key="bs" class="o_tp_kd_bar_row" t-att-style="'--i:' + bs_index">
+                                    <span class="o_tp_kd_bar_label" t-att-title="this.bidLabels[bs]" t-out="this.bidLabels[bs]"/>
+                                    <div class="o_tp_kd_bar_track">
+                                        <button t-if="d.g03.bid[bs]" type="button" class="o_tp_kd_seg_btn is-review" t-att-data-bid="bs"
+                                                t-att-style="'width:' + this.width(d.g03.bid[bs], leadmax)"
+                                                t-att-aria-label="'Đấu thầu, ' + this.bidLabels[bs] + ': ' + d.g03.bid[bs] + ' hồ sơ dự án — mở danh sách'"
+                                                t-on-click="() => this.open('lead', {route: 'bid', bid_state: bs})">
+                                            <span t-out="d.g03.bid[bs]"/>
+                                        </button>
+                                    </div>
+                                    <span class="o_tp_kd_bar_total" t-out="d.g03.bid[bs]"/>
+                                </li>
+                            </ol>
+                            <h3 class="o_tp_kd_subhead">Chỉ định thầu</h3>
+                            <ol class="o_tp_kd_bars">
+                                <li class="o_tp_kd_bar_row" style="--i:3">
+                                    <span class="o_tp_kd_bar_label">Tất cả bước</span>
+                                    <div class="o_tp_kd_bar_track">
+                                        <button t-if="d.g03.direct" type="button" class="o_tp_kd_seg_btn is-draft" data-route="direct"
+                                                t-att-style="'width:' + this.width(d.g03.direct, leadmax)"
+                                                t-att-aria-label="'Chỉ định thầu: ' + d.g03.direct + ' hồ sơ dự án — mở danh sách'"
+                                                t-on-click="() => this.open('lead', {route: 'direct'})">
+                                            <span t-out="d.g03.direct"/>
+                                        </button>
+                                    </div>
+                                    <span class="o_tp_kd_bar_total" t-out="d.g03.direct"/>
+                                </li>
+                            </ol>
+                        </t>
+                    </section>
+                </div>
+
+                <!-- Lazy details: production plan / credential expiry -->
+                <section class="o_tp_kd_card o_tp_kd_detail" aria-label="Biểu đồ chi tiết">
+                    <div class="o_tp_kd_card_head">
+                        <div class="o_tp_kd_tabs" role="tablist" aria-label="Biểu đồ chi tiết" t-on-keydown="(ev) => this.onDetailKey(ev)">
+                            <button type="button" role="tab" id="tp_kd_tab_plan" aria-controls="tp_kd_panel_detail"
+                                    t-att-tabindex="(this.state.detail === 'plan') ? '0' : '-1'"
+                                    t-att-aria-selected="(this.state.detail === 'plan') ? 'true' : 'false'"
+                                    t-att-class="{'is-on': this.state.detail === 'plan'}"
+                                    t-on-click="() => this.setDetail('plan')">Kế hoạch sản lượng</button>
+                            <button type="button" role="tab" id="tp_kd_tab_cred" aria-controls="tp_kd_panel_detail"
+                                    t-att-tabindex="(this.state.detail === 'cred') ? '0' : '-1'"
+                                    t-att-aria-selected="(this.state.detail === 'cred') ? 'true' : 'false'"
+                                    t-att-class="{'is-on': this.state.detail === 'cred'}"
+                                    t-on-click="() => this.setDetail('cred')">Hạn năng lực / chứng chỉ</button>
+                        </div>
+                        <label t-if="this.state.detail === 'plan'" class="o_tp_kd_inline">
+                            <span>Kỳ</span>
+                            <select class="o_input" t-on-change="(ev) => this.setPeriod(ev)">
+                                <option value="month" t-att-selected="this.state.periodKind === 'month'">Tháng</option>
+                                <option value="quarter" t-att-selected="this.state.periodKind === 'quarter'">Quý</option>
+                                <option value="year" t-att-selected="this.state.periodKind === 'year'">Năm</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div id="tp_kd_panel_detail" role="tabpanel"
+                         t-att-aria-labelledby="'tp_kd_tab_' + this.state.detail"
+                         t-att-class="{'is-busy': this.state.busy.detail}">
+                        <div t-foreach="[this.state.detail]" t-as="tab" t-key="tab" class="o_tp_kd_tabpane">
+                            <t t-if="tab === 'plan'">
+                                <t t-set="plan" t-value="this.state.plan"/>
+                                <p class="o_tp_kd_hint">Biểu đồ tối đa 12 kế hoạch gần nhất theo kỳ và quyền đọc giá trị.
+                                    <button type="button" class="btn btn-link tp_kd_plan_full" t-on-click="() => this.open('source', {source: 'plan', query: 'all'})">Mở danh sách để tìm, lọc và phân trang</button>
+                                </p>
+                                <p t-if="!plan" class="o_tp_kd_empty">Đang tải…</p>
+                                <p t-elif="!plan.available" class="o_tp_kd_empty o_tp_kd_noaccess">Bạn chưa có quyền xem kế hoạch định kỳ.</p>
+                                <p t-elif="!plan.rows.length" class="o_tp_kd_empty">
+                                    Chưa có kế hoạch kỳ này được phép xem số tiền.
+                                    <t t-if="plan.excluded"> (<t t-out="plan.excluded"/> kế hoạch không thuộc quyền xem số tiền.)</t>
+                                </p>
+                                <t t-else="">
+                                    <p class="o_tp_kd_hint">
+                                        Mục tiêu sản lượng đã xác nhận so với sản lượng tự khai nguồn. Mỗi dòng một thang riêng theo
+                                        tiền tệ và căn cứ thuế của dòng; không cộng kỳ, không so chéo dòng. Mục tiêu chưa xác nhận hiện trạng thái, không hiện 0.
+                                    </p>
+                                    <ul class="o_tp_kd_legend" aria-label="Chú giải kế hoạch">
+                                        <li><i class="is-draft"/>Mục tiêu đã xác nhận</li>
+                                        <li><i class="is-review"/>Sản lượng nguồn</li>
+                                    </ul>
+                                    <ol class="o_tp_kd_plan">
+                                        <li t-foreach="plan.rows" t-as="row" t-key="row.plan_id" class="o_tp_kd_plan_row" t-att-data-plan="row.plan_id">
+                                            <t t-set="bars" t-value="this.planBars(row)"/>
+                                            <button type="button" class="o_tp_kd_plan_name btn btn-link"
+                                                    t-on-click="() => this.open('plan', {plan_id: row.plan_id})">
+                                                <span><b t-out="row.period"/> · <t t-out="row.code or row.name"/><small t-if="row.project"> · <t t-out="row.project"/></small></span>
+                                                <small class="o_tp_kd_plan_unit">
+                                                    <t t-if="row.currency or row.basis_label">
+                                                        <t t-out="row.currency"/><t t-if="row.currency and row.basis_label"> · </t><t t-out="row.basis_label"/>
+                                                    </t>
+                                                    <t t-else="">Chưa có dòng mục tiêu</t>
+                                                </small>
+                                            </button>
+                                            <div class="o_tp_kd_plan_bars">
+                                                <div class="o_tp_kd_plan_bar">
+                                                    <span class="o_tp_kd_plan_track"><span class="o_tp_kd_plan_fill is-draft" t-att-style="'width:' + bars.target + '%'"/></span>
+                                                    <span class="o_tp_kd_plan_val" t-att-class="{'is-muted': !row.target_text}"
+                                                          t-out="row.target_text or (row.target_state === 'unconfirmed' ? 'Mục tiêu chưa xác nhận' : 'Chưa có mục tiêu')"/>
+                                                </div>
+                                                <button type="button" class="o_tp_kd_plan_bar is-btn"
+                                                        t-att-aria-label="'Mở sản lượng nguồn của ' + (row.code or row.name)"
+                                                        t-on-click="() => this.open('plan_sources', {plan_id: row.plan_id})">
+                                                    <span class="o_tp_kd_plan_track"><span class="o_tp_kd_plan_fill is-review" t-att-style="'width:' + bars.source + '%'"/></span>
+                                                    <span class="o_tp_kd_plan_val" t-att-class="{'is-muted': !row.source_text}" t-out="row.source_text or row.status_label"/>
+                                                </button>
+                                            </div>
+                                            <span class="o_tp_kd_pill" t-att-class="'is-' + this.planTone(row)">
+                                                <t t-if="row.ratio !== null" t-out="this.ratioText(row.ratio)"/>
+                                                <t t-else="">Chưa so sánh</t>
+                                            </span>
+                                        </li>
+                                    </ol>
+                                    <p class="o_tp_kd_hint">
+                                        <t t-out="plan.in_scope"/> kế hoạch trong phạm vi
+                                        <t t-if="plan.excluded"> · <t t-out="plan.excluded"/> không thuộc quyền xem số tiền</t>
+                                        <t t-if="plan.more"> · còn <t t-out="plan.more"/> kế hoạch cũ hơn</t>
+                                    </p>
+                                </t>
+                            </t>
+                            <t t-else="">
+                                <t t-set="cred" t-value="this.state.cred"/>
+                                <p t-if="!cred" class="o_tp_kd_empty">Đang tải…</p>
+                                <p t-elif="!cred.available" class="o_tp_kd_empty o_tp_kd_noaccess">Bạn chưa có quyền xem năng lực / chứng chỉ.</p>
+                                <p t-elif="!this.credTotal()" class="o_tp_kd_empty">Chưa có hồ sơ năng lực có ngày hết hạn trong phạm vi lọc.</p>
+                                <div t-else="" class="o_tp_kd_cred">
+                                    <div class="o_tp_kd_donut_box">
+                                        <div class="o_tp_kd_donut is-small">
+                                            <svg viewBox="0 0 42 42" role="img"
+                                                 t-att-aria-label="'Năng lực / chứng chỉ có hạn: ' + this.credTotal() + '. Đã hết hạn ' + cred.buckets.expired + ', trong 30 ngày ' + cred.buckets.soon + ', sau 30 ngày ' + cred.buckets.later + '.'">
+                                                <circle class="o_tp_kd_donut_track" cx="21" cy="21" r="16"/>
+                                                <circle t-foreach="this.donut(this.credParts())" t-as="sl" t-key="sl.key"
+                                                        class="o_tp_kd_slice" t-att-class="'is-' + sl.tone"
+                                                        cx="21" cy="21" r="16" pathLength="100" transform="rotate(-90 21 21)"
+                                                        t-att-stroke-dasharray="sl.dash" t-att-stroke-dashoffset="sl.offset"/>
+                                            </svg>
+                                            <div class="o_tp_kd_donut_center" aria-hidden="true">
+                                                <b t-out="this.credTotal()"/>
+                                                <span>Hồ sơ có hạn</span>
+                                            </div>
+                                        </div>
+                                        <ul class="o_tp_kd_dlegend" aria-label="Nhóm hạn năng lực / chứng chỉ">
+                                            <li t-foreach="this.credParts()" t-as="b" t-key="b.key">
+                                                <button type="button" class="o_tp_kd_dleg" t-att-class="'is-' + b.tone" t-att-data-bucket="b.key"
+                                                        t-att-disabled="!b.value"
+                                                        t-att-aria-label="this.credLabel(b.key) + ': ' + b.value + ' hồ sơ' + (b.value ? ' — mở danh sách' : '')"
+                                                        t-on-click="() => this.open('credential', {bucket: b.key})">
+                                                    <i aria-hidden="true"/>
+                                                    <span class="o_tp_kd_dleg_label" t-out="this.credLabel(b.key)"/>
+                                                    <b t-out="b.value"/>
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div t-if="cred.soon.length" class="o_tp_kd_cred_soon">
+                                        <h3 class="o_tp_kd_subhead">Sắp hết hạn gần nhất</h3>
+                                        <p class="o_tp_kd_hint">Tối đa 5 hồ sơ gần nhất.
+                                            <button type="button" class="btn btn-link tp_kd_cred_full" t-on-click="() => this.open('credential', {bucket: 'soon'})">Mở tất cả hồ sơ sắp hết hạn để lọc và phân trang</button>
+                                        </p>
+                                        <ul class="o_tp_kd_soon">
+                                            <li t-foreach="cred.soon" t-as="c" t-key="c.id">
+                                                <button type="button" class="btn btn-link" t-on-click="() => this.open('record', {source: 'credential', res_id: c.id})">
+                                                    <t t-out="c.code or c.name"/>
+                                                    <small t-if="c.code"> · <t t-out="c.name"/></small>
+                                                </button>
+                                                <span class="o_tp_kd_pill is-warn" t-out="this.formatDate(c.valid_to)"/>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <p t-if="cred and cred.available" class="o_tp_kd_hint">
+                                    Theo ngày hết hạn ghi trên hồ sơ; không tính hồ sơ chưa có ngày hết hạn và không suy ra tình trạng pháp lý.
+                                </p>
+                            </t>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="o_tp_kd_grid_main">
+                    <!-- Project operations table (KD-UI-003 standard) -->
+                    <section class="o_tp_kd_card o_tp_kd_projects" aria-labelledby="tp_kd_proj_t">
+                        <t t-set="pj" t-value="this.state.projects.data"/>
+                        <div class="o_tp_kd_card_head">
+                            <div>
+                                <h2 id="tp_kd_proj_t">Bảng điều hành dự án</h2>
+                                <p>Mở hồ sơ dự án hoặc đi thẳng tới hồ sơ liên quan.</p>
+                            </div>
+                            <div class="o_tp_kd_table_tools">
+                                <div class="o_tp_kd_search">
+                                    <i class="oi" data-icon="search" aria-hidden="true"/>
+                                    <input type="search" class="o_input" placeholder="Tìm mã, tên, bên ký thương mại…"
+                                           aria-label="Tìm dự án" t-att-value="this.state.projects.search"
+                                           t-on-change="(ev) => this.onProjectSearch(ev)"
+                                           t-on-keydown="(ev) => this.onProjectSearchKey(ev)"/>
+                                </div>
+                                <Dropdown position="'bottom-end'" menuClass="'o_tp_kd_menu o_tp_kd_cols'">
+                                    <button type="button" class="btn btn-secondary" title="Chọn cột hiển thị" aria-label="Chọn cột hiển thị">
+                                        <i class="oi" data-icon="visibility" aria-hidden="true"/>
+                                    </button>
+                                    <t t-set-slot="content">
+                                        <div class="o_tp_kd_cols_body" role="group" aria-label="Cột hiển thị">
+                                            <label t-foreach="this.columns" t-as="col" t-key="col.key">
+                                                <input type="checkbox" t-att-checked="this.hasColumn(col.key)"
+                                                       t-on-change="() => this.toggleColumn(col.key)"/>
+                                                <span t-out="col.label"/>
+                                            </label>
+                                        </div>
+                                    </t>
+                                </Dropdown>
+                            </div>
+                        </div>
+                        <div class="o_tp_kd_table_wrap" t-att-class="{'is-busy': this.state.busy.projects}">
+                            <table class="o_tp_kd_table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" t-att-aria-sort="this.sortState('code')">
+                                            <button type="button" t-on-click="() => this.sortBy('code')">Dự án <i class="oi" data-icon="swap_vert" aria-hidden="true"/></button>
+                                        </th>
+                                        <th t-if="this.hasColumn('partner')" scope="col" t-att-aria-sort="this.sortState('partner')">
+                                            <button type="button" t-on-click="() => this.sortBy('partner')">Bên ký thương mại <i class="oi" data-icon="swap_vert" aria-hidden="true"/></button>
+                                        </th>
+                                        <th t-if="this.hasColumn('user')" scope="col" t-att-aria-sort="this.sortState('user')">
+                                            <button type="button" t-on-click="() => this.sortBy('user')">Quản lý <i class="oi" data-icon="swap_vert" aria-hidden="true"/></button>
+                                        </th>
+                                        <th t-if="this.hasColumn('department')" scope="col">Phòng ban</th>
+                                        <th t-if="this.hasColumn('deadline')" scope="col" t-att-aria-sort="this.sortState('deadline')">
+                                            <button type="button" t-on-click="() => this.sortBy('deadline')">Hạn hồ sơ <i class="oi" data-icon="swap_vert" aria-hidden="true"/></button>
+                                        </th>
+                                        <th t-if="this.hasColumn('task_open')" scope="col" class="is-num">Việc mở</th>
+                                        <th t-if="this.hasColumn('task_overdue')" scope="col" class="is-num">Quá hạn</th>
+                                        <th t-if="this.hasColumn('review')" scope="col" class="is-num">Chờ tôi</th>
+                                        <th t-if="this.hasColumn('returned')" scope="col" class="is-num">Trả lại</th>
+                                        <th scope="col" class="is-act"><span class="visually-hidden">Thao tác</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-if="pj and !pj.rows.length">
+                                        <td colspan="10" class="o_tp_kd_empty">Không có dự án phù hợp bộ lọc.</td>
+                                    </tr>
+                                    <t t-if="pj">
+                                        <tr t-foreach="pj.rows" t-as="r" t-key="r.id">
+                                            <th scope="row">
+                                                <button type="button" class="btn btn-link o_tp_kd_proj_name"
+                                                        t-on-click="() => this.open('record', {source: 'project', res_id: r.id})">
+                                                    <b t-if="r.code" t-out="r.code"/>
+                                                    <span t-out="r.name"/>
+                                                </button>
+                                            </th>
+                                            <td t-if="this.hasColumn('partner')" t-out="r.partner"/>
+                                            <td t-if="this.hasColumn('user')" t-out="r.user"/>
+                                            <td t-if="this.hasColumn('department')" t-out="r.department"/>
+                                            <td t-if="this.hasColumn('deadline')" t-att-class="{'is-late': r.deadline_late}">
+                                                <t t-out="this.formatDate(r.deadline)"/>
+                                            </td>
+                                            <td t-if="this.hasColumn('task_open')" class="is-num">
+                                                <button t-if="r.task_open and d.readable.tasks" type="button" class="btn btn-link"
+                                                        t-on-click="() => this.open('task', {bucket: 'open', project_id: r.id})" t-out="r.task_open"/>
+                                                <t t-else="" t-out="r.task_open"/>
+                                            </td>
+                                            <td t-if="this.hasColumn('task_overdue')" class="is-num">
+                                                <button t-if="r.task_overdue and d.readable.tasks" type="button" class="btn btn-link is-late"
+                                                        t-on-click="() => this.open('task', {bucket: 'overdue', project_id: r.id})" t-out="r.task_overdue"/>
+                                                <t t-else="" t-out="r.task_overdue"/>
+                                            </td>
+                                            <td t-if="this.hasColumn('review')" class="is-num" t-out="r.review"/>
+                                            <td t-if="this.hasColumn('returned')" class="is-num" t-out="r.returned"/>
+                                            <td class="is-act">
+                                                <Dropdown position="'bottom-end'" menuClass="'o_tp_kd_menu'">
+                                                    <button type="button" class="btn btn-light btn-sm o_tp_kd_row_menu"
+                                                            t-att-aria-label="'Thao tác cho ' + (r.code or r.name)">
+                                                        Thao tác <i class="oi" data-icon="arrow_drop_down" aria-hidden="true"/>
+                                                    </button>
+                                                    <t t-set-slot="content">
+                                                        <DropdownItem onSelected="() => this.open('record', {source: 'project', res_id: r.id})">Mở hồ sơ dự án</DropdownItem>
+                                                        <DropdownItem t-foreach="d.project_actions" t-as="pa" t-key="pa.method"
+                                                                      onSelected="() => this.projectAction(pa.method, r.id)">
+                                                            <t t-out="pa.label"/>
+                                                        </DropdownItem>
+                                                    </t>
+                                                </Dropdown>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="o_tp_kd_pager">
+                            <label class="o_tp_kd_inline">
+                                <span>Hiển thị dòng mỗi trang</span>
+                                <select class="o_input" t-on-change="(ev) => this.setPageSize(ev)">
+                                    <option t-foreach="this.pageSizes" t-as="n" t-key="n" t-att-value="n"
+                                            t-att-selected="n === this.prefs.pageSize" t-out="n"/>
+                                </select>
+                            </label>
+                            <span class="o_tp_kd_range" t-out="this.range('projects')"/>
+                            <button type="button" class="btn btn-secondary btn-sm" aria-label="Trang trước"
+                                    t-att-disabled="!this.canPage('projects', -1)" t-on-click="() => this.page('projects', -1)">
+                                <i class="oi" data-icon="keyboard_arrow_left" aria-hidden="true"/>
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" aria-label="Trang sau"
+                                    t-att-disabled="!this.canPage('projects', 1)" t-on-click="() => this.page('projects', 1)">
+                                <i class="oi" data-icon="keyboard_arrow_right" aria-hidden="true"/>
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- My work -->
+                    <section id="tp_kd_mine" class="o_tp_kd_card o_tp_kd_mine" aria-labelledby="tp_kd_mine_t" tabindex="-1">
+                        <t t-set="mw" t-value="this.state.mine.data"/>
+                        <div class="o_tp_kd_card_head">
+                            <div>
+                                <h2 id="tp_kd_mine_t">Việc của tôi</h2>
+                                <p>Hồ sơ đang chờ bạn, ưu tiên hạn gần nhất.</p>
+                            </div>
+                        </div>
+                        <div class="o_tp_kd_tabs" role="tablist" aria-label="Nhóm việc của tôi">
+                            <button t-foreach="['review', 'returned', 'due']" t-as="tab" t-key="tab" type="button" role="tab"
+                                    t-att-id="'tp_kd_mtab_' + tab" aria-controls="tp_kd_mine_panel"
+                                    t-att-aria-selected="(this.state.mine.tab === tab) ? 'true' : 'false'"
+                                    t-att-class="{'is-on': this.state.mine.tab === tab}"
+                                    t-on-click="() => this.setTab(tab)">
+                                <t t-out="this.tabLabels[tab]"/> <span class="o_tp_kd_count" t-out="this.tabCount(tab)"/>
+                            </button>
+                        </div>
+                        <div id="tp_kd_mine_panel" role="tabpanel" t-att-aria-labelledby="'tp_kd_mtab_' + this.state.mine.tab"
+                             t-att-class="{'is-busy': this.state.busy.mine}">
+                            <p t-if="mw and !mw.rows.length" class="o_tp_kd_empty">Không có việc trong nhóm này.</p>
+                            <ul t-if="mw" class="o_tp_kd_work">
+                                <li t-foreach="mw.rows" t-as="w" t-key="w.source + '-' + w.id">
+                                    <button type="button" class="o_tp_kd_work_btn"
+                                            t-on-click="() => this.open('record', {source: w.source, res_id: w.id})">
+                                        <span class="o_tp_kd_work_main">
+                                            <span class="o_tp_kd_work_type" t-out="w.type"/>
+                                            <span class="o_tp_kd_work_name">
+                                                <b t-if="w.code" t-out="w.code"/> <t t-out="w.name"/>
+                                            </span>
+                                            <span class="o_tp_kd_work_meta">
+                                                <t t-out="w.project"/><t t-if="w.project and w.owner"> · </t><t t-out="w.owner"/>
+                                            </span>
+                                        </span>
+                                        <span class="o_tp_kd_work_side">
+                                            <span t-att-class="this.workTone(w)" t-out="w.state_label"/>
+                                            <span t-if="w.deadline" class="o_tp_kd_work_due" t-att-class="{'is-late': w.overdue}">
+                                                <t t-if="w.overdue">Quá hạn </t><t t-out="this.formatDate(w.deadline)"/>
+                                            </span>
+                                        </span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        <p t-if="mw and mw.total > 500" class="o_tp_kd_hint">Việc của tôi chỉ duyệt tối đa 500 hồ sơ. Thu hẹp bộ lọc hoặc mở danh sách nguồn để xem tiếp.</p><div class="o_tp_kd_pager">
+                            <label class="o_tp_kd_inline"><span>Hiển thị dòng mỗi trang</span><select class="o_input" aria-label="Số dòng Việc của tôi" t-on-change="(ev) => this.setPageSize(ev)"><option t-foreach="this.pageSizes" t-as="n" t-key="n" t-att-value="n" t-att-selected="n === this.prefs.pageSize" t-out="n"/></select></label><span class="o_tp_kd_range" t-out="this.range('mine')"/>
+                            <button type="button" class="btn btn-secondary btn-sm" aria-label="Trang trước"
+                                    t-att-disabled="!this.canPage('mine', -1)" t-on-click="() => this.page('mine', -1)">
+                                <i class="oi" data-icon="keyboard_arrow_left" aria-hidden="true"/>
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" aria-label="Trang sau"
+                                    t-att-disabled="!this.canPage('mine', 1)" t-on-click="() => this.page('mine', 1)">
+                                <i class="oi" data-icon="keyboard_arrow_right" aria-hidden="true"/>
+                            </button>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Source table -->
+                <section class="o_tp_kd_card o_tp_kd_sources">
+                    <button type="button" class="o_tp_kd_disclosure" aria-controls="tp_kd_sources_body"
+                            t-att-aria-expanded="(this.state.sourcesOpen) ? 'true' : 'false'" t-on-click="() => this.toggleSources()">
+                        <i class="oi" data-icon="chevron_forward" aria-hidden="true"/>
+                        <span>Bảng tổng hợp theo nguồn hồ sơ</span>
+                    </button>
+                    <div t-if="this.state.sourcesOpen" id="tp_kd_sources_body" class="o_tp_kd_table_wrap"
+                         t-att-class="{'is-busy': this.state.busy.sources}">
+                        <p t-if="!this.state.sources" class="o_tp_kd_empty">Đang tải…</p>
+                        <t t-else="">
+                            <p class="o_tp_kd_hint">10 nhóm nguồn cố định theo quyền; dùng bộ lọc chung hoặc chọn số để mở danh sách hồ sơ.</p><table class="o_tp_kd_table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Nguồn</th>
+                                        <th scope="col" class="is-num">Tất cả</th>
+                                        <th scope="col" class="is-num">Chờ tôi rà soát</th>
+                                        <th scope="col" class="is-num">Trả lại cho tôi</th>
+                                        <th scope="col" class="is-num">Quá hạn</th>
+                                        <th scope="col" class="is-num">Còn hạn</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="this.state.sources.rows" t-as="s" t-key="s.source">
+                                        <th scope="row" t-out="s.label"/>
+                                        <td t-foreach="['all', 'review', 'returned', 'overdue', 'due']" t-as="q" t-key="q" class="is-num">
+                                            <button t-if="s[q] and d.readable[s.source]" type="button" class="btn btn-link"
+                                                    t-att-aria-label="s.label + ': ' + s[q]"
+                                                    t-on-click="() => this.open('source', {source: s.source, query: q})" t-out="s[q]"/>
+                                            <t t-else="" t-out="s[q]"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="o_tp_kd_hint">
+                                Năng lực sắp hết hạn: <b t-out="this.state.sources.extras.expiring"/> ·
+                                Phiên bản hợp đồng nháp: <b t-out="this.state.sources.extras.contract_draft"/> ·
+                                Phiên bản hợp đồng hiệu lực: <b t-out="this.state.sources.extras.contract_effective"/>
+                            </p>
+                        </t>
+                    </div>
+                </section>
+
+                <p class="o_tp_kd_footnote">
+                    Hồ sơ nội bộ chưa phải quyết định BASE, bản ký, nghiệm thu bên ngoài hoặc tiền đã thu/chi.
+                    Tổng quan không thể hiện dòng tiền, lợi nhuận hay công nợ.
+                </p>
+            </div>
+            <div t-elif="this.state.loading" class="o_tp_kd_skeleton" aria-label="Đang tải">
+                <div class="is-kpis"><div/><div/><div/><div/></div>
+                <div class="is-pair"><div/><div/></div>
+                <div class="is-row"/>
+            </div>
+        </div>
+    </t>
+
+</templates>

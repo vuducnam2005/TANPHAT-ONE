@@ -1,0 +1,9 @@
+<templates xml:space="preserve">
+    <t t-name="tp_hr_workspace.DepartmentWorkspace">
+        <section class="container p-4" t-if="this.workspace()" aria-labelledby="tp_department_title">
+            <h1 id="tp_department_title" t-out="this.workspace().name"/>
+            <p class="alert alert-info" role="status">Đang phát triển</p>
+            <p>Không gian phòng ban đã được xác định. Các chức năng chuyên môn sẽ được bổ sung sau.</p>
+        </section>
+    </t>
+</templates>

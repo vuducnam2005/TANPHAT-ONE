@@ -8,6 +8,8 @@
 
 AUTH-002 kế thừa [AUTH-001/DEC-012](../DECISIONS.md): React chỉ thu credential và gọi endpoint session native của Odoo; session, quyền, 2FA và passkey vẫn do Odoo xử lý. D4 đã chốt (a) nên DEC-012 giữ nguyên, không cần DEC mới.
 
+**Cập nhật hiện hành09/11/2026 — UI-SHELL-AUTH-001 / CHG-20261109-002:** người dùng giao thực thi riêng bộ navbar/auth native, clone-test/backup verified rồi áp dev18069. `tp_web_login`20.0.1.1.0 đã cài; bố cục/chooser/TOTP/signup/reset theo [acceptance hiện hành](../demo/UI_SHELL_AUTH_001_ACCEPTANCE.md). Manifest không còn tải data đặt policy: install/upgrade giữ nguyên key/giá trị signup/reset hiện hữu, kể cả key vắng. TOTP cancel POST+CSRF về `/web/login`, native logout/session giữ. Mục3.1 và slice2 dưới đây là lịch sử AUTH-002/D6-a, không mô tả policy mutation của bản hiện hành; không ghi lại lịch sử thành đã audit hoặc đã tắt policy dev. AUTH-002/C01/business/pilot và giới hạn cũ vẫn riêng.
+
 ## 0. Nhãn trạng thái
 
 | Nhãn | Nghĩa |

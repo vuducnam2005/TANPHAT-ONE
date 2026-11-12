@@ -1,32 +1,22 @@
-import { Component, computed, onMounted, onWillStart, signal, useProps } from "@odoo/owl";
+import { Component, computed, onMounted, onWillDestroy, signal, useOnChange, useProps } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
+import { hasTouch } from "@web/core/browser/feature_detection";
 import { registry } from "@web/core/registry";
+import { user } from "@web/core/user";
 import { useService } from "@web/core/utils/hooks";
 import { standardActionServiceProps } from "@web/webclient/actions/action_plugin";
-import { buildTiles, filterTiles, groupTiles, monogram } from "./home_catalog";
+import { ADMIN_MODULES, ALL_APPS_KEY, buildCatalog, filterTiles, homeSections, monogram } from "./home_catalog";
+
+const EMPTY_CATALOG = Object.freeze({ isAdmin: false, admin: null, home: [], system: [], all: [], otherApps: 0 });
 
 /** A click the browser should handle itself (new tab/window, download, non-primary button). */
 export function isModifiedClick(ev) {
     return ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey || ev.button !== 0;
 }
 
-/**
- * The menu service may first render menus cached in IndexedDB, which are shared by every
- * user of the browser. The page always starts a fresh /web/webclient/load_menus request
- * (odoo.loadMenusPromise); wait for it and for the menu service to apply it, so Home never
- * shows the catalog of a previous session.
- */
-async function waitForFreshMenus() {
-    if (!odoo.loadMenusPromise) {
-        return;
-    }
-    try {
-        await odoo.loadMenusPromise;
-    } catch {
-        return;
-    }
-    // The menu service applies the response in promise callbacks: one macrotask later they ran.
-    await new Promise((resolve) => browser.setTimeout(resolve));
+/** True while an IME is composing: Enter/Escape then belong to the input method. */
+function isComposing(ev, composing) {
+    return ev.isComposing || composing || ev.keyCode === 229;
 }
 
 export class HomeLauncher extends Component {
@@ -34,36 +24,194 @@ export class HomeLauncher extends Component {
     props = useProps({ ...standardActionServiceProps });
 
     query = signal("");
+    panelQuery = signal("");
+    panelOpen = signal(false);
+    menuState = signal("loading");
     brokenIcons = signal(new Set());
-    searchInput = signal.ref();
+    selectedModule = signal(null);
 
-    tiles = computed(() =>
-        buildTiles(this.menuService.getMenuAsTree("root"), odoo.debug).map((tile) =>
-            this.brokenIcons().has(tile.key)
-                ? { ...tile, icon: { type: "monogram", text: monogram(tile.label) } }
-                : tile
-        )
-    );
-    visibleTiles = computed(() => filterTiles(this.tiles(), this.query()));
-    groups = computed(() => groupTiles(this.visibleTiles()));
+    searchInput = signal.ref();
+    panelInput = signal.ref();
+    panelToggle = signal.ref();
+    panelTitle = signal.ref();
+    detailTitleRef = signal.ref();
+
+    loadSequence = 0;
+    composing = false;
+    focusPanel = false;
+    lastClickedModuleKey = null;
+
+    catalog = computed(() => {
+        if (this.menuState() !== "ready") {
+            return EMPTY_CATALOG;
+        }
+        const catalog = buildCatalog(this.menuService.getMenuAsTree("root"), {
+            debug: odoo.debug,
+            // Session flag for base.group_system; presentation only, the server still
+            // filters every menu and record.
+            isSystem: Boolean(user.isSystem),
+        });
+        const broken = this.brokenIcons();
+        const fix = (tile) =>
+            broken.has(tile.key) ? { ...tile, icon: { type: "monogram", text: monogram(tile.label) } } : tile;
+        return {
+            ...catalog,
+            home: catalog.home.map(fix),
+            system: catalog.system.map(fix),
+            all: catalog.all.map(fix),
+        };
+    });
+
+    isAdmin = computed(() => Boolean(user.isSystem));
+    adminTools = computed(() => {
+        if (!this.isAdmin()) return [];
+        const sys = this.catalog().system || [];
+        const settings = sys.find((t) => t.xmlid === "base.menu_administration");
+        const apps = sys.find((t) => t.xmlid === "base.menu_management");
+        const all = sys.find((t) => t.key === ALL_APPS_KEY);
+        return [settings, apps, all].filter(Boolean);
+    });
+    adminDepartmentEntries = computed(() => this.catalog().admin?.departments || []);
+    adminHrEntries = computed(() => this.catalog().admin?.hr || []);
+    adminAllModules = computed(() => this.catalog().admin?.modules || []);
+    selectedModuleItem = computed(() => {
+        const key = this.selectedModule();
+        if (!key) return null;
+        return (
+            this.adminAllModules().find((m) => m.key === key) ||
+            ADMIN_MODULES.find((m) => m.key === key) ||
+            null
+        );
+    });
+
+    sections = computed(() => homeSections(this.catalog(), this.query()));
+    visibleEntries = computed(() => this.sections().flatMap((section) => section.tiles));
+    panelTiles = computed(() => filterTiles(this.catalog().all, this.panelQuery()));
+    hasAdminPanel = computed(() => this.catalog().all.length > 0);
 
     setup() {
         this.menuService = useService("menu");
-        this.ui = useService("ui");
-        onWillStart(waitForFreshMenus);
+        this._onHashChange = () => this.syncFromHash();
+
         onMounted(() => {
-            if (!this.ui.isSmall) {
-                this.searchInput()?.focus();
-            }
+            this.syncFromHash();
+            this.loadMenus();
+            browser.addEventListener("hashchange", this._onHashChange);
+            browser.addEventListener("popstate", this._onHashChange);
         });
+
+        onWillDestroy(() => {
+            this.loadSequence++;
+            browser.removeEventListener("hashchange", this._onHashChange);
+            browser.removeEventListener("popstate", this._onHashChange);
+        });
+
+        useOnChange(
+            () => [this.selectedModule() || "", Boolean(this.detailTitleRef())],
+            (key, hasTitle) => {
+                if (key && hasTitle) {
+                    this.detailTitleRef()?.focus();
+                }
+            }
+        );
+
+        // Move focus into the panel once it is rendered, only when the user just opened it.
+        // Touch devices get the panel title instead of the input, so no keyboard pops up.
+        useOnChange(
+            () => [Boolean(this.panelInput()), Boolean(this.panelTitle())],
+            (hasInput, hasTitle) => {
+                if (this.focusPanel && hasInput && hasTitle) {
+                    this.focusPanel = false;
+                    (hasTouch() ? this.panelTitle() : this.panelInput()).focus();
+                }
+            }
+        );
+    }
+
+    syncFromHash() {
+        const hash = browser.location.hash || "";
+        const match = hash.match(/(?:unit|detail)=([a-z0-9_-]+)/);
+        let key = match ? match[1] : null;
+        if (key === "tech") key = "technical";
+        const found = ADMIN_MODULES.find((m) => m.key === key);
+        if (found) {
+            this.selectedModule.set(found.key);
+        } else if (!key && this.selectedModule()) {
+            this.selectedModule.set(null);
+            if (this.lastClickedModuleKey) {
+                const btn = document.querySelector(`[data-module="${this.lastClickedModuleKey}"]`);
+                btn?.focus();
+            }
+        }
+    }
+
+    onAdminModuleClick(ev, item) {
+        if (item.key === "business" && item.menu) {
+            if (isModifiedClick(ev)) return;
+            ev.preventDefault();
+            this.menuService.selectMenu(item.menu);
+            return;
+        }
+        if (item.key === "hr" && item.menu) {
+            if (isModifiedClick(ev)) return;
+            ev.preventDefault();
+            this.menuService.selectMenu(item.menu);
+            return;
+        }
+        ev.preventDefault();
+        this.lastClickedModuleKey = item.key;
+        this.selectedModule.set(item.key);
+        browser.location.hash = `unit=${item.key}`;
+    }
+
+    onBackClick() {
+        const old = this.selectedModule();
+        this.selectedModule.set(null);
+        if (browser.location.hash) {
+            browser.location.hash = "";
+        }
+        if (old) {
+            const btn = document.querySelector(`[data-module="${old}"]`);
+            btn?.focus();
+        }
+    }
+
+    async loadMenus() {
+        const sequence = ++this.loadSequence;
+        this.menuState.set("loading");
+        this.panelOpen.set(false);
+        this.panelQuery.set("");
+        try {
+            // IndexedDB can belong to a previous user. Only a fresh, applied response may
+            // unlock the catalog; a failed request must never fall back to cached menus.
+            await this.menuService.reload();
+            if (!this.menuService.getMenuAsTree("root")) {
+                throw new Error("Missing menu root");
+            }
+            if (sequence === this.loadSequence) {
+                this.menuState.set("ready");
+                this.syncFromHash();
+            }
+        } catch {
+            if (sequence === this.loadSequence) this.menuState.set("error");
+        }
+    }
+
+    /** Which empty state applies when Home itself has nothing to show. */
+    emptyKind() {
+        if (this.menuState() !== "ready" || this.visibleEntries().length) return "";
+        if (this.query().trim()) return "search";
+        return this.catalog().otherApps ? "switcher" : "none";
     }
 
     resultMessage() {
-        const count = this.visibleTiles().length;
+        if (this.menuState() === "loading") return "Đang tải không gian làm việc…";
+        if (this.menuState() === "error") return "Chưa tải được Trang chủ";
+        const count = this.visibleEntries().length;
         if (!this.query().trim()) {
-            return `${count} ứng dụng`;
+            return `${count} lối vào trên Trang chủ`;
         }
-        return count ? `Tìm thấy ${count} ứng dụng` : "Không tìm thấy ứng dụng phù hợp";
+        return count ? `Tìm thấy ${count} lối vào` : "Không có lối vào phù hợp trên Trang chủ";
     }
 
     onSearchInput(ev) {
@@ -71,30 +219,90 @@ export class HomeLauncher extends Component {
     }
 
     onSearchKeydown(ev) {
+        if (isComposing(ev, this.composing)) return;
         if (ev.key === "Escape" && this.query()) {
             ev.preventDefault();
             ev.stopPropagation();
             this.clearSearch();
         } else if (ev.key === "Enter") {
-            const [first] = this.visibleTiles();
+            const [first] = this.visibleEntries();
             if (first) {
                 ev.preventDefault();
-                this.menuService.selectMenu(first.menu);
+                this.activate(first);
             }
         }
     }
+
+    onCompositionStart() { this.composing = true; }
+    onCompositionEnd() { this.composing = false; }
 
     clearSearch() {
         this.query.set("");
         this.searchInput()?.focus();
     }
 
-    onTileClick(ev, tile) {
-        if (isModifiedClick(ev)) {
+    /** Opens a menu entry like the native apps menu, or toggles the administrators' panel. */
+    activate(entry) {
+        if (entry.kind === "panel") {
+            this.togglePanel();
+        } else {
+            this.menuService.selectMenu(entry.menu);
+        }
+    }
+
+    onEntryClick(ev, entry) {
+        if (entry.kind === "menu" && isModifiedClick(ev)) {
             return;
         }
         ev.preventDefault();
-        this.menuService.selectMenu(tile.menu);
+        this.activate(entry);
+    }
+
+    togglePanel() {
+        if (this.panelOpen()) {
+            this.closePanel();
+        } else if (this.hasAdminPanel()) {
+            this.focusPanel = true;
+            this.panelQuery.set("");
+            this.panelOpen.set(true);
+        }
+    }
+
+    closePanel() {
+        this.focusPanel = false;
+        this.panelOpen.set(false);
+        this.panelQuery.set("");
+        (this.panelToggle() || this.searchInput())?.focus();
+    }
+
+    onPanelInput(ev) {
+        this.panelQuery.set(ev.target.value);
+    }
+
+    clearPanelSearch() {
+        this.panelQuery.set("");
+        this.panelInput()?.focus();
+    }
+
+    /** Escape clears the panel search first, then closes the panel; it never leaves Home. */
+    onPanelKeydown(ev) {
+        if (ev.key !== "Escape" || isComposing(ev, this.composing)) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (this.panelQuery() && ev.target === this.panelInput()) {
+            this.clearPanelSearch();
+        } else {
+            this.closePanel();
+        }
+    }
+
+    onPanelSearchKeydown(ev) {
+        if (isComposing(ev, this.composing) || ev.key !== "Enter") return;
+        const [first] = this.panelTiles();
+        if (first) {
+            ev.preventDefault();
+            this.menuService.selectMenu(first.menu);
+        }
     }
 
     onIconError(tile) {

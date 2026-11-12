@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_kd_workspace.TextBadge">
+        <t t-if="this.enabled" t-call="web.BadgeField"/>
+        <span t-else="" t-out="this.formattedValue"/>
+    </t>
+    <t t-name="tp_kd_workspace.StatusSelection">
+        <KdStatusBadge t-if="this.colored" name="this.props.name" record="this.props.record" readonly="true"/>
+        <t t-else="" t-call="web.SelectionField"/>
+    </t>
+    <t t-name="tp_kd_workspace.RelationField" t-inherit="web.X2ManyField" t-inherit-mode="primary">
+        <xpath expr="//div[hasclass('o_x2m_control_panel')]" position="inside">
+            <div t-if="this.enabled" class="tp_kd_relation_tools">
+                <strong t-out="this.props.string or this.field.string"/>
+                <button type="button" class="btn btn-outline-primary tp_kd_relation_filter" t-att-disabled="this.blocked"
+                        t-on-click="() => this.filterAll()"><i class="fa fa-filter" aria-hidden="true"/> Tìm / lọc toàn bộ bảng</button>
+                <label>Hiển thị <select aria-label="Số dòng bảng con" t-att-disabled="this.blocked" t-on-change="(ev) => this.changeSize(ev)">
+                    <option t-foreach="this.pageSizes" t-as="n" t-key="n" t-att-value="n" t-att-selected="n === this.list.limit" t-out="n"/>
+                </select> dòng mỗi trang</label>
+                <span t-if="this.blocked" class="tp_kd_save_hint">Lưu thay đổi để lọc</span>
+                <span t-else="" class="text-muted" t-out="this.list.count + ' bản ghi liên quan'"/>
+            </div>
+        </xpath>
+    </t>
+    <t t-name="tp_kd_workspace.RelationDialog">
+        <Dialog title="this.props.title" size="'xl'" bodyClass="'tp_kd_relation_dialog'">
+            <View t-props="this.props.viewProps"/>
+            <t t-set-slot="footer"><button type="button" class="btn btn-secondary" t-on-click="this.props.close">Đóng</button></t>
+        </Dialog>
+    </t>
+</templates>

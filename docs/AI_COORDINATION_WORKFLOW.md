@@ -2,6 +2,8 @@
 
 Tài liệu này bổ sung `AGENTS.md`: phiên hiện tại giữ vai trò điều phối, còn Claude là implementation agent. Không dùng nó để bỏ qua cổng nghiệp vụ hoặc thay `PROJECT_STATUS.md`.
 
+**Hướng hiện hành — DEC-030 (05/11/2026):** giao diện chính là Odoo native; React riêng được giữ legacy. Đọc [hiện trạng và hướng native](architecture/TP_NATIVE_ODOO_DIRECTION.md). Mẫu prompt cũ phải chuyển UI sang native và chỉ yêu cầu OpenAPI/types khi thay API; không coi test React cũ là kiểm chứng UI native mới.
+
 ## 1. Vai trò
 
 **Phiên chính:** đọc status/decision/readiness, chọn batch, phát prompt, nhận diff/log, audit source/test/security/scope, kết luận `TECHNICAL_ACCEPTED`, `NEEDS_FIX` hoặc `BLOCKED`, cập nhật kế hoạch và quyết định bước sau. Phiên chính không tự sửa application code trong mô hình làm việc này.
@@ -19,7 +21,7 @@ Với Request/BASE, đọc [kiến thức nghiệp vụ Request](architecture/TP
 1. Phiên chính xác định trạng thái hiện tại trong `PROJECT_STATUS.md` và plan; nếu chưa có scope/acceptance thì làm audit/spec-only.
 2. Phiên chính gửi một prompt có task ID, change ID, lane, scope, ngoài phạm vi, gate, test và đầu ra.
 3. Claude preflight đọc `AGENTS.md`, status, changelog, decisions, architecture; nếu gate thiếu thì trả `BLOCKED` trước khi sửa.
-4. Claude chạy `scripts/ai_workflow.py start`, sửa theo model/security/API/frontend/test, cập nhật handoff và chạy `finish/check`.
+4. Claude chạy `scripts/ai_workflow.py start`, sửa theo model/action → security → native view/OWL → test; thêm API/OpenAPI khi phạm vi cần, cập nhật handoff và chạy `finish/check`.
 5. Phiên chính kiểm `git status`, `git diff`, `git diff --check`, test/log, OpenAPI, security, migration và tài liệu. Không xem `finish` là bằng chứng test; không xem Claude tự nhận là nghiệm thu.
 6. Phiên chính ghi verdict. `NEEDS_FIX` thì gửi prompt correction chỉ chứa finding; `BLOCKED` thì yêu cầu decision/evidence; `TECHNICAL_ACCEPTED` mới cho phép chọn batch độc lập tiếp.
 7. Khi business owner ký đúng scope và ops gate đạt, chuyển trạng thái riêng sang `BUSINESS_ACCEPTED`/`PILOT_READY`. Commit/push/deploy là bước riêng theo chỉ thị người dùng.
@@ -39,7 +41,7 @@ State/action/capability/field/file/API/UI phải theo: [SPEC].
 Gate: [INPUTS]. Acceptance: [CA DƯƠNG/ÂM/SCOPE/RETRY/RACE cụ thể].
 Dữ liệu/môi trường: [FAKE DB/ORIGIN/DATA DIR/ownership].
 
-Nếu thiếu policy bắt buộc hoặc baseline chưa bàn giao, báo BLOCKED cho phần phụ thuộc; không tự đặt default nghiệp vụ. Khi gate đạt, chạy ai_workflow.py start rồi triển khai model/security/API OpenAPI/types/frontend/test. Giữ transaction/version/idempotency/audit; frontend không tự ghi state/tiền/quyền. Không generic RPC bypass API.
+Nếu thiếu policy bắt buộc hoặc baseline chưa bàn giao, báo BLOCKED cho phần phụ thuộc; không tự đặt default nghiệp vụ. Khi gate đạt, chạy ai_workflow.py start rồi triển khai model/action/security/native view hoặc OWL/test. Giữ transaction/version/idempotency/audit; UI không tự ghi state/tiền/quyền. Native ORM/RPC chỉ gọi backend được bảo vệ, không bypass workflow. Nếu thay API thì cập nhật OpenAPI/types và test tương thích; client ngoài native không né API contract bằng RPC.
 
 Chạy test [LỆNH/TARGET], chỉ nhận test thực đã chạy. Báo pass/fail/skip và log an toàn. Sửa fail trong scope; không mở feature khác. Cập nhật status/changelog/spec bị ảnh hưởng, diff --check, ai_workflow.py finish đúng CHG-ID và check. Báo output dùng được, files/schema/API/security, migration, test evidence, runtime cleanup, giới hạn và next action.
 ```

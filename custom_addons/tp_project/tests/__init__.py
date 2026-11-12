@@ -1,1 +1,1 @@
-from . import test_project_access
+from . import test_department_role, test_project_access

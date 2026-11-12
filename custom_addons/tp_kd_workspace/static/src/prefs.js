@@ -1,0 +1,149 @@
+import { proxy } from "@odoo/owl";
+import { browser } from "@web/core/browser/browser";
+import { user } from "@web/core/user";
+import { session } from "@web/session";
+
+/**
+ * KD-UI-002 personal display options. Presentation only: nothing here changes data, rights or
+ * which records the server returns. Stored per database and user in localStorage; any invalid
+ * or unreadable value falls back to the default.
+ */
+export const PROJECT_COLUMNS = [
+    { key: "partner", label: "Bên ký thương mại" },
+    { key: "user", label: "Quản lý" },
+    { key: "department", label: "Phòng ban" },
+    { key: "deadline", label: "Hạn hồ sơ" },
+    { key: "task_open", label: "Việc đang mở" },
+    { key: "task_overdue", label: "Việc quá hạn" },
+    { key: "review", label: "Chờ tôi rà soát" },
+    { key: "returned", label: "Trả lại cho tôi" },
+];
+const COLUMN_KEYS = PROJECT_COLUMNS.map((c) => c.key);
+const PAGE_SIZES = [10, 20, 50, 100];
+
+export function defaults() {
+    return {
+        collapsed: false,
+        density: "comfortable",
+        motion: "auto",
+        groups: null, // null: every group open; otherwise the list of open group XML IDs
+        columns: COLUMN_KEYS.filter((k) => k !== "department"),
+        pageSize: 10,
+    };
+}
+
+function storageKey() {
+    return `tp_kd_ui:v1:${session.db || ""}:${user.userId || 0}`;
+}
+
+function sanitize(raw) {
+    const value = defaults();
+    if (!raw || typeof raw !== "object") {
+        return value;
+    }
+    if (typeof raw.collapsed === "boolean") {
+        value.collapsed = raw.collapsed;
+    }
+    if (["comfortable", "compact"].includes(raw.density)) {
+        value.density = raw.density;
+    }
+    if (["auto", "reduced"].includes(raw.motion)) {
+        value.motion = raw.motion;
+    }
+    if (Array.isArray(raw.groups)) {
+        value.groups = raw.groups.filter((g) => typeof g === "string").slice(0, 20);
+    }
+    if (Array.isArray(raw.columns)) {
+        const columns = COLUMN_KEYS.filter((k) => raw.columns.includes(k));
+        value.columns = columns;
+    }
+    if (PAGE_SIZES.includes(raw.pageSize)) {
+        value.pageSize = raw.pageSize;
+    }
+    return value;
+}
+
+function load() {
+    try {
+        return sanitize(JSON.parse(browser.localStorage.getItem(storageKey()) || "null"));
+    } catch {
+        return defaults();
+    }
+}
+
+export const kdPrefs = proxy(load());
+
+export function savePrefs(changes = {}) {
+    Object.assign(kdPrefs, sanitize({ ...kdPrefs, ...changes }));
+    try {
+        browser.localStorage.setItem(storageKey(), JSON.stringify(kdPrefs));
+    } catch {
+        // Private mode or full storage: keep the in-memory value for this tab only.
+    }
+}
+
+/** Optional-column storage prefixes of KH-KD lists opened in this session (KD-UI-003). */
+export const KD_COLUMN_PREFIXES = new Set();
+
+/** Remove localStorage keys that start with one of the given prefixes (KH-KD lists only). */
+export function forgetColumns(prefixes) {
+    try {
+        for (let index = browser.localStorage.length - 1; index >= 0; index--) {
+            const key = browser.localStorage.key(index);
+            if (key && [...prefixes].some((prefix) => key.startsWith(prefix))) {
+                browser.localStorage.removeItem(key);
+            }
+        }
+    } catch {
+        // Storage unavailable: nothing stored to forget.
+    }
+}
+
+/** Reset only this module's UI keys; no other storage, session or server value is touched. */
+export function resetPrefs() {
+    try {
+        browser.localStorage.removeItem(storageKey());
+    } catch {
+        // ignore
+    }
+    forgetColumns(KD_COLUMN_PREFIXES);
+    Object.assign(kdPrefs, defaults());
+}
+
+export const PAGE_SIZE_OPTIONS = PAGE_SIZES;
+
+// Only page length is persisted; no record IDs, domains or search text.
+export function tablePageKey(model, action, view) {
+    return `tp_kd_page:v1:${session.db || ""}:${user.userId || 0}:${model}:${action || ""}:${view || ""}`;
+}
+export function readPageSize(key) {
+    try {
+        const value = Number(browser.localStorage.getItem(key));
+        return PAGE_SIZES.includes(value) ? value : 20;
+    } catch {
+        return 20;
+    }
+}
+export function writePageSize(key, value) {
+    if (!PAGE_SIZES.includes(value)) return;
+    try { browser.localStorage.setItem(key, String(value)); } catch { /* tab remains usable */ }
+}
+
+/** Vietnamese search without diacritics: "nghiem thu" matches "Hồ sơ nghiệm thu". */
+export function fold(text) {
+    return (text || "")
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D")
+        .toLowerCase()
+        .trim();
+}
+
+export function isModifiedClick(ev) {
+    return ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey || ev.button !== 0;
+}
+
+export const KD_APP_XMLID = "tp_kd_workspace.menu_kd";
+export const REPORTS_XMLID = "tp_kd_workspace.menu_reports";
+export const LAST_LEAF_KEY = "tp_kd_ui:last_leaf";

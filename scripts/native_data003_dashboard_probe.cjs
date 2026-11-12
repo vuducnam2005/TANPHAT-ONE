@@ -1,4 +1,7 @@
 /* Clone-only committed source delta, native spreadsheet refresh, then restore the source value. */
+if (process.argv.includes('--dash-ui001')) {
+  require('./dash_ui001_refresh.cjs');
+} else {
 const { chromium } = require('../frontend/node_modules/playwright');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -76,3 +79,4 @@ async function rpc(context, model, method, args, kwargs = {}) {
     await browser.close();
   }
 })().catch(error => { console.error(error.message); process.exitCode = 1; });
+}

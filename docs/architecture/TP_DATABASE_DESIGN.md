@@ -2,9 +2,22 @@
 
 Ngày 28/10/2026. Phân biệt phần đã triển khai nền với mô hình nghiệp vụ sẽ bổ sung sau.
 
+**Chính sách local 10/11/2026 — DEC-037:** giữ `tp_tanphat_dev` (18069) và
+`tp_tanphat_test` (18079), không tạo DB theo mỗi task. Dọn dữ liệu nghiệp vụ
+mẫu có backup/diễn tập, giữ tài khoản/quyền/cấu hình; test tách data dir tại
+`.local/test/data`, cron/SMTP cách ly. Không restore test đè dev. Staging/prod
+trong bảng dưới là thiết kế tương lai trên hạ tầng riêng, chưa được tạo thêm
+bởi tác vụ dọn này. Kết quả và cách chạy theo [runbook](../../ops/runbooks/SAMPLE_DATA_CLEANUP_AND_TEST.md)
+và [status](../PROJECT_STATUS.md); fixture/count lịch sử bên dưới không phải
+dữ liệu hiện còn trên main sau dọn.
+
+**Cập nhật 05/11/2026 — DEC-030:** giao diện chính phát triển trong Odoo native, React riêng chuyển legacy. Quyết định này không đổi database/schema, dữ liệu, filestore hoặc scope quyền. Lượt chốt hướng chỉ sửa tài liệu; xem [hướng giao diện](TP_NATIVE_ODOO_DIRECTION.md).
+
 ## 1. Phương án chọn
 
 Một database PostgreSQL do Odoo quản lý cho mỗi môi trường. Các phòng ban cùng dùng một hồ sơ dự án, hợp đồng, giao khoán và chứng từ; phạm vi truy cập được kiểm tra ở backend. Không tách database theo phòng ban vì sẽ phải đồng bộ cùng một nghiệp vụ và khó duy trì transaction.
+
+**Xác nhận cơ cấu ngày 04/11/2026 — DEC-029:** TADIC và TACICO là đơn vị nội bộ cùng công ty. Không tạo công ty Odoo hay database riêng cho hai đơn vị này. Dùng cùng company; cấu trúc phòng ban/đơn vị, phân công dự án và quyền backend phân biệt phạm vi làm việc. Cấp trên, người quản lý và quyền cụ thể chưa được xác nhận; tài liệu này chưa tạo hoặc thay đổi cơ cấu/quyền trên database.
 
 | Môi trường | Database | Vai trò |
 | --- | --- | --- |
@@ -87,7 +100,7 @@ Một bộ phục hồi Odoo gồm database dump, filestore tương ứng, phiê
 
 OPS-001 ngày 28/10/2026 đã kiểm chứng local: chụp dev nhất quán khi tạm dừng riêng Odoo, khôi phục DB/filestore và source commit `d9e8ccdc` vào cluster/HTTP/data-dir mới, đối chiếu 314 bảng và 37 tham chiếu attachment, kiểm login/API/quyền/tải tệp. Script ở `scripts/backup_restore.py`, hướng dẫn tại [BACKUP_RESTORE.md](../../ops/runbooks/BACKUP_RESTORE.md). Backup/credential nằm `.local/ops-001` có giới hạn ACL, chưa mã hóa. Đây là diễn tập cùng máy dùng lại `.venv`; backup ngoài máy, host khác, lịch/retention và RPO/RTO vẫn cần hoàn thiện trước production.
 
-Runtime dev chỉ bind loopback, chưa là triển khai production. Khi triển khai thật: HTTPS cùng origin cho SPA/Odoo, secrets riêng, không mở database manager công khai, staging kiểm migration và đủ test quyền/CSRF/MFA. Cấu hình mẫu nằm ở `ops/config/`, cấu hình/mật khẩu thật nằm trong `.local/` ngoài Git.
+Runtime dev chỉ bind loopback, chưa là triển khai production. Khi triển khai thật: HTTPS cho Odoo native, cùng origin cho API/legacy nếu giữ phục vụ, secrets riêng, không mở database manager công khai, staging kiểm migration và đủ test quyền/CSRF/MFA. Cấu hình mẫu nằm ở `ops/config/`, cấu hình/mật khẩu thật nằm trong `.local/` ngoài Git.
 
 ## 7. Đề xuất chi tiết cho phần nghiệp vụ tiếp theo
 

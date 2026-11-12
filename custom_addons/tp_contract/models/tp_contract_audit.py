@@ -15,6 +15,10 @@ WORKFLOW_ACTIONS = [
     ('resubmit_review', 'Resubmit for Review'),
     ('return_review', 'Return for Rework'),
     ('begin_rework', 'Begin Rework'),
+    ('take_review', 'Take Over Review'),
+    ('assign_owner', 'Assign Business Owner'),
+    ('document_add', 'Add Draft Document'),
+    ('document_remove', 'Archive Draft Document'),
 ]
 
 
@@ -42,6 +46,9 @@ class TpContractAudit(models.Model):
     version_after = fields.Integer(required=True)
     payload_sha256 = fields.Char()
     reason = fields.Text()
+    head_contributor = fields.Boolean(readonly=True)
+    snapshot_before = fields.Json(readonly=True)
+    snapshot_after = fields.Json(readonly=True)
 
     _event_unique = models.Constraint('UNIQUE(event_id)', 'Audit event IDs are unique.')
 
@@ -146,3 +153,19 @@ class TpContractIdempotency(models.Model):
         if not self.env.context.get(WORKFLOW_CONTEXT) or set(vals) - allowed or any(self.mapped('result_contract_id')):
             raise UserError(self.env._('An idempotency result is recorded once.'))
         return super().write(vals)
+
+
+class TpContractAuditAmount(models.Model):
+    _name = 'tp.contract.audit.amount'
+    _description = 'Protected contract intervention financial snapshots'
+    audit_id = fields.Many2one('tp.contract.audit', required=True, ondelete='restrict', index=True)
+    project_id = fields.Many2one(related='audit_id.project_id', store=True, index=True)
+    company_id = fields.Many2one(related='audit_id.company_id', store=True, index=True)
+    before_snapshot = fields.Json(readonly=True)
+    after_snapshot = fields.Json(readonly=True)
+
+    def write(self, vals):
+        raise UserError(self.env._('Financial intervention snapshots are immutable.'))
+
+    def unlink(self):
+        raise UserError(self.env._('Financial intervention snapshots are immutable.'))

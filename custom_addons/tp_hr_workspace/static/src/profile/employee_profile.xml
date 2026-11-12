@@ -1,0 +1,14 @@
+<templates xml:space="preserve">
+    <t t-name="tp_hr_workspace.EmployeeProfile" t-inherit="web.FormView" t-inherit-mode="primary">
+        <xpath expr="//t[@t-set-slot='control-panel-buttons']" position="inside">
+            <t t-if="!this.env.inDialog">
+                <button class="btn btn-outline-secondary o_tp_hr_back" t-on-click="this.backToEmployees"><i class="oi" data-icon="arrow_back" aria-hidden="true"/>Quay lại</button>
+                <button t-if="this.canEdit and !this.model.root.isInEdition" class="btn btn-primary o_tp_hr_edit" t-on-click="this.editProfile"><i class="oi" data-icon="edit" aria-hidden="true"/>Sửa hồ sơ</button>
+                <t t-if="this.canEdit and this.model.root.isInEdition">
+                    <button class="btn btn-primary o_tp_hr_save" t-on-click="this.saveProfile">Lưu</button>
+                    <button class="btn btn-outline-secondary o_tp_hr_cancel" t-on-click="this.cancelProfile">Hủy</button>
+                </t>
+            </t>
+        </xpath>
+    </t>
+</templates>

@@ -17,3 +17,45 @@ msgstr "Mã Tân Phát"
 #: model:ir.model.constraint,message:tp_organization.constraint_hr_department_tp_company_code_unique
 msgid "The department code must be unique within its company."
 msgstr "Mã phòng ban phải là duy nhất trong công ty."
+
+# HR-CORRECTION-008 (CHG-20261112-013): employee code and roster source labels.
+#. module: tp_organization
+#: model:ir.model.fields,field_description:tp_organization.field_hr_employee__tp_employee_code
+#: model:ir.model.fields,field_description:tp_organization.field_hr_employee_public__tp_employee_code
+msgid "TP Employee Code"
+msgstr "Mã nhân viên"
+
+#. module: tp_organization
+#: model:ir.model.fields,field_description:tp_organization.field_hr_employee__tp_source_code
+msgid "Source Code"
+msgstr "Mã nguồn"
+
+#. module: tp_organization
+#: model:ir.model.fields,field_description:tp_organization.field_hr_employee__tp_source_department
+msgid "Source Department"
+msgstr "Đơn vị nguồn"
+
+#. module: tp_organization
+#: model:ir.model.fields,field_description:tp_organization.field_hr_employee__tp_source_title
+msgid "Source Title"
+msgstr "Chức vụ nguồn"
+
+#. module: tp_organization
+#: model:ir.model.fields,field_description:tp_organization.field_hr_employee__tp_source_snapshot
+msgid "Source Snapshot"
+msgstr "Dữ liệu nguồn"
+
+#. module: tp_organization
+#: model:ir.model.fields,field_description:tp_organization.field_hr_employee__tp_import_batch_id
+msgid "Import Batch"
+msgstr "Đợt nhập danh sách"
+
+#. module: tp_organization
+#: model:ir.model.constraint,message:tp_organization.constraint_hr_employee_tp_code_unique
+msgid "Employee TP code is already used, including archived records."
+msgstr "Mã nhân viên đã được dùng (kể cả hồ sơ đã lưu trữ)."
+
+#. module: tp_organization
+#: model:ir.model.constraint,message:tp_organization.constraint_hr_employee_tp_source_unique
+msgid "Source identity is already used in this company."
+msgstr "Mã nguồn đã thuộc về một hồ sơ khác trong công ty."

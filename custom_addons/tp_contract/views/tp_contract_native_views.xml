@@ -1,0 +1,564 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <record id="view_native_draft_form" model="ir.ui.view">
+        <field name="name">tp.contract.native.draft.form</field>
+        <field name="model">tp.contract.native.draft</field>
+        <field name="arch" type="xml">
+            <form string="Nháp hợp đồng">
+                <field name="mode" invisible="1"/>
+                <field name="contract_id" invisible="1"/>
+                <field name="revision_id" invisible="1"/>
+                <field name="expected_version" invisible="1" force_save="1"/>
+                <field name="allowed_project_ids" invisible="1"/>
+                <field name="can_edit_header" invisible="1"/>
+                <field name="can_edit_money" invisible="1"/><field name="needs_intervention_reason" invisible="1"/>
+                <group>
+                    <field name="project_id" string="Dự án" domain="[('id', 'in', allowed_project_ids)]" readonly="mode == 'edit'" options="{'no_create': True}"/>
+                    <field name="revision_name"/>
+                    <field name="revision_reference"/><field name="reason" invisible="not needs_intervention_reason" required="needs_intervention_reason"/>
+                </group>
+                <group string="Thông tin chung">
+                    <group>
+                        <field name="code" readonly="not can_edit_header"/>
+                        <field name="name" readonly="not can_edit_header"/>
+                        <field name="contract_type" readonly="not can_edit_header"/>
+                    </group>
+                    <group>
+                        <field name="partner_id" readonly="not can_edit_header" options="{'no_create': True}"/>
+                        <field name="currency_id" readonly="not can_edit_header or (mode == 'edit' and not can_edit_money)" options="{'no_create': True}"/>
+                    </group>
+                </group>
+                <notebook>
+                    <page string="Dòng phạm vi">
+                        <p class="text-muted" invisible="can_edit_money">Xóa dòng đã có số tiền cần quyền sửa tài chính. Bạn vẫn có thể sửa tên và nội dung phạm vi.</p>
+                        <field name="line_ids">
+                            <list editable="bottom">
+                                <field name="scope_key"/>
+                                <field name="name"/>
+                                <field name="current_amount_text" readonly="1"/>
+                            </list>
+                        </field>
+                    </page>
+                    <page string="Nhập giá trị mới" invisible="not can_edit_money">
+                        <p class="text-muted">Chỉ thêm dòng khi muốn đổi giá trị. Dùng đúng mã phạm vi; để trống số tiền khi chưa xác nhận. Số 0 đã xác nhận là giá trị hợp lệ.</p>
+                        <field name="amount_input_ids">
+                            <list editable="bottom">
+                                <field name="scope_key"/>
+                                <field name="amount_state"/>
+                                <field name="value"/>
+                                <field name="tax_basis"/>
+                            </list>
+                        </field>
+                    </page>
+                </notebook>
+                <footer>
+                    <button name="action_confirm" type="object" string="Lưu nháp" class="btn-primary"/>
+                    <button string="Đóng" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="view_native_amendment_form" model="ir.ui.view">
+        <field name="name">tp.contract.native.amendment.form</field>
+        <field name="model">tp.contract.native.amendment</field>
+        <field name="arch" type="xml">
+            <form string="Tạo nháp phụ lục sửa đổi">
+                <group>
+                    <field name="contract_id"/>
+                    <field name="expected_version" invisible="1" force_save="1"/>
+                    <field name="name"/>
+                    <field name="reference"/>
+                </group>
+                <footer>
+                    <button name="action_confirm" type="object" string="Tạo nháp phụ lục" class="btn-primary"/>
+                    <button string="Đóng" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="view_native_submit_form" model="ir.ui.view">
+        <field name="name">tp.contract.native.submit.form</field>
+        <field name="model">tp.contract.native.submit</field>
+        <field name="arch" type="xml">
+            <form string="Trình rà soát">
+                <group>
+                    <field name="contract_id"/>
+                    <field name="revision_id"/>
+                    <field name="expected_version" invisible="1" force_save="1"/>
+                    <field name="eligible_reviewer_ids" invisible="1"/>
+                    <field name="is_resubmit" invisible="1"/>
+                    <field name="reviewer_id" domain="[('id', 'in', eligible_reviewer_ids)]" options="{'no_create': True}" required="1"/>
+                    <field name="last_return_reason" invisible="not is_resubmit"/>
+                    <field name="last_return_issues" invisible="not is_resubmit"/>
+                    <field name="fix_summary" invisible="not is_resubmit" required="is_resubmit"/>
+                </group>
+                <p class="text-muted">Rà soát không thay phê duyệt chính thức trên BASE, chữ ký hoặc hiệu lực hợp đồng.</p>
+                <footer>
+                    <button name="action_confirm" type="object" string="Trình rà soát" class="btn-primary"/>
+                    <button string="Đóng" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="view_native_return_form" model="ir.ui.view">
+        <field name="name">tp.contract.native.return.form</field>
+        <field name="model">tp.contract.native.return</field>
+        <field name="arch" type="xml">
+            <form string="Điều phối và tài liệu hợp đồng">
+                <group>
+                    <field name="contract_id"/>
+                    <field name="revision_id"/>
+                    <field name="expected_version" invisible="1" force_save="1"/>
+                    <field name="operation"/><field name="reason" required="1"/>
+                    <field name="eligible_owner_ids" invisible="1"/>
+                    <field name="owner_id" domain="[('id','in',eligible_owner_ids)]" invisible="operation != 'assign_owner'" required="operation == 'assign_owner'" options="{'no_create': True}"/>
+                    <field name="document_id" domain="[('revision_id','=',revision_id)]" invisible="operation != 'document_remove'" required="operation == 'document_remove'" options="{'no_create': True}"/>
+                    <field name="document_name" invisible="operation != 'document_add'" required="operation == 'document_add'"/>
+                    <field name="document_kind" invisible="operation != 'document_add'"/>
+                    <field name="confidentiality" invisible="operation != 'document_add'"/>
+                    <field name="file" filename="file_name" invisible="operation != 'document_add'" required="operation == 'document_add'"/>
+                    <field name="file_name" invisible="operation != 'document_add'"/>
+                    <field name="available_scope_keys" readonly="1" invisible="operation != 'return_review'"/>
+                </group>
+                <field name="issue_ids" invisible="operation != 'return_review'">
+                    <list editable="bottom">
+                        <field name="scope_key"/>
+                        <field name="note" required="1"/>
+                    </list>
+                </field>
+                <footer>
+                    <button name="action_confirm" type="object" string="Xác nhận" class="btn-primary"/>
+                    <button string="Đóng" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="view_native_rework_form" model="ir.ui.view">
+        <field name="name">tp.contract.native.rework.form</field>
+        <field name="model">tp.contract.native.rework</field>
+        <field name="arch" type="xml">
+            <form string="Bắt đầu chỉnh sửa lại">
+                <group>
+                    <field name="contract_id"/>
+                    <field name="revision_id"/>
+                    <field name="expected_version" invisible="1" force_save="1"/>
+                    <field name="reason" required="1"/>
+                </group>
+                <footer>
+                    <button name="action_confirm" type="object" string="Bắt đầu chỉnh sửa lại" class="btn-primary"/>
+                    <button string="Đóng" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_native_draft" model="ir.actions.act_window">
+        <field name="name">Nháp hợp đồng</field>
+        <field name="res_model">tp.contract.native.draft</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <record id="action_native_amendment" model="ir.actions.act_window">
+        <field name="name">Tạo nháp phụ lục sửa đổi</field>
+        <field name="res_model">tp.contract.native.amendment</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <record id="action_native_submit" model="ir.actions.act_window">
+        <field name="name">Trình rà soát</field>
+        <field name="res_model">tp.contract.native.submit</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <record id="action_native_return" model="ir.actions.act_window">
+        <field name="name">Trả lại để chỉnh sửa</field>
+        <field name="res_model">tp.contract.native.return</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <record id="action_native_rework" model="ir.actions.act_window">
+        <field name="name">Bắt đầu chỉnh sửa lại</field>
+        <field name="res_model">tp.contract.native.rework</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <record id="view_contract_list" model="ir.ui.view">
+        <field name="name">tp.contract.native.list</field>
+        <field name="model">tp.contract</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0" string="TP Contracts">
+                <header>
+                    <button name="%(action_native_draft)d" type="action" string="Tạo nháp hợp đồng" display="always" invisible="not context.get('tp_can_create_contract')" class="btn-primary"/>
+                </header>
+                <field name="code" string="Số hợp đồng"/>
+                <field name="name" string="Tên hợp đồng"/>
+                <field name="project_id"/>
+                <field name="partner_id"/>
+                <field name="contract_type"/>
+                <field name="department_id"/>
+                <field name="lifecycle_state"/>
+                <field name="tp_latest_review_state" string="Rà soát bản mới nhất" widget="badge"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_contract_search" model="ir.ui.view">
+        <field name="name">tp.contract.native.search</field>
+        <field name="model">tp.contract</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="project_id"/>
+                <filter name="in_review" string="Có bản đang rà soát" domain="[('revision_ids.review_state', '=', 'in_review')]"/>
+                <filter name="returned" string="Có bản bị trả lại" domain="[('revision_ids.review_state', '=', 'returned')]"/>
+                <filter name="draft" string="Có bản nháp" domain="[('revision_ids.review_state', '=', 'draft')]"/>
+                <separator/>
+                <filter name="project" string="Dự án" context="{'group_by': 'project_id'}"/>
+                <filter name="department" string="Phòng ban" context="{'group_by': 'department_id'}"/>
+            </search>
+        </field>
+    </record>
+    <record id="view_contract_form" model="ir.ui.view">
+        <field name="name">tp.contract.native.form</field>
+        <field name="model">tp.contract</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0" string="TP Contracts">
+                <header>
+                    <field name="tp_can_create_amendment" invisible="1"/>
+                    <field name="aggregate_version" invisible="1"/>
+                    <button name="%(action_native_amendment)d" type="action" string="Tạo nháp phụ lục sửa đổi" context="{'default_contract_id': id, 'default_expected_version': aggregate_version}" invisible="not tp_can_create_amendment"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_tp_open_documents" type="object" class="oe_stat_button" icon="fa-file-text-o">
+                            <field name="tp_document_count" widget="statinfo" string="Tài liệu"/>
+                        </button>
+                        <button name="action_tp_open_audit" type="object" class="oe_stat_button" icon="fa-history" string="Lịch sử"/>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="code"/>
+                        </h1>
+                        <h2>
+                            <field name="name"/>
+                        </h2>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="project_id"/>
+                            <field name="partner_id"/>
+                            <field name="contract_type"/>
+                        </group>
+                        <group>
+                            <field name="department_id"/>
+                            <field name="currency_id"/>
+                            <field name="lifecycle_state"/>
+                            <field name="legacy_unverified"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Bản gốc/phụ lục">
+                            <field name="revision_ids">
+                                <list create="0" edit="0" delete="0">
+                                    <field name="sequence"/>
+                                    <field name="revision_kind"/>
+                                    <field name="name"/>
+                                    <field name="reference"/>
+                                    <field name="review_state" widget="badge"/>
+                                    <field name="signature_status"/>
+                                    <field name="effectivity_status"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_revision_list" model="ir.ui.view">
+        <field name="name">tp.contract.revision.native.list</field>
+        <field name="model">tp.contract.revision</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0">
+                <field name="contract_id"/>
+                <field name="sequence"/>
+                <field name="revision_kind"/>
+                <field name="name"/>
+                <field name="reference"/><field name="review_state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_revision_form" model="ir.ui.view">
+        <field name="name">tp.contract.revision.native.form</field>
+        <field name="model">tp.contract.revision</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0" string="Bản hợp đồng">
+                <header>
+                    <field name="tp_is_resubmit" invisible="1"/>
+                    <field name="tp_can_edit_draft" invisible="1"/>
+                    <field name="tp_can_submit_review" invisible="1"/>
+                    <field name="tp_can_return_review" invisible="1"/>
+                    <field name="tp_can_begin_rework" invisible="1"/>
+                    <field name="tp_contract_version" invisible="1"/><field name="tp_can_take_review" invisible="1"/><field name="tp_can_assign_owner" invisible="1"/><field name="tp_can_document_add" invisible="1"/><field name="tp_can_document_remove" invisible="1"/><button name="%(action_native_return)d" type="action" string="Nhận rà soát" context="{'default_contract_id': contract_id, 'default_revision_id': id, 'default_expected_version': tp_contract_version, 'default_operation': 'take_review'}" invisible="not tp_can_take_review"/><button name="%(action_native_return)d" type="action" string="Phân công" context="{'default_contract_id': contract_id, 'default_revision_id': id, 'default_expected_version': tp_contract_version, 'default_operation': 'assign_owner'}" invisible="not tp_can_assign_owner"/><button name="%(action_native_return)d" type="action" string="Thêm tài liệu nháp" context="{'default_contract_id': contract_id, 'default_revision_id': id, 'default_expected_version': tp_contract_version, 'default_operation': 'document_add'}" invisible="not tp_can_document_add"/><button name="%(action_native_return)d" type="action" string="Gỡ tài liệu nháp" context="{'default_contract_id': contract_id, 'default_revision_id': id, 'default_expected_version': tp_contract_version, 'default_operation': 'document_remove'}" invisible="not tp_can_document_remove"/>
+                    <button name="%(action_native_draft)d" type="action" string="Chỉnh sửa nháp" context="{'default_contract_id': contract_id, 'default_revision_id': id, 'default_expected_version': tp_contract_version}" invisible="not tp_can_edit_draft"/>
+                    <button name="%(action_native_submit)d" type="action" string="Trình rà soát" context="{'default_contract_id': contract_id, 'default_revision_id': id, 'default_expected_version': tp_contract_version}" invisible="not tp_can_submit_review or tp_is_resubmit" class="btn-primary"/>
+                    <button name="%(action_native_submit)d" type="action" string="Trình rà soát lại" context="{'default_contract_id': contract_id, 'default_revision_id': id, 'default_expected_version': tp_contract_version}" invisible="not tp_can_submit_review or not tp_is_resubmit" class="btn-primary"/>
+                    <button name="%(action_native_return)d" type="action" string="Trả lại để chỉnh sửa" context="{'default_contract_id': contract_id, 'default_revision_id': id, 'default_expected_version': tp_contract_version}" invisible="not tp_can_return_review"/>
+                    <button name="%(action_native_rework)d" type="action" string="Bắt đầu chỉnh sửa lại" context="{'default_contract_id': contract_id, 'default_revision_id': id, 'default_expected_version': tp_contract_version}" invisible="not tp_can_begin_rework"/>
+                    <field name="review_state" widget="statusbar" statusbar_visible="draft,in_review,returned"/>
+                </header>
+                <sheet>
+                    <field name="tp_financial_read_granted" invisible="1"/>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_tp_open_amounts" type="object" string="Số tiền" icon="fa-money" class="oe_stat_button" invisible="not tp_financial_read_granted"/>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="contract_id"/>
+                            <field name="revision_kind"/>
+                            <field name="reference"/>
+                            <field name="business_owner_id"/><field name="previous_revision_id"/>
+                        </group>
+                        <group>
+                            <field name="signature_status"/>
+                            <field name="signature_authority_status"/>
+                            <field name="effectivity_status"/>
+                            <field name="signed_date"/>
+                            <field name="effective_date"/>
+                            <field name="recorded_at"/>
+                        </group>
+                    </group>
+                    <field name="tp_amount_summary_text" nolabel="1" invisible="not tp_financial_read_granted"/>
+                    <notebook>
+                        <page string="Dòng phạm vi">
+                            <field name="line_ids">
+                                <list create="0" edit="0" delete="0">
+                                    <field name="sequence"/>
+                                    <field name="scope_key"/>
+                                    <field name="name"/>
+                                    <field name="work_item_id"/>
+                                    <field name="change_kind"/>
+                                    <field name="previous_line_id"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Lần trình rà soát">
+                            <field name="submission_ids">
+                                <list create="0" edit="0" delete="0">
+                                    <field name="sequence"/>
+                                    <field name="submitted_by_id"/>
+                                    <field name="submitted_at"/>
+                                    <field name="reviewer_id"/><field name="assigned_reviewer_id"/>
+                                    <field name="outcome"/>
+                                    <field name="fix_summary"/>
+                                    <field name="return_reason"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Tham chiếu BASE">
+                            <p class="text-muted">Ghi nhận khai báo; không phải đã ký hoặc đã có hiệu lực.</p>
+                            <field name="approval_reference_ids">
+                                <list create="0" edit="0" delete="0">
+                                    <field name="reference_kind"/>
+                                    <field name="base_reference"/>
+                                    <field name="decision"/>
+                                    <field name="verification_state"/>
+                                    <field name="authority_status"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_scope_line_form" model="ir.ui.view">
+        <field name="name">tp.contract.line.native.form</field>
+        <field name="model">tp.contract.line</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0">
+                <sheet>
+                    <group>
+                        <field name="revision_id"/>
+                        <field name="sequence"/>
+                        <field name="scope_key"/>
+                        <field name="name"/>
+                        <field name="work_item_id"/>
+                        <field name="change_kind"/>
+                        <field name="previous_line_id"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_reference_form" model="ir.ui.view">
+        <field name="name">tp.approval.reference.native.form</field>
+        <field name="model">tp.approval.reference</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0">
+                <sheet>
+                    <p>Ghi nhận khai báo; không phải đã ký hoặc đã có hiệu lực.</p>
+                    <group>
+                        <field name="revision_id"/>
+                        <field name="reference_kind"/>
+                        <field name="base_reference"/>
+                        <field name="decision"/>
+                        <field name="verification_state"/>
+                        <field name="authority_status"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_submission_form" model="ir.ui.view">
+        <field name="name">tp.contract.submission.native.form</field>
+        <field name="model">tp.contract.submission</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0">
+                <sheet>
+                    <group>
+                        <field name="revision_id"/>
+                        <field name="sequence"/>
+                        <field name="submitted_by_id"/>
+                        <field name="submitted_at"/>
+                        <field name="reviewer_id"/><field name="assigned_reviewer_id"/>
+                        <field name="outcome"/>
+                        <field name="fix_summary"/>
+                        <field name="returned_by_id"/>
+                        <field name="returned_at"/>
+                        <field name="return_reason"/>
+                        <field name="tp_return_issues_text"/>
+                        <field name="rework_started_by_id"/>
+                        <field name="rework_started_at"/>
+                        <field name="rework_reason"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_document_list" model="ir.ui.view">
+        <field name="name">tp.contract.document.native.list</field>
+        <field name="model">tp.contract.document</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0">
+                <field name="name"/>
+                <field name="document_kind"/>
+                <field name="confidentiality"/>
+                <field name="revision_id"/>
+                <field name="file_name"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_document_form" model="ir.ui.view">
+        <field name="name">tp.contract.document.native.form</field>
+        <field name="model">tp.contract.document</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="contract_id"/>
+                        <field name="revision_id"/>
+                        <field name="document_kind"/>
+                        <field name="confidentiality"/>
+                        <field name="file_name"/>
+                        <field name="file" filename="file_name" widget="binary"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_amount_list" model="ir.ui.view">
+        <field name="name">tp.contract.line.amount.native.list</field>
+        <field name="model">tp.contract.line.amount</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0">
+                <field name="line_id"/>
+                <field name="amount_state"/>
+                <field name="amount" invisible="amount_state != 'confirmed'"/>
+                <field name="tax_basis"/>
+                <field name="currency_id"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_amount_form" model="ir.ui.view">
+        <field name="name">tp.contract.line.amount.native.form</field>
+        <field name="model">tp.contract.line.amount</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0">
+                <sheet>
+                    <group>
+                        <field name="line_id"/>
+                        <field name="amount_state"/>
+                        <field name="amount" invisible="amount_state != 'confirmed'"/>
+                        <field name="tax_basis"/>
+                        <field name="currency_id"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_audit_list" model="ir.ui.view">
+        <field name="name">tp.contract.audit.native.list</field>
+        <field name="model">tp.contract.audit</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0">
+                <field name="acted_at"/>
+                <field name="actor_id"/>
+                <field name="action"/>
+                <field name="revision_id"/>
+                <field name="state_before"/>
+                <field name="state_after"/>
+                <field name="reason"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_audit_form" model="ir.ui.view">
+        <field name="name">tp.contract.audit.native.form</field>
+        <field name="model">tp.contract.audit</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0">
+                <sheet>
+                    <group>
+                        <field name="contract_id"/>
+                        <field name="revision_id"/>
+                        <field name="acted_at"/>
+                        <field name="actor_id"/>
+                        <field name="action"/>
+                        <field name="state_before"/>
+                        <field name="state_after"/>
+                        <field name="version_before"/>
+                        <field name="version_after"/>
+                        <field name="reason"/>
+                    <field name="snapshot_before"/><field name="snapshot_after"/></group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_tp_contracts_list" model="ir.actions.act_window">
+        <field name="name">TP Contracts</field>
+        <field name="res_model">tp.contract</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_contract_search"/>
+        <field name="help" type="html">
+            <p>Chưa có hợp đồng trong các dự án bạn được phân công.</p>
+        </field>
+    </record>
+    <record id="action_tp_contracts" model="ir.actions.server">
+        <field name="name">TP Contracts</field>
+        <field name="model_id" ref="model_tp_contract"/>
+        <field name="group_ids" eval="[(4, ref('tp_core.group_user'))]"/>
+        <field name="state">code</field>
+        <field name="code">
+action = env['ir.actions.actions']._for_xml_id('tp_contract.action_tp_contracts_list')
+projects = env['project.project'].search([('tp_managed', '=', True)])
+can_create = any('contract_draft_edit' in env['tp.contract.workflow']._tp_capabilities(p, p.tp_department_id) for p in projects)
+action['context'] = dict(env.context, tp_can_create_contract=can_create)
+    </field>
+    </record>
+    <menuitem id="menu_tp_contracts" name="TP Contracts" parent="tp_core.menu_platform" action="action_tp_contracts" groups="tp_core.group_user" sequence="30"/>
+</odoo>

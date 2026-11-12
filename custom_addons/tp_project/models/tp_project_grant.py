@@ -95,6 +95,9 @@ class TpProjectGrant(models.Model):
         Department-scoped capabilities match only a grant of the same department,
         so the same capability name in another department never applies.
         """
+        if (capability in dict(CAPABILITIES) and project._tp_head_allowed(user)
+                and (capability not in DEPARTMENT_SCOPED or department == project.sudo().tp_department_id)):
+            return True
         domain = self._active_grant_domain(capability, (user or self.env.user).id) & Domain('project_id', '=', project.id)
         if capability in DEPARTMENT_SCOPED:
             if not department:

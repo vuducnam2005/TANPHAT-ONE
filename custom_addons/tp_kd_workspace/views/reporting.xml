@@ -1,0 +1,345 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+  <record id="overview_inbox" model="ir.ui.view">
+    <field name="name">kd.overview.inbox</field>
+    <field name="model">tp.kd.overview</field>
+    <field name="inherit_id" ref="overview_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//group[@name='sources']" position="before">
+        <h2>Việc cần xử lý</h2>
+        <p>Chọn bộ đếm để mở hồ sơ nguồn đúng quyền. Hạn 3 ngày và chứng chỉ 30 ngày là ngưỡng minh họa.</p>
+        <div class="tp_kd_queue overflow-auto">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Nguồn hồ sơ</th>
+                <th>Tất cả</th>
+                <th>Chờ tôi rà soát</th>
+                <th>Trả lại cho tôi</th>
+                <th>Quá hạn</th>
+                <th>Đến hạn trong 3 ngày</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>Giao khoán</th>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.allocation','kd_query':'all'}">
+                    <field name="allocation_all_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.allocation','kd_query':'review'}">
+                    <field name="allocation_review_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.allocation','kd_query':'returned'}">
+                    <field name="allocation_returned_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.allocation','kd_query':'overdue'}">
+                    <field name="allocation_overdue_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.allocation','kd_query':'due'}">
+                    <field name="allocation_due_count" nolabel="1"/>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <th>Sản lượng tự khai</th>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.production','kd_query':'all'}">
+                    <field name="production_all_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.production','kd_query':'review'}">
+                    <field name="production_review_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.production','kd_query':'returned'}">
+                    <field name="production_returned_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.production','kd_query':'overdue'}">
+                    <field name="production_overdue_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.production','kd_query':'due'}">
+                    <field name="production_due_count" nolabel="1"/>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <th>Hồ sơ nghiệm thu</th>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.acceptance','kd_query':'all'}">
+                    <field name="acceptance_all_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.acceptance','kd_query':'review'}">
+                    <field name="acceptance_review_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.acceptance','kd_query':'returned'}">
+                    <field name="acceptance_returned_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.acceptance','kd_query':'overdue'}">
+                    <field name="acceptance_overdue_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.acceptance','kd_query':'due'}">
+                    <field name="acceptance_due_count" nolabel="1"/>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <th>Đề nghị thanh toán</th>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.payment.request','kd_query':'all'}">
+                    <field name="payment_all_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.payment.request','kd_query':'review'}">
+                    <field name="payment_review_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.payment.request','kd_query':'returned'}">
+                    <field name="payment_returned_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.payment.request','kd_query':'overdue'}">
+                    <field name="payment_overdue_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.payment.request','kd_query':'due'}">
+                    <field name="payment_due_count" nolabel="1"/>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <th>Kế hoạch định kỳ</th>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.periodic.plan','kd_query':'all'}">
+                    <field name="plan_all_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.periodic.plan','kd_query':'review'}">
+                    <field name="plan_review_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.periodic.plan','kd_query':'returned'}">
+                    <field name="plan_returned_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.periodic.plan','kd_query':'overdue'}">
+                    <field name="plan_overdue_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.periodic.plan','kd_query':'due'}">
+                    <field name="plan_due_count" nolabel="1"/>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <th>Năng lực / chứng chỉ</th>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.credential','kd_query':'all'}">
+                    <field name="credential_all_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.credential','kd_query':'review'}">
+                    <field name="credential_review_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.credential','kd_query':'returned'}">
+                    <field name="credential_returned_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.credential','kd_query':'overdue'}">
+                    <field name="credential_overdue_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.credential','kd_query':'due'}">
+                    <field name="credential_due_count" nolabel="1"/>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <th>Nghĩa vụ / hồ sơ thiếu</th>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.obligation','kd_query':'all'}">
+                    <field name="obligation_all_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.obligation','kd_query':'review'}">
+                    <field name="obligation_review_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.obligation','kd_query':'returned'}">
+                    <field name="obligation_returned_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.obligation','kd_query':'overdue'}">
+                    <field name="obligation_overdue_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.obligation','kd_query':'due'}">
+                    <field name="obligation_due_count" nolabel="1"/>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <th>Hồ sơ dự án / thầu</th>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'crm.lead','kd_query':'all'}">
+                    <field name="opportunity_all_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'crm.lead','kd_query':'review'}">
+                    <field name="opportunity_review_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'crm.lead','kd_query':'returned'}">
+                    <field name="opportunity_returned_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'crm.lead','kd_query':'overdue'}">
+                    <field name="opportunity_overdue_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'crm.lead','kd_query':'due'}">
+                    <field name="opportunity_due_count" nolabel="1"/>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <th>Công việc / WBS</th>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'project.task','kd_query':'all'}">
+                    <field name="task_all_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'project.task','kd_query':'review'}">
+                    <field name="task_review_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'project.task','kd_query':'returned'}">
+                    <field name="task_returned_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'project.task','kd_query':'overdue'}">
+                    <field name="task_overdue_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'project.task','kd_query':'due'}">
+                    <field name="task_due_count" nolabel="1"/>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <th>Phiên bản hợp đồng</th>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.contract.revision','kd_query':'all'}">
+                    <field name="contract_all_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.contract.revision','kd_query':'review'}">
+                    <field name="contract_review_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.contract.revision','kd_query':'returned'}">
+                    <field name="contract_returned_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.contract.revision','kd_query':'overdue'}">
+                    <field name="contract_overdue_count" nolabel="1"/>
+                  </button>
+                </td>
+                <td>
+                  <button type="object" name="action_inbox" class="btn btn-outline-secondary" context="{'kd_source':'tp.contract.revision','kd_query':'due'}">
+                    <field name="contract_due_count" nolabel="1"/>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <group>
+          <button name="action_inbox" type="object" string="Chứng chỉ hết hạn trong 30 ngày minh họa" context="{'kd_source':'tp.credential','kd_query':'expiring'}">
+            <span>Chứng chỉ sắp hết hạn: </span>
+            <field name="credential_expiring_count" nolabel="1"/>
+          </button>
+          <button name="action_inbox" type="object" string="Phiên bản hợp đồng dự thảo" context="{'kd_source':'tp.contract.revision','kd_query':'draft'}">
+            <span>Phiên bản dự thảo: </span>
+            <field name="contract_draft_count" nolabel="1"/>
+          </button>
+          <button name="action_inbox" type="object" string="Phiên bản có ghi nhận hiệu lực" context="{'kd_source':'tp.contract.revision','kd_query':'effective'}">
+            <span>Phiên bản có ghi nhận hiệu lực: </span>
+            <field name="contract_effective_count" nolabel="1"/>
+          </button>
+        </group>
+        <p class="text-muted">Các bộ đếm là hồ sơ, không là tổng tiền. Phụ lục là phiên bản; không cộng vào giá trị hợp đồng hiệu lực. Chưa có chứng từ ghi sổ hoặc tiền thực thu/chi được xác minh trong bộ dữ liệu tổng hợp. Mở từng kế hoạch để đối chiếu chỉ tiêu cùng kỳ/tiền tệ/cơ sở.</p>
+      </xpath>
+    </field>
+  </record>
+
+  <record id="report_center_view" model="ir.ui.view">
+    <field name="name">tp.kd.report.center.form</field>
+    <field name="model">tp.kd.report.center</field>
+    <field name="arch" type="xml">
+      <form string="Báo cáo KH-KD" js_class="tp_kd_report_center" create="0" edit="0" delete="0">
+        <sheet/>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_reports" model="ir.actions.act_window">
+    <field name="name">Báo cáo KH-KD</field>
+    <field name="res_model">tp.kd.report.center</field>
+    <field name="view_mode">form</field>
+    <field name="view_id" ref="report_center_view"/>
+    <field name="target">main</field>
+  </record>
+
+  <menuitem id="menu_reports" name="Báo cáo KH-KD" parent="menu_group_admin" action="action_reports" sequence="10"/>
+</odoo>

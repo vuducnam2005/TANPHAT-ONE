@@ -1,3 +1,5 @@
+import base64
+import binascii
 import hashlib
 import hmac
 import json
@@ -11,7 +13,7 @@ from psycopg2 import errors as pg_errors
 from odoo import fields, models
 from odoo.exceptions import ConcurrencyError
 from odoo.fields import Domain
-from odoo.tools import SQL, float_repr
+from odoo.tools import SQL, BinaryBytes, float_repr
 
 from .tp_contract import CONTRACT_TYPES, WORKFLOW_CONTEXT
 from .tp_contract_line import TAX_BASES
@@ -37,6 +39,10 @@ ACTION_CAPABILITIES = {
     'submit_review': ('contract_submit', 'financial_read'),
     'return_review': ('contract_review_commercial', 'financial_read'),
     'begin_rework': ('contract_draft_edit',),
+    'take_review': ('contract_review_commercial', 'financial_read'),
+    'assign_owner': ('contract_draft_edit',),
+    'document_add': ('contract_draft_edit', 'financial_read'),
+    'document_remove': ('contract_draft_edit', 'financial_read'),
 }
 FINANCIAL_EDIT = ('financial_read', 'financial_draft_edit')
 REVIEWER_CAPABILITIES = frozenset({'contract_review_commercial', 'financial_read'})
@@ -223,6 +229,30 @@ def _parse_begin_rework(payload):
     }
 
 
+def _parse_head_command(payload):
+    _object(payload, 'body', required=('expected_version', 'reason'),
+            optional=('owner_id', 'document_id', 'name', 'document_kind', 'confidentiality', 'file', 'file_name'))
+    data = {'expected_version': _parse_version(payload),
+            'reason': _text(payload['reason'], 'body.reason', max_length=2000)}
+    for name in ('owner_id', 'document_id'):
+        if name in payload:
+            data[name] = _int(payload[name], 'body.' + name)
+    for name in ('name', 'document_kind', 'confidentiality', 'file_name'):
+        if name in payload:
+            data[name] = _text(payload[name], 'body.' + name, max_length=255)
+    if 'file' in payload:
+        raw = payload['file']
+        if not isinstance(raw, str) or len(raw) > 28_000_000:
+            raise _error(400, 'invalid_request', 'The file must be base64 content smaller than 20 MB.')
+        try:
+            data['file'] = BinaryBytes(base64.b64decode(raw, validate=True))
+        except (ValueError, binascii.Error) as error:
+            raise _error(400, 'invalid_request', 'The file encoding is invalid.') from error
+        if data['file'].size > 20_000_000:
+            raise _error(400, 'invalid_request', 'The file exceeds 20 MB.')
+    return data
+
+
 PARSERS = {
     'create_contract': _parse_create_contract,
     'create_amendment': _parse_create_amendment,
@@ -230,6 +260,7 @@ PARSERS = {
     'submit_review': _parse_submit_review,
     'return_review': _parse_return_review,
     'begin_rework': _parse_begin_rework,
+    **{name: _parse_head_command for name in ('take_review', 'assign_owner', 'document_add', 'document_remove')},
 }
 
 
@@ -265,7 +296,7 @@ class TpContractWorkflow(models.AbstractModel):
     _name = 'tp.contract.workflow'
     _description = 'Tan Phat Contract Workflow Service'
 
-    def _tp_run(self, action, payload, *, key, contract_id=None, revision_id=None, request_id=None):
+    def _tp_run(self, action, payload, *, key, contract_id=None, revision_id=None, request_id=None, intervention_reason=None):
         """Execute ``action`` for the current user and return the affected records.
 
         :returns: dict with ``contract``, ``revision``, ``submission`` (records
@@ -301,7 +332,10 @@ class TpContractWorkflow(models.AbstractModel):
             data = PARSERS[action](payload)
             project = contract.project_id
 
-        fingerprint = self._tp_fingerprint(action, object_ref, payload)
+        if intervention_reason is not None:
+            data['reason'] = _text(intervention_reason, 'reason', max_length=2000)
+        fingerprint_payload = dict(payload, _native_intervention_reason=data.get('reason')) if intervention_reason is not None else payload
+        fingerprint = self._tp_fingerprint(action, object_ref, fingerprint_payload)
         replay = self._tp_replay(action, key, object_ref, fingerprint)
         if replay is not None:
             return replay
@@ -340,7 +374,7 @@ class TpContractWorkflow(models.AbstractModel):
         assigned = self.env['tp.project.assignment'].sudo().search_count([
             ('project_id', '=', project.id), ('user_id', '=', user.id), ('active', '=', True),
         ], limit=1)
-        if not assigned:
+        if not assigned and not self.env["tp.kd.department.role"]._is_head(project=project, department=department, user=user):
             return set()
         Grant = self.env['tp.project.grant']
         return {capability for capability in CAPABILITY_KEYS if Grant._tp_has_capability(project, capability, department, user)}
@@ -396,6 +430,8 @@ class TpContractWorkflow(models.AbstractModel):
         if record.object_ref != object_ref or not hmac.compare_digest(record.fingerprint, fingerprint):
             raise _error(409, 'idempotency_conflict', 'This Idempotency-Key was already used for a different request.')
         contract = self._tp_find_contract(record.result_contract_id.id)
+        if action in ('take_review', 'assign_owner', 'document_add', 'document_remove'):
+            self._tp_require_head(contract)
         self._tp_require(contract, [capability for capability in (record.required_capabilities or '').split(',') if capability])
         return self._tp_result(contract, record.result_revision_id, record.result_submission_id, replayed=True)
 
@@ -423,7 +459,7 @@ class TpContractWorkflow(models.AbstractModel):
     # History
 
     def _tp_audit(self, context, contract, revision, *, state_before, state_after, version_before, version_after,
-                  action=None, submission=None, reason=None):
+                  action=None, submission=None, reason=None, snapshot_before=None, snapshot_after=None):
         return self.env['tp.contract.audit'].sudo().create({
             'event_id': str(uuid.uuid4()),
             'action': action or context['action'],
@@ -440,6 +476,11 @@ class TpContractWorkflow(models.AbstractModel):
             'version_after': version_after,
             'payload_sha256': submission.payload_sha256 if submission else False,
             'reason': reason,
+            'snapshot_before': snapshot_before, 'snapshot_after': snapshot_after,
+            'head_contributor': bool((action or context['action']) in (
+                'create_contract', 'create_amendment', 'edit_draft', 'document_add', 'document_remove') and
+                self.env['tp.kd.department.role']._is_head(project=contract.sudo().project_id,
+                                                        department=contract.sudo().department_id)),
         })
 
     def _tp_notify(self, audit, recipients):
@@ -622,7 +663,38 @@ class TpContractWorkflow(models.AbstractModel):
             return ['tax_basis_mixed']
         return []
 
-    def _tp_eligible_reviewers(self, contract):
+    def _tp_business_owner(self, revision):
+        revision = revision.sudo()
+        if revision.business_owner_id:
+            return revision.business_owner_id
+        created = self.env['tp.contract.audit'].sudo().search([
+            ('revision_id', '=', revision.id), ('action', 'in', ['create_contract', 'create_amendment'])], limit=1)
+        return created.actor_id
+
+    def _tp_authors(self, revision):
+        boundary = self.env['tp.contract.audit'].sudo().search([
+            ('revision_id', '=', revision.id), ('action', '=', 'begin_rework')], order='id desc', limit=1)
+        events = self.env['tp.contract.audit'].sudo().search([
+            ('revision_id', '=', revision.id), ('id', '>', boundary.id or 0)])
+        heads = self.env['tp.kd.department.role']._head_users(revision.sudo().project_id)
+        assignments = events.filtered(lambda event: event.action == 'assign_owner')
+        authors = events.filtered(lambda event: event.action in (
+            'create_contract', 'create_amendment', 'edit_draft', 'document_add', 'document_remove') and
+            (bool(assignments) or event.head_contributor or event.actor_id in heads)).actor_id
+        previous_owners = [event.snapshot_before.get('owner_id') for event in assignments if event.snapshot_before]
+        return authors | self.env['res.users'].sudo().browse([uid for uid in previous_owners if uid])
+
+    def _tp_can_review(self, revision, user=None):
+        user = user or self.env.user
+        pending = revision.sudo().submission_ids.filtered(lambda submission: submission.outcome == 'pending')
+        return bool(user not in self._tp_authors(revision) and (not pending or pending.submitted_by_id != user))
+
+    def _tp_require_head(self, contract):
+        record = contract.sudo()
+        if not self.env['tp.kd.department.role']._is_head(project=record.project_id, department=record.department_id):
+            raise _error(403, 'forbidden', 'An active HEAD role in this department is required.')
+
+    def _tp_eligible_reviewers(self, contract, revision=None):
         """Users who may receive a review: active assignment, review and financial.read grants."""
         contract = contract.sudo()
         if not contract.department_id:
@@ -632,12 +704,14 @@ class TpContractWorkflow(models.AbstractModel):
             ('capability', '=', 'contract_review_commercial'),
         ])
         # _tp_capabilities rechecks assignment, validity dates and financial.read.
-        return grants.user_id.filtered(
+        candidates = grants.user_id | self.env["tp.kd.department.role"]._head_users(contract.project_id)
+        return candidates.filtered(
             lambda user: user.id != self.env.uid and user.active
-            and self._tp_capabilities(contract.project_id, contract.department_id, user) >= REVIEWER_CAPABILITIES,
+            and self._tp_capabilities(contract.project_id, contract.department_id, user) >= REVIEWER_CAPABILITIES
+            and (not revision or self._tp_can_review(revision, user)),
         )
 
-    def _tp_available_actions(self, contract, revision=None):
+    def _tp_available_actions(self, contract, revision=None, *, native=False):
         """Actions the current user may try now. UI hints only; each action rechecks on the server."""
         record = contract.sudo()
         held = self._tp_capabilities(record.project_id, record.department_id)
@@ -648,6 +722,11 @@ class TpContractWorkflow(models.AbstractModel):
                 actions.append('create_amendment')
             return actions, held
         state = revision.sudo().review_state
+        head = self.env['tp.kd.department.role']._is_head(project=record.project_id, department=record.department_id)
+        if native and head and state in ('draft', 'returned'):
+            actions.append('assign_owner')
+        if native and head and state == 'draft':
+            actions.extend(('document_add', 'document_remove'))
         if state == 'draft':
             if 'contract_draft_edit' in held:
                 actions.append('edit_draft')
@@ -655,9 +734,11 @@ class TpContractWorkflow(models.AbstractModel):
                 actions.append('submit_review')
         elif state == 'in_review':
             pending = revision.sudo().submission_ids.filtered(lambda submission: submission.outcome == 'pending')
-            if (held >= REVIEWER_CAPABILITIES and pending.reviewer_id == self.env.user
-                    and pending.submitted_by_id != self.env.user):
+            if (held >= REVIEWER_CAPABILITIES and (pending.assigned_reviewer_id or pending.reviewer_id) == self.env.user
+                    and self._tp_can_review(revision)):
                 actions.append('return_review')
+            if native and head and held >= REVIEWER_CAPABILITIES and self._tp_can_review(revision) and (pending.assigned_reviewer_id or pending.reviewer_id) != self.env.user:
+                actions.append('take_review')
         elif state == 'returned' and 'contract_draft_edit' in held:
             actions.append('begin_rework')
         return actions, held
@@ -685,6 +766,7 @@ class TpContractWorkflow(models.AbstractModel):
         revision = self.env['tp.contract.revision'].sudo().with_context(**workflow).create({
             'contract_id': contract.id, 'sequence': 0, 'revision_kind': 'original',
             'name': data['revision'].get('name') or name, 'reference': data['revision'].get('reference'),
+            'business_owner_id': self.env.uid,
         })
         self._tp_apply_lines(revision, lines)
         self._tp_audit(context, contract, revision, state_before=None, state_after='draft',
@@ -706,7 +788,7 @@ class TpContractWorkflow(models.AbstractModel):
         revision = self.env['tp.contract.revision'].sudo().with_context(**workflow).create({
             'contract_id': record.id, 'sequence': max(record.revision_ids.mapped('sequence')) + 1,
             'revision_kind': 'amendment', 'name': name, 'reference': data.get('reference'),
-            'previous_revision_id': previous.id,
+            'previous_revision_id': previous.id, 'business_owner_id': self.env.uid,
         })
         # Carry the previous scope over unchanged; amounts are copied by the
         # system and stay behind the financial.read domain.
@@ -739,6 +821,10 @@ class TpContractWorkflow(models.AbstractModel):
         self._tp_guard(contract, version, data['expected_version'], capabilities)
         if rev.review_state != 'draft':
             raise _error(409, 'invalid_state', 'Only a draft revision can be edited.', review_state=rev.review_state)
+        head = self.env['tp.kd.department.role']._is_head(project=record.project_id, department=record.department_id)
+        if head and self._tp_business_owner(rev) != self.env.user:
+            _require_text(data.get('reason'), 'reason', 'reason_required')
+        metadata_before, financial_before = self._tp_snapshot(rev) if head else (None, None)
         workflow = {WORKFLOW_CONTEXT: True}
         header = data.get('contract')
         if header:
@@ -765,8 +851,13 @@ class TpContractWorkflow(models.AbstractModel):
         if lines is not None:
             self._tp_apply_lines(rev, lines)
         new_version = self._tp_bump(record, version)
-        self._tp_audit(context, record, rev, state_before='draft', state_after='draft',
-                       version_before=version, version_after=new_version)
+        metadata_after, financial_after = self._tp_snapshot(rev) if head else (None, None)
+        audit = self._tp_audit(context, record, rev, state_before='draft', state_after='draft',
+                              version_before=version, version_after=new_version, reason=data.get('reason'),
+                              snapshot_before=metadata_before, snapshot_after=metadata_after)
+        if head:
+            self.env['tp.contract.audit.amount'].sudo().create({
+                'audit_id': audit.id, 'before_snapshot': financial_before, 'after_snapshot': financial_after})
         return {'contract': record, 'revision': rev, 'capabilities': capabilities}
 
     def _tp_submit_review(self, contract, revision, data, context):
@@ -780,7 +871,7 @@ class TpContractWorkflow(models.AbstractModel):
         if previous and not data['fix_summary']:
             raise _error(422, 'fix_summary_required', 'Describe what was fixed since the returned submission.', field='fix_summary')
         reviewer = self.env['res.users'].sudo().browse(data['reviewer_id']).exists()
-        if not reviewer or reviewer.id == self.env.uid or reviewer not in self._tp_eligible_reviewers(record):
+        if not reviewer or reviewer.id == self.env.uid or reviewer not in self._tp_eligible_reviewers(record, rev):
             raise _error(422, 'reviewer_ineligible', 'The selected reviewer cannot review this contract.', field='reviewer_id')
         problems = self._tp_submission_problems(rev)
         if problems:
@@ -820,9 +911,9 @@ class TpContractWorkflow(models.AbstractModel):
         if rev.review_state != 'in_review':
             raise _error(409, 'invalid_state', 'Only a revision under review can be returned.', review_state=rev.review_state)
         pending = rev.submission_ids.filtered(lambda submission: submission.outcome == 'pending')
-        if pending.reviewer_id != self.env.user:
+        if (pending.assigned_reviewer_id or pending.reviewer_id) != self.env.user:
             raise _error(403, 'not_assigned_reviewer', 'Only the reviewer assigned to the submission can return it.')
-        if pending.submitted_by_id == self.env.user:
+        if not self._tp_can_review(rev):
             raise _error(422, 'reviewer_ineligible', 'The submitter cannot review their own submission.', field='reviewer_id')
         reason = _require_text(data['reason'], 'reason', 'reason_required')
         scope_keys = {line['scope_key'] for line in pending.metadata_snapshot['lines']}
@@ -861,3 +952,89 @@ class TpContractWorkflow(models.AbstractModel):
         self._tp_audit(context, record, rev, state_before='returned', state_after='draft',
                        version_before=version, version_after=new_version, submission=returned, reason=reason)
         return {'contract': record, 'revision': rev, 'submission': returned, 'capabilities': capabilities}
+
+    def _tp_take_review(self, contract, revision, data, context):
+        version = self._tp_lock(contract)
+        self._tp_require_head(contract)
+        capabilities = ACTION_CAPABILITIES['take_review']
+        self._tp_guard(contract, version, data['expected_version'], capabilities)
+        record, rev = contract.sudo(), revision.sudo()
+        if rev.review_state != 'in_review':
+            raise _error(409, 'invalid_state', 'Takeover requires a pending submission.')
+        if not self._tp_can_review(rev):
+            raise _error(403, 'reviewer_ineligible', 'An author or submitter cannot review this version.')
+        reason = _require_text(data['reason'], 'reason', 'reason_required')
+        pending = rev.submission_ids.filtered(lambda submission: submission.outcome == 'pending')
+        before = {'reviewer_id': (pending.assigned_reviewer_id or pending.reviewer_id).id,
+                  'original_reviewer_id': pending.reviewer_id.id}
+        pending.with_context(**{WORKFLOW_CONTEXT: True}).write({'assigned_reviewer_id': self.env.uid})
+        new_version = self._tp_bump(record, version)
+        self._tp_audit(context, record, rev, state_before='in_review', state_after='in_review',
+                       version_before=version, version_after=new_version, reason=reason, submission=pending,
+                       snapshot_before=before, snapshot_after=dict(before, reviewer_id=self.env.uid))
+        return {'contract': record, 'revision': rev, 'submission': pending, 'capabilities': capabilities}
+
+    def _tp_assign_owner(self, contract, revision, data, context):
+        version = self._tp_lock(contract)
+        self._tp_require_head(contract)
+        capabilities = ACTION_CAPABILITIES['assign_owner']
+        self._tp_guard(contract, version, data['expected_version'], capabilities)
+        record, rev = contract.sudo(), revision.sudo()
+        if rev.review_state not in ('draft', 'returned'):
+            raise _error(409, 'invalid_state', 'Only draft or returned responsibility can be assigned.')
+        reason = _require_text(data['reason'], 'reason', 'reason_required')
+        user = self.env['res.users'].sudo().browse(data.get('owner_id')).exists()
+        if (not user or not user.active or 'contract_draft_edit' not in
+                self._tp_capabilities(record.project_id, record.department_id, user)):
+            raise _error(403, 'forbidden', 'The owner needs draft preparation rights in this project/department.')
+        before = {'owner_id': self._tp_business_owner(rev).id or None}
+        rev.with_context(**{WORKFLOW_CONTEXT: True}).write({'business_owner_id': user.id})
+        new_version = self._tp_bump(record, version)
+        self._tp_audit(context, record, rev, state_before=rev.review_state, state_after=rev.review_state,
+                       version_before=version, version_after=new_version, reason=reason,
+                       snapshot_before=before, snapshot_after={'owner_id': user.id})
+        return {'contract': record, 'revision': rev, 'capabilities': capabilities}
+
+    def _tp_document_change(self, contract, revision, data, context, *, remove=False):
+        version = self._tp_lock(contract)
+        self._tp_require_head(contract)
+        capabilities = ACTION_CAPABILITIES['document_remove' if remove else 'document_add']
+        self._tp_guard(contract, version, data['expected_version'], capabilities)
+        record, rev = contract.sudo(), revision.sudo()
+        if rev.review_state != 'draft':
+            raise _error(409, 'invalid_state', 'Documents may change only in an open draft.')
+        reason = _require_text(data['reason'], 'reason', 'reason_required')
+        metadata_before, financial_before = self._tp_snapshot(rev)
+        Document = self.env['tp.contract.document'].sudo().with_context(**{WORKFLOW_CONTEXT: True})
+        if remove:
+            document = Document.search([('id', '=', data.get('document_id')), ('revision_id', '=', rev.id)])
+            if not document:
+                raise _error(404, 'not_found', 'The document was not found in this draft.')
+            document._tp_check_not_submitted()
+            document.write({'active': False})
+        else:
+            kind = data.get('document_kind')
+            confidentiality = data.get('confidentiality')
+            if kind not in ('technical_scope', 'other') or confidentiality not in ('general', 'financial'):
+                raise _error(422, 'invalid_request', 'Draft uploads are technical scope or other evidence.')
+            if not data.get('file'):
+                raise _error(422, 'invalid_request', 'Select a draft file.')
+            Document.create({'contract_id': record.id, 'revision_id': rev.id,
+                             'name': _require_text(data.get('name'), 'name', 'name_required'),
+                             'file_name': _require_text(data.get('file_name'), 'file_name', 'name_required'),
+                             'document_kind': kind, 'confidentiality': confidentiality, 'file': data['file'],
+                             'added_contract_version': version + 1})
+        metadata_after, financial_after = self._tp_snapshot(rev)
+        new_version = self._tp_bump(record, version)
+        audit = self._tp_audit(context, record, rev, state_before='draft', state_after='draft',
+                               version_before=version, version_after=new_version, reason=reason,
+                               snapshot_before=metadata_before, snapshot_after=metadata_after)
+        self.env['tp.contract.audit.amount'].sudo().create({
+            'audit_id': audit.id, 'before_snapshot': financial_before, 'after_snapshot': financial_after})
+        return {'contract': record, 'revision': rev, 'capabilities': capabilities}
+
+    def _tp_document_add(self, contract, revision, data, context):
+        return self._tp_document_change(contract, revision, data, context)
+
+    def _tp_document_remove(self, contract, revision, data, context):
+        return self._tp_document_change(contract, revision, data, context, remove=True)

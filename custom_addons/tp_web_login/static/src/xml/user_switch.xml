@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-inherit="web.login_user_switch" t-inherit-mode="extension">
+        <xpath expr="//div[@t-ref='this.rootRef']/p" position="replace"><div class="tp-auth-heading"><h1>Chọn tài khoản</h1><p>Tài khoản đã dùng trên thiết bị này.<br/>Bạn vẫn cần xác thực để đăng nhập.</p></div></xpath>
+        <xpath expr="//div[hasclass('list-group')]" position="replace">
+            <div class="tp-account-list"><div t-foreach="this.state.users" t-as="user" t-key="user_index" class="tp-account-row">
+                <button type="button" class="list-group-item-action tp-account-select" t-on-click="() => this.fillForm(user.login)">
+                    <span class="tp-account-avatar" aria-hidden="true"><span t-out="user.name?.slice(0,1) || '?'"/><img t-att-src="this.getAvatarUrl(user)" alt="" t-on-error="(ev) => { ev.target.hidden = true; }"/></span>
+                    <span class="tp-account-name"><t t-out="user.name"/><small>Tiếp tục đăng nhập</small></span>
+                </button>
+                <button type="button" class="tp-account-remove" aria-label="Bỏ khỏi thiết bị này" title="Bỏ khỏi thiết bị này" t-on-click="() => this.remove(user)"><i class="oi" data-icon="close" aria-hidden="true"/></button>
+            </div></div>
+        </xpath>
+        <xpath expr="//button[contains(@class, 'w-100')]" position="replace"><button type="button" class="tp-account-other" t-on-click="() => this.fillForm()">Dùng tài khoản khác</button></xpath>
+        <xpath expr="//Portal/button" position="replace"><button type="button" class="o_user_switch_btn btn btn-sm btn-link m-0 p-0" t-on-click="() => this.toggleFormDisplay()">Chọn tài khoản</button></xpath>
+    </t>
+</templates>

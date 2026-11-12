@@ -1,6 +1,6 @@
 id,name,model_id,group_id/id,operation,domain
 project_platform_reader,Platform project reader,project.project,tp_core.group_user,r,"[('tp_managed', '=', True)]"
-project_platform_scope,Managed project read scope,project.project,,r,"[] if user.has_group('tp_core.group_manager') else ['|', ('tp_managed', '=', False), ('tp_assignment_ids', 'any', [('user_id', '=', user.id), ('active', '=', True)])]"
+project_platform_scope,Managed project read scope,project.project,,r,"[] if user.has_group('tp_core.group_manager') else ['|', ('tp_managed', '=', False), ('tp_scope_access', '=', True)]"
 project_platform_write_scope,Managed project write scope,project.project,,cud,"[] if user.has_group('tp_core.group_manager') else [('tp_managed', '=', False)]"
 task_platform_scope,Managed task read scope,project.task,,r,"['|', ('project_id', '=', False), '|', ('project_id.tp_managed', '=', False), ('project_id', 'access', 'read')]"
 task_platform_write_scope,Managed task write scope,project.task,,cud,"[] if user.has_group('tp_core.group_manager') else ['|', ('project_id', '=', False), ('project_id.tp_managed', '=', False)]"
@@ -10,3 +10,7 @@ assignment_company,Assignment company restriction,tp.project.assignment,,crud,"[
 grant_reader,Own capability grant reader,tp.project.grant,tp_core.group_user,r,"[('user_id', '=', user.id)]"
 grant_manager_reader,Capability grant audit reader,tp.project.grant,tp_core.group_manager,r,
 grant_company,Capability grant company restriction,tp.project.grant,,crud,"[('company_id', 'in', company_ids)]"
+
+head_role_own,Own department responsibility,tp.kd.department.role,tp_core.group_user,r,"[('user_id', '=', user.id)]"
+head_role_company,Department responsibility company,tp.kd.department.role,,crud,"[('company_id', 'in', company_ids)]"
+head_role_event_own,Own department responsibility history,tp.kd.department.role.event,tp_core.group_user,r,"[('role_id.user_id', '=', user.id), ('role_id.company_id', 'in', company_ids)]"

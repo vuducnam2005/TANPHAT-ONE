@@ -1,0 +1,9 @@
+<odoo noupdate="1">
+    <record id="seq_employee_code" model="ir.sequence">
+        <field name="name">TP HR employee code</field>
+        <field name="code">tp.hr.employee.code</field>
+        <field name="prefix">TP</field>
+        <field name="number_next">10001</field>
+        <field name="padding">5</field>
+    </record>
+</odoo>

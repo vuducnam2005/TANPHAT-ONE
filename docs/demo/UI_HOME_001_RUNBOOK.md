@@ -2,6 +2,8 @@
 
 Trạng thái: `IMPLEMENTED_PENDING_AUDIT` (CHG-20261102-006). Addon: [`custom_addons/tp_web_home/`](../../custom_addons/tp_web_home/README.md). Prompt: [CLAUDE_UI_HOME001_NATIVE_APP_LAUNCHER.md](../prompts/CLAUDE_UI_HOME001_NATIVE_APP_LAUNCHER.md).
 
+**Cập nhật 07/11/2026 — UI-HOME-002:** Trang chủ trên dev18069 đã được tổ chức lại thành bốn khu, `tp_web_home` 20.0.1.2.0. Xem [hướng dẫn hiện hành](UI_HOME_002_USER_GUIDE.md), [acceptance/ảnh/rollback](UI_HOME_002_ACCEPTANCE.md) và [thiết kế/catalog](../ui/UI_HOME_002_DESIGN.md). Nội dung UI-HOME-001 bên dưới giữ làm lịch sử; giới hạn "TP Contracts chưa có menu" không còn mô tả hiện trạng.
+
 ## 1. Mở Trang chủ
 
 | Môi trường | URL | Ghi chú |
@@ -63,3 +65,25 @@ Demo `tp_tanphat_demo_ui001` (18109) dùng DB riêng, không cài/không khởi 
 - Ô TP Projects/Danh mục công việc dùng chữ viết tắt (TP/DM) vì chưa có icon riêng.
 - Nhãn tiếng Việt chỉ áp dụng trên Trang chủ; menu Odoo gốc vẫn theo ngôn ngữ user (VI-001 riêng).
 - Lỗi quyền To-do (TODO-001) không thuộc batch này; ô “Việc cá nhân” chỉ hiện khi menu Odoo cho phép.
+
+## 7. Mobile (MOBILE-001, CHG-20261104-005)
+
+**Phiên bản:** `tp_web_home` 20.0.1.1.0.
+
+**Thay đổi trong addon:**
+
+- thêm view `tp_web_home.webclient_bootstrap_user_zoom`: viewport `width=device-width, initial-scale=1`, bỏ `user-scalable=no` của native;
+- Home 2 cột thẻ trên điện thoại;
+- nút ≥44 px;
+- patch drawer ☰: Escape đóng và đưa focus về nút ☰.
+
+Chi tiết ở [README addon](../../custom_addons/tp_web_home/README.md#mobile-and-accessibility-mobile-001-chg-20261104-005).
+
+**Áp dụng dev đã làm ngày 04/11/2026:** `.venv\Scripts\python.exe -X utf8 scripts\mobile001.py upgrade-dev`.
+
+- Lệnh dừng riêng Odoo, chạy `-u tp_web_home`, rồi bật lại. PostgreSQL vẫn chạy.
+- Lệnh chỉ chạy khi có kết quả clone đạt và snapshot bảo toàn `dev-before`.
+
+**Rollback viewport:** bỏ view khỏi `__manifest__.py` hoặc xóa file view, rồi `-u tp_web_home`. Odoo xóa view theo XML ID. Không cần restore DB.
+
+**Bằng chứng và giới hạn:** [MOBILE_001_ACCEPTANCE.md](../ui/MOBILE_001_ACCEPTANCE.md).

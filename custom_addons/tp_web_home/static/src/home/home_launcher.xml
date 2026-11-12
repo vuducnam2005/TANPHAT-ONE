@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
+    <t t-name="tp_web_home.AdminIcon">
+        <svg t-if="icon === 'briefcase'" class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        <svg t-elif="icon === 'ruler'" class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg>
+        <svg t-elif="icon === 'hardhat'" class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v2z"/><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5"/><path d="M4 15v-3a8 8 0 0 1 16 0v3"/></svg>
+        <svg t-elif="icon === 'boxes'" class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z"/><path d="m7 16.5-4.74-2.85"/><path d="m7 16.5 5-3"/><path d="M7 16.5v5.17"/><path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z"/><path d="m17 16.5-5-3"/><path d="m17 16.5 4.74-2.85"/><path d="M17 16.5v5.17"/><path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z"/><path d="M12 8 7.26 5.15"/><path d="m12 8 4.74-2.85"/><path d="M12 13.5V8"/></svg>
+        <svg t-elif="icon === 'building'" class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+        <svg t-elif="icon === 'users'" class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/></svg>
+        <svg t-elif="icon === 'user-plus'" class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
+        <svg t-else="" class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>
+    </t>
+
     <t t-name="tp_web_home.HomeIcon">
         <span class="o_tp_web_home_icon" aria-hidden="true">
             <img t-if="tile.icon.type === 'image'"
@@ -17,67 +28,291 @@
         </span>
     </t>
 
-    <t t-name="tp_web_home.HomeLauncher">
-        <div class="o_tp_web_home" t-att-class="this.props.className">
-            <div class="o_tp_web_home_inner">
-                <header class="o_tp_web_home_header">
-                    <h1 class="o_tp_web_home_brand">TANPHAT ONE</h1>
-                    <p class="o_tp_web_home_tagline">Không gian làm việc</p>
-                    <div class="o_tp_web_home_search" role="search">
-                        <i class="oi o_tp_web_home_search_icon" data-icon="search" aria-hidden="true"/>
-                        <input type="text"
-                               class="o_tp_web_home_search_input"
-                               placeholder="Tìm ứng dụng…"
-                               aria-label="Tìm ứng dụng"
-                               autocomplete="off"
-                               spellcheck="false"
-                               t-att-value="this.query()"
-                               t-ref="this.searchInput"
-                               t-on-input="this.onSearchInput"
-                               t-on-keydown="this.onSearchKeydown"/>
-                        <button t-if="this.query()"
-                                type="button"
-                                class="o_tp_web_home_search_clear"
-                                title="Xóa từ khóa"
-                                aria-label="Xóa từ khóa tìm"
-                                t-on-click="this.clearSearch">
-                            <i class="oi" data-icon="close" aria-hidden="true"/>
-                        </button>
-                    </div>
-                </header>
+    <t t-name="tp_web_home.HomeCopy">
+        <span class="o_tp_web_home_copy">
+            <span class="o_tp_web_home_label" t-out="tile.label"/>
+            <span t-if="tile.hint" class="o_tp_web_home_hint" t-out="tile.hint"/>
+        </span>
+    </t>
 
-                <p class="visually-hidden" role="status" aria-live="polite" t-out="this.resultMessage()"/>
-
-                <t t-foreach="this.groups()" t-as="group" t-key="group.key">
-                    <section class="o_tp_web_home_group" t-att-aria-label="group.label">
-                        <h2 t-if="this.groups().length > 1"
-                            class="o_tp_web_home_group_title"
-                            t-out="group.label"/>
-                        <ul class="o_tp_web_home_grid">
-                            <li t-foreach="group.tiles" t-as="tile" t-key="tile.key" class="o_tp_web_home_cell">
-                                <a class="o_tp_web_home_tile"
-                                   t-att-href="tile.href"
-                                   t-att-title="tile.description or null"
-                                   t-att-data-menu-xmlid="tile.xmlid"
-                                   t-on-click="(ev) => this.onTileClick(ev, tile)">
-                                    <t t-call="tp_web_home.HomeIcon"/>
-                                    <span class="o_tp_web_home_label" t-out="tile.label"/>
-                                    <span t-if="tile.hint" class="o_tp_web_home_hint" t-out="tile.hint"/>
-                                </a>
-                            </li>
-                        </ul>
-                    </section>
-                </t>
-
-                <div t-if="!this.visibleTiles().length" class="o_tp_web_home_empty">
-                    <t t-if="this.query().trim()">
-                        <p class="o_tp_web_home_empty_title">Không tìm thấy ứng dụng phù hợp</p>
-                        <p class="o_tp_web_home_empty_text">Thử từ khóa khác, viết có hoặc không dấu đều được.</p>
-                        <button type="button" class="btn btn-secondary" t-on-click="this.clearSearch">Xóa từ khóa</button>
-                    </t>
-                    <p t-else="" class="o_tp_web_home_empty_title">Tài khoản này chưa được cấp ứng dụng nào.</p>
-                </div>
+    <t t-name="tp_web_home.AllAppsPanel">
+        <section t-if="this.panelOpen() and this.hasAdminPanel()"
+                 id="tp_home_all_apps"
+                 class="o_tp_web_home_panel"
+                 aria-labelledby="tp_home_all_apps_title"
+                 t-on-keydown="this.onPanelKeydown">
+            <div class="o_tp_web_home_panel_head">
+                <h2 id="tp_home_all_apps_title" class="o_tp_web_home_panel_title" tabindex="-1"
+                    t-ref="this.panelTitle">Tất cả ứng dụng của tài khoản</h2>
+                <button type="button" class="o_tp_web_home_panel_close cursor-interaction" title="Đóng danh sách"
+                        aria-label="Đóng danh sách ứng dụng" t-on-click="this.closePanel">
+                    <i class="oi" data-icon="close" aria-hidden="true"/>
+                </button>
             </div>
+            <div class="o_tp_web_home_search o_tp_web_home_panel_search" role="search">
+                <i class="oi o_tp_web_home_search_icon" data-icon="search" aria-hidden="true"/>
+                <input type="text"
+                       class="o_tp_web_home_search_input o_tp_web_home_panel_input"
+                       placeholder="Tìm ứng dụng…"
+                       aria-label="Tìm trong tất cả ứng dụng"
+                       autocomplete="off"
+                       spellcheck="false"
+                       t-att-value="this.panelQuery()"
+                       t-ref="this.panelInput"
+                       t-on-input="this.onPanelInput"
+                       t-on-keydown="this.onPanelSearchKeydown"
+                       t-on-compositionstart="this.onCompositionStart"
+                       t-on-compositionend="this.onCompositionEnd"/>
+                <button t-if="this.panelQuery()"
+                        type="button"
+                        class="o_tp_web_home_search_clear cursor-interaction"
+                        title="Xóa từ khóa"
+                        aria-label="Xóa từ khóa tìm ứng dụng"
+                        t-on-click="this.clearPanelSearch">
+                    <i class="oi" data-icon="close" aria-hidden="true"/>
+                </button>
+            </div>
+            <p class="visually-hidden" role="status" aria-live="polite"
+               t-out="this.panelTiles().length ? this.panelTiles().length + ' ứng dụng' : 'Không tìm thấy ứng dụng phù hợp'"/>
+            <ul t-if="this.panelTiles().length" class="o_tp_web_home_apps">
+                <li t-foreach="this.panelTiles()" t-as="tile" t-key="tile.key" class="o_tp_web_home_cell">
+                    <a class="o_tp_web_home_app cursor-interaction"
+                       t-att-href="tile.href"
+                       t-att-data-menu-xmlid="tile.xmlid"
+                       t-on-click="(ev) => this.onEntryClick(ev, tile)">
+                        <t t-call="tp_web_home.HomeIcon"/>
+                        <t t-call="tp_web_home.HomeCopy"/>
+                    </a>
+                </li>
+            </ul>
+            <p t-else="" class="o_tp_web_home_panel_empty">Không tìm thấy ứng dụng phù hợp.</p>
+        </section>
+    </t>
+
+    <t t-name="tp_web_home.HomeLauncher">
+        <div class="o_tp_web_home" t-att-class="this.props.className" t-att-data-state="this.menuState()">
+            <!-- ADMIN LAYOUT (UI-HOME-004): 7 items -->
+            <t t-if="this.isAdmin()">
+                <div id="tp-admin-home-design" class="o_tp_admin_home" aria-label="Trang chủ quản trị TANPHAT ONE">
+                    <main>
+                        <div class="tp-heading">
+                            <div>
+                                <h1>Trang chủ quản trị</h1>
+                                <p class="tp-subtitle">Không gian làm việc của TANPHAT ONE</p>
+                            </div>
+                            <div class="tp-admin-tools" role="toolbar" aria-label="Công cụ quản trị">
+                                <t t-foreach="this.adminTools()" t-as="tool" t-key="tool.key">
+                                    <button t-if="tool.kind === 'panel'"
+                                            type="button"
+                                            class="tp-tool-btn cursor-interaction"
+                                            t-att-class="{'is-active': this.panelOpen()}"
+                                            data-tool="all-apps"
+                                            aria-controls="tp_home_all_apps"
+                                            t-att-aria-expanded="this.panelOpen() ? 'true' : 'false'"
+                                            t-ref="this.panelToggle"
+                                            t-on-click="(ev) => this.onEntryClick(ev, tool)">
+                                        <svg class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+                                        <span t-out="tool.label"/>
+                                    </button>
+                                    <a t-else=""
+                                       class="tp-tool-btn cursor-interaction"
+                                       t-att-data-tool="tool.xmlid"
+                                       t-att-href="tool.href"
+                                       t-on-click="(ev) => this.onEntryClick(ev, tool)">
+                                        <svg t-if="tool.xmlid === 'base.menu_administration'" class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        <svg t-elif="tool.xmlid === 'base.menu_management'" class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 17h7"/><path d="M17.5 13.5 21 17l-3.5 3.5"/></svg>
+                                        <span t-out="tool.label"/>
+                                    </a>
+                                </t>
+                            </div>
+                        </div>
+
+                        <t t-call="tp_web_home.AllAppsPanel"/>
+
+                        <div t-if="!this.selectedModule()" data-home="">
+                            <section aria-labelledby="tp-dept-title">
+                                <h2 id="tp-dept-title">Phòng ban và đơn vị</h2>
+                                <div class="tp-grid">
+                                    <t t-foreach="this.adminDepartmentEntries()" t-as="item" t-key="item.key">
+                                        <button type="button"
+                                                class="tp-entry cursor-interaction"
+                                                t-att-class="{'tp-featured': item.featured}"
+                                                t-att-data-module="item.key"
+                                                t-on-click="(ev) => this.onAdminModuleClick(ev, item)">
+                                            <span class="tp-entry-top">
+                                                <span class="tp-icon">
+                                                    <t t-call="tp_web_home.AdminIcon" icon="item.icon"/>
+                                                </span>
+                                                <span class="tp-badge" t-att-class="'tp-badge-' + item.badgeKind" t-out="item.status"/>
+                                            </span>
+                                            <span>
+                                                <span class="tp-name" t-out="item.name"/>
+                                                <span class="tp-description" t-out="item.description"/>
+                                            </span>
+                                            <span t-if="item.featured" class="tp-arrow" aria-hidden="true">
+                                                <svg class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+                                            </span>
+                                        </button>
+                                    </t>
+                                </div>
+                            </section>
+
+                            <section class="tp-shared" aria-labelledby="tp-hr-title">
+                                <h2 id="tp-hr-title">Nhân sự và tuyển dụng</h2>
+                                <div class="tp-hr-grid">
+                                    <t t-foreach="this.adminHrEntries()" t-as="item" t-key="item.key">
+                                        <button type="button"
+                                                class="tp-entry cursor-interaction"
+                                                t-att-class="{'tp-next': item.badgeKind === 'next'}"
+                                                t-att-data-module="item.key"
+                                                t-on-click="(ev) => this.onAdminModuleClick(ev, item)">
+                                            <span class="tp-entry-top">
+                                                <span class="tp-icon">
+                                                    <t t-call="tp_web_home.AdminIcon" icon="item.icon"/>
+                                                </span>
+                                                <span class="tp-badge" t-att-class="'tp-badge-' + item.badgeKind" t-out="item.status"/>
+                                            </span>
+                                            <span>
+                                                <span class="tp-name" t-out="item.name"/>
+                                                <span class="tp-description" t-out="item.description"/>
+                                            </span>
+                                        </button>
+                                    </t>
+                                </div>
+                            </section>
+
+                            <p class="tp-foot">
+                                <svg class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+                                Danh mục này chỉ dành cho quản trị hệ thống.
+                            </p>
+                        </div>
+
+                        <!-- Detail / Placeholder View -->
+                        <section t-else="" data-detail="" aria-label="Chi tiết không gian">
+                            <button type="button" class="tp-back cursor-interaction" data-back="" t-on-click="this.onBackClick">
+                                <svg class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                                Về Trang chủ
+                            </button>
+                            <p class="tp-detail-path">Trang chủ / <span data-path="" t-out="this.selectedModuleItem()?.name"/></p>
+                            <div class="tp-detail-box" aria-live="polite">
+                                <span class="tp-icon" data-detail-icon="">
+                                    <t t-call="tp_web_home.AdminIcon" icon="this.selectedModuleItem()?.icon"/>
+                                </span>
+                                <span class="tp-badge" t-att-class="'tp-badge-' + this.selectedModuleItem()?.badgeKind" data-detail-status="" t-out="this.selectedModuleItem()?.status"/>
+                                <h2 data-detail-title="" tabindex="-1" t-ref="this.detailTitleRef" t-out="this.selectedModuleItem()?.name"/>
+                                <p class="tp-detail-description" data-detail-copy="" t-out="this.selectedModuleItem()?.copy"/>
+                                <div class="tp-hr-scope" data-hr-scope="" t-att-hidden="this.selectedModule() !== 'hr' ? 'until-found' : undefined">
+                                    <span>Hồ sơ nhân viên</span>
+                                    <span>Phòng ban và chức danh</span>
+                                    <span>Năng lực và chứng chỉ</span>
+                                    <span>Nhập dữ liệu có đối chiếu</span>
+                                </div>
+                            </div>
+                        </section>
+                    </main>
+                </div>
+            </t>
+
+            <!-- NON-ADMIN LAYOUT (UI-HOME-003): workspace + personal tools -->
+            <t t-else="">
+                <div class="o_tp_web_home_inner">
+                    <header class="o_tp_web_home_header">
+                        <div>
+                            <h1 class="o_tp_web_home_brand">TANPHAT ONE</h1>
+                            <p class="o_tp_web_home_tagline">Trang chủ</p>
+                        </div>
+                        <div class="o_tp_web_home_search" role="search">
+                            <i class="oi o_tp_web_home_search_icon" data-icon="search" aria-hidden="true"/>
+                            <input type="text"
+                                   class="o_tp_web_home_search_input"
+                                   placeholder="Tìm không gian hoặc công cụ…"
+                                   aria-label="Tìm không gian hoặc công cụ trên Trang chủ"
+                                   autocomplete="off"
+                                   spellcheck="false"
+                                   t-att-value="this.query()"
+                                   t-att-disabled="this.menuState() !== 'ready'"
+                                   t-ref="this.searchInput"
+                                   t-on-input="this.onSearchInput"
+                                   t-on-keydown="this.onSearchKeydown"
+                                   t-on-compositionstart="this.onCompositionStart"
+                                   t-on-compositionend="this.onCompositionEnd"/>
+                            <button t-if="this.query()"
+                                    type="button"
+                                    class="o_tp_web_home_search_clear"
+                                    title="Xóa từ khóa"
+                                    aria-label="Xóa từ khóa tìm"
+                                    t-on-click="this.clearSearch">
+                                <i class="oi" data-icon="close" aria-hidden="true"/>
+                            </button>
+                        </div>
+                    </header>
+
+                    <p class="visually-hidden" role="status" aria-live="polite" t-out="this.resultMessage()"/>
+
+                    <t t-foreach="this.sections()" t-as="section" t-key="section.key">
+                        <section class="o_tp_web_home_group" t-att-data-group="section.key"
+                                 t-att-aria-labelledby="'tp_home_' + section.key">
+                            <h2 class="o_tp_web_home_group_title" t-att-id="'tp_home_' + section.key" t-out="section.label"/>
+                            <ul class="o_tp_web_home_grid">
+                                <li t-foreach="section.tiles" t-as="tile" t-key="tile.key" class="o_tp_web_home_cell">
+                                    <button t-if="tile.kind === 'panel'"
+                                            type="button"
+                                            class="o_tp_web_home_tile o_tp_web_home_panel_toggle"
+                                            t-att-class="{'is-open': this.panelOpen()}"
+                                            data-entry="all-apps"
+                                            aria-controls="tp_home_all_apps"
+                                            t-att-aria-expanded="this.panelOpen() ? 'true' : 'false'"
+                                            t-ref="this.panelToggle"
+                                            t-on-click="(ev) => this.onEntryClick(ev, tile)">
+                                        <t t-call="tp_web_home.HomeIcon"/>
+                                        <t t-call="tp_web_home.HomeCopy"/>
+                                        <i class="oi o_tp_web_home_chevron" data-icon="keyboard_arrow_down" aria-hidden="true"/>
+                                    </button>
+                                    <a t-else=""
+                                       class="o_tp_web_home_tile"
+                                       t-att-href="tile.href"
+                                       t-att-data-menu-xmlid="tile.xmlid"
+                                       t-on-click="(ev) => this.onEntryClick(ev, tile)">
+                                        <t t-call="tp_web_home.HomeIcon"/>
+                                        <t t-call="tp_web_home.HomeCopy"/>
+                                        <i t-if="section.key === 'workspace'" class="oi o_tp_web_home_arrow"
+                                           data-icon="arrow_forward" aria-hidden="true"/>
+                                    </a>
+                                </li>
+                            </ul>
+                        </section>
+                    </t>
+
+                    <t t-call="tp_web_home.AllAppsPanel"/>
+
+                    <p t-if="this.menuState() === 'ready' and this.catalog().otherApps and !this.query().trim() and this.visibleEntries().length"
+                       class="o_tp_web_home_note">
+                        <i class="oi" data-icon="apps" aria-hidden="true"/>
+                        <span>Ứng dụng khác được cấp cho tài khoản mở từ nút ứng dụng ở góc trái thanh điều hướng.</span>
+                    </p>
+
+                    <div t-if="this.menuState() === 'loading'" class="o_tp_web_home_loading" aria-busy="true">
+                        Đang tải không gian làm việc…
+                    </div>
+                    <div t-elif="this.menuState() === 'error'" class="o_tp_web_home_empty o_tp_web_home_error" role="alert">
+                        <p class="o_tp_web_home_empty_title">Chưa tải được Trang chủ</p>
+                        <p class="o_tp_web_home_empty_text">Kiểm tra kết nối rồi thử lại. Danh mục cũ không được hiển thị khi chưa tải mới.</p>
+                        <button type="button" class="btn btn-secondary" t-on-click="this.loadMenus">Thử lại</button>
+                    </div>
+                    <div t-elif="this.emptyKind()" class="o_tp_web_home_empty" t-att-data-empty="this.emptyKind()">
+                        <t t-if="this.emptyKind() === 'search'">
+                            <p class="o_tp_web_home_empty_title">Không có lối vào phù hợp trên Trang chủ</p>
+                            <p class="o_tp_web_home_empty_text">Thử từ khóa khác, viết có hoặc không dấu đều được.</p>
+                            <button type="button" class="btn btn-secondary" t-on-click="this.clearSearch">Xóa từ khóa</button>
+                        </t>
+                        <t t-elif="this.emptyKind() === 'switcher'">
+                            <p class="o_tp_web_home_empty_title">Trang chủ chưa có không gian làm việc cho tài khoản này</p>
+                            <p class="o_tp_web_home_empty_text">Các ứng dụng đã được cấp vẫn mở từ nút ứng dụng ở góc trái thanh điều hướng.</p>
+                        </t>
+                        <p t-else="" class="o_tp_web_home_empty_title">Tài khoản này chưa được cấp ứng dụng nào.</p>
+                    </div>
+                </div>
+            </t>
         </div>
     </t>
 
