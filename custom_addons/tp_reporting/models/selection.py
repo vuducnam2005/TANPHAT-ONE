@@ -17,9 +17,10 @@ class ReportingPeople(models.AbstractModel):
         for value in (resource_id, company_id, department_id):
             if value is not False and value is not None and (type(value) is not int or value <= 0):
                 raise ValidationError(_('Định danh phạm vi không hợp lệ.'))
-        allowed_models = {'plan': 'tp.report.plan', 'directive': 'tp.report.directive',
-                          'report_owner': 'tp.report.document', 'configuration': False}
-        if purpose != 'configuration' and model not in (False, allowed_models[purpose]):
+        # Report lines pick collaborators/issue owners under the same plan authority as plans.
+        allowed_models = {'plan': ('tp.report.plan', 'tp.report.line'), 'directive': ('tp.report.directive',),
+                          'report_owner': ('tp.report.document',), 'configuration': ()}
+        if purpose != 'configuration' and model is not False and model not in allowed_models[purpose]:
             raise ValidationError(_('Loại hồ sơ không phù hợp bộ chọn người.'))
         if purpose == 'configuration' and model not in (False, 'tp.report.assignment', 'tp.report.schedule'):
             raise ValidationError(_('Cấu hình chỉ dùng bộ chọn assignment/lịch.'))
@@ -46,7 +47,7 @@ class ReportingPeople(models.AbstractModel):
         else:
             capability = {'plan': 'plan', 'directive': 'direct', 'report_owner': 'consolidate'}[purpose]
             if record:
-                authority = record.document_id if purpose == 'directive' else record
+                authority = record.document_id if purpose == 'directive' or record._name == 'tp.report.line' else record
                 if purpose == 'report_owner' and record.level == 'personal':
                     return self._own_option(search)
                 if not authority._has_capability(capability):

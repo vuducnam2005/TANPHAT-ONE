@@ -34,3 +34,7 @@ access_report_reason,access_report_reason,tp.report.reason,tp_reporting.group_re
 access_report_section_content,access report section.content,tp.report.section.content,tp_reporting.group_reporting_user,crud,"[('document_id','access','read')]"
 access_report_copy_plan,access report copy.plan,tp.report.copy.plan,tp_reporting.group_reporting_user,crud,
 access_report_carry_work,access report carry.work,tp.report.carry.work,tp_reporting.group_reporting_user,crud,
+access_report_priority_user,access report priority user,tp.report.priority,tp_reporting.group_reporting_user,r,
+access_report_priority_config,access report priority config,tp.report.priority,tp_reporting.group_reporting_config,crud,
+access_report_rating_user,access report rating user,tp.report.rating,tp_reporting.group_reporting_user,r,
+access_report_rating_config,access report rating config,tp.report.rating,tp_reporting.group_reporting_config,crud,

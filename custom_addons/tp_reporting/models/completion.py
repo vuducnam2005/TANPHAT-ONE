@@ -266,7 +266,7 @@ class CopyPlan(models.TransientModel):
                       'department_id': node.department_id.id, 'owner_id': node.owner_id.id,
                       'parent_id': parent.id if parent else False, 'kind': node.kind, 'target': node.target,
                       'unit': node.unit, 'output': node.output, 'expected_output': node.expected_output,
-                      'priority': node.priority, 'task_id': node.task_id.id, 'project_id': node.project_id.id,
+                      'priority_id': node.priority_id.id, 'task_id': node.task_id.id, 'project_id': node.project_id.id,
                       'collaborator_ids': [fields.Command.set(node.collaborator_ids.ids)],
                       'work_deadline': False}
             copied = self.env['tp.report.plan'].create(values)
@@ -363,7 +363,10 @@ class CarryWork(models.TransientModel):
             'planned_quantity_known': False, 'contribution_key': source.contribution_key,
             'stable_key': source.stable_key, 'task_id': source.task_id.id, 'project_id': source.project_id.id,
             'expected_output': source.expected_output, 'work_deadline': source.work_deadline,
-            'priority': source.priority, 'collaborator_ids': [fields.Command.set(source.collaborator_ids.ids)],
+            'priority_id': source.priority_id.id, 'collaborator_ids': [fields.Command.set(source.collaborator_ids.ids)],
+            # Open issues follow the same work item into the next period.
+            'cause': source.cause, 'next_action': source.next_action, 'support_needed': source.support_needed,
+            'issue_owner_id': source.issue_owner_id.id, 'issue_deadline': source.issue_deadline,
             'origin_line_id': source.id, 'carry_reason': self.reason, 'work_status': 'todo',
         })
         target._internal_write({'version': target.version + 1})

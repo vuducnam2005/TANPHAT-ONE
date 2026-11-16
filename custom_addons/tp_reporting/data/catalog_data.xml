@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Shared catalogs; configuration may rename/recolor/archive them later (noupdate). -->
+<odoo noupdate="1">
+<record id="priority_urgent" model="tp.report.priority"><field name="name">Gấp</field><field name="code">urgent</field><field name="sequence">10</field><field name="color">danger</field></record>
+<record id="priority_high" model="tp.report.priority"><field name="name">Cao</field><field name="code">high</field><field name="sequence">20</field><field name="color">warning</field></record>
+<record id="priority_normal" model="tp.report.priority"><field name="name">Bình thường</field><field name="code">normal</field><field name="sequence">30</field><field name="color">info</field><field name="is_default" eval="True"/></record>
+<record id="priority_low" model="tp.report.priority"><field name="name">Thấp</field><field name="code">low</field><field name="sequence">40</field><field name="color">muted</field></record>
+<record id="rating_excellent" model="tp.report.rating"><field name="name">Xuất sắc</field><field name="code">excellent</field><field name="sequence">10</field><field name="color">success</field></record>
+<record id="rating_meets" model="tp.report.rating"><field name="name">Đạt yêu cầu</field><field name="code">meets</field><field name="sequence">20</field><field name="color">info</field></record>
+<record id="rating_improve" model="tp.report.rating"><field name="name">Cần cải thiện</field><field name="code">improve</field><field name="sequence">30</field><field name="color">warning</field></record>
+<record id="rating_below" model="tp.report.rating"><field name="name">Chưa đạt</field><field name="code">below</field><field name="sequence">40</field><field name="color">danger</field></record>
+<record id="rating_pending" model="tp.report.rating"><field name="name">Chờ đánh giá</field><field name="code">pending</field><field name="sequence">50</field><field name="color">muted</field></record>
+</odoo>

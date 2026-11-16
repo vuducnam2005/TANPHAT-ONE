@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16-bullseye
+    container_name: tp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: tp_odoo
+      POSTGRES_PASSWORD: tp_tanphat_prod_secret_2026
+    volumes:
+      - tp_pgdata:/var/lib/postgresql/data
+      - ./latest_deploy_full.dump:/latest_deploy_full.dump:ro
+    ports:
+      - "127.0.0.1:5433:5432"
+
+  odoo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tp-odoo
+    restart: unless-stopped
+    depends_on:
+      - db
+    volumes:
+      - .:/workspace
+      - ./docker_data/filestore:/var/lib/odoo/filestore
+    ports:
+      - "8069:8069"
+
+volumes:
+  tp_pgdata:

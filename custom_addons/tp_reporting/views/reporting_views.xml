@@ -444,7 +444,7 @@
                         <group>
                             <field name="expected_output" string="Đầu ra dự kiến" readonly="state not in ('draft','returned')"/>
                             <field name="work_deadline" string="Hạn công việc" readonly="state not in ('draft','returned')"/>
-                            <field name="priority" string="Mức ưu tiên" readonly="state not in ('draft','returned')"/>
+                            <field name="priority_id" string="Mức ưu tiên" readonly="state not in ('draft','returned')" options="{'no_create': True, 'no_open': True}"/>
                         </group>
                         <group>
                             <field name="collaborator_ids" string="Người phối hợp" widget="tp_reporting_person" readonly="state not in ('draft','returned')" options="{'purpose':'plan'}"/>
@@ -464,7 +464,10 @@
         <field name="arch" type="xml">
             <form class="tp_reporting_form" js_class="tp_reporting_form">
                 <header>
-                    <button type="object" name="action_submit" string="Gửi báo cáo" invisible="(state not in ('draft','returned')) or not can_submit" class="btn-primary"/>
+                    <button type="object" name="action_save_draft" string="Lưu nháp" invisible="(state not in ('draft','returned')) or not can_submit"/>
+                    <button type="object" name="action_preview" string="Xem trước" invisible="(state not in ('draft','returned')) or not can_submit"/>
+                    <button type="object" name="action_submit" string="Gửi báo cáo" invisible="(state not in ('draft','returned')) or not can_submit" class="btn-primary" confirm="Gửi báo cáo cho người rà soát? Bản gửi được lưu thành phiên bản và không sửa trực tiếp được nữa."/>
+                    <button type="object" name="action_comment" string="Nhận xét chung" invisible="not can_comment"/>
                     <button type="object" name="action_review" string="Bắt đầu rà" invisible="(state != 'submitted') or not can_review" class="btn-primary"/>
                     <button type="object" name="action_finalize" string="Chốt báo cáo" invisible="(state not in ('submitted','in_review')) or not can_finalize" class="btn-primary" confirm="Chốt báo cáo và lưu phiên bản?"/>
                     <button type="object" name="action_return" string="Yêu cầu sửa" invisible="(state not in ('submitted','in_review')) or not can_review"/>
@@ -475,7 +478,7 @@
                     <button type="object" name="action_export_docx" string="Word"/>
                     <button type="object" name="action_export_pdf" string="PDF / In"/>
                     <button type="object" name="action_load_plans" string="Đưa kế hoạch vào báo cáo" invisible="state not in ('draft','returned')"/>
-                    <button type="object" name="action_preview" string="Xem trước"/>
+                    <button type="object" name="action_preview" string="Xem trước" invisible="(state in ('draft','returned')) and can_submit"/>
                     <button type="object" name="action_compare_versions" string="So sánh phiên bản"/>
                 </header>
                 <sheet>
@@ -491,6 +494,15 @@
                         </h1>
                     </div>
                     <div class="tp_reporting_hint">Nội dung có nguồn, phiên bản có lịch sử. Chốt báo cáo không phê duyệt nghiệp vụ nguồn.</div>
+                    <div class="alert alert-warning tp_reporting_returned" role="alert" invisible="state != 'returned'">
+                        <strong>Báo cáo bị trả lại để bổ sung.</strong>
+                        <div>Lý do: <field name="return_reason" readonly="1" nolabel="1" class="d-inline"/></div>
+                        <div invisible="needs_change_count == 0"><field name="needs_change_count" readonly="1" nolabel="1" class="d-inline"/> đầu việc được đánh dấu <strong>Cần bổ sung</strong> trong cột Nhận xét. Mở dòng để đọc nhận xét, sửa và bấm Phản hồi.</div>
+                        <div>Sửa xong bấm <strong>Lưu nháp</strong>, <strong>Xem trước</strong> rồi <strong>Gửi báo cáo</strong> để gửi lại; bản gửi trước được giữ nguyên.</div>
+                    </div>
+                    <div class="alert alert-info" role="status" invisible="state not in ('submitted','in_review') or snapshot_count &lt; 2">
+                        Đây là lần gửi thứ <field name="snapshot_count" readonly="1" nolabel="1" class="d-inline"/>. Bấm <strong>So sánh phiên bản</strong> để xem thay đổi so với lần gửi trước.
+                    </div>
                     <group>
                         <group string="Đối tượng báo cáo">
                             <field name="company_id" string="Công ty" readonly="id != False"/>
@@ -499,6 +511,8 @@
                             <field name="level" string="Cấp báo cáo" readonly="id != False"/>
                             <field name="template_id" string="Mẫu" readonly="state not in ('draft','returned')"/>
                             <field name="reviewer_id" string="Người nhận / rà soát" readonly="state not in ('draft','returned')" widget="tp_reporting_reviewer"/>
+                            <field name="submitted_at" string="Gửi lần gần nhất" readonly="1" invisible="not submitted_at"/>
+                            <field name="snapshot_count" string="Số lần gửi" readonly="1" invisible="snapshot_count == 0"/>
                         </group>
                         <group string="Kỳ và nguồn">
                             <field name="period_type" string="Loại kỳ" readonly="state not in ('draft','returned')"/>
@@ -515,12 +529,19 @@
                         <page string="Kết quả và công việc">
                             <field name="summary" string="Kết quả nổi bật" readonly="state not in ('draft','returned')"/>
                             <field name="line_ids" string="line_ids" readonly="state not in ('draft','returned')">
-                                <list limit="20">
+                                <list limit="20" decoration-warning="review_flag == 'needs_change'">
                                     <field name="name" string="Nhiệm vụ"/>
                                     <field name="expected_output" string="Đầu ra dự kiến"/>
-                                    <field name="work_deadline" string="Hạn công việc"/>
+                                    <field name="work_deadline" string="Hạn"/>
                                     <field name="result" string="Kết quả thực tế"/>
-                                    <field name="work_status" string="Trạng thái việc"/>
+                                    <field name="work_status" string="Trạng thái việc" widget="badge" decoration-success="work_status == 'done'" decoration-info="work_status == 'in_progress'" decoration-warning="work_status in ('partial','late')" decoration-danger="work_status == 'blocked'" decoration-muted="work_status in ('todo','paused')"/>
+                                    <field name="priority_id" string="Ưu tiên" optional="hide" widget="badge" decoration-danger="priority_color == 'danger'" decoration-warning="priority_color == 'warning'" decoration-info="priority_color == 'info'" decoration-success="priority_color == 'success'" decoration-muted="priority_color == 'muted'"/>
+                                    <field name="review_flag" string="Nhận xét" widget="badge" decoration-warning="review_flag == 'needs_change'" decoration-info="review_flag in ('replied','resubmitted','note')" decoration-success="review_flag == 'ok'" decoration-muted="review_flag == 'none'"/>
+                                    <field name="manager_rating_id" string="Đánh giá quản lý" optional="show" widget="badge" decoration-danger="manager_rating_color == 'danger'" decoration-warning="manager_rating_color == 'warning'" decoration-info="manager_rating_color == 'info'" decoration-success="manager_rating_color == 'success'" decoration-muted="manager_rating_color == 'muted'"/>
+                                    <button type="object" name="action_comment" string="Nhận xét dòng" icon="fa-comment-o" invisible="not can_comment"/>
+                                    <field name="can_comment" column_invisible="True"/>
+                                    <field name="priority_color" column_invisible="True"/>
+                                    <field name="manager_rating_color" column_invisible="True"/>
                                     <field name="document_version" column_invisible="True"/>
                                 </list>
                             </field>
@@ -556,18 +577,26 @@
                             </field>
                         </page>
                         <page string="Nhận xét và phản hồi">
-                            <div class="tp_reporting_hint">Nhận xét gắn phiên bản và đầu việc. Để phản hồi, tạo dòng mới và chọn Nhận xét cha; nội dung đã công bố giữ nguyên lịch sử.</div>
+                            <div class="tp_reporting_hint">Nhận xét gắn phiên bản và đầu việc. Người lập bấm <strong>Phản hồi</strong> ở từng nhận xét; người rà dùng <strong>Nhận xét chung</strong> hoặc <strong>Nhận xét dòng</strong>. Nội dung đã công bố giữ nguyên lịch sử; sửa bằng Đính chính.</div>
                             <field name="review_ids" string="Trao đổi" context="{'default_document_id': id}" readonly="1">
-                                <list create="false" edit="false" delete="false" limit="10">
+                                <list create="false" edit="false" delete="false" limit="10" decoration-muted="audience == 'internal'" decoration-warning="assessment == 'needs_change' and not parent_id">
                                     <field name="actor_id" string="Người viết"/>
                                     <field name="create_date" string="Thời điểm"/>
                                     <field name="line_id" string="Đầu việc"/>
                                     <field name="comment" string="Nhận xét / phản hồi"/>
-                                    <field name="assessment" string="Đánh giá"/>
-                                    <field name="audience" string="Đối tượng xem"/>
+                                    <field name="assessment" string="Loại" widget="badge" decoration-warning="assessment == 'needs_change'" decoration-success="assessment == 'satisfactory'"/>
+                                    <field name="rating_id" string="Mức đánh giá" widget="badge" decoration-danger="rating_color == 'danger'" decoration-warning="rating_color == 'warning'" decoration-info="rating_color == 'info'" decoration-success="rating_color == 'success'" decoration-muted="rating_color == 'muted'"/>
+                                    <field name="audience" string="Đối tượng xem" widget="badge" decoration-muted="audience == 'internal'"/>
+                                    <field name="version" string="Phiên bản" optional="hide"/>
+                                    <field name="parent_id" string="Phản hồi cho" optional="show"/>
+                                    <button type="object" name="action_reply" string="Phản hồi" icon="fa-reply" invisible="not can_reply"/>
+                                    <button type="object" name="action_correct" string="Đính chính" icon="fa-pencil" invisible="not can_correct"/>
+                                    <field name="can_reply" column_invisible="True"/>
+                                    <field name="can_correct" column_invisible="True"/>
+                                    <field name="rating_color" column_invisible="True"/>
                                 </list>
                             </field>
-                            <button type="action" name="%(action_review_new)d" string="Thêm nhận xét / phản hồi" context="{'default_document_id':id}"/>
+                            <button type="object" name="action_comment" string="Nhận xét chung" invisible="not can_comment"/>
                             <button type="action" name="%(action_document_reviews)d" string="Lọc / tìm nhận xét"/>
                         </page>
                     </notebook>
@@ -576,6 +605,7 @@
                 <field name="can_review" invisible="1"/>
                 <field name="can_finalize" invisible="1"/>
                 <field name="can_submit" invisible="1"/>
+                <field name="can_comment" invisible="1"/>
             </form>
         </field>
     </record>
@@ -591,9 +621,11 @@
                 <field name="work_date" string="Ngày thực hiện" optional="show"/>
                 <field name="quantity" string="Thực hiện" optional="show"/>
                 <field name="unit" string="Đơn vị" optional="show"/>
-                <field name="work_status" string="Trạng thái việc" widget="badge"/>
-                <field name="priority" string="Ưu tiên" optional="hide"/>
+                <field name="work_status" string="Trạng thái việc" widget="badge" decoration-success="work_status == 'done'" decoration-info="work_status == 'in_progress'" decoration-warning="work_status in ('partial','late')" decoration-danger="work_status == 'blocked'" decoration-muted="work_status in ('todo','paused')"/>
+                <field name="priority_id" string="Ưu tiên" optional="show" widget="badge" decoration-danger="priority_color == 'danger'" decoration-warning="priority_color == 'warning'" decoration-info="priority_color == 'info'" decoration-success="priority_color == 'success'" decoration-muted="priority_color == 'muted'"/>
                 <field name="work_deadline" string="Hạn việc" optional="show"/>
+                <field name="review_flag" string="Nhận xét" optional="show" widget="badge" decoration-warning="review_flag == 'needs_change'" decoration-info="review_flag in ('replied','resubmitted','note')" decoration-success="review_flag == 'ok'" decoration-muted="review_flag == 'none'"/>
+                <field name="priority_color" column_invisible="True"/>
             </list>
         </field>
     </record>
@@ -609,8 +641,15 @@
                 <field name="work_date" string="Ngày thực hiện"/>
                 <field name="unit" string="Đơn vị"/>
                 <field name="work_status" string="Trạng thái công việc"/>
-                <field name="priority" string="Mức ưu tiên"/>
+                <field name="priority_id" string="Mức ưu tiên"/>
                 <field name="work_deadline" string="Hạn công việc"/>
+                <filter name="needs_change" string="Nhận xét cần bổ sung" domain="[('review_ids.assessment','=','needs_change'),('review_ids.parent_id','=',False)]"/>
+                <filter name="open_work" string="Chưa hoàn thành" domain="[('work_status','!=','done')]"/>
+                <filter name="overdue_work" string="Quá hạn việc" domain="[('work_status','!=','done'),('work_deadline','&lt;',context_today().strftime('%Y-%m-%d'))]"/>
+                <filter name="has_issue" string="Có vướng mắc / cần hỗ trợ" domain="['|','|',('cause','!=',False),('support_needed','!=',False),('work_status','=','blocked')]"/>
+                <separator/>
+                <filter name="group_status" string="Trạng thái việc" context="{'group_by':'work_status'}"/>
+                <filter name="group_priority" string="Mức ưu tiên" context="{'group_by':'priority_id'}"/>
             </search>
         </field>
     </record>
@@ -641,8 +680,8 @@
                             <field name="quantity" string="Thực hiện" readonly="document_state not in ('draft','returned')" invisible="not quantity_known"/>
                             <field name="unit" string="Đơn vị" readonly="document_state not in ('draft','returned')"/>
                             <field name="result" string="Kết quả thực tế" readonly="document_state not in ('draft','returned')"/>
-                            <field name="cause" string="Nguyên nhân" readonly="document_state not in ('draft','returned')"/>
-                            <field name="next_action" string="Xử lý tiếp" readonly="document_state not in ('draft','returned')"/>
+                            <field name="cause" string="Vướng mắc / nguyên nhân" readonly="document_state not in ('draft','returned')"/>
+                            <field name="next_action" string="Cách xử lý / khắc phục" readonly="document_state not in ('draft','returned')"/>
                             <field name="evidence_ids" string="Minh chứng" widget="many2many_binary" readonly="document_state not in ('draft','returned')"/>
                         </group>
                     </group>
@@ -652,34 +691,63 @@
                             <field name="planned_quantity_known" string="Kế hoạch có số lượng" readonly="1"/>
                             <field name="planned_quantity" string="Khối lượng kế hoạch" readonly="1" invisible="not planned_quantity_known"/>
                             <field name="work_deadline" string="Hạn công việc" readonly="document_state not in ('draft','returned')"/>
-                            <field name="priority" string="Mức ưu tiên" readonly="document_state not in ('draft','returned')"/>
+                            <field name="priority_id" string="Mức ưu tiên" readonly="document_state not in ('draft','returned')" options="{'no_create': True, 'no_open': True}"/>
                         </group>
                         <group>
                             <field name="collaborator_ids" string="Người phối hợp" widget="tp_reporting_person" readonly="document_state not in ('draft','returned')" options="{'purpose':'plan'}"/>
                             <field name="work_status" string="Trạng thái công việc" readonly="document_state not in ('draft','returned')"/>
-                            <field name="deviation_reason" string="Nguyên nhân / khắc phục" readonly="document_state not in ('draft','returned')"/>
+                            <field name="deviation_reason" string="Lý do lệch kế hoạch" readonly="document_state not in ('draft','returned')"/>
+                        </group>
+                    </group>
+                    <group string="Vướng mắc, khắc phục và hỗ trợ">
+                        <group>
+                            <field name="support_needed" string="Hỗ trợ cần cấp trên" readonly="document_state not in ('draft','returned')" placeholder="Nội dung cần cấp trên quyết định / hỗ trợ"/>
+                        </group>
+                        <group>
+                            <field name="issue_owner_id" string="Người xử lý" widget="tp_reporting_person" options="{'purpose':'plan'}" readonly="document_state not in ('draft','returned')"/>
+                            <field name="issue_deadline" string="Hạn xử lý" readonly="document_state not in ('draft','returned')"/>
+                        </group>
+                    </group>
+                    <group string="Nhận xét của quản lý" invisible="review_flag == 'none'">
+                        <group>
+                            <field name="review_flag" string="Tình trạng nhận xét" readonly="1" widget="badge" decoration-warning="review_flag == 'needs_change'" decoration-info="review_flag in ('replied','resubmitted','note')" decoration-success="review_flag == 'ok'" decoration-muted="review_flag == 'none'"/>
+                            <field name="manager_rating_id" string="Mức đánh giá" readonly="1" invisible="not manager_rating_id" widget="badge" decoration-danger="manager_rating_color == 'danger'" decoration-warning="manager_rating_color == 'warning'" decoration-info="manager_rating_color == 'info'" decoration-success="manager_rating_color == 'success'" decoration-muted="manager_rating_color == 'muted'"/>
+                        </group>
+                        <group>
+                            <field name="latest_review" string="Nhận xét mới nhất" readonly="1"/>
                         </group>
                     </group>
                     <notebook>
                         <page string="Nhận xét và phản hồi">
-                            <div class="tp_reporting_hint">Nhận xét gắn phiên bản và đầu việc. Để phản hồi, tạo dòng mới và chọn Nhận xét cha; nội dung đã công bố giữ nguyên lịch sử.</div>
+                            <div class="tp_reporting_hint">Nhận xét của quản lý cho đầu việc này. Người lập bấm <strong>Phản hồi</strong>; người rà bấm <strong>Nhận xét dòng</strong>. Nội dung đã công bố giữ nguyên lịch sử.</div>
                             <field name="review_ids" string="Trao đổi" context="{'default_document_id':document_id,'default_line_id':id}" readonly="1">
-                                <list create="false" edit="false" delete="false" limit="10">
+                                <list create="false" edit="false" delete="false" limit="10" decoration-muted="audience == 'internal'" decoration-warning="assessment == 'needs_change' and not parent_id">
                                     <field name="actor_id" string="Người viết"/>
                                     <field name="create_date" string="Thời điểm"/>
                                     <field name="line_id" string="Đầu việc"/>
                                     <field name="comment" string="Nhận xét / phản hồi"/>
-                                    <field name="assessment" string="Đánh giá"/>
-                                    <field name="audience" string="Đối tượng xem"/>
+                                    <field name="assessment" string="Loại" widget="badge" decoration-warning="assessment == 'needs_change'" decoration-success="assessment == 'satisfactory'"/>
+                                    <field name="rating_id" string="Mức đánh giá" widget="badge" decoration-danger="rating_color == 'danger'" decoration-warning="rating_color == 'warning'" decoration-info="rating_color == 'info'" decoration-success="rating_color == 'success'" decoration-muted="rating_color == 'muted'"/>
+                                    <field name="audience" string="Đối tượng xem" widget="badge" decoration-muted="audience == 'internal'"/>
+                                    <field name="version" string="Phiên bản" optional="hide"/>
+                                    <field name="parent_id" string="Phản hồi cho" optional="show"/>
+                                    <button type="object" name="action_reply" string="Phản hồi" icon="fa-reply" invisible="not can_reply"/>
+                                    <button type="object" name="action_correct" string="Đính chính" icon="fa-pencil" invisible="not can_correct"/>
+                                    <field name="can_reply" column_invisible="True"/>
+                                    <field name="can_correct" column_invisible="True"/>
+                                    <field name="rating_color" column_invisible="True"/>
                                 </list>
                             </field>
-                            <button type="action" name="%(action_review_new)d" string="Thêm nhận xét / phản hồi" context="{'default_document_id':document_id,'default_line_id':id}"/>
+                            <button type="object" name="action_comment" string="Nhận xét dòng" invisible="not can_comment"/>
                             <button type="action" name="%(action_line_reviews)d" string="Lọc / tìm nhận xét đầu việc"/>
                         </page>
                     </notebook>
                 </sheet>
                 <field name="document_version" invisible="1"/>
                 <field name="document_state" invisible="1"/>
+                <field name="can_comment" invisible="1"/>
+                <field name="priority_color" invisible="1"/>
+                <field name="manager_rating_color" invisible="1"/>
             </form>
         </field>
     </record>
@@ -1332,6 +1400,7 @@
                     <field name="action" string="action" invisible="1"/>
                     <field name="expected_version" string="expected_version" invisible="1"/>
                     <field name="reason" string="Lý do" required="1"/>
+                    <field name="line_ids" string="Đầu việc cần bổ sung" widget="many2many_tags" invisible="resource_model != 'tp.report.document' or action != 'return'" domain="[('document_id','=',resource_id)]" options="{'no_create': True}" placeholder="Chọn các dòng cần sửa (không bắt buộc)"/>
                 </group>
                 <footer>
                     <button type="object" name="action_apply" string="Xác nhận" class="btn-primary"/>

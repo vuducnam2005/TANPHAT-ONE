@@ -12,6 +12,10 @@ from odoo.fields import Domain
 
 _INTERNAL = object()
 PERIODS = [('week', 'Tuần'), ('month', 'Tháng'), ('quarter', 'Quý'), ('cumulative', 'Lũy kế')]
+# Standard work-status codes; 'partial' (initial completion) never counts as done.
+WORK_STATUS = [('todo', 'Chưa làm'), ('in_progress', 'Đang làm'), ('partial', 'Hoàn thành bước đầu'), ('late', 'Chậm tiến độ'), ('paused', 'Tạm hoãn'), ('blocked', 'Vướng mắc'), ('done', 'Hoàn thành')]
+# Comment kind is separate from the configurable rating level (tp.report.rating).
+REVIEW_KINDS = [('note', 'Nhận xét'), ('needs_change', 'Yêu cầu bổ sung'), ('satisfactory', 'Ghi nhận đạt')]
 CAPABILITIES = [('read', 'Xem báo cáo'), ('plan', 'Lập/giao kế hoạch'), ('plan_issue', 'Ban hành kế hoạch'), ('review', 'Rà soát/trả lại'), ('finalize', 'Chốt/điều chỉnh báo cáo'), ('consolidate', 'Tổng hợp/nghĩa vụ'), ('direct', 'Giao chỉ đạo'), ('finance_read', 'Xem số tài chính'), ('finance_enter', 'Cung cấp số tài chính'), ('finance_confirm', 'Xác nhận số tài chính'), ('coverage_exception', 'Ngoại lệ thiếu bao phủ')]
 
 
@@ -1086,9 +1090,8 @@ class PlanPersonal(models.Model):
     _inherit = 'tp.report.plan'
     expected_output = fields.Text()
     work_deadline = fields.Date()
-    priority = fields.Selection([('0', 'Bình thường'), ('1', 'Cao'), ('2', 'Khẩn')], default='0', required=True)
     collaborator_ids = fields.Many2many('res.users', 'tp_report_plan_collaborator_rel')
-    work_status = fields.Selection([('todo', 'Chưa làm'), ('in_progress', 'Đang làm'), ('partial', 'Hoàn thành bước đầu'), ('done', 'Hoàn thành'), ('blocked', 'Vướng mắc')], default='todo', required=True)
+    work_status = fields.Selection(WORK_STATUS, default='todo', required=True)
     proposed = fields.Boolean(default=False, readonly=True)
 
     @api.model_create_multi
@@ -1185,7 +1188,7 @@ class DocumentPersonal(models.Model):
             date = max(plan.date_start, self.date_start, plan.parent_id.date_start)
             if date > min(plan.date_end, self.date_end, plan.parent_id.date_end):
                 continue
-            self.env['tp.report.line'].with_context(tp_reporting_provenance=_INTERNAL).create({'document_id': self.id, 'name': plan.name, 'plan_id': plan.id, 'project_id': plan.project_id.id, 'task_id': plan.task_id.id, 'work_date': date, 'unit': plan.unit, 'contribution_key': 'plan-%s' % plan.id, 'stable_key': 'plan-%s' % plan.id, 'expected_output': plan.expected_output or plan.output, 'planned_quantity': plan.target, 'planned_quantity_known': plan.kind == 'quantitative', 'work_deadline': plan.work_deadline, 'priority': plan.priority, 'collaborator_ids': [fields.Command.set(plan.collaborator_ids.ids)]})
+            self.env['tp.report.line'].with_context(tp_reporting_provenance=_INTERNAL).create({'document_id': self.id, 'name': plan.name, 'plan_id': plan.id, 'project_id': plan.project_id.id, 'task_id': plan.task_id.id, 'work_date': date, 'unit': plan.unit, 'contribution_key': 'plan-%s' % plan.id, 'stable_key': 'plan-%s' % plan.id, 'expected_output': plan.expected_output or plan.output, 'planned_quantity': plan.target, 'planned_quantity_known': plan.kind == 'quantitative', 'work_deadline': plan.work_deadline, 'priority_id': plan.priority_id.id, 'collaborator_ids': [fields.Command.set(plan.collaborator_ids.ids)]})
         self._internal_write({'version': self.version + 1})
         return True
 
@@ -1194,9 +1197,8 @@ class LinePersonal(models.Model):
     _inherit = 'tp.report.line'
     expected_output = fields.Text()
     work_deadline = fields.Date()
-    priority = fields.Selection([('0', 'Bình thường'), ('1', 'Cao'), ('2', 'Khẩn')], default='0', required=True)
     collaborator_ids = fields.Many2many('res.users', 'tp_report_line_collaborator_rel')
-    work_status = fields.Selection([('todo', 'Chưa làm'), ('in_progress', 'Đang làm'), ('partial', 'Hoàn thành bước đầu'), ('done', 'Hoàn thành'), ('blocked', 'Vướng mắc')], default='todo', required=True)
+    work_status = fields.Selection(WORK_STATUS, default='todo', required=True)
     deviation_reason = fields.Text()
     stable_key = fields.Char(required=True, default=lambda self: uuid.uuid4().hex)
     review_ids = fields.One2many('tp.report.review', 'line_id')
@@ -1205,7 +1207,7 @@ class LinePersonal(models.Model):
 
     def _fact(self):
         fact = super()._fact()
-        fact.update({key: self[key] for key in ('expected_output', 'priority', 'work_status', 'deviation_reason', 'stable_key')})
+        fact.update({key: self[key] for key in ('expected_output', 'work_status', 'deviation_reason', 'stable_key')})
         fact['work_deadline'] = str(self.work_deadline) if self.work_deadline else None
         fact['collaborator_ids'] = self.collaborator_ids.ids
         fact['line_id'] = self.id
@@ -1233,7 +1235,7 @@ class Review(models.Model):
     version = fields.Integer(readonly=True)
     actor_id = fields.Many2one('res.users', readonly=True)
     comment = fields.Text(required=True)
-    assessment = fields.Selection([('satisfactory', 'Đáp ứng'), ('needs_change', 'Cần bổ sung'), ('note', 'Ý kiến')], default='note', required=True)
+    assessment = fields.Selection(REVIEW_KINDS, string='Loại nhận xét', default='note', required=True)
     audience = fields.Selection([('published', 'Công bố cho tác giả'), ('internal', 'Nội bộ người rà')], default='published', required=True)
     parent_id = fields.Many2one('tp.report.review', ondelete='restrict')
     correction_of_id = fields.Many2one('tp.report.review', ondelete='restrict')
@@ -1269,7 +1271,9 @@ class Review(models.Model):
                 raise ValidationError(_('Dòng không thuộc đúng phiên bản nhận xét.'))
             vals.update({'actor_id': self.env.uid, 'snapshot_id': snapshot.id, 'version': snapshot.version, 'line_key': line.stable_key if line else False})
         records = super().create(vals_list)
-        for rec in records.filtered(lambda item: item.audience == 'published'):
+        # Return-with-lines markers rely on the single return notification instead.
+        quiet = self.env.context.get('tp_reporting_quiet') is _INTERNAL
+        for rec in records.filtered(lambda item: item.audience == 'published' and not quiet):
             recipient = rec.document_id.reviewer_id if rec.parent_id else rec.owner_id
             self.env['bus.bus']._sendone(recipient, 'simple_notification', {'title': _('Nhận xét báo cáo'), 'message': _('Có nhận xét/phản hồi mới. Mở Trung tâm Báo cáo để xem.'), 'sticky': True})
         return records
