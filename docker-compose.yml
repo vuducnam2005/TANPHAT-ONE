@@ -10,6 +10,7 @@ services:
     volumes:
       - tp_pgdata:/var/lib/postgresql/data
       - ./latest_deploy_full.dump:/latest_deploy_full.dump:ro
+      - ./ops/docker/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
     ports:
       - "127.0.0.1:5433:5432"
 
@@ -26,6 +27,14 @@ services:
       - ./docker_data/filestore:/var/lib/odoo/filestore
     ports:
       - "8069:8069"
+
+  tunnel:
+    image: node:20-alpine
+    container_name: tp-tunnel
+    restart: unless-stopped
+    depends_on:
+      - odoo
+    command: sh -c "npx -y localtunnel --port 8069 --local-host odoo --subdomain tanphatone"
 
 volumes:
   tp_pgdata:
