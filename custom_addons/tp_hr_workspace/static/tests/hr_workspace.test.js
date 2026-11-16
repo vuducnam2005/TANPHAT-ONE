@@ -48,12 +48,14 @@ describe("TP HR display contract", () => {
         expect(first === tablePageKey("hr.employee",1,1)).toBe(false);
     });
     test("Vietnamese menu search accepts unaccented text", () => {expect(fold("Hồ sơ Nhân viên")).toBe("ho so nhan vien");});
-    test("grouped list headers display 'thành viên' instead of English records", () => {
+    test("group labels are scoped to the HR renderer and retain accurate record units", () => {
         const hrRenderer = Object.create(HrListRenderer.prototype);
+        hrRenderer.props = {list:{resModel:"hr.ui.row"}};
+        expect(hrRenderer.getGroupText({ count: 4 })).toBe("4 bản ghi");
+        hrRenderer.props.list.resModel = "hr.employee";
         expect(hrRenderer.getGroupText({ count: 4 })).toBe("4 thành viên");
-        expect(hrRenderer.getGroupText({ count: 1 })).toBe("1 thành viên");
-        expect(hrRenderer.getGroupText({ count: 6 })).toBe("6 thành viên");
+        expect(hrRenderer.getEmptyRowIds).toEqual([]);
         const baseRenderer = Object.create(ListRenderer.prototype);
-        expect(baseRenderer.getGroupText({ count: 4 })).toBe("4 thành viên");
+        expect(baseRenderer.getGroupText({ count: 4 }) === "4 bản ghi").toBe(false);
     });
 });

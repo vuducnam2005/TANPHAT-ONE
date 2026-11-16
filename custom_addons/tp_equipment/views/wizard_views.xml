@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='utf8'?>
+<odoo>
+  <record id="reason_wizard_form" model="ir.ui.view">
+    <field name="name">tp.reason_wizard_form</field>
+    <field name="model">tp.equipment.reason.wizard</field>
+    <field name="arch" type="xml">
+      <form>
+        <group>
+          <field name="record_name"/>
+          <field name="hint"/>
+          <field name="reason"/>
+        </group>
+        <footer>
+          <button name="action_confirm" type="object" string="Xác nhận" invisible="False" class="btn-primary"/>
+          <button string="Đóng" special="cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+  <record id="proposal_approval_form" model="ir.ui.view">
+    <field name="name">tp.proposal_approval_form</field>
+    <field name="model">tp.equipment.proposal.approval</field>
+    <field name="arch" type="xml">
+      <form>
+        <group>
+          <field name="proposal_id"/>
+          <field name="approval_state"/>
+          <field name="approval_source"/>
+          <field name="approval_ref"/>
+          <field name="approval_date"/>
+          <field name="approver_text"/>
+          <field name="approval_check"/>
+          <field name="approval_note"/>
+          <field name="attachment_ids" widget="many2many_binary"/>
+          <field name="line_ids" widget="tp_equipment_relation"><list js_class="tp_equipment_table" class="tp_eq_table" limit="20">
+        <field name="sequence"/>
+        <field name="kind"/>
+        <field name="description"/>
+        <field name="equipment_id"/>
+        <field name="category_id"/>
+        <field name="quantity"/>
+        <field name="uom_text"/>
+        <field name="estimate_amount_known"/>
+        <field name="estimate_amount"/>
+        <field name="currency_id"/>
+        <field name="approved"/>
+        <field name="received_qty"/>
+        <field name="remaining_qty"/>
+        <field name="progress"/>
+        <field name="can_execute"/>
+      </list>
+    </field>
+        </group>
+        <footer>
+          <button name="action_confirm" type="object" string="Xác nhận" invisible="False" class="btn-primary"/>
+          <button string="Đóng" special="cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+  <record id="inventory_adjust_form" model="ir.ui.view">
+    <field name="name">tp.inventory_adjust_form</field>
+    <field name="model">tp.equipment.inventory.adjust</field>
+    <field name="arch" type="xml">
+      <form>
+        <group>
+          <field name="inventory_id"/>
+          <field name="line_ids" widget="tp_equipment_relation"><list js_class="tp_equipment_table" class="tp_eq_table" limit="20">
+        <field name="equipment_id"/>
+        <field name="extra_description"/>
+        <field name="is_extra"/>
+        <field name="expected_text" optional="show"/>
+        <field name="count_state" readonly="inventory_state != 'counting'" optional="show"/>
+        <field name="actual_custody" readonly="inventory_state != 'counting'" optional="show"/>
+        <field name="actual_employee_id" readonly="inventory_state != 'counting'" optional="show"/>
+        <field name="actual_department_id" readonly="inventory_state != 'counting'" optional="show"/>
+        <field name="actual_location_id" readonly="inventory_state != 'counting'" optional="show"/>
+        <field name="actual_state" readonly="inventory_state != 'counting'" optional="hide"/>
+        <field name="actual_meter" readonly="inventory_state != 'counting'" optional="hide"/>
+        <field name="result" optional="hide"/>
+        <field name="changed_after" optional="hide"/>
+        <field name="note" optional="hide"/>
+        <field name="inventory_state" column_invisible="True"/>
+        <field name="can_adjust" column_invisible="True"/>
+        </list>
+    </field>
+          <field name="reason"/>
+          <field name="preview_html"/>
+        </group>
+        <footer>
+          <button name="action_confirm" type="object" string="Xác nhận" invisible="False" class="btn-primary"/>
+          <button string="Đóng" special="cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+</odoo>

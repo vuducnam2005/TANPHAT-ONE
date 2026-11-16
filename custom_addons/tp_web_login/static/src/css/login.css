@@ -2,11 +2,14 @@
 .tp-native-login { --portal-primary-color:#255f85; --portal-text-color:#fff; color:#1f2937; font-family:"Segoe UI",system-ui,sans-serif; display:grid; grid-template-columns:45% minmax(0,1fr); min-height:100vh; min-height:100dvh; background:#f4f6f8; }
 .tp-native-login .tp-auth-identity { position:relative; display:flex; flex-direction:column; overflow:hidden; padding:clamp(28px,5vw,76px); background:#17324d; color:#fff; }
 .tp-native-login .tp-native-wordmark { display:flex; align-items:center; gap:12px; font-size:19px; letter-spacing:.035em; }
-.tp-native-login .tp-native-wordmark svg { width:44px; height:44px; color:#a8d0eb; flex-shrink:0; }
+/* BRAND-LOGO-001: company mark on a white tile (same as the backend navbar) and the full logo card. */
+.tp-native-login .tp-auth-logo { display:inline-grid; place-items:center; flex-shrink:0; width:48px; height:48px; border-radius:12px; background:#fff; box-shadow:0 2px 8px rgba(3,14,30,.35); }
+.tp-native-login .tp-auth-logo img { display:block; width:36px; height:36px; object-fit:contain; }
 .tp-native-login .tp-auth-intro { margin-top:clamp(70px,15vh,160px); position:relative; z-index:1; }
 .tp-native-login .tp-auth-intro h2 { font-size:clamp(32px,3.2vw,52px); line-height:1.2; letter-spacing:-.035em; font-weight:650; color:#fff; margin:0 0 24px; }
 .tp-native-login .tp-auth-intro p { color:#c3d5e6; font-size:17px; line-height:1.8; }
-.tp-native-login .tp-auth-bridge { width:calc(100% + 100px); min-height:180px; margin:36px -50px 12px; color:#8cb4d1; opacity:.8; }
+.tp-native-login .tp-auth-brand-card { position:relative; z-index:1; width:min(100%, 300px); margin:48px 0 12px; padding:28px 30px 24px; background:#fff; border-radius:20px; box-shadow:0 22px 48px rgba(3,14,30,.38), 0 0 0 1px rgba(255,255,255,.5); }
+.tp-native-login .tp-auth-brand-card img { display:block; width:100%; height:auto; }
 .tp-native-login .tp-auth-signature { margin-top:auto; color:#c3d5e6; font-size:13px; padding-top:32px; }
 .tp-native-login .tp-auth-panel { min-width:0; display:flex; justify-content:center; align-items:center; padding:56px 40px; background:#f4f6f8; }
 .tp-native-login .tp-auth-content { flex:none; width:100%; max-width:440px; padding:0; animation:tp-auth-enter 180ms ease-out; }
@@ -14,17 +17,20 @@
 .tp-native-login .tp-auth-heading h1 { font-size:32px; font-weight:700; letter-spacing:-.025em; color:#17324d; margin:0 0 10px; }
 .tp-native-login .tp-auth-heading p { color:#607287; line-height:1.6; margin:0; font-size:15px; }
 .tp-native-login .form-label { font-weight:600; font-size:14px; margin-bottom:8px; align-items:center; }
-.tp-native-login .form-control { min-height:48px; border:1px solid #b6c6d5; background:#fff; color:#1f2937; border-radius:8px; padding:12px 14px; font-size:16px; box-shadow:none; }
-.tp-native-login .form-control::placeholder { color:#607287; }
-.tp-native-login .form-control:focus { border-color:#255f85; box-shadow:0 0 0 3px #255f8520; }
+/* UI-INPUT-001: colours from tp_web_home input_tokens.css (fallbacks keep the page usable alone). */
+.tp-native-login .form-control { min-height:48px; border:1px solid var(--tp-input-border, #7a8ca5); background:var(--tp-input-bg, #fff); color:var(--tp-input-text, #172b4d); border-radius:8px; padding:12px 14px; font-size:16px; box-shadow:none; }
+.tp-native-login .form-control::placeholder { color:var(--tp-input-placeholder, #64748b); opacity:1; }
+.tp-native-login .form-control:hover { border-color:var(--tp-input-border-hover, #52627a); }
+.tp-native-login .form-control:focus { border-color:var(--tp-input-focus, #2563eb); box-shadow:var(--tp-input-ring, 0 0 0 3px rgba(37, 99, 235, .22)); }
 .tp-native-login .field-login { margin-bottom:22px !important; }
 .tp-native-login .input-group .form-control { border-radius:8px 0 0 8px; }
-.tp-native-login .o_show_password { background:#fff; color:#255f85; min-width:48px; border-color:#b6c6d5 !important; border-radius:0 8px 8px 0; }
+.tp-native-login .o_show_password { background:#fff; color:#255f85; min-width:48px; border-color:var(--tp-input-border, #7a8ca5) !important; border-radius:0 8px 8px 0; }
 .tp-native-login .btn-primary { min-height:48px; border-radius:8px; background:#255f85; border-color:#255f85; font-size:16px; font-weight:600; transition:background-color 180ms ease, box-shadow 180ms ease; }
 .tp-native-login .btn-primary:hover { --portal-primary-color:#17324d; background:#17324d; border-color:#17324d; box-shadow:0 4px 12px #17324d20; }
 .tp-native-login .btn-primary:disabled { opacity:.7; }
 .tp-native-login a, .tp-native-login .btn-link { color:#255f85; text-underline-offset:3px; }
-.tp-native-login :is(button,a,input):focus-visible { outline:3px solid #255f85; outline-offset:3px; }
+.tp-native-login :is(button,a,input:not(.form-control)):focus-visible { outline:3px solid #255f85; outline-offset:3px; }
+.tp-native-login .form-control:focus-visible { outline:2px solid transparent; }
 .tp-native-login .oe_login_form { max-width:100%; }
 .tp-native-login .alert { margin-top:20px; border-radius:8px; line-height:1.5; overflow-wrap:anywhere; }
 .tp-native-login .alert-danger { color:#8b2631; background:#fff0f1; border-color:#edc4ca; }
@@ -39,7 +45,7 @@
 .tp-native-login .tp-account-avatar img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .tp-native-login .tp-account-remove { flex-shrink:0; align-self:center; width:44px; min-height:44px; border:0; background:none; color:#607287; border-radius:8px; margin-right:6px; }
 .tp-native-login .tp-account-remove:hover { background:#fff0f1; color:#8b2631; }
-.tp-native-login .tp-account-other { width:100%; min-height:48px; border:1px solid #b6c6d5; border-radius:8px; background:transparent; color:#255f85; font-weight:600; transition:background 180ms ease; }
+.tp-native-login .tp-account-other { width:100%; min-height:48px; border:1px solid var(--tp-input-border, #7a8ca5); border-radius:8px; background:transparent; color:#255f85; font-weight:600; transition:background 180ms ease; }
 .tp-native-login .tp-account-other:hover { background:#e3edf5; }
 .tp-native-login .o_user_switch { margin:0 !important; }
 .tp-native-login input[name="totp_token"] { font-size:24px; letter-spacing:.22em; }
@@ -56,10 +62,11 @@
   .tp-native-login { display:flex; flex-direction:column; }
   .tp-native-login .tp-auth-identity { padding:20px 24px; min-height:120px; flex:none; }
   .tp-native-login .tp-native-wordmark { font-size:17px; }
-  .tp-native-login .tp-native-wordmark svg { width:32px; height:32px; }
-  .tp-native-login .tp-auth-intro { margin:12px 0 0 44px; }
+  .tp-native-login .tp-auth-logo { width:34px; height:34px; border-radius:8px; }
+  .tp-native-login .tp-auth-logo img { width:26px; height:26px; }
+  .tp-native-login .tp-auth-intro { margin:12px 0 0 42px; }
   .tp-native-login .tp-auth-intro h2 { font-size:14px; letter-spacing:0; font-weight:400; margin:0; color:#c3d5e6; }
-  .tp-native-login .tp-auth-desktop-break, .tp-native-login .tp-auth-intro p, .tp-native-login .tp-auth-bridge, .tp-native-login .tp-auth-signature { display:none; }
+  .tp-native-login .tp-auth-desktop-break, .tp-native-login .tp-auth-intro p, .tp-native-login .tp-auth-brand-card, .tp-native-login .tp-auth-signature { display:none; }
   .tp-native-login .tp-auth-panel { flex:1; align-items:flex-start; padding:36px 24px 28px; }
   .tp-native-login .tp-auth-heading { margin-bottom:28px; }
   .tp-native-login .tp-auth-heading h1 { font-size:28px; }

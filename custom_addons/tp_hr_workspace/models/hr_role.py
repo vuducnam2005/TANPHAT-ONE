@@ -297,13 +297,22 @@ class RoleWizard(models.TransientModel):
             user.write({'tp_lock_revision': user.sudo().tp_lock_revision + 1})
             self.env['tp.kd.department.role']._invalidate_scope()
             after = employee._tp_access_snapshot()
+            reason = self.reason.strip()
+            self.env['tp.hr.employee.audit']._tp_record([{
+                'action': 'role_change',
+                'employee_ref': employee.id,
+                'employee_name': employee.name,
+                'employee_code': employee.tp_employee_code,
+                'company_id': employee.company_id.id,
+                'reason': reason,
+                'snapshot': {'before': before, 'after': after, 'new_role': self.new_role},
+            }])
             employee.message_post(body=self.env._('Thay đổi vai trò: %(role)s. Người thực hiện: %(actor)s. Lý do: %(reason)s. Quyền cấp riêng giữ theo bản xem trước.',
-                                                 role=dict(self._fields['new_role'].selection)[self.new_role], actor=self.env.user.name, reason=self.reason.strip()))
-            employee.message_post(body=json.dumps({'before': before, 'after': after}, default=str, ensure_ascii=False))
+                                                 role=dict(self._fields['new_role'].selection)[self.new_role], actor=self.env.user.name, reason=reason))
             # Same existing append-only audit stream; sudo retains uid of the real admin.
             for role in roles or self.env['tp.kd.department.role'].sudo().search([('user_id', '=', user.id), ('active', '=', True)]):
                 self.env['tp.kd.department.role.event'].sudo().create({
-                    'role_id': role.id, 'actor_id': self.env.uid, 'reason': self.reason.strip(),
+                    'role_id': role.id, 'actor_id': self.env.uid, 'reason': reason,
                     'before': json.dumps(before, default=str, ensure_ascii=False),
                     'after': json.dumps(after, default=str, ensure_ascii=False),
                 })

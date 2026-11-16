@@ -1,0 +1,34 @@
+/* UI-INPUT-001 — single source of input tokens for the backend (web.assets_backend)
+   and the authentication pages (tp_web_login.assets_login). Colours checked on #fff:
+   text 14:1, placeholder 4.7:1, border 3.4:1, focus 5.2:1, error 6.5:1. */
+:root {
+    --tp-input-bg: #fff;
+    --tp-input-text: #172b4d;
+    --tp-input-label: #334155;
+    --tp-input-placeholder: #64748b;
+    --tp-input-border: #7a8ca5;
+    --tp-input-border-hover: #52627a;
+    --tp-input-focus: #2563eb;
+    --tp-input-ring: 0 0 0 3px rgba(37, 99, 235, .22);
+    --tp-input-error: #b91c1c;
+    --tp-input-error-bg: #fff7f7;
+    --tp-input-error-ring: 0 0 0 3px rgba(185, 28, 28, .18);
+    --tp-input-readonly-bg: #f1f5f9;
+    --tp-input-readonly-text: #334155;
+    --tp-input-disabled-bg: #e2e8f0;
+    --tp-input-disabled-text: #475569;
+    --tp-input-disabled-border: #a3b1c2;
+    --tp-input-icon: #52627a;
+    --tp-input-radius: 6px;
+    --tp-input-px: 10px;
+    --tp-input-h: 38px;
+    --tp-input-font: 14px;
+}
+
+/* Touch and narrow screens: 44px targets and 16px text (no iOS zoom on focus). */
+@media (max-width: 767.98px), (pointer: coarse) {
+    :root {
+        --tp-input-h: 44px;
+        --tp-input-font: 16px;
+    }
+}

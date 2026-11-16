@@ -1,6 +1,6 @@
 {
     "name": "TANPHAT ONE — Kế hoạch Kinh doanh",
-    "version": "20.0.1.9.0",
+    "version": "20.0.1.9.1",
     "license": "LGPL-3",
     "author": "Tan Phat JSC",
     "depends": ["tp_contract", "tp_crm_project_bridge", "tp_web_home"],
@@ -21,6 +21,7 @@
         "views/contracts.xml",
         "views/project_restructure.xml",
         "views/head_operations.xml",
+        "views/search_views.xml",
     ],
     "assets": {
         "web.assets_backend": [
@@ -39,6 +40,7 @@
             "tp_kd_workspace/static/src/report_center/report_center.js",
             "tp_kd_workspace/static/src/report_center/report_center.xml",
             "tp_kd_workspace/static/src/report_center/report_center.scss",
+            "tp_kd_workspace/static/src/table/filter_profiles.js",
             "tp_kd_workspace/static/src/table/table_tools.js",
             "tp_kd_workspace/static/src/table/table_tools.xml",
             "tp_kd_workspace/static/src/review_form.js",

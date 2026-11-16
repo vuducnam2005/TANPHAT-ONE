@@ -16,8 +16,6 @@ _TP_CODE_CORRECTION = object()
 CODE_MIN, CODE_MAX = 10001, 19999
 _CODE_LOCK = 761102
 _CODE_RE = re.compile(r'TP([1-9][0-9]*)')
-_SIDECAR_REFERENCES = {('hr.version', 'employee_id'), ('hr.employee', 'resource_id'), ('hr.version', 'resource_id')}
-_USER_MESSAGE_TYPES = ('comment', 'email', 'email_outgoing')
 
 
 def code_number(code):
@@ -133,6 +131,13 @@ class HrEmployee(models.Model):
             raise UserError(self.env._('Đã dùng hết dải mã TP%(min)s–TP%(max)s. Liên hệ quản trị trước khi tạo hồ sơ mới.', min=CODE_MIN, max=CODE_MAX))
         return f'TP{number}'
 
+    @api.model
+    def _tp_check_code_not_retired(self, code):
+        """A code of a deleted or corrected profile is never issued again."""
+        self.env.cr.execute('SELECT 1 FROM tp_hr_employee_audit WHERE employee_code=%s LIMIT 1', [code])
+        if self.env.cr.fetchone():
+            raise ValidationError(self.env._('Mã %(code)s thuộc hồ sơ đã xóa hoặc đã đổi mã; mã TP không được cấp lại.', code=code))
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -143,6 +148,8 @@ class HrEmployee(models.Model):
             self.env.cr.execute('SELECT pg_advisory_xact_lock(%s, %s)', [761101, company_id])
             if not vals.get('tp_employee_code'):
                 vals['tp_employee_code'] = self._tp_allocate_code(company_id)
+            else:
+                self._tp_check_code_not_retired(vals['tp_employee_code'])
         employees = super().create(vals_list)
         explicit = [code_number(code) for code in employees.mapped('tp_employee_code')]
         explicit = [number for number in explicit if number and number <= CODE_MAX]
@@ -182,145 +189,30 @@ class HrEmployee(models.Model):
                     raise ValidationError(self.env._('Mã nguồn phải là số nguyên dương và khớp với mã nhân viên TP.'))
 
     # ------------------------------------------------------------------
-    # Deleting a mistaken entry (admin) vs archiving (everything else)
+    # References (kept for the 20.0.2.1.0 migration report)
     # ------------------------------------------------------------------
     def _tp_reference_counts(self):
         """Stored references to these employees from other records.
 
-        Returns ``{employee_id: [(label, count), ...]}``. Records created with
-        the employee itself (its versions and resource) are not references;
-        wizard rows (transient models) are ignored.
+        Returns ``{employee_id: [(label, count), ...]}``; the employee's own
+        versions/resource and transient rows are not references.
         """
         result = {employee_id: [] for employee_id in self.ids}
         if not self.ids:
             return result
-        cr = self.env.cr
-        Fields = self.env['ir.model.fields'].sudo()
-        targets = {'hr.employee': ('employee', self.ids)}
-        resource_ids = self.sudo().with_context(active_test=False).mapped('resource_id').ids
-        if resource_ids:
-            targets['resource.resource'] = ('resource', resource_ids)
-        resource_owner = {employee.resource_id.id: employee.id for employee in self.sudo().with_context(active_test=False)}
-        own_relations = {field.relation for field in self._fields.values() if field.type == 'many2many' and field.store}
-        for target, (kind, ids) in targets.items():
-            for field_info in Fields.search([('relation', '=', target), ('ttype', 'in', ('many2one', 'many2many')), ('store', '=', True)]):
-                model = self.env.get(field_info.model)
-                field = model is not None and model._fields.get(field_info.name)
-                if not field or not field.store or model._transient or model._abstract or not model._auto:
-                    continue
-                if (field_info.model, field_info.name) in _SIDECAR_REFERENCES:
-                    continue
-                if field.type == 'many2one':
-                    query = f'SELECT "{field.name}", count(*) FROM "{model._table}" WHERE "{field.name}" IN %s'
-                    if field_info.model == 'hr.employee':
-                        query += ' AND id NOT IN %s'
-                        cr.execute(query + ' GROUP BY 1', [tuple(ids), tuple(self.ids)])
-                    else:
-                        cr.execute(query + ' GROUP BY 1', [tuple(ids)])
-                else:
-                    if field.relation in own_relations or not field.relation:
-                        continue
-                    cr.execute(f'SELECT "{field.column2}", count(*) FROM "{field.relation}" WHERE "{field.column2}" IN %s GROUP BY 1', [tuple(ids)])
-                label = f'{self.env["ir.model"]._get(field_info.model).name} – {field_info.field_description}'
-                for record_id, count in cr.fetchall():
-                    employee_id = record_id if kind == 'employee' else resource_owner.get(record_id)
-                    if employee_id in result:
-                        result[employee_id].append((label, count))
+        doomed = self._tp_doomed()
+        targets = {model_name: list(rows) for model_name, rows in doomed.items() if rows}
+        for model_name, field_name, counts in self._tp_stored_references(targets, self._tp_doomed_exclusions(doomed)):
+            for target, rows in counts.items():
+                for record_id, count in rows.items():
+                    result[doomed[target][record_id]].append((self._tp_label(model_name, field_name), count))
         return result
 
-    def _tp_deletion_blockers(self):
-        """Return ``{employee_id: [reason, ...]}`` for records that are not mistaken entries.
-
-        Only an unused manual entry may be deleted: created by hand (not from
-        the roster), without a personal account, business role or reference
-        from other records, without real work history (later versions),
-        posted notes/emails, planned activities or attached documents.
-        """
-        employees = self.sudo().with_context(active_test=False)
-        blockers = {employee.id: [] for employee in employees}
-        if not employees:
-            return blockers
-        cr = self.env.cr
-        ids = tuple(employees.ids)
-        for employee in employees:
-            reasons = blockers[employee.id]
-            if employee.tp_source_code or employee.tp_import_batch_id:
-                reasons.append(self.env._('Hồ sơ được nhập từ danh sách nhân sự (mã nguồn %(roster_code)s).', roster_code=employee.tp_source_code or '-'))
-            if employee.user_id:
-                reasons.append(self.env._('Đã cấp tài khoản cá nhân %(login)s.', login=employee.user_id.login))
-            if len(employee.version_ids) > 1:
-                reasons.append(self.env._('Đã có lịch sử công tác (%(count)s phiên bản hồ sơ).', count=len(employee.version_ids)))
-        cr.execute("SELECT res_id, count(*) FROM mail_message WHERE model='hr.employee' AND res_id IN %s AND message_type IN %s GROUP BY 1", [ids, _USER_MESSAGE_TYPES])
-        for employee_id, count in cr.fetchall():
-            blockers[employee_id].append(self.env._('Có %(count)s ghi chú hoặc trao đổi trong lịch sử hồ sơ.', count=count))
-        cr.execute("SELECT res_id, count(*) FROM mail_activity WHERE res_model='hr.employee' AND res_id IN %s GROUP BY 1", [ids])
-        for employee_id, count in cr.fetchall():
-            blockers[employee_id].append(self.env._('Có %(count)s hoạt động đang lên lịch.', count=count))
-        cr.execute("SELECT res_id, count(*) FROM ir_attachment WHERE res_model='hr.employee' AND res_id IN %s AND res_field IS NULL GROUP BY 1", [ids])
-        for employee_id, count in cr.fetchall():
-            blockers[employee_id].append(self.env._('Có %(count)s tài liệu đính kèm.', count=count))
-        for employee_id, references in employees._tp_reference_counts().items():
-            for label, count in references:
-                blockers[employee_id].append(self.env._('Đang được dùng trong %(label)s (%(count)s bản ghi).', label=label, count=count))
-        return {employee_id: reasons for employee_id, reasons in blockers.items() if reasons}
-
-    def _tp_check_delete_admin(self):
-        if not self.env.user.has_group('base.group_system'):
-            raise AccessError(self.env._('Chỉ quản trị hệ thống được xóa hồ sơ nhập nhầm. Hãy lưu trữ hồ sơ nếu cần ẩn khỏi danh sách.'))
-        foreign = self.sudo().with_context(active_test=False).filtered(lambda employee: employee.company_id != self.env.company)
-        if foreign:
-            raise AccessError(self.env._('Chỉ xóa hồ sơ thuộc công ty đang làm việc (%(company)s).', company=self.env.company.name))
-
-    def _tp_format_blockers(self, blockers):
-        lines = []
-        for employee in self.sudo().with_context(active_test=False):
-            if employee.id in blockers:
-                lines.append(f'• {employee.name} ({employee.tp_employee_code or "-"}): ' + ' '.join(blockers[employee.id]))
-        return self.env._('Không xóa được vì có hồ sơ đang được sử dụng. Không hồ sơ nào bị xóa.\n%(details)s\nHãy dùng "Lưu trữ nhân viên" để giữ lịch sử.', details='\n'.join(lines))
-
-    def _tp_delete_mistaken(self, reason):
-        """Permanently delete unused manual entries, all or nothing, with an audit."""
-        self._tp_check_delete_admin()
-        reason = (reason or '').strip()
-        if not reason:
-            raise UserError(self.env._('Vui lòng nhập lý do xóa hồ sơ nhập nhầm.'))
-        employees = self.with_context(active_test=False)
-        for company_id in sorted(set(employees.sudo().mapped('company_id').ids)):
-            self.env.cr.execute('SELECT pg_advisory_xact_lock(%s, %s)', [761101, company_id])
-        self.env.cr.execute('SELECT id FROM hr_employee WHERE id IN %s FOR UPDATE', [tuple(employees.ids)])
-        employees.invalidate_recordset()
-        blockers = employees._tp_deletion_blockers()
-        if blockers:
-            raise UserError(employees._tp_format_blockers(blockers))
-        audit_vals = []
-        for employee in employees.sudo():
-            audit_vals.append({
-                'action': 'delete',
-                'employee_ref': employee.id,
-                'employee_name': employee.name,
-                'employee_code': employee.tp_employee_code,
-                'company_id': employee.company_id.id,
-                'reason': reason,
-                'snapshot': {
-                    'department': employee.department_id.display_name or '',
-                    'job': employee.job_id.display_name or '',
-                    'work_contact_id': employee.work_contact_id.id,
-                    'resource_id': employee.resource_id.id,
-                    'version_ids': employee.version_ids.ids,
-                    'create_date': str(employee.create_date),
-                    'create_uid': employee.create_uid.id,
-                },
-            })
-        self.env['tp.hr.employee.audit']._tp_record(audit_vals)
-        employees.with_context(_tp_employee_delete=_TP_DELETE).unlink()
-        return len(audit_vals)
-
     def unlink(self):
+        # HR-DELETE-010: only the audited permanent deletion (admin password
+        # re-verified, plan checked under lock) passes this Python sentinel.
         if self.env.context.get('_tp_employee_delete') is not _TP_DELETE:
-            raise UserError(self.env._('Không xóa trực tiếp hồ sơ nhân viên. Quản trị dùng "Xóa hồ sơ nhập nhầm" để kiểm tra điều kiện; hồ sơ đã sử dụng thì lưu trữ để giữ lịch sử.'))
-        blockers = self._tp_deletion_blockers()
-        if blockers:
-            raise UserError(self._tp_format_blockers(blockers))
+            raise UserError(self.env._('Không xóa trực tiếp hồ sơ nhân viên. Quản trị dùng "Xóa vĩnh viễn nhân viên" (xác minh lại mật khẩu) hoặc "Lưu trữ" để giữ lịch sử.'))
         return super().unlink()
 
     @api.model

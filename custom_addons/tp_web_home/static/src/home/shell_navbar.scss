@@ -7,43 +7,55 @@
     min-width: 0;
     padding: 4px 10px;
     gap: 4px;
-    background: #17324d;
+    background: linear-gradient(90deg, #061b40 0%, #0d2b57 55%, #163d73 100%);
     color: #fff;
-    border-bottom: 1px solid #314e69;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
     font-family: "Segoe UI", system-ui, sans-serif;
 
     .tp-shell-brand { display: flex; align-items: center; gap: 9px; flex-shrink: 0; padding: 0 18px 0 10px; font-size: 14px; font-weight: 750; letter-spacing: .025em; }
-    .tp-shell-brand svg { width: 28px; height: 28px; fill: none; stroke: #a8d0eb; stroke-width: 1.6; stroke-linecap: round; }
+    // BRAND-LOGO-001: company mark on a white tile so the blue logo stays clear on the dark navbar.
+    .tp-shell-logo { display: inline-grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 8px; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.6); }
+    .tp-shell-logo img { display: block; width: 24px; height: 24px; object-fit: contain; user-select: none; }
     .tp-shell-shortmark { display: none; }
-    .o_menu_brand { align-items: center; max-width: 220px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-left: 1px solid #526a80; padding-left: 18px; margin-right: 8px; font-size: 14px; font-weight: 600; color: #fff; }
+    .o_menu_brand { align-items: center; max-width: 220px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-left: 1px solid rgba(255, 255, 255, 0.24); padding-left: 18px; margin-right: 8px; font-size: 14px; font-weight: 600; color: #fff; }
     .o_menu_sections { min-width: 0;
         > * { flex-shrink: 0; } // Native adapt must measure full labels before moving them to More.
     }
-    .o_menu_systray { gap: 3px; min-width: 0; align-items: center; }
+    .o_menu_systray { gap: 4px; min-width: 0; align-items: center; }
     .o_navbar_apps_menu > button, .o_navbar_apps_menu button, .o_menu_toggle,
     .o_menu_sections > button, .o_menu_sections .o_nav_entry,
     .o_menu_systray button, .o_menu_systray .o_nav_entry {
-        color: #fff; border-radius: 7px; min-height: var(--tp-ui-nav-entry-h, 44px); min-width: 40px;
-        transition: background-color 180ms ease, box-shadow 180ms ease;
-        &:hover, &[aria-expanded="true"] { background-color: #2b4c6b; }
+        color: #fff; border-radius: 8px; min-height: var(--tp-ui-nav-entry-h, 40px); min-width: 40px;
+        transition: background-color 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+        &:hover, &[aria-expanded="true"] { background-color: rgba(255, 255, 255, 0.14); }
         &:focus-visible { outline: 2px solid #b3d9f2; outline-offset: -3px; }
     }
-    .o_tp_web_home_button { display: inline-flex; align-items: center; justify-content: center; }
-    .o_tp_web_home_button_active { background: #2b4c6b; box-shadow: inset 0 -3px #a8d0eb; }
-    .o_user_menu { align-items: center; gap: 9px; margin-left: 6px; padding: 2px 10px !important; border: 1px solid #526a80; }
-    .o_user_avatar { width: 28px; height: 28px; border: 1px solid #a8d0eb; }
-    .tp-shell-user-name { max-width: 120px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; }
+    .o_tp_web_home_button { display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; }
+    .o_tp_web_home_button_active { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.36); box-shadow: none; }
+    .o_user_menu { position: relative; align-items: center; gap: 8px; margin-left: 14px; padding: 2px 8px !important; border: 1px solid transparent;
+        &::before { content: ""; position: absolute; left: -9px; top: 50%; transform: translateY(-50%); width: 1px; height: 22px; background: rgba(255, 255, 255, 0.22); }
+        .o-mail-DiscussAvatar img,
+        .o_user_avatar { border-radius: 50% !important; }
+        &.tp-avatar-broken {
+            .o-mail-DiscussAvatar,
+            .o_user_avatar { display: none !important; }
+        }
+    }
+    .o_user_avatar { width: 28px; height: 28px; border-radius: 50% !important; border: 1.5px solid rgba(255, 255, 255, 0.45); }
+    .tp-shell-user-name { max-width: 140px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; }
     .tp-shell-user-chevron { font-size: 12px; }
     .o_user_menu .oe_topbar_name { display: none !important; } // Name is shown once; database remains in native debug tools.
     .o_switch_company_menu { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .badge { color: #17324d; background: #dcecf8; }
     .tp-shell-mobile-context { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center; font-size: 13px; color: #dce6f0; }
 }
-.tp-shell-user-heading { padding: 14px 18px; width: 280px; max-width: 90vw; border-bottom: 1px solid #d9e2ec; color: #1f2937; }
-.tp-shell-user-heading small, .tp-shell-user-heading strong { display: block; overflow-wrap: anywhere; }
-.tp-shell-user-heading small { color: #607287; margin-bottom: 4px; }
-.tp-shell-user-item { min-height: 40px; display: flex; align-items: center; }
-.tp-shell-user-item[data-menu="logout"] { color: #a52c36; border-top: 1px solid #d9e2ec; margin-top: 5px; font-weight: 600; }
+body.o_tp_hr_shell,
+body.o_tp_kd_shell {
+    .o_main_navbar.tp-shell-navbar .o_user_menu,
+    .o_main_navbar.tp-shell-navbar .o_mobile_menu_toggle {
+        display: none !important;
+    }
+}
 @media (max-width: 1199.98px) {
     .tp-shell-navbar .tp-shell-user-name { display: none; }
     .o_main_navbar.tp-shell-navbar .tp-shell-brand { padding-right: 8px; }
@@ -51,11 +63,13 @@
 @media (max-width: 767.98px) {
     .o_main_navbar.tp-shell-navbar { padding: 4px; gap: 0;
         .tp-shell-brand { padding: 0 8px 0 2px; gap: 5px; font-size: 12px; }
-        .tp-shell-brand svg { width: 25px; height: 25px; }
+        .tp-shell-logo { width: 28px; height: 28px; border-radius: 7px; }
+        .tp-shell-logo img { width: 21px; height: 21px; }
         .tp-shell-wordmark { display: none; }
         .tp-shell-shortmark { display: inline; }
         .o_menu_systray { gap: 0; }
         .o_menu_systray .o_nav_entry, .o_menu_systray button { min-width: 36px; padding-left: 6px; padding-right: 6px; }
+        .o_user_menu { margin-left: 4px; &::before { display: none; } }
         .o_mobile_menu_toggle { min-width: 44px; padding-right: 8px !important; }
     }
 }

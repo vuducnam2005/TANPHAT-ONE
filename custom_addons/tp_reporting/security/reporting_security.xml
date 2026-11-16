@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo>
+  <record id="privilege_reporting" model="res.groups.privilege"><field name="name">TP Báo cáo</field></record>
+  <record id="group_reporting_user" model="res.groups"><field name="name">Báo cáo — người dùng</field><field name="implied_ids" eval="[(4,ref('base.group_user'))]"/><field name="privilege_id" ref="privilege_reporting"/></record>
+  <record id="group_reporting_finance" model="res.groups"><field name="name">Báo cáo — tài chính (cần assignment)</field><field name="privilege_id" ref="privilege_reporting"/><field name="implied_ids" eval="[(4, ref('group_reporting_user'))]"/></record>
+  <record id="group_reporting_config" model="res.groups"><field name="name">Báo cáo — cấu hình (không cấp thẩm quyền nghiệp vụ)</field><field name="privilege_id" ref="privilege_reporting"/><field name="implied_ids" eval="[(4, ref('group_reporting_user'))]"/></record>
+  </odoo>

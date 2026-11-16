@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- S1: Specialized hr.employee search views so missing/archived/pending never carry irrelevant filters -->
+    <record id="missing_employee_search" model="ir.ui.view">
+        <field name="name">tp.hr.employee.missing.search</field>
+        <field name="model">hr.employee</field>
+        <field name="priority">32</field>
+        <field name="arch" type="xml">
+            <search string="Nhân viên thiếu thông tin">
+                <field name="name" string="Họ tên"/>
+                <field name="tp_employee_code" string="Mã nhân viên"/>
+                <field name="department_id" string="Phòng ban"/>
+                <field name="job_id" string="Chức vụ"/>
+                <field name="tp_source_title" string="Chức vụ nguồn"/>
+                <field name="tp_employment_kind" string="Loại hình lao động"/>
+                <filter name="miss_code" string="Thiếu mã nhân viên" domain="[('tp_employee_code', '=', False)]"/>
+                <filter name="miss_department" string="Chưa có phòng ban" domain="[('department_id', '=', False)]"/>
+                <filter name="miss_job" string="Chưa có chức vụ" domain="[('job_id', '=', False), ('tp_source_title', '=', False)]"/>
+                <group>
+                    <filter name="group_department" string="Phòng ban" context="{'group_by': 'department_id'}"/>
+                    <filter name="group_employment" string="Loại hình" context="{'group_by': 'tp_employment_kind'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="archived_employee_search" model="ir.ui.view">
+        <field name="name">tp.hr.employee.archived.search</field>
+        <field name="model">hr.employee</field>
+        <field name="priority">32</field>
+        <field name="arch" type="xml">
+            <search string="Nhân viên đã nghỉ / lưu trữ">
+                <field name="name" string="Họ tên"/>
+                <field name="tp_employee_code" string="Mã nhân viên"/>
+                <field name="department_id" string="Phòng ban"/>
+                <field name="job_id" string="Chức vụ"/>
+                <field name="tp_employment_kind" string="Loại hình lao động"/>
+                <field name="tp_account_status" string="Trạng thái tài khoản"/>
+                <filter name="has_account" string="Có tài khoản" domain="[('user_id', '!=', False)]"/>
+                <filter name="no_account" string="Chưa có tài khoản" domain="[('user_id', '=', False)]"/>
+                <filter name="acc_disabled" string="Tài khoản đang khóa" domain="[('tp_account_status', '=', 'disabled')]"/>
+                <group>
+                    <filter name="group_department" string="Phòng ban" context="{'group_by': 'department_id'}"/>
+                    <filter name="group_employment" string="Loại hình" context="{'group_by': 'tp_employment_kind'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="pending_employee_search" model="ir.ui.view">
+        <field name="name">tp.hr.employee.pending.search</field>
+        <field name="model">hr.employee</field>
+        <field name="priority">32</field>
+        <field name="arch" type="xml">
+            <search string="Nhân viên chưa có tài khoản">
+                <field name="name" string="Họ tên"/>
+                <field name="tp_employee_code" string="Mã nhân viên"/>
+                <field name="department_id" string="Phòng ban"/>
+                <field name="job_id" string="Chức vụ"/>
+                <field name="tp_employment_kind" string="Loại hình lao động"/>
+                <filter name="missing_basic" string="Thiếu thông tin cơ bản" domain="[('tp_missing_basic', '!=', False)]"/>
+                <filter name="active_records" string="Đang làm việc" domain="[('active', '=', True)]"/>
+                <filter name="archived_records" string="Đã lưu trữ" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter name="group_department" string="Phòng ban" context="{'group_by': 'department_id'}"/>
+                    <filter name="group_employment" string="Loại hình" context="{'group_by': 'tp_employment_kind'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- S1: Missing <search> views across HR workspace -->
+    <record id="hr_work_location_search" model="ir.ui.view">
+        <field name="name">tp.hr.work.location.search</field>
+        <field name="model">hr.work.location</field>
+        <field name="arch" type="xml">
+            <search string="Địa điểm làm việc">
+                <field name="name" string="Tên địa điểm"/>
+                <field name="location_type" string="Loại địa điểm"/>
+                <field name="location_number" string="Mã / số địa điểm"/>
+                <field name="address_id" string="Địa chỉ"/>
+                <field name="company_id" string="Công ty" groups="base.group_multi_company"/>
+                <filter name="type_office" string="Văn phòng" domain="[('location_type', '=', 'office')]"/>
+                <filter name="type_home" string="Làm việc từ xa" domain="[('location_type', '=', 'home')]"/>
+                <filter name="type_other" string="Khác" domain="[('location_type', '=', 'other')]"/>
+                <filter name="archived" string="Đã lưu trữ" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter name="group_type" string="Loại địa điểm" context="{'group_by': 'location_type'}"/>
+                    <filter name="group_company" string="Công ty" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="hr_employee_category_search" model="ir.ui.view">
+        <field name="name">tp.hr.employee.category.search</field>
+        <field name="model">hr.employee.category</field>
+        <field name="arch" type="xml">
+            <search string="Nhãn nhân viên">
+                <field name="name" string="Tên nhãn"/>
+                <filter name="in_use" string="Đang gắn nhân viên" domain="[('employee_ids', '!=', False)]"/>
+                <filter name="unused" string="Chưa gắn nhân viên" domain="[('employee_ids', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="hr_resume_type_search" model="ir.ui.view">
+        <field name="name">tp.hr.resume.line.type.search</field>
+        <field name="model">hr.resume.line.type</field>
+        <field name="arch" type="xml">
+            <search string="Loại hồ sơ năng lực">
+                <field name="name" string="Tên loại"/>
+                <filter name="course_types" string="Khóa học / đào tạo" domain="[('is_course', '=', True)]"/>
+                <filter name="non_course" string="Kinh nghiệm / bằng cấp" domain="[('is_course', '=', False)]"/>
+                <group>
+                    <filter name="group_course" string="Là khóa học" context="{'group_by': 'is_course'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="hr_skill_type_search" model="ir.ui.view">
+        <field name="name">tp.hr.skill.type.search</field>
+        <field name="model">hr.skill.type</field>
+        <field name="arch" type="xml">
+            <search string="Loại kỹ năng">
+                <field name="name" string="Tên loại kỹ năng"/>
+                <filter name="cert_only" string="Là chứng chỉ" domain="[('is_certification', '=', True)]"/>
+                <filter name="archived" string="Đã lưu trữ" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="hr_employee_audit_search" model="ir.ui.view">
+        <field name="name">tp.hr.employee.audit.search</field>
+        <field name="model">tp.hr.employee.audit</field>
+        <field name="arch" type="xml">
+            <search string="Nhật ký hồ sơ nhân sự">
+                <field name="employee_code" string="Mã nhân viên"/>
+                <field name="employee_name" string="Nhân viên"/>
+                <field name="new_code" string="Mã mới"/>
+                <field name="source_code" string="Mã nguồn"/>
+                <field name="action" string="Hành động"/>
+                <field name="account_action" string="Tài khoản"/>
+                <field name="actor_id" string="Người thực hiện"/>
+                <field name="actor_name" string="Tên người thực hiện"/>
+                <field name="reason" string="Lý do"/>
+                <field name="request_id" string="Mã yêu cầu"/>
+                <field name="create_date" string="Thời điểm"/>
+                <field name="company_id" string="Công ty" groups="base.group_multi_company"/>
+                <filter name="act_delete" string="Xóa nhập nhầm" domain="[('action', '=', 'delete')]"/>
+                <filter name="act_perm_delete" string="Xóa vĩnh viễn" domain="[('action', '=', 'permanent_delete')]"/>
+                <filter name="act_code_correction" string="Sửa mã NV" domain="[('action', '=', 'code_correction')]"/>
+                <filter name="act_identity" string="Đồng bộ danh tính" domain="[('action', '=', 'identity')]"/>
+                <filter name="act_role" string="Đổi vai trò" domain="[('action', '=', 'role_change')]"/>
+                <filter name="act_dept" string="Chuyển phòng ban" domain="[('action', '=', 'department_transfer')]"/>
+                <filter name="acc_locked" string="Đã khóa tài khoản" domain="[('account_action', '=', 'locked')]"/>
+                <group>
+                    <filter name="group_action" string="Hành động" context="{'group_by': 'action'}"/>
+                    <filter name="group_account_action" string="Tác động tài khoản" context="{'group_by': 'account_action'}"/>
+                    <filter name="group_month" string="Tháng thực hiện" context="{'group_by': 'create_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="hr_import_line_search" model="ir.ui.view">
+        <field name="name">tp.hr.import.line.search</field>
+        <field name="model">tp.hr.import.line</field>
+        <field name="arch" type="xml">
+            <search string="Dòng đối chiếu import">
+                <field name="batch_id" string="Lô import"/>
+                <field name="source_code" string="Mã nguồn"/>
+                <field name="name" string="Họ tên nguồn"/>
+                <field name="source_department" string="Đơn vị nguồn"/>
+                <field name="source_title" string="Chức vụ nguồn"/>
+                <field name="department_id" string="Đơn vị đối chiếu"/>
+                <field name="employee_id" string="Hồ sơ hiện có"/>
+                <field name="action" string="Kết quả đối chiếu"/>
+                <filter name="act_create" string="Tạo mới" domain="[('action', '=', 'create')]"/>
+                <filter name="act_update" string="Thay đổi nguồn" domain="[('action', '=', 'update')]"/>
+                <filter name="act_skip" string="Bỏ qua" domain="[('action', '=', 'skip')]"/>
+                <filter name="act_conflict" string="Cần đối chiếu" domain="[('action', '=', 'conflict')]"/>
+                <filter name="need_review" string="Chưa rà soát" domain="[('review_update', '=', False), ('action', '=', 'update')]"/>
+                <group>
+                    <filter name="group_action" string="Kết quả" context="{'group_by': 'action'}"/>
+                    <filter name="group_department" string="Đơn vị đối chiếu" context="{'group_by': 'department_id'}"/>
+                    <filter name="group_batch" string="Lô import" context="{'group_by': 'batch_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="hr_contract_document_search" model="ir.ui.view">
+        <field name="name">tp.hr.contract.document.search</field>
+        <field name="model">tp.hr.contract.document</field>
+        <field name="arch" type="xml">
+            <search string="Hồ sơ hợp đồng lao động">
+                <field name="employee_id" string="Nhân viên"/>
+                <field name="number" string="Số hợp đồng"/>
+                <field name="name" string="Tên văn bản"/>
+                <field name="kind" string="Loại hợp đồng"/>
+                <field name="signed_date" string="Ngày ký"/>
+                <field name="service_start" string="Hiệu lực từ"/>
+                <field name="service_end" string="Hiệu lực đến"/>
+                <filter name="kind_labor" string="Hợp đồng lao động" domain="[('kind', '=', 'labor')]"/>
+                <filter name="kind_outsourced" string="Hợp đồng thuê khoán" domain="[('kind', '=', 'outsourced')]"/>
+                <group>
+                    <filter name="group_kind" string="Loại hợp đồng" context="{'group_by': 'kind'}"/>
+                    <filter name="group_employee" string="Nhân viên" context="{'group_by': 'employee_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="import_search_dates" model="ir.ui.view">
+        <field name="name">tp.hr.import.search.dates</field>
+        <field name="model">tp.hr.import.batch</field>
+        <field name="inherit_id" ref="tp_hr_workspace.import_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='create_uid']" position="after">
+                <field name="create_date" string="Ngày tạo"/>
+                <field name="applied_by" string="Người áp dụng"/>
+                <field name="applied_at" string="Ngày áp dụng"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Bind specialized search views & profiles to HR actions -->
+    <record id="tp_hr_workspace.action_missing" model="ir.actions.act_window">
+        <field name="search_view_id" ref="missing_employee_search"/>
+        <field name="context">{'tp_hr_missing': True, 'tp_filter_profile': 'missing'}</field>
+    </record>
+    <record id="tp_hr_workspace.action_archived" model="ir.actions.act_window">
+        <field name="search_view_id" ref="archived_employee_search"/>
+        <field name="context">{'active_test': False, 'tp_filter_profile': 'archived'}</field>
+    </record>
+    <record id="tp_hr_workspace.action_pending" model="ir.actions.act_window">
+        <field name="search_view_id" ref="pending_employee_search"/>
+        <field name="context">{'tp_filter_profile': 'pending'}</field>
+    </record>
+    <record id="tp_hr_workspace.action_locations" model="ir.actions.act_window">
+        <field name="search_view_id" ref="hr_work_location_search"/>
+    </record>
+    <record id="tp_hr_workspace.action_categories" model="ir.actions.act_window">
+        <field name="search_view_id" ref="hr_employee_category_search"/>
+    </record>
+    <record id="tp_hr_workspace.action_resume_types" model="ir.actions.act_window">
+        <field name="search_view_id" ref="hr_resume_type_search"/>
+    </record>
+    <record id="tp_hr_workspace.action_skill_types" model="ir.actions.act_window">
+        <field name="search_view_id" ref="hr_skill_type_search"/>
+    </record>
+    <record id="tp_hr_workspace.action_employee_audit" model="ir.actions.act_window">
+        <field name="search_view_id" ref="hr_employee_audit_search"/>
+    </record>
+
+    <!-- S3: Native HR Skills, HR Settings, Calendar search views -->
+    <record id="tp_hr_resume_lines_filter_inherit" model="ir.ui.view">
+        <field name="name">tp.hr.resume.line.search.inherit</field>
+        <field name="model">hr.resume.line</field>
+        <field name="inherit_id" ref="hr_skills.view_resume_lines_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="name" string="Tên khóa học / mục"/>
+                <field name="employee_id" string="Nhân viên"/>
+                <field name="line_type_id" string="Loại năng lực"/>
+                <field name="course_type" string="Hình thức"/>
+                <field name="date_start" string="Ngày bắt đầu"/>
+                <filter name="with_certificate" string="Có chứng chỉ đính kèm" domain="[('certificate_file', '!=', False)]"/>
+                <filter name="external_courses" string="Khóa học bên ngoài" domain="[('course_type', '=', 'external')]"/>
+                <group>
+                    <filter name="group_employee" string="Nhân viên" context="{'group_by': 'employee_id'}"/>
+                    <filter name="group_line_type" string="Loại năng lực" context="{'group_by': 'line_type_id'}"/>
+                    <filter name="group_course_type" string="Hình thức" context="{'group_by': 'course_type'}"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="tp_hr_employee_type_search" model="ir.ui.view">
+        <field name="name">tp.hr.employee.type.search</field>
+        <field name="model">hr.employee.type</field>
+        <field name="arch" type="xml">
+            <search string="Loại nhân viên">
+                <field name="name" string="Tên loại"/>
+                <field name="code" string="Mã"/>
+                <field name="country_id" string="Quốc gia"/>
+                <field name="company_id" string="Công ty" groups="base.group_multi_company"/>
+                <group>
+                    <filter name="group_company" string="Công ty" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="tp_hr_departure_reason_search" model="ir.ui.view">
+        <field name="name">tp.hr.departure.reason.search</field>
+        <field name="model">hr.departure.reason</field>
+        <field name="arch" type="xml">
+            <search string="Lý do nghỉ việc">
+                <field name="name" string="Tên lý do"/>
+                <field name="country_id" string="Quốc gia"/>
+                <filter name="archived" string="Đã lưu trữ" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="tp_calendar_calendar_search" model="ir.ui.view">
+        <field name="name">tp.calendar.calendar.search</field>
+        <field name="model">calendar.calendar</field>
+        <field name="arch" type="xml">
+            <search string="Lịch chia sẻ">
+                <field name="name" string="Tên lịch"/>
+                <field name="calendar_default_privacy" string="Quyền mặc định"/>
+                <field name="create_date" string="Ngày tạo"/>
+                <filter name="privacy_public" string="Công khai" domain="[('calendar_default_privacy', '=', 'public')]"/>
+                <filter name="privacy_private" string="Riêng tư" domain="[('calendar_default_privacy', '=', 'private')]"/>
+                <filter name="privacy_confidential" string="Nội bộ" domain="[('calendar_default_privacy', '=', 'confidential')]"/>
+                <group>
+                    <filter name="group_privacy" string="Quyền mặc định" context="{'group_by': 'calendar_default_privacy'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="tp_calendar_event_type_search" model="ir.ui.view">
+        <field name="name">tp.calendar.event.type.search</field>
+        <field name="model">calendar.event.type</field>
+        <field name="arch" type="xml">
+            <search string="Thẻ sự kiện lịch">
+                <field name="name" string="Tên thẻ"/>
+                <field name="create_date" string="Ngày tạo"/>
+            </search>
+        </field>
+    </record>
+</odoo>

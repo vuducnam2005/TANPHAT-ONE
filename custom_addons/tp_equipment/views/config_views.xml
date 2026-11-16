@@ -1,0 +1,159 @@
+<?xml version='1.0' encoding='utf8'?>
+<odoo>
+    <!-- Phân loại thiết bị -->
+    <record id="category_list" model="ir.ui.view">
+        <field name="name">tp.equipment.category.list</field>
+        <field name="model">maintenance.equipment.category</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <list string="Phân loại thiết bị" js_class="tp_equipment_table" class="tp_eq_table" limit="20">
+                <field name="tp_sequence" widget="handle"/>
+                <field name="tp_code" string="Mã"/>
+                <field name="name" string="Tên phân loại"/>
+                <field name="tp_asset_class" string="Loại quản lý"/>
+                <field name="tp_has_config" string="Có cấu hình" optional="show"/>
+                <field name="tp_has_meter" string="Số đếm" optional="show"/>
+                <field name="equipment_count" string="Số thiết bị"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="category_search" model="ir.ui.view">
+        <field name="name">tp.equipment.category.search</field>
+        <field name="model">maintenance.equipment.category</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <search string="Tìm phân loại">
+                <field name="name" string="Tên phân loại"/>
+                <field name="tp_code" string="Mã"/>
+                <field name="tp_asset_class"/>
+                <filter name="q_device" string="Thiết bị" domain="[('tp_asset_class', '=', 'device')]"/>
+                <filter name="q_component" string="Linh kiện / phụ kiện" domain="[('tp_asset_class', '=', 'component')]"/>
+                <filter name="q_service" string="Dịch vụ" domain="[('tp_asset_class', '=', 'service')]"/>
+                <separator/>
+                <filter name="inactive" string="Đã lưu trữ" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="category_form" model="ir.ui.view">
+        <field name="name">tp.equipment.category.form</field>
+        <field name="model">maintenance.equipment.category</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <form string="Phân loại thiết bị" class="tp_eq_form">
+                <sheet>
+                    <widget name="web_ribbon" title="Đã lưu trữ" bg_color="text-bg-secondary" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name" string="Tên phân loại"/>
+                        <h1><field name="name" placeholder="Ví dụ: Máy tính để bàn"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="tp_code" placeholder="Ví dụ: PC"/>
+                            <field name="tp_asset_class"/>
+                            <field name="tp_sequence"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="tp_has_config"/>
+                            <field name="tp_has_meter"/>
+                            <field name="equipment_count" string="Số thiết bị"/>
+                        </group>
+                    </group>
+                    <field name="note" placeholder="Mô tả phạm vi phân loại…"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_category" model="ir.actions.act_window">
+        <field name="name">Phân loại thiết bị</field>
+        <field name="res_model">maintenance.equipment.category</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="category_search"/>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('category_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('category_form')})]"/>
+        <field name="context">{'tp_eq_leaf': 'tp_equipment.menu_config_category'}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+    </record>
+
+    <!-- Vị trí đặt thiết bị -->
+    <record id="location_list" model="ir.ui.view">
+        <field name="name">tp.equipment.location.list</field>
+        <field name="model">tp.equipment.location</field>
+        <field name="arch" type="xml">
+            <list string="Vị trí đặt thiết bị" js_class="tp_equipment_table" class="tp_eq_table" limit="20">
+                <field name="sequence" widget="handle"/>
+                <field name="code" string="Mã"/>
+                <field name="name" string="Tên vị trí"/>
+                <field name="work_location_id" optional="show"/>
+                <field name="department_id" optional="show"/>
+                <field name="shared" optional="show"/>
+                <field name="equipment_count"/>
+                <field name="company_id" optional="hide" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="location_search" model="ir.ui.view">
+        <field name="name">tp.equipment.location.search</field>
+        <field name="model">tp.equipment.location</field>
+        <field name="arch" type="xml">
+            <search string="Tìm vị trí">
+                <field name="name" string="Tên vị trí"/>
+                <field name="code" string="Mã"/>
+                <field name="work_location_id"/>
+                <field name="department_id"/>
+                <filter name="q_shared" string="Dùng chung" domain="[('shared', '=', True)]"/>
+                <filter name="q_department" string="Gắn phòng ban" domain="[('department_id', '!=', False)]"/>
+                <separator/>
+                <filter name="inactive" string="Đã lưu trữ" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="location_form" model="ir.ui.view">
+        <field name="name">tp.equipment.location.form</field>
+        <field name="model">tp.equipment.location</field>
+        <field name="arch" type="xml">
+            <form string="Vị trí đặt thiết bị" class="tp_eq_form">
+                <sheet>
+                    <widget name="web_ribbon" title="Đã lưu trữ" bg_color="text-bg-secondary" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name" string="Tên vị trí"/>
+                        <h1><field name="name" placeholder="Ví dụ: Phòng họp tầng 2"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="work_location_id" options="{'no_create': True}"/>
+                            <field name="department_id" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="shared"/>
+                            <field name="sequence"/>
+                            <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
+                            <field name="active" invisible="1"/>
+                            <field name="equipment_count"/>
+                        </group>
+                    </group>
+                    <field name="note" placeholder="Ghi chú vị trí…"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_location" model="ir.actions.act_window">
+        <field name="name">Vị trí đặt thiết bị</field>
+        <field name="res_model">tp.equipment.location</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="location_search"/>
+        <field name="context">{'tp_eq_leaf': 'tp_equipment.menu_config_location'}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có vị trí nào</p>
+            <p>Khai báo phòng / khu vực đặt thiết bị dùng chung (máy in, thiết bị mạng…).</p>
+        </field>
+    </record>
+</odoo>

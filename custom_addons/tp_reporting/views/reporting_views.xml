@@ -1,0 +1,1452 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo>
+    <record id="action_template_sections" model="ir.actions.act_window">
+        <field name="name">Mục trong mẫu</field>
+        <field name="res_model">tp.report.section</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('template_id','=',active_id)]</field>
+    </record>
+    <record id="action_line_reviews" model="ir.actions.act_window">
+        <field name="name">Nhận xét đầu việc</field>
+        <field name="res_model">tp.report.review</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('line_id','=',active_id)]</field>
+    </record>
+    <record id="action_review_new" model="ir.actions.act_window">
+        <field name="name">Nhận xét / Phản hồi</field>
+        <field name="res_model">tp.report.review</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <record id="action_my_review" model="ir.actions.act_window">
+        <field name="name">Chờ tôi rà soát</field>
+        <field name="res_model">tp.report.document</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('reviewer_id','=',uid),('state','in',('submitted','in_review'))]</field>
+    </record>
+    <record id="action_document_reviews" model="ir.actions.act_window">
+        <field name="name">Nhận xét báo cáo</field>
+        <field name="res_model">tp.report.review</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('document_id','=',active_id)]</field>
+    </record>
+    <record id="action_reviews" model="ir.actions.act_window">
+        <field name="name">Nhận xét và phản hồi</field>
+        <field name="res_model">tp.report.review</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+    </record>
+    <record id="action_document_values" model="ir.actions.act_window">
+        <field name="name">Chỉ tiêu có nguồn</field>
+        <field name="res_model">tp.report.value</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('document_id','=',active_id)]</field>
+    </record>
+    <record id="action_document_obligations" model="ir.actions.act_window">
+        <field name="name">Nghĩa vụ báo cáo</field>
+        <field name="res_model">tp.report.obligation</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('document_id','=',active_id)]</field>
+    </record>
+    <record id="action_document_events" model="ir.actions.act_window">
+        <field name="name">Lịch sử báo cáo</field>
+        <field name="res_model">tp.report.event</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('document_id','=',active_id)]</field>
+    </record>
+    <record id="action_document_snapshots" model="ir.actions.act_window">
+        <field name="name">Phiên bản báo cáo</field>
+        <field name="res_model">tp.report.snapshot</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('document_id','=',active_id)]</field>
+    </record>
+    <record id="action_document_lines" model="ir.actions.act_window">
+        <field name="name">Công việc báo cáo</field>
+        <field name="res_model">tp.report.line</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('document_id','=',active_id)]</field>
+    </record>
+    <record id="action_plans" model="ir.actions.act_window">
+        <field name="name">Mục tiêu và kế hoạch</field>
+        <field name="res_model">tp.report.plan</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="path">bao-cao-plans</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_personal" model="ir.actions.act_window">
+        <field name="name">Báo cáo của tôi</field>
+        <field name="res_model">tp.report.document</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('level','=','personal'),('owner_id','=',uid)]</field>
+        <field name="context">{'default_level':'personal'}</field>
+        <field name="path">bao-cao-personal</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_department" model="ir.actions.act_window">
+        <field name="name">Báo cáo phòng ban</field>
+        <field name="res_model">tp.report.document</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('level','=','department')]</field>
+        <field name="context">{'default_level':'department'}</field>
+        <field name="path">bao-cao-department</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_company" model="ir.actions.act_window">
+        <field name="name">Báo cáo công ty</field>
+        <field name="res_model">tp.report.document</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('level','=','company')]</field>
+        <field name="context">{'default_level':'company'}</field>
+        <field name="path">bao-cao-company</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_lines" model="ir.actions.act_window">
+        <field name="name">Dòng kết quả</field>
+        <field name="res_model">tp.report.line</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="path">bao-cao-lines</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_snapshots" model="ir.actions.act_window">
+        <field name="name">Phiên bản báo cáo</field>
+        <field name="res_model">tp.report.snapshot</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="path">bao-cao-snapshots</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_events" model="ir.actions.act_window">
+        <field name="name">Lịch sử báo cáo</field>
+        <field name="res_model">tp.report.event</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="path">bao-cao-events</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_plan_events" model="ir.actions.act_window">
+        <field name="name">Lịch sử kế hoạch</field>
+        <field name="res_model">tp.report.event</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('plan_id','=',active_id)]</field>
+        <field name="context">{}</field>
+        <field name="path">bao-cao-plan-events</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_plan_children" model="ir.actions.act_window">
+        <field name="name">Kế hoạch phân bổ</field>
+        <field name="res_model">tp.report.plan</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('parent_id','=',active_id)]</field>
+        <field name="context">{}</field>
+        <field name="path">bao-cao-plan-children</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_obligations" model="ir.actions.act_window">
+        <field name="name">Nghĩa vụ báo cáo</field>
+        <field name="res_model">tp.report.obligation</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="path">bao-cao-obligations</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_templates" model="ir.actions.act_window">
+        <field name="name">Mẫu báo cáo</field>
+        <field name="res_model">tp.report.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="path">bao-cao-templates</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_sections" model="ir.actions.act_window">
+        <field name="name">Mục trong mẫu</field>
+        <field name="res_model">tp.report.section</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="path">bao-cao-sections</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_assignments" model="ir.actions.act_window">
+        <field name="name">Phân quyền theo phạm vi</field>
+        <field name="res_model">tp.report.assignment</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="path">bao-cao-assignments</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_metrics" model="ir.actions.act_window">
+        <field name="name">Danh mục chỉ tiêu</field>
+        <field name="res_model">tp.report.metric</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="path">bao-cao-metrics</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_values" model="ir.actions.act_window">
+        <field name="name">Giá trị có nguồn</field>
+        <field name="res_model">tp.report.value</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="path">bao-cao-values</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_schedules" model="ir.actions.act_window">
+        <field name="name">Lịch và nhắc hạn</field>
+        <field name="res_model">tp.report.schedule</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="path">bao-cao-schedules</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_directives" model="ir.actions.act_window">
+        <field name="name">Việc cần xử lý</field>
+        <field name="res_model">tp.report.directive</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="path">bao-cao-directives</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có dữ liệu trong phạm vi này</p>
+            <p>Tạo hồ sơ theo phân công hoặc thay điều kiện lọc.</p>
+        </field>
+    </record>
+    <record id="action_dashboard" model="ir.actions.client">
+        <field name="name">Tổng quan báo cáo</field>
+        <field name="tag">tp_reporting.dashboard</field>
+        <field name="path">bao-cao-tong-quan</field>
+    </record>
+    <record id="plan_list" model="ir.ui.view">
+        <field name="name">tp.report.plan.list</field>
+        <field name="model">tp.report.plan</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_reporting_list" limit="20">
+                <field name="name" string="Nội dung"/>
+                <field name="period_type" string="Loại kỳ" optional="show"/>
+                <field name="parent_id" string="Kế hoạch cha" optional="hide"/>
+                <field name="owner_id" string="Người phụ trách" optional="show"/>
+                <field name="department_id" string="Phòng ban" optional="hide"/>
+                <field name="date_start" string="Từ ngày" optional="hide"/>
+                <field name="date_end" string="Đến ngày" optional="show"/>
+                <field name="target" string="Kế hoạch" optional="show"/>
+                <field name="unit" string="Đơn vị" optional="show"/>
+                <field name="allocated" string="Đã phân bổ" optional="hide"/>
+                <field name="remaining" string="Chưa phân bổ" optional="hide"/>
+                <field name="deadline" string="Hạn hoàn thành" optional="hide"/>
+                <field name="state" string="Trạng thái" widget="badge"/>
+                <field name="version" string="Phiên bản" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <record id="plan_search" model="ir.ui.view">
+        <field name="name">tp.report.plan.search</field>
+        <field name="model">tp.report.plan</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Nội dung"/>
+                <field name="period_type" string="Loại kỳ"/>
+                <field name="parent_id" string="Kế hoạch cha"/>
+                <field name="owner_id" string="Người phụ trách"/>
+                <field name="department_id" string="Phòng ban"/>
+                <field name="date_start" string="Từ ngày"/>
+                <field name="date_end" string="Đến ngày"/>
+                <field name="unit" string="Đơn vị"/>
+                <field name="deadline" string="Hạn hoàn thành"/>
+                <field name="state" string="Trạng thái"/>
+                <field name="version" string="Phiên bản"/>
+            </search>
+        </field>
+    </record>
+    <record id="document_list" model="ir.ui.view">
+        <field name="name">tp.report.document.list</field>
+        <field name="model">tp.report.document</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_reporting_list" limit="20" decoration-success="state == 'finalized'" decoration-warning="state == 'returned'">
+                <field name="name" string="Nội dung"/>
+                <field name="level" string="Cấp báo cáo" optional="hide"/>
+                <field name="period_type" string="Loại kỳ" optional="show"/>
+                <field name="department_id" string="Phòng ban" optional="show"/>
+                <field name="owner_id" string="Người phụ trách" optional="show"/>
+                <field name="date_start" string="Từ ngày" optional="hide"/>
+                <field name="date_end" string="Đến ngày" optional="hide"/>
+                <field name="deadline" string="Hạn hoàn thành" optional="show"/>
+                <field name="state" string="Trạng thái" widget="badge"/>
+                <field name="version" string="Phiên bản" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <record id="document_search" model="ir.ui.view">
+        <field name="name">tp.report.document.search</field>
+        <field name="model">tp.report.document</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Nội dung"/>
+                <field name="level" string="Cấp báo cáo"/>
+                <field name="period_type" string="Loại kỳ"/>
+                <field name="department_id" string="Phòng ban"/>
+                <field name="owner_id" string="Người phụ trách"/>
+                <field name="date_start" string="Từ ngày"/>
+                <field name="date_end" string="Đến ngày"/>
+                <field name="deadline" string="Hạn hoàn thành"/>
+                <field name="state" string="Trạng thái"/>
+                <field name="version" string="Phiên bản"/>
+            </search>
+        </field>
+    </record>
+    <record id="plan_form" model="ir.ui.view">
+        <field name="name">tp.report.plan.form</field>
+        <field name="model">tp.report.plan</field>
+        <field name="arch" type="xml">
+            <form class="tp_reporting_form" js_class="tp_reporting_form">
+                <header>
+                    <button type="object" name="action_submit" string="Trình kế hoạch" invisible="(state not in ('draft','returned')) or not can_submit" class="btn-primary"/>
+                    <button type="object" name="action_issue" string="Ban hành" invisible="(state != 'submitted') or not can_issue" class="btn-primary" confirm="Ban hành và lưu mốc kế hoạch?"/>
+                    <button type="object" name="action_return" string="Trả lại" invisible="(state != 'submitted') or not can_manage_plan"/>
+                    <button type="object" name="action_revise" string="Điều chỉnh" invisible="(state != 'issued') or not can_manage_plan"/>
+                    <button type="object" name="action_create_month" string="Lập kế hoạch tháng" invisible="(period_type != 'quarter') or not can_manage_plan"/>
+                    <button type="object" name="action_create_week" string="Giao việc tuần" invisible="(period_type != 'month') or not can_manage_plan"/>
+                    <button type="object" name="action_copy_structure" string="Sao chép cơ cấu" invisible="not can_manage_plan"/>
+                    <field name="state" string="Trạng thái" widget="statusbar" statusbar_visible="draft,submitted,issued"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button type="action" name="%(action_plan_children)d" string="Kế hoạch phân bổ"/>
+                        <button type="action" name="%(action_plan_events)d" string="Lịch sử"/>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" string="Nội dung" readonly="state not in ('draft','returned')"/>
+                        </h1>
+                    </div>
+                    <div class="tp_reporting_hint">Quý → tháng → tuần. Phân bổ cùng đơn vị, không tự chia đều.</div>
+                    <group>
+                        <group string="Phạm vi và người chịu trách nhiệm">
+                            <field name="company_id" string="Công ty" readonly="id != False"/>
+                            <field name="department_id" string="Phòng ban" readonly="id != False"/>
+                            <field name="owner_id" string="Người phụ trách" readonly="id != False" widget="tp_reporting_person" options="{'purpose':'plan'}"/>
+                            <field name="parent_id" string="Kế hoạch cha" readonly="state not in ('draft','returned')"/>
+                        </group>
+                        <group string="Kỳ và thời hạn">
+                            <field name="period_type" string="Loại kỳ" readonly="state not in ('draft','returned')"/>
+                            <field name="date_start" string="Từ ngày" readonly="state not in ('draft','returned')"/>
+                            <field name="date_end" string="Đến ngày" readonly="state not in ('draft','returned')"/>
+                            <field name="deadline" string="Hạn hoàn thành" readonly="state not in ('draft','returned')"/>
+                            <field name="project_id" string="Dự án" readonly="state not in ('draft','returned')"/>
+                            <field name="version" string="Phiên bản" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Mục tiêu và đầu ra">
+                            <group>
+                                <group>
+                                    <field name="kind" string="Loại" readonly="state not in ('draft','returned')"/>
+                                    <field name="target" string="Kế hoạch" readonly="state not in ('draft','returned')" invisible="kind == 'qualitative'"/>
+                                    <field name="unit" string="Đơn vị" readonly="state not in ('draft','returned')"/>
+                                    <field name="task_id" string="Công việc nguồn" readonly="state not in ('draft','returned')"/>
+                                </group>
+                                <group>
+                                    <field name="allocated" string="Đã phân bổ" readonly="1"/>
+                                    <field name="remaining" string="Chưa phân bổ" readonly="1"/>
+                                </group>
+                            </group>
+                            <field name="output" string="Đầu ra và tiêu chí" readonly="state not in ('draft','returned')"/>
+                        </page>
+                        <page string="Kế hoạch con">
+                            <field name="child_ids" readonly="1"/>
+                        </page>
+                        <page string="Lịch sử">
+                            <field name="event_ids" string="event_ids" readonly="1">
+                                <list create="false" edit="false" delete="false" limit="10">
+                                    <field name="create_date" string="Thời điểm"/>
+                                    <field name="actor_id" string="Người thao tác"/>
+                                    <field name="name" string="Sự kiện"/>
+                                    <field name="version" string="Phiên bản"/>
+                                    <field name="reason" string="Lý do"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Mốc ban đầu và điều chỉnh">
+                            <group>
+                                <group string="Kế hoạch đã ban hành">
+                                    <field name="baseline_version" string="Phiên bản mốc" readonly="1"/>
+                                    <field name="baseline_target" string="Mục tiêu mốc" readonly="1"/>
+                                    <field name="baseline_output" string="Đầu ra mốc" readonly="1"/>
+                                </group>
+                                <group string="Kế hoạch hiện hành">
+                                    <field name="version" string="Phiên bản hiện tại" readonly="1"/>
+                                    <field name="target" string="Mục tiêu hiện tại" readonly="1" invisible="kind == 'qualitative'"/>
+                                    <field name="output" string="Đầu ra hiện tại" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                    <group string="Kế hoạch công việc">
+                        <group>
+                            <field name="expected_output" string="Đầu ra dự kiến" readonly="state not in ('draft','returned')"/>
+                            <field name="work_deadline" string="Hạn công việc" readonly="state not in ('draft','returned')"/>
+                            <field name="priority" string="Mức ưu tiên" readonly="state not in ('draft','returned')"/>
+                        </group>
+                        <group>
+                            <field name="collaborator_ids" string="Người phối hợp" widget="tp_reporting_person" readonly="state not in ('draft','returned')" options="{'purpose':'plan'}"/>
+                            <field name="work_status" string="Trạng thái công việc" readonly="state not in ('draft','returned')"/>
+                        </group>
+                    </group>
+                </sheet>
+                <field name="can_issue" invisible="1"/>
+                <field name="can_submit" invisible="1"/>
+                <field name="can_manage_plan" invisible="1"/>
+            </form>
+        </field>
+    </record>
+    <record id="document_form" model="ir.ui.view">
+        <field name="name">tp.report.document.form</field>
+        <field name="model">tp.report.document</field>
+        <field name="arch" type="xml">
+            <form class="tp_reporting_form" js_class="tp_reporting_form">
+                <header>
+                    <button type="object" name="action_submit" string="Gửi báo cáo" invisible="(state not in ('draft','returned')) or not can_submit" class="btn-primary"/>
+                    <button type="object" name="action_review" string="Bắt đầu rà" invisible="(state != 'submitted') or not can_review" class="btn-primary"/>
+                    <button type="object" name="action_finalize" string="Chốt báo cáo" invisible="(state not in ('submitted','in_review')) or not can_finalize" class="btn-primary" confirm="Chốt báo cáo và lưu phiên bản?"/>
+                    <button type="object" name="action_return" string="Yêu cầu sửa" invisible="(state not in ('submitted','in_review')) or not can_review"/>
+                    <button type="object" name="action_revise" string="Lập bản điều chỉnh" invisible="state != 'finalized'"/>
+                    <button type="object" name="action_aggregate" string="Tổng hợp bản nguồn" invisible="(level == 'personal' or state not in ('draft','returned')) or not can_consolidate"/>
+                    <field name="state" string="Trạng thái" widget="statusbar" statusbar_visible="draft,submitted,in_review,finalized"/>
+                    <button type="object" name="action_export_xlsx" string="Excel"/>
+                    <button type="object" name="action_export_docx" string="Word"/>
+                    <button type="object" name="action_export_pdf" string="PDF / In"/>
+                    <button type="object" name="action_load_plans" string="Đưa kế hoạch vào báo cáo" invisible="state not in ('draft','returned')"/>
+                    <button type="object" name="action_preview" string="Xem trước"/>
+                    <button type="object" name="action_compare_versions" string="So sánh phiên bản"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button type="action" name="%(action_document_lines)d" string="Bảng công việc" context="{'search_default_document_id':id,'default_document_id':id}"/>
+                        <button type="action" name="%(action_document_snapshots)d" string="Phiên bản" context="{'search_default_document_id':id,'default_document_id':id}"/>
+                        <button type="action" name="%(action_document_events)d" string="Lịch sử" context="{'search_default_document_id':id,'default_document_id':id}"/>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" string="Nội dung" readonly="state not in ('draft','returned')"/>
+                        </h1>
+                    </div>
+                    <div class="tp_reporting_hint">Nội dung có nguồn, phiên bản có lịch sử. Chốt báo cáo không phê duyệt nghiệp vụ nguồn.</div>
+                    <group>
+                        <group string="Đối tượng báo cáo">
+                            <field name="company_id" string="Công ty" readonly="id != False"/>
+                            <field name="department_id" string="Phòng ban" readonly="id != False"/>
+                            <field name="owner_id" string="Người phụ trách" readonly="id != False" widget="tp_reporting_person" options="{'purpose':'report_owner'}"/>
+                            <field name="level" string="Cấp báo cáo" readonly="id != False"/>
+                            <field name="template_id" string="Mẫu" readonly="state not in ('draft','returned')"/>
+                            <field name="reviewer_id" string="Người nhận / rà soát" readonly="state not in ('draft','returned')" widget="tp_reporting_reviewer"/>
+                        </group>
+                        <group string="Kỳ và nguồn">
+                            <field name="period_type" string="Loại kỳ" readonly="state not in ('draft','returned')"/>
+                            <field name="date_start" string="Từ ngày" readonly="state not in ('draft','returned')"/>
+                            <field name="date_end" string="Đến ngày" readonly="state not in ('draft','returned')"/>
+                            <field name="deadline" string="Hạn hoàn thành" readonly="state not in ('draft','returned')"/>
+                            <field name="project_id" string="Dự án" readonly="state not in ('draft','returned')"/>
+                            <field name="version" string="Phiên bản" readonly="1"/>
+                            <field name="coverage" string="Mức bao phủ" readonly="1"/>
+                            <field name="current_snapshot_id" string="Bản hiện hành" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Kết quả và công việc">
+                            <field name="summary" string="Kết quả nổi bật" readonly="state not in ('draft','returned')"/>
+                            <field name="line_ids" string="line_ids" readonly="state not in ('draft','returned')">
+                                <list limit="20">
+                                    <field name="name" string="Nhiệm vụ"/>
+                                    <field name="expected_output" string="Đầu ra dự kiến"/>
+                                    <field name="work_deadline" string="Hạn công việc"/>
+                                    <field name="result" string="Kết quả thực tế"/>
+                                    <field name="work_status" string="Trạng thái việc"/>
+                                    <field name="document_version" column_invisible="True"/>
+                                </list>
+                            </field>
+                            <button type="action" name="%(action_document_lines)d" string="Lọc / tìm toàn bộ công việc" context="{'search_default_document_id':id,'default_document_id':id}"/>
+                        </page>
+                        <page string="Vướng mắc và kỳ tới">
+                            <field name="obstacles" string="Vướng mắc" readonly="state not in ('draft','returned')"/>
+                            <field name="recommendations" string="Kiến nghị" readonly="state not in ('draft','returned')"/>
+                            <field name="next_plan" string="Kế hoạch kỳ tới" readonly="state not in ('draft','returned')"/>
+                            <field name="coverage_reason" string="Lý do thiếu bao phủ" readonly="state not in ('draft','returned')"/>
+                        </page>
+                        <page string="Nguồn và bao phủ">
+                            <field name="dependency_ids" string="Bản nguồn" readonly="1" widget="many2many_tags"/>
+                            <field name="obligation_ids" string="obligation_ids" readonly="1"/>
+                            <button type="action" name="%(action_document_obligations)d" string="Lọc / tìm nghĩa vụ"/>
+                        </page>
+                        <page string="Chỉ tiêu có nguồn" groups="tp_reporting.group_reporting_finance">
+                            <field name="value_ids" string="value_ids" readonly="state not in ('draft','returned')"/>
+                            <button type="action" name="%(action_document_values)d" string="Lọc / tìm chỉ tiêu có nguồn"/>
+                        </page>
+                        <page string="Phiên bản">
+                            <field name="snapshot_ids" string="snapshot_ids" readonly="1"/>
+                        </page>
+                        <page string="Lịch sử">
+                            <field name="event_ids" string="event_ids" readonly="1">
+                                <list create="false" edit="false" delete="false" limit="10">
+                                    <field name="create_date" string="Thời điểm"/>
+                                    <field name="actor_id" string="Người thao tác"/>
+                                    <field name="name" string="Sự kiện"/>
+                                    <field name="version" string="Phiên bản"/>
+                                    <field name="reason" string="Lý do"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Nhận xét và phản hồi">
+                            <div class="tp_reporting_hint">Nhận xét gắn phiên bản và đầu việc. Để phản hồi, tạo dòng mới và chọn Nhận xét cha; nội dung đã công bố giữ nguyên lịch sử.</div>
+                            <field name="review_ids" string="Trao đổi" context="{'default_document_id': id}" readonly="1">
+                                <list create="false" edit="false" delete="false" limit="10">
+                                    <field name="actor_id" string="Người viết"/>
+                                    <field name="create_date" string="Thời điểm"/>
+                                    <field name="line_id" string="Đầu việc"/>
+                                    <field name="comment" string="Nhận xét / phản hồi"/>
+                                    <field name="assessment" string="Đánh giá"/>
+                                    <field name="audience" string="Đối tượng xem"/>
+                                </list>
+                            </field>
+                            <button type="action" name="%(action_review_new)d" string="Thêm nhận xét / phản hồi" context="{'default_document_id':id}"/>
+                            <button type="action" name="%(action_document_reviews)d" string="Lọc / tìm nhận xét"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <field name="can_consolidate" invisible="1"/>
+                <field name="can_review" invisible="1"/>
+                <field name="can_finalize" invisible="1"/>
+                <field name="can_submit" invisible="1"/>
+            </form>
+        </field>
+    </record>
+    <record id="line_list" model="ir.ui.view">
+        <field name="name">tp.report.line.list</field>
+        <field name="model">tp.report.line</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_reporting_list" limit="20">
+                <field name="name" string="Nội dung"/>
+                <field name="document_id" string="Báo cáo" optional="show"/>
+                <field name="plan_id" string="Kế hoạch nguồn" optional="hide"/>
+                <field name="project_id" string="Dự án" optional="hide"/>
+                <field name="work_date" string="Ngày thực hiện" optional="show"/>
+                <field name="quantity" string="Thực hiện" optional="show"/>
+                <field name="unit" string="Đơn vị" optional="show"/>
+                <field name="work_status" string="Trạng thái việc" widget="badge"/>
+                <field name="priority" string="Ưu tiên" optional="hide"/>
+                <field name="work_deadline" string="Hạn việc" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="line_search" model="ir.ui.view">
+        <field name="name">tp.report.line.search</field>
+        <field name="model">tp.report.line</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Nội dung"/>
+                <field name="document_id" string="Báo cáo"/>
+                <field name="plan_id" string="Kế hoạch nguồn"/>
+                <field name="project_id" string="Dự án"/>
+                <field name="work_date" string="Ngày thực hiện"/>
+                <field name="unit" string="Đơn vị"/>
+                <field name="work_status" string="Trạng thái công việc"/>
+                <field name="priority" string="Mức ưu tiên"/>
+                <field name="work_deadline" string="Hạn công việc"/>
+            </search>
+        </field>
+    </record>
+    <record id="line_form" model="ir.ui.view">
+        <field name="name">tp.report.line.form</field>
+        <field name="model">tp.report.line</field>
+        <field name="arch" type="xml">
+            <form class="tp_reporting_form" js_class="tp_reporting_form">
+                <header/>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" string="Nội dung" readonly="document_state not in ('draft','returned')"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Nguồn công việc">
+                            <field name="document_id" string="Báo cáo" readonly="id != False"/>
+                            <field name="plan_id" string="Kế hoạch nguồn" readonly="document_state not in ('draft','returned')"/>
+                            <field name="project_id" string="Dự án" readonly="document_state not in ('draft','returned')"/>
+                            <field name="task_id" string="Công việc nguồn" readonly="document_state not in ('draft','returned')"/>
+                            <field name="work_date" string="Ngày thực hiện" readonly="document_state not in ('draft','returned')"/>
+                            <field name="contribution_key" string="Mã đầu ra nguồn" readonly="document_state not in ('draft','returned')"/>
+                        </group>
+                        <group string="Kết quả thực tế">
+                            <field name="quantity_known" string="Đã có số thực hiện" readonly="document_state not in ('draft','returned')"/>
+                            <field name="quantity" string="Thực hiện" readonly="document_state not in ('draft','returned')" invisible="not quantity_known"/>
+                            <field name="unit" string="Đơn vị" readonly="document_state not in ('draft','returned')"/>
+                            <field name="result" string="Kết quả thực tế" readonly="document_state not in ('draft','returned')"/>
+                            <field name="cause" string="Nguyên nhân" readonly="document_state not in ('draft','returned')"/>
+                            <field name="next_action" string="Xử lý tiếp" readonly="document_state not in ('draft','returned')"/>
+                            <field name="evidence_ids" string="Minh chứng" widget="many2many_binary" readonly="document_state not in ('draft','returned')"/>
+                        </group>
+                    </group>
+                    <group string="Kế hoạch công việc">
+                        <group>
+                            <field name="expected_output" string="Đầu ra dự kiến" readonly="document_state not in ('draft','returned')"/>
+                            <field name="planned_quantity_known" string="Kế hoạch có số lượng" readonly="1"/>
+                            <field name="planned_quantity" string="Khối lượng kế hoạch" readonly="1" invisible="not planned_quantity_known"/>
+                            <field name="work_deadline" string="Hạn công việc" readonly="document_state not in ('draft','returned')"/>
+                            <field name="priority" string="Mức ưu tiên" readonly="document_state not in ('draft','returned')"/>
+                        </group>
+                        <group>
+                            <field name="collaborator_ids" string="Người phối hợp" widget="tp_reporting_person" readonly="document_state not in ('draft','returned')" options="{'purpose':'plan'}"/>
+                            <field name="work_status" string="Trạng thái công việc" readonly="document_state not in ('draft','returned')"/>
+                            <field name="deviation_reason" string="Nguyên nhân / khắc phục" readonly="document_state not in ('draft','returned')"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Nhận xét và phản hồi">
+                            <div class="tp_reporting_hint">Nhận xét gắn phiên bản và đầu việc. Để phản hồi, tạo dòng mới và chọn Nhận xét cha; nội dung đã công bố giữ nguyên lịch sử.</div>
+                            <field name="review_ids" string="Trao đổi" context="{'default_document_id':document_id,'default_line_id':id}" readonly="1">
+                                <list create="false" edit="false" delete="false" limit="10">
+                                    <field name="actor_id" string="Người viết"/>
+                                    <field name="create_date" string="Thời điểm"/>
+                                    <field name="line_id" string="Đầu việc"/>
+                                    <field name="comment" string="Nhận xét / phản hồi"/>
+                                    <field name="assessment" string="Đánh giá"/>
+                                    <field name="audience" string="Đối tượng xem"/>
+                                </list>
+                            </field>
+                            <button type="action" name="%(action_review_new)d" string="Thêm nhận xét / phản hồi" context="{'default_document_id':document_id,'default_line_id':id}"/>
+                            <button type="action" name="%(action_line_reviews)d" string="Lọc / tìm nhận xét đầu việc"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <field name="document_version" invisible="1"/>
+                <field name="document_state" invisible="1"/>
+            </form>
+        </field>
+    </record>
+    <record id="snapshot_list" model="ir.ui.view">
+        <field name="name">tp.report.snapshot.list</field>
+        <field name="model">tp.report.snapshot</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_reporting_list" limit="20" create="false" edit="false" delete="false">
+                <field name="name" string="Nội dung"/>
+                <field name="document_id" string="Báo cáo" optional="show"/>
+                <field name="version" string="Phiên bản" optional="show"/>
+                <field name="kind" string="Loại" optional="show"/>
+                <field name="create_date" string="Thời điểm" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="snapshot_search" model="ir.ui.view">
+        <field name="name">tp.report.snapshot.search</field>
+        <field name="model">tp.report.snapshot</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Nội dung"/>
+                <field name="document_id" string="Báo cáo"/>
+                <field name="version" string="Phiên bản"/>
+                <field name="kind" string="Loại"/>
+                <field name="create_date" string="Thời điểm"/>
+            </search>
+        </field>
+    </record>
+    <record id="snapshot_form" model="ir.ui.view">
+        <field name="name">tp.report.snapshot.form</field>
+        <field name="model">tp.report.snapshot</field>
+        <field name="arch" type="xml">
+            <form class="tp_reporting_form" create="false" edit="false" delete="false">
+                <header>
+                    <button type="object" name="action_export_xlsx" string="Excel bản này"/>
+                    <button type="object" name="action_export_docx" string="Word bản này"/>
+                    <button type="object" name="action_export_pdf" string="PDF bản này"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" string="Nội dung" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Thông tin chính">
+                            <field name="document_id" string="Báo cáo" readonly="1"/>
+                            <field name="version" string="Phiên bản" readonly="1"/>
+                            <field name="kind" string="Loại" readonly="1"/>
+                        </group>
+                        <group string="Phạm vi và chi tiết">
+                            <field name="create_date" string="Thời điểm" readonly="1"/>
+                            <field name="dependency_ids" string="Bản nguồn" readonly="1"/>
+                        </group>
+                    </group>
+                    <field name="preview_html" string="preview_html" widget="html" readonly="1" nolabel="1"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="event_list" model="ir.ui.view">
+        <field name="name">tp.report.event.list</field>
+        <field name="model">tp.report.event</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_reporting_list" limit="20" create="false" edit="false" delete="false">
+                <field name="name" string="Nội dung"/>
+                <field name="actor_id" string="Người thao tác" optional="show"/>
+                <field name="version" string="Phiên bản" optional="show"/>
+                <field name="create_date" string="Thời điểm" optional="show"/>
+                <field name="document_id" string="Báo cáo" optional="show"/>
+                <field name="plan_id" string="Kế hoạch nguồn" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="event_search" model="ir.ui.view">
+        <field name="name">tp.report.event.search</field>
+        <field name="model">tp.report.event</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Nội dung"/>
+                <field name="actor_id" string="Người thao tác"/>
+                <field name="version" string="Phiên bản"/>
+                <field name="create_date" string="Thời điểm"/>
+                <field name="document_id" string="Báo cáo"/>
+                <field name="plan_id" string="Kế hoạch nguồn"/>
+            </search>
+        </field>
+    </record>
+    <record id="event_form" model="ir.ui.view">
+        <field name="name">tp.report.event.form</field>
+        <field name="model">tp.report.event</field>
+        <field name="arch" type="xml">
+            <form class="tp_reporting_form" create="false" edit="false" delete="false">
+                <header/>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" string="Nội dung" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Thông tin chính">
+                            <field name="document_id" string="Báo cáo" readonly="1"/>
+                            <field name="plan_id" string="Kế hoạch nguồn" readonly="1"/>
+                            <field name="actor_id" string="Người thao tác" readonly="1"/>
+                        </group>
+                        <group string="Phạm vi và chi tiết">
+                            <field name="version" string="Phiên bản" readonly="1"/>
+                            <field name="create_date" string="Thời điểm" readonly="1"/>
+                            <field name="reason" string="Lý do" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="obligation_list" model="ir.ui.view">
+        <field name="name">tp.report.obligation.list</field>
+        <field name="model">tp.report.obligation</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_reporting_list" limit="20">
+                <field name="name" string="Nội dung"/>
+                <field name="owner_id" string="Người phụ trách" optional="show"/>
+                <field name="department_id" string="Phòng ban" optional="show"/>
+                <field name="period_type" string="Loại kỳ" optional="show"/>
+                <field name="date_start" string="Từ ngày" optional="show"/>
+                <field name="date_end" string="Đến ngày" optional="show"/>
+                <field name="deadline" string="Hạn hoàn thành" optional="show"/>
+                <field name="status" string="Tình trạng nguồn" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="obligation_search" model="ir.ui.view">
+        <field name="name">tp.report.obligation.search</field>
+        <field name="model">tp.report.obligation</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Nội dung"/>
+                <field name="owner_id" string="Người phụ trách"/>
+                <field name="department_id" string="Phòng ban"/>
+                <field name="period_type" string="Loại kỳ"/>
+                <field name="date_start" string="Từ ngày"/>
+                <field name="date_end" string="Đến ngày"/>
+                <field name="deadline" string="Hạn hoàn thành"/>
+                <field name="status" string="Tình trạng nguồn"/>
+            </search>
+        </field>
+    </record>
+    <record id="obligation_form" model="ir.ui.view">
+        <field name="name">tp.report.obligation.form</field>
+        <field name="model">tp.report.obligation</field>
+        <field name="arch" type="xml">
+            <form class="tp_reporting_form">
+                <header>
+                    <button type="object" name="action_exempt" string="Miễn nghĩa vụ"/>
+                    <button type="object" name="action_extend" string="Gia hạn"/>
+                    <button type="object" name="action_create_report" string="Lập báo cáo" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" string="Nội dung"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Thông tin chính">
+                            <field name="company_id" string="Công ty"/>
+                            <field name="department_id" string="Phòng ban"/>
+                            <field name="owner_id" string="Người phụ trách"/>
+                            <field name="period_type" string="Loại kỳ"/>
+                            <field name="date_start" string="Từ ngày"/>
+                            <field name="date_end" string="Đến ngày"/>
+                        </group>
+                        <group string="Phạm vi và chi tiết">
+                            <field name="deadline" string="Hạn hoàn thành"/>
+                            <field name="extended_deadline" string="Hạn gia hạn"/>
+                            <field name="state" string="Trạng thái"/>
+                            <field name="status" string="Tình trạng nguồn"/>
+                            <field name="reason" string="Lý do"/>
+                            <field name="document_id" string="Báo cáo"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="assignment_list" model="ir.ui.view">
+        <field name="name">tp.report.assignment.list</field>
+        <field name="model">tp.report.assignment</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_reporting_list" limit="20">
+                <field name="name" string="Nội dung"/>
+                <field name="user_id" string="Tài khoản" optional="show"/>
+                <field name="capability" string="Năng lực được cấp" optional="show"/>
+                <field name="department_id" string="Phòng ban" optional="show"/>
+                <field name="subject_id" string="Giới hạn người lập" optional="show"/>
+                <field name="date_start" string="Từ ngày" optional="show"/>
+                <field name="date_end" string="Đến ngày" optional="show"/>
+                <field name="active" string="Đang áp dụng" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="assignment_search" model="ir.ui.view">
+        <field name="name">tp.report.assignment.search</field>
+        <field name="model">tp.report.assignment</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Nội dung"/>
+                <field name="user_id" string="Tài khoản"/>
+                <field name="capability" string="Năng lực được cấp"/>
+                <field name="department_id" string="Phòng ban"/>
+                <field name="subject_id" string="Giới hạn người lập"/>
+                <field name="date_start" string="Từ ngày"/>
+                <field name="date_end" string="Đến ngày"/>
+                <field name="active" string="Đang áp dụng"/>
+            </search>
+        </field>
+    </record>
+    <record id="assignment_form" model="ir.ui.view">
+        <field name="name">tp.report.assignment.form</field>
+        <field name="model">tp.report.assignment</field>
+        <field name="arch" type="xml">
+            <form class="tp_reporting_form">
+                <header/>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" string="Nội dung"/>
+                        </h1>
+                    </div>
+                    <div class="tp_reporting_hint">Cấu hình thử nghiệm — lịch và thẩm quyền cần được ban hành trước sử dụng thật.</div>
+                    <group>
+                        <group string="Thông tin chính">
+                            <field name="company_id" string="Công ty"/>
+                            <field name="user_id" string="Tài khoản" widget="tp_reporting_person" options="{'purpose':'configuration'}"/>
+                            <field name="capability" string="Năng lực được cấp"/>
+                            <field name="department_id" string="Phòng ban"/>
+                            <field name="subject_id" string="Giới hạn người lập" widget="tp_reporting_person" options="{'purpose':'configuration'}"/>
+                            <field name="level" string="Cấp báo cáo được cấp"/>
+                        </group>
+                        <group string="Phạm vi và chi tiết">
+                            <field name="date_start" string="Từ ngày"/>
+                            <field name="date_end" string="Đến ngày"/>
+                            <field name="active" string="Đang áp dụng"/>
+                            <field name="reason" string="Lý do"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="section_list" model="ir.ui.view">
+        <field name="name">tp.report.section.list</field>
+        <field name="model">tp.report.section</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_reporting_list" limit="20">
+                <field name="name" string="Nội dung"/>
+                <field name="template_id" string="Mẫu" optional="show"/>
+                <field name="sequence" string="Thứ tự" optional="show"/>
+                <field name="required" string="Bắt buộc" optional="show"/>
+                <field name="audience" string="Đối tượng xem" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="section_search" model="ir.ui.view">
+        <field name="name">tp.report.section.search</field>
+        <field name="model">tp.report.section</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Nội dung"/>
+                <field name="template_id" string="Mẫu"/>
+                <field name="sequence" string="Thứ tự"/>
+                <field name="required" string="Bắt buộc"/>
+                <field name="audience" string="Đối tượng xem"/>
+            </search>
+        </field>
+    </record>
+    <record id="section_form" model="ir.ui.view">
+        <field name="name">tp.report.section.form</field>
+        <field name="model">tp.report.section</field>
+        <field name="arch" type="xml">
+            <form class="tp_reporting_form">
+                <header/>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" string="Nội dung"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Thông tin chính">
+                            <field name="template_id" string="Mẫu"/>
+                            <field name="sequence" string="Thứ tự"/>
+                            <field name="required" string="Bắt buộc"/>
+                        </group>
+                        <group string="Phạm vi và chi tiết">
+                            <field name="audience" string="Đối tượng xem"/>
+                            <field name="description" string="Nội dung chi tiết"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="schedule_list" model="ir.ui.view">
+        <field name="name">tp.report.schedule.list</field>
+        <field name="model">tp.report.schedule</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_reporting_list" limit="20">
+                <field name="name" string="Nội dung"/>
+                <field name="company_id" string="Công ty" optional="show"/>
+                <field name="department_id" string="Phòng ban" optional="show"/>
+                <field name="period_type" string="Loại kỳ" optional="show"/>
+                <field name="timezone" string="Múi giờ" optional="show"/>
+                <field name="active" string="Đang áp dụng" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="schedule_search" model="ir.ui.view">
+        <field name="name">tp.report.schedule.search</field>
+        <field name="model">tp.report.schedule</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Nội dung"/>
+                <field name="company_id" string="Công ty"/>
+                <field name="department_id" string="Phòng ban"/>
+                <field name="period_type" string="Loại kỳ"/>
+                <field name="timezone" string="Múi giờ"/>
+                <field name="active" string="Đang áp dụng"/>
+            </search>
+        </field>
+    </record>
+    <record id="schedule_form" model="ir.ui.view">
+        <field name="name">tp.report.schedule.form</field>
+        <field name="model">tp.report.schedule</field>
+        <field name="arch" type="xml">
+            <form class="tp_reporting_form">
+                <header>
+                    <button type="object" name="action_generate_obligations" string="Tạo nghĩa vụ theo lịch"/>
+                    <button type="object" name="action_remind" string="Nhắc trong ứng dụng" invisible="not reminders_enabled"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" string="Nội dung"/>
+                        </h1>
+                    </div>
+                    <div class="tp_reporting_hint">Cấu hình thử nghiệm — lịch và thẩm quyền cần được ban hành trước sử dụng thật.</div>
+                    <group>
+                        <group string="Thông tin chính">
+                            <field name="company_id" string="Công ty"/>
+                            <field name="department_id" string="Phòng ban"/>
+                            <field name="period_type" string="Loại kỳ"/>
+                            <field name="timezone" string="Múi giờ"/>
+                            <field name="deadline_days" string="Số ngày tới hạn"/>
+                        </group>
+                        <group string="Phạm vi và chi tiết">
+                            <field name="active" string="Đang áp dụng"/>
+                            <field name="reminders_enabled" string="Nhắc trong ứng dụng"/>
+                            <field name="date_start" string="Từ ngày"/>
+                            <field name="date_end" string="Đến ngày"/>
+                            <field name="user_ids" string="Người có nghĩa vụ" widget="tp_reporting_person" options="{'purpose':'configuration'}"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="metric_list" model="ir.ui.view">
+        <field name="name">tp.report.metric.list</field>
+        <field name="model">tp.report.metric</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_reporting_list" limit="20">
+                <field name="name" string="Nội dung"/>
+                <field name="code" string="Mã" optional="show"/>
+                <field name="unit" string="Đơn vị" optional="show"/>
+                <field name="method" string="Cách tính" optional="show"/>
+                <field name="currency_id" string="Tiền tệ" optional="show"/>
+                <field name="active" string="Đang áp dụng" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="metric_search" model="ir.ui.view">
+        <field name="name">tp.report.metric.search</field>
+        <field name="model">tp.report.metric</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Nội dung"/>
+                <field name="code" string="Mã"/>
+                <field name="unit" string="Đơn vị"/>
+                <field name="method" string="Cách tính"/>
+                <field name="currency_id" string="Tiền tệ"/>
+                <field name="active" string="Đang áp dụng"/>
+            </search>
+        </field>
+    </record>
+    <record id="metric_form" model="ir.ui.view">
+        <field name="name">tp.report.metric.form</field>
+        <field name="model">tp.report.metric</field>
+        <field name="arch" type="xml">
+            <form class="tp_reporting_form">
+                <header/>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" string="Nội dung"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Thông tin chính">
+                            <field name="code" string="Mã"/>
+                            <field name="unit" string="Đơn vị"/>
+                            <field name="method" string="Cách tính"/>
+                            <field name="currency_id" string="Tiền tệ"/>
+                        </group>
+                        <group string="Phạm vi và chi tiết">
+                            <field name="tax_basis" string="Cơ sở thuế"/>
+                            <field name="active" string="Đang áp dụng"/>
+                            <field name="definition" string="Định nghĩa chỉ tiêu"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="value_list" model="ir.ui.view">
+        <field name="name">tp.report.value.list</field>
+        <field name="model">tp.report.value</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_reporting_list" limit="20">
+                <field name="name" string="Nội dung"/>
+                <field name="document_id" string="Báo cáo" optional="show"/>
+                <field name="metric_id" string="Chỉ tiêu" optional="show"/>
+                <field name="amount" string="Giá trị" optional="show" invisible="status in ('missing','not_applicable')"/>
+                <field name="currency_id" string="Tiền tệ" optional="show"/>
+                <field name="status" string="Tình trạng nguồn" optional="show"/>
+                <field name="source_date" string="Ngày nguồn" optional="show"/>
+                <field name="provider_id" string="Người cung cấp" optional="show"/>
+                <field name="confirmer_id" string="Người xác nhận" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="value_search" model="ir.ui.view">
+        <field name="name">tp.report.value.search</field>
+        <field name="model">tp.report.value</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Nội dung"/>
+                <field name="document_id" string="Báo cáo"/>
+                <field name="metric_id" string="Chỉ tiêu"/>
+                <field name="currency_id" string="Tiền tệ"/>
+                <field name="status" string="Tình trạng nguồn"/>
+                <field name="source_date" string="Ngày nguồn"/>
+                <field name="provider_id" string="Người cung cấp"/>
+                <field name="confirmer_id" string="Người xác nhận"/>
+            </search>
+        </field>
+    </record>
+    <record id="value_form" model="ir.ui.view">
+        <field name="name">tp.report.value.form</field>
+        <field name="model">tp.report.value</field>
+        <field name="arch" type="xml">
+            <form class="tp_reporting_form">
+                <header>
+                    <button type="object" name="action_confirm" string="Xác nhận nguồn" invisible="status == 'confirmed'" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" string="Nội dung"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Thông tin chính">
+                            <field name="document_id" string="Báo cáo"/>
+                            <field name="metric_id" string="Chỉ tiêu"/>
+                            <field name="amount" string="Giá trị" invisible="status in ('missing','not_applicable')"/>
+                            <field name="currency_id" string="Tiền tệ"/>
+                            <field name="status" string="Tình trạng nguồn"/>
+                            <field name="source_reference" string="Tham chiếu nguồn"/>
+                        </group>
+                        <group string="Phạm vi và chi tiết">
+                            <field name="source_date" string="Ngày nguồn"/>
+                            <field name="provider_id" string="Người cung cấp"/>
+                            <field name="confirmer_id" string="Người xác nhận" readonly="1"/>
+                            <field name="coverage_key" string="Mã phạm vi chống trùng"/>
+                            <field name="tax_basis" string="Cơ sở thuế"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="directive_list" model="ir.ui.view">
+        <field name="name">tp.report.directive.list</field>
+        <field name="model">tp.report.directive</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_reporting_list" limit="20">
+                <field name="name" string="Nội dung"/>
+                <field name="owner_id" string="Người phụ trách" optional="show"/>
+                <field name="department_id" string="Phòng ban" optional="show"/>
+                <field name="deadline" string="Hạn hoàn thành" optional="show"/>
+                <field name="state" string="Trạng thái" widget="badge"/>
+                <field name="document_id" string="Báo cáo" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="directive_search" model="ir.ui.view">
+        <field name="name">tp.report.directive.search</field>
+        <field name="model">tp.report.directive</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Nội dung"/>
+                <field name="owner_id" string="Người phụ trách"/>
+                <field name="department_id" string="Phòng ban"/>
+                <field name="deadline" string="Hạn hoàn thành"/>
+                <field name="state" string="Trạng thái"/>
+                <field name="document_id" string="Báo cáo"/>
+            </search>
+        </field>
+    </record>
+    <record id="directive_form" model="ir.ui.view">
+        <field name="name">tp.report.directive.form</field>
+        <field name="model">tp.report.directive</field>
+        <field name="arch" type="xml">
+            <form class="tp_reporting_form" js_class="tp_reporting_form">
+                <header>
+                    <button type="object" name="action_start" string="Bắt đầu" invisible="state != 'open'" class="btn-primary"/>
+                    <button type="object" name="action_done" string="Hoàn thành" invisible="state != 'in_progress'"/>
+                    <button type="object" name="action_create_task" string="Tạo việc dự án" invisible="task_id != False or not document_id"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" string="Nội dung"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Thông tin chính">
+                            <field name="document_id" string="Báo cáo" readonly="id != False"/>
+                            <field name="company_id" string="Công ty" readonly="id != False"/>
+                            <field name="department_id" string="Phòng ban" readonly="id != False"/>
+                            <field name="owner_id" string="Người phụ trách" readonly="id != False" widget="tp_reporting_person" options="{'purpose':'directive'}"/>
+                            <field name="deadline" string="Hạn hoàn thành"/>
+                        </group>
+                        <group string="Phạm vi và chi tiết">
+                            <field name="state" string="Trạng thái" readonly="1" widget="badge"/>
+                            <field name="description" string="Nội dung chi tiết"/>
+                            <field name="task_id" string="Công việc nguồn"/>
+                            <field name="project_id" string="Dự án"/>
+                            <field name="reason" string="Lý do / kết quả"/>
+                        </group>
+                    </group>
+                    <group string="Kết quả và minh chứng">
+                        <field name="result" string="Kết quả xử lý"/>
+                        <field name="evidence_ids" string="Minh chứng" widget="many2many_binary"/>
+                    </group>
+                    <group string="Nguồn chỉ đạo">
+                        <field name="issuer_id" string="Người giao" readonly="1"/>
+                        <field name="snapshot_id" string="Phiên bản nguồn" readonly="1"/>
+                        <field name="line_id" string="Đầu việc nguồn" readonly="id != False"/>
+                    </group>
+                    <notebook>
+                        <page string="Lịch sử xử lý">
+                            <field name="history_html" widget="html" readonly="1" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <field name="version" invisible="1"/>
+            </form>
+        </field>
+    </record>
+    <record id="template_list" model="ir.ui.view">
+        <field name="name">tp.report.template.list</field>
+        <field name="model">tp.report.template</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_reporting_list" limit="20">
+                <field name="name" string="Nội dung"/>
+                <field name="code" string="Mã" optional="show"/>
+                <field name="version" string="Phiên bản" optional="show"/>
+                <field name="level" string="Cấp báo cáo" optional="show"/>
+                <field name="period_type" string="Loại kỳ" optional="show"/>
+                <field name="active" string="Đang áp dụng" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="template_search" model="ir.ui.view">
+        <field name="name">tp.report.template.search</field>
+        <field name="model">tp.report.template</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Nội dung"/>
+                <field name="code" string="Mã"/>
+                <field name="version" string="Phiên bản"/>
+                <field name="level" string="Cấp báo cáo"/>
+                <field name="period_type" string="Loại kỳ"/>
+                <field name="active" string="Đang áp dụng"/>
+            </search>
+        </field>
+    </record>
+    <record id="template_form" model="ir.ui.view">
+        <field name="name">tp.report.template.form</field>
+        <field name="model">tp.report.template</field>
+        <field name="arch" type="xml">
+            <form class="tp_reporting_form">
+                <header/>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" string="Nội dung"/>
+                        </h1>
+                    </div>
+                    <div class="tp_reporting_hint">Cấu hình thử nghiệm — lịch và thẩm quyền cần được ban hành trước sử dụng thật.</div>
+                    <group>
+                        <group string="Thông tin chính">
+                            <field name="code" string="Mã"/>
+                            <field name="version" string="Phiên bản"/>
+                            <field name="level" string="Cấp báo cáo"/>
+                        </group>
+                        <group string="Phạm vi và chi tiết">
+                            <field name="period_type" string="Loại kỳ"/>
+                            <field name="active" string="Đang áp dụng"/>
+                            <field name="section_ids" string="Các mục trong mẫu"/>
+                        </group>
+                    </group>
+                    <button type="action" name="%(action_template_sections)d" string="Lọc / tìm mục trong mẫu" context="{'default_template_id':id}"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="reason_form" model="ir.ui.view">
+        <field name="name">tp.report.reason.form</field>
+        <field name="model">tp.report.reason</field>
+        <field name="arch" type="xml">
+            <form string="Lý do thao tác">
+                <group>
+                    <field name="resource_model" string="resource_model" invisible="1"/>
+                    <field name="resource_id" string="resource_id" invisible="1"/>
+                    <field name="action" string="action" invisible="1"/>
+                    <field name="expected_version" string="expected_version" invisible="1"/>
+                    <field name="reason" string="Lý do" required="1"/>
+                </group>
+                <footer>
+                    <button type="object" name="action_apply" string="Xác nhận" class="btn-primary"/>
+                    <button special="cancel" string="Hủy" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="review_list" model="ir.ui.view">
+        <field name="name">review_list</field>
+        <field name="model">tp.report.review</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_reporting_list" edit="false" delete="false" limit="20">
+                <field name="comment" string="Nhận xét / phản hồi"/>
+                <field name="document_id" string="Báo cáo"/>
+                <field name="line_id" string="Đầu việc"/>
+                <field name="actor_id" string="Người viết"/>
+                <field name="assessment" string="Đánh giá"/>
+                <field name="create_date" string="Thời điểm"/>
+            </list>
+        </field>
+    </record>
+    <record id="review_form" model="ir.ui.view">
+        <field name="name">review_form</field>
+        <field name="model">tp.report.review</field>
+        <field name="arch" type="xml">
+            <form class="tp_reporting_form" edit="false" delete="false">
+                <sheet>
+                    <group>
+                        <group string="Báo cáo và phiên bản">
+                            <field name="document_id" string="Báo cáo"/>
+                            <field name="line_id" string="Đầu việc" domain="[('document_id','=',document_id)]"/>
+                            <field name="snapshot_id" string="Bản đã gửi" readonly="1"/>
+                            <field name="version" string="Phiên bản" readonly="1"/>
+                        </group>
+                        <group string="Người viết và đối tượng">
+                            <field name="actor_id" string="Người viết" readonly="1"/>
+                            <field name="create_date" string="Thời điểm" readonly="1"/>
+                            <field name="audience" string="Đối tượng xem"/>
+                        </group>
+                    </group>
+                    <group string="Nhận xét quản lý / phản hồi nhân viên">
+                        <field name="parent_id" string="Nhận xét cha (khi phản hồi)"/>
+                        <field name="correction_of_id" string="Đính chính nhận xét"/>
+                        <field name="assessment" string="Đánh giá"/>
+                        <field name="comment" string="Nội dung"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="review_search" model="ir.ui.view">
+        <field name="name">review_search</field>
+        <field name="model">tp.report.review</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="comment" string="Nội dung"/>
+                <field name="document_id" string="Báo cáo"/>
+                <field name="actor_id" string="Người viết"/>
+                <field name="line_id" string="Đầu việc"/>
+                <field name="assessment" string="Đánh giá"/>
+                <field name="create_date" string="Thời điểm"/>
+            </search>
+        </field>
+    </record>
+    <record id="document_preview_form" model="ir.ui.view">
+        <field name="name">tp.report.document.preview</field>
+        <field name="model">tp.report.document</field>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <form string="Xem trước báo cáo" class="tp_reporting_form" create="false" edit="false" delete="false">
+                <sheet>
+                    <h1>
+                        <field name="name" readonly="1"/>
+                    </h1>
+                    <group>
+                        <field name="owner_id" string="Người lập" readonly="1"/>
+                        <field name="department_id" string="Phòng ban" readonly="1"/>
+                        <field name="date_start" string="Từ ngày" readonly="1"/>
+                        <field name="date_end" string="Đến ngày" readonly="1"/>
+                        <field name="reviewer_id" string="Người nhận" readonly="1" widget="tp_reporting_reviewer"/>
+                        <field name="state" string="Trạng thái báo cáo" readonly="1"/>
+                    </group>
+                    <field name="summary" string="Kết quả nổi bật" readonly="1"/>
+                    <field name="line_ids" string="Kế hoạch và kết quả" readonly="1">
+                        <list create="false" edit="false" delete="false">
+                            <field name="name" string="Nhiệm vụ"/>
+                            <field name="expected_output" string="Đầu ra dự kiến"/>
+                            <field name="result" string="Kết quả thực tế"/>
+                            <field name="work_status" string="Trạng thái việc"/>
+                        </list>
+                    </field>
+                    <field name="obstacles" string="Vướng mắc" readonly="1"/>
+                    <field name="recommendations" string="Kiến nghị" readonly="1"/>
+                    <field name="next_plan" string="Kỳ tới" readonly="1"/>
+                </sheet>
+                <footer>
+                    <button special="cancel" string="Đóng xem trước" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="document_comparison_form" model="ir.ui.view">
+        <field name="name">tp.report.document.comparison</field>
+        <field name="model">tp.report.document</field>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <form string="So sánh phiên bản" class="tp_reporting_form" create="false" edit="false" delete="false">
+                <sheet>
+                    <field name="comparison_html" widget="html" readonly="1" nolabel="1"/>
+                </sheet>
+                <footer>
+                    <button special="cancel" string="Đóng" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

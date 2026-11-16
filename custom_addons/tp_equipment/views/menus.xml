@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Admin-only app for office equipment (EQUIP-001 / EQUIP-UI-001).
+         EQUIP-SIMPLE-003 (DEC-047): only "Thiết bị" (default) and "Yêu cầu đề xuất" stay visible. Every other menu
+         is switched off with active="False" — XML IDs, actions and data are kept; advanced lists are reachable from
+         "Phạm vi nâng cao" on the Thiết bị list header and old links/paths still open their action. -->
+    <menuitem id="menu_root" name="Kho thiết bị văn phòng" sequence="46"
+              web_icon="tp_equipment,static/description/icon.svg"
+              groups="base.group_system" action="action_equipment"/>
+
+    <menuitem id="menu_equipment_all" name="Thiết bị" parent="menu_root" sequence="10"
+              action="action_equipment" groups="base.group_system"/>
+    <menuitem id="menu_proposals" name="Yêu cầu đề xuất" parent="menu_root" sequence="20"
+              action="action_proposals" groups="base.group_system"/>
+
+    <!-- Hidden (active="False"), kept for XML IDs, old deep links and last-leaf fallbacks -->
+    <menuitem id="menu_overview" name="Tổng quan" parent="menu_root" sequence="80"
+              action="action_dashboard" groups="base.group_system" active="False"/>
+    <menuitem id="menu_equipment_stock" name="Thiết bị tồn kho" parent="menu_root" sequence="85"
+              action="action_equipment_stock" groups="base.group_system" active="False"/>
+    <menuitem id="menu_group_admin" name="Quản trị dữ liệu" parent="menu_root" sequence="90" groups="base.group_system" active="False"/>
+
+    <menuitem id="menu_import" name="Nhập nguồn có xem trước" parent="menu_group_admin" sequence="10"
+              action="action_import" groups="base.group_system" active="False"/>
+    <menuitem id="menu_import_pending" name="Dòng nguồn chờ bổ sung" parent="menu_group_admin" sequence="15"
+              action="action_import_pending" groups="base.group_system" active="False"/>
+    <menuitem id="menu_import_alias" name="Ánh xạ tên nguồn" parent="menu_group_admin" sequence="20"
+              action="action_import_alias" groups="base.group_system" active="False"/>
+
+    <menuitem id="menu_config_category" name="Phân loại thiết bị" parent="menu_group_admin" sequence="30"
+              action="action_category" groups="base.group_system" active="False"/>
+    <menuitem id="menu_config_location" name="Vị trí đặt thiết bị" parent="menu_group_admin" sequence="35"
+              action="action_location" groups="base.group_system" active="False"/>
+
+    <menuitem id="menu_moves" name="Phiếu bàn giao / thu hồi" parent="menu_group_admin" sequence="40"
+              action="action_moves" groups="base.group_system" active="False"/>
+    <menuitem id="menu_moves_pending" name="Phiếu chờ bàn giao" parent="menu_group_admin" sequence="45"
+              action="action_moves_pending" groups="base.group_system" active="False"/>
+    <menuitem id="menu_move_lines" name="Lịch sử bàn giao" parent="menu_group_admin" sequence="50"
+              action="action_move_lines" groups="base.group_system" active="False"/>
+    <menuitem id="menu_receipts" name="Phiếu nhập thiết bị" parent="menu_group_admin" sequence="55"
+              action="action_receipts" groups="base.group_system" active="False"/>
+    <menuitem id="menu_repairs" name="Sửa chữa / bảo trì" parent="menu_group_admin" sequence="60"
+              action="action_repairs" groups="base.group_system" active="False"/>
+    <menuitem id="menu_inventories" name="Kiểm kê thiết bị" parent="menu_group_admin" sequence="65"
+              action="action_inventories" groups="base.group_system" active="False"/>
+    <menuitem id="menu_scan" name="Quét mã thiết bị" parent="menu_group_admin" sequence="70"
+              action="action_scan" groups="base.group_system" active="False"/>
+
+    <menuitem id="menu_equipment_shared" name="Thiết bị dùng chung &amp; chưa xác định người" parent="menu_group_admin" sequence="72"
+              action="action_equipment_shared" groups="base.group_system" active="False"/>
+    <menuitem id="menu_equipment_records" name="Tất cả hồ sơ thiết bị" parent="menu_group_admin" sequence="73"
+              action="action_equipment_all_records" groups="base.group_system" active="False"/>
+    <menuitem id="menu_equipment_available" name="Sẵn sàng cấp phát" parent="menu_group_admin" sequence="75"
+              action="action_equipment_available" groups="base.group_system" active="False"/>
+    <menuitem id="menu_equipment_in_use" name="Đang sử dụng (chi tiết)" parent="menu_group_admin" sequence="80"
+              action="action_equipment_in_use" groups="base.group_system" active="False"/>
+    <menuitem id="menu_equipment_attention" name="Cần xử lý" parent="menu_group_admin" sequence="85"
+              action="action_equipment_attention" groups="base.group_system" active="False"/>
+    <menuitem id="menu_equipment_draft" name="Hồ sơ nháp" parent="menu_group_admin" sequence="90"
+              action="action_equipment_draft" groups="base.group_system" active="False"/>
+    <menuitem id="menu_equipment_retired" name="Ngừng quản lý" parent="menu_group_admin" sequence="95"
+              action="action_equipment_retired" groups="base.group_system" active="False"/>
+</odoo>

@@ -1,11 +1,11 @@
 /**
  * Home entries are derived only from the menu tree the native menu service received for the
- * current user (/web/webclient/load_menus is filtered by groups on the server). Labels below
- * enrich a node when its XML ID is actually present; they never create a destination.
+ * current user (/web/webclient/load_menus is filtered by groups on the server). Metadata below
+ * enriches a node when its XML ID is actually present; it never grants access or creates routes.
  *
- * UI-HOME-003: Home shows a short, opt-in set of entries (workspaces, personal tools and, for
- * system administrators, an administration area). Every other granted app stays in the native
- * app switcher; it is not removed from the menu service.
+ * UI-SHELL-UNIFY-001: One shared Home catalog and layout for all accounts. Groups render only
+ * when they contain at least one permitted entry; developing placeholders stay restricted to
+ * system administrators (`user.isSystem`) per existing policy.
  */
 export const HOME_MENU_XMLID = "tp_web_home.menu_home";
 export const ALL_APPS_KEY = "all-apps";
@@ -15,39 +15,49 @@ const DEFAULT_ICON = "/web/static/img/default_icon_app.png";
 /** Roots replaced by their own action leaves, so a root and its first leaf never show twice. */
 const EXPANDED_ROOTS = new Set(["tp_core.menu_platform"]);
 
-/** Home sections, in display order. Only entries whose metadata names a section appear. */
+/** Unified Home sections in display order. Empty sections are omitted. */
 export const SECTIONS = [
-    { key: "workspace", label: "Không gian làm việc" },
+    { key: "departments", label: "Phòng ban và đơn vị" },
+    { key: "hr", label: "Nhân sự và tuyển dụng" },
     { key: "personal", label: "Công cụ cá nhân" },
-    { key: "system", label: "Quản trị hệ thống" },
 ];
 
 /** Display order inside the administrators' "Tất cả ứng dụng" panel. */
-const PANEL_ORDER = ["workspace", "personal", "apps", "system"];
+const PANEL_ORDER = ["workspace", "hr", "personal", "apps", "system"];
 
 export const APP_LABELS = {
     "tp_hr_workspace.menu_department_workspace": {
-        hint: "Đang phát triển", group: "workspace", order: 10, icon: "workspace",
+        hint: "Đang phát triển", group: "workspace", order: 20, icon: "building",
     },
     "tp_kd_workspace.menu_kd": {
         // U+2011 keeps "KH‑KD" on one line; the alias keeps the ASCII spelling searchable.
-        label: "Kế hoạch Kinh doanh", hint: "Hồ sơ, kế hoạch và điều hành KH‑KD",
-        group: "workspace", order: 10, icon: "workspace",
+        label: "Kế hoạch Kinh doanh", hint: "Dự án, đấu thầu, hợp đồng và báo cáo KH‑KD",
+        group: "workspace", order: 10, icon: "briefcase",
         aliases: "khkd kh-kd kh kd ke hoach kinh doanh workspace planning business",
+    },
+    "tp_hr_workspace.menu_hr": {
+        label: "Quản lý nhân sự", hint: "Hồ sơ nhân viên, tổ chức và năng lực",
+        group: "hr", order: 10, icon: "users",
+        aliases: "hr nhan su ho so nhan vien to chuc nang luc",
+    },
+    "hr.menu_hr_root": {
+        label: "Nhân viên", hint: "Danh bạ nhân viên Odoo",
+        order: 60,
+        aliases: "employees danh ba nhan vien",
     },
     "project_todo.menu_todo_todos": {
         label: "Việc cá nhân",
-        hint: "Việc cần làm của bạn", group: "personal", order: 10,
+        hint: "Việc cần làm của bạn", group: "personal", order: 10, icon: "check-square",
         aliases: "todo to-do ghi chu nhac viec",
     },
     "calendar.mail_menu_calendar": {
         label: "Lịch làm việc",
-        hint: "Lịch và cuộc hẹn", group: "personal", order: 20,
+        hint: "Lịch và cuộc hẹn", group: "personal", order: 20, icon: "calendar",
         aliases: "calendar lich hop cuoc hen meeting",
     },
     "mail.menu_root_discuss": {
         label: "Trao đổi",
-        hint: "Tin nhắn và kênh nội bộ", group: "personal", order: 30,
+        hint: "Tin nhắn và kênh nội bộ", group: "personal", order: 30, icon: "message-circle",
         aliases: "discuss chat tin nhan thao luan kenh",
     },
     "base.menu_administration": {
@@ -89,11 +99,6 @@ export const APP_LABELS = {
         label: "Danh mục công việc",
         hint: "Danh mục hạng mục", order: 60, icon: "catalog",
         aliases: "hang muc work item catalog",
-    },
-    "hr.menu_hr_root": {
-        label: "Nhân sự",
-        hint: "Hồ sơ nhân viên", order: 100,
-        aliases: "employees nhan vien hr phong ban",
     },
     "hr_timesheet.timesheet_menu_root": {
         label: "Giờ làm việc",
@@ -142,7 +147,7 @@ function menuHref(menu, debug) {
 }
 
 function menuIcon(menu, label, meta) {
-    if (meta.icon) {
+    if (meta.icon && ["workspace", "projects", "contracts", "catalog", "apps"].includes(meta.icon)) {
         return { type: "image", src: `/tp_web_home/static/img/${meta.icon}.svg` };
     }
     if (menu.webIconData && menu.webIconData !== DEFAULT_ICON) {
@@ -225,9 +230,7 @@ export function buildTiles(rootTree, debug = "") {
 }
 
 /**
- * Admin Home (UI-HOME-004 / DEC-036): exactly 7 items in two groups.
- * Group 1: Phòng ban và đơn vị (5 items: KH-KD, Thiết kế, Kỹ Thuật, BIM-QC, TADIC)
- * Group 2: Nhân sự và tuyển dụng (2 items: Quản lý nhân sự, Tuyển dụng)
+ * Department & HR catalog definitions (used for unified cards and admin placeholders).
  */
 export const ADMIN_MODULES = [
     {
@@ -240,11 +243,13 @@ export const ADMIN_MODULES = [
         icon: "briefcase",
         featured: true,
         xmlid: "tp_kd_workspace.menu_kd",
+        aliases: "khkd kh-kd kh kd ke hoach kinh doanh workspace planning business",
         copy: "Lối vào không gian KH-KD hiện có: quản lý và quản trị dự án, đấu thầu, hợp đồng, kế hoạch và báo cáo. Khi áp dụng lên hệ thống, mục này tiếp tục mở workspace đang sử dụng.",
     },
     {
         key: "design",
         group: "departments",
+        placeholderOnly: true,
         name: "Phòng Thiết kế",
         description: "Không gian chuyên môn thiết kế",
         status: "Đang phát triển",
@@ -255,6 +260,7 @@ export const ADMIN_MODULES = [
     {
         key: "technical",
         group: "departments",
+        placeholderOnly: true,
         name: "Phòng Kỹ Thuật",
         description: "Không gian chuyên môn kỹ thuật",
         status: "Đang phát triển",
@@ -265,6 +271,7 @@ export const ADMIN_MODULES = [
     {
         key: "bim",
         group: "departments",
+        placeholderOnly: true,
         name: "Phòng BIM-QC",
         description: "Không gian BIM và kiểm soát chất lượng",
         status: "Đang phát triển",
@@ -275,6 +282,7 @@ export const ADMIN_MODULES = [
     {
         key: "tadic",
         group: "departments",
+        placeholderOnly: true,
         name: "TADIC",
         description: "Không gian đơn vị TADIC",
         status: "Đang phát triển",
@@ -291,41 +299,94 @@ export const ADMIN_MODULES = [
         badgeKind: "active",
         icon: "users",
         xmlid: "tp_hr_workspace.menu_hr",
+        aliases: "nhan su hr ho so nhan vien to chuc nang luc",
         copy: "Bắt đầu từ hồ sơ nhân viên, phòng ban, chức danh và năng lực. Dữ liệu nguồn đã đối chiếu sẽ được nhập qua bước kiểm tra riêng; tài khoản đăng nhập và quyền truy cập được quản lý độc lập.",
     },
     {
         key: "recruitment",
         group: "hr",
+        placeholderOnly: true,
         name: "Tuyển dụng",
         description: "Vị trí tuyển dụng và hồ sơ ứng viên",
         status: "Đang phát triển",
         badgeKind: "developing",
         icon: "user-plus",
         xmlid: "hr_recruitment.menu_hr_recruitment_root",
+        aliases: "tuyen dung ung vien recruitment",
         copy: "Không gian tuyển dụng sẽ được bổ sung sau nền nhân sự: nhu cầu tuyển, vị trí, ứng viên và các vòng xử lý.",
     },
 ];
 
-export function buildAdminCatalog(rootTree, { debug = "" } = {}) {
+function indexMenuTree(rootTree) {
     const menuMap = new Map();
     function walk(node) {
-        if (!node) return;
-        if (node.xmlid) menuMap.set(node.xmlid, node);
+        if (!node) {
+            return;
+        }
+        if (node.xmlid) {
+            menuMap.set(node.xmlid, node);
+        }
         for (const child of node.childrenTree || []) {
             walk(child);
         }
     }
     walk(rootTree);
+    return menuMap;
+}
 
-    const items = ADMIN_MODULES.map((tpl) => {
-        const item = { ...tpl };
-        if (item.key === "hr" && !menuMap.has(item.xmlid) && menuMap.has("hr.menu_hr_root")) item.xmlid = "hr.menu_hr_root";
-        if (item.xmlid && menuMap.has(item.xmlid)) {
-            item.menu = menuMap.get(item.xmlid);
-            item.href = menuHref(item.menu, debug);
+function attachSearch(entry, extraText = "") {
+    return {
+        ...entry,
+        search: normalizeSearch(
+            [entry.name, entry.description, entry.menu?.name, entry.aliases, extraText].filter(Boolean).join(" ")
+        ),
+    };
+}
+
+/**
+ * Resolve department and HR entries against the server-filtered menu tree.
+ * Without `isSystem`, only entries backed by an authorized menu in `rootTree` are returned.
+ */
+export function buildAdminCatalog(rootTree, { debug = "", isSystem = true } = {}) {
+    const menuMap = indexMenuTree(rootTree);
+    const items = [];
+    for (const tpl of ADMIN_MODULES) {
+        const matchedMenu =
+            (tpl.xmlid && menuMap.get(tpl.xmlid)) ||
+            (tpl.fallbackXmlid && menuMap.get(tpl.fallbackXmlid)) ||
+            null;
+        const hasActionMenu = Boolean(matchedMenu && matchedMenu.actionID);
+        if (!hasActionMenu && !isSystem) {
+            continue;
         }
-        return item;
-    });
+        const item = { ...tpl };
+        if (matchedMenu) {
+            item.xmlid = matchedMenu.xmlid;
+            item.menu = matchedMenu;
+            if (matchedMenu.actionID) {
+                item.href = menuHref(matchedMenu, debug);
+            }
+        }
+        items.push(attachSearch(item));
+    }
+
+    const deptWsMenu = menuMap.get("tp_hr_workspace.menu_department_workspace");
+    if (deptWsMenu && deptWsMenu.actionID) {
+        items.push(
+            attachSearch({
+                key: `menu-${deptWsMenu.id}`,
+                group: "departments",
+                name: deptWsMenu.name || "Không gian phòng ban",
+                description: "Đang phát triển",
+                status: "Đang phát triển",
+                badgeKind: "developing",
+                icon: "building",
+                xmlid: deptWsMenu.xmlid,
+                menu: deptWsMenu,
+                href: menuHref(deptWsMenu, debug),
+            })
+        );
+    }
 
     return {
         modules: items,
@@ -334,29 +395,69 @@ export function buildAdminCatalog(rootTree, { debug = "" } = {}) {
     };
 }
 
+function personalEntries(apps) {
+    return apps
+        .filter((tile) => tile.group === "personal")
+        .map((tile) => {
+            const meta = APP_LABELS[tile.xmlid] || {};
+            return attachSearch({
+                key: tile.key,
+                group: "personal",
+                name: tile.label,
+                description: tile.hint || "",
+                icon: meta.icon || "circle",
+                aliases: meta.aliases || "",
+                xmlid: tile.xmlid,
+                menu: tile.menu,
+                href: tile.href,
+                tile,
+            });
+        });
+}
+
 /**
- * Splits the user's own apps into what Home shows and what stays in the native switcher.
- * The administration area and the full app list exist only for system administrators
- * (`user.isSystem`, i.e. base.group_system); for anyone else they are not built at all,
- * so neither the main search nor the DOM can reach them.
- *
- * @returns {{home: Object[], system: Object[], all: Object[], otherApps: number, admin: Object}}
+ * Build the unified Home catalog from the server-filtered menu tree.
+ * Backend permissions remain the source of truth: no unauthorized routes or menus are created.
  */
 export function buildCatalog(rootTree, { debug = "", isSystem = false } = {}) {
     const apps = buildTiles(rootTree, debug);
-    const home = apps.filter((tile) => tile.group === "workspace" || tile.group === "personal");
-    const admin = isSystem ? buildAdminCatalog(rootTree, { debug }) : null;
+    const modulesCatalog = buildAdminCatalog(rootTree, { debug, isSystem: Boolean(isSystem) });
+    const personal = personalEntries(apps);
+    // EQUIP-001: modules registered by other addons in their own SECTIONS group (e.g. office
+    // equipment) appear after departments/HR; still only when the server sent their menu.
+    const extraSections = new Set(SECTIONS.map((s) => s.key).filter((k) => !["departments", "hr", "personal"].includes(k)));
+    const entries = [
+        ...modulesCatalog.departments,
+        ...modulesCatalog.hr,
+        ...modulesCatalog.modules.filter((m) => extraSections.has(m.group)),
+        ...personal,
+    ];
+
     const system = isSystem
         ? [allAppsEntry(), ...apps.filter((tile) => tile.group === "system")]
         : [];
-    const shown = new Set([...home, ...system].map((tile) => tile.key));
+    const tools = isSystem
+        ? [
+              system.find((t) => t.xmlid === "base.menu_administration"),
+              system.find((t) => t.xmlid === "base.menu_management"),
+              system.find((t) => t.key === ALL_APPS_KEY),
+          ].filter(Boolean)
+        : [];
+
+    const shownMenuIds = new Set([
+        ...entries.map((entry) => entry.menu?.id).filter(Boolean),
+        ...system.map((tile) => tile.menu?.id).filter(Boolean),
+    ]);
+
     return {
         isAdmin: Boolean(isSystem),
-        admin,
-        home,
+        admin: modulesCatalog,
+        tools,
+        entries,
+        home: apps.filter((tile) => tile.group === "workspace" || tile.group === "personal"),
         system,
         all: isSystem ? apps : [],
-        otherApps: apps.filter((tile) => !shown.has(tile.key)).length,
+        otherApps: apps.filter((tile) => !shownMenuIds.has(tile.menu?.id)).length,
     };
 }
 
@@ -370,18 +471,16 @@ export function filterTiles(tiles, query) {
         return tiles;
     }
     return tiles.filter((tile) => {
-        const text = ` ${tile.search}`;
+        const text = ` ${tile.search || ""}`;
         return words.every((word) => text.includes(` ${word}`));
     });
 }
 
-/** Home sections in display order; the main search walks exactly this list. */
+/** Unified Home sections in display order; empty groups are omitted. */
 export function homeSections(catalog, query = "") {
-    const entries = filterTiles([...catalog.home, ...catalog.system], query);
+    const entries = filterTiles(catalog.entries || [], query);
     return SECTIONS.map((section) => ({
         ...section,
-        tiles: entries
-            .filter((tile) => tile.group === section.key)
-            .sort((a, b) => a.order - b.order),
-    })).filter((section) => section.tiles.length);
+        tiles: entries.filter((entry) => entry.group === section.key),
+    })).filter((section) => section.tiles.length > 0);
 }

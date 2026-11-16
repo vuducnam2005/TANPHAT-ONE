@@ -326,7 +326,25 @@ class TransferWizard(models.TransientModel):
                 user.sudo().write({'tp_lock_revision': user.sudo().tp_lock_revision + 1})
             self.env['tp.kd.department.role']._invalidate_scope()
             self.env.transaction.invalidate_ormcache()
-            employee.message_post(body=json.dumps({'action': 'department_transfer', 'actor': self.env.uid,
-                'reason': reason, 'preview': self.preview, 'before': before, 'after': self._transfer_snapshot(employee)}, default=str, ensure_ascii=False))
+            after = self._transfer_snapshot(employee)
+            self.env['tp.hr.employee.audit']._tp_record([{
+                'action': 'department_transfer',
+                'employee_ref': employee.id,
+                'employee_name': employee.name,
+                'employee_code': employee.tp_employee_code,
+                'company_id': employee.company_id.id,
+                'reason': reason,
+                'snapshot': {'action': 'department_transfer', 'actor': self.env.uid, 'reason': reason,
+                             'preview': self.preview, 'before': before, 'after': after},
+            }])
+            old_dept = (
+                self.env['hr.department'].browse(before.get('department')).name
+                if before.get('department') else 'Chưa khai báo'
+            )
+            new_dept = self.target_department_id.name or 'Chưa khai báo'
+            employee.message_post(body=self.env._(
+                'Chuyển phòng ban: %(old)s → %(new)s. Người thực hiện: %(actor)s. Lý do: %(reason)s.',
+                old=old_dept, new=new_dept, actor=self.env.user.name, reason=reason,
+            ))
             self.with_context(_tp_role_preview=_ROLE_PREVIEW).write({'expected_digest': False})
         return {'type': 'ir.actions.act_window_close'}

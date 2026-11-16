@@ -2,6 +2,21 @@
     color: #17324d;
     h3 { font-size: 20px; margin-bottom: 12px; }
     p { color: #526477; line-height: 1.6; font-size: 14px; max-width: 65ch; margin-bottom: 20px; }
-    .o_field_widget[name=password] { border: 1px solid #9fb0c0; border-radius: 6px; background: #fff; padding: 0 12px !important; min-height: 46px; input { min-height: 44px; font-size: 16px; background: transparent; } }
-    input:focus-visible { outline: 2px solid #087f8c; outline-offset: 3px; }
+    // UI-INPUT-001: one frame around the password and its show/hide button (tokens from tp_web_home).
+    .o_field_widget[name=password] {
+        padding: 0 4px 0 var(--tp-input-px, 10px) !important;
+        border: 1px solid var(--tp-input-border, #7a8ca5); border-radius: var(--tp-input-radius, 6px); background: var(--tp-input-bg, #fff);
+        &:hover { border-color: var(--tp-input-border-hover, #52627a); }
+        &:focus-within { border-color: var(--tp-input-focus, #2563eb); box-shadow: var(--tp-input-ring, 0 0 0 3px rgba(37, 99, 235, .22)); }
+        &.o_field_invalid { border-color: var(--tp-input-error, #b91c1c); box-shadow: inset 0 0 0 1px var(--tp-input-error, #b91c1c); }
+        > .d-flex { align-items: center; gap: 4px; min-height: 44px; }
+        .o_input { flex: 1 1 auto; min-width: 0; min-height: 44px; padding: 0; border: 0; border-radius: 0; box-shadow: none; outline: 0; background: transparent; font-size: 16px; color: var(--tp-input-text, #172b4d); }
+        .o_input::placeholder { color: var(--tp-input-placeholder, #64748b); opacity: 1; }
+    }
+    // Odoo marks the empty required password invalid as soon as the saved wizard opens; stay neutral
+    // until something is typed (an empty submit still gets Odoo's own notification).
+    .o_field_widget[name=password].o_field_invalid:has(.o_input:placeholder-shown) { border-color: var(--tp-input-border, #7a8ca5); box-shadow: none; }
+    .o_field_widget[name=password].o_field_invalid:has(.o_input:placeholder-shown):focus-within { border-color: var(--tp-input-focus, #2563eb); box-shadow: var(--tp-input-ring, 0 0 0 3px rgba(37, 99, 235, .22)); }
+    .o_form_label.o_field_invalid:has(+ .o_field_widget .o_input:placeholder-shown) { color: var(--tp-input-label, #334155); }
+    button:focus-visible { outline: 2px solid #087f8c; outline-offset: 2px; }
 }

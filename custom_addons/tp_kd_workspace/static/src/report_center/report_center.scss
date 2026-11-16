@@ -336,12 +336,15 @@ body.o_tp_kd_compact .o_tp_kd_rc {
     .o_input {
         min-height: 34px;
         padding: 4px 8px;
-        border: 1px solid var(--kd-line);
+        border: 1px solid var(--tp-input-border);
         border-radius: 8px;
         background: #fff;
         width: 100%;
+        &:focus {
+            outline: 2px solid transparent; border-color: var(--tp-input-focus); box-shadow: var(--tp-input-ring);
+        }
         &[aria-invalid="true"] {
-            border-color: var(--kd-returned);
+            border-color: var(--tp-input-error);
         }
     }
 }
@@ -636,7 +639,7 @@ body.o_tp_kd_compact .o_tp_kd_rc {
     .o_input {
         min-height: 32px;
         padding: 3px 8px;
-        border: 1px solid var(--kd-line);
+        border: 1px solid var(--tp-input-border);
         border-radius: 8px;
         background: #fff;
         color: var(--kd-ink);
@@ -653,11 +656,12 @@ body.o_tp_kd_compact .o_tp_kd_rc {
     align-items: center;
     gap: 6px;
     padding: 0 8px;
-    border: 1px solid var(--kd-line);
+    border: 1px solid var(--tp-input-border);
     border-radius: 8px;
     background: #fff;
     &:focus-within {
-        border-color: var(--kd-action);
+        border-color: var(--tp-input-focus);
+        box-shadow: var(--tp-input-ring);
     }
     .o_input {
         min-width: 180px;

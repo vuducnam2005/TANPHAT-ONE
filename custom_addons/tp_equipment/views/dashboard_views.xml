@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_dashboard" model="ir.actions.client">
+        <field name="name">Tổng quan thiết bị</field>
+        <field name="tag">tp_equipment.dashboard</field>
+        <field name="path">tong-quan-thiet-bi</field>
+        <field name="context">{'tp_eq_leaf': 'tp_equipment.menu_equipment_all'}</field>
+    </record>
+</odoo>

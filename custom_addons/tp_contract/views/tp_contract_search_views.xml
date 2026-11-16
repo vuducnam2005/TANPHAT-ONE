@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- S2: Enrich main contract search + add missing smart-button search views -->
+    <record id="view_contract_search_enrich" model="ir.ui.view">
+        <field name="name">tp.contract.native.search.enrich</field>
+        <field name="model">tp.contract</field>
+        <field name="inherit_id" ref="tp_contract.view_contract_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='project_id']" position="after">
+                <field name="partner_id" string="Đối tác"/>
+                <field name="department_id" string="Phòng ban"/>
+                <field name="contract_type" string="Loại hợp đồng"/>
+                <field name="lifecycle_state" string="Trạng thái vòng đời"/>
+                <field name="create_date" string="Ngày tạo"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="tp_contract_revision_search" model="ir.ui.view">
+        <field name="name">tp.contract.revision.search</field>
+        <field name="model">tp.contract.revision</field>
+        <field name="arch" type="xml">
+            <search string="Phiên bản hợp đồng">
+                <field name="contract_id" string="Hợp đồng"/>
+                <field name="project_id" string="Dự án"/>
+                <field name="name" string="Tên phiên bản"/>
+                <field name="reference" string="Số hiệu / tham chiếu"/>
+                <field name="revision_kind" string="Loại phiên bản"/>
+                <field name="review_state" string="Trạng thái rà soát"/>
+                <field name="signature_status" string="Trạng thái ký"/>
+                <field name="effectivity_status" string="Hiệu lực"/>
+                <field name="business_owner_id" string="Phụ trách nghiệp vụ"/>
+                <field name="signed_date" string="Ngày ký"/>
+                <field name="effective_date" string="Ngày hiệu lực"/>
+                <filter name="rev_draft" string="Nháp" domain="[('review_state', '=', 'draft')]"/>
+                <filter name="rev_in_review" string="Đang rà soát" domain="[('review_state', '=', 'in_review')]"/>
+                <filter name="rev_returned" string="Trả lại" domain="[('review_state', '=', 'returned')]"/>
+                <filter name="rev_complete" string="Hoàn tất rà soát" domain="[('review_state', '=', 'review_complete')]"/>
+                <filter name="rev_signed" string="Đã ghi nhận chữ ký" domain="[('signature_status', '=', 'signed_recorded')]"/>
+                <filter name="rev_effective" string="Đã ghi nhận hiệu lực" domain="[('effectivity_status', '=', 'effective_recorded')]"/>
+                <group>
+                    <filter name="group_contract" string="Hợp đồng" context="{'group_by': 'contract_id'}"/>
+                    <filter name="group_review" string="Rà soát" context="{'group_by': 'review_state'}"/>
+                    <filter name="group_kind" string="Loại phiên bản" context="{'group_by': 'revision_kind'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="tp_contract_document_search" model="ir.ui.view">
+        <field name="name">tp.contract.document.search</field>
+        <field name="model">tp.contract.document</field>
+        <field name="arch" type="xml">
+            <search string="Tài liệu hợp đồng">
+                <field name="contract_id" string="Hợp đồng"/>
+                <field name="project_id" string="Dự án"/>
+                <field name="revision_id" string="Phiên bản"/>
+                <field name="name" string="Tên tài liệu"/>
+                <field name="file_name" string="Tên tệp"/>
+                <field name="document_kind" string="Loại tài liệu"/>
+                <field name="confidentiality" string="Độ mật"/>
+                <field name="create_date" string="Ngày thêm"/>
+                <filter name="doc_signed" string="Hợp đồng đã ký" domain="[('document_kind', '=', 'signed_contract')]"/>
+                <filter name="doc_amendment" string="Phụ lục sửa đổi" domain="[('document_kind', '=', 'amendment')]"/>
+                <filter name="doc_base" string="Bằng chứng BASE" domain="[('document_kind', '=', 'base_evidence')]"/>
+                <filter name="doc_archived" string="Đã lưu trữ" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter name="group_kind" string="Loại tài liệu" context="{'group_by': 'document_kind'}"/>
+                    <filter name="group_conf" string="Độ mật" context="{'group_by': 'confidentiality'}"/>
+                    <filter name="group_contract" string="Hợp đồng" context="{'group_by': 'contract_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="tp_contract_line_amount_search" model="ir.ui.view">
+        <field name="name">tp.contract.line.amount.search</field>
+        <field name="model">tp.contract.line.amount</field>
+        <field name="arch" type="xml">
+            <search string="Dòng giá trị hợp đồng">
+                <field name="line_id" string="Hạng mục hợp đồng"/>
+                <field name="revision_id" string="Phiên bản"/>
+                <field name="project_id" string="Dự án"/>
+                <field name="amount_state" string="Trạng thái xác nhận"/>
+                <field name="tax_basis" string="Cơ sở thuế"/>
+                <field name="create_date" string="Ngày tạo"/>
+                <filter name="amt_confirmed" string="Đã xác nhận" domain="[('amount_state', '=', 'confirmed')]"/>
+                <filter name="amt_unconfirmed" string="Chưa xác nhận" domain="[('amount_state', '=', 'unconfirmed')]"/>
+                <group>
+                    <filter name="group_state" string="Trạng thái xác nhận" context="{'group_by': 'amount_state'}"/>
+                    <filter name="group_tax" string="Cơ sở thuế" context="{'group_by': 'tax_basis'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="tp_contract_audit_search" model="ir.ui.view">
+        <field name="name">tp.contract.audit.search</field>
+        <field name="model">tp.contract.audit</field>
+        <field name="arch" type="xml">
+            <search string="Nhật ký hợp đồng">
+                <field name="contract_id" string="Hợp đồng"/>
+                <field name="project_id" string="Dự án"/>
+                <field name="revision_id" string="Phiên bản"/>
+                <field name="action" string="Hành động"/>
+                <field name="actor_id" string="Người thực hiện"/>
+                <field name="department_id" string="Phòng ban"/>
+                <field name="reason" string="Lý do"/>
+                <field name="acted_at" string="Thời điểm"/>
+                <filter name="act_submit" string="Trình rà soát" domain="[('action', 'in', ['submit_review', 'resubmit_review'])]"/>
+                <filter name="act_return" string="Trả lại" domain="[('action', '=', 'return_review')]"/>
+                <group>
+                    <filter name="group_action" string="Hành động" context="{'group_by': 'action'}"/>
+                    <filter name="group_actor" string="Người thực hiện" context="{'group_by': 'actor_id'}"/>
+                    <filter name="group_month" string="Tháng" context="{'group_by': 'acted_at:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+</odoo>

@@ -1,5 +1,8 @@
 # UI-HOME-003 — Trang chủ theo workspace, KH-KD trước
 
+> [!NOTE]
+> **Cập nhật UI-SHELL-UNIFY-001 (14/11/2026 — DEC-043 / CHG-20261114-001):** Bố cục Trang chủ riêng cho non-admin trước đây đã được thống nhất thành một mẫu Trang chủ dùng chung (nền sáng xanh + sóng nhẹ, lưới 3 cột desktop giữ nguyên kích thước từng thẻ, các nhóm `Phòng ban và đơn vị`, `Nhân sự và tuyển dụng`, `Công cụ cá nhân` chỉ hiện khi có ít nhất 1 mục hợp lệ theo quyền). Phạm vi menu và quyền truy cập theo server (`menuService`) vẫn giữ nguyên. Xem [UI_SHELL_UNIFY_001_ACCEPTANCE.md](../demo/UI_SHELL_UNIFY_001_ACCEPTANCE.md).
+
 Ngày 07/11/2026, Asia/Saigon. CHG-20261107-006. Căn cứ: [prompt](../prompts/CLAUDE_UI_HOME_003_KD_FIRST.md), [DEC-031](../DECISIONS.md#dec-031--trang-chủ-theo-workspace-ưu-tiên-hoàn-thành-kh-kd-07112026), DEC-030. Baseline: UI-HOME-002 CHG-20261107-004 (`tp_web_home` 20.0.1.2.0), KD-UI-004 CHG-20261107-003 (`tp_kd_workspace` 20.0.1.3.0), cả hai `IMPLEMENTED_VERIFIED_DEV_PENDING_AUDIT`; checker CHG-005 PASS, không có checkpoint mở khi bắt đầu.
 
 ## 1. Phạm vi

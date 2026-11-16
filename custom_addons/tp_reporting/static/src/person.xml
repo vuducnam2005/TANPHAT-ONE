@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<templates xml:space="preserve">
+    <t t-name="tp_reporting.PersonField">
+        <div class="tp_reporting_people">
+            <span t-if="this.props.readonly">
+                <t t-foreach="this.selected" t-as="person" t-key="person.id">
+                    <span class="badge text-bg-light me-1" t-out="person.display_name"/>
+                </t>
+            </span>
+            <t t-else="">
+                <div class="d-flex gap-1">
+                    <input class="o_input" type="search" aria-label="Tìm người trong phạm vi" placeholder="Tìm người trong phạm vi…" t-att-value="this.state.search" t-on-input="(ev) =&gt; this.state.search=ev.target.value" t-on-keydown="(ev) =&gt; {if(ev.key==='Enter'){ev.preventDefault();this.load();}}"/>
+                    <button type="button" class="btn btn-light" t-on-click="() =&gt; this.load()" t-att-disabled="this.state.busy">Tìm</button>
+                </div>
+                <div t-if="this.multi" class="tp_reporting_people_choices">
+                    <label t-foreach="this.state.choices" t-as="choice" t-key="choice.id">
+                        <input type="checkbox" t-att-checked="this.isSelected(choice.id)" t-att-disabled="this.state.busy" t-on-change="() =&gt; this.toggle(choice)"/>
+                        <span t-out="choice.display_name"/>
+                    </label>
+                </div>
+                <select t-else="" class="o_input" t-att-id="this.props.id" t-att-value="this.value?.id || ''" t-on-change="(ev) =&gt; this.select(ev)" t-att-disabled="this.state.busy">
+                    <option value="">Chọn người trong phạm vi</option>
+                    <option t-foreach="this.state.choices" t-as="choice" t-key="choice.id" t-att-value="choice.id" t-out="choice.display_name"/>
+                </select>
+                <small t-if="!this.state.busy and !this.state.choices.length" class="text-muted">Không có người phù hợp. Kiểm tra công ty/phòng, quyền và từ khóa.</small>
+                <span t-if="this.state.error" class="text-danger" role="alert" t-out="this.state.error"/>
+                <small class="d-block text-muted">Tối đa 100 lựa chọn mỗi lần tìm. Thu hẹp từ khóa để tìm đúng người.</small>
+            </t>
+        </div>
+    </t>
+</templates>

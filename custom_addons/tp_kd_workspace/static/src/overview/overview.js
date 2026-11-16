@@ -257,8 +257,13 @@ export class TpKdOverview extends Component {
 
     /** New filter generation: main payload + first-screen tables; detail/sources load beside it. */
     async reload() {
-        const gen = ++this.gen;
         const filters = this.filters();
+        if (filters.date_from && filters.date_to && filters.date_from > filters.date_to) {
+            this.state.error = '"Từ ngày" không được lớn hơn "Đến ngày".';
+            this.state.loading = false;
+            return;
+        }
+        const gen = ++this.gen;
         const pSeq = ++this.seq.projects;
         const mSeq = ++this.seq.mine;
         this.state.loading = true;

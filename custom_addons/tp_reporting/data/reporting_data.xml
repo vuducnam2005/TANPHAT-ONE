@@ -1,0 +1,12 @@
+<odoo noupdate="1">
+<record id="template_personal" model="tp.report.template"><field name="name">Cá nhân — mẫu kỹ thuật</field><field name="code">PERSONAL</field><field name="level">personal</field></record>
+<record id="template_department" model="tp.report.template"><field name="name">Phòng ban — mẫu kỹ thuật</field><field name="code">DEPARTMENT</field><field name="level">department</field></record>
+<record id="template_design" model="tp.report.template"><field name="name">Thiết kế — mẫu đề xuất</field><field name="code">DESIGN</field><field name="level">department</field></record>
+<record id="template_business" model="tp.report.template"><field name="name">KH-KD — mẫu đề xuất</field><field name="code">BUSINESS</field><field name="level">department</field></record>
+<record id="template_company" model="tp.report.template"><field name="name">Công ty — mẫu kỹ thuật</field><field name="code">COMPANY</field><field name="level">company</field></record>
+<record id="section_personal_results" model="tp.report.section"><field name="name">Kế hoạch và kết quả</field><field name="template_id" ref="template_personal"/><field name="required" eval="True"/></record>
+<record id="section_department_results" model="tp.report.section"><field name="name">Kết quả phòng, vướng mắc và kỳ sau</field><field name="template_id" ref="template_department"/></record>
+<record id="section_design_results" model="tp.report.section"><field name="name">Hồ sơ, bước thiết kế và KCS</field><field name="template_id" ref="template_design"/><field name="description">PreFS/FS/TKKT/BVTC/GSTG; hạng mục, chủ trì, lần trình, đầu vào còn thiếu, mốc kế tiếp.</field></record>
+<record id="section_business_results" model="tp.report.section"><field name="name">Dự án, đấu thầu và hợp đồng</field><field name="template_id" ref="template_business"/><field name="description">Sản lượng, nghiệm thu, đề nghị thanh toán là các chỉ tiêu riêng; chưa tích hợp nguồn tự động.</field></record>
+<record id="section_company_results" model="tp.report.section"><field name="name">Tổng hợp kết quả, rủi ro và chỉ đạo</field><field name="template_id" ref="template_company"/></record>
+</odoo>

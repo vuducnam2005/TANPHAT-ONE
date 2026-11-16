@@ -12,7 +12,7 @@
     .btn-primary {background:var(--hr-teal);border-color:var(--hr-teal);color:white;}
     .o_tp_hr_filters {display:flex;gap:16px;align-items:end;flex-wrap:wrap;border-block:1px solid var(--hr-line);padding:14px 0;margin-bottom:17px;}
     label {display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px;min-width:0;}
-    select,input[type=search] {padding:9px 12px;border:1px solid var(--hr-line);border-radius:6px;background:var(--hr-surface);color:var(--hr-text);font-size:14px;font-weight:400;max-width:100%;min-height:var(--tp-ui-control-h, 40px);}
+    select,input[type=search] {padding:9px 12px;border:1px solid var(--tp-input-border);border-radius:6px;background:var(--hr-surface);color:var(--hr-text);font-size:14px;font-weight:400;max-width:100%;min-height:var(--tp-ui-control-h, 40px);}
     select {min-width:165px;}
     .o_tp_hr_filters label:first-child {flex:1;max-width:340px;}
     .o_tp_hr_note {color:var(--hr-muted);font-size:14px;}
@@ -65,7 +65,8 @@
     .o_tp_hr_skeleton {min-height:430px;color:var(--hr-muted);>div{height:100px;background:var(--hr-track);margin-top:20px;border-radius:6px;}}
     button,a {transition:background-color 180ms,border-color 180ms;}
     button:not(:disabled):hover,.o_tp_hr_kpis a:hover {background-color:var(--hr-soft);}.btn-primary:not(:disabled):hover{background:#076b76;color:white;}
-    button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible {outline:3px solid var(--hr-teal);outline-offset:3px;}
+    button:focus-visible,a:focus-visible {outline:3px solid var(--hr-teal);outline-offset:3px;}
+    :is(select,input[type=search]):focus {outline:2px solid transparent;border-color:var(--tp-input-focus);box-shadow:var(--tp-input-ring);}
     button:disabled {cursor:default;}
     @media(max-width:1399px) {.o_tp_hr_kpis {grid-template-columns:repeat(3,minmax(0,1fr));}.o_tp_hr_charts{grid-template-columns:1fr;}}
     @media(max-width:600px) {padding:16px;h1{font-size:24px;}section{padding:16px;}.o_tp_hr_kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}.o_tp_hr_kpis>*{padding:16px 12px;}.o_tp_hr_kpis strong{font-size:28px;}.o_tp_hr_kpi_icon{font-size:16px;right:12px;}
@@ -81,8 +82,8 @@
     .btn-link {color:var(--hr-teal);}
     .o_tp_hr_filters {background:#fff;border:1px solid var(--hr-line);border-radius:8px;padding:14px 16px;margin-bottom:18px;}
     label {font-size:13px;}
-    select,input[type=search] {min-height:42px;border-color:#c9d5e2;background:#fff;color:var(--hr-text);}
-    input::placeholder {color:#6b7b8e;opacity:1;}
+    select,input[type=search] {min-height:42px;border-color:var(--tp-input-border);background:#fff;color:var(--hr-text);}
+    input::placeholder {color:var(--tp-input-placeholder);opacity:1;}
     .o_tp_hr_kpis > * > span {font-size:14px;line-height:1.5;}
     .o_tp_hr_kpi_icon {width:28px;height:28px;fill:none;stroke:var(--hr-teal);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
     .o_tp_hr_kpi_quality .o_tp_hr_kpi_icon {stroke:var(--hr-amber);}
@@ -127,7 +128,7 @@
 body.o_tp_hr_reduce_motion .o_tp_hr_overview *{transition:none!important;animation:none!important;}
 body.o_tp_hr_shell {
     .o_list_table {border-collapse:separate;border-spacing:0; th{background:#edf2f6;position:sticky;top:0;z-index:1;} td,th{border-right:1px solid #e3e9ef;border-bottom:1px solid #dce4eb;} .o_data_row:hover{background:#edf6f7;} .o_data_cell{max-width:320px;} }
-    .o_tp_hr_page_size {font-size:13px;select{border:1px solid #bccbd6;border-radius:4px;padding:5px;}}
+    .o_tp_hr_page_size {font-size:13px;select{border:1px solid var(--tp-input-border);border-radius:4px;padding:5px;}}
     .o_tp_hr_employee_code {font-size:15px;color:#167d8d;font-weight:650;}
 }
 body.o_tp_hr_shell {

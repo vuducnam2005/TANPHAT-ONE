@@ -1,6 +1,6 @@
 # TANPHAT ONE — Danh mục Prompt và Kho lưu trữ
 
-**Cập nhật:** 12/11/2026 (Task SOURCE-CLEANUP-001)  
+**Cập nhật:** 16/11/2026 (thêm CORP-REPORT-001 full module R0–R5; metadata kho SOURCE-CLEANUP-001 giữ nguyên)
 **Kho lưu trữ an toàn ngoài source:** `C:\TANPHAT ONE ARCHIVE\SOURCE-CLEANUP-001\20261112T194934\docs\prompts`  
 **File mapping khôi phục:** `C:\TANPHAT ONE ARCHIVE\SOURCE-CLEANUP-001\20261112T194934\recovery-mapping.json`
 
@@ -12,8 +12,18 @@ Thư mục này quản lý các prompt giao việc cho các phiên AI thực thi
 
 ## 1. Prompt đang hiệu lực trong thư mục source
 
+**Kho thiết bị:** dùng EQUIP-SIMPLE-003 cho yêu cầu UI/thao tác hiện hành.
+EQUIP-UI-001/002 bên dưới giữ để tra cứu lịch sử, không giao chạy lại giao diện cũ.
+
 | Tệp prompt | Nhiệm vụ | Mô tả | Trạng thái | Tài liệu đặc tả / Kế hoạch |
 | --- | --- | --- | --- | --- |
+| [`CLAUDE_CORP_REPORT_001_FULL_MODULE.md`](CLAUDE_CORP_REPORT_001_FULL_MODULE.md) | **CORP-REPORT-001** | Full quý→tháng→tuần và báo cáo ngược; dashboard sáng/chart lớn, UI/filter/detail/mobile mọi tab, nguồn/quyền/version, chỉ đạo và Excel/Word/PDF | `FULL_MODULE_PROMPT_READY_NOT_IMPLEMENTED` CHG-20261116-006 | [Thiết kế](../architecture/TP_COMPANY_REPORTING_001_DESIGN.md), DEC-048; R0–R5 trên18079, cấu hình lịch/role test, không grant/nhập thật/main/commit/push. Đối chiếu baseline workflow FAIL trước code; không finish hộ source chưa kiểm |
+| [`CLAUDE_EQUIP_SIMPLE_003.md`](CLAUDE_EQUIP_SIMPLE_003.md) | **EQUIP-SIMPLE-003** | Hai menu Thiết bị/Yêu cầu đề xuất; gán/đổi chỉ máy stock chưa có người giữ; trả kho, bỏ tab dư/chuyển trực tiếp | `IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK` CHG-20261116-003 (prompt CHG-20261116-001/002) | Đã áp main18069 `tp_equipment` 20.0.1.5.0; mức bằng chứng ở [acceptance](../demo/EQUIP_001_ACCEPTANCE.md). DEC-047 bổ sung trước code: cấm chọn máy có chủ/cấm đổi chéo, backend kiểm lại sau khóa; cùng DB/HR/admin-only/data/history; main18069 sau backup, không18079/bộ test riêng/fixture |
+| [`CLAUDE_EQUIP_UI_002_USERS_AND_GLOBAL_BACK.md`](CLAUDE_EQUIP_UI_002_USERS_AND_GLOBAL_BACK.md) | **EQUIP-UI-002 / UI-BACK-001** | Bảng thiết bị gắn HR/người dùng, stock riêng; Quay lại dùng chung toàn hệ thống; nâng dashboard theo phản hồi | `IMPLEMENTED_RUNTIME_VERIFIED_MAIN_PENDING_VISUAL_REVIEW` CHG-20261115-002 (prompt CHG-20261115-001) | DEC-045/046; [chuẩn Quay lại](../ui/UI_BACK_001_STANDARD.md), [acceptance](../demo/EQUIP_001_ACCEPTANCE.md); main18069 sau backup; dữ liệu/HR/quyền giữ |
+| [`CLAUDE_EQUIP_UI_001_SIMPLIFY_AND_REDESIGN.md`](CLAUDE_EQUIP_UI_001_SIMPLIFY_AND_REDESIGN.md) | **EQUIP-UI-001** | Dashboard sáng/nhiều màu/chart lớn ở đầu, sidebar4mục, bảng/filter/detail gọn theo thiết bị/tồn/đề xuất; giữ data/admin-only | `PROMPT_READY_UI_NOT_IMPLEMENTED` CHG-20261114-013 | Wireframe/palette/responsive/scope trong prompt; [DEC-045](../DECISIONS.md), [chuẩn filter](../ui/TP_TABLE_FILTER_STANDARD.md); main18069 sau backup, không18079/bộ test |
+| [`CLAUDE_EQUIP_DATA_001_IMPORT_REAL.md`](CLAUDE_EQUIP_DATA_001_IMPORT_REAL.md) | **EQUIP-DATA-001** | Nhập thật hai workbook local lên18069 sau backup; bổ sung mapping còn thiếu; apply/đăng ký/hiển thị, đề xuất không thành tồn | `PROMPT_READY_REAL_IMPORT_AUTHORIZED_NOT_EXECUTED` CHG-20261114-011 | [Runbook](../../ops/runbooks/EQUIP_001_DEPLOY_IMPORT_AND_ROLLBACK.md), phân tích nguồn private `.local/equipment001/`; giữ admin-only/DB và HR chung, không18079/bộ test |
+| [`CLAUDE_EQUIP_001_OFFICE_EQUIPMENT.md`](CLAUDE_EQUIP_001_OFFICE_EQUIPMENT.md) | **EQUIP-001** | Codex hoàn tất Claude dở; module20.0.1.1.0 chạy18069 sau backup; không suites/18079/nhập thật | `SOURCE_IMPLEMENTED_RUNTIME_OBSERVED_EMPTY` CHG-20261114-010 | [Blueprint](../architecture/TP_EQUIPMENT001_BLUEPRINT.md), [acceptance và giới hạn](../demo/EQUIP_001_ACCEPTANCE.md), [hướng dẫn](../demo/EQUIP_001_USER_GUIDE.md), [runbook](../../ops/runbooks/EQUIP_001_DEPLOY_IMPORT_AND_ROLLBACK.md); giữ prompt để đối chiếu scope |
+| [`CLAUDE_UI_TABLE_FILTER_001.md`](CLAUDE_UI_TABLE_FILTER_001.md) | **UI-TABLE-FILTER-001** | Bộ lọc đúng nội dung cho mọi bảng HR/KH-KD/native và checklist phòng ban mới; test 18079, không tự áp main | `IMPLEMENTED_VERIFIED_TEST_ONLY` CHG-20261114-008 | [Nghiệm thu](../demo/UI_TABLE_FILTER_001_ACCEPTANCE.md), [hướng dẫn](../demo/UI_TABLE_FILTER_001_USER_GUIDE.md), [inventory](../ui/TP_TABLE_FILTER_INVENTORY.md), [runbook](../../ops/runbooks/UI_TABLE_FILTER_001_DEPLOY_AND_ROLLBACK.md) |
 | [`CLAUDE_C01_ISOLATED_TEST_RUNTIME.md`](CLAUDE_C01_ISOLATED_TEST_RUNTIME.md) | **FND-002 / C01** | Thiết lập môi trường kiểm thử cô lập tái lập được | `READY_FOR_TEST_CODE` | [Kế hoạch thực thi](../architecture/TP_CODE_EXECUTION_MASTER_PLAN.md), [Quy trình điều phối](../AI_COORDINATION_WORKFLOW.md) |
 | [`CLAUDE_KD_REPORT_UI_002_IMPLEMENT.md`](CLAUDE_KD_REPORT_UI_002_IMPLEMENT.md) | **KD-REPORT-UI-002** | Triển khai thiết kế lại 6 báo cáo KH-KD (S0–S5) | `DESIGN_PREVIEW_READY_PENDING_USER_REVIEW` | [Kế hoạch thiết kế lại](../ui/KD_REPORT_UI_002_REDESIGN_PLAN.md) |
 

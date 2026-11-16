@@ -1,0 +1,187 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+  <record id="inventory_line_list" model="ir.ui.view">
+    <field name="name">tp.inventory_line_list</field>
+    <field name="model">tp.equipment.inventory.line</field>
+    <field name="arch" type="xml">
+      <list js_class="tp_equipment_table" class="tp_eq_table" editable="bottom" limit="20">
+        <field name="equipment_id"/>
+        <field name="extra_description"/>
+        <field name="is_extra"/>
+        <field name="expected_text" optional="show"/>
+        <field name="count_state" readonly="inventory_state != 'counting'" optional="show"/>
+        <field name="actual_custody" readonly="inventory_state != 'counting'" optional="show"/>
+        <field name="actual_employee_id" readonly="inventory_state != 'counting'" optional="show"/>
+        <field name="actual_department_id" readonly="inventory_state != 'counting'" optional="show"/>
+        <field name="actual_location_id" readonly="inventory_state != 'counting'" optional="show"/>
+        <field name="actual_state" readonly="inventory_state != 'counting'" optional="hide"/>
+        <field name="actual_meter" readonly="inventory_state != 'counting'" optional="hide"/>
+        <field name="result" optional="hide"/>
+        <field name="changed_after" optional="hide"/>
+        <field name="note" optional="hide"/>
+        <field name="inventory_state" column_invisible="True"/>
+        <field name="can_adjust" column_invisible="True"/>
+        <button name="action_mark_found" type="object" string="Có mặt" invisible="inventory_state != 'counting'" class="btn-secondary"/>
+        <button name="action_mark_missing" type="object" string="Không thấy" invisible="inventory_state != 'counting' or is_extra" class="btn-secondary"/>
+        <button name="action_suggest_lost" type="object" string="Lập báo mất" invisible="inventory_state != 'closed' or result != 'missing'" class="btn-secondary"/>
+        <button name="action_suggest_receipt" type="object" string="Lập phiếu nhập" invisible="not is_extra or equipment_id" class="btn-secondary"/>
+      </list>
+    </field>
+  </record>
+  <record id="inventory_line_search" model="ir.ui.view">
+    <field name="name">tp.inventory_line_search</field>
+    <field name="model">tp.equipment.inventory.line</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="inventory_id"/>
+        <field name="equipment_id"/>
+        <field name="equipment_code"/>
+        <field name="count_state"/>
+        <field name="result"/>
+        <field name="expected_employee_id"/>
+        <field name="actual_employee_id"/>
+        <field name="actual_location_id"/>
+      </search>
+    </field>
+  </record>
+  <record id="inventory_list" model="ir.ui.view">
+    <field name="name">tp.inventory_list</field>
+    <field name="model">tp.equipment.inventory</field>
+    <field name="arch" type="xml">
+      <list js_class="tp_equipment_table" class="tp_eq_table" limit="20">
+        <field name="name"/>
+        <field name="title"/>
+        <field name="date"/>
+        <field name="scope" optional="show"/>
+        <field name="state" optional="show"/>
+        <field name="expected_count" optional="show"/>
+        <field name="found_count" optional="show"/>
+        <field name="pending_count" optional="show"/>
+        <field name="missing_count" optional="show"/>
+        <field name="extra_count" optional="hide"/>
+      </list>
+    </field>
+  </record>
+  <record id="inventory_search" model="ir.ui.view">
+    <field name="name">tp.inventory_search</field>
+    <field name="model">tp.equipment.inventory</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="name"/>
+        <field name="title"/>
+        <field name="date"/>
+        <field name="scope"/>
+        <field name="state"/>
+        <field name="location_ids"/>
+        <field name="department_ids"/>
+        <field name="category_ids"/>
+      </search>
+    </field>
+  </record>
+  <record id="inventory_form" model="ir.ui.view">
+    <field name="name">tp.inventory_form</field>
+    <field name="model">tp.equipment.inventory</field>
+    <field name="arch" type="xml">
+      <form class="tp_eq_form" js_class="tp_equipment_form">
+        <header>
+          <button name="action_start" type="object" string="Chụp sổ và bắt đầu" invisible="state != 'draft'" class="btn-primary"/>
+          <button name="action_mark_pending_missing" type="object" string="Đánh dấu chưa đếm là thiếu" invisible="state != 'counting'" class="btn-secondary"/>
+          <button name="action_close" type="object" string="Chốt kết quả" invisible="state != 'counting'" class="btn-primary"/>
+          <button name="action_open_adjust" type="object" string="Xem trước điều chỉnh" invisible="state != 'closed'" class="btn-secondary"/>
+          <button name="action_open_cancel" type="object" string="Hủy có lý do" invisible="state in ('closed', 'cancel')" class="btn-secondary"/>
+          <field name="state" widget="statusbar"/>
+        </header>
+        <sheet>
+          <div class="oe_button_box">
+            <button name="action_open_lines" type="object" string="Mở danh sách kiểm đếm" invisible="False" class="btn-secondary"/>
+            <button name="action_open_moves" type="object" string="Phiếu điều chỉnh" invisible="False" class="btn-secondary"/>
+          </div>
+          <div class="oe_title">
+            <h2>
+              <field name="name"/>
+            </h2>
+            <h1>
+              <field name="title"/>
+            </h1>
+          </div>
+          <group>
+            <group>
+              <field name="date" readonly="state != 'draft'"/>
+              <field name="company_id" readonly="state != 'draft'"/>
+              <field name="scope" readonly="state != 'draft'"/>
+              <field name="location_ids" readonly="state != 'draft'"/>
+              <field name="department_ids" readonly="state != 'draft'"/>
+              <field name="category_ids" readonly="state != 'draft'"/>
+              <field name="include_components" readonly="state != 'draft'"/>
+            </group>
+            <group>
+              <field name="team_text"/>
+              <field name="responsible_id"/>
+              <field name="snapshot_date"/>
+              <field name="closed_date"/>
+              <field name="closed_by_id"/>
+              <field name="cancel_reason"/>
+            </group>
+          </group>
+          <group string="Kết quả">
+            <field name="expected_count"/>
+            <field name="found_count"/>
+            <field name="pending_count"/>
+            <field name="missing_count"/>
+            <field name="extra_count"/>
+            <field name="wrong_place_count"/>
+            <field name="state_diff_count"/>
+            <field name="changed_after_count"/>
+          </group>
+          <div class="alert alert-info" role="status">Chốt kiểm kê chỉ giữ kết quả. Điều chỉnh cần xem trước, lý do và kiểm tra phiên bản thiết bị.</div>
+          <group invisible="state != 'counting'">
+            <field name="scan_input" placeholder="Quét QR hoặc nhập mã / serial rồi nhấn Tab"/>
+          </group>
+          <notebook>
+            <page string="Kiểm đếm">
+              <field name="line_ids" readonly="state != 'counting'" widget="tp_equipment_relation">
+                <list js_class="tp_equipment_table" class="tp_eq_table" editable="bottom" limit="20">
+                  <field name="equipment_id"/>
+                  <field name="extra_description"/>
+                  <field name="is_extra"/>
+                  <field name="expected_text" optional="show"/>
+                  <field name="count_state" readonly="inventory_state != 'counting'" optional="show"/>
+                  <field name="actual_custody" readonly="inventory_state != 'counting'" optional="show"/>
+                  <field name="actual_employee_id" readonly="inventory_state != 'counting'" optional="show"/>
+                  <field name="actual_department_id" readonly="inventory_state != 'counting'" optional="show"/>
+                  <field name="actual_location_id" readonly="inventory_state != 'counting'" optional="show"/>
+                  <field name="actual_state" readonly="inventory_state != 'counting'" optional="hide"/>
+                  <field name="actual_meter" readonly="inventory_state != 'counting'" optional="hide"/>
+                  <field name="result" optional="hide"/>
+                  <field name="changed_after" optional="hide"/>
+                  <field name="note" optional="hide"/>
+                  <field name="inventory_state" column_invisible="True"/>
+                  <field name="can_adjust" column_invisible="True"/>
+                  <button name="action_mark_found" type="object" string="Có mặt" invisible="inventory_state != 'counting'" class="btn-secondary"/>
+                  <button name="action_mark_missing" type="object" string="Không thấy" invisible="inventory_state != 'counting' or is_extra" class="btn-secondary"/>
+                  <button name="action_suggest_lost" type="object" string="Lập báo mất" invisible="inventory_state != 'closed' or result != 'missing'" class="btn-secondary"/>
+                  <button name="action_suggest_receipt" type="object" string="Lập phiếu nhập" invisible="not is_extra or equipment_id" class="btn-secondary"/>
+                </list>
+              </field>
+            </page>
+            <page string="Ghi chú">
+              <field name="note"/>
+            </page>
+          </notebook>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+  <record id="action_inventories" model="ir.actions.act_window">
+    <field name="name">Kiểm kê thiết bị</field>
+    <field name="res_model">tp.equipment.inventory</field>
+    <field name="view_mode">list,form</field>
+    <field name="view_id" ref="inventory_list"/>
+    <field name="search_view_id" ref="inventory_search"/>
+    <field name="context">{'tp_eq_leaf': 'tp_equipment.menu_inventories'}</field>
+    <field name="domain">[]</field>
+    <field name="group_ids" eval="[(4, ref('base.group_system'))]"/>
+    <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('inventory_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('inventory_form')})]"/>
+  <field name="path">kiem-ke-thiet-bi</field></record>
+</odoo>

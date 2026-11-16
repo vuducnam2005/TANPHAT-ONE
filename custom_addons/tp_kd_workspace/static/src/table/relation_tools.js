@@ -6,6 +6,7 @@ import { registry } from "@web/core/registry";
 import { View } from "@web/views/view";
 import { X2ManyField, x2ManyField } from "@web/views/fields/x2many/x2many_field";
 import { PAGE_SIZE_OPTIONS, tablePageKey, readPageSize, writePageSize } from "../prefs";
+import { buildRelationSearchArch } from "@tp_web_home/search/relation_search_helper";
 
 class KdRelationDialog extends Component {
     static template = "tp_kd_workspace.RelationDialog";
@@ -25,9 +26,17 @@ export class KdRelationField extends X2ManyField {
             }
         });
     }
+    get isHrContext() {
+        const appXmlid = this.env.services.menu?.getCurrentApp()?.xmlid;
+        return (
+            appXmlid === "tp_hr_workspace.menu_hr" ||
+            Boolean(this.props.context?.tp_hr_relation) ||
+            Boolean(this.props.record?.resModel?.startsWith("hr.")) ||
+            Boolean(this.props.record?.resModel?.startsWith("tp.hr."))
+        );
+    }
     get enabled() {
-        return this.props.viewMode === "list" &&
-            this.env.services.menu?.getCurrentApp()?.xmlid === "tp_kd_workspace.menu_kd";
+        return this.props.viewMode === "list";
     }
     get pageKey() {
         return tablePageKey(this.props.record.resModel, this.env.config.actionId,
@@ -44,35 +53,32 @@ export class KdRelationField extends X2ManyField {
     }
     async filterAll() {
         if (this.blocked || await this.props.record.isDirty()) return;
+        const jsClass = this.isHrContext ? "tp_hr_table" : "tp_kd_table";
         const arch = this.archInfo.xmlDoc.cloneNode(true);
-        arch.setAttribute("js_class", "tp_kd_table");
+        arch.setAttribute("js_class", jsClass);
         arch.setAttribute("create", "false");
         arch.setAttribute("edit", "false");
         arch.setAttribute("delete", "false");
         arch.removeAttribute("editable");
         arch.querySelectorAll("button,control").forEach((el) => el.remove());
-        const search = document.createElement("search");
-        for (const node of arch.querySelectorAll("field")) {
-            const name = node.getAttribute("name");
-            const field = this.props.relatedFields[name];
-            if (field?.searchable !== false && ["char", "text", "many2one"].includes(field?.type)) {
-                const fieldNode = document.createElement("field");
-                fieldNode.setAttribute("name", name);
-                search.appendChild(fieldNode);
-            }
-        }
+        const searchArch = buildRelationSearchArch(arch, this.props.relatedFields);
         const context = Object.fromEntries(Object.entries(this.props.context).filter(([key]) =>
             !key.endsWith("_view_ref") && !key.startsWith("default_") && !key.startsWith("search_default_") &&
             !["active_id", "active_ids", "active_model"].includes(key)));
         this.dialog.add(KdRelationDialog, {
             title: this.props.string || this.field.string,
             viewProps: {
-                resModel: this.list.resModel, type: "list", jsClass: "tp_kd_table",
+                resModel: this.list.resModel, type: "list", jsClass,
                 arch: new XMLSerializer().serializeToString(arch), fields: this.props.relatedFields,
                 relatedModels: { [this.list.resModel]: { fields: this.props.relatedFields } },
                 domain: [["id", "in", this.list.currentIds.filter((id) => typeof id === "number")]],
-                context: { ...context, tp_kd_relation: `${this.props.record.resModel}:${this.props.name}` },
-                searchViewArch: new XMLSerializer().serializeToString(search), searchViewFields: this.props.relatedFields,
+                context: {
+                    ...context,
+                    ...(this.isHrContext
+                        ? { tp_hr_relation: `${this.props.record.resModel}:${this.props.name}` }
+                        : { tp_kd_relation: `${this.props.record.resModel}:${this.props.name}` }),
+                },
+                searchViewArch: searchArch, searchViewFields: this.props.relatedFields,
                 searchMenuTypes: ["filter", "groupBy"],
                 display: { controlPanel: {} },
                 readonly: true, allowOpenAction: false,

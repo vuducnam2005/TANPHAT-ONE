@@ -1,25 +1,25 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-12T12:55:12.474014+00:00",
-  "last_change_id": "CHG-20261112-015",
-  "code_digest": "dd2363a9c5218e756a36db72f0a44f75b56816517e56b0700524af11b262de6e",
-  "code_file_count": 413,
+  "updated_at": "2026-11-16T07:10:57.321152+00:00",
+  "last_change_id": "CHG-20261116-007",
+  "code_digest": "9add15799eee5f9da993bbcf170b914517fb1410049342f148006400515fa2bb",
+  "code_file_count": 514,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "ad2a7fd4a664baeffadad12bc124b4328e092d78cfdcdc649b4266ff7898df26",
-    "docs/CHANGELOG.md": "0731fc582953caafe0ac48263ab0a21d8526426a40abdc678f6e3001455eaba7",
-    "AGENTS.md": "c7ad5bd0bf2ca4a8c384cc912defb9224fc7c0923d3162c475a4485c23afaccc",
+    "docs/PROJECT_STATUS.md": "0cf53f31bd81b21c4a6b9584624461f5a2c2d1ae65991b883c09b3e34e69dcf5",
+    "docs/CHANGELOG.md": "099ebb67b9d5e05de0820f513a9e5944dd5c3be7705fcc2a7112821fa1722d17",
+    "AGENTS.md": "226a323a84865cfa735027396a4699a620a5b3c6791c888988f7a9f3a75057fa",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
-    "docs/AI_CHANGE_WORKFLOW.md": "8f0a7961c56c60ee26063c94b175b9d6d7ea453ded6acb883e9c3bbde894bc63",
-    "docs/ROADMAP.md": "b12f94b1d73406fd81f174c80f3522f6e0783931feae9d9ec98e2db6cbeb7553",
-    "docs/DECISIONS.md": "476eb6f9a413b8250df39c1ddaf2d19680a32e9e73b355e8b6b65931cc9068d7",
-    "docs/HANDOFF_TEMPLATE.md": "7a98efbd7a557efe789b51fefbf5c4072908f9d9f29a21e0c76d012cbddf3d32",
+    "docs/AI_CHANGE_WORKFLOW.md": "4189251e7585d32c5b9aee0aa051e3a282e64e697a1cf92dbe39f11fadd69228",
+    "docs/ROADMAP.md": "9c7cb071eb76029dc1deafa62bedf5f3135810b92bae8632c198b53731de31e6",
+    "docs/DECISIONS.md": "d54aa39544bd4d20190aeabd4c7aefe2734e9a11d3593ce1a122171aafbaea7e",
+    "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
     "docs/architecture/TP_PLATFORM_SOURCE_STRUCTURE.md": "ab116137fac640d5bb583a8a3eb931dde703b0343c6a70ddfa927715e515792b",
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "source cleanup dry-run and execution verified, 92 files archived with SHA256 match, 5907 cache/temp files deleted, HTTP 18069 and 18079 smoke pass, git diff check pass"
+    "Backup .local/equip-simple003-printer/backup-pre-printer; lxml XML (2) + node --check (2) + git diff --check pass; -u tp_equipment 20.0.1.5.1 exit 0 / 0 ERROR; Playwright 18069: 9 ket qua Tat ca (TB-00014..TB-00022), 1 Dang su dung, 0 Trong kho, 1 khi ghep Ban Giam doc, Quay lai giu loc, Xoa loc ve 54, export XLSX HTTP 200, 1366/390 khong tran ngang, 0 console/page/server error sau warm-up; DB preservation TOP_DIFFS=['modules'] (tp_equipment)."
   ]
 }

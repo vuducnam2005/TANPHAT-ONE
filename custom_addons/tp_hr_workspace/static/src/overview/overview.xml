@@ -5,13 +5,14 @@
         <div><h1>Tổng quan nhân sự</h1><small t-if="this.state.data">Cập nhật <t t-out="this.state.data.updated_at"/></small></div>
         <div class="o_tp_hr_actions">
             <button t-if="this.state.data?.can_create" class="btn btn-primary" t-on-click="this.createEmployee" t-att-disabled="!this.ready"><i class="fa fa-plus me-2"/>Thêm nhân viên</button>
-            <button class="btn btn-outline-primary" t-on-click="this.exportFile" t-att-disabled="!this.ready"><i class="fa fa-download me-2"/>Xuất Excel</button>
+            <button class="btn btn-outline-primary" t-on-click="this.exportFile" t-att-disabled="!this.ready"><i class="fa fa-download me-2"/>Xuất Excel nhân sự</button>
             <button class="btn btn-secondary" t-on-click="this.load" t-att-disabled="this.state.loading" aria-label="Làm mới" title="Làm mới">Làm mới</button>
         </div>
     </header>
     <div class="o_tp_hr_filters">
         <label>Đơn vị<select aria-label="Lọc đơn vị" t-on-change="(ev) => this.changeFilter(ev, 'department')"><option value="" t-att-selected="!this.state.department">Tất cả trong quyền</option><option t-foreach="this.state.catalog" t-as="row" t-key="row.id" t-att-value="row.id" t-att-selected="('' + row.id) === this.state.department" t-out="row.name"/></select></label>
         <label>Chức vụ<select aria-label="Lọc chức vụ" t-on-change="(ev) => this.changeFilter(ev, 'job')"><option value="" t-att-selected="!this.state.job">Tất cả chức vụ</option><option t-foreach="this.state.jobs" t-as="row" t-key="row.id" t-att-value="row.id" t-att-selected="('' + row.id) === this.state.job" t-out="row.name"/></select></label>
+        <label>Loại hình lao động<select aria-label="Lọc loại hình lao động" t-on-change="ev => this.changeFilter(ev, 'employment')"><option value="" t-att-selected="!this.state.employment">Tất cả loại hình</option><option value="short_term" t-att-selected="this.state.employment === 'short_term'">Ngắn hạn</option><option value="long_term" t-att-selected="this.state.employment === 'long_term'">Dài hạn</option><option value="outsourced" t-att-selected="this.state.employment === 'outsourced'">Thuê khoán</option><option value="unknown" t-att-selected="this.state.employment === 'unknown'">Chưa khai báo</option></select></label>
         <label>Hồ sơ<select aria-label="Lọc hồ sơ" t-on-change="(ev) => this.changeFilter(ev, 'status')"><option value="active" t-att-selected="this.state.status === 'active'">Đang quản lý</option><option value="archived" t-att-selected="this.state.status === 'archived'">Lưu trữ</option><option value="all" t-att-selected="this.state.status === 'all'">Tất cả</option></select></label>
         <button class="btn btn-link" t-on-click="this.resetFilters">Xóa bộ lọc</button>
     </div>

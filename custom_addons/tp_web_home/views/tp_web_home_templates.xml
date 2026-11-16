@@ -6,5 +6,19 @@
         <xpath expr="//meta[@name='viewport']" position="attributes">
             <attribute name="content">width=device-width, initial-scale=1</attribute>
         </xpath>
+        <!-- BRAND-LOGO-001: home-screen icon and browser toolbar colour follow the company logo/navbar. -->
+        <xpath expr="//link[@rel='apple-touch-icon']" position="attributes">
+            <attribute name="href">/tp_web_home/static/img/brand/tp_logo_touch.png</attribute>
+        </xpath>
+        <xpath expr="//meta[@name='theme-color']" position="attributes">
+            <attribute name="content">#061b40</attribute>
+        </xpath>
+    </template>
+    <!-- BRAND-LOGO-001: every page built on web.layout (backend, login, portal) shows the company mark
+         as favicon; pages that pass their own x_icon (scoped apps) keep it. -->
+    <template id="layout_brand_favicon" inherit_id="web.layout">
+        <xpath expr="//link[@rel='shortcut icon']" position="attributes">
+            <attribute name="t-att-href">x_icon or '/tp_web_home/static/img/brand/favicon.ico'</attribute>
+        </xpath>
     </template>
 </odoo>

@@ -16,7 +16,7 @@ class HrWorkspace(models.AbstractModel):
         if not self.env.user.has_group('hr.group_hr_user'):
             raise AccessError(self.env._('Chỉ nhân sự được giao mới được xem báo cáo HR.'))
         filters = filters or {}
-        if not isinstance(filters, dict) or set(filters) - {'department_id', 'job_id', 'status'}:
+        if not isinstance(filters, dict) or set(filters) - {'department_id', 'job_id', 'status', 'employment_kind', 'missing_basic'}:
             raise ValidationError(self.env._('Bộ lọc HR không hợp lệ.'))
         status = filters.get('status') or 'active'
         if status not in ('active', 'archived', 'all'):
@@ -39,6 +39,15 @@ class HrWorkspace(models.AbstractModel):
             if not record or record.company_id not in (self.env.company, self.env['res.company']):
                 raise AccessError(self.env._('%s nằm ngoài công ty đang xem.', label))
             domain.append((field, '=', value))
+        kind = filters.get('employment_kind')
+        if kind:
+            if kind not in ('short_term', 'long_term', 'outsourced', 'unknown'):
+                raise ValidationError(self.env._('Loại hình lao động không hợp lệ.'))
+            domain.append(('tp_employment_kind', '=', False if kind == 'unknown' else kind))
+        if filters.get('missing_basic') not in (None, False, True, '', '1'):
+            raise ValidationError(self.env._('Bộ lọc hồ sơ cần bổ sung không hợp lệ.'))
+        if filters.get('missing_basic'):
+            domain += self.env['hr.employee']._tp_missing_domain()
         employees = self.env['hr.employee'].with_context(active_test=False)
         employees.check_access('read')
         return employees, domain, status
@@ -54,8 +63,7 @@ class HrWorkspace(models.AbstractModel):
             for department, count in groups
         ]
         departments.sort(key=lambda row: row['name'].casefold())
-        missing_domain = ['|', '|', ('tp_employee_code', '=', False), ('department_id', '=', False),
-                          '&', ('tp_source_title', '=', False), ('job_id', '=', False)]
+        missing_domain = employees._tp_missing_domain()
         missing = employees.search_count(domain + missing_domain)
         linked = employees.search_count(domain + [('user_id', '!=', False)])
         job_groups = employees._read_group(domain, ['job_id'], ['__count'])
@@ -79,6 +87,7 @@ class HrWorkspace(models.AbstractModel):
             'linked': linked, 'pending': total - linked, 'domain': domain,
             'jobs': jobs, 'catalog_departments': catalog('hr.department'), 'catalog_jobs': catalog('hr.job'),
             'can_create': employees.has_access('create'), 'employee_form_id': self.env.ref('tp_hr_workspace.employee_form').id,
+            'missing_domain': employees._tp_missing_domain(),
             'missing_code': employees.search_count(domain + [('tp_employee_code', '=', False)]),
             'missing_department': employees.search_count(domain + [('department_id', '=', False)]),
             'locked': employees.search_count(domain + [('tp_account_status', '=', 'disabled')]),
@@ -92,12 +101,13 @@ class HrWorkspace(models.AbstractModel):
 
     @api.model
     def action_employees(self, filters=None, extra_domain=None):
-        _employees, domain, _status = self._population(filters)
+        employees, domain, _status = self._population(filters)
         if extra_domain is not None and not isinstance(extra_domain, list):
             raise ValidationError(self.env._('Bộ lọc danh sách không hợp lệ.'))
         action = self.env['ir.actions.actions']._for_xml_id('tp_hr_workspace.action_employees')
         action.update(domain=domain + (extra_domain or []), context={
             'active_test': False, 'tp_hr_leaf': 'tp_hr_workspace.menu_employees',
+            'tp_hr_missing': [tuple(item) if isinstance(item, list) else item for item in (extra_domain or [])] == employees._tp_missing_domain(),
         })
         return action
 
@@ -121,6 +131,11 @@ class HrWorkspace(models.AbstractModel):
         metadata = f"{self.env.company.name} | {labels[status]} | {department_name} | Xuất {overview['updated_at']}"
         if (filters or {}).get('job_id'):
             metadata += ' | Chức vụ: ' + self.env['hr.job'].browse(int(filters['job_id'])).name
+        if (filters or {}).get('employment_kind'):
+            kind = filters['employment_kind']
+            metadata += ' | Loại hình: ' + dict(employees._fields['tp_employment_kind']._description_selection(self.env)).get(kind, 'Chưa khai báo')
+        if (filters or {}).get('missing_basic'):
+            metadata += ' | Hồ sơ cần bổ sung cơ bản'
         for name in ('Tổng hợp đơn vị', 'Danh sách nhân viên'):
             sheet = book.add_worksheet(name)
             sheet.write_string(0, 0, 'TANPHAT ONE — TP HR', title)
@@ -132,7 +147,7 @@ class HrWorkspace(models.AbstractModel):
             sheet.repeat_rows(0, 4)
             sheet.set_column(0, 0, 20)
             sheet.set_column(1, 4, 32)
-            sheet.set_column(5, 6, 24)
+            sheet.set_column(5, 9, 26)
             if name == 'Tổng hợp đơn vị':
                 sheet.write_row(4, 0, ['Đơn vị', 'Số hồ sơ', 'Tỷ lệ', 'Có tài khoản', 'Chưa có tài khoản', 'Thiếu cơ bản'], header)
                 for row, item in enumerate(overview['departments'], 5):
@@ -150,14 +165,17 @@ class HrWorkspace(models.AbstractModel):
                 sheet.autofilter(4, 0, max(4, last - 1), 5)
                 sheet.set_column(0, 0, 38)
             else:
-                columns = ['Mã nhân viên', 'Họ và tên', 'Đơn vị', 'Chức vụ nguồn', 'Chức danh đã khai báo', 'Hồ sơ lưu trữ', 'Tài khoản', 'Tình trạng']
+                columns = ['Mã nhân viên', 'Họ và tên', 'Đơn vị', 'Chức vụ nguồn', 'Chức danh đã khai báo', 'Loại hình lao động', 'Hồ sơ lưu trữ', 'Tài khoản', 'Tình trạng', 'Cần bổ sung']
                 sheet.write_row(4, 0, columns, header)
                 for row, employee in enumerate(records, 5):
                     values = [employee.tp_employee_code or 'Chưa có thông tin', employee.name,
                               employee.department_id.name or 'Chưa có thông tin', employee.tp_source_title or 'Chưa có thông tin',
-                              employee.job_id.name or 'Chưa có thông tin', 'Đang quản lý' if employee.active else 'Lưu trữ',
+                              employee.job_id.name or 'Chưa có thông tin',
+                              dict(employee._fields['tp_employment_kind']._description_selection(self.env)).get(employee.tp_employment_kind, 'Chưa khai báo'),
+                              'Đang quản lý' if employee.active else 'Lưu trữ',
                               'Có tài khoản' if employee.user_id else 'Chưa có tài khoản',
-                              dict(employee._fields['tp_account_status'].selection)[employee.tp_account_status]]
+                              dict(employee._fields['tp_account_status'].selection)[employee.tp_account_status],
+                              employee.tp_missing_basic or 'Đủ ba tiêu chí cơ bản']
                     for column, value in enumerate(values):
                         sheet.write_string(row, column, value, text)
                 sheet.autofilter(4, 0, max(4, 4 + len(records)), len(columns) - 1)
@@ -234,6 +252,7 @@ class HrEmployee(models.Model):
         action = super().action_open_versions()
         # Native wage analytics aggregate technical defaults before wages are confirmed.
         action.update(view_mode='list', views=[(self.env.ref('tp_hr_workspace.version_list').id, 'list')])
+        action['name'] = self.env._('Phiên bản hồ sơ — %s', self.name)
         return action
 
     def action_tp_credentials(self):

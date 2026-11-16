@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_equipment.TableTools">
+        <div class="o_tp_eq_list_tools d-flex align-items-center gap-1 d-print-none" role="group" aria-label="Hiển thị bảng">
+            <button t-if="this.canExport" type="button" class="btn btn-secondary" t-on-click="() => this.exportXlsx()"
+                    t-att-disabled="this.blocked or this.state.busy" title="Xuất theo bộ lọc đã áp dụng">Xuất Excel</button>
+            <span t-if="this.controller.eqShowAll" class="tp_eq_page_size tp_eq_page_all" t-out="this.showAllText"/>
+            <label t-else="" class="tp_eq_page_size"><span>Hiển thị</span>
+                <select aria-label="Số dòng mỗi trang" t-att-disabled="this.blocked or this.state.busy"
+                        t-on-change="(ev) => this.changeSize(ev)">
+                    <option t-foreach="this.pageSizes" t-as="n" t-key="n" t-att-value="n"
+                            t-att-selected="n === this.controller.model.root.limit" t-out="n"/>
+                </select>
+                <span t-out="this.controller.model.root.isGrouped ? 'nhóm mỗi trang' : 'dòng mỗi trang'"/>
+            </label>
+            <details class="tp_eq_display_options"><summary>Tùy chọn bảng</summary>
+                <div class="btn-group o_tp_eq_density" role="group" aria-label="Mật độ dòng">
+                    <button type="button" class="btn btn-secondary" t-att-class="{ active: !this.compact }"
+                            t-att-aria-pressed="this.compact ? 'false' : 'true'" title="Dòng thoáng"
+                            t-on-click="() => this.setDensity('comfortable')">Thoáng</button>
+                    <button type="button" class="btn btn-secondary" t-att-class="{ active: this.compact }"
+                            t-att-aria-pressed="this.compact ? 'true' : 'false'" title="Dòng gọn"
+                            t-on-click="() => this.setDensity('compact')">Gọn</button>
+                </div>
+                <button t-if="this.optionalColumns.length" type="button" class="btn btn-secondary o_tp_eq_reset_columns"
+                        title="Khôi phục cột mặc định của bảng này" aria-label="Khôi phục cột mặc định"
+                        t-on-click="() => this.resetColumns()">
+                    <i class="oi" data-icon="refresh" aria-hidden="true"/><span class="ms-1">Khôi phục cột</span>
+                </button>
+            </details>
+        </div>
+    </t>
+
+    <t t-name="tp_equipment.QuickFilters">
+        <div class="tp_eq_filter_bar" role="region" aria-label="Thanh công cụ lọc bảng">
+            <TpEquipmentFilterBar controller="this.controller"
+                                  quickFilters="this.filters"
+                                  blocked="this.blocked"
+                                  onAdvanced="() => this.advanced()"
+                                  onClearAll="() => this.clearFilters()"/>
+            <span t-if="this.blocked" class="text-muted">Lưu thay đổi để lọc</span>
+        </div>
+    </t>
+
+    <t t-name="tp_equipment.MainHeader">
+        <div class="tp_eq_main_head" role="region" aria-label="Tóm tắt thiết bị">
+            <div class="tp_eq_segmented" role="group" aria-label="Phạm vi danh sách">
+                <button t-foreach="this.segments" t-as="seg" t-key="seg.key" type="button"
+                        class="tp_eq_seg" t-att-class="{ 'is-active': seg.key === this.segment }"
+                        t-att-aria-pressed="seg.key === this.segment ? 'true' : 'false'"
+                        t-att-disabled="this.blocked" t-attf-data-seg="{{seg.key}}"
+                        t-on-click="() => this.setSegment(seg.key)">
+                    <span class="tp_eq_seg_label" t-out="seg.label"/>
+                    <span class="tp_eq_seg_count" t-out="seg.count"/>
+                </button>
+            </div>
+            <span t-if="this.state.failed" class="tp_eq_main_note tp_eq_main_note_warn">Chưa tải được số liệu tóm tắt</span>
+            <span t-elif="this.state.counts and this.state.counts.cleanup" class="tp_eq_main_note tp_eq_main_note_warn"
+                  title="Máy ghi trong kho nhưng vẫn còn người giữ. Cần rà soát dữ liệu; hệ thống không tự xóa người giữ.">
+                <t t-out="this.state.counts.cleanup"/> máy trong kho còn ghi người giữ — cần rà soát
+            </span>
+            <div class="tp_eq_main_scope">
+                <Dropdown position="'bottom-end'" menuClass="'tp_eq_scope_menu'">
+                    <button type="button" class="btn btn-light tp_eq_scope_btn" t-att-disabled="this.blocked"
+                            title="Nháp, ngừng quản lý, dịch vụ, linh kiện đã gắn, dòng nguồn chờ bổ sung">Phạm vi nâng cao</button>
+                    <t t-set-slot="content">
+                        <t t-foreach="this.advancedScopes" t-as="scope" t-key="scope_index">
+                            <div t-if="scope.section" class="dropdown-header tp_eq_scope_section" t-out="scope.section"/>
+                            <DropdownItem t-else="" onSelected="() => this.openScope(scope)"><t t-out="scope.label"/></DropdownItem>
+                        </t>
+                    </t>
+                </Dropdown>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="tp_equipment.ListView" t-inherit="web.ListView" t-inherit-mode="primary">
+        <xpath expr="//t[@t-set-slot='control-panel-navigation-additional']/t[@t-if='!this.hasSelectedRecords']" position="attributes">
+            <attribute name="t-if">false</attribute>
+        </xpath>
+        <xpath expr="//t[@t-set-slot='control-panel-navigation-additional']" position="inside">
+            <TpEquipmentTableTools t-if="!this.hasSelectedRecords" controller="this"/>
+        </xpath>
+        <xpath expr="//t[@t-set-slot='control-panel-actions']/SearchBar" position="before">
+            <TpEquipmentMainHeader t-if="this.eqMain" controller="this"/>
+        </xpath>
+        <xpath expr="//t[@t-set-slot='control-panel-actions']" position="inside">
+            <TpEquipmentQuickFilters controller="this"/>
+        </xpath>
+    </t>
+</templates>

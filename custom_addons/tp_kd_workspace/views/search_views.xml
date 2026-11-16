@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- S2: Keep project_search_restructure scoped cleanly (priority=32 so native project templates never pick it) -->
+    <record id="tp_kd_workspace.project_search_restructure" model="ir.ui.view">
+        <field name="priority">32</field>
+    </record>
+
+    <record id="project_search_restructure_enrich" model="ir.ui.view">
+        <field name="name">kd.project.restructure.search.enrich</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="tp_kd_workspace.project_search_restructure"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="tp_department_id" string="Phòng chủ trì"/>
+                <field name="partner_id" string="Đối tác"/>
+                <field name="kd_deadline" string="Hạn dự án"/>
+                <field name="create_date" string="Ngày tạo"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- S2: Dedicated Vietnamese search view for KH-KD WBS & Tasks (replaces English native search view) -->
+    <record id="kd_task_search" model="ir.ui.view">
+        <field name="name">kd.task.search</field>
+        <field name="model">project.task</field>
+        <field name="priority">32</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm công việc &amp; WBS">
+                <field name="name" string="Công việc / hạng mục"/>
+                <field name="project_id" string="Dự án"/>
+                <field name="parent_id" string="Hạng mục cha"/>
+                <field name="kd_responsible_id" string="Người thực hiện"/>
+                <field name="kd_contract_id" string="Hợp đồng"/>
+                <field name="kd_deliverable" string="Sản phẩm bàn giao"/>
+                <field name="state" string="Trạng thái"/>
+                <field name="date_deadline" string="Hạn hoàn thành"/>
+                <filter name="top_wbs" string="Hạng mục cấp 1" domain="[('parent_id', '=', False)]"/>
+                <filter name="my_tasks" string="Việc tôi phụ trách" domain="[('kd_responsible_id', '=', uid)]"/>
+                <filter name="in_progress" string="Đang thực hiện" domain="[('state', '=', '01_in_progress')]"/>
+                <filter name="done_tasks" string="Đã hoàn tất" domain="[('state', '=', '1_done')]"/>
+                <group>
+                    <filter name="group_project" string="Dự án" context="{'group_by': 'project_id'}"/>
+                    <filter name="group_parent" string="Hạng mục cha" context="{'group_by': 'parent_id'}"/>
+                    <filter name="group_responsible" string="Người thực hiện" context="{'group_by': 'kd_responsible_id'}"/>
+                    <filter name="group_state" string="Trạng thái" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="tp_kd_workspace.action_tasks" model="ir.actions.act_window">
+        <field name="search_view_id" ref="kd_task_search"/>
+    </record>
+    <record id="tp_kd_workspace.action_wbs" model="ir.actions.act_window">
+        <field name="search_view_id" ref="kd_task_search"/>
+    </record>
+
+    <!-- Smart-button search views in KH-KD -->
+    <record id="tp_project_participation_search" model="ir.ui.view">
+        <field name="name">tp.project.participation.search</field>
+        <field name="model">tp.project.participation</field>
+        <field name="arch" type="xml">
+            <search string="Bên tham gia dự án">
+                <field name="project_id" string="Dự án"/>
+                <field name="package_id" string="Gói thầu"/>
+                <field name="partner_id" string="Đơn vị tham gia"/>
+                <field name="role" string="Vai trò"/>
+                <field name="create_date" string="Ngày tạo"/>
+                <filter name="active_only" string="Đang tham gia" domain="[('active', '=', True)]"/>
+                <filter name="archived_only" string="Đã ngừng" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter name="group_role" string="Vai trò" context="{'group_by': 'role'}"/>
+                    <filter name="group_project" string="Dự án" context="{'group_by': 'project_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="tp_bid_package_amount_search" model="ir.ui.view">
+        <field name="name">tp.bid.package.amount.search</field>
+        <field name="model">tp.bid.package.amount</field>
+        <field name="arch" type="xml">
+            <search string="Giá trị gói thầu">
+                <field name="project_id" string="Dự án"/>
+                <field name="package_id" string="Gói thầu"/>
+                <field name="kind" string="Loại giá trị"/>
+                <field name="amount_state" string="Tình trạng"/>
+                <field name="tax_basis" string="Thuế"/>
+                <field name="source" string="Nguồn ước tính"/>
+                <field name="estimate_date" string="Ngày ước tính"/>
+                <filter name="estimated" string="Ước tính có nguồn" domain="[('amount_state', '=', 'estimated')]"/>
+                <filter name="unknown" string="Chưa xác định" domain="[('amount_state', '=', 'unknown')]"/>
+                <group>
+                    <filter name="group_kind" string="Loại giá trị" context="{'group_by': 'kind'}"/>
+                    <filter name="group_project" string="Dự án" context="{'group_by': 'project_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="tp_project_update_search" model="ir.ui.view">
+        <field name="name">tp.project.update.search</field>
+        <field name="model">tp.project.update</field>
+        <field name="arch" type="xml">
+            <search string="Lịch sử cập nhật dự án">
+                <field name="project_id" string="Dự án"/>
+                <field name="package_id" string="Gói thầu"/>
+                <field name="kind" string="Loại cập nhật"/>
+                <field name="actor_id" string="Người cập nhật"/>
+                <field name="reason" string="Căn cứ / lý do"/>
+                <field name="create_date" string="Thời điểm"/>
+                <group>
+                    <filter name="group_kind" string="Loại cập nhật" context="{'group_by': 'kind'}"/>
+                    <filter name="group_actor" string="Người cập nhật" context="{'group_by': 'actor_id'}"/>
+                    <filter name="group_month" string="Tháng" context="{'group_by': 'create_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="tp_task_update_search" model="ir.ui.view">
+        <field name="name">tp.task.update.search</field>
+        <field name="model">tp.task.update</field>
+        <field name="arch" type="xml">
+            <search string="Lịch sử thực hiện công việc">
+                <field name="project_id" string="Dự án"/>
+                <field name="task_id" string="Công việc"/>
+                <field name="operation" string="Thao tác"/>
+                <field name="actor_id" string="Người thực hiện"/>
+                <field name="reason" string="Lý do"/>
+                <field name="create_date" string="Thời điểm"/>
+                <group>
+                    <filter name="group_operation" string="Thao tác" context="{'group_by': 'operation'}"/>
+                    <filter name="group_actor" string="Người thực hiện" context="{'group_by': 'actor_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="tp_kd_document_search" model="ir.ui.view">
+        <field name="name">tp.kd.document.search</field>
+        <field name="model">tp.kd.document</field>
+        <field name="arch" type="xml">
+            <search string="Tài liệu dự án KH-KD">
+                <field name="project_id" string="Dự án"/>
+                <field name="name" string="Tên tài liệu"/>
+                <field name="file_name" string="Tên tệp"/>
+                <field name="confidentiality" string="Phân loại bảo mật"/>
+                <field name="actor_id" string="Người tải lên"/>
+                <field name="added_at" string="Thời điểm tải"/>
+                <filter name="conf_general" string="Thông thường" domain="[('confidentiality', '=', 'general')]"/>
+                <filter name="conf_financial" string="Tài chính" domain="[('confidentiality', '=', 'financial')]"/>
+                <filter name="doc_archived" string="Đã lưu trữ" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter name="group_conf" string="Phân loại" context="{'group_by': 'confidentiality'}"/>
+                    <filter name="group_project" string="Dự án" context="{'group_by': 'project_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Enrich existing KH-KD search views with state & period/due date fields -->
+    <record id="allocation_search_enrich" model="ir.ui.view">
+        <field name="name">kd.allocation.search.enrich</field>
+        <field name="model">tp.allocation</field>
+        <field name="inherit_id" ref="tp_kd_workspace.allocation_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='owner_id']" position="after">
+                <field name="state" string="Trạng thái"/>
+                <field name="allocation_kind" string="Loại giao khoán"/>
+                <field name="recipient_department_id" string="Đơn vị nhận"/>
+                <field name="period_from" string="Từ ngày kỳ"/>
+                <field name="period_to" string="Đến ngày kỳ"/>
+                <field name="date_due" string="Hạn"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="production_search_enrich" model="ir.ui.view">
+        <field name="name">kd.production.search.enrich</field>
+        <field name="model">tp.production</field>
+        <field name="inherit_id" ref="tp_kd_workspace.production_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='owner_id']" position="after">
+                <field name="state" string="Trạng thái"/>
+                <field name="reconciliation_state" string="Đối chiếu"/>
+                <field name="period_from" string="Từ ngày kỳ"/>
+                <field name="period_to" string="Đến ngày kỳ"/>
+                <field name="date_due" string="Hạn"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="acceptance_search_enrich" model="ir.ui.view">
+        <field name="name">kd.acceptance.search.enrich</field>
+        <field name="model">tp.acceptance</field>
+        <field name="inherit_id" ref="tp_kd_workspace.acceptance_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='owner_id']" position="after">
+                <field name="state" string="Trạng thái"/>
+                <field name="counterparty_id" string="Đối tác nghiệm thu"/>
+                <field name="period_from" string="Từ ngày kỳ"/>
+                <field name="period_to" string="Đến ngày kỳ"/>
+                <field name="date_due" string="Hạn"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="plan_search_enrich" model="ir.ui.view">
+        <field name="name">kd.plan.search.enrich</field>
+        <field name="model">tp.periodic.plan</field>
+        <field name="inherit_id" ref="tp_kd_workspace.plan_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='owner_id']" position="after">
+                <field name="state" string="Trạng thái"/>
+                <field name="period_kind" string="Loại kỳ"/>
+                <field name="period_from" string="Từ ngày kỳ"/>
+                <field name="period_to" string="Đến ngày kỳ"/>
+                <field name="date_due" string="Hạn"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="payment_search_enrich" model="ir.ui.view">
+        <field name="name">kd.payment.search.enrich</field>
+        <field name="model">tp.payment.request</field>
+        <field name="inherit_id" ref="tp_kd_workspace.payment_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='owner_id']" position="after">
+                <field name="state" string="Trạng thái"/>
+                <field name="direction" string="Chiều thanh toán"/>
+                <field name="payment_basis" string="Căn cứ thanh toán"/>
+                <field name="reconciliation_state" string="Đối soát"/>
+                <field name="partner_id" string="Đối tác"/>
+                <field name="period_from" string="Từ ngày kỳ"/>
+                <field name="period_to" string="Đến ngày kỳ"/>
+                <field name="date_due" string="Hạn"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="obligation_search_enrich" model="ir.ui.view">
+        <field name="name">kd.obligation.search.enrich</field>
+        <field name="model">tp.obligation</field>
+        <field name="inherit_id" ref="tp_kd_workspace.obligation_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='owner_id']" position="after">
+                <field name="state" string="Trạng thái"/>
+                <field name="obligation_kind" string="Loại nghĩa vụ"/>
+                <field name="checklist_status" string="Tình trạng checklist"/>
+                <field name="date_due" string="Hạn xử lý"/>
+                <field name="period_from" string="Từ ngày kỳ"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="credential_search_enrich" model="ir.ui.view">
+        <field name="name">kd.credential.search.enrich</field>
+        <field name="model">tp.credential</field>
+        <field name="inherit_id" ref="tp_kd_workspace.credential_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='owner_id']" position="after">
+                <field name="state" string="Trạng thái"/>
+                <field name="subject_kind" string="Đối tượng"/>
+                <field name="subject_id" string="Đơn vị / nhân sự"/>
+                <field name="valid_to" string="Hiệu lực đến"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="opportunity_search_enrich" model="ir.ui.view">
+        <field name="name">kd.opportunity.search.enrich</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="tp_kd_workspace.opportunity_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="partner_id" string="Đối tác"/>
+                <field name="user_id" string="Phụ trách"/>
+                <field name="kd_route" string="Hướng triển khai"/>
+                <field name="kd_bid_state" string="Trạng thái thầu"/>
+                <field name="kd_deadline" string="Hạn nộp / thực hiện"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

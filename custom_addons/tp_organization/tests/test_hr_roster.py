@@ -232,16 +232,16 @@ class TestHrRoster(TransactionCase):
         # HR-CORRECTION-008: no superuser shortcut; deletion is the audited admin flow.
         with self.assertRaises(UserError):
             sample.sudo().unlink()
-        sample.with_user(admin)._tp_delete_mistaken('Synthetic verified fixture')
-        self.assertFalse(sample.exists())
+        # HR-DELETE-010: the native unlink stays closed even for imported records;
+        # permanent deletion is the password-verified admin flow (tested there).
         batch = self.batch([[1, 981010, 'Synthetic protected import', 981010, '']])
         batch.action_preview()
         batch.action_apply()
         with self.assertRaises(UserError):
             batch.line_ids.employee_id.sudo().unlink()
         with self.assertRaises(UserError):
-            batch.line_ids.employee_id.with_user(admin)._tp_delete_mistaken('Synthetic imported record')
-        self.assertTrue(batch.line_ids.employee_id.exists())
+            batch.line_ids.employee_id.with_user(admin).unlink()
+        self.assertTrue(sample.exists() and batch.line_ids.employee_id.exists())
 
     def test_duplicate_department_requires_mapping(self):
         departments = self.env['hr.department'].create([

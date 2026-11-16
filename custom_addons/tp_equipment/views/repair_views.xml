@@ -1,0 +1,130 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+  <record id="repair_list" model="ir.ui.view">
+    <field name="name">tp.repair_list</field>
+    <field name="model">maintenance.request</field>
+    <field name="arch" type="xml">
+      <list js_class="tp_equipment_table" class="tp_eq_table" limit="20">
+        <field name="tp_code"/>
+        <field name="name"/>
+        <field name="equipment_id"/>
+        <field name="tp_kind" optional="show"/>
+        <field name="tp_reporter_employee_id" optional="show"/>
+        <field name="tp_report_date" optional="show"/>
+        <field name="tp_deadline" optional="show"/>
+        <field name="tp_state" optional="show"/>
+        <field name="tp_overdue" optional="show"/>
+      </list>
+    </field>
+  </record>
+  <record id="repair_search" model="ir.ui.view">
+    <field name="name">tp.repair_search</field>
+    <field name="model">maintenance.request</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="name"/>
+        <field name="tp_code"/>
+        <field name="equipment_id"/>
+        <field name="tp_kind"/>
+        <field name="tp_state"/>
+        <field name="tp_reporter_employee_id"/>
+        <field name="tp_vendor_id"/>
+        <field name="tp_report_date"/>
+        <field name="tp_deadline"/>
+        <field name="tp_overdue"/>
+      </search>
+    </field>
+  </record>
+  <record id="repair_form" model="ir.ui.view">
+    <field name="name">tp.repair_form</field>
+    <field name="model">maintenance.request</field>
+    <field name="arch" type="xml">
+      <form class="tp_eq_form" js_class="tp_equipment_form">
+        <header>
+          <button name="action_tp_start" type="object" string="Bắt đầu xử lý" invisible="tp_state != 'new'" class="btn-primary"/>
+          <button name="action_tp_send_vendor" type="object" string="Gửi sửa ngoài" invisible="tp_state != 'in_progress'" class="btn-secondary"/>
+          <button name="action_tp_receive_back" type="object" string="Nhận lại" invisible="tp_state != 'vendor'" class="btn-secondary"/>
+          <button name="action_tp_done" type="object" string="Ghi kết quả" invisible="tp_state not in ('new', 'in_progress')" class="btn-primary"/>
+          <button name="action_tp_open_cancel" type="object" string="Hủy có lý do" invisible="tp_state in ('done', 'cancel')" class="btn-secondary"/>
+          <field name="tp_state" widget="statusbar"/>
+        </header>
+        <sheet>
+          <div class="oe_title">
+            <h2>
+              <field name="tp_code"/>
+            </h2>
+            <h1>
+              <field name="name"/>
+            </h1>
+          </div>
+          <group>
+            <group>
+              <field name="equipment_id"/>
+              <field name="tp_kind"/>
+              <field name="tp_reporter_employee_id"/>
+              <field name="tp_report_date"/>
+              <field name="tp_deadline"/>
+              <field name="priority"/>
+            </group>
+            <group>
+              <field name="tp_technician_text"/>
+              <field name="tp_vendor_id"/>
+              <field name="company_id"/>
+              <field name="tp_proposal_line_id"/>
+            </group>
+          </group>
+          <notebook>
+            <page string="Xử lý">
+              <group>
+                <field name="tp_symptom"/>
+                <field name="tp_diagnosis"/>
+                <field name="tp_work_done"/>
+                <field name="tp_parts"/>
+              </group>
+            </page>
+            <page string="Kết quả">
+              <group>
+                <field name="tp_result"/>
+                <field name="tp_state_after"/>
+                <field name="tp_result_note"/>
+                <field name="tp_cost_known"/>
+                <field name="tp_cost"/>
+                <field name="tp_currency_id"/>
+                <field name="tp_cost_ref"/>
+                <field name="tp_meter_value"/>
+                <field name="tp_done_date"/>
+                <field name="tp_done_by_id"/>
+                <field name="tp_cancel_reason"/>
+              </group>
+            </page>
+            <page string="Nâng cấp">
+              <group>
+                <field name="tp_config_before"/>
+                <field name="tp_apply_config"/>
+                <field name="tp_cpu_after"/>
+                <field name="tp_ram_after"/>
+                <field name="tp_storage_after"/>
+                <field name="tp_gpu_after"/>
+              </group>
+            </page>
+            <page string="Phiếu gửi / nhận">
+              <field name="tp_move_ids" readonly="1" widget="tp_equipment_relation"><list limit="20"><field name="name"/><field name="move_type"/><field name="date"/><field name="state"/></list></field>
+            </page>
+          </notebook>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+  <record id="action_repairs" model="ir.actions.act_window">
+    <field name="name">Sửa chữa / bảo trì</field>
+    <field name="res_model">maintenance.request</field>
+    <field name="view_mode">list,form</field>
+    <field name="view_id" ref="repair_list"/>
+    <field name="search_view_id" ref="repair_search"/>
+    <field name="context">{'tp_eq_leaf': 'tp_equipment.menu_repairs'}</field>
+    <field name="domain">[]</field>
+    <field name="group_ids" eval="[(4, ref('base.group_system'))]"/>
+    <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('repair_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('repair_form')})]"/>
+  <field name="path">sua-chua-thiet-bi</field></record>
+</odoo>

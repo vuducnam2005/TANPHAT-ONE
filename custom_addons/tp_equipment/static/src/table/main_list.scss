@@ -1,0 +1,341 @@
+// EQUIP-SIMPLE-003 (DEC-047) — single "Thiết bị" list, status badges, row menu and the
+// Gán / Đổi máy / Trả về kho popups. Light theme only, no new library, badges always carry text.
+// Colours: blue = đang sử dụng, teal = trong kho, orange = cần kiểm tra, red = hỏng.
+
+$tp-eq-status-tones: (
+    "use":    (#1d4ed8, #eff6ff, #bfdbfe),
+    "stock":  (#0f766e, #f0fdfa, #99f6e4),
+    "shared": (#475569, #f1f5f9, #cbd5e1),
+    "check":  (#b45309, #fff7ed, #fed7aa),
+    "ok":     (#15803d, #f0fdf4, #bbf7d0),
+    "broken": (#b91c1c, #fef2f2, #fecaca),
+    "muted":  (#64748b, #f8fafc, #e2e8f0),
+);
+
+// ---- status / condition badge (list cell + detail strip) -------------------------------------------------
+.tp_eq_status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    padding: 3px 10px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    white-space: nowrap;
+    vertical-align: middle;
+
+    .tp_eq_status_dot {
+        flex: 0 0 8px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+    .tp_eq_status_text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+@each $tone, $c in $tp-eq-status-tones {
+    .tp_eq_status_#{$tone} {
+        color: nth($c, 1);
+        background: nth($c, 2);
+        border-color: nth($c, 3);
+    }
+}
+
+.tp_eq_type_badge {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 0 7px;
+    border-radius: 4px;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 18px;
+    color: #334155;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    vertical-align: 1px;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// ---- header: segmented Tất cả / Đang sử dụng / Trong kho + Phạm vi nâng cao -------------------------------
+body.o_tp_eq_shell .tp_eq_main_head {
+    display: flex;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    width: 100%;
+    margin-bottom: 6px;
+
+    .tp_eq_main_scope { margin-left: auto; }
+}
+
+.tp_eq_segmented {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid #d9e2ec;
+    border-radius: 10px;
+    background: #f1f5f9;
+}
+
+.tp_eq_seg {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    padding: 5px 14px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #334155;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+
+    &:hover { background: #e2e8f0; }
+    &:focus-visible { outline: 2px solid #255f85; outline-offset: 1px; }
+
+    .tp_eq_seg_count {
+        min-width: 26px;
+        padding: 0 7px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        color: #334155;
+        font-size: 12.5px;
+        line-height: 20px;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+        transition: background-color 160ms ease, color 160ms ease;
+    }
+
+    &.is-active {
+        background: #ffffff;
+        color: #0f172a;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12), 0 0 0 1px #d9e2ec;
+
+        .tp_eq_seg_count { background: #dbeafe; color: #1d4ed8; }
+    }
+    &[data-seg="stock"].is-active .tp_eq_seg_count { background: #ccfbf1; color: #0f766e; }
+}
+
+.tp_eq_main_note {
+    font-size: 13px;
+    color: #52677d;
+}
+.tp_eq_main_note_warn {
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: #fff7ed;
+    color: #9a3412;
+    border: 1px solid #fed7aa;
+}
+
+.tp_eq_scope_btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #d9e2ec;
+    background: #ffffff;
+    color: #334155;
+    font-weight: 600;
+}
+.tp_eq_scope_menu {
+    min-width: 290px;
+
+    .tp_eq_scope_section {
+        padding-top: 8px;
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: #64748b;
+    }
+}
+
+// ---- row actions: Xem + fitting action + 3-dot menu --------------------------------------------------------
+// Odoo adds `btn-link` to list row buttons and core `.btn-link.btn-light` sets border/background/colour
+// with !important, so — like the "Xem" button in table.scss — these scoped rules must use !important too.
+body.o_tp_eq_shell .o_list_view.tp_eq_main_table .o_list_renderer .o_list_table > tbody > tr.o_data_row {
+    > td.o_list_button {
+        white-space: nowrap;
+
+        > button { margin-right: 4px; }
+    }
+    // Compact buttons so Xem + Đổi máy + Trả kho + ⋮ fit a 1440px screen with the sidebar open.
+    > td.o_list_button > div { flex-wrap: nowrap !important; }
+    .tp_eq_row_act,
+    .tp_eq_row_view_btn {
+        min-height: 32px;
+        padding: 4px 9px !important;
+        font-size: 13px !important;
+    }
+    .tp_eq_row_act {
+        border: 1px solid #c7d7ea !important;
+        border-radius: 6px;
+        background: #ffffff !important;
+        color: #255f85 !important;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background-color 150ms ease, border-color 150ms ease;
+
+        &:hover { background: #f1f5f9 !important; border-color: #94a3b8 !important; }
+    }
+    .tp_eq_row_act_assign {
+        border-color: #99f6e4 !important;
+        background: #f0fdfa !important;
+        color: #0f766e !important;
+
+        &:hover { background: #ccfbf1 !important; border-color: #5eead4 !important; }
+    }
+}
+
+// Tighter cells + badges on the main list only (column minimums live in the arch `width` attributes).
+body.o_tp_eq_shell .o_list_view.tp_eq_user_table.tp_eq_main_table .o_list_renderer .o_list_table {
+    > thead > tr > th:not(:first-child):not(:last-child),
+    > tbody > tr.o_data_row > td:not(:first-child):not(:last-child) {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    // Odoo's column-width hook counts the button column's padding twice (ideal rect + cell padding),
+    // so keep that padding and the ⋮ column's padding small.
+    > thead > tr > th.o_list_button:not(:first-child):not(:last-child),
+    > tbody > tr.o_data_row > td.o_list_button:not(:first-child):not(:last-child) {
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+    > thead > tr > th.o_list_button + th:not(:first-child):not(:last-child),
+    > tbody > tr.o_data_row > td.o_list_button + td:not(:first-child):not(:last-child) {
+        padding-left: 2px;
+        padding-right: 6px;
+    }
+    > tbody > tr.o_data_row .tp_eq_status {
+        gap: 5px;
+        padding: 2px 8px;
+        font-size: 12.5px;
+    }
+}
+
+.tp_eq_row_menu {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.tp_eq_row_menu_btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: #475569;
+    transition: background-color 150ms ease, border-color 150ms ease;
+
+    &:hover, &[aria-expanded="true"] {
+        background: #f1f5f9;
+        border-color: #d9e2ec;
+    }
+}
+.tp_eq_row_menu_list .dropdown-item {
+    min-height: 34px;
+}
+
+// ---- Gán / Đổi máy / Trả về kho popup + short add/edit form ------------------------------------------------
+.o_tp_eq_quick_form {
+    .o_tp_eq_quick_alert { margin-bottom: 12px; }
+    .o_tp_eq_quick_hint {
+        margin-bottom: 12px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        color: #0c4a6e;
+        font-size: 13.5px;
+    }
+    .o_tp_eq_quick_block { margin: 8px 0 12px; }
+    .o_tp_eq_quick_label {
+        margin-bottom: 6px;
+        font-size: 12.5px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: #52677d;
+    }
+    .o_tp_eq_quick_list .o_list_table {
+        border: 1px solid #d9e2ec;
+        border-radius: 8px;
+    }
+}
+
+.o_tp_eq_quick_summary {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border: 1px solid #d9e2ec;
+    border-radius: 8px;
+    background: #f8fafc;
+
+    .o_tp_eq_qs_row {
+        display: grid;
+        grid-template-columns: 140px minmax(0, 1fr);
+        gap: 8px;
+        align-items: start;
+
+        > span:first-child { color: #52677d; font-size: 13px; }
+        ul { margin: 0; padding-left: 18px; }
+        li { margin: 1px 0; }
+    }
+    .o_tp_eq_qs_meta {
+        margin-left: 6px;
+        color: #64748b;
+        font-size: 12.5px;
+    }
+    .o_tp_eq_qs_badge {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 0 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 18px;
+        border: 1px solid transparent;
+    }
+    .o_tp_eq_qs_ok { color: #15803d; background: #f0fdf4; border-color: #bbf7d0; }
+    .o_tp_eq_qs_check { color: #b45309; background: #fff7ed; border-color: #fed7aa; }
+    .o_tp_eq_qs_broken { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
+    .o_tp_eq_qs_note {
+        margin: 2px 0 0;
+        color: #9a3412;
+        font-size: 13px;
+    }
+}
+
+// ---- motion ------------------------------------------------------------------------------------------------
+@media (prefers-reduced-motion: reduce) {
+    .tp_eq_seg, .tp_eq_seg .tp_eq_seg_count, .tp_eq_row_menu_btn, .tp_eq_row_act { transition: none !important; }
+}
+body.o_tp_eq_reduce_motion {
+    .tp_eq_seg, .tp_eq_seg .tp_eq_seg_count, .tp_eq_row_menu_btn, .tp_eq_row_act { transition: none !important; }
+}
+
+// ---- tablet / mobile ---------------------------------------------------------------------------------------
+@media (max-width: 767.98px) {
+    body.o_tp_eq_shell .tp_eq_main_head {
+        .tp_eq_segmented { width: 100%; }
+        .tp_eq_seg { flex: 1 1 0; justify-content: center; padding: 5px 8px; gap: 6px; }
+        .tp_eq_main_scope { margin-left: 0; }
+    }
+    .o_tp_eq_quick_summary .o_tp_eq_qs_row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}

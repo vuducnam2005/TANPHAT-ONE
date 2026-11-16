@@ -31,36 +31,13 @@
     </t>
 
     <t t-name="tp_kd_workspace.QuickFilters">
-        <div class="tp_kd_filter_bar" t-att-class="{'is-open': this.state.open}" role="search" aria-label="Bộ lọc bảng">
-            <div class="tp_kd_quick_states">
-                <button type="button" class="btn tp_kd_filter_label" t-att-aria-expanded="this.state.open or !this.controller.uiService.isSmall ? 'true' : 'false'"
-                        t-on-click="() => this.state.open = !this.state.open"><i class="fa fa-filter" aria-hidden="true"/> Bộ lọc</button>
-                <button class="btn btn-outline-secondary tp_kd_clear" t-att-disabled="this.blocked" t-on-click="() => this.clearFilters()">Tất cả trong quyền</button>
-                <button t-foreach="this.filters" t-as="item" t-key="item.id" class="btn btn-outline-secondary tp_kd_quick_filter"
-                        t-att-class="{active: item.isActive}" t-att-aria-pressed="item.isActive ? 'true' : 'false'"
-                        t-att-disabled="this.blocked" t-on-click="() => this.toggleFilter(item)" t-out="item.description"/>
-            </div>
-            <div class="tp_kd_field_filters">
-                <t t-if="this.selectedField">
-                    <select aria-label="Trường lọc" t-att-disabled="this.blocked" t-on-change="(ev) => { this.state.field = ev.target.value; this.state.value = ''; }">
-                        <option t-foreach="this.filterFields" t-as="field" t-key="field.name" t-att-value="field.name"
-                                t-att-selected="field.name === this.selectedField.name" t-out="field.string"/>
-                    </select>
-                    <select t-if="this.selectedField.type === 'selection'" aria-label="Giá trị lọc" t-att-disabled="this.blocked"
-                            t-att-value="this.state.value" t-on-change="(ev) => { this.state.value = ev.target.value; this.addFilter(); }">
-                        <option value="">Chọn giá trị…</option>
-                        <option t-foreach="this.selectedField.selection" t-as="option" t-key="option[0]" t-att-value="option[0]" t-out="option[1]"/>
-                    </select>
-                    <input t-else="" aria-label="Giá trị lọc" placeholder="Nhập rồi nhấn Enter…" t-att-disabled="this.blocked"
-                           t-att-type="['date', 'datetime'].includes(this.selectedField.type) ? 'date' : 'text'"
-                           t-att-value="this.state.value" t-on-input="(ev) => this.state.value = ev.target.value"
-                           t-on-keydown="(ev) => this.onFilterKey(ev)"/>
-                    <button type="button" class="btn btn-primary" t-att-disabled="this.blocked or !this.state.value" t-on-click="() => this.addFilter()">Áp dụng</button>
-                </t>
-                <button type="button" class="btn btn-outline-primary tp_kd_advanced" t-att-disabled="this.blocked" t-on-click="() => this.advanced()">Bộ lọc nâng cao</button>
-                <button type="button" class="btn btn-link tp_kd_clear_filters" t-att-disabled="this.blocked" t-on-click="() => this.clearFilters()">Xóa bộ lọc</button>
-                <span t-if="this.blocked" class="text-muted">Lưu thay đổi để lọc</span>
-            </div>
+        <div class="tp_kd_filter_bar" t-att-class="{'is-open': this.state.open}" role="region" aria-label="Thanh công cụ lọc bảng">
+            <TpTableFilterBar controller="this.controller"
+                              quickFilters="this.filters"
+                              blocked="this.blocked"
+                              onAdvanced="() => this.advanced()"
+                              onClearAll="() => this.clearFilters()"/>
+            <span t-if="this.blocked" class="text-muted">Lưu thay đổi để lọc</span>
         </div>
     </t>
 

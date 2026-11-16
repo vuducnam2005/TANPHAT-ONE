@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <!-- EQUIP-UI-002 — office-equipment overview.
+         Header (compact filter · Làm mới · Xuất Excel) → 4 KPI → [donut | types] →
+         [departments | recent proposals] → attention → collapsible data quality. -->
+    <t t-name="tp_equipment.Dashboard">
+        <div class="tp_eq_dash" t-att-class="{ 'is-busy': this.state.busy }">
+            <header class="tp_eq_dash_head">
+                <div class="tp_eq_dash_title_wrap">
+                    <h1>Tổng quan thiết bị</h1>
+                    <span t-if="this.state.data" class="tp_eq_scope_pill"><t t-out="this.scopeSummaryText"/></span>
+                </div>
+                <div class="tp_eq_toolbar" role="toolbar" aria-label="Bộ lọc và thao tác tổng quan">
+                    <label class="tp_eq_tool_field">
+                        <span class="tp_eq_tool_label">Phòng ban</span>
+                        <select class="form-select tp_eq_tool_select"
+                                t-att-value="this.state.pending.department_id"
+                                t-on-change="(ev) => this.state.pending.department_id = ev.target.value">
+                            <option value="" t-att-selected="!this.state.pending.department_id">Tất cả phòng ban</option>
+                            <t t-if="this.state.data" t-foreach="this.state.data.options.departments" t-as="opt" t-key="opt.id">
+                                <option t-att-value="opt.id" t-att-selected="('' + opt.id) === ('' + this.state.pending.department_id)"><t t-out="opt.name"/></option>
+                            </t>
+                        </select>
+                    </label>
+                    <label class="tp_eq_tool_field">
+                        <span class="tp_eq_tool_label">Vị trí</span>
+                        <select class="form-select tp_eq_tool_select"
+                                t-att-value="this.state.pending.location_id"
+                                t-on-change="(ev) => this.state.pending.location_id = ev.target.value">
+                            <option value="" t-att-selected="!this.state.pending.location_id">Tất cả vị trí</option>
+                            <t t-if="this.state.data" t-foreach="this.state.data.options.locations" t-as="opt" t-key="opt.id">
+                                <option t-att-value="opt.id" t-att-selected="('' + opt.id) === ('' + this.state.pending.location_id)"><t t-out="opt.name"/></option>
+                            </t>
+                        </select>
+                    </label>
+                    <div class="tp_eq_filter_more_wrap">
+                        <button type="button" class="tp_eq_btn tp_eq_btn_outline"
+                                t-att-class="{ 'is-open': this.state.moreOpen }"
+                                t-att-aria-expanded="this.state.moreOpen ? 'true' : 'false'"
+                                t-on-click="() => this.toggleMore()">
+                            <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+                                <path fill="currentColor" d="M1.5 3h13v1.5l-4.75 4.75v4.25l-3.5-1.75v-2.5L1.5 4.5V3z"/>
+                            </svg>
+                            <span><t t-out="this.extraBadgeText"/></span>
+                        </button>
+                        <div t-if="this.state.moreOpen" class="tp_eq_filter_popover" role="dialog" aria-label="Lọc thêm theo ngày">
+                            <div class="tp_eq_popover_grid">
+                                <label>
+                                    <span>Từ ngày mua / nhận</span>
+                                    <input type="date" class="form-control"
+                                           t-att-value="this.state.pending.date_from"
+                                           t-on-change="(ev) => this.state.pending.date_from = ev.target.value"/>
+                                </label>
+                                <label>
+                                    <span>Đến ngày mua / nhận</span>
+                                    <input type="date" class="form-control"
+                                           t-att-value="this.state.pending.date_to"
+                                           t-on-change="(ev) => this.state.pending.date_to = ev.target.value"/>
+                                </label>
+                            </div>
+                            <p class="tp_eq_popover_hint">
+                                Lọc thiết bị theo ngày mua/nhận đã khai báo; đề xuất lọc theo ngày chứng từ.
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button" class="tp_eq_btn tp_eq_btn_apply" t-att-disabled="this.state.busy"
+                            t-on-click="() => this.apply()">
+                        <span>Áp dụng</span>
+                        <span t-if="this.isDirty" class="tp_eq_pending_dot" title="Có thay đổi chưa áp dụng"/>
+                    </button>
+                    <button t-if="this.hasAppliedFilters or this.isDirty" type="button"
+                            class="tp_eq_btn tp_eq_btn_ghost" t-att-disabled="this.state.busy"
+                            t-on-click="() => this.clear()">Xóa lọc</button>
+                    <span class="tp_eq_toolbar_sep" aria-hidden="true"/>
+                    <button type="button" class="tp_eq_btn tp_eq_btn_outline" t-att-disabled="this.state.busy"
+                            t-on-click="() => this.load()" title="Tải lại số liệu mới nhất">
+                        <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+                            <path fill="currentColor" d="M13.65 2.35A8 8 0 1015.73 10h-2.08A6 6 0 118 2c1.66 0 3.14.69 4.22 1.78L9 7h7V0l-2.35 2.35z"/>
+                        </svg>
+                        <span>Làm mới</span>
+                    </button>
+                    <button type="button" class="tp_eq_btn tp_eq_btn_primary" t-att-disabled="this.state.busy or !this.state.data"
+                            t-on-click="() => this.exportExcel()" title="Xuất Excel đúng phạm vi đang lọc">
+                        <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+                            <path fill="currentColor" d="M8.75 1.5v7.69l2.47-2.47 1.06 1.06L8 12.06 3.72 7.78l1.06-1.06 2.47 2.47V1.5h1.5zM2.5 13h11v1.5h-11V13z"/>
+                        </svg>
+                        <span>Xuất Excel</span>
+                    </button>
+                </div>
+            </header>
+            <div class="tp_eq_busy_bar" t-att-class="{ 'is-on': this.state.busy and this.state.data }" aria-hidden="true"/>
+
+            <div t-if="this.state.loading" class="tp_eq_loading_grid" aria-busy="true">
+                <div class="tp_eq_skel_kpi" t-foreach="[1, 2, 3, 4]" t-as="s" t-key="s"/>
+                <div class="tp_eq_skel_chart"/>
+                <div class="tp_eq_skel_chart"/>
+            </div>
+
+            <div t-elif="this.state.error" class="tp_eq_error_card" role="alert">
+                <div>
+                    <strong>Không tải được số liệu tổng quan</strong>
+                    <p><t t-out="this.state.error"/></p>
+                </div>
+                <button type="button" class="tp_eq_btn tp_eq_btn_primary" t-on-click="() => this.load()">Tải lại</button>
+            </div>
+
+            <div t-elif="this.state.data" class="tp_eq_dash_body" t-key="this.state.animKey">
+                <!-- 4 KPI -->
+                <section class="tp_eq_kpi_grid" aria-label="Chỉ số thiết bị chính">
+                    <button t-foreach="this.kpis" t-as="kpi" t-key="kpi.key" type="button"
+                            t-attf-class="tp_eq_kpi_card tone_{{kpi.tone}}"
+                            t-att-title="kpi.tooltip"
+                            t-on-click="() => this.openUi(kpi.key)">
+                        <span class="tp_eq_kpi_top">
+                            <span class="tp_eq_kpi_label"><t t-out="kpi.label"/></span>
+                            <span class="tp_eq_kpi_icon" aria-hidden="true">
+                                <svg t-if="kpi.icon === 'devices'" viewBox="0 0 24 24" width="22" height="22">
+                                    <path fill="currentColor" d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/>
+                                </svg>
+                                <svg t-elif="kpi.icon === 'person_pin'" viewBox="0 0 24 24" width="22" height="22">
+                                    <path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                                <svg t-elif="kpi.icon === 'inventory_2'" viewBox="0 0 24 24" width="22" height="22">
+                                    <path fill="currentColor" d="M20 2H4c-1 0-2 .9-2 2v3.01c0 .72.43 1.34 1 1.69V20c0 1.1 1.1 2 2 2h14c.9 0 2-.9 2-2V8.7c.57-.35 1-.97 1-1.69V4c0-1.1-1-2-2-2zm-5 12H9v-2h6v2zm5-7H4V4h16v3z"/>
+                                </svg>
+                                <svg t-else="" viewBox="0 0 24 24" width="22" height="22">
+                                    <path fill="currentColor" d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                                </svg>
+                            </span>
+                        </span>
+                        <span class="tp_eq_kpi_num"><t t-out="kpi.value"/></span>
+                        <span t-if="kpi.key === 'in_use'" class="tp_eq_kpi_caption">Gồm thiết bị giao nhân viên và dùng chung</span>
+                        <span class="tp_eq_kpi_sub"><t t-out="kpi.subnote"/></span>
+                        <span class="tp_eq_kpi_cta">Xem danh sách →</span>
+                    </button>
+                </section>
+
+                <!-- Row 1: allocation donut | device types -->
+                <section class="tp_eq_row tp_eq_row_charts">
+                    <article class="tp_eq_card tp_eq_donut_card" aria-labelledby="tp_eq_h_alloc">
+                        <div class="tp_eq_card_head">
+                            <div>
+                                <h2 id="tp_eq_h_alloc">Phân bổ thiết bị</h2>
+                                <p class="tp_eq_card_sub">Theo nơi quản lý hiện tại · bấm một phần để xem thiết bị</p>
+                            </div>
+                        </div>
+                        <div class="tp_eq_donut_stage">
+                            <div class="tp_eq_donut_wrap">
+                                <svg viewBox="0 0 260 260" class="tp_eq_donut_svg" role="img" aria-label="Biểu đồ phân bổ thiết bị">
+                                    <circle cx="130" cy="130" r="100" fill="none" class="tp_eq_donut_track" stroke-width="34"/>
+                                    <g transform="rotate(-90 130 130)">
+                                        <t t-foreach="this.allocationSlices" t-as="sl" t-key="sl.key">
+                                            <circle t-if="sl.count > 0"
+                                                    cx="130" cy="130" r="100" fill="none"
+                                                    class="tp_eq_donut_seg"
+                                                    t-att-class="{ 'is-hovered': sl.isHovered, 'is-dimmed': sl.isDimmed }"
+                                                    t-att-stroke="sl.color" stroke-width="34"
+                                                    t-att-stroke-dasharray="sl.dasharray"
+                                                    t-att-stroke-dashoffset="sl.dashoffset"
+                                                    t-on-mouseenter="() => this.state.hoveredAllocKey = sl.key"
+                                                    t-on-mouseleave="() => this.state.hoveredAllocKey = null"
+                                                    t-on-click="() => this.openUi(sl.drill_kind)">
+                                                <title><t t-out="sl.label"/>: <t t-out="sl.count"/> (<t t-out="sl.pctText"/>)</title>
+                                            </circle>
+                                        </t>
+                                    </g>
+                                </svg>
+                                <div class="tp_eq_donut_center" aria-live="polite">
+                                    <div class="tp_eq_donut_big"><t t-out="this.donutCenter.value"/></div>
+                                    <div class="tp_eq_donut_lbl"><t t-out="this.donutCenter.label"/></div>
+                                    <div class="tp_eq_donut_sub"><t t-out="this.donutCenter.sub"/></div>
+                                </div>
+                            </div>
+                            <ul class="tp_eq_legend">
+                                <li t-foreach="this.allocationSlices" t-as="sl" t-key="sl.key">
+                                    <button type="button" class="tp_eq_legend_item"
+                                            t-att-class="{ 'is-hovered': sl.isHovered, 'is-dimmed': sl.isDimmed, 'is-empty': !sl.count }"
+                                            t-att-disabled="!sl.count"
+                                            t-att-title="'Xem ' + sl.count + ' thiết bị: ' + sl.label"
+                                            t-on-mouseenter="() => this.state.hoveredAllocKey = sl.key"
+                                            t-on-mouseleave="() => this.state.hoveredAllocKey = null"
+                                            t-on-focus="() => this.state.hoveredAllocKey = sl.key"
+                                            t-on-blur="() => this.state.hoveredAllocKey = null"
+                                            t-on-click="() => this.openUi(sl.drill_kind)">
+                                        <span class="tp_eq_dot" t-att-style="sl.dotStyle"/>
+                                        <span class="tp_eq_legend_label"><t t-out="sl.label"/></span>
+                                        <span class="tp_eq_legend_count"><t t-out="sl.count"/></span>
+                                        <span class="tp_eq_legend_pct"><t t-out="sl.pctText"/></span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </article>
+
+                    <article class="tp_eq_card tp_eq_types_card" aria-labelledby="tp_eq_h_types">
+                        <div class="tp_eq_card_head">
+                            <div>
+                                <h2 id="tp_eq_h_types">Thiết bị theo loại</h2>
+                                <p class="tp_eq_card_sub">Nhóm nhiều nhất, còn lại gộp vào “Khác” · tổng <t t-out="this.typeTotal"/> thiết bị</p>
+                            </div>
+                        </div>
+                        <div t-if="!this.typeRows.length" class="tp_eq_empty">Chưa có thiết bị trong phạm vi lọc.</div>
+                        <ul t-else="" class="tp_eq_bars">
+                            <li t-foreach="this.typeRows" t-as="row" t-key="row.id">
+                                <button type="button" class="tp_eq_bar_row" t-att-title="row.title"
+                                        t-on-click="() => this.openUi(row.kind, row.key)">
+                                    <span class="tp_eq_bar_label">
+                                        <span class="tp_eq_dot" t-att-style="row.dotStyle"/>
+                                        <span class="tp_eq_bar_text"><t t-out="row.label"/></span>
+                                    </span>
+                                    <span class="tp_eq_bar_track"><span class="tp_eq_bar_fill" t-att-style="row.fillStyle"/></span>
+                                    <span class="tp_eq_bar_value">
+                                        <strong><t t-out="row.count"/></strong>
+                                        <small><t t-out="row.pctText"/></small>
+                                    </span>
+                                </button>
+                            </li>
+                        </ul>
+                    </article>
+                </section>
+
+                <!-- Row 2: departments | recent proposals -->
+                <section class="tp_eq_row tp_eq_row_lists">
+                    <article class="tp_eq_card tp_eq_depts_card" aria-labelledby="tp_eq_h_depts">
+                        <div class="tp_eq_card_head">
+                            <div>
+                                <h2 id="tp_eq_h_depts">Thiết bị theo phòng ban</h2>
+                                <p class="tp_eq_card_sub">Phòng ban theo hồ sơ HR; kho, dùng chung và chưa xác định tách riêng</p>
+                            </div>
+                            <div class="tp_eq_mini_legend" aria-hidden="true">
+                                <span><i class="tp_eq_dot is-personal"/>Giao nhân viên</span>
+                                <span><i class="tp_eq_dot is-shared"/>Dùng chung</span>
+                            </div>
+                        </div>
+                        <div t-if="!this.departmentRows.length" class="tp_eq_empty">Chưa có thiết bị trong phạm vi lọc.</div>
+                        <ul t-else="" class="tp_eq_bars tp_eq_dept_bars">
+                            <t t-foreach="this.departmentRows" t-as="row" t-key="row.kind + ':' + row.key">
+                                <li t-if="row.firstSpecial" class="tp_eq_bar_sep" aria-hidden="true"><span>Ngoài phòng ban</span></li>
+                                <li>
+                                    <button type="button" t-attf-class="tp_eq_bar_row tone_{{row.tone}}"
+                                            t-att-title="row.hint ? (row.label + ' — ' + row.hint) : (row.label + ': ' + row.count + ' thiết bị')"
+                                            t-on-click="() => this.openDepartment(row)">
+                                        <span class="tp_eq_bar_label"><span class="tp_eq_bar_text"><t t-out="row.label"/></span></span>
+                                        <span class="tp_eq_bar_track">
+                                            <t t-if="row.isDept">
+                                                <span class="tp_eq_bar_fill is-personal" t-att-style="row.personalStyle"/>
+                                                <span class="tp_eq_bar_fill is-shared" t-att-style="row.sharedStyle"/>
+                                            </t>
+                                            <span t-else="" class="tp_eq_bar_fill" t-att-style="row.fillStyle"/>
+                                        </span>
+                                        <span class="tp_eq_bar_value">
+                                            <strong><t t-out="row.count"/></strong>
+                                            <small t-if="row.isDept and row.shared"><t t-out="row.personal"/> NV · <t t-out="row.shared"/> chung</small>
+                                        </span>
+                                    </button>
+                                </li>
+                            </t>
+                        </ul>
+                    </article>
+
+                    <article class="tp_eq_card tp_eq_props_card" aria-labelledby="tp_eq_h_props">
+                        <div class="tp_eq_card_head">
+                            <div>
+                                <h2 id="tp_eq_h_props">Đề xuất mua gần đây</h2>
+                                <p class="tp_eq_card_sub">Đề xuất đang mở, mới nhất trước</p>
+                            </div>
+                            <button type="button" class="tp_eq_link_btn" t-on-click="() => this.openUi('open_proposals')">Xem tất cả →</button>
+                        </div>
+                        <div t-if="!this.recentProposals.length" class="tp_eq_empty">Không có đề xuất đang mở.</div>
+                        <ul t-else="" class="tp_eq_props">
+                            <li t-foreach="this.recentProposals" t-as="prop" t-key="prop.id">
+                                <button type="button" class="tp_eq_prop_row" t-att-title="prop.name + ' — ' + prop.title"
+                                        t-on-click="() => this.openProposal(prop.id)">
+                                    <span class="tp_eq_prop_main">
+                                        <span class="tp_eq_prop_title"><t t-out="prop.title or prop.name"/></span>
+                                        <span class="tp_eq_prop_meta">
+                                            <span><t t-out="prop.requester"/></span>
+                                            <span aria-hidden="true">·</span>
+                                            <span><t t-out="prop.date"/></span>
+                                            <span aria-hidden="true">·</span>
+                                            <span class="tp_eq_prop_code"><t t-out="prop.name"/></span>
+                                        </span>
+                                    </span>
+                                    <span class="tp_eq_prop_side">
+                                        <span class="tp_eq_prop_amount" t-att-class="{ 'is-unknown': prop.amount === 'Chưa có' }">
+                                            <t t-if="prop.amount === 'Chưa có'">Chưa có dự toán</t>
+                                            <t t-else="" t-out="prop.amount"/>
+                                        </span>
+                                        <span t-attf-class="tp_eq_pill tone_{{this.proposalTone(prop)}}"><t t-out="prop.review_label"/></span>
+                                    </span>
+                                </button>
+                            </li>
+                        </ul>
+                    </article>
+                </section>
+
+                <!-- Attention -->
+                <section class="tp_eq_card tp_eq_attention_card" aria-labelledby="tp_eq_h_attn">
+                    <div class="tp_eq_card_head">
+                        <div>
+                            <h2 id="tp_eq_h_attn">Thiết bị cần chú ý</h2>
+                            <p class="tp_eq_card_sub">Bấm để mở đúng danh sách cần xử lý</p>
+                        </div>
+                    </div>
+                    <div class="tp_eq_tiles">
+                        <button t-foreach="this.attentionItems" t-as="item" t-key="item.key" type="button"
+                                t-attf-class="tp_eq_tile tone_{{item.tone}}"
+                                t-att-class="{ 'is-zero': !item.count }"
+                                t-att-disabled="!item.count"
+                                t-att-title="item.hint"
+                                t-on-click="() => this.openUi(item.kind)">
+                            <span class="tp_eq_tile_num"><t t-out="item.count"/></span>
+                            <span class="tp_eq_tile_text">
+                                <span class="tp_eq_tile_label"><t t-out="item.label"/></span>
+                                <span class="tp_eq_tile_hint"><t t-out="item.count ? item.hint : 'Không có'"/></span>
+                            </span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Data quality (collapsible) -->
+                <section class="tp_eq_card tp_eq_quality_card" t-att-class="{ 'is-open': this.state.qualityOpen }">
+                    <button type="button" class="tp_eq_quality_toggle"
+                            aria-controls="tp_eq_quality_body"
+                            t-att-aria-expanded="this.state.qualityOpen ? 'true' : 'false'"
+                            t-on-click="() => this.toggleQuality()">
+                        <span class="tp_eq_quality_title">Chất lượng dữ liệu</span>
+                        <span class="tp_eq_quality_count" t-att-class="{ 'is-zero': !this.qualityTotal }">
+                            <t t-out="this.qualityTotal"/> mục cần rà soát
+                        </span>
+                        <span class="tp_eq_chevron" aria-hidden="true">▾</span>
+                    </button>
+                    <div t-if="this.state.qualityOpen" id="tp_eq_quality_body" class="tp_eq_tiles tp_eq_quality_body">
+                        <button t-foreach="this.qualityItems" t-as="item" t-key="item.key" type="button"
+                                t-attf-class="tp_eq_tile tone_{{item.tone}}"
+                                t-att-class="{ 'is-zero': !item.count }"
+                                t-att-disabled="!item.count"
+                                t-att-title="item.hint"
+                                t-on-click="() => this.openUi(item.kind)">
+                            <span class="tp_eq_tile_num"><t t-out="item.count"/></span>
+                            <span class="tp_eq_tile_text">
+                                <span class="tp_eq_tile_label"><t t-out="item.label"/></span>
+                                <span class="tp_eq_tile_hint"><t t-out="item.count ? item.hint : 'Không có'"/></span>
+                            </span>
+                        </button>
+                    </div>
+                </section>
+
+                <footer class="tp_eq_dash_foot"><t t-out="this.filterScopeNote"/></footer>
+            </div>
+        </div>
+    </t>
+</templates>

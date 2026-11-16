@@ -1,0 +1,241 @@
+<?xml version='1.0' encoding='utf8'?>
+<odoo>
+    <record id="move_list" model="ir.ui.view">
+        <field name="name">tp.equipment.move.list</field>
+        <field name="model">tp.equipment.move</field>
+        <field name="arch" type="xml">
+            <list string="Phiếu bàn giao thiết bị" js_class="tp_equipment_table" class="tp_eq_table" limit="20" create="1" decoration-muted="state == 'cancel'" decoration-info="state == 'pending'">
+                <field name="name" string="Số phiếu" class="tp_eq_strong"/>
+                <field name="date" string="Ngày lập"/>
+                <field name="move_type" string="Loại phiếu"/>
+                <field name="target_employee_id" string="Nhân viên nhận" optional="show"/>
+                <field name="target_department_id" string="Phòng ban nhận" optional="hide"/>
+                <field name="target_location_id" string="Vị trí" optional="hide"/>
+                <field name="target_partner_id" string="Đơn vị ngoài" optional="hide"/>
+                <field name="line_count" string="Số TB"/>
+                <field name="expected_return_date" string="Hẹn trả" optional="hide"/>
+                <field name="reversed_by_id" string="Đã đảo bởi" optional="hide"/>
+                <field name="date_done" string="Hoàn tất lúc" optional="show"/>
+                <field name="state" string="Trạng thái" widget="badge" decoration-muted="state in ('draft', 'cancel')" decoration-info="state == 'pending'" decoration-success="state == 'done'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="move_search" model="ir.ui.view">
+        <field name="name">tp.equipment.move.search</field>
+        <field name="model">tp.equipment.move</field>
+        <field name="arch" type="xml">
+            <search string="Tìm phiếu">
+                <field name="name" string="Số phiếu"/>
+                <field name="line_ids" string="Thiết bị" filter_domain="[('line_ids.equipment_id', 'ilike', self)]"/>
+                <field name="target_employee_id" string="Nhân viên nhận"/>
+                <field name="target_department_id" string="Phòng ban nhận"/>
+                <field name="target_location_id" string="Vị trí"/>
+                <field name="target_partner_id" string="Đơn vị ngoài"/>
+                <field name="move_type"/>
+                <field name="state"/>
+                <field name="date"/>
+                <filter name="q_draft" string="Nháp" domain="[('state', '=', 'draft')]"/>
+                <filter name="q_pending" string="Chờ bàn giao" domain="[('state', '=', 'pending')]"/>
+                <filter name="q_done" string="Đã hoàn tất" domain="[('state', '=', 'done')]"/>
+                <filter name="q_handover" string="Bàn giao / điều chuyển" domain="[('move_type', 'in', ('assign', 'transfer'))]"/>
+                <filter name="q_return" string="Thu hồi" domain="[('move_type', 'in', ('return', 'loan_return', 'repair_return'))]"/>
+                <filter name="q_loan" string="Cho mượn" domain="[('move_type', '=', 'loan')]"/>
+                <filter name="q_reversed" string="Đã đảo / phiếu đảo" domain="['|', ('reversed_by_id', '!=', False), ('move_type', '=', 'reversal')]"/>
+                <separator/>
+                <filter name="hide_system" string="Ẩn phiếu hệ thống" domain="[('move_type', 'not in', ('opening', 'adjust'))]"/>
+                <filter name="cancelled" string="Đã hủy" domain="[('state', '=', 'cancel')]"/>
+                <group>
+                    <filter name="group_type" string="Loại phiếu" context="{'group_by': 'move_type'}"/>
+                    <filter name="group_state" string="Trạng thái" context="{'group_by': 'state'}"/>
+                    <filter name="group_employee" string="Nhân viên nhận" context="{'group_by': 'target_employee_id'}"/>
+                    <filter name="group_date" string="Ngày lập" context="{'group_by': 'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="move_form" model="ir.ui.view">
+        <field name="name">tp.equipment.move.form</field>
+        <field name="model">tp.equipment.move</field>
+        <field name="arch" type="xml">
+            <form string="Phiếu bàn giao thiết bị" class="tp_eq_form tp_eq_move_form">
+                <header>
+                    <button name="action_confirm" type="object" string="Xác nhận – chờ bàn giao" class="btn-primary" invisible="state != 'draft' or not id" help="Giữ chỗ thiết bị, chốt thông tin trước khi giao. Có thể in biên bản để ký."/>
+                    <button name="action_done" type="object" string="Hoàn tất bàn giao" class="btn-primary" invisible="state != 'pending'" confirm="Ghi nhận thiết bị đã được giao / nhận thực tế? Phiếu hoàn tất không sửa được, chỉ đảo phiếu."/>
+                    <button name="action_print_handover" type="object" string="In biên bản" icon="print" invisible="state not in ('pending', 'done')"/>
+                    <button name="action_back_to_draft" type="object" string="Đưa về nháp" invisible="state != 'pending'"/>
+                    <button name="action_open_reverse" type="object" string="Đảo phiếu" invisible="state != 'done' or reversed_by_id or move_type in ('opening', 'reversal')"/>
+                    <button name="action_cancel" type="object" string="Hủy phiếu" invisible="state not in ('draft', 'pending') or not id" confirm="Hủy phiếu này? Thiết bị được nhả giữ chỗ."/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending,done"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Đã đảo" bg_color="text-bg-danger" invisible="not reversed_by_id"/>
+                    <widget name="web_ribbon" title="Đã hủy" bg_color="text-bg-secondary" invisible="state != 'cancel'"/>
+                    <div class="oe_title">
+                        <div class="o_tp_eq_code" invisible="name == '/' or not name"><field name="name" readonly="1"/></div>
+                        <h1>
+                            <field name="request_type" placeholder="Chọn loại phiếu" required="move_type not in ('opening', 'adjust', 'reversal')" readonly="state != 'draft'" invisible="move_type in ('opening', 'adjust', 'reversal')"/>
+                            <span invisible="move_type not in ('opening', 'adjust', 'reversal')"><field name="move_type" readonly="1"/></span>
+                        </h1>
+                    </div>
+                    <div class="alert alert-info" role="status" invisible="state != 'pending'">
+                        Thiết bị đang được giữ chỗ cho phiếu này. In biên bản, giao nhận thực tế rồi bấm “Hoàn tất bàn giao”.
+                    </div>
+                    <div class="alert alert-danger" role="status" invisible="not reversed_by_id">
+                        Phiếu đã được đảo bởi <field name="reversed_by_id" readonly="1" class="d-inline"/>.
+                        Lý do: <field name="reversal_reason" readonly="1" class="d-inline"/>
+                    </div>
+                    <group>
+                        <group string="Bên nhận" invisible="move_type not in ('assign', 'transfer', 'loan', 'send_repair', 'rental_return', 'return', 'loan_return', 'repair_return')">
+                            <field name="target_custody" widget="radio" options="{'horizontal': true}" invisible="move_type not in ('assign', 'transfer')" required="move_type in ('assign', 'transfer')" readonly="state != 'draft'"/>
+                            <field name="target_employee_id" options="{'no_create': True}" invisible="not (move_type == 'loan' or (move_type in ('assign', 'transfer') and target_custody == 'employee'))" required="move_type == 'loan' or (move_type in ('assign', 'transfer') and target_custody == 'employee')" readonly="state != 'draft'"/>
+                            <field name="target_department_id" options="{'no_create': True}" invisible="not (move_type in ('assign', 'transfer') and target_custody == 'department')" required="move_type in ('assign', 'transfer') and target_custody == 'department'" readonly="state != 'draft'"/>
+                            <field name="target_location_id" options="{'no_create': True}" string="Vị trí đặt / kho nhận" invisible="move_type not in ('assign', 'transfer', 'return', 'loan_return', 'repair_return')" required="move_type in ('assign', 'transfer') and target_custody == 'location'" readonly="state != 'draft'"/>
+                            <field name="target_partner_id" options="{'no_create': True}" invisible="move_type not in ('send_repair', 'rental_return')" required="move_type == 'send_repair'" readonly="state != 'draft'"/>
+                            <field name="expected_return_date" invisible="move_type != 'loan'" required="move_type == 'loan'" readonly="state in ('done', 'cancel')"/>
+                        </group>
+                        <group string="Ngừng quản lý" invisible="move_type not in ('retire', 'lost')">
+                            <field name="retire_reason" invisible="move_type != 'retire'" required="move_type == 'retire'" readonly="state != 'draft'"/>
+                            <p class="o_tp_eq_note" colspan="2">
+                                Thiết bị chuyển sang “Ngừng quản lý”, hồ sơ và lịch sử được giữ lại. Không ghi nhận kế toán / khấu hao.
+                            </p>
+                        </group>
+                        <group string="Phiếu">
+                            <field name="date" readonly="state != 'draft'"/>
+                            <field name="responsible_id"/>
+                            <field name="date_done" invisible="state != 'done'"/>
+                            <field name="done_by_id" invisible="state != 'done'"/>
+                            <field name="reversal_of_id" invisible="not reversal_of_id"/>
+                            <field name="company_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <field name="reason" placeholder="Lý do, căn cứ, ghi chú giao nhận…" required="move_type in ('retire', 'lost')" readonly="state in ('done', 'cancel')"/>
+                    <notebook>
+                        <page name="lines" string="Thiết bị">
+                            <field name="line_ids" readonly="state != 'draft'" nolabel="1" widget="tp_equipment_relation">
+                                <list editable="bottom">
+                                    <field name="equipment_id" options="{'no_create': True}"/>
+                                    <field name="condition" optional="show"/>
+                                    <field name="accessories" optional="show"/>
+                                    <field name="note" optional="hide"/>
+                                    <field name="from_text" string="Từ" optional="show"/>
+                                    <field name="to_text" string="Đến" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="preview" string="Xem trước" invisible="state not in ('draft', 'pending') or move_type in ('opening', 'adjust', 'reversal')">
+                            <field name="has_blocking" invisible="1"/>
+                            <field name="preview_html" nolabel="1" readonly="1"/>
+                            <p class="o_tp_eq_note" invisible="preview_html">Chọn thiết bị và bên nhận để xem thay đổi sẽ ghi nhận.</p>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="move_reverse_form" model="ir.ui.view">
+        <field name="name">tp.equipment.move.reverse.form</field>
+        <field name="model">tp.equipment.move.reverse</field>
+        <field name="arch" type="xml">
+            <form string="Đảo phiếu">
+                <p>
+                    Đảo phiếu tạo một phiếu mới đưa thiết bị về đúng nơi giữ trước phiếu này. Phiếu gốc giữ nguyên để
+                    đối chiếu. Chỉ đảo được khi thiết bị chưa có thay đổi nào sau phiếu.
+                </p>
+                <group>
+                    <field name="move_id"/>
+                    <field name="reason" placeholder="Ví dụ: chọn nhầm nhân viên nhận"/>
+                </group>
+                <footer>
+                    <button name="action_confirm" type="object" string="Đảo phiếu" class="btn-primary"/>
+                    <button string="Bỏ qua" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_moves" model="ir.actions.act_window">
+        <field name="name">Phiếu bàn giao / thu hồi</field>
+        <field name="res_model">tp.equipment.move</field>
+        <field name="path">phieu-thiet-bi</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="move_search"/>
+        <field name="context">{'search_default_hide_system': 1, 'tp_filter_profile': 'move', 'tp_eq_leaf': 'tp_equipment.menu_moves'}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có phiếu nào</p>
+            <p>Lập phiếu từ hồ sơ thiết bị (nút Bàn giao, Thu hồi, Điều chuyển…) hoặc tạo mới ở đây.
+               Phiếu đi qua Nháp → Chờ bàn giao → Hoàn tất; sai sót sửa bằng Đảo phiếu.</p>
+        </field>
+    </record>
+
+    <record id="action_moves_pending" model="ir.actions.act_window">
+        <field name="name">Phiếu chờ bàn giao</field>
+        <field name="res_model">tp.equipment.move</field>
+        <field name="path">phieu-cho-ban-giao</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="move_search"/>
+        <field name="domain">[('state', 'in', ('draft', 'pending'))]</field>
+        <field name="context">{'tp_filter_profile': 'move', 'tp_eq_leaf': 'tp_equipment.menu_moves_pending'}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Không có phiếu nháp hoặc chờ bàn giao</p>
+        </field>
+    </record>
+
+    <record id="action_move_lines" model="ir.actions.act_window">
+        <field name="name">Lịch sử bàn giao theo thiết bị</field>
+        <field name="res_model">tp.equipment.move.line</field>
+        <field name="path">lich-su-ban-giao</field>
+        <field name="view_mode">list</field>
+        <field name="domain">[('state', '=', 'done')]</field>
+        <field name="context">{'tp_filter_profile': 'move_line', 'tp_eq_leaf': 'tp_equipment.menu_move_lines'}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+    </record>
+
+    <record id="move_line_list" model="ir.ui.view">
+        <field name="name">tp.equipment.move.line.list</field>
+        <field name="model">tp.equipment.move.line</field>
+        <field name="arch" type="xml">
+            <list string="Lịch sử bàn giao" js_class="tp_equipment_table" class="tp_eq_table" limit="20" create="0" edit="0" delete="0">
+                <field name="date_done" string="Hoàn tất lúc"/>
+                <field name="move_id" string="Phiếu" class="tp_eq_strong"/>
+                <field name="move_type" string="Loại"/>
+                <field name="equipment_id" string="Thiết bị"/>
+                <field name="from_text" string="Từ"/>
+                <field name="to_text" string="Đến"/>
+                <field name="condition" string="Tình trạng ghi nhận" optional="show"/>
+                <field name="accessories" optional="hide"/>
+                <field name="note" optional="hide"/>
+                <field name="state" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="move_line_search" model="ir.ui.view">
+        <field name="name">tp.equipment.move.line.search</field>
+        <field name="model">tp.equipment.move.line</field>
+        <field name="arch" type="xml">
+            <search string="Tìm lịch sử bàn giao">
+                <field name="equipment_id" string="Thiết bị"/>
+                <field name="move_id" string="Phiếu"/>
+                <field name="to_employee_id" string="Người nhận"/>
+                <field name="from_employee_id" string="Người giao"/>
+                <field name="move_type"/>
+                <field name="date"/>
+                <filter name="q_handover" string="Bàn giao / điều chuyển" domain="[('move_type', 'in', ('assign', 'transfer'))]"/>
+                <filter name="q_return" string="Thu hồi" domain="[('move_type', 'in', ('return', 'loan_return', 'repair_return'))]"/>
+                <filter name="q_loan" string="Cho mượn" domain="[('move_type', '=', 'loan')]"/>
+                <filter name="q_repair" string="Sửa ngoài" domain="[('move_type', '=', 'send_repair')]"/>
+                <filter name="q_end" string="Ngừng quản lý / mất" domain="[('move_type', 'in', ('retire', 'lost', 'rental_return'))]"/>
+                <group>
+                    <filter name="group_equipment" string="Thiết bị" context="{'group_by': 'equipment_id'}"/>
+                    <filter name="group_type" string="Loại phiếu" context="{'group_by': 'move_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+</odoo>

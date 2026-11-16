@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<templates xml:space="preserve">
+    <t t-name="tp_reporting.Dashboard">
+        <main class="tp_reporting_dashboard" t-att-aria-busy="this.state.busy ? 'true' : 'false'">
+            <header class="tp_reporting_heading">
+                <div>
+                    <h1>Tổng quan báo cáo</h1>
+                    <p>Kế hoạch xuống từng tuần · Kết quả lên toàn công ty</p>
+                </div>
+                <form class="tp_reporting_period" t-on-submit.prevent="()=&gt;this.load()">
+                    <label>Loại kỳ<select t-att-value="this.state.period_type" t-on-change="(ev) =&gt; this.state.period_type = ev.target.value">
+                            <option value="week">Tuần</option>
+                            <option value="month">Tháng</option>
+                            <option value="quarter">Quý</option>
+                            <option value="cumulative">Lũy kế</option>
+                        </select>
+                    </label>
+                    <label>Phòng ban<select t-att-value="this.state.department_id" t-on-change="(ev) =&gt; this.state.department_id = ev.target.value">
+                            <option value="">Trong quyền của tôi</option>
+                            <option t-foreach="this.state.data?.scopes || []" t-as="scope" t-key="scope.id" t-att-value="scope.id" t-out="scope.name"/>
+                        </select>
+                    </label>
+                    <label>Từ ngày<input type="date" required="required" t-att-value="this.state.date_start" t-on-change="(ev) =&gt; this.state.date_start = ev.target.value"/>
+                    </label>
+                    <label>Đến ngày<input type="date" required="required" t-att-value="this.state.date_end" t-on-change="(ev) =&gt; this.state.date_end = ev.target.value"/>
+                    </label>
+                    <button class="btn btn-primary" t-att-disabled="this.state.busy">Áp dụng</button>
+                </form>
+            </header>
+            <div t-if="this.state.error" class="alert alert-danger" role="alert">
+                <t t-out="this.state.error"/>
+                <button class="btn btn-link" t-on-click="()=&gt;this.load()">Thử lại</button>
+            </div>
+            <p t-if="this.state.busy" class="tp_reporting_loading" role="status">Đang tải số liệu trong phạm vi được xem…</p>
+            <t t-if="this.state.data and !this.state.busy and !this.state.error">
+                <p class="tp_reporting_scope">
+                    <span t-out="this.state.data.scope_label"/> · <span t-out="this.state.data.period.label"/> · Hiện hành · Cập nhật <time t-out="this.date(this.state.data.updated_at)"/>
+                </p>
+                <section class="tp_reporting_kpis" aria-label="Chỉ số theo dõi">
+                    <button class="tp_reporting_kpi" t-foreach="this.state.data.kpis" t-as="kpi" t-key="kpi.key" t-on-click="()=&gt;this.open(kpi)">
+                        <span t-out="kpi.label"/>
+                        <strong t-out="this.format(kpi.value)"/>
+                        <small>Xem danh sách →</small>
+                    </button>
+                </section>
+                <section class="tp_reporting_charts" aria-label="Biểu đồ báo cáo">
+                    <article class="tp_reporting_panel">
+                        <h2>Tình hình nộp báo cáo</h2>
+                        <p>Mẫu số là nghĩa vụ nộp trong kỳ</p>
+                        <div class="tp_reporting_donut_layout">
+                            <svg class="tp_reporting_donut" viewBox="0 0 120 120" role="img" t-att-aria-label="'Tổng ' + this.state.data.submission.total + ' nghĩa vụ'">
+                                <circle cx="60" cy="60" r="46" fill="none" stroke="#edf1f6" stroke-width="15"/>
+                                <circle t-foreach="this.segments" t-as="seg" t-key="seg.key" cx="60" cy="60" r="46" fill="none" stroke-width="15" pathLength="100" t-att-stroke="seg.color" t-att-stroke-dasharray="seg.length + ' ' + (100-seg.length)" t-att-stroke-dashoffset="-seg.offset" transform="rotate(-90 60 60)">
+                                    <title>
+                                        <t t-out="seg.label"/>: <t t-out="seg.count"/>
+                                    </title>
+                                </circle>
+                                <text x="60" y="58" text-anchor="middle" class="tp_reporting_donut_total" t-out="this.state.data.submission.total"/>
+                                <text x="60" y="72" text-anchor="middle" class="tp_reporting_donut_label">nghĩa vụ</text>
+                            </svg>
+                            <div class="tp_reporting_legend">
+                                <button t-foreach="this.segments" t-as="seg" t-key="seg.key" t-on-click="()=&gt;this.open(seg)" t-att-title="seg.label + ': ' + seg.count + ' nghĩa vụ — mở danh sách'" class="tp_reporting_legend_item">
+                                    <i t-att-style="'background:' + seg.color"/>
+                                    <span t-out="seg.label"/>
+                                    <strong t-out="seg.count"/>
+                                    <small t-out="this.state.data.submission.total ? Math.round(seg.count/this.state.data.submission.total*100)+'%' : '—'"/>
+                                </button>
+                                <p t-if="!this.state.data.submission.total">Chưa có nghĩa vụ trong kỳ này.</p>
+                            </div>
+                        </div>
+                    </article>
+                    <article class="tp_reporting_panel">
+                        <h2>Kế hoạch và thực hiện</h2>
+                        <p>Đối chiếu riêng từng chỉ tiêu cùng đơn vị</p>
+                        <div class="tp_reporting_bar_legend">
+                            <span>
+                                <i/>Kế hoạch</span>
+                            <span>
+                                <i/>Thực hiện</span>
+                        </div>
+                        <div class="tp_reporting_bars">
+                            <button class="tp_reporting_bar_row" t-foreach="this.state.data.plan_actual" t-as="row" t-key="row.id" t-on-click="()=&gt;this.open(row)" t-att-title="row.label + ' — ' + this.format(row.plan) + ' / ' + this.format(row.actual) + ' ' + row.unit">
+                                <span class="tp_reporting_bar_title">
+                                    <strong t-out="row.label"/>
+                                    <small t-out="row.unit"/>
+                                </span>
+                                <span class="tp_reporting_bar_track">
+                                    <i t-att-style="'width:'+this.width(row.plan,row)+'%'"/>
+                                    <em t-out="this.format(row.plan)"/>
+                                </span>
+                                <span class="tp_reporting_bar_track actual">
+                                    <i t-att-style="'width:'+this.width(row.actual,row)+'%'"/>
+                                    <em t-out="this.format(row.actual)"/>
+                                </span>
+                            </button>
+                            <p t-if="!this.state.data.plan_actual.length">Chưa có chỉ tiêu có kế hoạch và nguồn thực hiện cùng đơn vị trong kỳ.</p>
+                        </div>
+                    </article>
+                </section>
+                <section t-if="this.state.data.milestones?.length" class="tp_reporting_panel tp_reporting_milestones">
+                    <h2>Mốc và đầu ra định tính</h2>
+                    <button t-foreach="this.state.data.milestones" t-as="m" t-key="m.id" t-on-click="()=&gt;this.openDecision(m)">
+                        <strong t-out="m.name"/>
+                        <p t-out="m.output"/>
+                        <time t-out="this.date(m.deadline)"/>
+                    </button>
+                </section>
+                <section class="tp_reporting_panel tp_reporting_decisions">
+                    <h2>Việc cần quyết định và theo dõi</h2>
+                    <p t-if="!this.state.data.decisions.length">Không có chỉ đạo cần xử lý trong phạm vi này.</p>
+                    <button t-foreach="this.state.data.decisions" t-as="item" t-key="item.id" t-on-click="()=&gt;this.openDecision(item)">
+                        <strong t-out="item.name"/>
+                        <span t-out="item.owner"/>
+                        <time t-out="this.date(item.deadline)"/>
+                        <span t-out="item.state"/>
+                        <span aria-hidden="true">→</span>
+                    </button>
+                </section>
+                <aside class="tp_reporting_notes" t-if="this.state.data.notes?.length">
+                    <p t-foreach="this.state.data.notes" t-as="note" t-key="note_index" t-out="note"/>
+                </aside>
+            </t>
+        </main>
+    </t>
+</templates>

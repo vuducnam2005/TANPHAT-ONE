@@ -1,0 +1,214 @@
+// UI-INPUT-001 — editable fields show a visible four-sided frame in every state.
+// Root cause: core `.o_input` (web/views/fields/fields.scss) draws a bottom border only and
+// web/views/form/form_controller.scss makes it transparent until hover/focus, so editable
+// fields read as plain text. Tokens live in input_tokens.css (shared with the login bundle).
+//
+// Only the outermost `.o_input` of an editable widget in an editable form (page or dialog) is
+// framed: nested inputs (tags, autocomplete), checkbox/radio/toggle, file inputs, list cells
+// and readonly widgets are left alone. Below md, Odoo's own outlined box is the single frame.
+
+// Specificity stays (0,2,0) so module rules and Odoo's mobile box can still adjust it.
+$tp-input-frame: ".o_form_editable :where(.o_field_widget:not(.o_readonly_modifier)) .o_input:where(:not(.o_input .o_input, .o_list_renderer .o_input, .o_readonly_modifier .o_input))";
+$tp-input-editable: ".o_form_editable .o_field_widget:not(.o_readonly_modifier)";
+
+#{$tp-input-frame} {
+    // Core `.o_field_highlight .o_field_widget .o_input` (mobile, some dialogs) paints
+    // var(--o-input-border-color); feed it the token instead of out-ranking it. Outside highlight
+    // mode core sets that variable to transparent, so the border itself reads the token directly.
+    --o-input-border-color: var(--tp-input-border);
+    min-height: var(--tp-input-h);
+    padding-block: 4px;
+    padding-inline: var(--tp-input-px);
+    border: 1px solid var(--tp-input-border);
+    border-radius: var(--tp-input-radius);
+    background-color: var(--tp-input-bg);
+    color: var(--tp-input-text);
+    font-size: var(--tp-input-font);
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
+
+    &::placeholder {
+        color: var(--tp-input-placeholder);
+        opacity: 1;
+    }
+    &:hover {
+        --o-input-border-color: var(--tp-input-border-hover);
+        border-color: var(--tp-input-border-hover);
+    }
+    &:focus,
+    &:focus-within {
+        --o-input-border-color: var(--tp-input-focus);
+        border-color: var(--tp-input-focus);
+        box-shadow: var(--tp-input-ring);
+        outline: 2px solid transparent; // visible in forced-colours mode
+    }
+    &:disabled {
+        --o-input-border-color: var(--tp-input-disabled-border);
+        border-color: var(--tp-input-disabled-border);
+        background-color: var(--tp-input-disabled-bg);
+        color: var(--tp-input-disabled-text);
+        cursor: not-allowed;
+    }
+
+    // Shapes (element type on the input itself, not on the form): textarea height comes from
+    // Odoo autoresize; div/label frames centre their content.
+    &:is(textarea) {
+        min-height: 0;
+        padding-block: 7px;
+        line-height: 1.5;
+    }
+    &:is(div, label) {
+        align-items: center;
+    }
+    &:is(label) {
+        display: flex;
+        margin-bottom: 0;
+        cursor: pointer;
+    }
+    &:is(select) {
+        padding-right: calc(var(--tp-input-px) + 18px);
+        background-position: right var(--tp-input-px) center; // core caret image, kept off the border
+    }
+}
+
+// Headings keep their own type scale (employee name, record titles).
+.o_form_editable :is(h1, h2, .oe_title, .o_tp_hr_name, .tp_kd_bp_title) .o_input:where(:not(.o_input .o_input)) {
+    min-height: 0;
+    font-size: inherit;
+}
+
+// Error: thicker red frame (shape + colour) and Odoo keeps the typed value.
+.o_form_editable .o_field_invalid .o_input:where(:not(.o_input .o_input, .o_list_renderer .o_input)) {
+    --o-input-border-color: var(--tp-input-error);
+    border-color: var(--tp-input-error);
+    background-color: var(--tp-input-error-bg);
+    box-shadow: inset 0 0 0 1px var(--tp-input-error);
+
+    &:focus,
+    &:focus-within {
+        box-shadow: inset 0 0 0 1px var(--tp-input-error), var(--tp-input-error-ring);
+    }
+}
+
+// Dropdown caret (many2one, selection, tags) centred and always visible.
+#{$tp-input-editable} {
+    --o-caret-color: var(--tp-input-icon);
+
+    &:focus-within {
+        --o-caret-color: var(--tp-input-focus);
+    }
+    // Core hides the many2one caret until hover (many2one_field.scss); editable fields always show it.
+    .o_field_many2one_selection .o_dropdown_button {
+        visibility: visible;
+    }
+    .o_input_dropdown .o_dropdown_button {
+        top: 50%;
+        bottom: auto;
+        right: 8px;
+        transform: translateY(-50%);
+    }
+}
+
+// Date pickers: calendar icon always visible (Odoo shows its own icon only on touch devices).
+.o_form_editable :where(.o_field_date, .o_field_datetime, .o_field_daterange, .o_field_tp_kd_date):not(.o_readonly_modifier) .o_input:where(:not(.o_input .o_input)) {
+    padding-right: calc(var(--tp-input-px) + 24px);
+    // Literal url(): Odoo rewrites url($variable) into a module path.
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2352627a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--tp-input-px) center;
+    background-size: 16px;
+}
+.o_touch_device .o_form_editable :where(.o_field_date, .o_field_datetime, .o_field_daterange, .o_field_tp_kd_date) .o_input {
+    padding-right: var(--tp-input-px);
+    background-image: none;
+}
+
+// Required marker on the label, driven by the same modifier Odoo validates on save.
+.o_form_editable {
+    .o_wrap_label:has(+ .o_cell .o_required_modifier:not(.o_readonly_modifier)) .o_form_label::after,
+    .o_form_label:has(+ .o_required_modifier:not(.o_readonly_modifier))::after {
+        content: "*";
+        margin-left: 3px;
+        color: var(--tp-input-error);
+        font-weight: 600;
+    }
+}
+
+// Editable list row: frame the editable cell with an inset line so the row height never changes.
+.o_list_renderer .o_data_row.o_selected_row > .o_data_cell:not(.o_readonly_modifier) {
+    box-shadow: inset 0 0 0 1px var(--tp-input-border);
+
+    &:focus-within {
+        box-shadow: inset 0 0 0 2px var(--tp-input-focus);
+    }
+    &.o_invalid_cell {
+        box-shadow: inset 0 0 0 2px var(--tp-input-error);
+    }
+}
+
+// Search bars and Bootstrap controls inside actions and dialogs (not the navbar or sidebar).
+:is(.o_action_manager, .modal) :is(.o_searchview, .form-control, .form-select) {
+    border-color: var(--tp-input-border);
+}
+:is(.o_action_manager, .modal) :is(.form-control, .form-select):focus,
+:is(.o_action_manager, .modal) .o_searchview:focus-within {
+    border-color: var(--tp-input-focus);
+    box-shadow: var(--tp-input-ring);
+}
+
+@include media-breakpoint-up(md) {
+    // Edit mode: a locked field next to editable ones reads as read-only (tint, no caret).
+    .o_form_editable .o_inner_group:has(.o_field_widget:not(.o_readonly_modifier) .o_input) .o_cell > .o_field_widget.o_readonly_modifier:not(.o_field_empty):is(.o_field_char, .o_field_many2one, .o_field_selection, .o_field_date, .o_field_datetime, .o_field_integer, .o_field_float, .o_field_monetary, .o_field_email, .o_field_phone, .o_field_url) {
+        // Column like core many2one: the value fills the width and is centred vertically.
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: stretch;
+        min-height: var(--tp-input-h);
+        padding: 4px var(--tp-input-px);
+        border: 1px solid transparent;
+        border-radius: var(--tp-input-radius);
+        background-color: var(--tp-input-readonly-bg);
+        color: var(--tp-input-readonly-text);
+
+        > * {
+            min-width: 0;
+        }
+    }
+}
+
+@include media-breakpoint-down(md) {
+    // Odoo's outlined field box (form_controller_m3.scss) is the frame on small screens.
+    .o_web_client .o_form_view {
+        --o-field-box-border-color: var(--tp-input-border);
+    }
+    .o_form_view .o_inner_group:not(.oe_subtotal_footer) :is(.o_cell, .o_cell_custom):not(.o_wrap_label):not(.o_no_box):not(:has(.o_outlined)) {
+        &:focus-within {
+            box-shadow: var(--tp-input-ring);
+        }
+        .o_input {
+            min-height: 0;
+            padding-left: 0;
+            border-radius: 0;
+            box-shadow: none;
+            background-color: transparent;
+        }
+    }
+    // Core floats the label onto the next cell's top edge; custom cells have no box, so our framed
+    // input would paint over the label. Keep the label on top (its gradient hides the border behind it).
+    .o_form_editable .o_inner_group .o_wrap_label:has(+ .o_cell:not(.o_no_box)) .o_form_label {
+        position: relative;
+        z-index: 1;
+    }
+    // Edit mode: a box holding only locked fields reads as read-only (tint, no frame).
+    .o_form_view .o_form_editable .o_inner_group:not(.oe_subtotal_footer) :is(.o_cell, .o_cell_custom):not(.o_wrap_label):not(.o_no_box):not(:has(.o_outlined)):has(> .o_field_widget.o_readonly_modifier):not(:has(.o_field_widget:not(.o_readonly_modifier))) {
+        --o-field-box-border-color: transparent;
+        background-color: var(--tp-input-readonly-bg);
+        color: var(--tp-input-readonly-text);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #{$tp-input-frame} {
+        transition: none;
+    }
+}

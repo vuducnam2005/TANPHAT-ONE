@@ -1,7 +1,12 @@
 # UI-HOME-004 — Thiết kế Trang chủ quản trị
 
-**Ngày:** 10/11/2026. **Trạng thái:** AS_BUILT_VERIFIED (CHG-20261110-006: Duy nhất 1 navbar, 3 công cụ quản trị/panel, 7 icon chuẩn).
-Yêu cầu DEC-036: đúng 7 mục và chỉ trên Trang chủ của quản trị hệ thống (`base.group_system`). Đã triển khai và kiểm chứng trên clone 19689 và dev 18069 (`tp_web_home` 20.0.1.5.0).
+> [!NOTE]
+> **Cập nhật UI-SHELL-UNIFY-001 (14/11/2026 — DEC-043 / CHG-20261114-001):** Thiết kế Trang chủ quản trị đã được nâng cấp thành mẫu Trang chủ dùng chung (`#tp-unified-home`) cho mọi tài khoản: tiêu đề chung `"Trang chủ"`, mô tả `"Không gian làm việc của TANPHAT ONE"`, bỏ cách gọi `"Trang chủ quản trị"` và ghi chú chỉ dành cho quản trị; quyền quyết định danh sách thẻ/nhóm hiển thị (gồm placeholder đang phát triển và cụm công cụ `Cài đặt` / `Quản lý ứng dụng` / `Tất cả ứng dụng` vẫn giữ ở `user.isSystem`). Xem [UI_SHELL_UNIFY_001_ACCEPTANCE.md](../demo/UI_SHELL_UNIFY_001_ACCEPTANCE.md).
+
+**Ngày:** 10/11/2026 (cập nhật giao diện `UI-HOME-005` ngày 13/11/2026). **Trạng thái:** AS_BUILT_VERIFIED (CHG-20261113-001: UI-HOME-005 đồng bộ giao diện mẫu `tp_web_home` 20.0.1.6.0 trên test 18079 và dev 18069; giữ nguyên hợp đồng 7 mục/quyền của UI-HOME-004).
+Yêu cầu DEC-036: đúng 7 mục và chỉ trên Trang chủ của quản trị hệ thống (`base.group_system`). Đã triển khai và kiểm chứng trên test 18079 và dev 18069 (`tp_web_home` 20.0.1.6.0).
+
+**Làm mới giao diện UI-HOME-005 (CHG-20261113-001):** giữ nguyên 7 mục, 3 công cụ quản trị, gate `user.isSystem`, `UI-HOME-003` cho non-admin và toàn bộ hành vi/selector; nâng cấp trực quan: nền gradient xanh băng toàn màn hình với sóng chéo góc dưới-phải, thanh điều hướng navy phân cách dọc trước avatar tròn, 3 nút công cụ dạng pill trắng nổi, thanh nhấn xanh dọc ở tiêu đề nhóm, thẻ ngang (icon 52×52 bên trái + tiêu đề/badge/mô tả bên phải), lưới 3 cột đều cho 5 đơn vị (KH-KD nổi bật xanh đậm + `↗`) và lưới 2 cột cho Nhân sự (`Đang hoạt động` xanh bạc hà) & Tuyển dụng (`Đang phát triển`).
 
 **Correction CHG-20261110-006:** khi nhúng thiết kế vào Odoo phải dùng navbar
 native chung, bỏ navbar nằm trong client action. Giữ7tile; Cài đặt/Quản lý

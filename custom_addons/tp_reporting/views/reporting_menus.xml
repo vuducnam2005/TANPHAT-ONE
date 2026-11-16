@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo>
+    <menuitem id="menu_root" name="Báo cáo" sequence="35" action="action_dashboard" web_icon="tp_reporting,static/description/icon.svg" groups="tp_reporting.group_reporting_user"/>
+    <menuitem id="menu_overview" name="Tổng quan" parent="menu_root" action="action_dashboard" sequence="10"/>
+    <menuitem id="menu_plans" name="Mục tiêu và kế hoạch" parent="menu_root" action="action_plans" sequence="20"/>
+    <menuitem id="menu_personal" name="Báo cáo của tôi" parent="menu_root" action="action_personal" sequence="30"/>
+    <menuitem id="menu_department" name="Báo cáo phòng ban" parent="menu_root" action="action_department" sequence="40"/>
+    <menuitem id="menu_company" name="Báo cáo công ty" parent="menu_root" action="action_company" sequence="50"/>
+    <menuitem id="menu_directives" name="Việc cần xử lý" parent="menu_root" action="action_directives" sequence="60"/>
+    <menuitem id="menu_config" name="Mẫu và lịch" parent="menu_root" sequence="70" groups="tp_reporting.group_reporting_config"/>
+    <menuitem id="menu_templates" name="Mẫu báo cáo" parent="menu_config" action="action_templates" sequence="10"/>
+    <menuitem id="menu_sections" name="Mục trong mẫu" parent="menu_config" action="action_sections" sequence="20"/>
+    <menuitem id="menu_schedules" name="Lịch và nhắc hạn" parent="menu_config" action="action_schedules" sequence="30"/>
+    <menuitem id="menu_obligations" name="Nghĩa vụ nộp" parent="menu_config" action="action_obligations" sequence="40"/>
+    <menuitem id="menu_assignments" name="Phân quyền theo phạm vi" parent="menu_config" action="action_assignments" sequence="50"/>
+    <menuitem id="menu_metrics" name="Danh mục chỉ tiêu" parent="menu_config" action="action_metrics" sequence="60"/>
+    <menuitem id="menu_values" name="Giá trị có nguồn" parent="menu_config" action="action_values" sequence="70" groups="tp_reporting.group_reporting_finance"/>
+</odoo>

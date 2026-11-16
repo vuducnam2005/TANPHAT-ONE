@@ -2,4 +2,5 @@ id,name,model_id,group_id/id,operation,domain
 access_tp_hr_account_wizard_user,TP HR account wizard,tp.hr.account.wizard,hr.group_hr_user,crud,
 access_tp_hr_role_wizard_admin,TP HR role command,tp.hr.role.wizard,base.group_system,crud,
 access_tp_hr_identity_wizard_admin,TP identity reconciliation,tp.hr.identity.wizard,base.group_system,crud,
-access_tp_hr_employee_delete_wizard_admin,TP mistaken employee deletion,tp.hr.employee.delete.wizard,base.group_system,crud,
+access_tp_hr_contract_hr,HR contract papers read,tp.hr.contract.document,hr.group_hr_user,r,"[('company_id', 'in', company_ids), ('employee_id', 'access', 'read')]"
+access_tp_hr_contract_write,HR contract papers edit,tp.hr.contract.document,hr.group_hr_user,cu,"[('company_id', 'in', company_ids), ('employee_id', 'access', 'write')]"

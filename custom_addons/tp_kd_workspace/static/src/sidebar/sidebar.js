@@ -14,7 +14,7 @@ import { Dropdown } from "@web/core/dropdown/dropdown";
 import { UIPlugin } from "@web/core/ui/ui_plugin";
 import { useBus, useService } from "@web/core/utils/hooks";
 import { WebClient } from "@web/webclient/webclient";
-import { preferencesItem } from "@web/webclient/user_menu/user_menu_items";
+import { TpUserAccountMenu } from "@tp_web_home/identity/user_account_menu";
 import {
     fold,
     isModifiedClick,
@@ -86,7 +86,7 @@ export class TpKdPrefs extends Component {
  */
 export class TpKdSidebar extends Component {
     static template = "tp_kd_workspace.Sidebar";
-    static components = { Dropdown, TpKdPrefs };
+    static components = { Dropdown, TpKdPrefs, TpUserAccountMenu };
 
     prefs = kdPrefs;
     panel = signal.ref();
@@ -157,7 +157,6 @@ export class TpKdSidebar extends Component {
     setup() {
         this.menu = useService("menu");
         this.action = useService("action");
-        this.accountPreferences = preferencesItem();
         this.ui = usePlugin(UIPlugin); // size() is a signal: the layout follows breakpoints
         this.state = proxy({ query: "", drawer: false, active: 0 });
         this.focusAfterPatch = null;
@@ -336,11 +335,6 @@ export class TpKdSidebar extends Component {
             this.state.drawer = false;
             this.focusAfterPatch = "toggle";
         }
-    }
-
-    openAccount() {
-        this.closeDrawer();
-        return this.accountPreferences.callback();
     }
 
     onKeydown(ev) {

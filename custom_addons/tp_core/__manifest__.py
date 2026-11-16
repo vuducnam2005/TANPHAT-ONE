@@ -7,5 +7,7 @@
         'security/tp_core_security.xml',
         'security/ir.access.csv',
         'views/tp_work_item_views.xml',
+        'views/tp_work_item_search_views.xml',
+        'views/native_search_views.xml',
     ],
 }

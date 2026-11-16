@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='utf8'?>
+<odoo>
+    <!-- Admin-only equipment tab on the existing HR profile (same hr.employee id, no hr_maintenance). -->
+    <record id="employee_form_equipment" model="ir.ui.view">
+        <field name="name">tp.equipment.hr.employee.form</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="tp_hr_workspace.employee_form"/>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='tp_history']" position="before">
+                <page name="tp_equipment" string="Thiết bị" groups="base.group_system">
+                    <div class="alert alert-warning" role="status" invisible="not tp_equipment_warning">
+                        <field name="tp_equipment_warning" readonly="1" nolabel="1"/>
+                    </div>
+                    <p class="o_tp_hr_note">
+                        Chỉ quản trị hệ thống thấy mục này. Đổi phòng ban trong HR không tự chuyển thiết bị;
+                        thu hồi / điều chuyển lập phiếu trong Kho thiết bị văn phòng.
+                    </p>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <span><field name="tp_equipment_count" readonly="1" nolabel="1"/> thiết bị đang giữ</span>
+                        <button name="action_tp_open_equipment" type="object" string="Mở trong Kho thiết bị" class="btn btn-secondary" icon="widgets"/>
+                    </div>
+                    <field name="tp_equipment_ids" readonly="1" nolabel="1" widget="tp_equipment_relation">
+                        <list create="0" delete="0" no_open="0">
+                            <field name="tp_code" string="Mã"/>
+                            <field name="name" string="Tên thiết bị"/>
+                            <field name="category_id" string="Phân loại"/>
+                            <field name="tp_custody" string="Hình thức" widget="badge"/>
+                            <field name="tp_technical_state" string="Tình trạng" widget="badge" decoration-success="tp_technical_state == 'good'" decoration-warning="tp_technical_state == 'limited'" decoration-danger="tp_technical_state == 'broken'"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

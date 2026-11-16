@@ -1,5 +1,10 @@
 # UI-SHELL-AUTH-001 — Thiết kế và inventory
 
+> [!NOTE]
+> **Cập nhật UI-SHELL-UNIFY-001 (14/11/2026 — DEC-043 / CHG-20261114-001):** Thanh điều hướng giữ nguyên phong cách, systray và Home; riêng `UserMenu` (navbar và sidebar HR/KH-KD) được rút gọn dropdown chỉ còn duy nhất `[icon đăng xuất] Đăng xuất` (tái sử dụng `/web/session/logout` + CSRF + service worker, giữ các service nền như `im_status`), bỏ `.tp-shell-user-heading`, và tại workspace HR/KH-KD cụm tên/avatar chỉ đặt ở cuối sidebar qua `<TpUserAccountMenu>` dùng dịch vụ `tp_identity` chung (ẩn khỏi navbar để mỗi màn chỉ có 1 điểm truy cập). Xem [UI_SHELL_UNIFY_001_ACCEPTANCE.md](../demo/UI_SHELL_UNIFY_001_ACCEPTANCE.md).
+>
+> **Cập nhật BRAND-LOGO-001 (16/11/2026 — CHG-20261116-009):** hình nhịp cầu SVG (navbar và login) được thay bằng logo công ty `logo/logo.png`, tách thành asset local `tp_web_home/static/img/brand/`. Navbar: biểu tượng logo trên ô trắng bo góc 32px (mobile 28px) cạnh wordmark `TANPHAT ONE` / `TP ONE`. Login: ô logo 48px (mobile 34px) cạnh wordmark; vùng hình cầu cũ thay bằng thẻ trắng chứa logo đầy đủ “TAN PHAT JOINT STOCK.Co”, ẩn trên mobile như hình cầu trước đây. Favicon, apple-touch-icon, theme-color `#061b40` và logo `res.company` cũng theo logo mới. Mô tả “hình nhịp cầu SVG local” ở mục dưới là lịch sử.
+
 CHG-20261109-002, 09/11/2026. Người dùng giao trực tiếp thực thi prompt, test
 clone, backup verified và áp dev18069; phạm vi này chuyển từ điều phối sang thực
 thi. Baseline checker CHG-20261109-001 PASS; thay đổi Git có sẵn được giữ.

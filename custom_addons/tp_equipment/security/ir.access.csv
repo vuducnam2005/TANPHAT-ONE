@@ -1,0 +1,50 @@
+id,name,model_id,group_id/id,operation,domain
+access_tp_equipment_admin,Office equipment admin,maintenance.equipment,base.group_system,crud,
+access_tp_request_admin,Office equipment repair admin,maintenance.request,base.group_system,crud,
+access_tp_category_admin,Office equipment category admin,maintenance.equipment.category,base.group_system,crud,
+access_tp_stage_admin,Office equipment repair stage admin,maintenance.stage,base.group_system,crud,
+access_tp_team_admin,Office equipment team admin,maintenance.team,base.group_system,crud,
+access_tp_location_admin,Office equipment location admin,tp.equipment.location,base.group_system,crud,
+access_tp_software_admin,Office equipment software admin,tp.equipment.software,base.group_system,crud,
+access_tp_meter_admin,Office equipment meter admin,tp.equipment.meter,base.group_system,crud,
+access_tp_move_admin,Office equipment move admin,tp.equipment.move,base.group_system,crud,
+access_tp_move_line_admin,Office equipment move line admin,tp.equipment.move.line,base.group_system,crud,
+access_tp_move_reverse_admin,Office equipment move reversal admin,tp.equipment.move.reverse,base.group_system,crud,
+access_tp_receipt_admin,Office equipment receipt admin,tp.equipment.receipt,base.group_system,crud,
+access_tp_receipt_line_admin,Office equipment receipt line admin,tp.equipment.receipt.line,base.group_system,crud,
+access_tp_equipment_reason_wizard_admin,Office equipment administrator,tp.equipment.reason.wizard,base.group_system,crud,
+access_tp_equipment_quick_action_admin,Office equipment administrator,tp.equipment.quick.action,base.group_system,crud,
+access_tp_equipment_proposal_admin,Office equipment administrator,tp.equipment.proposal,base.group_system,crud,
+access_tp_equipment_proposal_line_admin,Office equipment administrator,tp.equipment.proposal.line,base.group_system,crud,
+access_tp_equipment_proposal_review_admin,Office equipment administrator,tp.equipment.proposal.review,base.group_system,crud,
+access_tp_equipment_proposal_approval_admin,Office equipment administrator,tp.equipment.proposal.approval,base.group_system,crud,
+access_tp_equipment_inventory_admin,Office equipment administrator,tp.equipment.inventory,base.group_system,crud,
+access_tp_equipment_inventory_line_admin,Office equipment administrator,tp.equipment.inventory.line,base.group_system,crud,
+access_tp_equipment_inventory_adjust_admin,Office equipment administrator,tp.equipment.inventory.adjust,base.group_system,crud,
+access_tp_equipment_import_batch_admin,Office equipment administrator,tp.equipment.import.batch,base.group_system,crud,
+access_tp_equipment_import_line_admin,Office equipment administrator,tp.equipment.import.line,base.group_system,crud,
+access_tp_equipment_import_column_admin,Office equipment administrator,tp.equipment.import.column,base.group_system,crud,
+access_tp_equipment_import_alias_admin,Office equipment administrator,tp.equipment.import.alias,base.group_system,crud,
+restrict_tp_equipment_admin_only,Office equipment is admin-only,maintenance.equipment,,crud,"[] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_request_admin_only,Office equipment repairs are admin-only,maintenance.request,,crud,"[] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_category_admin_only,Office equipment categories are admin-only,maintenance.equipment.category,,crud,"[] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_mail_message,Office equipment chatter is admin-only,mail.message,,crud,"[] if user.has_group('base.group_system') else [('model', 'not in', ['maintenance.equipment', 'maintenance.request', 'maintenance.equipment.category', 'tp.equipment.location', 'tp.equipment.software', 'tp.equipment.meter', 'tp.equipment.move', 'tp.equipment.move.line', 'tp.equipment.receipt', 'tp.equipment.receipt.line', 'tp.equipment.proposal', 'tp.equipment.proposal.line', 'tp.equipment.inventory', 'tp.equipment.inventory.line', 'tp.equipment.import.batch', 'tp.equipment.import.line', 'tp.equipment.proposal.review', 'tp.equipment.proposal.approval', 'tp.equipment.import.column', 'tp.equipment.import.alias', 'tp.equipment.reason.wizard', 'tp.equipment.inventory.adjust', 'tp.equipment.move.reverse', 'tp.equipment.quick.action'])]"
+restrict_tp_attachment,Office equipment files are admin-only,ir.attachment,,crud,"[] if user.has_group('base.group_system') else [('res_model', 'not in', ['maintenance.equipment', 'maintenance.request', 'maintenance.equipment.category', 'tp.equipment.location', 'tp.equipment.software', 'tp.equipment.meter', 'tp.equipment.move', 'tp.equipment.move.line', 'tp.equipment.receipt', 'tp.equipment.receipt.line', 'tp.equipment.proposal', 'tp.equipment.proposal.line', 'tp.equipment.inventory', 'tp.equipment.inventory.line', 'tp.equipment.import.batch', 'tp.equipment.import.line', 'tp.equipment.proposal.review', 'tp.equipment.proposal.approval', 'tp.equipment.import.column', 'tp.equipment.import.alias', 'tp.equipment.reason.wizard', 'tp.equipment.inventory.adjust', 'tp.equipment.move.reverse', 'tp.equipment.quick.action'])]"
+restrict_tp_followers,Office equipment followers are admin-only,mail.followers,,crud,"[] if user.has_group('base.group_system') else [('res_model', 'not in', ['maintenance.equipment', 'maintenance.request', 'maintenance.equipment.category', 'tp.equipment.location', 'tp.equipment.software', 'tp.equipment.meter', 'tp.equipment.move', 'tp.equipment.move.line', 'tp.equipment.receipt', 'tp.equipment.receipt.line', 'tp.equipment.proposal', 'tp.equipment.proposal.line', 'tp.equipment.inventory', 'tp.equipment.inventory.line', 'tp.equipment.import.batch', 'tp.equipment.import.line', 'tp.equipment.proposal.review', 'tp.equipment.proposal.approval', 'tp.equipment.import.column', 'tp.equipment.import.alias', 'tp.equipment.reason.wizard', 'tp.equipment.inventory.adjust', 'tp.equipment.move.reverse', 'tp.equipment.quick.action'])]"
+restrict_tp_activity,Office equipment activities are admin-only,mail.activity,,crud,"[] if user.has_group('base.group_system') else [('res_model', 'not in', ['maintenance.equipment', 'maintenance.request', 'maintenance.equipment.category', 'tp.equipment.location', 'tp.equipment.software', 'tp.equipment.meter', 'tp.equipment.move', 'tp.equipment.move.line', 'tp.equipment.receipt', 'tp.equipment.receipt.line', 'tp.equipment.proposal', 'tp.equipment.proposal.line', 'tp.equipment.inventory', 'tp.equipment.inventory.line', 'tp.equipment.import.batch', 'tp.equipment.import.line', 'tp.equipment.proposal.review', 'tp.equipment.proposal.approval', 'tp.equipment.import.column', 'tp.equipment.import.alias', 'tp.equipment.reason.wizard', 'tp.equipment.inventory.adjust', 'tp.equipment.move.reverse', 'tp.equipment.quick.action'])]"
+restrict_tp_equipment_location_scope,Office equipment admin/company scope,tp.equipment.location,,crud,"[('company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_equipment_move_scope,Office equipment admin/company scope,tp.equipment.move,,crud,"[('company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_equipment_receipt_scope,Office equipment admin/company scope,tp.equipment.receipt,,crud,"[('company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_equipment_proposal_scope,Office equipment admin/company scope,tp.equipment.proposal,,crud,"[('company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_equipment_inventory_scope,Office equipment admin/company scope,tp.equipment.inventory,,crud,"[('company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_equipment_import_batch_scope,Office equipment admin/company scope,tp.equipment.import.batch,,crud,"[('company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_equipment_import_alias_scope,Office equipment admin/company scope,tp.equipment.import.alias,,crud,"[('company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_equipment_move_line_scope,Office equipment admin/company scope,tp.equipment.move.line,,crud,"[('move_id.company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_equipment_receipt_line_scope,Office equipment admin/company scope,tp.equipment.receipt.line,,crud,"[('receipt_id.company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_equipment_proposal_line_scope,Office equipment admin/company scope,tp.equipment.proposal.line,,crud,"[('proposal_id.company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_equipment_proposal_review_scope,Office equipment admin/company scope,tp.equipment.proposal.review,,crud,"[('proposal_id.company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_equipment_inventory_line_scope,Office equipment admin/company scope,tp.equipment.inventory.line,,crud,"[('inventory_id.company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_equipment_import_line_scope,Office equipment admin/company scope,tp.equipment.import.line,,crud,"[('batch_id.company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_equipment_import_column_scope,Office equipment admin/company scope,tp.equipment.import.column,,crud,"[('batch_id.company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_equipment_software_scope,Office equipment admin/company scope,tp.equipment.software,,crud,"[('equipment_id.company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"
+restrict_tp_equipment_meter_scope,Office equipment admin/company scope,tp.equipment.meter,,crud,"[('equipment_id.company_id', 'in', company_ids)] if user.has_group('base.group_system') else [(0, '=', 1)]"

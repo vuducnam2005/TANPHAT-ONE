@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_web_home.TableFilterBar">
+        <div t-ref="this.rootRef" class="tp_filter_bar" t-att-class="{ 'is-mobile-open': this.state.mobileOpen }" role="search" aria-label="Bộ lọc bảng">
+            <div class="tp_filter_mobile_head">
+                <button type="button" class="btn btn-outline-secondary tp_filter_mobile_toggle"
+                        t-att-aria-expanded="this.state.mobileOpen ? 'true' : 'false'"
+                        t-on-click="() => this.state.mobileOpen = !this.state.mobileOpen">
+                    <i class="fa fa-filter" aria-hidden="true"/>
+                    <span>Bộ lọc</span>
+                    <span t-if="this.activeFilterCount" class="tp_filter_badge" t-out="this.activeFilterCount"/>
+                </button>
+                <span t-if="this.resultCountText" class="tp_filter_count tp_filter_count_mobile" t-out="this.resultCountText"/>
+            </div>
+
+            <div class="tp_filter_body">
+                <div t-if="this.quickFilters.length" class="tp_kd_quick_states tp_filter_quick_strip">
+                    <button type="button" class="btn btn-outline-secondary tp_kd_clear" t-att-disabled="this.blocked"
+                            t-on-click="() => this.clearAllFilters()">Tất cả trong quyền</button>
+                    <button t-foreach="this.quickFilters" t-as="item" t-key="item.id" type="button"
+                            class="btn btn-outline-secondary tp_kd_quick_filter"
+                            t-att-class="{ active: item.isActive }"
+                            t-att-aria-pressed="item.isActive ? 'true' : 'false'"
+                            t-att-disabled="this.blocked"
+                            t-on-click="() => this.toggleQuickFilter(item)"
+                            t-out="item.description"/>
+                </div>
+
+                <div t-if="this.criteria.length" class="tp_filter_grid">
+                    <div t-foreach="this.criteria" t-as="crit" t-key="crit.key"
+                         class="tp_filter_item" t-att-data-filter-key="crit.key">
+                        <label class="tp_filter_label" t-att-for="'tp_f_' + crit.key" t-out="crit.label"/>
+
+                        <!-- Char / text search -->
+                        <input t-if="crit.type === 'char'"
+                               t-att-id="'tp_f_' + crit.key"
+                               type="text"
+                               class="tp_filter_control"
+                               t-att-placeholder="crit.placeholder || 'Nhập từ khóa…'"
+                               t-att-disabled="this.blocked"
+                               t-att-value="this.state.pending[crit.key] || ''"
+                               t-on-input="(ev) => this.setSingleValue(crit, ev.target.value)"
+                               t-on-keydown="(ev) => this.onTextKeyDown(ev)"/>
+
+                        <!-- Boolean 3-state (Tất cả / Có / Không) -->
+                        <select t-elif="crit.type === 'boolean'"
+                                t-att-id="'tp_f_' + crit.key"
+                                class="tp_filter_control"
+                                t-att-disabled="this.blocked"
+                                t-att-value="this.state.pending[crit.key] || 'all'"
+                                t-on-change="(ev) => this.setSingleValue(crit, ev.target.value)">
+                            <option value="all">Tất cả</option>
+                            <option value="true" t-out="crit.positiveLabel || 'Có'"/>
+                            <option value="false" t-out="crit.negativeLabel || 'Không'"/>
+                        </select>
+
+                        <!-- Single selection -->
+                        <select t-elif="(crit.type === 'selection' or crit.type === 'preset') and crit.multi === false"
+                                t-att-id="'tp_f_' + crit.key"
+                                class="tp_filter_control"
+                                t-att-disabled="this.blocked"
+                                t-att-value="this.state.pending[crit.key] || ''"
+                                t-on-change="(ev) => this.setSingleValue(crit, ev.target.value)">
+                            <option value="">Tất cả</option>
+                            <option t-if="crit.allowEmpty" value="__false__">Chưa khai báo</option>
+                            <t t-if="crit.type === 'preset'">
+                                <option t-foreach="crit.options" t-as="opt" t-key="opt.key"
+                                        t-att-value="opt.key" t-out="opt.label"/>
+                            </t>
+                            <t t-else="">
+                                <option t-foreach="crit.options" t-as="opt" t-key="opt[0]"
+                                        t-att-value="opt[0]" t-out="opt[1]"/>
+                            </t>
+                        </select>
+
+                        <!-- Multi selection / preset popover checklist (OR within criterion) -->
+                        <div t-elif="crit.type === 'selection' or crit.type === 'preset'" class="tp_filter_multi_wrap">
+                            <button type="button"
+                                    t-att-id="'tp_f_' + crit.key"
+                                    class="tp_filter_control tp_filter_multi_btn"
+                                    t-att-class="{ 'has-selection': (this.state.pending[crit.key] || []).length > 0 }"
+                                    aria-haspopup="listbox"
+                                    t-att-aria-expanded="this.state.openPopoverKey === crit.key ? 'true' : 'false'"
+                                    t-att-disabled="this.blocked"
+                                    t-on-click="() => this.togglePopover(crit.key)">
+                                <span class="tp_filter_multi_text" t-out="this.multiSummaryLabel(crit)"/>
+                                <i class="fa fa-chevron-down" aria-hidden="true"/>
+                            </button>
+                            <div t-if="this.state.openPopoverKey === crit.key" class="tp_filter_popover" role="listbox"
+                                 aria-multiselectable="true">
+                                <label t-if="crit.allowEmpty" class="tp_filter_opt">
+                                    <input type="checkbox"
+                                           t-att-checked="this.isOptionSelected(crit.key, '__false__')"
+                                           t-on-change="() => this.toggleMultiOption(crit, '__false__')"/>
+                                    <span>Chưa khai báo</span>
+                                </label>
+                                <t t-if="crit.type === 'preset'">
+                                    <label t-foreach="crit.options" t-as="opt" t-key="opt.key" class="tp_filter_opt">
+                                        <input type="checkbox"
+                                               t-att-checked="this.isOptionSelected(crit.key, opt.key)"
+                                               t-on-change="() => this.toggleMultiOption(crit, opt.key)"/>
+                                        <span t-out="opt.label"/>
+                                    </label>
+                                </t>
+                                <t t-else="">
+                                    <label t-foreach="crit.options" t-as="opt" t-key="opt[0]" class="tp_filter_opt">
+                                        <input type="checkbox"
+                                               t-att-checked="this.isOptionSelected(crit.key, opt[0])"
+                                               t-on-change="() => this.toggleMultiOption(crit, opt[0])"/>
+                                        <span t-out="opt[1]"/>
+                                    </label>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- Many2one backend name_search autocomplete -->
+                        <div t-elif="crit.type === 'many2one'" class="tp_filter_m2o_wrap">
+                            <AutoComplete
+                                id="'tp_f_' + crit.key"
+                                value="this.state.m2oInputs[crit.key] || ''"
+                                placeholder="crit.placeholder || 'Tìm &amp; chọn…'"
+                                sources="this.m2oSources(crit)"
+                                onInput="(args) => this.onM2oInput(args, crit)"
+                                inputDebounceDelay="180"
+                                class="'tp_filter_m2o_input'"
+                            />
+                            <button t-if="this.state.pending[crit.key] or this.state.m2oInputs[crit.key]"
+                                    type="button" class="tp_filter_m2o_clear" aria-label="Xóa lựa chọn"
+                                    t-on-click="() => this.clearM2o(crit)">×</button>
+                        </div>
+
+                        <!-- Date / Datetime range -->
+                        <div t-elif="crit.type === 'date' or crit.type === 'datetime'" class="tp_filter_date_pair">
+                            <input type="date"
+                                   t-att-id="'tp_f_' + crit.key"
+                                   class="tp_filter_control"
+                                   aria-label="Từ ngày"
+                                   t-att-disabled="this.blocked"
+                                   t-att-value="this.state.pending[crit.key]?.from || ''"
+                                   t-on-input="(ev) => this.setDateBound(crit, 'from', ev.target.value)"
+                                   t-on-change="(ev) => this.setDateBound(crit, 'from', ev.target.value)"
+                                   t-on-keydown="(ev) => this.onTextKeyDown(ev)"/>
+                            <span class="tp_filter_date_sep" aria-hidden="true">→</span>
+                            <input type="date"
+                                   class="tp_filter_control"
+                                   aria-label="Đến ngày"
+                                   t-att-disabled="this.blocked"
+                                   t-att-value="this.state.pending[crit.key]?.to || ''"
+                                   t-on-input="(ev) => this.setDateBound(crit, 'to', ev.target.value)"
+                                   t-on-change="(ev) => this.setDateBound(crit, 'to', ev.target.value)"
+                                   t-on-keydown="(ev) => this.onTextKeyDown(ev)"/>
+                        </div>
+                    </div>
+
+                    <div class="tp_filter_actions">
+                        <button type="button" class="btn btn-primary tp_filter_apply"
+                                t-att-disabled="this.blocked or this.state.busy or this.validationErrors.length > 0 or !this.hasPendingChanges"
+                                t-on-click="() => this.applyFilters()">
+                            <span t-if="this.state.busy">Đang lọc…</span>
+                            <span t-else="">Áp dụng</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary tp_filter_clear"
+                                t-att-disabled="this.blocked or this.state.busy or !this.hasAnyValue"
+                                t-on-click="() => this.clearAllFilters()">Xóa bộ lọc</button>
+                        <button type="button" class="btn btn-outline-primary tp_filter_advanced tp_kd_advanced"
+                                t-att-disabled="this.blocked"
+                                t-on-click="() => this.openAdvanced()">Bộ lọc nâng cao</button>
+                        <span t-if="this.hasPendingChanges" class="tp_filter_pending_note" role="status">Chưa áp dụng</span>
+                        <span t-if="this.resultCountText" class="tp_filter_count tp_filter_count_desktop" t-out="this.resultCountText"/>
+                    </div>
+                </div>
+
+                <div t-if="this.validationErrors.length or this.state.error" class="tp_filter_alert" role="alert">
+                    <span t-out="this.validationErrors[0] || this.state.error"/>
+                    <button t-if="this.state.error and !this.validationErrors.length" type="button"
+                            class="btn btn-sm btn-link" t-on-click="() => this.applyFilters()">Thử lại</button>
+                </div>
+
+                <div t-if="this.activeFacets.length" class="tp_filter_chips" aria-label="Bộ lọc đang áp dụng">
+                    <span t-foreach="this.activeFacets" t-as="facet" t-key="facet.groupId" class="tp_filter_chip">
+                        <strong t-if="facet.title" t-out="facet.title + ':'"/>
+                        <span t-out="facet.values.join(', ')"/>
+                        <button type="button" class="tp_filter_chip_remove" aria-label="Gỡ điều kiện lọc"
+                                t-att-disabled="this.blocked" t-on-click="() => this.removeFacet(facet)">×</button>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

@@ -14,16 +14,16 @@
         <xpath expr="//div[contains(@t-attf-class, 'o_database_list')]" position="before">
             <aside t-if="tp_auth_page" class="tp-auth-identity">
                 <div class="tp-native-wordmark" aria-label="TANPHAT ONE" t-translation="off">
-                    <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M4 29h32M8 29V10m24 19V10M8 13c7 13 17 13 24 0M14 21v8m6-5v5m6-8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span class="tp-auth-logo" aria-hidden="true"><img src="/tp_web_home/static/img/brand/tp_logo_mark.png" alt="" width="32" height="32"/></span>
                     <strong>TANPHAT ONE</strong>
                 </div>
                 <div class="tp-auth-intro" t-translation="off">
                     <h2>Không gian<br class="tp-auth-desktop-break"/> làm việc chung</h2>
                     <p>Kết nối công việc.<br/>Vững bước cùng Tấn Phát.</p>
                 </div>
-                <svg class="tp-auth-bridge" viewBox="0 0 600 310" fill="none" aria-hidden="true">
-                    <g stroke="currentColor" stroke-width="1.4"><path d="M-30 240H630M-30 250H630M110 250V50h12v200m356 0V50h12v200M116 68C200 265 400 265 484 68M116 68C70 153 20 192-30 196m514-128c46 85 96 124 146 128M146 121v119m30-75v75m30-44v44m30-29v29m30-20v20m34-17v17m34-20v20m30-29v29m30-44v44m30-75v75m30-119v119M-30 278c110-16 190 16 300 0s230 16 360 0"/><path d="M-30 212H630M95 250v32m42-32v32m326-32v32m42-32v32" opacity=".4"/></g>
-                </svg>
+                <figure class="tp-auth-brand-card" t-translation="off">
+                    <img src="/tp_web_home/static/img/brand/tp_logo_full.png" alt="Logo Tấn Phát — TAN PHAT JOINT STOCK.Co" width="900" height="885"/>
+                </figure>
                 <span class="tp-auth-signature" t-translation="off">Cùng dựng xây, cùng phát triển.</span>
             </aside>
         </xpath>

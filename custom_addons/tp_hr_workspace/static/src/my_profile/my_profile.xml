@@ -1,0 +1,714 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_hr_workspace.MyProfile">
+        <div class="o_tp_hr_my_profile o_tp_hr_profile_view">
+            <div class="o_control_panel d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="o_control_panel_breadcrumbs d-flex align-items-center gap-2">
+                    <span class="o_breadcrumb active">Thông tin cá nhân</span>
+                </div>
+                <div class="o_control_panel_actions d-flex align-items-center gap-2">
+                    <t t-if="this.state.data?.has_employee">
+                        <button t-if="!this.state.editing" type="button" class="btn btn-primary o_tp_hr_edit" t-on-click="() => this.startEdit()">
+                            <i class="oi" data-icon="edit" aria-hidden="true"/>
+                            <span>Sửa hồ sơ</span>
+                        </button>
+                        <t t-else="">
+                            <button type="button" class="btn btn-primary o_tp_hr_save" t-att-disabled="this.state.saving" t-on-click="() => this.saveProfile()">
+                                <span t-if="this.state.saving">Đang lưu…</span>
+                                <span t-else="">Lưu</span>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary o_tp_hr_cancel" t-att-disabled="this.state.saving" t-on-click="() => this.cancelEdit()">Hủy</button>
+                        </t>
+                    </t>
+                    <button type="button" class="btn o_tp_back_button" title="Quay lại màn hình trước" t-on-click="() => this.goBack()">
+                        <i class="oi" data-icon="arrow_back" aria-hidden="true"/>
+                        <span>Quay lại</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="o_tp_hr_employee_form">
+                <div class="o_form_sheet_bg">
+                    <div class="o_form_sheet">
+                        <div t-if="this.state.loading" class="p-4 text-center text-muted" role="status">
+                            Đang tải thông tin cá nhân…
+                        </div>
+                        <div t-elif="this.state.error" class="alert alert-danger m-2" role="alert">
+                            <t t-out="this.state.error"/>
+                        </div>
+                        <t t-elif="this.state.data and !this.state.data.has_employee">
+                            <div class="o_tp_hr_header">
+                                <div class="o_tp_hr_avatar">
+                                    <img t-if="this.avatarSrc" t-att-src="this.avatarSrc" t-att-alt="this.state.data.user.name"/>
+                                    <div t-else="" class="tp-myprofile-avatar-fallback" t-out="this.tpIdentity.initials"/>
+                                </div>
+                                <div class="o_tp_hr_identity">
+                                    <h1 class="o_tp_hr_name" t-out="this.state.data.user.name"/>
+                                    <div class="o_tp_hr_badges">
+                                        <span class="o_tp_hr_badge_code" t-out="this.state.data.user.login"/>
+                                        <span t-out="this.state.data.user.company_name"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3">
+                                <div class="alert alert-info mb-3">
+                                    Tài khoản này chưa gắn với hồ sơ nhân viên trong công ty hiện tại. Bạn vẫn có thể cập nhật ảnh đại diện, ngôn ngữ, mật khẩu và bảo mật tài khoản qua hộp thoại Tùy chọn tài khoản.
+                                </div>
+                                <button type="button" class="btn btn-primary" t-on-click="() => this.openAccountSecurityPreferences()">
+                                    Mở Tùy chọn &amp; Đổi mật khẩu
+                                </button>
+                            </div>
+                        </t>
+                        <t t-elif="this.state.data?.has_employee">
+                            <div class="o_tp_hr_header">
+                                <div class="o_tp_hr_avatar tp-myprofile-avatar-wrap">
+                                    <img t-if="this.avatarSrc" t-att-src="this.avatarSrc" t-att-alt="this.state.data.header.name"/>
+                                    <div t-else="" class="tp-myprofile-avatar-fallback" t-out="this.tpIdentity.initials"/>
+                                    <div t-if="this.state.editing" class="tp-myprofile-avatar-actions">
+                                        <label class="btn btn-sm btn-light tp-myprofile-upload-btn" title="Đổi ảnh đại diện">
+                                            <span>Đổi ảnh</span>
+                                            <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" class="d-none" t-on-change="(ev) => this.onAvatarFileChange(ev)"/>
+                                        </label>
+                                        <button t-if="this.avatarSrc" type="button" class="btn btn-sm btn-outline-danger tp-myprofile-clear-btn" title="Xóa ảnh" t-on-click="() => this.clearAvatarSelection()">Xóa</button>
+                                    </div>
+                                </div>
+                                <div class="o_tp_hr_identity">
+                                    <h1 class="o_tp_hr_name" t-out="this.state.data.header.name"/>
+                                    <div class="o_tp_hr_badges">
+                                        <span class="o_tp_hr_badge_code"><i class="oi" data-icon="person" aria-hidden="true"/><t t-out="this.state.data.header.code"/></span>
+                                        <span><i class="oi" data-icon="account_tree" aria-hidden="true"/><t t-out="this.state.data.header.department_name"/></span>
+                                        <span><i class="oi" data-icon="work" aria-hidden="true"/><t t-out="this.state.data.header.job_name"/></span>
+                                    </div>
+                                </div>
+                                <div class="o_field_badge">
+                                    <span class="badge"
+                                          t-att-class="{
+                                              'text-bg-success': this.state.data.header.account_status === 'active',
+                                              'text-bg-danger': this.state.data.header.account_status === 'disabled',
+                                              'text-bg-secondary': this.state.data.header.account_status === 'unlinked',
+                                          }"
+                                          t-out="this.state.data.header.account_status_label or 'Mở'"/>
+                                </div>
+                            </div>
+
+                            <div class="tp-myprofile-sync-banner">
+                                <span>Mọi thông tin bạn chỉnh sửa và lưu tại đây sẽ được đồng bộ trực tiếp vào Hồ sơ nhân sự của công ty. Thông tin tổ chức, chức vụ và hợp đồng lao động do HR quản lý ở chế độ chỉ đọc.</span>
+                            </div>
+
+                            <div class="o_notebook">
+                                <div class="o_notebook_headers">
+                                    <ul class="nav nav-tabs" role="tablist">
+                                        <li t-foreach="this.tabs" t-as="tab" t-key="tab.id" class="nav-item" role="presentation">
+                                            <button type="button"
+                                                    class="nav-link"
+                                                    role="tab"
+                                                    t-att-aria-selected="this.state.activeTab === tab.id ? 'true' : 'false'"
+                                                    t-att-class="{ 'active': this.state.activeTab === tab.id }"
+                                                    t-on-click="() => this.setTab(tab.id)">
+                                                <i class="oi" t-att-data-icon="tab.icon" aria-hidden="true"/>
+                                                <span t-out="tab.label"/>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="tab-content">
+                                    <!-- Tab 1: Tổng quan -->
+                                    <div t-if="this.state.activeTab === 'overview'" class="tab-pane active show">
+                                        <div class="o_tp_hr_overview_grid">
+                                            <section class="o_tp_hr_card">
+                                                <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="work" aria-hidden="true"/>Thông tin công việc (Chỉ đọc)</h2>
+                                                <div class="o_inner_group">
+                                                    <div class="o_wrap_label"><span class="o_form_label">Mã nhân viên</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.code"/></div>
+
+                                                    <div class="o_wrap_label"><span class="o_form_label">Phòng ban</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.department_name"/></div>
+
+                                                    <div class="o_wrap_label"><span class="o_form_label">Chức vụ nhân sự</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.job_name"/></div>
+
+                                                    <div class="o_wrap_label"><span class="o_form_label">Loại hình lao động</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.employment_kind_label"/></div>
+
+                                                    <div class="o_wrap_label"><span class="o_form_label">Quản lý trực tiếp</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.parent_name"/></div>
+
+                                                    <div class="o_wrap_label"><span class="o_form_label">Nơi làm việc</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.work_location_name"/></div>
+
+                                                    <div class="o_wrap_label"><span class="o_form_label">Chức danh hiển thị</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.job_title or this.state.data.header.job_name"/></div>
+                                                </div>
+                                            </section>
+
+                                            <section class="o_tp_hr_card">
+                                                <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="phone" aria-hidden="true"/>Liên hệ công việc</h2>
+                                                <div class="o_inner_group">
+                                                    <div class="o_wrap_label"><label for="tp_mp_work_email" class="o_form_label">Email công việc</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_work_email" type="email" class="form-control o_input" t-att-value="this.state.form.work_email || ''" t-on-input="(ev) => this.onFormInput('work_email', ev)" placeholder="ten@congty.vn"/>
+                                                        <span t-else="" t-out="this.state.form.work_email or 'Chưa khai báo'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_work_phone" class="o_form_label">Điện thoại công ty</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_work_phone" type="tel" class="form-control o_input" t-att-value="this.state.form.work_phone || ''" t-on-input="(ev) => this.onFormInput('work_phone', ev)" placeholder="Số máy bàn / công ty"/>
+                                                        <span t-else="" t-out="this.state.form.work_phone or 'Chưa khai báo'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_mobile_phone" class="o_form_label">Di động</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_mobile_phone" type="tel" class="form-control o_input" t-att-value="this.state.form.mobile_phone || ''" t-on-input="(ev) => this.onFormInput('mobile_phone', ev)" placeholder="Số điện thoại di động"/>
+                                                        <span t-else="" t-out="this.state.form.mobile_phone or 'Chưa khai báo'"/>
+                                                    </div>
+                                                </div>
+                                            </section>
+
+                                            <div class="o_tp_hr_account_card">
+                                                <div class="o_tp_hr_account_summary">
+                                                    <i class="oi" data-icon="person" aria-hidden="true"/>
+                                                    <div>
+                                                        <span class="text-muted">Tài khoản cá nhân</span>
+                                                        <div t-out="this.state.data.header.user_login"/>
+                                                    </div>
+                                                </div>
+                                                <div class="o_tp_hr_account_summary">
+                                                    <i class="oi" data-icon="verified_user" aria-hidden="true"/>
+                                                    <div>
+                                                        <span class="text-muted">Vai trò nghiệp vụ</span>
+                                                        <div t-out="this.state.data.header.business_role or 'Nhân viên'"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tab 2: Thông tin cá nhân -->
+                                    <div t-if="this.state.activeTab === 'personal'" class="tab-pane active show">
+                                        <div class="o_tp_hr_overview_grid tp-myprofile-personal-grid">
+                                            <section class="o_tp_hr_card">
+                                                <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="person" aria-hidden="true"/>Định danh &amp; Liên hệ riêng</h2>
+                                                <div class="o_inner_group">
+                                                    <div class="o_wrap_label"><span class="o_form_label">Họ và tên chính thức (Chỉ đọc)</span></div>
+                                                    <div class="o_wrap_input"><strong t-out="this.state.data.header.name"/></div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_private_email" class="o_form_label">Email cá nhân</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_private_email" type="email" class="form-control o_input" t-att-value="this.state.form.private_email || ''" t-on-input="(ev) => this.onFormInput('private_email', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.private_email or 'Chưa khai báo'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_private_phone" class="o_form_label">Điện thoại cá nhân</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_private_phone" type="tel" class="form-control o_input" t-att-value="this.state.form.private_phone || ''" t-on-input="(ev) => this.onFormInput('private_phone', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.private_phone or 'Chưa khai báo'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_birthday" class="o_form_label">Ngày sinh</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_birthday" type="date" class="form-control o_input" t-att-value="this.state.form.birthday || ''" t-on-change="(ev) => this.onFormInput('birthday', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.birthday or 'Chưa khai báo'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_sex" class="o_form_label">Giới tính</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <select t-if="this.state.editing" id="tp_mp_sex" class="form-select o_input" t-att-value="this.state.form.sex || ''" t-on-change="(ev) => this.onFormInput('sex', ev)">
+                                                            <option value="">-- Chọn --</option>
+                                                            <option t-foreach="this.state.data.options.sex" t-as="opt" t-key="opt.value" t-att-value="opt.value" t-out="opt.label"/>
+                                                        </select>
+                                                        <span t-else="" t-out="this.optionLabel('sex', this.state.form.sex)"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_pob" class="o_form_label">Nơi sinh</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_pob" type="text" class="form-control o_input" t-att-value="this.state.form.place_of_birth || ''" t-on-input="(ev) => this.onFormInput('place_of_birth', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.place_of_birth or 'Chưa khai báo'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_country_birth" class="o_form_label">Quốc gia nơi sinh</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <select t-if="this.state.editing" id="tp_mp_country_birth" class="form-select o_input" t-att-value="this.state.form.country_of_birth || ''" t-on-change="(ev) => this.onFormInput('country_of_birth', ev)">
+                                                            <option value="">-- Chọn --</option>
+                                                            <option t-foreach="this.state.data.options.countries" t-as="c" t-key="c.id" t-att-value="c.id" t-out="c.name"/>
+                                                        </select>
+                                                        <span t-else="" t-out="this.countryName(this.state.form.country_of_birth, this.state.data.values.country_of_birth_name)"/>
+                                                    </div>
+                                                </div>
+                                            </section>
+
+                                            <section class="o_tp_hr_card">
+                                                <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="badge" aria-hidden="true"/>Quốc tịch, Giấy tờ &amp; Liên hệ khẩn cấp</h2>
+                                                <div class="o_inner_group">
+                                                    <div class="o_wrap_label"><label for="tp_mp_country" class="o_form_label">Quốc tịch</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <select t-if="this.state.editing" id="tp_mp_country" class="form-select o_input" t-att-value="this.state.form.country_id || ''" t-on-change="(ev) => this.onFormInput('country_id', ev)">
+                                                            <option value="">-- Chọn --</option>
+                                                            <option t-foreach="this.state.data.options.countries" t-as="c" t-key="c.id" t-att-value="c.id" t-out="c.name"/>
+                                                        </select>
+                                                        <span t-else="" t-out="this.countryName(this.state.form.country_id, this.state.data.values.country_name)"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_cccd" class="o_form_label">Số CCCD / CMND</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_cccd" type="text" class="form-control o_input" t-att-value="this.state.form.identification_id || ''" t-on-input="(ev) => this.onFormInput('identification_id', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.identification_id or 'Chưa khai báo'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_passport" class="o_form_label">Số hộ chiếu</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_passport" type="text" class="form-control o_input" t-att-value="this.state.form.passport_id || ''" t-on-input="(ev) => this.onFormInput('passport_id', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.passport_id or 'Chưa khai báo'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_passport_exp" class="o_form_label">Hết hạn hộ chiếu</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_passport_exp" type="date" class="form-control o_input" t-att-value="this.state.form.passport_expiration_date || ''" t-on-change="(ev) => this.onFormInput('passport_expiration_date', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.passport_expiration_date or 'Chưa khai báo'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_emergency_contact" class="o_form_label">Liên hệ khẩn cấp (Họ tên)</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_emergency_contact" type="text" class="form-control o_input" t-att-value="this.state.form.emergency_contact || ''" t-on-input="(ev) => this.onFormInput('emergency_contact', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.emergency_contact or 'Chưa khai báo'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_emergency_phone" class="o_form_label">SĐT khẩn cấp</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_emergency_phone" type="tel" class="form-control o_input" t-att-value="this.state.form.emergency_phone || ''" t-on-input="(ev) => this.onFormInput('emergency_phone', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.emergency_phone or 'Chưa khai báo'"/>
+                                                    </div>
+                                                </div>
+                                            </section>
+
+                                            <section class="o_tp_hr_card">
+                                                <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="location_on" aria-hidden="true"/>Địa chỉ thường trú / Nơi ở</h2>
+                                                <div class="o_inner_group">
+                                                    <div class="o_wrap_label"><label for="tp_mp_street" class="o_form_label">Số nhà, đường</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_street" type="text" class="form-control o_input" t-att-value="this.state.form.private_street || ''" t-on-input="(ev) => this.onFormInput('private_street', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.private_street or 'Chưa khai báo'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_street2" class="o_form_label">Phường / Xã</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_street2" type="text" class="form-control o_input" t-att-value="this.state.form.private_street2 || ''" t-on-input="(ev) => this.onFormInput('private_street2', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.private_street2 or 'Chưa khai báo'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_city" class="o_form_label">Quận / Huyện / TP</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_city" type="text" class="form-control o_input" t-att-value="this.state.form.private_city || ''" t-on-input="(ev) => this.onFormInput('private_city', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.private_city or 'Chưa khai báo'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_priv_country" class="o_form_label">Quốc gia</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <select t-if="this.state.editing" id="tp_mp_priv_country" class="form-select o_input" t-att-value="this.state.form.private_country_id || ''" t-on-change="(ev) => this.onPrivateCountryChange(ev)">
+                                                            <option value="">-- Chọn --</option>
+                                                            <option t-foreach="this.state.data.options.countries" t-as="c" t-key="c.id" t-att-value="c.id" t-out="c.name"/>
+                                                        </select>
+                                                        <span t-else="" t-out="this.countryName(this.state.form.private_country_id, this.state.data.values.private_country_name)"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_priv_state" class="o_form_label">Tỉnh / Thành phố</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <select t-if="this.state.editing" id="tp_mp_priv_state" class="form-select o_input" t-att-value="this.state.form.private_state_id || ''" t-on-change="(ev) => this.onFormInput('private_state_id', ev)">
+                                                            <option value="">-- Chọn --</option>
+                                                            <option t-foreach="this.state.states" t-as="st" t-key="st.id" t-att-value="st.id" t-out="st.name"/>
+                                                        </select>
+                                                        <span t-else="" t-out="this.stateName(this.state.form.private_state_id, this.state.data.values.private_state_name)"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_zip" class="o_form_label">Mã bưu chính</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_zip" type="text" class="form-control o_input" t-att-value="this.state.form.private_zip || ''" t-on-input="(ev) => this.onFormInput('private_zip', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.private_zip or 'Chưa khai báo'"/>
+                                                    </div>
+                                                </div>
+                                            </section>
+
+                                            <section class="o_tp_hr_card">
+                                                <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="school" aria-hidden="true"/>Gia đình &amp; Học vấn</h2>
+                                                <div class="o_inner_group">
+                                                    <div class="o_wrap_label"><label for="tp_mp_marital" class="o_form_label">Tình trạng hôn nhân</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <select t-if="this.state.editing" id="tp_mp_marital" class="form-select o_input" t-att-value="this.state.form.marital || ''" t-on-change="(ev) => this.onFormInput('marital', ev)">
+                                                            <option value="">-- Chọn --</option>
+                                                            <option t-foreach="this.state.data.options.marital" t-as="opt" t-key="opt.value" t-att-value="opt.value" t-out="opt.label"/>
+                                                        </select>
+                                                        <span t-else="" t-out="this.state.form.tp_personal_defaults_confirmed ? this.optionLabel('marital', this.state.form.marital) : 'Chưa xác nhận'"/>
+                                                    </div>
+
+                                                    <t t-if="this.state.form.marital === 'married' or this.state.form.marital === 'cohabitant'">
+                                                        <div class="o_wrap_label"><label for="tp_mp_spouse" class="o_form_label">Họ tên vợ/chồng</label></div>
+                                                        <div class="o_wrap_input">
+                                                            <input t-if="this.state.editing" id="tp_mp_spouse" type="text" class="form-control o_input" t-att-value="this.state.form.spouse_complete_name || ''" t-on-input="(ev) => this.onFormInput('spouse_complete_name', ev)"/>
+                                                            <span t-else="" t-out="this.state.form.spouse_complete_name or 'Chưa khai báo'"/>
+                                                        </div>
+                                                        <div class="o_wrap_label"><label for="tp_mp_spouse_bday" class="o_form_label">Ngày sinh vợ/chồng</label></div>
+                                                        <div class="o_wrap_input">
+                                                            <input t-if="this.state.editing" id="tp_mp_spouse_bday" type="date" class="form-control o_input" t-att-value="this.state.form.spouse_birthdate || ''" t-on-change="(ev) => this.onFormInput('spouse_birthdate', ev)"/>
+                                                            <span t-else="" t-out="this.state.form.spouse_birthdate or 'Chưa khai báo'"/>
+                                                        </div>
+                                                    </t>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_children" class="o_form_label">Số con phụ thuộc</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_children" type="number" min="0" max="30" class="form-control o_input" t-att-value="this.state.form.children ?? ''" t-on-input="(ev) => this.onFormInput('children', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.tp_personal_defaults_confirmed ? this.state.form.children : 'Chưa xác nhận'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_distance" class="o_form_label">Khoảng cách đi làm (km)</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_distance" type="number" min="0" max="2000" class="form-control o_input" t-att-value="this.state.form.distance_home_work ?? ''" t-on-input="(ev) => this.onFormInput('distance_home_work', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.tp_personal_defaults_confirmed ? (this.state.form.distance_home_work + ' km') : 'Chưa xác nhận'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_cert" class="o_form_label">Trình độ học vấn</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <select t-if="this.state.editing" id="tp_mp_cert" class="form-select o_input" t-att-value="this.state.form.certificate || ''" t-on-change="(ev) => this.onFormInput('certificate', ev)">
+                                                            <option value="">-- Chọn --</option>
+                                                            <option t-foreach="this.state.data.options.certificate" t-as="opt" t-key="opt.value" t-att-value="opt.value" t-out="opt.label"/>
+                                                        </select>
+                                                        <span t-else="" t-out="this.optionLabel('certificate', this.state.form.certificate)"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_study" class="o_form_label">Chuyên ngành đào tạo</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <input t-if="this.state.editing" id="tp_mp_study" type="text" class="form-control o_input" t-att-value="this.state.form.study_field || ''" t-on-input="(ev) => this.onFormInput('study_field', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.study_field or 'Chưa khai báo'"/>
+                                                    </div>
+
+                                                    <div class="o_wrap_label"><label for="tp_mp_note" class="o_form_label">Ghi chú cá nhân</label></div>
+                                                    <div class="o_wrap_input">
+                                                        <textarea t-if="this.state.editing" id="tp_mp_note" rows="3" class="form-control o_input" t-att-value="this.state.form.additional_note || ''" t-on-input="(ev) => this.onFormInput('additional_note', ev)"/>
+                                                        <span t-else="" t-out="this.state.form.additional_note or 'Chưa có ghi chú'"/>
+                                                    </div>
+                                                </div>
+                                            </section>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tab 3: Hồ sơ và năng lực -->
+                                    <div t-if="this.state.activeTab === 'resume'" class="tab-pane active show">
+                                        <div class="o_tp_hr_overview_grid">
+                                            <section class="o_tp_hr_card">
+                                                <div class="o_tp_hr_card_title justify-content-between">
+                                                    <span><i class="oi" data-icon="work" aria-hidden="true"/>Quá trình công tác &amp; Kinh nghiệm</span>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" t-on-click="() => this.openResumeModal(null)">+ Thêm mục</button>
+                                                </div>
+                                                <div class="p-3">
+                                                    <div t-if="!this.state.data.resume.lines.length" class="text-muted">Chưa có thông tin kinh nghiệm / học vấn.</div>
+                                                    <div t-foreach="this.state.data.resume.lines" t-as="line" t-key="line.id" class="tp-myprofile-list-item">
+                                                        <div>
+                                                            <div class="fw-semibold" t-out="line.name"/>
+                                                            <div class="small text-muted">
+                                                                <span t-out="line.line_type_name"/> · <span t-out="line.date_start"/> → <span t-out="line.date_end or 'Hiện tại'"/>
+                                                            </div>
+                                                            <div t-if="line.description" class="small mt-1" t-out="line.description"/>
+                                                        </div>
+                                                        <div class="d-flex gap-1">
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.openResumeModal(line)">Sửa</button>
+                                                            <button type="button" class="btn btn-sm btn-outline-danger" t-on-click="() => this.deleteResumeLine(line)">Xóa</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </section>
+
+                                            <section class="o_tp_hr_card">
+                                                <div class="o_tp_hr_card_title justify-content-between">
+                                                    <span><i class="oi" data-icon="verified_user" aria-hidden="true"/>Kỹ năng &amp; Chứng chỉ</span>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" t-on-click="() => this.openSkillModal()">+ Thêm kỹ năng</button>
+                                                </div>
+                                                <div class="p-3">
+                                                    <div t-if="!this.state.data.resume.skills.length" class="text-muted">Chưa khai báo kỹ năng cá nhân.</div>
+                                                    <div t-foreach="this.state.data.resume.skills" t-as="sk" t-key="sk.id" class="tp-myprofile-list-item">
+                                                        <div>
+                                                            <div class="fw-semibold" t-out="sk.skill_name"/>
+                                                            <div class="small text-muted">
+                                                                <span t-out="sk.skill_type_name"/> · <span t-out="sk.skill_level_name"/> (<t t-out="sk.level_progress"/>%)
+                                                            </div>
+                                                        </div>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" t-on-click="() => this.deleteSkill(sk)">Xóa</button>
+                                                    </div>
+                                                </div>
+                                            </section>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tab 4: Hợp đồng lao động (CHỈ ĐỌC) -->
+                                    <div t-if="this.state.activeTab === 'contract'" class="tab-pane active show">
+                                        <div class="o_tp_hr_overview_grid mb-3">
+                                            <section class="o_tp_hr_card">
+                                                <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="description" aria-hidden="true"/>Tóm tắt hợp đồng hiện tại (Chỉ đọc)</h2>
+                                                <div class="o_inner_group">
+                                                    <div class="o_wrap_label"><span class="o_form_label">Loại hình lao động</span></div>
+                                                    <div class="o_wrap_input"><strong t-out="this.state.data.contracts.employment_kind_label"/></div>
+
+                                                    <div class="o_wrap_label"><span class="o_form_label">Có hiệu lực từ</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.contracts.date_version or 'Chưa khai báo'"/></div>
+                                                </div>
+                                            </section>
+                                            <section class="o_tp_hr_card">
+                                                <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="calendar_today" aria-hidden="true"/>Thời hạn hợp đồng lao động</h2>
+                                                <div class="o_inner_group">
+                                                    <div class="o_wrap_label"><span class="o_form_label">Ngày bắt đầu</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.contracts.contract_date_start or 'Chưa khai báo'"/></div>
+
+                                                    <div class="o_wrap_label"><span class="o_form_label">Ngày kết thúc</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.contracts.contract_date_end or 'Chưa khai báo'"/></div>
+
+                                                    <div class="o_wrap_label"><span class="o_form_label">Xác nhận có thời hạn</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.contracts.fixed_term ? 'Có' : 'Không'"/></div>
+                                                </div>
+                                            </section>
+                                        </div>
+
+                                        <section class="o_tp_hr_card">
+                                            <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="folder" aria-hidden="true"/>Danh sách hồ sơ giấy tờ hợp đồng</h2>
+                                            <div class="p-3">
+                                                <div t-if="!this.state.data.contracts.documents.length" class="o_tp_hr_contract_empty p-3 bg-light rounded">
+                                                    <h3>Chưa có hồ sơ giấy tờ hợp đồng</h3>
+                                                    <p class="mb-0 text-muted">Thông tin hợp đồng lao động / thuê khoán sẽ hiển thị tại đây khi bộ phận nhân sự cập nhật.</p>
+                                                </div>
+                                                <div t-else="">
+                                                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                                        <select class="form-select form-select-sm" style="max-width:210px;" aria-label="Lọc loại hợp đồng"
+                                                                t-att-value="this.state.docKindFilter" t-on-change="(ev) => this.onDocKindChange(ev)">
+                                                            <option value="all">Tất cả loại giấy tờ</option>
+                                                            <option value="labor">Hợp đồng lao động</option>
+                                                            <option value="outsourced">Hợp đồng thuê khoán</option>
+                                                        </select>
+                                                        <input type="text" class="form-control form-control-sm" style="max-width:240px;"
+                                                               placeholder="Tìm số HĐ, tên văn bản…" aria-label="Tìm hợp đồng"
+                                                               t-att-value="this.state.docQuery" t-on-input="(ev) => this.onDocQueryInput(ev)"/>
+                                                        <button t-if="this.state.docKindFilter !== 'all' or this.state.docQuery" type="button"
+                                                                class="btn btn-sm btn-outline-secondary" t-on-click="() => this.clearContractDocFilters()">Xóa lọc</button>
+                                                        <span class="ms-auto small text-muted" t-out="this.filteredContractDocuments.length + ' / ' + this.state.data.contracts.documents.length + ' giấy tờ'"/>
+                                                    </div>
+                                                    <div class="table-responsive">
+                                                    <table class="table table-hover align-middle mb-0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Số hợp đồng</th>
+                                                                <th>Tên / trích yếu</th>
+                                                                <th>Loại giấy tờ</th>
+                                                                <th>Ngày ký</th>
+                                                                <th>Thời hạn thuê khoán</th>
+                                                                <th>Tệp đính kèm</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr t-if="!this.filteredContractDocuments.length">
+                                                                <td colspan="6" class="text-center text-muted py-3">Không có giấy tờ hợp đồng phù hợp bộ lọc.</td>
+                                                            </tr>
+                                                            <tr t-foreach="this.filteredContractDocuments" t-as="doc" t-key="doc.id">
+                                                                <td t-out="doc.number or '-'"/>
+                                                                <td>
+                                                                    <div class="fw-semibold" t-out="doc.name"/>
+                                                                    <div t-if="doc.note" class="small text-muted" t-out="doc.note"/>
+                                                                </td>
+                                                                <td t-out="doc.kind_label"/>
+                                                                <td t-out="doc.signed_date or '-'"/>
+                                                                <td>
+                                                                    <t t-if="doc.kind === 'outsourced' and (doc.service_start or doc.service_end)">
+                                                                        <span t-out="(doc.service_start or '-') + ' → ' + (doc.service_end or '-')"/>
+                                                                    </t>
+                                                                    <span t-else="">-</span>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="d-flex flex-wrap gap-2">
+                                                                        <a t-if="doc.has_file" class="btn btn-sm btn-outline-primary" t-att-href="'/tp_hr/my_contract/' + doc.id + '/file'" t-att-download="doc.filename">Tải hợp đồng</a>
+                                                                        <a t-if="doc.has_appendix" class="btn btn-sm btn-outline-secondary" t-att-href="'/tp_hr/my_contract/' + doc.id + '/appendix'" t-att-download="doc.appendix_filename">Tải phụ lục</a>
+                                                                        <span t-if="!doc.has_file and !doc.has_appendix" class="text-muted small">Không có tệp</span>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                </div>
+                                                <p class="o_tp_hr_note mb-0">Thông tin và tệp hợp đồng thuộc quyền quản lý của HR; bạn chỉ được xem và tải bản lưu của chính mình.</p>
+                                            </div>
+                                        </section>
+                                    </div>
+
+                                    <!-- Tab 5: Tài khoản và phân quyền -->
+                                    <div t-if="this.state.activeTab === 'account'" class="tab-pane active show">
+                                        <div class="o_tp_hr_overview_grid">
+                                            <section class="o_tp_hr_card">
+                                                <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="person" aria-hidden="true"/>Tài khoản đăng nhập</h2>
+                                                <div class="o_inner_group">
+                                                    <div class="o_wrap_label"><span class="o_form_label">Tên đăng nhập</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.user_login"/></div>
+
+                                                    <div class="o_wrap_label"><span class="o_form_label">Tình trạng</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.account_status_label"/></div>
+
+                                                    <div class="o_wrap_label"><span class="o_form_label">Công ty</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.company_name"/></div>
+                                                </div>
+                                                <div class="p-3 pt-0">
+                                                    <button type="button" class="btn btn-outline-primary" t-on-click="() => this.openAccountSecurityPreferences()">
+                                                        Đổi mật khẩu &amp; Tùy chọn tài khoản
+                                                    </button>
+                                                </div>
+                                            </section>
+                                            <section class="o_tp_hr_card">
+                                                <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="verified_user" aria-hidden="true"/>Vai trò và phạm vi</h2>
+                                                <div class="o_inner_group">
+                                                    <div class="o_wrap_label"><span class="o_form_label">Vai trò nghiệp vụ</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.business_role or 'Nhân viên'"/></div>
+
+                                                    <div class="o_wrap_label"><span class="o_form_label">Phạm vi quyền</span></div>
+                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.role_scope or this.state.data.header.department_name"/></div>
+                                                </div>
+                                            </section>
+                                        </div>
+                                        <p class="o_tp_hr_note">Quyền hệ thống và chức vụ nhân sự do Quản trị / HR cấp. Nếu cần thay đổi họ tên chính thức hoặc quyền truy cập, vui lòng liên hệ quản trị.</p>
+                                    </div>
+
+                                    <!-- Tab 6: Lịch sử hoạt động -->
+                                    <div t-if="this.state.activeTab === 'history'" class="tab-pane active show">
+                                        <section class="o_tp_hr_card">
+                                            <div class="o_tp_hr_card_title tp-myprofile-history-header">
+                                                <h2 class="h6 mb-0 d-flex align-items-center gap-2">
+                                                    <i class="oi" data-icon="history" aria-hidden="true"/>
+                                                    <span>Lịch sử cập nhật hồ sơ</span>
+                                                </h2>
+                                                <div class="tp-history-filters d-flex flex-wrap align-items-center gap-2" role="group" aria-label="Lọc lịch sử hoạt động">
+                                                    <button
+                                                        t-foreach="this.historyFilters"
+                                                        t-as="hf"
+                                                        t-key="hf.id"
+                                                        type="button"
+                                                        t-attf-class="tp-history-filter-btn {{ this.state.historyFilter === hf.id ? 'is-active' : '' }}"
+                                                        t-on-click="() => this.setHistoryFilter(hf.id)"
+                                                        t-out="hf.label"
+                                                    />
+                                                    <input type="text" class="form-control form-control-sm" style="max-width:210px;"
+                                                           placeholder="Tìm nội dung, người sửa…" aria-label="Tìm lịch sử cập nhật"
+                                                           t-att-value="this.state.historyQuery" t-on-input="(ev) => this.onHistoryQueryInput(ev)"/>
+                                                    <button t-if="this.state.historyFilter !== 'all' or this.state.historyQuery" type="button"
+                                                            class="btn btn-sm btn-outline-secondary" t-on-click="() => this.clearHistoryFilters()">Xóa lọc</button>
+                                                </div>
+                                            </div>
+                                            <div class="p-3 tp-myprofile-history-list">
+                                                <div t-if="!this.filteredHistory.length" class="text-muted small py-2">
+                                                    Chưa có lịch sử phù hợp bộ lọc.
+                                                </div>
+                                                <article t-foreach="this.filteredHistory" t-as="item" t-key="item.id" class="tp-myprofile-history-item">
+                                                    <div class="tp-history-meta">
+                                                        <div class="tp-history-meta-left">
+                                                            <span t-attf-class="tp-history-badge is-{{ item.tone || 'slate' }}" t-out="item.category_label"/>
+                                                            <span t-if="item.effective_date" class="tp-history-effective">
+                                                                Hiệu lực: <t t-out="item.effective_date"/>
+                                                            </span>
+                                                        </div>
+                                                        <div class="tp-history-meta-right">
+                                                            <span class="tp-history-author" t-out="item.author"/>
+                                                            <span class="tp-history-sep" aria-hidden="true">·</span>
+                                                            <time class="tp-history-date" t-out="item.date"/>
+                                                        </div>
+                                                    </div>
+                                                    <div t-if="item.summary_lines &amp;&amp; item.summary_lines.length" class="tp-history-summary">
+                                                        <p t-foreach="item.summary_lines" t-as="line" t-key="line_index" t-out="line"/>
+                                                    </div>
+                                                    <ul t-if="item.changes &amp;&amp; item.changes.length" class="tp-history-changes">
+                                                        <li t-foreach="item.changes" t-as="ch" t-key="ch_index" class="tp-history-change-row">
+                                                            <span class="tp-history-field" t-out="ch.field"/>
+                                                            <span class="tp-history-diff">
+                                                                <span class="tp-history-old" t-out="ch.old_value"/>
+                                                                <span class="tp-history-arrow" aria-hidden="true">→</span>
+                                                                <strong class="tp-history-new" t-out="ch.new_value"/>
+                                                            </span>
+                                                        </li>
+                                                    </ul>
+                                                </article>
+                                            </div>
+                                        </section>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal thêm/sửa mục hồ sơ năng lực -->
+            <div t-if="this.state.resumeDraft" class="tp-myprofile-modal-backdrop" role="dialog" aria-modal="true" aria-label="Cập nhật hồ sơ năng lực">
+                <div class="tp-myprofile-modal card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="h6 mb-0" t-out="this.state.resumeDraft.id ? 'Sửa mục hồ sơ năng lực' : 'Thêm mục hồ sơ năng lực'"/>
+                        <button type="button" class="btn-close" aria-label="Đóng" t-on-click="() => this.closeResumeModal()"/>
+                    </div>
+                    <div class="card-body d-flex flex-column gap-3">
+                        <div>
+                            <label class="form-label">Loại mục</label>
+                            <select class="form-select o_input" t-att-value="this.state.resumeDraft.line_type_id || ''" t-on-change="(ev) => this.onDraftInput('resumeDraft', 'line_type_id', ev)">
+                                <option t-foreach="this.state.data.resume.resume_types" t-as="rt" t-key="rt.id" t-att-value="rt.id" t-out="rt.name"/>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Tiêu đề / Chức danh / Bằng cấp</label>
+                            <input type="text" class="form-control o_input" t-att-value="this.state.resumeDraft.name || ''" t-on-input="(ev) => this.onDraftInput('resumeDraft', 'name', ev)"/>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label">Từ ngày</label>
+                                <input type="date" class="form-control o_input" t-att-value="this.state.resumeDraft.date_start || ''" t-on-change="(ev) => this.onDraftInput('resumeDraft', 'date_start', ev)"/>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Đến ngày</label>
+                                <input type="date" class="form-control o_input" t-att-value="this.state.resumeDraft.date_end || ''" t-on-change="(ev) => this.onDraftInput('resumeDraft', 'date_end', ev)"/>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label">Mô tả</label>
+                            <textarea rows="3" class="form-control o_input" t-att-value="this.state.resumeDraft.description || ''" t-on-input="(ev) => this.onDraftInput('resumeDraft', 'description', ev)"/>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary" t-on-click="() => this.closeResumeModal()">Hủy</button>
+                        <button type="button" class="btn btn-primary" t-att-disabled="this.state.saving" t-on-click="() => this.saveResumeDraft()">Lưu</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal thêm kỹ năng -->
+            <div t-if="this.state.skillDraft" class="tp-myprofile-modal-backdrop" role="dialog" aria-modal="true" aria-label="Thêm kỹ năng">
+                <div class="tp-myprofile-modal card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="h6 mb-0">Thêm kỹ năng cá nhân</h3>
+                        <button type="button" class="btn-close" aria-label="Đóng" t-on-click="() => this.closeSkillModal()"/>
+                    </div>
+                    <div class="card-body d-flex flex-column gap-3">
+                        <div>
+                            <label class="form-label">Loại kỹ năng</label>
+                            <select class="form-select o_input" t-att-value="this.state.skillDraft.skill_type_id" t-on-change="(ev) => this.onSkillTypeChange(ev)">
+                                <option t-foreach="this.state.data.resume.skill_types" t-as="st" t-key="st.id" t-att-value="st.id" t-out="st.name"/>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Kỹ năng</label>
+                            <select class="form-select o_input" t-att-value="this.state.skillDraft.skill_id || ''" t-on-change="(ev) => this.onDraftInput('skillDraft', 'skill_id', ev)">
+                                <option t-foreach="this.filteredSkillsForDraft" t-as="sk" t-key="sk.id" t-att-value="sk.id" t-out="sk.name"/>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Mức độ</label>
+                            <select class="form-select o_input" t-att-value="this.state.skillDraft.skill_level_id || ''" t-on-change="(ev) => this.onDraftInput('skillDraft', 'skill_level_id', ev)">
+                                <option t-foreach="this.filteredLevelsForDraft" t-as="lv" t-key="lv.id" t-att-value="lv.id" t-out="lv.name + ' (' + lv.progress + '%)'"/>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary" t-on-click="() => this.closeSkillModal()">Hủy</button>
+                        <button type="button" class="btn btn-primary" t-att-disabled="this.state.saving" t-on-click="() => this.saveSkillDraft()">Lưu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

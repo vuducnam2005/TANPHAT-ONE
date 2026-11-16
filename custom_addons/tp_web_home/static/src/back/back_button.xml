@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_web_home.BackButton">
+        <button type="button" class="btn o_tp_back_button d-print-none" t-att-title="this.tooltip"
+                t-att-aria-label="this.tooltip" t-att-disabled="this.state.busy" t-att-aria-busy="this.state.busy ? 'true' : 'false'"
+                t-on-click="() => this.onClick()">
+            <i class="oi" data-icon="arrow_back" aria-hidden="true"/>
+            <span class="o_tp_back_label">Quay lại</span>
+        </button>
+    </t>
+
+    <t t-name="tp_web_home.UnsavedBackDialog">
+        <Dialog title="'Thay đổi chưa lưu'" size="'md'">
+            <p class="mb-0">Bản ghi này có thay đổi chưa lưu. Bạn muốn làm gì trước khi quay lại?</p>
+            <t t-set-slot="footer">
+                <button type="button" class="btn btn-primary o_tp_back_save" t-on-click="() => this.choose('save')">Lưu và quay lại</button>
+                <button type="button" class="btn btn-outline-danger o_tp_back_discard" t-on-click="() => this.choose('discard')">Bỏ thay đổi</button>
+                <button type="button" class="btn btn-secondary o_tp_back_stay" t-on-click="() => this.choose('stay')">Ở lại</button>
+            </t>
+        </Dialog>
+    </t>
+
+    <t t-inherit="web.ControlPanel" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('o_control_panel_main_buttons')]" position="before">
+            <TpBackButton t-if="this.tpShowBack"/>
+        </xpath>
+    </t>
+</templates>

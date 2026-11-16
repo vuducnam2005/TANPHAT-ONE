@@ -1,0 +1,81 @@
+<templates xml:space="preserve">
+    <t t-name="tp_hr_workspace.EmployeeDelete">
+        <Dialog title="'Xóa vĩnh viễn nhân viên'" size="'lg'" contentClass="'o_tp_hr_delete'">
+            <div t-if="this.state.loading" class="o_tp_hr_delete_loading" role="status">Đang kiểm tra hồ sơ và dữ liệu liên quan…</div>
+            <div t-elif="this.state.loadError" class="o_tp_hr_delete_error" role="alert">
+                <span t-out="this.state.loadError"/>
+                <button type="button" class="btn btn-link p-0 ms-2" t-on-click="this.reloadPreview">Thử lại</button>
+            </div>
+            <t t-else="">
+                <p class="o_tp_hr_delete_warning" role="note"><strong t-out="this.warning"/></p>
+                <p class="o_tp_hr_delete_count">Đã chọn <strong t-out="this.state.preview.count"/> hồ sơ. Xóa theo lô: một lần xác nhận, tất cả hoặc không hồ sơ nào bị xóa.</p>
+                <div class="o_tp_hr_delete_table table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th scope="col">Họ và tên</th><th scope="col">Mã</th><th scope="col">Phòng ban</th><th scope="col">Tài khoản</th></tr></thead>
+                        <tbody>
+                            <tr t-foreach="this.state.preview.employees" t-as="employee" t-key="employee.id">
+                                <td><t t-out="employee.name"/><span t-if="!employee.active" class="o_tp_hr_delete_tag">Đã lưu trữ</span></td>
+                                <td t-out="employee.code or '—'"/>
+                                <td t-out="employee.department or '—'"/>
+                                <td><t t-if="employee.login"><t t-out="employee.login"/><span t-if="!employee.accountActive" class="o_tp_hr_delete_tag">Đang khóa</span></t><t t-else="">Chưa có tài khoản</t></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <section class="o_tp_hr_delete_section o_tp_hr_delete_remove" aria-labelledby="tp_hr_delete_remove">
+                    <h3 id="tp_hr_delete_remove">Sẽ xóa</h3>
+                    <ul>
+                        <li>Hồ sơ nhân viên (cả khi đã lưu trữ)<t t-if="this.state.preview.count > 1"> — <t t-out="this.state.preview.count"/> hồ sơ</t></li>
+                        <li t-foreach="this.section('delete')" t-as="row" t-key="row_index"><t t-if="this.state.preview.count > 1"><span class="o_tp_hr_delete_owner" t-out="row.employee"/>: </t><t t-out="row.label"/><span class="o_tp_hr_delete_value" t-out="row.value"/></li>
+                    </ul>
+                </section>
+                <section class="o_tp_hr_delete_section o_tp_hr_delete_keep" aria-labelledby="tp_hr_delete_keep">
+                    <h3 id="tp_hr_delete_keep">Giữ lại</h3>
+                    <ul>
+                        <li>Nhật ký xóa (người thực hiện, thời điểm, mã, lý do); mã TP không được cấp lại</li>
+                        <li t-foreach="this.section('keep')" t-as="row" t-key="row_index"><t t-if="this.state.preview.count > 1"><span class="o_tp_hr_delete_owner" t-out="row.employee"/>: </t><t t-out="row.label"/><span class="o_tp_hr_delete_value" t-out="row.value"/></li>
+                    </ul>
+                </section>
+                <section t-if="this.blockers.length" class="o_tp_hr_delete_section o_tp_hr_delete_block" aria-labelledby="tp_hr_delete_block" role="alert">
+                    <h3 id="tp_hr_delete_block">Đang chặn — chưa thể xóa</h3>
+                    <ul>
+                        <li t-foreach="this.blockers" t-as="blocker" t-key="blocker.id"><strong><t t-out="blocker.name"/> (<t t-out="blocker.code or '—'"/>)</strong>
+                            <ul><li t-foreach="blocker.reasons" t-as="text" t-key="text_index" t-out="text"/></ul>
+                        </li>
+                    </ul>
+                    <p>Xử lý các mục trên rồi bấm <em>Xem trước lại</em>, hoặc dùng <strong>Lưu trữ</strong> nếu cần giữ lịch sử.</p>
+                    <button type="button" class="btn btn-link p-0" t-on-click="this.reloadPreview" t-att-disabled="this.state.busy">Xem trước lại</button>
+                </section>
+                <form id="tp_hr_delete_form" class="o_tp_hr_delete_form" t-on-submit="this.submit" autocomplete="off">
+                    <div t-if="this.state.preview.accountCount" class="o_tp_hr_delete_option">
+                        <input id="tp_hr_delete_lock" type="checkbox" class="form-check-input" t-att-checked="this.state.lockAccounts" t-on-change="(ev) => this.state.lockAccounts = ev.target.checked" t-att-disabled="this.state.busy" aria-describedby="tp_hr_delete_lock_help"/>
+                        <label for="tp_hr_delete_lock">Xóa hồ sơ và khóa tài khoản</label>
+                        <small id="tp_hr_delete_lock_help">Mặc định giữ tài khoản. Khi chọn: khóa đăng nhập, kết thúc phiên, thu hồi vai trò trưởng phòng/phân công/quyền dự án. Không xóa tài khoản; tài khoản quản trị và tài khoản của bạn không bị khóa.</small>
+                    </div>
+                    <div class="o_tp_hr_delete_field">
+                        <label for="tp_hr_delete_reason">Lý do xóa <span aria-label="bắt buộc">*</span></label>
+                        <textarea id="tp_hr_delete_reason" name="delete_reason" rows="2" maxlength="1000" t-ref="this.reasonInput" t-att-value="this.state.reason" t-on-input="(ev) => this.state.reason = ev.target.value" t-att-readonly="this.state.busy" t-att-aria-invalid="this.state.errorField === 'reason' ? 'true' : 'false'" aria-describedby="tp_hr_delete_reason_help"/>
+                        <small id="tp_hr_delete_reason_help">Ghi vào nhật ký xóa để đối chiếu sau này.</small>
+                    </div>
+                    <input type="text" name="username" class="visually-hidden" tabindex="-1" aria-hidden="true" autocomplete="username" readonly="readonly" t-att-value="this.state.preview.adminLogin"/>
+                    <div class="o_tp_hr_delete_field">
+                        <label for="tp_hr_delete_password">Mật khẩu của bạn <span aria-label="bắt buộc">*</span></label>
+                        <div class="o_tp_hr_delete_password">
+                            <input id="tp_hr_delete_password" name="admin_password" t-ref="this.passwordInput" t-att-type="this.state.visible ? 'text' : 'password'" t-att-value="this.state.password" t-on-input="(ev) => this.state.password = ev.target.value" t-att-readonly="this.state.busy" autocomplete="current-password" spellcheck="false" autocapitalize="none" t-att-aria-invalid="this.state.errorField === 'password' ? 'true' : 'false'" aria-describedby="tp_hr_delete_password_help"/>
+                            <button type="button" class="o_tp_hr_delete_toggle" t-on-click="() => this.state.visible = !this.state.visible" t-att-aria-pressed="this.state.visible ? 'true' : 'false'" t-att-aria-label="this.state.visible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'" t-att-disabled="this.state.busy"><t t-out="this.state.visible ? 'Ẩn' : 'Hiện'"/></button>
+                        </div>
+                        <small id="tp_hr_delete_password_help">Nhập lại mật khẩu đăng nhập của chính bạn (<t t-out="this.state.preview.adminLogin"/>) cho mỗi lần xóa. Mật khẩu không được lưu.</small>
+                    </div>
+                    <div t-if="this.state.error" class="o_tp_hr_delete_error" role="alert">
+                        <span t-out="this.state.error"/>
+                        <button t-if="this.state.stale" type="button" class="btn btn-link p-0 ms-2" t-on-click="this.reloadPreview" t-att-disabled="this.state.busy">Xem trước lại</button>
+                    </div>
+                </form>
+            </t>
+            <t t-set-slot="footer">
+                <button type="submit" form="tp_hr_delete_form" class="btn btn-danger o_tp_hr_delete_confirm" t-att-disabled="!this.canSubmit" t-att-aria-busy="this.state.busy ? 'true' : 'false'"><t t-if="this.state.busy">Đang xóa…</t><t t-else="">Xác nhận xóa vĩnh viễn</t></button>
+                <button type="button" class="btn btn-outline-secondary" t-on-click="this.props.close" t-att-disabled="this.state.busy">Hủy</button>
+            </t>
+        </Dialog>
+    </t>
+</templates>

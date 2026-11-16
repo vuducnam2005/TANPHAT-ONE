@@ -1,0 +1,17 @@
+<templates xml:space="preserve">
+    <t t-name="tp_reporting.ReviewerField">
+        <span t-if="this.props.readonly" t-out="this.value?.display_name || 'Chưa chọn người nhận'"/>
+        <div t-else="" class="tp_reporting_reviewer">
+            <p t-if="!this.props.record.resId" class="text-muted">Lưu nháp trước để chọn người nhận theo phạm vi.</p>
+            <t t-else="">
+                <select class="o_input" t-att-id="this.props.id" aria-label="Người nhận / rà soát" t-att-value="this.value?.id || ''" t-on-change="(ev) => this.change(ev)" t-att-disabled="this.state.busy">
+                    <option value="">Chọn người nhận được phân công</option>
+                    <option t-foreach="this.state.choices" t-as="choice" t-key="choice.id" t-att-value="choice.id" t-out="choice.display_name"/>
+                </select>
+                <button type="button" class="btn btn-link p-0" t-on-click="() => this.load()" t-att-disabled="this.state.busy">Tải lại người nhận</button>
+                <small t-if="!this.state.busy and !this.state.choices.length and !this.state.error" class="d-block text-muted">Chưa có người nhận hợp lệ. Cần cấu hình assignment rà soát đúng phạm vi/hiệu lực.</small>
+                <span t-if="this.state.error" class="text-danger" role="alert" t-out="this.state.error"/>
+            </t>
+        </div>
+    </t>
+</templates>

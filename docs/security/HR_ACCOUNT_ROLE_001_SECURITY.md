@@ -101,4 +101,28 @@ binding “Delete employee” của `hr_timesheet` được gỡ. Mã nhân viê
 correction nội bộ có audit; cấp mã dưới khóa advisory, unique constraint giữ.
 Xem [acceptance](../demo/HR_CORRECTION_008_ACCEPTANCE.md).
 
+## HR-DELETE-010 — 12/11/2026 (DEC-042)
+
+Thay luồng 008: `hr.employee.unlink` chỉ chạy khi context mang đúng đối tượng
+sentinel Python nội bộ (so `is`, không phải giá trị client gửi được); native
+Delete/RPC/`sudo()`/context giả đều bị chặn. Entry “Xóa vĩnh viễn nhân viên” chỉ
+mở hộp thoại; quyết định nằm ở `tp_permanent_delete_execute`:
+
+| Kiểm tra | Cách làm |
+| --- | --- |
+| Quyền | `base.group_system` và `hr.group_hr_manager`, mọi hồ sơ thuộc công ty đang chọn; không có cờ admin từ frontend |
+| Phiên | `request.session.uid` phải trùng uid gọi; gọi ngoài HTTP bị AccessError |
+| Mật khẩu | Mỗi yêu cầu cuối: native `_check_credentials` của chính admin trong native `_assert_can_auth` (đếm sai/cooldown chung của đăng nhập); không dùng 10 phút `check_identity`, không ghi `identity-check-last` |
+| Bí mật | Mật khẩu chỉ trong state OWL và tham số RPC cuối; xóa khỏi state trước khi gửi/khi đóng; không transient/context/decorator/log/audit/URL; ô `current-password` ẩn mặc định |
+| Đồng thời | Khóa advisory theo công ty, `FOR UPDATE` hồ sơ/resource/tài khoản; digest kế hoạch phải bằng preview và bằng dữ liệu commit (cursor read-only mới) |
+| Toàn vẹn | Một transaction: khóa tài khoản (tùy chọn) → unlink → dọn chatter/tệp/xmlid qua ORM → audit; lỗi giữa chừng rollback toàn bộ; `request_id` + unique `(request_id, employee_ref)` chống xóa lặp |
+| Quan hệ | Không gỡ FK, không cascade dữ liệu độc lập, không đổi owner/reviewer; dữ liệu độc lập chặn với model/số lượng/gợi ý; dòng nhập Excel chỉ bỏ liên kết |
+| Tài khoản | Mặc định giữ; khóa chỉ khi admin chọn: inactive + cờ HR + tăng revision kết thúc phiên, tắt role/assignment/grant/CRM member trong công ty, gỡ scoped group. Không khóa/xóa root/admin/hệ thống/portal/chính mình/đa công ty ngoài phạm vi; không xóa user |
+
+Audit `tp.hr.employee.audit` không FK, append-only (create/write/unlink chỉ qua
+sentinel), lưu snapshot tối thiểu (mã, mã nguồn, phòng/chức vụ, tài khoản, phần
+xóa/giữ, quyền thu hồi), không lưu mật khẩu hoặc toàn bộ hồ sơ cá nhân. Mã TP đã
+xóa bị ValidationError nếu cấp/gán lại. Blob vật lý chỉ do GC native xử lý khi
+không còn tham chiếu. Xem [acceptance](../demo/HR_DELETE_010_ACCEPTANCE.md).
+
 CHG-20261112-012: current_version_id phải thuộc chính employee dù cùng phòng; hr.version.employee_id không được chuyển lịch sử sang người khác, createversion không kháccompany. Native initialbacklink chỉ khi version chưaowner/employee chưahistory; không contextflag. RegressionHR41 đạt trướcrestartmain; không đổi quyền/data thật.

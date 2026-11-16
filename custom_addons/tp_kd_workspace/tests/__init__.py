@@ -16,6 +16,7 @@ from . import (
     test_report_center,
     test_reporting,
     test_staff_scope,
+    test_table_filter_kd,
     test_ui_layout,
     test_workspace,
 )

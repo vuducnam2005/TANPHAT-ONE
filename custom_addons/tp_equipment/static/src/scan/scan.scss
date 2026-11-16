@@ -1,0 +1,56 @@
+.o_tp_eq_scan {
+    overflow: auto;
+    padding: 24px 16px;
+    background: var(--tp-eq-bg, #f4f6f9);
+
+    .o_tp_eq_scan_card {
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 24px;
+        background: #fff;
+        border: 1px solid #d8e0e8;
+        border-radius: 12px;
+    }
+    .o_tp_eq_scan_title {
+        font-size: 1.35rem;
+        margin: 0 0 8px;
+    }
+    .o_tp_eq_scan_help {
+        color: #4a5b6c;
+    }
+    .o_tp_eq_scan_form {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+
+        .o_tp_eq_scan_input {
+            flex: 1 1 240px;
+            min-height: 44px;
+            font-size: 1.05rem;
+        }
+        .btn {
+            min-height: 44px;
+        }
+    }
+    .o_tp_eq_scan_error {
+        min-height: 1.5em;
+        margin: 8px 0 0;
+        color: #a12a2a;
+    }
+    .o_tp_eq_scan_recent {
+        h2 {
+            font-size: 1rem;
+            margin: 12px 0 4px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .btn-link {
+            min-height: 44px;
+            padding-left: 0;
+            text-align: left;
+        }
+    }
+}

@@ -1,0 +1,293 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+  <record id="import_list" model="ir.ui.view">
+    <field name="name">tp.import_list</field>
+    <field name="model">tp.equipment.import.batch</field>
+    <field name="arch" type="xml">
+      <list js_class="tp_equipment_table" class="tp_eq_table" limit="20">
+        <field name="name"/>
+        <field name="kind"/>
+        <field name="file_name"/>
+        <field name="state" optional="show"/>
+        <field name="file_hash" optional="show"/>
+      </list>
+    </field>
+  </record>
+  <record id="import_search" model="ir.ui.view">
+    <field name="name">tp.import_search</field>
+    <field name="model">tp.equipment.import.batch</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="name"/>
+        <field name="kind"/>
+        <field name="file_name"/>
+        <field name="state"/>
+        <field name="file_hash"/>
+      </search>
+    </field>
+  </record>
+  <record id="import_line_list" model="ir.ui.view">
+    <field name="name">tp.import_line_list</field>
+    <field name="model">tp.equipment.import.line</field>
+    <field name="arch" type="xml">
+      <list js_class="tp_equipment_table" class="tp_eq_table" limit="20">
+        <field name="sheet_name"/>
+        <field name="row_number"/>
+        <field name="disposition"/>
+        <field name="name" optional="show"/>
+        <field name="employee_id" optional="show"/>
+        <field name="department_id" optional="show"/>
+        <field name="location_id" optional="show"/>
+        <field name="mapping_confirmed" readonly="1" optional="show"/>
+        <field name="applied" optional="show"/>
+        <field name="equipment_id" optional="show"/>
+        <field name="proposal_line_id" optional="show"/>
+        <field name="resolution_note" optional="show"/>
+        <field name="suggestion" optional="hide"/>
+      </list>
+    </field>
+  </record>
+  <record id="import_line_search" model="ir.ui.view">
+    <field name="name">tp.import_line_search</field>
+    <field name="model">tp.equipment.import.line</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="sheet_name"/>
+        <field name="row_number"/>
+        <field name="disposition"/>
+        <field name="name"/>
+        <field name="employee_id"/>
+        <field name="department_id"/>
+        <field name="location_id"/>
+        <field name="mapping_confirmed" readonly="1"/>
+        <field name="equipment_id"/>
+        <field name="proposal_line_id"/>
+        <field name="batch_id"/>
+        <filter name="pending" string="Chờ bổ sung" domain="[('disposition', 'in', ('unknown', 'wait', 'missing'))]"/>
+        <filter name="applied" string="Đã áp dụng" domain="[('applied', '=', True)]"/>
+      </search>
+    </field>
+  </record>
+  <record id="import_column_list" model="ir.ui.view">
+    <field name="name">tp.import_column_list</field>
+    <field name="model">tp.equipment.import.column</field>
+    <field name="arch" type="xml">
+      <list js_class="tp_equipment_table" class="tp_eq_table" limit="20">
+        <field name="sheet_name"/>
+        <field name="column_number"/>
+        <field name="source_label"/>
+        <field name="target_field" optional="show"/>
+        <field name="network_excluded" optional="show"/>
+      </list>
+    </field>
+  </record>
+  <record id="import_column_search" model="ir.ui.view">
+    <field name="name">tp.import_column_search</field>
+    <field name="model">tp.equipment.import.column</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="sheet_name"/>
+        <field name="column_number"/>
+        <field name="source_label"/>
+        <field name="target_field"/>
+      </search>
+    </field>
+  </record>
+  <record id="import_alias_list" model="ir.ui.view">
+    <field name="name">tp.import_alias_list</field>
+    <field name="model">tp.equipment.import.alias</field>
+    <field name="arch" type="xml">
+      <list js_class="tp_equipment_table" class="tp_eq_table" limit="20">
+        <field name="source_text"/>
+        <field name="employee_id"/>
+        <field name="department_id"/>
+        <field name="location_id" optional="show"/>
+        <field name="confirmed" optional="show"/>
+      </list>
+    </field>
+  </record>
+  <record id="import_alias_search" model="ir.ui.view">
+    <field name="name">tp.import_alias_search</field>
+    <field name="model">tp.equipment.import.alias</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="source_text"/>
+        <field name="employee_id"/>
+        <field name="department_id"/>
+        <field name="location_id"/>
+        <field name="confirmed"/>
+      </search>
+    </field>
+  </record>
+  <record id="import_line_form" model="ir.ui.view">
+    <field name="name">tp.import_line_form</field>
+    <field name="model">tp.equipment.import.line</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+            <field name="batch_id"/>
+            <field name="batch_kind" invisible="1"/>
+            <field name="sheet_name"/>
+            <field name="row_number"/>
+            <field name="disposition"/>
+            <field name="name"/>
+            <field name="employee_id"/>
+            <field name="department_id"/>
+            <field name="location_id"/>
+            <field name="custody_stock"/>
+            <field name="suggestion"/>
+            <field name="mapping_confirmed" readonly="1"/>
+            <field name="applied"/>
+            <field name="resolution_note"/>
+            <field name="proposal_kind"/>
+            <field name="amount_known"/>
+            <field name="amount"/>
+            <field name="currency_id"/>
+            <field name="quantity_known"/>
+            <field name="quantity"/>
+            <field name="equipment_id"/>
+            <field name="proposal_line_id"/>
+          <field name="identity_resolution"/><field name="match_equipment_id"/><field name="match_proposal_line_id"/><field name="identity_confirmed"/></group>
+          <group string="Giá trị xác nhận cho hồ sơ tạo mới" invisible="batch_kind != 'equipment'">
+            <field name="category_id"/>
+            <field name="asset_class"/>
+            <field name="ownership"/>
+            <field name="technical_state"/>
+            <field name="replacement_needed"/>
+            <field name="brand"/>
+            <field name="cpu"/>
+            <field name="ram"/>
+            <field name="storage"/>
+            <field name="gpu"/>
+            <field name="screen"/>
+          </group>
+          <group string="Ô nguồn và xuất xứ">
+            <field name="source_json"/>
+          </group>
+          <button name="action_apply_alias" type="object" string="Áp dụng ánh xạ đã xác nhận"/>
+        <button name="action_confirm_mapping" type="object" string="Xác nhận ánh xạ" class="btn-primary"/></sheet>
+      </form>
+    </field>
+  </record>
+  <record id="import_form" model="ir.ui.view">
+    <field name="name">tp.import_form</field>
+    <field name="model">tp.equipment.import.batch</field>
+    <field name="arch" type="xml">
+      <form class="tp_eq_form" js_class="tp_equipment_form">
+        <header>
+          <button name="action_preview" type="object" string="Đọc nguồn / xem trước" class="btn-primary" invisible="state != 'draft'"/>
+          <button name="action_apply" type="object" string="Áp dụng dòng đã xác nhận" class="btn-primary" invisible="state not in ('preview', 'partial')" confirm="Áp dụng dữ liệu đã xác nhận vào hồ sơ thật? Dòng đã áp dụng không bị tạo lại."/>
+          <button name="action_open_pending" type="object" string="Dòng nguồn chờ bổ sung" invisible="not pending_count"/>
+          <field name="state" widget="statusbar"/>
+        </header>
+        <sheet>
+          <div class="oe_title">
+            <h1>
+              <field name="name"/>
+            </h1>
+          </div>
+          <div class="alert alert-info" role="status">Đọc nguồn chỉ lập bản xem trước. Xác nhận từng ánh xạ ID, cách xử lý và nội dung trước khi áp dụng.</div>
+          <div class="alert alert-warning" role="status" invisible="state != 'partial'">Đã áp dụng phần đủ thông tin. Dòng chờ giữ trên đợt này kèm lý do; bổ sung ID / nội dung, xác nhận rồi áp dụng tiếp. Dòng đã áp dụng không bị tạo lại.</div>
+          <group>
+            <field name="company_id" readonly="state != 'draft'"/>
+            <field name="kind" readonly="state != 'draft'"/>
+            <field name="file_name" readonly="state != 'draft'"/>
+            <field name="file" filename="file_name" readonly="state != 'draft'"/>
+            <field name="file_hash"/>
+            <field name="proposal_title" invisible="kind != 'proposal'" readonly="state not in ('draft', 'preview')"/>
+            <field name="pending_count"/>
+            <field name="previous_batch_id" readonly="state == 'applied'"/>
+            <field name="identity_confirmed" readonly="state == 'applied'"/>
+            <field name="proposal_id"/>
+            <field name="applied_by_id"/>
+            <field name="applied_date"/>
+            <field name="note" placeholder="Ghi kết quả đối chiếu định danh và khác biệt với nguồn trước khi xác nhận phiên bản mới."/>
+          </group>
+          <notebook>
+            <page string="Ánh xạ cột">
+              <field name="column_ids" readonly="state != 'preview'" widget="tp_equipment_relation">
+                <list js_class="tp_equipment_table" class="tp_eq_table" limit="20" editable="bottom" create="0" delete="0">
+                  <field name="sheet_name"/>
+                  <field name="column_number"/>
+                  <field name="source_label"/>
+                  <field name="target_field"/>
+                  <field name="network_excluded"/>
+                </list>
+              </field>
+            </page>
+            <page string="Tất cả dòng nguồn">
+              <field name="line_ids" readonly="state not in ('preview', 'partial')" context="{'form_view_ref': 'tp_equipment.import_line_form'}" widget="tp_equipment_relation">
+                <list js_class="tp_equipment_table" class="tp_eq_table" editable="bottom" create="0" delete="0" limit="20" open_form_view="1">
+                  <field name="sheet_name"/>
+                  <field name="row_number"/>
+                  <field name="disposition"/>
+                  <field name="name"/>
+                  <field name="employee_id"/>
+                  <field name="department_id"/>
+                  <field name="location_id"/>
+                  <field name="mapping_confirmed" readonly="1"/>
+                  <field name="equipment_id"/>
+                  <field name="proposal_line_id"/>
+                  <field name="resolution_note"/>
+                <button name="action_confirm_mapping" type="object" string="Xác nhận ánh xạ"/><field name="identity_resolution" optional="show"/><field name="match_equipment_id" optional="hide"/><field name="match_proposal_line_id" optional="hide"/><field name="identity_confirmed" optional="hide" readonly="parent.state == 'applied'"/><field name="applied" optional="show"/><field name="category_id" optional="show"/><field name="ownership" optional="hide"/><field name="custody_stock" optional="hide"/><field name="technical_state" optional="hide"/><field name="replacement_needed" optional="hide"/><field name="proposal_kind" optional="hide"/><field name="amount_known" optional="hide"/><field name="amount" optional="hide"/><field name="currency_id" optional="hide"/><field name="quantity_known" optional="hide"/><field name="quantity" optional="hide"/></list>
+              </field>
+            </page>
+          </notebook>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+  <record id="import_alias_form" model="ir.ui.view">
+    <field name="name">tp.import_alias_form</field>
+    <field name="model">tp.equipment.import.alias</field>
+    <field name="arch" type="xml">
+      <form>
+        <header>
+          <button name="action_confirm" type="object" string="Xác nhận ánh xạ" class="btn-primary" invisible="confirmed"/>
+        </header>
+        <sheet>
+          <group>
+            <field name="source_text"/>
+            <field name="company_id"/>
+            <field name="employee_id"/>
+            <field name="department_id"/>
+            <field name="location_id"/>
+            <field name="confirmed"/>
+            <field name="confirmed_by_id"/>
+            <field name="confirmed_date"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+  <record id="action_import" model="ir.actions.act_window">
+    <field name="name">Nhập nguồn có xem trước</field>
+    <field name="res_model">tp.equipment.import.batch</field>
+    <field name="view_mode">list,form</field>
+    <field name="view_id" ref="import_list"/>
+    <field name="search_view_id" ref="import_search"/>
+    <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('import_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('import_form')})]"/>
+    <field name="group_ids" eval="[(4, ref('base.group_system'))]"/>
+  <field name="path">nhap-du-lieu-thiet-bi</field></record>
+  <record id="action_import_pending" model="ir.actions.act_window">
+    <field name="name">Dòng nguồn chờ bổ sung</field>
+    <field name="res_model">tp.equipment.import.line</field>
+    <field name="view_mode">list,form</field>
+    <field name="view_id" ref="import_line_list"/>
+    <field name="search_view_id" ref="import_line_search"/>
+    <field name="domain">[('disposition', 'in', ('unknown', 'wait', 'missing'))]</field>
+    <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('import_line_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('import_line_form')})]"/>
+    <field name="group_ids" eval="[(4, ref('base.group_system'))]"/>
+  <field name="path">dong-nguon-thiet-bi-cho</field></record>
+  <record id="action_import_alias" model="ir.actions.act_window">
+    <field name="name">Ánh xạ tên đã xác nhận</field>
+    <field name="res_model">tp.equipment.import.alias</field>
+    <field name="view_mode">list,form</field>
+    <field name="view_id" ref="import_alias_list"/>
+    <field name="search_view_id" ref="import_alias_search"/>
+    <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('import_alias_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('import_alias_form')})]"/>
+    <field name="group_ids" eval="[(4, ref('base.group_system'))]"/>
+  <field name="path">anh-xa-nguon-thiet-bi</field></record>
+</odoo>

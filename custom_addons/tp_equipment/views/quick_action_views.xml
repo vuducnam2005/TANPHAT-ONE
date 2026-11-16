@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- EQUIP-SIMPLE-003 (DEC-047): picker used by the Gán / Đổi máy popups. The machine domain itself
+         (stock AND no holder AND fit to hand over) is the backend field domain of the popup. -->
+    <record id="equipment_picker_list" model="ir.ui.view">
+        <field name="name">tp.equipment.picker.list</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="priority">120</field>
+        <field name="arch" type="xml">
+            <list string="Thiết bị trong kho chưa được gán" create="0" class="tp_eq_table tp_eq_picker_table">
+                <field name="tp_code" string="Mã TB" class="tp_eq_strong"/>
+                <field name="name" string="Thiết bị" class="tp_eq_wrap"/>
+                <field name="category_id" string="Loại"/>
+                <field name="tp_short_config" string="Cấu hình"/>
+                <field name="tp_technical_state" string="Tình trạng máy" widget="badge" decoration-success="tp_technical_state == 'good'" decoration-warning="tp_technical_state in ('limited', 'unverified')" decoration-danger="tp_technical_state == 'broken'"/>
+                <field name="serial_no" string="Serial" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="equipment_picker_search" model="ir.ui.view">
+        <field name="name">tp.equipment.picker.search</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="priority">120</field>
+        <field name="arch" type="xml">
+            <search string="Tìm thiết bị trong kho">
+                <field name="tp_search" string="Tên / mã / serial"/>
+                <field name="category_id" string="Loại thiết bị"/>
+                <filter name="pick_good" string="Tốt" domain="[('tp_technical_state', '=', 'good')]"/>
+                <filter name="pick_limited" string="Hạn chế" domain="[('tp_technical_state', '=', 'limited')]"/>
+                <filter name="pick_unverified" string="Chưa xác minh" domain="[('tp_technical_state', '=', 'unverified')]"/>
+                <group>
+                    <filter name="pick_group_category" string="Loại thiết bị" context="{'group_by': 'category_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="quick_action_form" model="ir.ui.view">
+        <field name="name">tp.equipment.quick.action.form</field>
+        <field name="model">tp.equipment.quick.action</field>
+        <field name="arch" type="xml">
+            <form string="Thiết bị" class="o_tp_eq_quick_form">
+                <field name="mode" invisible="1"/>
+                <field name="expected_versions" invisible="1"/>
+                <field name="request_key" invisible="1"/>
+                <field name="has_unverified" invisible="1"/>
+                <field name="free_count" invisible="1"/>
+                <field name="employee_archived" invisible="1"/>
+                <div class="alert alert-warning o_tp_eq_quick_alert" role="alert" invisible="mode == 'return' or free_count">
+                    Không có thiết bị trong kho chưa được gán
+                </div>
+                <div class="alert alert-warning o_tp_eq_quick_alert" role="status" invisible="not employee_archived">
+                    Người đã nghỉ/cần thu hồi: chỉ trả thiết bị về kho, không giao thêm máy.
+                </div>
+                <group class="o_tp_eq_quick_main">
+                    <field name="employee_id" string="Người sử dụng"
+                           options="{'no_create': True, 'no_create_edit': True, 'no_quick_create': True, 'no_open': True}"
+                           readonly="mode != 'assign'" required="mode != 'return'" invisible="mode == 'return' and not employee_id"
+                           placeholder="Chọn nhân viên trong HR"/>
+                    <field name="old_equipment_id" string="Máy đang dùng (trả về kho)" invisible="mode != 'swap'" required="mode == 'swap'"
+                           domain="[('tp_lifecycle', '=', 'active'), ('tp_custody', 'in', ['employee', 'loan']), ('tp_employee_id', '=', employee_id)]"
+                           options="{'no_create': True, 'no_create_edit': True, 'no_quick_create': True, 'no_open': True}"/>
+                    <field name="new_equipment_id" string="Máy mới (trong kho, chưa có người giữ)" invisible="mode != 'swap'" required="mode == 'swap'"
+                           context="{'list_view_ref': 'tp_equipment.equipment_picker_list', 'search_view_ref': 'tp_equipment.equipment_picker_search'}"
+                           options="{'no_create': True, 'no_create_edit': True, 'no_quick_create': True, 'no_open': True}"
+                           placeholder="Tìm theo mã, tên, serial"/>
+                    <field name="reason" string="Lý do" widget="radio" options="{'horizontal': true}" invisible="mode != 'return'" required="mode == 'return'"/>
+                </group>
+                <div invisible="mode != 'assign'" class="o_tp_eq_quick_block">
+                    <div class="o_tp_eq_quick_label">Thiết bị trong kho chưa được gán</div>
+                    <field name="assign_equipment_ids" nolabel="1" create="0"
+                           context="{'list_view_ref': 'tp_equipment.equipment_picker_list', 'search_view_ref': 'tp_equipment.equipment_picker_search'}">
+                        <list create="0" class="tp_eq_table o_tp_eq_quick_list">
+                            <field name="tp_code" string="Mã TB" readonly="1" class="tp_eq_strong"/>
+                            <field name="name" string="Thiết bị" readonly="1"/>
+                            <field name="tp_short_config" string="Cấu hình" readonly="1"/>
+                            <field name="tp_technical_state" string="Tình trạng máy" readonly="1" widget="badge" decoration-success="tp_technical_state == 'good'" decoration-warning="tp_technical_state in ('limited', 'unverified')" decoration-danger="tp_technical_state == 'broken'"/>
+                        </list>
+                    </field>
+                </div>
+                <div invisible="mode != 'return'" class="o_tp_eq_quick_block">
+                    <div class="o_tp_eq_quick_label">Thiết bị trả về kho</div>
+                    <field name="return_equipment_ids" nolabel="1" create="0"
+                           domain="[('tp_lifecycle', '=', 'active'), ('tp_custody', 'in', ['employee', 'loan', 'department', 'location']), ('tp_employee_id', '=', employee_id)]">
+                        <list create="0" class="tp_eq_table o_tp_eq_quick_list">
+                            <field name="tp_code" string="Mã TB" readonly="1" class="tp_eq_strong"/>
+                            <field name="name" string="Thiết bị" readonly="1"/>
+                            <field name="tp_short_config" string="Cấu hình" readonly="1"/>
+                            <field name="tp_technical_state" string="Tình trạng máy" readonly="1" widget="badge" decoration-success="tp_technical_state == 'good'" decoration-warning="tp_technical_state in ('limited', 'unverified')" decoration-danger="tp_technical_state == 'broken'"/>
+                        </list>
+                    </field>
+                </div>
+                <group>
+                    <field name="note" string="Ghi chú" placeholder="Không bắt buộc" rows="2"/>
+                </group>
+                <div class="o_tp_eq_quick_block">
+                    <div class="o_tp_eq_quick_label">Tóm tắt</div>
+                    <field name="summary_html" nolabel="1" readonly="1"/>
+                </div>
+                <div class="alert alert-warning o_tp_eq_quick_alert" role="status" invisible="not has_unverified">
+                    Có máy chưa xác minh tình trạng thực tế. Hệ thống không tự đánh dấu đã xác minh.
+                    <div class="mt-1"><field name="confirm_unverified" nolabel="1" class="d-inline-block me-1"/><label for="confirm_unverified" class="d-inline"/></div>
+                </div>
+                <footer>
+                    <button name="action_confirm" type="object" string="Xác nhận gán" class="btn-primary" invisible="mode != 'assign'" data-hotkey="q"/>
+                    <button name="action_confirm" type="object" string="Xác nhận đổi máy" class="btn-primary" invisible="mode != 'swap'" data-hotkey="q"/>
+                    <button name="action_confirm" type="object" string="Xác nhận trả về kho" class="btn-primary" invisible="mode != 'return'" data-hotkey="q"/>
+                    <button string="Hủy" special="cancel" class="btn-secondary" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_quick_assign" model="ir.actions.act_window">
+        <field name="name">Gán thiết bị</field>
+        <field name="res_model">tp.equipment.quick.action</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="quick_action_form"/>
+        <field name="target">new</field>
+        <field name="context">{'default_mode': 'assign'}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+    </record>
+
+    <!-- "Thêm thiết bị" / "Sửa": short form in a dialog. The code comes from the sequence; a valid save of a
+         new machine registers it in the backend (draft → active, opening move into stock). -->
+    <record id="equipment_quick_form" model="ir.ui.view">
+        <field name="name">tp.equipment.quick.form</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="priority">120</field>
+        <field name="arch" type="xml">
+            <form string="Thiết bị" class="o_tp_eq_quick_form o_tp_eq_quick_add">
+                <field name="tp_lifecycle" invisible="1"/>
+                <div class="o_tp_eq_quick_hint" invisible="id">
+                    Mã thiết bị do hệ thống cấp khi lưu. Máy mới vào <strong>Trong kho</strong>, chưa có người giữ.
+                    Thông tin chưa rõ thì để trống.
+                </div>
+                <div class="o_tp_eq_quick_hint" invisible="not id">
+                    Mã <field name="tp_code" readonly="1" class="d-inline fw-semibold"/>. Người giữ chỉ đổi qua Gán / Đổi máy / Trả về kho.
+                </div>
+                <group class="o_tp_eq_quick_main">
+                    <group>
+                        <field name="name" string="Tên thiết bị" required="1" placeholder="Ví dụ: Laptop Dell Latitude 5440"/>
+                        <field name="category_id" string="Loại thiết bị" required="1" options="{'no_create': True, 'no_create_edit': True, 'no_quick_create': True, 'no_open': True}"/>
+                        <field name="tp_brand" string="Hãng"/>
+                        <field name="model" string="Model"/>
+                        <field name="serial_no" string="Serial" placeholder="Để trống nếu chưa rõ"/>
+                    </group>
+                    <group>
+                        <field name="tp_cpu" string="CPU"/>
+                        <field name="tp_ram" string="RAM"/>
+                        <field name="tp_storage" string="Ổ lưu trữ"/>
+                        <field name="tp_technical_state" string="Tình trạng máy" readonly="tp_lifecycle == 'retired'"/>
+                        <field name="tp_condition_note" string="Ghi chú" placeholder="Hiện trạng thực tế, lỗi đang gặp (nếu có)"/>
+                    </group>
+                </group>
+                <group>
+                    <field name="tp_image" string="Ảnh" widget="image" options="{'size': [96, 96]}"/>
+                </group>
+                <footer>
+                    <button string="Lưu" special="save" class="btn-primary" data-hotkey="q"/>
+                    <button string="Hủy" special="cancel" class="btn-secondary" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_equipment_quick_add" model="ir.actions.act_window">
+        <field name="name">Thêm thiết bị</field>
+        <field name="res_model">maintenance.equipment</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="equipment_quick_form"/>
+        <field name="target">new</field>
+        <field name="context">{'tp_quick_register': True}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+    </record>
+</odoo>

@@ -1,0 +1,264 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+  <record id="proposal_list" model="ir.ui.view">
+    <field name="name">tp.proposal_list</field>
+    <field name="model">tp.equipment.proposal</field>
+    <field name="arch" type="xml">
+      <!-- EQUIP-SIMPLE-003: mã, người đề xuất, phòng ban, ngày, nội dung, rà soát, Xem. -->
+      <list string="Yêu cầu đề xuất" js_class="tp_equipment_table" class="tp_eq_table" limit="20" decoration-muted="review_state == 'cancel'">
+        <field name="name" string="Mã đề xuất" class="tp_eq_strong" width="[110,140]"/>
+        <field name="requester_employee_id" string="Người đề xuất" widget="many2one_avatar_employee" invisible="not requester_employee_id"/>
+        <field name="requester_department_id" string="Phòng ban"/>
+        <field name="date_display" string="Ngày đề xuất"/>
+        <field name="title" string="Nội dung" class="tp_eq_wrap"/>
+        <field name="review_state" string="Rà soát" widget="badge" decoration-muted="review_state == 'draft'" decoration-info="review_state == 'review'" decoration-warning="review_state == 'returned'" decoration-success="review_state == 'reviewed'" decoration-danger="review_state == 'cancel'"/>
+        <field name="need_type" string="Nhu cầu" optional="hide"/>
+        <field name="requester_summary" string="Người / bộ phận (nguồn)" optional="hide"/>
+        <field name="amount_display" string="Chi phí dự kiến" optional="hide"/>
+        <field name="approval_state" string="Phê duyệt" widget="badge" optional="hide" decoration-warning="approval_state == 'unverified'" decoration-success="approval_state == 'approved'" decoration-info="approval_state == 'partial'" decoration-danger="approval_state == 'rejected'"/>
+        <field name="progress" string="Tiến độ" widget="badge" optional="hide" decoration-muted="progress in ('waiting', 'cancel')" decoration-warning="progress == 'not_started'" decoration-info="progress in ('in_progress', 'partial')" decoration-success="progress == 'done'"/>
+        <button name="action_open_detail" type="object" string="Xem" class="btn btn-sm btn-light tp_eq_row_view_btn"/>
+      </list>
+    </field>
+  </record>
+  <record id="proposal_search" model="ir.ui.view">
+    <field name="name">tp.proposal_search</field>
+    <field name="model">tp.equipment.proposal</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="name"/>
+        <field name="title"/>
+        <field name="date"/>
+        <field name="requester_employee_id"/>
+        <field name="requester_department_id"/>
+        <field name="need_type"/>
+        <field name="review_state"/>
+        <field name="approval_state"/>
+        <field name="progress"/>
+        <filter name="rv_draft" string="Nháp" domain="[('review_state', '=', 'draft')]"/>
+        <filter name="rv_review" string="Đang rà soát" domain="[('review_state', '=', 'review')]"/>
+        <filter name="rv_returned" string="Trả lại" domain="[('review_state', '=', 'returned')]"/>
+        <filter name="rv_reviewed" string="Đã rà soát" domain="[('review_state', '=', 'reviewed')]"/>
+        <separator/>
+        <filter name="need_purchase" string="Mua mới" domain="[('need_type', '=', 'purchase')]"/>
+        <filter name="need_swap" string="Đổi máy" domain="[('need_type', '=', 'swap')]"/>
+        <filter name="need_repair" string="Sửa hoặc nâng cấp" domain="[('need_type', '=', 'repair')]"/>
+        <separator/>
+        <filter name="f_date" string="Ngày đề xuất" date="date"/>
+        <group>
+          <filter name="group_department" string="Phòng ban" context="{'group_by': 'requester_department_id'}"/>
+          <filter name="group_review" string="Rà soát" context="{'group_by': 'review_state'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+  <record id="proposal_line_list" model="ir.ui.view">
+    <field name="name">tp.proposal_line_list</field>
+    <field name="model">tp.equipment.proposal.line</field>
+    <field name="arch" type="xml">
+      <list js_class="tp_equipment_table" class="tp_eq_table" limit="20">
+        <field name="sequence"/>
+        <field name="kind"/>
+        <field name="description"/>
+        <field name="equipment_id"/>
+        <field name="category_id"/>
+        <field name="quantity"/>
+        <field name="uom_text"/>
+        <field name="estimate_amount_known"/>
+        <field name="estimate_amount" invisible="not estimate_amount_known"/>
+        <field name="currency_id"/>
+        <field name="approved"/>
+        <field name="received_qty"/>
+        <field name="remaining_qty"/>
+        <field name="progress"/>
+        <field name="can_execute"/>
+      </list>
+    </field>
+  </record>
+  <record id="proposal_line_search" model="ir.ui.view">
+    <field name="name">tp.proposal_line_search</field>
+    <field name="model">tp.equipment.proposal.line</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="description"/>
+        <field name="proposal_id"/>
+        <field name="kind"/>
+        <field name="equipment_id"/>
+        <field name="progress"/>
+        <field name="approval_state"/>
+      </search>
+    </field>
+  </record>
+  <record id="proposal_line_form" model="ir.ui.view">
+    <field name="name">tp.proposal_line_form</field>
+    <field name="model">tp.equipment.proposal.line</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+            <field name="proposal_id"/>
+            <field name="kind"/>
+            <field name="description"/>
+            <field name="equipment_id"/>
+            <field name="equipment_text"/>
+            <field name="category_id"/>
+            <field name="current_state"/>
+            <field name="solution"/>
+            <field name="desired_config"/>
+            <field name="quantity"/>
+            <field name="uom_text"/>
+            <field name="estimate_amount_known"/>
+        <field name="estimate_amount" invisible="not estimate_amount_known"/>
+            <field name="currency_id"/>
+            <field name="tax_note"/>
+            <field name="target_employee_id"/>
+            <field name="target_department_id"/>
+            <field name="approved"/>
+            <field name="progress"/>
+            <field name="not_executed_reason"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+  <record id="proposal_form" model="ir.ui.view">
+    <field name="name">tp.proposal_form</field>
+    <field name="model">tp.equipment.proposal</field>
+    <field name="arch" type="xml">
+      <form class="tp_eq_form o_tp_eq_form_wide" js_class="tp_equipment_form">
+        <header>
+          <button name="action_submit" type="object" string="Gửi" invisible="review_state != 'draft'" class="btn-primary"/>
+          <button name="action_resubmit" type="object" string="Gửi lại" invisible="review_state != 'returned'" class="btn-primary"/>
+          <button name="action_open_return" type="object" string="Trả lại có lý do" invisible="review_state != 'review'" class="btn-secondary"/>
+          <button name="action_reviewed" type="object" string="Hoàn tất rà soát" invisible="review_state != 'review'" class="btn-primary"/>
+          <field name="review_state" widget="statusbar"/>
+        </header>
+        <sheet>
+          <div class="tp_eq_hero_card tp_eq_proposal_hero">
+            <div class="oe_title">
+              <div class="tp_eq_hero_top_meta">
+                <span class="o_tp_eq_code"><field name="name" readonly="1"/></span>
+              </div>
+              <label for="title" string="Nội dung đề xuất"/>
+              <h1><field name="title" placeholder="Ví dụ: Đổi laptop cho kế toán vì máy chậm" readonly="review_state not in ('draft', 'returned')"/></h1>
+              <div class="o_tp_eq_states" role="group" aria-label="Trạng thái đề xuất">
+                <span class="o_tp_eq_state"><span>Rà soát</span><field name="review_state" widget="badge" readonly="1" nolabel="1" decoration-muted="review_state == 'draft'" decoration-info="review_state == 'review'" decoration-warning="review_state == 'returned'" decoration-success="review_state == 'reviewed'" decoration-danger="review_state == 'cancel'"/></span>
+                <span class="o_tp_eq_state" invisible="not need_type"><span>Nhu cầu</span><field name="need_type" readonly="1" nolabel="1" class="fw-semibold"/></span>
+                <span class="o_tp_eq_state"><span>Chi phí dự kiến</span><field name="amount_display" readonly="1" nolabel="1" class="fw-semibold"/></span>
+              </div>
+            </div>
+          </div>
+          <div class="alert alert-info" role="status">Gửi đề xuất chỉ để rà soát. Hệ thống không tự duyệt, không tự mua, không tự nhập kho và không tự gán máy.</div>
+          <div class="alert alert-warning" role="status" invisible="review_state != 'returned' or not return_reason">
+            Đề xuất bị trả lại: <field name="return_reason" readonly="1" class="d-inline"/>
+          </div>
+          <group class="tp_eq_form_cards">
+            <group string="Người đề xuất">
+              <field name="requester_employee_id" string="Nhân viên" options="{'no_create': True, 'no_create_edit': True, 'no_quick_create': True}" readonly="review_state not in ('draft', 'returned')"/>
+              <field name="requester_department_id" string="Phòng ban" options="{'no_create': True}" readonly="review_state not in ('draft', 'returned')"/>
+              <field name="date" string="Ngày đề xuất" readonly="review_state not in ('draft', 'returned')"/>
+            </group>
+            <group string="Dự toán (không bắt buộc)">
+              <field name="amount_total_known" invisible="1"/>
+              <field name="amount_total" string="Tổng dự toán" invisible="not amount_total_known"/>
+              <div class="text-muted" invisible="amount_total_known" colspan="2">Chưa có dự toán. Ghi dự toán ở từng dòng nếu đã biết.</div>
+              <field name="currency_id" invisible="1"/>
+            </group>
+          </group>
+          <notebook>
+            <page name="proposal_lines" string="Nội dung đề xuất">
+              <field name="line_ids" widget="tp_equipment_relation" readonly="review_state not in ('draft', 'returned')">
+                <list js_class="tp_equipment_table" class="tp_eq_table" editable="bottom" limit="20">
+                  <field name="sequence" widget="handle"/>
+                  <field name="kind" column_invisible="True"/>
+                  <field name="need_type" string="Nhu cầu" required="1"/>
+                  <field name="category_id" string="Loại thiết bị" options="{'no_create': True}"/>
+                  <field name="quantity" string="SL"/>
+                  <field name="equipment_id" string="Thiết bị hiện tại" options="{'no_create': True}" domain="[('tp_lifecycle', '=', 'active')]" invisible="need_type == 'purchase'"/>
+                  <field name="description" string="Lý do / nội dung cần" class="tp_eq_wrap"/>
+                  <field name="current_state" string="Hiện trạng / lỗi" optional="show"/>
+                  <field name="estimate_amount_known" string="Có dự toán" optional="show"/>
+                  <field name="estimate_amount" string="Dự toán" optional="show" invisible="not estimate_amount_known"/>
+                  <field name="currency_id" column_invisible="True"/>
+                  <field name="progress" string="Tiến độ" widget="badge" optional="hide" decoration-muted="progress in ('waiting', 'cancel')" decoration-warning="progress == 'not_started'" decoration-info="progress in ('in_progress', 'partial')" decoration-success="progress == 'done'"/>
+                </list>
+                <form>
+                  <sheet>
+                    <group>
+                      <field name="kind" invisible="1"/>
+                      <field name="need_type" string="Nhu cầu" required="1"/>
+                      <field name="category_id" string="Loại thiết bị" options="{'no_create': True}"/>
+                      <field name="quantity" string="Số lượng"/>
+                      <field name="equipment_id" string="Thiết bị hiện tại" options="{'no_create': True}" domain="[('tp_lifecycle', '=', 'active')]" invisible="need_type == 'purchase'"/>
+                      <field name="equipment_text" string="Thiết bị hiện tại (theo nguồn)" invisible="need_type == 'purchase' or equipment_id"/>
+                      <field name="description" string="Lý do / nội dung cần"/>
+                      <field name="current_state" string="Hiện trạng / lỗi"/>
+                      <field name="desired_config" string="Cấu hình mong muốn"/>
+                      <field name="estimate_amount_known" string="Có dự toán"/>
+                      <field name="estimate_amount" string="Dự toán" invisible="not estimate_amount_known"/>
+                      <field name="currency_id" invisible="1"/>
+                    </group>
+                  </sheet>
+                </form>
+              </field>
+              <p class="o_tp_eq_note">Đính kèm báo giá, ảnh hiện trạng ở phần trao đổi bên dưới (biểu tượng ghim).</p>
+            </page>
+            <page name="proposal_approval" string="Căn cứ duyệt">
+              <group class="tp_eq_form_cards">
+                <group string="Kết quả phê duyệt">
+                  <field name="approval_state" widget="badge" readonly="1" decoration-warning="approval_state == 'unverified'" decoration-success="approval_state == 'approved'" decoration-info="approval_state == 'partial'" decoration-danger="approval_state == 'rejected'"/>
+                  <field name="approval_source" readonly="1"/>
+                  <field name="approval_ref" readonly="1"/>
+                  <field name="approval_date" readonly="1"/>
+                  <field name="approval_check" readonly="1"/>
+                  <field name="approver_text" readonly="1"/>
+                </group>
+                <group string="Ghi nhận &amp; lý do">
+                  <field name="approval_note" readonly="1"/>
+                  <field name="approval_recorded_by_id" readonly="1"/>
+                  <field name="approval_recorded_date" readonly="1"/>
+                  <field name="return_reason" readonly="1"/>
+                  <field name="cancel_reason" readonly="1"/>
+                </group>
+              </group>
+              <separator string="Tài liệu căn cứ đính kèm"/>
+              <field name="approval_attachment_ids" widget="many2many_binary" readonly="1"/>
+            </page>
+            <page name="proposal_history" string="Lịch sử rà soát">
+              <field name="review_ids" readonly="1" widget="tp_equipment_relation"><list js_class="tp_equipment_table" class="tp_eq_table" limit="20" create="0" delete="0"><field name="date"/><field name="user_id"/><field name="action"/><field name="state_from"/><field name="state_to"/><field name="reason"/></list></field>
+            </page>
+            <page name="proposal_notes" string="Ghi chú &amp; nguồn">
+              <group class="tp_eq_form_cards">
+                <group string="Ghi chú">
+                  <field name="note"/>
+                  <field name="source_ref"/>
+                </group>
+                <group string="Thông tin nguồn">
+                  <field name="requester_text"/>
+                  <field name="date_known"/>
+                  <field name="responsible_id"/>
+                  <field name="preparer_text"/>
+                  <field name="reviewer_text"/>
+                  <field name="company_id"/>
+                </group>
+              </group>
+            </page>
+          </notebook>
+          <div class="o_tp_eq_chatter_below"/>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+  <record id="action_proposals" model="ir.actions.act_window">
+    <field name="name">Yêu cầu đề xuất</field>
+    <field name="res_model">tp.equipment.proposal</field>
+    <field name="view_mode">list,form</field>
+    <field name="view_id" ref="proposal_list"/>
+    <field name="search_view_id" ref="proposal_search"/>
+    <field name="context">{'tp_filter_profile': 'proposal_simple', 'tp_eq_leaf': 'tp_equipment.menu_proposals'}</field>
+    <field name="domain">[]</field>
+    <field name="group_ids" eval="[(4, ref('base.group_system'))]"/>
+    <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('proposal_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('proposal_form')})]"/>
+  <field name="path">de-xuat-thiet-bi</field></record>
+</odoo>

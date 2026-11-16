@@ -1,0 +1,25 @@
+<templates xml:space="preserve">
+    <t t-name="tp_hr_workspace.HierarchyView" t-inherit="web_hierarchy.HierarchyView" t-inherit-mode="primary">
+        <xpath expr="//t[@t-set-slot='default']" position="inside">
+            <div class="o_tp_hr_hierarchy_note">
+                <div class="o_tp_hr_hierarchy_head">
+                    <div>
+                        <h1>Sơ đồ quản lý</h1>
+                        <p>Đường nối thể hiện quản lý trực tiếp đã khai báo. Nhân viên chưa có quản lý được hiển thị riêng.</p>
+                        <p>Tìm kiếm và lọc phòng ban chọn các hồ sơ phù hợp; mở nhánh để xem cấp dưới theo quan hệ thật. Quản lý ngoài bộ lọc có thể không nằm trong khung nhìn. Mở hồ sơ → Tổng quan để cập nhật quản lý theo quyền.</p>
+                    </div>
+                    <div class="o_tp_hr_hierarchy_filters">
+                        <label>
+                            <span>Phòng ban</span>
+                            <select aria-label="Lọc phòng ban" class="o_tp_hr_dept_select" t-att-value="this.state.departmentId" t-on-change="this.changeDepartment">
+                                <option value="" t-att-selected="!this.state.departmentId">Tất cả phòng ban</option>
+                                <option t-foreach="this.state.departments" t-as="dept" t-key="dept.id" t-att-value="dept.id" t-att-selected="('' + dept.id) === this.state.departmentId" t-out="dept.name"/>
+                            </select>
+                        </label>
+                        <button t-if="this.state.departmentId" type="button" class="btn btn-link btn-sm o_tp_hr_hierarchy_clear" t-on-click="this.clearDepartment">Xóa bộ lọc</button>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </t>
+</templates>

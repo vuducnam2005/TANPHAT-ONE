@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_equipment" model="ir.sequence">
+        <field name="name">Mã thiết bị văn phòng</field>
+        <field name="code">tp.equipment</field>
+        <field name="prefix">TB-</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_move" model="ir.sequence">
+        <field name="name">Phiếu bàn giao thiết bị</field>
+        <field name="code">tp.equipment.move</field>
+        <field name="prefix">PBG-%(year)s-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_receipt" model="ir.sequence">
+        <field name="name">Phiếu nhập thiết bị</field>
+        <field name="code">tp.equipment.receipt</field>
+        <field name="prefix">PNK-%(year)s-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_repair" model="ir.sequence">
+        <field name="name">Phiếu sửa chữa thiết bị</field>
+        <field name="code">tp.equipment.repair</field>
+        <field name="prefix">SC-%(year)s-</field>
+        <field name="padding">4</field>
+    </record>
+    <record id="seq_proposal" model="ir.sequence">
+        <field name="name">Đề xuất thiết bị</field>
+        <field name="code">tp.equipment.proposal</field>
+        <field name="prefix">DX-</field>
+        <field name="padding">5</field>
+    </record>
+    <record id="seq_inventory" model="ir.sequence">
+        <field name="name">Kiểm kê thiết bị</field>
+        <field name="code">tp.equipment.inventory</field>
+        <field name="prefix">KK-</field>
+        <field name="padding">5</field>
+    </record>
+    <record id="seq_import" model="ir.sequence">
+        <field name="name">Nhập dữ liệu thiết bị</field>
+        <field name="code">tp.equipment.import.batch</field>
+        <field name="prefix">NDL-</field>
+        <field name="padding">5</field>
+    </record>
+</odoo>

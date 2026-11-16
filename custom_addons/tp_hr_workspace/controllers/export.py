@@ -4,9 +4,12 @@ from odoo.http import Controller, request, route
 
 class HrExportController(Controller):
     @route('/tp_hr/export', type='http', auth='user', methods=['GET'])
-    def export_hr(self, department_id='', job_id='', status='active', **_params):
+    def export_hr(self, department_id='', job_id='', status='active', employment_kind='', missing_basic='', **_params):
         try:
-            content = request.env['tp.hr.workspace']._build_xlsx({'department_id': department_id, 'job_id': job_id, 'status': status})
+            content = request.env['tp.hr.workspace']._build_xlsx({
+                'department_id': department_id, 'job_id': job_id, 'status': status,
+                'employment_kind': employment_kind, 'missing_basic': missing_basic,
+            })
         except AccessError:
             return request.make_response('Không có quyền xem báo cáo HR.', status=403)
         except ValidationError:

@@ -1,0 +1,233 @@
+// Shared identity avatar, sidebar user trigger, and logout-only dropdown styling.
+.tp-identity-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--tp-avatar-size, 28px);
+    height: var(--tp-avatar-size, 28px);
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    color: #fff;
+    border: 1.5px solid rgba(255, 255, 255, 0.38);
+    font-size: calc(var(--tp-avatar-size, 28px) * 0.42);
+    font-weight: 700;
+    line-height: 1;
+    user-select: none;
+}
+
+.tp-identity-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.tp-identity-avatar-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    letter-spacing: 0.02em;
+}
+
+.tp-sb-user {
+    width: 100%;
+    margin-bottom: 2px;
+
+    .o-dropdown {
+        display: block;
+        width: 100%;
+    }
+
+    .tp-sb-user-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 40px;
+        padding: 6px 10px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: #dce6f2;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 140ms ease, color 140ms ease;
+
+        &:hover,
+        &[aria-expanded="true"] {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #93c5fd;
+            outline-offset: -2px;
+        }
+    }
+
+    .tp-sb-user-name {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 600;
+    }
+
+    .tp-sb-user-chev {
+        flex-shrink: 0;
+        width: 15px;
+        height: 15px;
+        opacity: 0.78;
+    }
+
+    &.is-collapsed .tp-sb-user-btn {
+        justify-content: center;
+        padding: 6px 0;
+    }
+}
+
+// Compact logout-only dropdown shared by navbar UserMenu and sidebar TpUserAccountMenu.
+.o-dropdown--menu.tp-logout-dropdown-menu,
+.o-dropdown--menu:has(.tp-logout-menu-item) {
+    min-width: 190px;
+    width: 204px;
+    max-width: calc(100vw - 16px);
+    padding: 6px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14), 0 2px 6px rgba(15, 23, 42, 0.06);
+    animation: tp-logout-dropdown-in 140ms ease-out;
+    z-index: 1080;
+}
+
+.o-popover:has(.tp-logout-dropdown-menu),
+.o-popover:has(.tp-logout-menu-item),
+.o-overlay-item:has(.tp-logout-dropdown-menu),
+.o-overlay-item:has(.tp-logout-menu-item) {
+    z-index: 1080 !important;
+}
+
+.tp-burger-profile-item,
+.tp-burger-logout-item[data-menu="logout"] {
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px 12px !important;
+    text-decoration: none;
+
+    .tp-profile-icon,
+    .tp-logout-icon {
+        width: 17px;
+        height: 17px;
+        flex-shrink: 0;
+    }
+}
+
+.tp-burger-profile-item {
+    color: #1e293b !important;
+
+    &:hover,
+    &:focus-visible {
+        background: #f1f5f9;
+        color: #0f172a !important;
+    }
+}
+
+.tp-burger-logout-item[data-menu="logout"] {
+    color: #dc2626 !important;
+
+    &:hover,
+    &:focus-visible {
+        background: #fef2f2;
+        color: #b91c1c !important;
+    }
+}
+
+.tp-profile-menu-item.dropdown-item,
+.tp-logout-menu-item.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 38px;
+    padding: 8px 12px;
+    border-radius: 7px;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    transition: background-color 130ms ease, color 130ms ease;
+
+    > .d-flex {
+        justify-content: flex-start !important;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .tp-profile-icon,
+    .tp-logout-icon {
+        width: 17px;
+        height: 17px;
+        flex-shrink: 0;
+    }
+}
+
+.tp-profile-menu-item.dropdown-item {
+    color: #1e293b !important;
+    margin-bottom: 2px;
+
+    &:hover,
+    &:focus,
+    &.focus {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #2563eb;
+        outline-offset: -2px;
+    }
+}
+
+.tp-logout-menu-item.dropdown-item {
+    color: #dc2626 !important;
+
+    &:hover,
+    &:focus,
+    &.focus {
+        background: #fef2f2 !important;
+        color: #b91c1c !important;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #dc2626;
+        outline-offset: -2px;
+    }
+}
+
+@keyframes tp-logout-dropdown-in {
+    from {
+        opacity: 0;
+        transform: translateY(-3px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tp-sb-user .tp-sb-user-btn,
+    .o-dropdown--menu.tp-logout-dropdown-menu,
+    .tp-profile-menu-item.dropdown-item,
+    .tp-logout-menu-item.dropdown-item {
+        animation: none !important;
+        transition: none !important;
+    }
+}

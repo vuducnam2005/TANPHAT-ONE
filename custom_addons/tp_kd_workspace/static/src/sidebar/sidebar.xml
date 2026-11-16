@@ -142,11 +142,7 @@
                 </nav>
 
                 <div class="o_tp_kd_sb_foot">
-                    <button type="button" class="o_tp_kd_sb_leaf o_tp_kd_sb_account"
-                            title="Tài khoản" aria-label="Tài khoản" t-on-click="this.openAccount">
-                        <i class="oi o_tp_kd_sb_ico" data-icon="account_circle" aria-hidden="true"/>
-                        <span class="o_tp_kd_sb_label">Tài khoản</span>
-                    </button>
+                    <TpUserAccountMenu collapsed="this.rail()" onBeforeOpenProfile="() => this.closeDrawer()" onBeforeLogout="() => this.closeDrawer()"/>
                     <Dropdown position="'top-start'" menuClass="'o_tp_kd_prefs_menu'">
                         <button type="button" class="o_tp_kd_sb_leaf o_tp_kd_sb_prefs" title="Tùy chọn hiển thị">
                             <i class="oi o_tp_kd_sb_ico" data-icon="settings" aria-hidden="true"/>

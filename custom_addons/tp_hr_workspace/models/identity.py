@@ -211,7 +211,11 @@ class IdentityWizard(models.TransientModel):
             image = employee.image_1920 if self.choice == 'employee' else employee.user_id.sudo().image_1920
             employee.with_context(_tp_identity=_IDENTITY).write({'image_1920': image})
             employee._tp_sync_identity({'name', 'image_1920'})
-            employee.message_post(body=self.env._('Đối chiếu danh tính theo ID: %(preview)s. Lý do: %(reason)s',
-                                                  preview=self.preview, reason=self.reason))
+            self.env['tp.hr.employee.audit']._tp_record([{
+                'action': 'identity', 'employee_ref': employee.id, 'employee_name': employee.name,
+                'employee_code': employee.tp_employee_code, 'company_id': employee.company_id.id,
+                'reason': self.reason, 'snapshot': {'preview': self.preview, 'after': employee._tp_identity_state()},
+            }])
+            employee.message_post(body=self.env._('Đã đồng bộ tên và ảnh hồ sơ với tài khoản. Lý do: %s', self.reason))
             self.with_context(_tp_identity=_IDENTITY).write({'expected_digest': False})
         return {'type': 'ir.actions.act_window_close'}

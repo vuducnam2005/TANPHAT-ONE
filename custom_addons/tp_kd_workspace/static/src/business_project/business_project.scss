@@ -13,7 +13,7 @@ body.o_tp_kd_shell {
             padding-left: 16px;
             h1 { font-size: 26px; line-height: 1.35; margin: 0; }
             .o_field_widget, textarea { width: 100%; max-width: 100%; }
-            textarea { font-size: 26px; font-weight: 600; line-height: 1.35; padding: 0 0 4px; }
+            textarea { font-size: 26px; font-weight: 600; line-height: 1.35; padding: 4px var(--tp-input-px); }
         }
         .tp_kd_bp_columns {
             display: grid;
@@ -37,7 +37,6 @@ body.o_tp_kd_shell {
             margin-bottom: 16px;
             > .o_form_label { display: block; font-size: 13px; color: #526579; margin: 0 0 5px; }
             > .o_field_widget { display: block; width: 100%; font-size: 15px; }
-            .o_input { min-height: 36px; }
             .o_form_uri { white-space: normal; overflow-wrap: anywhere; }
         }
         .tp_kd_bp_preview {
@@ -62,7 +61,7 @@ body.o_tp_kd_shell {
         .o_form_statusbar { flex-wrap: wrap; gap: 8px; }
         .o_statusbar_buttons .btn { min-height: 44px; }
         :is(button, summary, input, textarea, select, .nav-link) { transition: background-color 120ms, border-color 140ms, color 140ms; }
-        :is(button, summary, input, textarea, select, .nav-link):focus-visible { outline: 2px solid #255f85; outline-offset: 2px; }
+        :is(button, summary, input, textarea, select, .nav-link):not(.o_input):focus-visible { outline: 2px solid #255f85; outline-offset: 2px; }
         .nav-link { min-height: 44px; display: flex; align-items: center; }
         @container (max-width: 760px) { .tp_kd_bp_columns { grid-template-columns: minmax(0, 1fr); gap: 8px; } }
         @include media-breakpoint-down(lg) {
@@ -71,7 +70,6 @@ body.o_tp_kd_shell {
         @include media-breakpoint-down(md) {
             .o_form_sheet_bg > .o_form_sheet { padding: 16px 12px; }
             .tp_kd_bp_title { padding-left: 12px; h1, textarea { font-size: 22px; } }
-            .tp_kd_bp_field .o_input { min-height: 44px; }
             .tp_kd_bp_preview summary { min-height: 44px; padding: 12px 0; }
             .tp_kd_bp_primary_actions .btn { flex: 1 1 100%; }
             .o_form_label { position: static; transform: none; background: transparent; }

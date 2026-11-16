@@ -239,11 +239,14 @@ body.o_tp_kd_compact .o_tp_kd_ov {
     .o_input {
         min-height: 34px;
         padding: 4px 8px;
-        border: 1px solid var(--kd-line);
+        border: 1px solid var(--tp-input-border);
         border-radius: 8px;
         background: #fff;
+        &:focus {
+            outline: 2px solid transparent; border-color: var(--tp-input-focus); box-shadow: var(--tp-input-ring);
+        }
         &[aria-invalid="true"] {
-            border-color: var(--kd-returned);
+            border-color: var(--tp-input-error);
         }
     }
 }
@@ -888,7 +891,7 @@ body.o_tp_kd_compact .o_tp_kd_ov {
     .o_input {
         min-height: 30px;
         padding: 2px 6px;
-        border: 1px solid var(--kd-line);
+        border: 1px solid var(--tp-input-border);
         border-radius: 7px;
     }
 }
@@ -1050,11 +1053,12 @@ body.o_tp_kd_compact .o_tp_kd_ov {
     align-items: center;
     gap: 6px;
     padding: 0 8px;
-    border: 1px solid var(--kd-line);
+    border: 1px solid var(--tp-input-border);
     border-radius: 8px;
     background: #fff;
     &:focus-within {
-        border-color: var(--kd-action);
+        border-color: var(--tp-input-focus);
+        box-shadow: var(--tp-input-ring);
     }
     .o_input {
         min-width: 160px;

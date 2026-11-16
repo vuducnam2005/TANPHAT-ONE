@@ -1,6 +1,6 @@
 # tp_kd_workspace — Workspace & Trung tâm Báo cáo KH-KD
 
-Module Odoo mở rộng cung cấp giao diện native OWL cho Khối Kế hoạch - Kinh doanh (KH-KD) trong hệ thống TANPHAT ONE.
+Module Odoo mở rộng cung cấp giao diện native OWL cho Khối Kế hoạch - Kinh doanh (KH-KD) trong hệ thống TANPHAT ONE. Từ `UI-SHELL-UNIFY-001` (14/11/2026), thanh bên KH-KD sử dụng `<TpUserAccountMenu>` dùng chung từ `tp_web_home` ở cuối sidebar thay cho nút `"Tài khoản"` cũ để hiển thị `[Avatar] Họ tên người đang đăng nhập` và dropdown 2 mục (`Thông tin cá nhân` đồng bộ HR và `Đăng xuất`).
 
 ## 1. Cấu trúc chức năng chính
 
@@ -27,6 +27,11 @@ Module Odoo mở rộng cung cấp giao diện native OWL cho Khối Kế hoạc
 ## 3. Kiến trúc bảo mật & Kiểm thử
 
 * Phân quyền xem tiền (`can_view_money`): Dựa trên quyền tài chính `_kd_financial_projects()`. Người dùng không có quyền (như nhân viên hỗ trợ) sẽ bị che số tiền ở mọi view, thẻ tóm tắt và file Excel tải về.
-* Kiểm thử backend: `tests/test_report_center.py` (Odoo tests).
-* Kiểm thử frontend: `static/tests/report_center.test.js` (HOOT unit tests).
+* Kiểm thử backend: `tests/test_report_center.py`, `tests/test_table_filter_kd.py` (Odoo tests).
+* Kiểm thử frontend: `static/tests/report_center.test.js`, `static/tests/tables007.test.js` (HOOT unit tests).
 * Kiểm thử E2E: `scripts/kd_report001_ui.cjs` (Playwright browser & openpyxl).
+
+## 4. Bộ lọc bảng toàn phân hệ (`UI-TABLE-FILTER-001` — 14/11/2026)
+
+* Chuẩn hóa cấu hình bộ lọc theo nội dung (`static/src/table/filter_profiles.js`, `table_tools.js/xml`, `relation_tools.js`, `tables007.scss`) dùng chung `<TpTableFilterBar>` của `tp_web_home` cho danh sách KH-KD, TP Contracts và deep links (`kdEnabled`).
+* Cô lập `project_search_restructure` (`priority="32"` tại `views/search_views.xml`) để `project.open_view_project_template` giữ nguyên search view native; bổ sung `kd_task_search` (`views/wbs.xml`) và search views cho các smart button KH-KD. Xem [TP_TABLE_FILTER_INVENTORY.md](../../docs/ui/TP_TABLE_FILTER_INVENTORY.md).

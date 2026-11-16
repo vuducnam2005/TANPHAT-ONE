@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- S3: Native Spreadsheet Dashboard Group search view -->
+    <record id="tp_spreadsheet_dashboard_group_search" model="ir.ui.view">
+        <field name="name">tp.spreadsheet.dashboard.group.search</field>
+        <field name="model">spreadsheet.dashboard.group</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm nhóm dashboard">
+                <field name="name" string="Tên nhóm"/>
+                <field name="create_date" string="Ngày tạo"/>
+            </search>
+        </field>
+    </record>
+</odoo>

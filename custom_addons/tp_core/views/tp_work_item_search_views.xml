@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- S2: Search view for tp.work.item -->
+    <record id="tp_work_item_search" model="ir.ui.view">
+        <field name="name">tp.work.item.search</field>
+        <field name="model">tp.work.item</field>
+        <field name="arch" type="xml">
+            <search string="Hạng mục công việc">
+                <field name="code" string="Mã hạng mục"/>
+                <field name="name" string="Tên hạng mục"/>
+                <field name="create_date" string="Ngày tạo"/>
+                <filter name="active_items" string="Đang sử dụng" domain="[('active', '=', True)]"/>
+                <filter name="archived_items" string="Đã lưu trữ" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+</odoo>

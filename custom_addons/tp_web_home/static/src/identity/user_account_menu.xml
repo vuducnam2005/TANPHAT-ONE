@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tp_web_home.TpIdentityAvatar">
+        <span class="tp-identity-avatar"
+              t-attf-class="{{ this.props.className }}"
+              t-attf-style="--tp-avatar-size: {{ this.props.size }}px;"
+              aria-hidden="true">
+            <img t-if="this.identity.avatarUrl"
+                 class="tp-identity-avatar-img"
+                 t-att-src="this.identity.avatarUrl"
+                 t-att-alt="this.identity.name"
+                 t-on-error="() => this.onError()"/>
+            <span t-else="" class="tp-identity-avatar-fallback" t-out="this.identity.initials"/>
+        </span>
+    </t>
+
+    <t t-name="tp_web_home.TpUserAccountMenu">
+        <div class="tp-sb-user" t-att-class="{ 'is-collapsed': this.props.collapsed }">
+            <Dropdown state="this.dropdown"
+                      position="this.props.position"
+                      menuClass="'tp-logout-dropdown-menu'"
+                      focusOnMount="true">
+                <button type="button"
+                        class="tp-sb-user-btn"
+                        t-att-title="this.identity.name"
+                        t-att-aria-label="this.identity.name">
+                    <TpIdentityAvatar size="28"/>
+                    <span t-if="!this.props.collapsed" class="tp-sb-user-name" t-out="this.identity.name"/>
+                    <svg t-if="!this.props.collapsed" class="tp-sb-user-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+                </button>
+                <t t-set-slot="content">
+                    <DropdownItem class="'tp-profile-menu-item'" attrs="{ 'data-menu': 'personal_profile' }" onSelected="() => this.onOpenProfile()">
+                        <svg class="tp-profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+                        <span>Thông tin cá nhân</span>
+                    </DropdownItem>
+                    <DropdownItem class="'tp-logout-menu-item'" attrs="{ 'data-menu': 'logout' }" onSelected="() => this.onLogout()">
+                        <svg class="tp-logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                        <span>Đăng xuất</span>
+                    </DropdownItem>
+                </t>
+            </Dropdown>
+        </div>
+    </t>
+
+</templates>

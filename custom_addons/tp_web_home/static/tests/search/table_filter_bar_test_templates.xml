@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_web_home.TestFilterListView" t-inherit="web.ListView" t-inherit-mode="primary">
+        <xpath expr="//t[@t-set-slot='control-panel-actions']" position="inside">
+            <TpTableFilterBar controller="this"/>
+        </xpath>
+    </t>
+</templates>

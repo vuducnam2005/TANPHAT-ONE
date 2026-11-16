@@ -1,6 +1,234 @@
 # TANPHAT ONE — Sổ quyết định
 
+## DEC-048 — Báo cáo toàn công ty dùng chung dữ liệu và luồng tổng hợp (16/11/2026)
+
+**Bổ sung trực tiếp CHG-20261116-006:** người dùng yêu cầu viết prompt triển khai
+**full module**, gồm dashboard sáng/đẹp với biểu đồ lớn rõ, hover/animation,
+bảng không chồng chéo và bộ lọc theo nội dung trên mọi tab; dữ liệu đồng bộ
+cùng một DB trong từng môi trường. Được đề xuất/thực hiện thêm tính năng hữu
+ích phù hợp module. [Prompt thực thi R0–R5](prompts/CLAUDE_CORP_REPORT_001_FULL_MODULE.md)
+đã lưu; lượt điều phối chưa triển khai code. Các default lịch/thẩm quyền kỹ
+thuật dùng cho cấu hình/test không phải policy/grant người thật. Chưa có yêu
+cầu áp module Báo cáo lên main18069; ngoại lệ Kho không tự mở rộng.
+
+**Bổ sung trực tiếp CHG-20261116-005:** phải đề ra mục tiêu quý trước, phân rã
+thành kế hoạch tháng rồi kế hoạch tuần. Kế hoạch đi quý → tháng → tuần;
+kết quả tổng hợp tuần → tháng → quý để đối chiếu mục tiêu. Mỗi kế hoạch con
+liên kết cha, có người chịu trách nhiệm/đầu ra/hạn; công ty-phòng-cá nhân là
+trục phân công, không đồng nhất với ba loại kỳ. Không tự chia đều chỉ tiêu,
+ghi đè baseline hoặc coi việc phát sinh là mục tiêu gốc đã hoàn thành. Đề xuất
+lộ trình cập nhật R0–R5: xây mục tiêu/phân rã trước báo cáo; kế hoạch được chốt
+và điều chỉnh theo quyền có lịch sử, chi tiết thẩm quyền cần xác nhận.
+
+- **Yêu cầu trực tiếp:** phân tích hai báo cáo Word, định hướng phân hệ báo cáo
+  cho mọi phòng ban, cá nhân/trưởng phòng/phòng và lãnh đạo xem theo tuần,
+  tháng, quý; dữ liệu đồng bộ toàn hệ thống.
+- **Đã xác nhận qua trả lời trong chat:** nhân viên nộp báo cáo tuần; cá nhân
+  lập tháng/quý khi được yêu cầu; trưởng phòng tổng hợp phòng/nộp tháng-quý;
+  lãnh đạo xem, nhận xét và giao việc tiếp theo. Cho người phụ trách nhập số
+  tài chính tổng hợp chưa có trên Odoo, kèm nguồn và xác nhận, chỉ người có
+  quyền phù hợp được xem. Chưa xác nhận lịch nộp, reviewer/publisher hay grant
+  cho tài khoản lãnh đạo cụ thể.
+- **Thiết kế đề xuất:** [CORP-REPORT-001](architecture/TP_COMPANY_REPORTING_001_DESIGN.md),
+  một chức năng Báo cáo native/cùng DB/identity, mẫu chung và section đặc thù
+  phòng; source tự động + số nhập có nguồn + nhận xét, lưu phiên bản đã gửi/
+  chốt. Addon `tp_reporting`, UI/schema/role/state/lộ trình R0–R5 là đề xuất,
+  chưa code hoặc coi là policy doanh nghiệp đã ban hành.
+- **Ranh giới:** báo cáo tháng Phòng Thiết kế và báo cáo SXKD 9 tháng cấp công
+  ty có phạm vi khác nhau; 9 tháng là lũy kế, không là quý III. Giữ phân biệt
+  sản lượng/nghiệm thu/đề nghị thanh toán/doanh thu/thực thu. Quyền báo cáo
+  không tự mở source/files/tiền/HR; không phê duyệt nghiệp vụ gốc từ báo cáo.
+- **Trạng thái:** CHG-20261116-004/005 phân tích, CHG-006 lưu prompt full module;
+  chưa triển khai/nhập Word,
+  đổi runtime/DB/user/quyền hoặc deploy. Ngoại lệ main trực tiếp của Kho không
+  tự áp sang task Báo cáo. Luồng Kho CHG-003 còn chờ admin nghiệm thu riêng;
+  không commit/push.
+
+## DEC-047 — Kho đơn giản: thiết bị, người giữ và yêu cầu đề xuất (16/11/2026)
+
+**Bổ sung xác nhận CHG-20261116-002, trước khi người dùng chạy prompt:** máy
+thay thế chỉ là máy trong kho và không có người giữ hiện tại. Máy có người
+giữ không được dùng để đổi/gán, kể cả cùng người hoặc người đã nghỉ việc;
+không đổi chéo. Chọn trên UI và xác nhận backend đều bắt buộc cùng điều kiện,
+kiểm lại sau khóa/version. Nếu bị gán trong lúc đang chọn, từ chối và giữ máy
+cũ nguyên trạng. Thu gọn còn Gán/Đổi/Trả kho; không nút Chuyển người dùng trực
+tiếp, cần trả kho thực tế rồi gán cho người khác. Không tự bỏ người giữ hoặc
+sửa sở hữu pháp lý để làm máy đủ điều kiện. Lượt này chỉ sửa prompt/docs.
+
+- **Nguồn đã xác nhận:** người dùng yêu cầu viết prompt sửa toàn bộ Kho để biết
+  ai dùng máy gì/phòng nào/thông tin máy, chọn thiết bị có sẵn để gán/đổi,
+  trả kho khi đổi máy/nghỉ việc, bỏ tab không cần và giữ yêu cầu đề xuất.
+- **Thiết kế thực thi trong phạm vi đã giao:** chỉ hai mục `Thiết bị` và
+  `Yêu cầu đề xuất`; một bảng thiết bị có bộ lọc Tất cả/Đang sử dụng/Trong kho.
+  Gán, đổi, thu hồi bằng popup ngắn; phiếu và lịch sử tự ghi
+  qua backend hiện có. Đổi máy là một transaction; chọn HR/máy bằng ID, không
+  nhập tên tay hoặc tạo bản sao. Một nhân viên được giữ nhiều thiết bị.
+- **Thay phạm vi UI cũ:** bỏ dashboard/tab nghiệp vụ kho sâu khỏi điều hướng
+  hoạt động, thay nhóm sidebar Quản trị dữ liệu trong DEC-045/UI-001/UI-002.
+  Không xóa bảng/bản ghi/lịch sử/nguồn nhập; trường hợp dùng chung/chưa rõ/sửa
+  ngoài/ngừng quản lý vẫn truy cập phù hợp, không ép thành hai trạng thái giả.
+  Trả kho không đồng nghĩa máy tốt; nghỉ việc/khóa account không tự giả đã trả.
+- **Giữ nguyên:** cùng DB/HR, admin-only, phân quyền backend, DEC-044 bộ lọc và
+  DEC-046 Quay lại; chỉ đạo EQUIP main18069 sau backup, không18079/bộ test riêng,
+  không fixture/nhập lại; không mở self-service, BASE/mua/duyệt chi/kế toán.
+- **Trạng thái:** CHG-20261116-001/002 chỉ [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md)
+  và tài liệu; chưa triển khai, không thay dữ liệu/quyền/runtime, không commit/push.
+
+## DEC-046 — Quay lại thống nhất ở mọi màn chi tiết (15/11/2026)
+
+- **Yêu cầu trực tiếp:** người dùng muốn nút Quay lại khi mở bất kỳ chi tiết
+  nào, áp dụng toàn hệ thống. Hướng sản phẩm đã xác nhận; chi tiết triển khai
+  trong [prompt](prompts/CLAUDE_EQUIP_UI_002_USERS_AND_GLOBAL_BACK.md) chưa code.
+- **Thiết kế giao thực hiện:** một nút cùng format trên native form/custom
+  detail đang cài, bao gồm HR/KH-KD/Kho và app/cấu hình có quyền. Reuse action
+  stack/breadcrumb để về đúng màn giữ filter/page; fallback deep link đúng
+  scope. Popup giữ Đóng/Hủy đúng ngữ cảnh, bảo vệ chưa lưu, không history.back
+  mù/forceLeave, không tạo trùng nút HR hoặc cache PII qua logout.
+- **Ghi nhớ cho phát triển:** component/helper dùng chung trong addon chung
+  hiện có, không sửa core hoặc làm router mới. Inventory từng loại detail,
+  coverage và giới hạn trước báo toàn hệ thống; màn mới áp cùng quy ước.
+- **Trạng thái:** CHG-20261115-001 lập prompt; CHG-20261115-002 đã triển khai
+  trên main 18069 (`tp_web_home` 20.0.1.8.0, `tp_hr_workspace` 20.0.1.11.5),
+  quy ước và inventory tại [UI-BACK-001](ui/UI_BACK_001_STANDARD.md). Màn mới
+  đăng ký fallback qua `tp_back_fallbacks`, không tự vẽ nút. KH-KD/hợp đồng chưa
+  quan sát có dữ liệu; chờ người dùng xem trực quan.
+
+## DEC-045 — Chuẩn bị kho thiết bị văn phòng dùng chung dữ liệu và giao diện (14/11/2026)
+
+**Làm rõ danh sách CHG-20261115-001:** Thiết bị & người sử dụng chỉ gồm máy
+gắn nhân viên xác định, không lẫn stock; dùng loại/tình trạng/ghi chú và HR ID/
+phòng ban hiện tại. Thiết bị dùng chung/chưa rõ/tồn vẫn còn lối xem phù hợp,
+không đổi dữ liệu để tách UI. [Prompt EQUIP-UI-002](prompts/CLAUDE_EQUIP_UI_002_USERS_AND_GLOBAL_BACK.md)
+thay cách dùng list tổng cho menu người sử dụng trong prompt cũ; kèm nâng tiếp
+dashboard và DEC-046 Quay lại dùng chung. Chưa triển khai trong CHG-001;
+đã áp main 18069 ở CHG-20261115-002 (`tp_equipment` 20.0.1.4.0): list người sử
+dụng 26 dòng có nhân viên HR, menu dùng chung/chưa rõ người và tất cả hồ sơ.
+
+**Điều chỉnh giao diện CHG-20261114-013:** người dùng yêu cầu đơn giản hóa kho,
+ưu tiên ai sử dụng/thiết bị tồn/đề xuất mua; giao diện sáng nhiều màu, biểu đồ
+lớn ở đầu, bảng rõ không đè ô, filter thiết kế lại và bỏ preset trong ô search.
+[Prompt EQUIP-UI-001](prompts/CLAUDE_EQUIP_UI_001_SIMPLIFY_AND_REDESIGN.md)
+đề xuất bốn mục chính và nhóm nâng cao đóng; không xóa dữ liệu/chức năng nền.
+Đây là phạm vi UI mới, chưa triển khai trong CHG-013. Giữ admin-only, admin
+ghi nhận nhu cầu nhân viên; không mở thêm role/portal. Bộ lọc chủ động vẫn theo
+DEC-044, chỉ thu gọn trình bày riêng EQUIP; scope/backend không bị xóa khi bỏ
+chip mặc định. Giữ chỉ đạo main trực tiếp/backup/không18079 hoặc bộ test.
+
+**Phạm vi nhập mới CHG-20261114-011:** người dùng đã giao nhập dữ liệu thật từ
+hai file local `C:\2026_tanphat_cntt_thiet-bi_0611.xlsx` và
+`C:\TP_TBCNTT_De xuat mua mới.xlsx` lên main18069; đường dẫn đề xuất gửi lặp
+không tạo nguồn thứ ba. [Prompt nhập](prompts/CLAUDE_EQUIP_DATA_001_IMPORT_REAL.md)
+thay hạn chế chưa nhập nguồn của lượt code trước trong riêng hai file này.
+Backup mới, cùng DB/HR/admin-only, không18079/bộ test theo yêu cầu; apply và
+đăng ký phần đủ điều kiện, giữ phần chưa rõ, không biến đề xuất thành tồn hoặc
+duyệt mua. CHG-011 mới chuẩn bị tài liệu, chưa nhập hoặc sửa application.
+
+**Chỉ đạo mới nhất CHG-20261114-009:** người dùng yêu cầu triển khai trực tiếp
+18069, bỏ môi trường test 18079 và bộ kiểm thử riêng cho EQUIP-001, lỗi phát
+sinh sửa trực tiếp. Thay cổng test-first/test-only của prompt cũ trong riêng
+task này; không cần hỏi lại quyền áp main. Backup DB+filestore, giữ dữ liệu/
+tài khoản, cài/upgrade đúng dependency và mở module admin để xem ngay. Không
+tuyên bố đã test khi bỏ test; không tự bulk nhập nguồn thật/tạo fixture, mở
+quyền non-admin hoặc duyệt chi/kế toán từ quyền code. Phiên điều phối chỉ sửa
+prompt/tài liệu, chưa thực thi deploy trong CHG-009.
+
+**Làm rõ theo yêu cầu tiếp theo, CHG-20261114-007:** một module riêng **Kho thiết
+bị văn phòng**, addon `tp_equipment`, thẻ/icon/menu/dashboard/sidebar riêng;
+chỉ admin `base.group_system` truy cập/quản lý theo company/scope. HR/KH-KD/
+technician/staff không phải admin không được xem/thao tác kể cả qua native RPC,
+file/chatter/public HR. Vẫn dùng chung database và liên kết employee/department
+gốc. Thay phương án nhiều role/self-service trong bản thiết kế đầu; chưa code.
+
+- **Nguồn yêu cầu đã xác nhận:** người dùng giao đọc hai workbook thiết bị/
+  đề xuất mua tại NAS, phân tích kỹ và viết prompt xây kho thiết bị văn phòng,
+  dùng chung database/dữ liệu đồng bộ, đủ thao tác và giao diện giống nền HR/
+  KH-KD, đẹp/trực quan, có hover/animation. Lượt này là chuẩn bị, không giao phiên
+  điều phối sửa application code hoặc nhập dữ liệu thật.
+- **Thiết kế đề xuất:** [blueprint EQUIP-001](architecture/TP_EQUIPMENT001_BLUEPRINT.md)
+  gồm danh mục/tiếp nhận, cấp–thu hồi–điều chuyển–mượn/trả, sửa/nâng cấp, đề xuất,
+  kiểm kê và báo cáo. Tái sử dụng maintenance gốc, cầu nối HR có scope riêng và
+  native OWL/QWeb/SCSS; không DB riêng hay danh tính bản sao. Capability, state
+  và schema trong blueprint là thiết kế cần AT/test, chưa phải policy công ty.
+- **Phân biệt:** dòng đề xuất không là thiết bị đã mua, footer ký không chứng
+  minh đã duyệt; còn mapping/thẩm quyền/ngày/serial/giá cần xác minh. Dịch vụ,
+  tài sản cá nhân/thuê và thiết bị công ty có ý nghĩa khác nhau. Không mở
+  kế toán/khấu hao/thanh toán/phê duyệt chính thức từ hai workbook.
+- **Bàn giao ban đầu, cổng môi trường đã được CHG-009 thay thế ở trên:**
+  [prompt](prompts/CLAUDE_EQUIP_001_OFFICE_EQUIPMENT.md) cho S0 và EQUIP-001a–e,
+  AT-E01–18 nay là tiêu chí hành vi, không bắt viết/chạy test. Phân tích thật ở `.local/`
+  ignored; không đưa workbook/raw/PII/IP/giá thật vào Git.
+
+## DEC-044 — Mọi bảng có bộ lọc đúng nội dung, dùng làm cổng cho phòng ban mới (14/11/2026)
+
+- **Nguồn xác nhận:** người dùng yêu cầu tất cả bảng toàn hệ thống có bộ lọc
+  riêng theo nội dung, phân tích/viết prompt và lưu để không bỏ sót khi phát
+  triển phòng ban khác. Yêu cầu sản phẩm đã xác nhận; chi tiết tương tác/field
+  trong đặc tả là phương án triển khai cần kiểm trên source và test.
+- **Quyết định:** áp dụng [quy chuẩn](ui/TP_TABLE_FILTER_STANDARD.md) và
+  [inventory](ui/TP_TABLE_FILTER_INVENTORY.md) cho list, bảng con, popup,
+  smart button, lịch sử, báo cáo và ứng dụng native đang dùng. Một cách thao tác
+  chung; tiêu chí theo từng bảng/action, không áp cùng một bộ lọc vô nghĩa.
+  Cổng phát triển bảng/phòng ban mới phải có mapping, security, paging/count/
+  export, mobile và bằng chứng; ngoại lệ N/A có lý do và role review.
+- **Kiến trúc:** kế thừa DEC-030/023, native Odoo và backend enforce scope/quyền;
+  tái sử dụng SearchModel/search view/công cụ HR–KH-KD. Không tạo state/engine
+  nghiệp vụ, frontend độc lập hoặc mở grant tiền chỉ để thêm filter.
+- **Trạng thái:** CHG-20261114-005 chỉ lập tài liệu/prompt `SPEC_READY`, không
+  sửa application code/runtime/dữ liệu. [Prompt](prompts/CLAUDE_UI_TABLE_FILTER_001.md)
+  giao triển khai trên test 18079 khi người dùng đưa cho Claude; áp main 18069
+  là bước được giao riêng. Không thay thế nghiệm thu hình thức/nghiệp vụ/pilot.
+
+## DEC-043 — Thống nhất Trang chủ dùng chung, điểm truy cập danh tính theo ngữ cảnh và UserMenu chỉ còn Đăng xuất (14/11/2026)
+
+- **Bối cảnh:** Trước đây `tp_web_home` tách hai cây giao diện Trang chủ theo `this.isAdmin()` (`UI-HOME-003` cho non-admin và `UI-HOME-004`/`005` cho admin), `UserMenu` còn nhiều mục phụ (`Tài khoản và tùy chọn`, `Hỗ trợ`, `Shortcuts`, `Online`, `My Subscription`, phần lặp tên), đồng thời sidebar HR và KH-KD có nút `"Tài khoản"` mở preferences song song với cụm người dùng trên navbar.
+- **Quyết định:**
+  1. Dùng một template và hệ lưới Trang chủ thống nhất (`#tp-unified-home`, nền gradient sáng xanh + sóng nhẹ, tiêu đề `"Trang chủ"` / `"Không gian làm việc của TANPHAT ONE"`, lưới 3 cột desktop giữ nguyên kích thước thẻ đơn lẻ); nội dung các nhóm (`Phòng ban và đơn vị`, `Nhân sự và tuyển dụng`, `Công cụ cá nhân`) và công cụ/placeholder quản trị do menu server + `user.isSystem` quyết định; bỏ fallback `hr.menu_hr_root` ở mục `Quản lý nhân sự` để không lộ thẻ HR cho người không có quyền workspace HR. (Cập nhật phần tách layout của `DEC-031`/`DEC-036`, giữ nguyên nguyên tắc quyền backend).
+  2. Mỗi màn hình chỉ giữ **một** điểm truy cập danh tính: Trang chủ & ứng dụng native dùng `UserMenu` trên navbar; workspace HR & KH-KD dùng component dùng chung `<TpUserAccountMenu>` ở cuối sidebar (hỗ trợ `.is-rail` và mobile drawer) và ẩn cụm `.o_user_menu` / `.o_mobile_menu_toggle` ở navbar theo class `body.o_tp_hr_shell, body.o_tp_kd_shell`. Không tạo addon mới hay dependency vòng: dịch vụ `tp_identity` và component đặt trong `tp_web_home`.
+  3. Dropdown người dùng (navbar, `BurgerUserMenu` và sidebar) trình bày đúng 2 mục theo xác nhận của người dùng: **`Thông tin cá nhân`** (mở màn hình tự phục vụ `tp_hr_workspace.action_my_profile` tại `/odoo/my-profile` qua registry `tp_personal_profile`, fallback `res.users` `action_get` cho tài khoản chưa gắn nhân sự; cho phép nhân viên xem toàn bộ 6 tab kể cả hợp đồng ở chế độ chỉ đọc + tải bản lưu của chính mình qua `/tp_hr/my_contract/...`, đồng thời chỉnh sửa các trường cá nhân trong allowlist và đồng bộ trực tiếp về hồ sơ `hr.employee` + ảnh đại diện của Admin HR; khóa chặt `Họ tên`, `mã NV`, `phòng ban`, `chức vụ`, `hợp đồng`, `phân quyền` ở backend) và **`Đăng xuất`** (`performNativeLogout()`, tái sử dụng `/web/session/logout` + CSRF + service worker, giữ nguyên `im_status` & systray).
+
+## DEC-042 — Xóa vĩnh viễn nhân viên có xác minh lại mật khẩu quản trị (12/11/2026)
+
+Yêu cầu trực tiếp HR-DELETE-010, không commit/push. Thay DEC-041 phần “chỉ xóa
+hồ sơ nhập nhầm”: admin chủ động chọn hồ sơ → Tác vụ → “Xóa vĩnh viễn nhân viên”
+xóa thật `hr.employee` (không lưu trữ, không còn trong danh sách đang dùng/lưu
+trữ, tìm kiếm, xuất dữ liệu). “Lưu trữ” vẫn là thao tác riêng; xóa không bao giờ
+tự đổi thành lưu trữ. Nguồn Excel, mã nguồn và sidecar tự sinh không chặn xóa.
+Mã/ưu tiên mã nhân viên của DEC-041 giữ nguyên: mã TP đã xóa không bao giờ cấp lại.
+
+Quyền: chỉ `base.group_system` có quyền quản lý nhân sự, hồ sơ trong công ty đang
+chọn, phiên HTTP hợp lệ của chính tài khoản đó; không nhận cờ admin từ frontend.
+Mật khẩu: admin đang đăng nhập nhập lại mật khẩu của chính mình trong yêu cầu cuối
+cùng; backend gọi native `_check_credentials` bên trong native `_assert_can_auth`
+(dùng chung giới hạn thử sai/cooldown của đăng nhập), mỗi lần xóa kiểm lại, không
+dùng lại 10 phút của `check_identity`, không ghi timestamp xác minh chung. Mật
+khẩu chỉ ở state giao diện và request kiểm tra, xóa khỏi state khi gửi/đóng; không
+lưu DB/transient/context/log/audit/URL.
+
+Quan hệ: dòng sở hữu (phiên bản hồ sơ, kỹ năng, quá trình, địa điểm, nghỉ việc,
+resource) và chatter/người theo dõi/hoạt động/tệp/xmlid của chúng bị xóa qua ORM,
+không xóa blob vật lý trực tiếp. Dòng nhập, lô và file Excel giữ (dòng chỉ bỏ liên
+kết, giữ mã nguồn); nhập lại danh tính đã xóa thành xung đột. Liên hệ công việc
+riêng không còn dùng thì xóa, còn dùng thì giữ. Dữ liệu nghiệp vụ độc lập (quản lý
+trực tiếp, quản lý phòng ban, chấm công, chi phí...) chặn kèm model, số lượng và
+gợi ý; không gỡ FK, không cascade, không tự đổi người phụ trách.
+
+Tài khoản: mặc định giữ nguyên; nếu tài khoản còn vai trò/phân công/quyền dự án,
+KH-KD hoặc nhóm kinh doanh thì phải chọn “Xóa hồ sơ và khóa tài khoản” (khóa,
+tăng revision để kết thúc phiên, tắt vai trò/phân công/quyền trong công ty, gỡ
+nhóm nhân viên phạm vi) hoặc hạ quyền trước. Không khóa/xóa tài khoản hệ thống,
+root, admin, chính mình hoặc có công ty ngoài phạm vi; không xóa tài khoản.
+
+Thực thi: preview có digest; yêu cầu cuối khóa advisory theo công ty và `FOR
+UPDATE` hồ sơ/resource/tài khoản, tính lại kế hoạch, so với preview và dữ liệu đã
+commit (cursor đọc riêng); lệch thì từ chối cả lô. Lô một xác nhận, tất cả-hoặc-
+không; `request_id` duy nhất cho mỗi hộp thoại nên bấm lặp/thử lại không xóa hai
+lần. Audit bền vững (`tp.hr.employee.audit`, không FK) ghi người làm, lý do, mã,
+mã nguồn, phòng/chức vụ, tài khoản và lựa chọn, phần đã xóa/giữ, request; không
+ghi mật khẩu hoặc toàn bộ thông tin cá nhân; không ai sửa/xóa audit.
+
 ## DEC-041 — Xóa hồ sơ nhập nhầm, mã nhân viên và mật độ giao diện (12/11/2026)
+
+> Phần xóa hồ sơ của quyết định này được thay bằng DEC-042 (HR-DELETE-010); phần mã nhân viên và mật độ giao diện giữ hiệu lực.
 
 Yêu cầu trực tiếp HR-CORRECTION-008, không commit/push. Hồ sơ nhân viên chỉ xóa
 vĩnh viễn qua “Xóa hồ sơ nhập nhầm”: admin hệ thống cùng công ty, backend kiểm

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- S3: Native Base Search Views so res.company and res.country.group stop falling back to AUTO -->
+    <record id="tp_res_company_search" model="ir.ui.view">
+        <field name="name">tp.res.company.search</field>
+        <field name="model">res.company</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm công ty">
+                <field name="name" string="Tên công ty"/>
+                <field name="partner_id" string="Đối tác"/>
+                <field name="parent_id" string="Công ty mẹ"/>
+                <field name="currency_id" string="Tiền tệ"/>
+                <field name="email" string="Email"/>
+                <field name="phone" string="Điện thoại"/>
+                <filter name="active_companies" string="Đang hoạt động" domain="[('active', '=', True)]"/>
+                <filter name="archived_companies" string="Đã lưu trữ" domain="[('active', '=', False)]"/>
+                <filter name="root_companies" string="Công ty gốc" domain="[('parent_id', '=', False)]"/>
+                <group>
+                    <filter name="group_parent" string="Công ty mẹ" context="{'group_by': 'parent_id'}"/>
+                    <filter name="group_currency" string="Tiền tệ" context="{'group_by': 'currency_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="tp_res_country_group_search" model="ir.ui.view">
+        <field name="name">tp.res.country.group.search</field>
+        <field name="model">res.country.group</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm nhóm quốc gia">
+                <field name="name" string="Tên nhóm quốc gia"/>
+                <field name="code" string="Mã nhóm"/>
+                <field name="create_date" string="Ngày tạo"/>
+            </search>
+        </field>
+    </record>
+</odoo>

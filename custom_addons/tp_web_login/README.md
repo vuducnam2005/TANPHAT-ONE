@@ -4,7 +4,10 @@ Native authentication UI for `/web/login`, `/web/login/totp`, `/web/signup` and
 `/web/reset_password` (UI-SHELL-AUTH-001). It keeps Odoo authentication, fields, CSRF, captcha, cooldown, passkey and
 trusted-device behavior. The HR lock model extends native active users and session-token revision; no authentication controller or new route is defined.
 
-The two-region desktop layout uses a local bridge drawing and Segoe UI/system
+The two-region desktop layout shows the company logo (BRAND-LOGO-001,
+CHG-20261116-009: mark on a white tile beside `TANPHAT ONE`, full logo card in
+place of the former bridge drawing; images served from
+`/tp_web_home/static/img/brand/`) and Segoe UI/system
 fonts. Mobile prioritizes the single-column form. Remembered users use the
 native public OWL component and storage, with separate accessible remove controls.
 The dedicated `tp_web_login.assets_login` bundle loads only on the four auth

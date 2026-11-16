@@ -40,6 +40,17 @@ Ghi nguồn tài liệu và quyết định diễn giải vào changelog hoặc 
 5. Theo DEC-030, ưu tiên view/action native hoặc OWL gọi backend đã kiểm quyền; không ghi trực tiếp state hoặc bypass guard qua RPC. API tích hợp/React legacy vẫn theo OpenAPI, không dùng RPC để né contract. Chỉ bắt buộc cập nhật OpenAPI/types khi thay API.
 6. Giữ backward compatibility hoặc tăng version API khi DTO phá vỡ.
 
+## Khi thêm/sửa bảng hoặc xây phòng ban mới
+
+Áp dụng [quy chuẩn bộ lọc](ui/TP_TABLE_FILTER_STANDARD.md) (`DEC-044`), đăng ký
+từng action/view/vị trí bảng trong [inventory](ui/TP_TABLE_FILTER_INVENTORY.md).
+Thiết kế tiêu chí theo nội dung và field/search method thật; reuse native search.
+Coverage gồm list, bảng con, smart button, popup chọn, lịch sử và báo cáo. Cổng
+UI phải kiểm AND/OR, clear giữ scope, dữ liệu nhiều trang, options/count/export
+theo quyền, dirty relation, mobile và bằng chứng. N/A phải có lý do cụ thể và
+role review; chưa đủ coverage thì ghi còn thiếu, không đánh hoàn thành toàn hệ
+thống. Không tự mở module/nghiệp vụ hay áp main từ quy chuẩn này.
+
 ## Khi kết thúc một phiên
 
 Bắt buộc cập nhật:

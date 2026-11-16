@@ -35,11 +35,11 @@ export class HrOverview extends Component {
     static template = "tp_hr_workspace.Overview";
     setup() {
         this.orm = useService("orm"); this.action = useService("action");
-        this.state = proxy({loading: true, error: "", data: null, department: "", job: "", status: "active", catalog: [], jobs: [], search: "", page: 1, pageSize: 10, highlight: null, tooltip: null});
+        this.state = proxy({loading: true, error: "", data: null, department: "", job: "", status: "active", employment: "", catalog: [], jobs: [], search: "", page: 1, pageSize: 10, highlight: null, tooltip: null});
         this.request = 0; this.loadedFilters = null;
         onWillStart(() => this.load());
     }
-    get filters() { return {department_id: Number(this.state.department) || false, job_id: Number(this.state.job) || false, status: this.state.status}; }
+    get filters() { return {department_id: Number(this.state.department) || false, job_id: Number(this.state.job) || false, status: this.state.status, employment_kind: this.state.employment}; }
     get ready() { return !this.state.loading && !this.state.error && Boolean(this.state.data); }
     get segments() { return chartSegments(this.state.data?.departments || [], this.state.data?.total || 0, this.state.catalog); }
     get jobs() { return [...(this.state.data?.jobs || [])].sort((a,b) => b.count-a.count || a.name.localeCompare(b.name,'vi') || a.id-b.id); }
@@ -52,7 +52,7 @@ export class HrOverview extends Component {
     get visibleRows() { return this.tableRows.slice((this.state.page - 1) * this.state.pageSize, this.state.page * this.state.pageSize); }
     get checklist() {
         return [
-            {key:'missing_basic', label:'Thiếu thông tin cơ bản', domain:MISSING_BASIC, note:'Mã TP, đơn vị hoặc cả chức vụ nguồn và chức vụ khai báo.'},
+            {key:'missing_basic', label:'Thiếu thông tin cơ bản', domain:this.state.data?.missing_domain || MISSING_BASIC, note:'Mã TP, đơn vị hoặc cả chức vụ nguồn và chức vụ khai báo.'},
             {key:'missing_code', label:'Chưa có mã nhân viên', domain:[['tp_employee_code','=',false]]},
             {key:'missing_department', label:'Chưa khai báo đơn vị', domain:[['department_id','=',false]]},
             {key:'missing_job', label:'Chưa khai báo chức vụ', domain:[['job_id','=',false]], note:'Tách riêng khỏi chức vụ nguồn.'},
@@ -77,7 +77,7 @@ export class HrOverview extends Component {
         } finally { if (request === this.request) this.state.loading = false; }
     }
     async changeFilter(ev, key) { this.state[key] = ev.target.value; await this.load(); }
-    resetFilters() { Object.assign(this.state, {department:'',job:'',status:'active',search:'',page:1}); return this.load(); }
+    resetFilters() { Object.assign(this.state, {department:'',job:'',status:'active',employment:'',search:'',page:1}); return this.load(); }
     searchTable(ev) { this.state.search = ev.target.value; this.state.page = 1; }
     changePageSize(ev) { this.state.pageSize = Number(ev.target.value); this.state.page = 1; }
     async openEmployees(extra = []) {
@@ -101,7 +101,7 @@ export class HrOverview extends Component {
     onKeydown(ev) { if (ev.key === 'Escape') this.clearHighlight(); }
     openDepartment(row) { return this.openEmployees([["department_id", "=", row.id || false]]); }
     openJob(row) { return this.openEmployees([["job_id", "=", row.id || false]]); }
-    openMissing() { return this.openEmployees(MISSING_BASIC); }
+    openMissing() { return this.openEmployees(this.state.data?.missing_domain || MISSING_BASIC); }
     openSummary() { document.getElementById('hr-department-summary')?.scrollIntoView({block:'start'}); }
     createEmployee() {
         if (!this.ready || !this.state.data.can_create) return;
@@ -110,7 +110,7 @@ export class HrOverview extends Component {
     exportFile() {
         if (!this.ready) return;
         const filters = this.loadedFilters;
-        window.location.assign('/tp_hr/export?' + new URLSearchParams({department_id: filters.department_id || '', job_id: filters.job_id || '', status: filters.status}));
+        window.location.assign('/tp_hr/export?' + new URLSearchParams({department_id: filters.department_id || '', job_id: filters.job_id || '', status: filters.status, employment_kind: filters.employment_kind || ""}));
     }
 }
 registry.category("actions").add("tp_hr_workspace.overview", HrOverview);

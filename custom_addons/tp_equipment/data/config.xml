@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Native Maintenance app: same records, admin-only menu (no hr_maintenance, no equipment-manager path). -->
+    <record id="maintenance.menu_maintenance_title" model="ir.ui.menu">
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+    </record>
+
+    <!-- Odoo auto-installs hr_maintenance (hr + maintenance), which makes every HR officer an Equipment
+         Manager. EQUIP-001 keeps existing HR rights unchanged: the module is uninstalled and this link is
+         removed again on every install/upgrade of tp_equipment (see ops/runbooks/EQUIP_001_*). -->
+    <record id="hr.group_hr_user" model="res.groups">
+        <field name="implied_ids" eval="[Command.unlink(ref('maintenance.group_equipment_manager'))]"/>
+    </record>
+
+    <data noupdate="1">
+        <record id="param_warranty_warning_days" model="ir.config_parameter">
+            <field name="key">tp_equipment.warranty_warning_days</field>
+            <field name="value">30</field>
+        </record>
+
+        <!-- Taxonomy only (configuration, not equipment records). Admin may rename / archive. -->
+        <record id="category_desktop" model="maintenance.equipment.category">
+            <field name="name">Máy tính để bàn</field><field name="tp_code">PC</field><field name="tp_sequence">10</field>
+            <field name="tp_has_config" eval="True"/><field name="technician_user_id" eval="False"/>
+        </record>
+        <record id="category_laptop" model="maintenance.equipment.category">
+            <field name="name">Máy tính xách tay</field><field name="tp_code">LT</field><field name="tp_sequence">20</field>
+            <field name="tp_has_config" eval="True"/><field name="technician_user_id" eval="False"/>
+        </record>
+        <record id="category_monitor" model="maintenance.equipment.category">
+            <field name="name">Màn hình</field><field name="tp_code">MH</field><field name="tp_sequence">30</field>
+            <field name="technician_user_id" eval="False"/>
+        </record>
+        <record id="category_printer" model="maintenance.equipment.category">
+            <field name="name">Máy in</field><field name="tp_code">MI</field><field name="tp_sequence">40</field>
+            <field name="tp_has_meter" eval="True"/><field name="technician_user_id" eval="False"/>
+        </record>
+        <record id="category_copier" model="maintenance.equipment.category">
+            <field name="name">Máy photocopy</field><field name="tp_code">PT</field><field name="tp_sequence">50</field>
+            <field name="tp_has_meter" eval="True"/><field name="technician_user_id" eval="False"/>
+        </record>
+        <record id="category_network" model="maintenance.equipment.category">
+            <field name="name">Thiết bị mạng</field><field name="tp_code">MG</field><field name="tp_sequence">60</field>
+            <field name="technician_user_id" eval="False"/>
+        </record>
+        <record id="category_storage" model="maintenance.equipment.category">
+            <field name="name">Lưu trữ / NAS</field><field name="tp_code">NAS</field><field name="tp_sequence">70</field>
+            <field name="tp_has_config" eval="True"/><field name="technician_user_id" eval="False"/>
+        </record>
+        <record id="category_component" model="maintenance.equipment.category">
+            <field name="name">Linh kiện / phụ kiện</field><field name="tp_code">LK</field><field name="tp_sequence">80</field>
+            <field name="tp_asset_class">component</field><field name="technician_user_id" eval="False"/>
+        </record>
+        <record id="category_service" model="maintenance.equipment.category">
+            <field name="name">Dịch vụ / đường truyền</field><field name="tp_code">DV</field><field name="tp_sequence">90</field>
+            <field name="tp_asset_class">service</field><field name="technician_user_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

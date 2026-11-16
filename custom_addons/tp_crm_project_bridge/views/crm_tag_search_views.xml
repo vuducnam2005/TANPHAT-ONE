@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- S3: Native CRM Tag search view -->
+    <record id="tp_crm_tag_search" model="ir.ui.view">
+        <field name="name">tp.crm.tag.search</field>
+        <field name="model">crm.tag</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm thẻ CRM">
+                <field name="name" string="Tên thẻ"/>
+                <field name="create_date" string="Ngày tạo"/>
+                <group>
+                    <filter name="group_color" string="Màu sắc" context="{'group_by': 'color'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+</odoo>

@@ -12,6 +12,8 @@ import { Domain } from "@web/core/domain";
 import { deserializeDate, serializeDateTime } from "@web/core/l10n/dates";
 import { SearchBar } from "@web/search/search_bar/search_bar";
 import { useSetupAction } from "@web/search/action_hook";
+import { TpTableFilterBar } from "@tp_web_home/search/table_filter_bar";
+import "./filter_profiles";
 
 class KdSearchBar extends SearchBar {
     static template = "tp_kd_workspace.SearchBar";
@@ -141,6 +143,7 @@ export class KdTableTools extends Component {
 
 export class KdQuickFilters extends KdTableTools {
     static template = "tp_kd_workspace.QuickFilters";
+    static components = { TpTableFilterBar };
 }
 
 const kdTableSetup = (Base) =>
@@ -157,8 +160,8 @@ const kdTableSetup = (Base) =>
             } : {} });
         }
         get kdEnabled() {
-            return this.props.context?.tp_kd_relation ||
-                this.env.services.menu?.getCurrentApp()?.xmlid === "tp_kd_workspace.menu_kd";
+            // Views using js_class="tp_kd_*" belong to KH-KD / TP Contracts regardless of deep-link or current app menu state.
+            return true;
         }
         get kdPageKey() {
             return tablePageKey(this.props.resModel, this.env.config.actionId,

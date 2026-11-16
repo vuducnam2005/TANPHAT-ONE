@@ -1,5 +1,91 @@
 # TP HR — HR-001 implementation spec
 
+## UI-TABLE-FILTER-001 — 14/11/2026
+
+Implemented content-appropriate table filtering (`DEC-044`, verified on `tp_tanphat_test` `18079`) via shared `<TpTableFilterBar>` (`static/src/table/filter_profiles.js`, `table.js/xml/scss`), action-specific `<search>` views (`views/search_views.xml`, `employment_contract.xml`) isolating `Hồ sơ cần bổ sung` / `Lưu trữ` / `Chưa có tài khoản` / `Training Attendances` / `Nơi làm việc` / `Nhãn` / `Bảng đối chiếu` / `Nhật ký` / `Loại hồ sơ năng lực` / `Hợp đồng nhân sự`, relation search widgets (`hr_ui.xml`, `tp_hr_relation` guard in `HrListModel._getNextConfig` preserving `HR-LIST-013` department grouping), self-profile filters (`my_profile.js/xml`), and `tests/test_table_filter_hr.py`. See [TP_TABLE_FILTER_INVENTORY.md](../../docs/ui/TP_TABLE_FILTER_INVENTORY.md) and [UI_TABLE_FILTER_001_ACCEPTANCE.md](../../docs/demo/UI_TABLE_FILTER_001_ACCEPTANCE.md).
+
+## UI-HISTORY-001 — 14/11/2026
+
+Cleaned up **Lịch sử hoạt động** across both HR Chatter and the self-service **Thông tin cá nhân** page without altering stored DB history: moved future role-change and department-transfer JSON snapshots out of `mail.message` into private `tp.hr.employee.audit` (`role_change`, `department_transfer`) while keeping human-readable Vietnamese business notes in Chatter (`hr_role.py`, `department_transfer.py`); expanded `hr_history.py` (`format_hr_message_body`, `extract_history_item`) to summarize legacy raw JSON envelopes/onboarding banners and fully translate English tracking labels/values; and redesigned the `history` tab in `my_profile` (`my_profile.py`, `my_profile.js`, `my_profile.xml`, `my_profile.scss`) with category badges, filter pills (`Tất cả`, `Hồ sơ & Cá nhân`, `Vai trò & Phòng ban`, `Tài khoản`), effective-date chips, and line-by-line diff rows (`Trường | Cũ → Mới`). Verified by `test_history_hides_raw_json_localizes_tracking_and_cleans_legacy_entries` (`tests/test_my_profile.py`) and HOOT (`static/tests/hr_profile.test.js`).
+
+## UI-PERSONAL-TAB-001 — 14/11/2026
+
+Redesigned `hr.employee` form tab **Thông tin cá nhân** (`views/workspace.xml`, `static/src/profile/employee_profile.scss`) into a balanced 2-column (`.o_tp_hr_personal_grid`, 1 column on `<= 991px`) layout of 8 `.o_tp_hr_card` sections matching **Tổng quan**, replaced `.o_address_format` vertical blank spacing with 6 crisp address rows, added readonly empty-binary fallback `"Chưa có tệp"` via `.o_tp_hr_binary_cell` (`"Tải tệp lên"` in edit mode), and localized all field labels, tooltips (`help`), and selections (`sex`, `marital`, `certificate`) into Vietnamese on `HrVersion` and `Employee` (`models/hr_ui.py`), matching the self-service **Thông tin cá nhân** view (`my_profile`). Covered by `test_employee_personal_information_tab_is_card_structured_and_vietnamese` in `tests/test_hr_ui.py`.
+
+## UI-SHELL-UNIFY-001 — 14/11/2026
+
+Replaced the sidebar `"Tài khoản"` item and `openAccount()` callback with `<TpUserAccountMenu>` from `tp_web_home` (logged-in user's `[Avatar] Full Name [chevron]` opening a 2-item dropdown: **Thông tin cá nhân** and **Đăng xuất**, keeping `is-rail` tooltip/access and mobile drawer support). Removed `static/src/identity_navbar.js` (navbar synchronization and `tp.identity/changed` bus listener are handled centrally by `tp_identity` in `tp_web_home`; `tp_hr_workspace` depends on `tp_web_home`).
+
+Added self-service **Thông tin cá nhân** (`tp_hr_workspace.action_my_profile`, route `/odoo/my-profile`, OWL `TpHrMyProfile`, `models/my_profile.py`, `controllers/my_profile.py`, `static/src/my_profile/`): registered `tp_personal_profile` handler so every user clicking **Thông tin cá nhân** views all 6 profile tabs (including read-only employment contracts and strict own-employee file download `/tp_hr/my_contract/<doc_id>/<file|appendix>`) and can update allowlisted personal/contact/address/ID/family/resume/skills/avatar fields, syncing immediately to HR Admin's `hr.employee`, chatter, and `tp.identity/changed` while blocking writes to official `name`/org/job/contract/ACL fields. See [UI_SHELL_UNIFY_001_ACCEPTANCE.md](../../docs/demo/UI_SHELL_UNIFY_001_ACCEPTANCE.md).
+
+## HR-EMP-014 — 13/11/2026
+
+Version20.0.1.11.0 adds **Hợp đồng lao động**, bringing the profile to six tabs. Internal employment
+classification lives on `hr.version` and is inherited by employee: nullable
+Ngắn hạn/Dài hạn/Thuê khoán, tracked and guarded by employee write access.
+Native contract dates/fixed_term remain the only labor-date source. Minimal
+`tp.hr.contract.document` stores paper metadata/private files and outsourced
+service dates; versions can share one document. Company/HR ACLs, attachment
+guards and restrict dependencies preserve HR-DELETE-010.
+
+The compact list retains013's fixed department grouping and account actions,
+with job → classification → phone columns. Shared basic-missing criteria power
+row reasons, overview/drilldown and XLSX. Chatter is **Lịch sử hoạt động**;
+the smart button is **Phiên bản hồ sơ**. Recognized legacy identity events are
+summarized during serialization without changing stored bodies. New events
+use business text and a private audit. The duplicate reports menu is inactive;
+**Xuất Excel nhân sự** remains in Tổng quan with scope/time/filter metadata.
+
+See [guide](../../docs/demo/HR_EMP_014_USER_GUIDE.md),
+[schema/access](../../docs/security/HR_EMP_014_SCHEMA_AND_ACCESS.md),
+[acceptance](../../docs/demo/HR_EMP_014_ACCEPTANCE.md) and
+[deploy/rollback](../../ops/runbooks/HR_EMP_014_DEPLOY_AND_ROLLBACK.md).
+The five-tab descriptions below are historical;014 has six tabs.
+
+
+## HR-LIST-013 — 13/11/2026
+
+Version20.0.1.10.2 makes department sections a fixed employee-list layout.
+The scoped `HrListModel` always prepends `department_id` before native config
+normalization; SearchModel has no default department facet. Clearing search
+or secondary grouping keeps the department sections and hidden department
+column. Actual department domain searches remain available. Other HR lists
+and native forms keep their existing behavior; no global model patch.
+See [acceptance and rollback](../../docs/demo/HR_LIST_013_ACCEPTANCE.md).
+
+## HR-LIST-012 — 13/11/2026 (grouping superseded by013)
+
+Version20.0.1.10.1 restores the compact employee table requested after011:
+native default department grouping with light cyan headers, plain text names,
+no repeated department column while grouped, no large intro block or avatars.
+Clicking a row still opens the existing profile. Other HR lists keep011 layouts;
+account actions and backend guards remain. The removable grouping from012 is superseded by013.
+See [acceptance and rollback](../../docs/demo/HR_LIST_012_ACCEPTANCE.md).
+
+## HR-UI-011 — 13/11/2026
+
+`tp_hr_workspace` 20.0.1.10.0 replaces the duplicate employee navigation with
+one **Danh sách nhân viên** entry, preserving old action/XML IDs and all data.
+The scoped `tp_hr_table` uses native backend search, sort and grouping, actual
+10/20/50/100 limits, group units, optional columns and actionable empty/error
+states. Only its own renderer changes; the global ListRenderer is untouched.
+
+Employee detail opens readonly, with explicit Edit/Save/Cancel on desktop and
+mobile. Dirty cancellation/navigation asks before discarding or saving. Its five
+tabs preserve personal field groups, work details, resume/skills/certifications,
+versions, account workflows and chatter history. Department/job/tag counts and
+drilldowns use the same active, company-scoped, record-rule-visible population
+without sudo. Catalog forms, location empty states, declared employee hierarchy
+and the four import UI steps reuse native views and existing backend states.
+Employee labels remain `hr.employee.category`, with no access-grant semantics.
+
+Shared shell widths and password/focus/delete guards remain. No API contract,
+stored business fields, account data or business state machine changes.
+See [design](../../docs/ui/HR_UI_011_DESIGN.md),
+[acceptance/evidence](../../docs/demo/HR_UI_011_ACCEPTANCE.md) and
+[deploy/rollback](../../ops/runbooks/HR_UI_011_DEPLOY_AND_ROLLBACK.md).
+The historical profile sizes below are superseded by HR-UI-011.
+
 HR-COMPACT-007 (CHG-20261112-010) reduces profile spacing and typography:
 88px desktop avatar, name up to 32px, 15px tabs and 16px information fields.
 The native toolbar fits the available content width without moving the sidebar.
@@ -50,10 +136,27 @@ Version history stays a native list with HR pagination. Unconfirmed wage cells r
 The redesigned employee form has five tabs, readonly initial mode, native edit/save/discard/dirty handling, a compact identity header, light two-column content and mobile stacking. Account status is Mở / Khóa / Chưa có tài khoản across list, form, dashboard and XLSX; profile archive is separate. Account/password/role controls require system admin in the employee company. Password reset uses Odoo's native identity verification.
 
 Staff ↔ HEAD KH-KD uses a reason and server preview of direct/implied groups, assignments and grants. Demotion revokes the department responsibility and blocks conflicting separate management rights, retaining listed independent financial_read grants. Session revision invalidates old sessions. Job titles never grant rights; unsupported departments are explicit. See [admin guide](../../docs/demo/HR_ACCOUNT_ROLE_001_USER_GUIDE.md), [security](../../docs/security/HR_ACCOUNT_ROLE_001_SECURITY.md) and [acceptance](../../docs/demo/HR_ACCOUNT_ROLE_001_ACCEPTANCE.md).
+# HR-DELETE-010 — 12/11/2026
+
+CHG-20261112-016, HR 20.0.1.9.0 with `tp_organization` 20.0.2.2.0 (DEC-042,
+replaces the mistaken-entry-only rule of 008). **Tác vụ → Xóa vĩnh viễn nhân
+viên** opens the `tp_hr_workspace.employee_delete` OWL dialog (native Dialog):
+identity table, Sẽ xóa / Giữ lại / Đang chặn sections, required reason, optional
+**Xóa hồ sơ và khóa tài khoản**, the admin's own password and a red confirm
+button. `tp_permanent_delete_execute` re-checks system admin + HR manager, company
+and HTTP session, verifies the freshly typed password with native
+`_check_credentials` inside `_assert_can_auth` on every request, locks, compares
+the plan digest with the preview and committed data, then locks/keeps accounts,
+deletes owned rows, sweeps chatter/files/xmlids and writes the audit in one
+transaction. Import lines/batches/files stay; independent business links block
+with a hint; deleted TP codes are never reissued. See
+[acceptance](../../docs/demo/HR_DELETE_010_ACCEPTANCE.md) and
+[rollback](../../ops/runbooks/HR_DELETE_010_DEPLOY_AND_ROLLBACK.md).
+
 # HR-CORRECTION-008 — 12/11/2026
 
-CHG-20261112-013, HR 20.0.1.8.0 with `tp_organization` 20.0.2.1.0. Employees are
-deleted only through **Xóa hồ sơ nhập nhầm** (`tp.hr.employee.delete.wizard`,
+CHG-20261112-013, HR 20.0.1.8.0 with `tp_organization` 20.0.2.1.0 (deletion part
+superseded by HR-DELETE-010 above). Employees were deleted only through **Xóa hồ sơ nhập nhầm** (`tp.hr.employee.delete.wizard`,
 server action bound to employee list/form): system admin in the same company,
 backend eligibility per record, required reason, all-or-nothing batch and a
 durable `tp.hr.employee.audit` row without FK to the deleted record. Only unused

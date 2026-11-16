@@ -1,0 +1,154 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo>
+    <record id="action_section_contents" model="ir.actions.act_window">
+        <field name="name">Nội dung theo mẫu</field>
+        <field name="res_model">tp.report.section.content</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('document_id','=',active_id)]</field>
+    </record>
+    <record id="document_completion_form" model="ir.ui.view">
+        <field name="name">tp.report.document.completion</field>
+        <field name="model">tp.report.document</field>
+        <field name="inherit_id" ref="tp_reporting.document_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_aggregate']" position="attributes">
+                <attribute name="invisible">not can_consolidate or state not in ('draft','returned') or (level == 'personal' and period_type not in ('month','quarter'))</attribute>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Nội dung theo mẫu">
+                    <div class="alert alert-info">Nguồn chuyên môn là tham chiếu thủ công có ghi rõ; chưa tích hợp tự động. Không dùng phần này để nhập số tài chính hạn chế.</div>
+                    <button name="action_prepare_sections" type="object" string="Chuẩn bị các phần của mẫu" invisible="state not in ('draft','returned')"/>
+                    <field name="section_content_ids" readonly="state not in ('draft','returned')">
+                        <list limit="20">
+                            <field name="section_id"/>
+                            <field name="content"/>
+                            <field name="design_stage" optional="hide"/>
+                        </list>
+                    </field>
+                    <button type="action" name="%(action_section_contents)d" string="Lọc / tìm nội dung theo mẫu"/>
+                </page>
+            </xpath>
+        </field>
+    </record>
+    <record id="section_content_form" model="ir.ui.view">
+        <field name="name">tp.report.section.content.form</field>
+        <field name="model">tp.report.section.content</field>
+        <field name="arch" type="xml">
+            <form class="tp_reporting_form" js_class="tp_reporting_form">
+                <sheet>
+                    <field name="document_state" invisible="1"/>
+                    <field name="document_version" invisible="1"/>
+                    <group>
+                        <field name="document_id" readonly="id != False"/>
+                        <field name="section_id" readonly="id != False" domain="[('audience','=','general')]"/>
+                    </group>
+                    <field name="content" readonly="document_state not in ('draft','returned')"/>
+                    <notebook>
+                        <page string="Thiết kế / hồ sơ">
+                            <group>
+                                <field name="design_stage" readonly="document_state not in ('draft','returned')"/>
+                                <field name="package_reference" readonly="document_state not in ('draft','returned')"/>
+                                <field name="submission_reference" readonly="document_state not in ('draft','returned')"/>
+                                <field name="quality_review" readonly="document_state not in ('draft','returned')"/>
+                                <field name="missing_inputs" readonly="document_state not in ('draft','returned')"/>
+                            </group>
+                        </page>
+                        <page string="KH-KD / nguồn">
+                            <group>
+                                <field name="business_source_kind" readonly="document_state not in ('draft','returned')"/>
+                                <field name="source_reference" readonly="document_state not in ('draft','returned')"/>
+                                <field name="source_note" readonly="document_state not in ('draft','returned')"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="copy_plan_form" model="ir.ui.view">
+        <field name="name">tp.report.copy.plan.form</field>
+        <field name="model">tp.report.copy.plan</field>
+        <field name="arch" type="xml">
+            <form string="Sao chép cơ cấu sang kỳ mới">
+                <div class="alert alert-info">Tạo cây nháp mới, giữ cấu trúc/đầu ra. Không sao chép thực hiện, baseline, xác nhận hoặc trạng thái đã ban hành.</div>
+                <group>
+                    <field name="source_id"/>
+                    <field name="target_start"/>
+                    <field name="target_parent_id"/>
+                </group>
+                <footer>
+                    <button type="object" name="action_copy" string="Tạo cơ cấu nháp" class="btn-primary"/>
+                    <button special="cancel" string="Hủy"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="carry_work_form" model="ir.ui.view">
+        <field name="name">tp.report.carry.work.form</field>
+        <field name="model">tp.report.carry.work</field>
+        <field name="arch" type="xml">
+            <form string="Chuyển đầu việc tồn sang kỳ sau" js_class="tp_reporting_form">
+                <div class="alert alert-info">Giữ ID nguồn/công việc. Khối lượng thực hiện của kỳ cũ không được sao chép sang kỳ mới.</div>
+                <group>
+                    <field name="line_id"/>
+                    <field name="target_document_id" domain="[('owner_id','=',uid),('state','in',('draft','returned')),('level','=','personal')]"/>
+                    <field name="work_date"/>
+                    <field name="reason"/>
+                </group>
+                <footer>
+                    <button type="object" name="action_carry" string="Chuyển tiếp đầu việc" class="btn-primary"/>
+                    <button special="cancel" string="Hủy"/>
+                </footer>
+                <field name="target_version" invisible="1"/>
+            </form>
+        </field>
+    </record>
+    <record id="line_completion_form" model="ir.ui.view">
+        <field name="name">tp.report.line.completion</field>
+        <field name="model">tp.report.line</field>
+        <field name="inherit_id" ref="tp_reporting.line_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <footer>
+                    <button name="action_carry_forward" type="object" string="Chuyển tiếp sang kỳ sau" invisible="work_status == 'done'"/>
+                </footer>
+            </xpath>
+            <xpath expr="//sheet" position="inside">
+                <group string="Nguồn phát sinh / chuyển tiếp">
+                    <field name="rollup_source" readonly="1"/>
+                    <field name="origin_line_id" readonly="1"/>
+                    <field name="carry_reason" readonly="1"/>
+                    <field name="is_emergent" readonly="document_state not in ('draft','returned')"/>
+                    <field name="emergence_reason" invisible="not is_emergent" readonly="document_state not in ('draft','returned')"/>
+                    <field name="assigned_by_id" invisible="not is_emergent" readonly="document_state not in ('draft','returned')"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+    <record id="section_content_list" model="ir.ui.view">
+        <field name="name">section_content_list</field>
+        <field name="model">tp.report.section.content</field>
+        <field name="arch" type="xml">
+            <list js_class="tp_reporting_list" limit="20">
+                <field name="document_id" string="Báo cáo"/>
+                <field name="section_id" string="Mục trong mẫu"/>
+                <field name="content" string="Nội dung"/>
+                <field name="design_stage" string="Bước thiết kế"/>
+                <field name="source_reference" string="Tham chiếu nguồn"/>
+            </list>
+        </field>
+    </record>
+    <record id="section_content_search" model="ir.ui.view">
+        <field name="name">section_content_search</field>
+        <field name="model">tp.report.section.content</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="document_id" string="Báo cáo"/>
+                <field name="section_id" string="Mục trong mẫu"/>
+                <field name="content" string="Nội dung"/>
+                <field name="design_stage" string="Bước thiết kế"/>
+                <field name="source_reference" string="Tham chiếu nguồn"/>
+            </search>
+        </field>
+    </record>
+</odoo>

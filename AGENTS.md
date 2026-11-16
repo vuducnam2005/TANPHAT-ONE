@@ -48,6 +48,15 @@ Tên kỹ thuật như `tp_project`, `tp.project.assignment`, XML ID và `/api/v
 
 ## 3. Quy tắc source và dữ liệu
 
+**Bộ lọc cho mọi bảng (DEC-044):** khi thêm/sửa bảng hoặc phát triển phòng ban
+mới, bắt buộc theo [quy chuẩn bộ lọc](docs/ui/TP_TABLE_FILTER_STANDARD.md) và
+cập nhật [inventory](docs/ui/TP_TABLE_FILTER_INVENTORY.md). Mỗi bảng có tiêu chí
+đúng nội dung, giữ domain/quyền backend, phân trang/count/export nhất quán;
+bao gồm bảng con, popup và báo cáo. Không đánh hoàn thành UI bảng khi chưa có
+coverage/test hoặc N/A có lý do. Tái sử dụng SearchModel và công cụ HR/KH-KD,
+không tự tạo filter engine mới. Đây là quy chuẩn phát triển, không chứng minh
+các bảng hiện tại đã được triển khai đủ.
+
 - Không sửa `odoo/` hoặc `addons/`; code riêng đặt trong `custom_addons/`.
 - Database dùng một PostgreSQL database cho mỗi môi trường, dùng chung các phòng ban; phạm vi được kiểm tra ở Odoo.
 - Theo DEC-037, local chỉ dùng `tp_tanphat_dev` (18069) và `tp_tanphat_test` (18079), trên cluster workspace 55432; giữ các database hệ thống PostgreSQL. Tái sử dụng test với một tác vụ ghi tại một thời điểm, không tự tạo database theo tên task. Đọc [quy trình dữ liệu sạch/test](ops/runbooks/SAMPLE_DATA_CLEANUP_AND_TEST.md); helper clone/seed lịch sử cần đánh giá lại, không tự chạy để mở phiên. Dữ liệu giả chỉ trên test; áp code/migration đã kiểm thử lên main, không restore test đè main.

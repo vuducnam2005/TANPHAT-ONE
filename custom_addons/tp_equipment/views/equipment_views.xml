@@ -1,0 +1,642 @@
+<?xml version='1.0' encoding='utf8'?>
+<odoo>
+    <record id="equipment_list" model="ir.ui.view">
+        <field name="name">tp.equipment.list</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <list string="Hồ sơ thiết bị" js_class="tp_equipment_table" class="tp_eq_table" limit="20" decoration-muted="tp_lifecycle == 'retired'">
+                <field name="tp_lifecycle" column_invisible="True"/>
+                <field name="tp_code" string="Mã TB" class="tp_eq_strong"/>
+                <field name="name" string="Tên thiết bị" class="tp_eq_wrap"/>
+                <field name="category_id" string="Loại" optional="show"/>
+                <field name="tp_custody" string="Nơi giữ" widget="badge" optional="show" decoration-info="tp_custody == 'employee'" decoration-primary="tp_custody in ('department', 'location')" decoration-success="tp_custody == 'stock'" decoration-warning="tp_custody in ('loan', 'vendor')" decoration-muted="tp_custody == 'none'"/>
+                <field name="tp_employee_id" string="Người sử dụng" optional="show"/>
+                <field name="tp_current_department_id" string="Phòng ban" optional="show"/>
+                <field name="tp_technical_state" string="Tình trạng" widget="badge" optional="show" decoration-success="tp_technical_state == 'good'" decoration-warning="tp_technical_state == 'limited'" decoration-danger="tp_technical_state == 'broken'" decoration-muted="tp_technical_state == 'unverified'"/>
+                <field name="tp_brand" string="Hãng" optional="hide"/>
+                <field name="model" string="Model" optional="hide"/>
+                <field name="serial_no" string="Serial" optional="hide"/>
+                <field name="tp_location_id" string="Vị trí" optional="hide"/>
+                <field name="tp_availability" string="Khả dụng" widget="badge" optional="hide" decoration-success="tp_availability == 'available'" decoration-info="tp_availability in ('in_use', 'reserved')" decoration-warning="tp_availability in ('check', 'repair')" decoration-danger="tp_availability == 'blocked'" decoration-muted="tp_availability in ('draft', 'retired')"/>
+                <field name="tp_warranty_state" string="Bảo hành" widget="badge" optional="hide" decoration-success="tp_warranty_state == 'active'" decoration-warning="tp_warranty_state == 'expiring'" decoration-danger="tp_warranty_state == 'expired'" decoration-muted="tp_warranty_state in ('none', 'unknown')"/>
+                <field name="tp_warranty_end" string="Hết bảo hành" optional="hide"/>
+                <field name="tp_ownership" string="Sở hữu" optional="hide"/>
+                <field name="tp_purchase_date" string="Ngày mua / nhận" optional="hide"/>
+                <field name="tp_verification" string="Xác minh" optional="hide"/>
+                <field name="tp_replacement_needed" string="Cần thay thế" optional="hide"/>
+                <button name="action_tp_open_detail" type="object" string="Xem" class="btn btn-sm btn-light tp_eq_row_view_btn"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- EQUIP-UI-002: devices attached to an identified HR employee only (scope enforced by the action domain). -->
+    <record id="equipment_user_list" model="ir.ui.view">
+        <field name="name">tp.equipment.user.list</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="priority">95</field>
+        <field name="arch" type="xml">
+            <list string="Thiết bị &amp; người sử dụng" js_class="tp_equipment_table" class="tp_eq_table tp_eq_user_table" limit="20"
+                  default_order="tp_employee_id, tp_code">
+                <header>
+                    <button name="action_tp_quick_return" type="object" string="Trả về kho" class="btn-secondary"/>
+                </header>
+                <field name="tp_lifecycle" column_invisible="True"/>
+                <field name="tp_code" column_invisible="True"/>
+                <field name="model" column_invisible="True"/>
+                <field name="tp_employee_code" column_invisible="True"/>
+                <field name="tp_employee_archived" column_invisible="True"/>
+                <field name="tp_employee_id" string="Người sử dụng" widget="tp_eq_holder" class="tp_eq_col_holder" width="[170,260]"/>
+                <field name="tp_department_name" string="Phòng ban" widget="tp_eq_clamp" class="tp_eq_col_dept" width="[100,170]"/>
+                <field name="category_id" string="Loại thiết bị" widget="tp_eq_clamp" class="tp_eq_col_type" width="[100,160]"/>
+                <field name="name" string="Thiết bị" widget="tp_eq_device" class="tp_eq_col_device" width="[150,260]"/>
+                <field name="tp_technical_state" string="Tình trạng" widget="badge" class="tp_eq_col_state" width="[100,120]" decoration-success="tp_technical_state == 'good'" decoration-warning="tp_technical_state == 'limited'" decoration-danger="tp_technical_state == 'broken'" decoration-muted="tp_technical_state == 'unverified'"/>
+                <field name="tp_condition_note" string="Ghi chú" help="Ghi chú hỏng hóc / tình trạng thực tế của thiết bị" widget="tp_eq_clamp" options="{'blank': True}" class="tp_eq_col_note" width="[90]"/>
+                <field name="tp_brand" string="Hãng" optional="hide"/>
+                <field name="serial_no" string="Serial" optional="hide"/>
+                <field name="tp_location_id" string="Vị trí" optional="hide"/>
+                <field name="tp_availability" string="Khả dụng" widget="badge" optional="hide" decoration-success="tp_availability == 'available'" decoration-info="tp_availability in ('in_use', 'reserved')" decoration-warning="tp_availability in ('check', 'repair')" decoration-danger="tp_availability == 'blocked'" decoration-muted="tp_availability in ('draft', 'retired')"/>
+                <field name="tp_warranty_state" string="Bảo hành" widget="badge" optional="hide" decoration-success="tp_warranty_state == 'active'" decoration-warning="tp_warranty_state == 'expiring'" decoration-danger="tp_warranty_state == 'expired'" decoration-muted="tp_warranty_state in ('none', 'unknown')"/>
+                <field name="tp_ownership" string="Sở hữu" optional="hide"/>
+                <field name="tp_purchase_date" string="Ngày mua / nhận" optional="hide"/>
+                <field name="tp_verification" string="Xác minh" optional="hide"/>
+                <field name="tp_replacement_needed" string="Cần thay thế" optional="hide"/>
+                <button name="action_tp_open_detail" type="object" string="Xem" class="btn btn-sm btn-light tp_eq_row_view_btn"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="equipment_stock_list" model="ir.ui.view">
+        <field name="name">tp.equipment.stock.list</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <list string="Thiết bị tồn kho" js_class="tp_equipment_table" class="tp_eq_table" limit="20">
+                <header>
+                    <button name="action_tp_quick_assign" type="object" string="Gán thiết bị" class="btn-secondary"/>
+                </header>
+                <field name="tp_lifecycle" column_invisible="True"/>
+                <field name="tp_custody" column_invisible="True"/>
+                <field name="tp_code" string="Mã TB" class="tp_eq_strong"/>
+                <field name="name" string="Tên thiết bị" class="tp_eq_wrap"/>
+                <field name="category_id" string="Loại" optional="show"/>
+                <field name="tp_stock_location_display" string="Vị trí kho" optional="show"/>
+                <field name="tp_technical_state" string="Tình trạng" widget="badge" optional="show" decoration-success="tp_technical_state == 'good'" decoration-warning="tp_technical_state == 'limited'" decoration-danger="tp_technical_state == 'broken'" decoration-muted="tp_technical_state == 'unverified'"/>
+                <field name="tp_availability" string="Sẵn sàng" widget="badge" optional="show" decoration-success="tp_availability == 'available'" decoration-info="tp_availability in ('in_use', 'reserved')" decoration-warning="tp_availability in ('check', 'repair')" decoration-danger="tp_availability == 'blocked'" decoration-muted="tp_availability in ('draft', 'retired')"/>
+                <field name="tp_brand" string="Hãng" optional="hide"/>
+                <field name="model" string="Model" optional="hide"/>
+                <field name="serial_no" string="Serial" optional="hide"/>
+                <field name="tp_location_id" string="Vị trí chi tiết" optional="hide"/>
+                <field name="tp_warranty_state" string="Bảo hành" widget="badge" optional="hide" decoration-success="tp_warranty_state == 'active'" decoration-warning="tp_warranty_state == 'expiring'" decoration-danger="tp_warranty_state == 'expired'" decoration-muted="tp_warranty_state in ('none', 'unknown')"/>
+                <field name="tp_purchase_date" string="Ngày mua / nhận" optional="hide"/>
+                <field name="tp_verification" string="Xác minh" optional="hide"/>
+                <button name="action_tp_open_detail" type="object" string="Xem" class="btn btn-sm btn-light tp_eq_row_view_btn"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- EQUIP-SIMPLE-003 (DEC-047): the single "Thiết bị" list. Scope = action domain; the segmented control
+         toggles seg_in_use / seg_stock of equipment_search, so list, count, picker and Excel share one domain. -->
+    <record id="equipment_main_list" model="ir.ui.view">
+        <field name="name">tp.equipment.main.list</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="priority">92</field>
+        <field name="arch" type="xml">
+            <list string="Thiết bị" js_class="tp_equipment_table" class="tp_eq_table tp_eq_user_table tp_eq_main_table" limit="20"
+                  default_order="tp_code">
+                <header>
+                    <button name="%(tp_equipment.action_equipment_quick_add)d" type="action" string="Thêm thiết bị" class="btn-primary" display="always"/>
+                    <button name="%(tp_equipment.action_quick_assign)d" type="action" string="Gán thiết bị" class="btn-secondary" display="always"/>
+                </header>
+                <field name="tp_lifecycle" column_invisible="True"/>
+                <field name="tp_custody" column_invisible="True"/>
+                <field name="tp_code" column_invisible="True"/>
+                <field name="model" column_invisible="True"/>
+                <field name="category_id" column_invisible="True"/>
+                <field name="tp_verification" column_invisible="True"/>
+                <field name="tp_employee_code" column_invisible="True"/>
+                <field name="tp_employee_archived" column_invisible="True"/>
+                <field name="tp_can_assign" column_invisible="True"/>
+                <field name="tp_can_swap" column_invisible="True"/>
+                <field name="tp_can_return" column_invisible="True"/>
+                <!-- Minimums sum so the list fits 1440px with the sidebar open; status/condition fit their longest common label. -->
+                <field name="name" string="Thiết bị" widget="tp_eq_device" options="{'show_type': True}" class="tp_eq_col_device" width="[140,280]"/>
+                <field name="tp_employee_id" string="Người sử dụng" widget="tp_eq_holder" options="{'empty': ''}" class="tp_eq_col_holder" width="[140,240]"/>
+                <field name="tp_department_name" string="Phòng ban" widget="tp_eq_clamp" options="{'blank': True}" class="tp_eq_col_dept" width="[90,170]"/>
+                <field name="tp_usage_status" string="Trạng thái" widget="tp_eq_status" class="tp_eq_col_status" width="[120,150]"/>
+                <field name="tp_technical_state" string="Tình trạng máy" widget="tp_eq_status" class="tp_eq_col_state" width="[115,130]"/>
+                <field name="tp_condition_note" string="Ghi chú" widget="tp_eq_clamp" options="{'blank': True}" class="tp_eq_col_note" width="[80]"/>
+                <field name="tp_brand" string="Hãng" optional="hide"/>
+                <field name="serial_no" string="Serial" optional="hide"/>
+                <field name="tp_short_config" string="Cấu hình" optional="hide"/>
+                <field name="tp_location_id" string="Vị trí" optional="hide"/>
+                <field name="tp_purchase_date" string="Ngày mua / nhận" optional="hide"/>
+                <button name="action_tp_open_detail" type="object" string="Xem" class="btn btn-sm btn-light tp_eq_row_view_btn"/>
+                <button name="action_tp_quick_assign" type="object" string="Gán" class="btn btn-sm btn-light tp_eq_row_act tp_eq_row_act_assign" invisible="not tp_can_assign"/>
+                <button name="action_tp_quick_swap" type="object" string="Đổi máy" class="btn btn-sm btn-light tp_eq_row_act" invisible="not tp_can_swap"/>
+                <button name="action_tp_quick_return" type="object" string="Trả kho" class="btn btn-sm btn-light tp_eq_row_act" invisible="not tp_can_return"/>
+                <widget name="tp_eq_row_menu" width="36"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="equipment_search" model="ir.ui.view">
+        <field name="name">tp.equipment.search</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <search string="Tìm thiết bị">
+                <field name="tp_search" string="Tìm nhanh (nhân viên, mã NV, mã TB, model)"/>
+                <field name="tp_code" string="Mã thiết bị"/>
+                <field name="serial_no" string="Serial"/>
+                <field name="category_id" string="Phân loại"/>
+                <field name="tp_employee_id" string="Người đang giữ"/>
+                <field name="tp_current_department_id" string="Phòng ban hiện tại"/>
+                <field name="tp_location_id" string="Vị trí"/>
+                <field name="tp_brand" string="Hãng"/>
+                <field name="tp_availability"/>
+                <field name="tp_technical_state"/>
+                <field name="tp_warranty_state"/>
+                <field name="tp_ownership"/>
+                <field name="tp_purchase_date"/>
+                <filter name="q_available" string="Sẵn sàng cấp phát" domain="[('tp_availability', '=', 'available')]"/>
+                <filter name="q_in_use" string="Đang sử dụng" domain="[('tp_availability', '=', 'in_use')]"/>
+                <filter name="q_check" string="Cần kiểm tra" domain="[('tp_availability', 'in', ('check', 'blocked'))]"/>
+                <filter name="q_repair" string="Đang sửa chữa" domain="[('tp_availability', '=', 'repair')]"/>
+                <filter name="q_faulty" string="Hỏng / hạn chế" domain="[('tp_technical_state', 'in', ('limited', 'broken'))]"/>
+                <filter name="q_warranty" string="Bảo hành sắp / đã hết" domain="[('tp_warranty_state', 'in', ('expiring', 'expired'))]"/>
+                <filter name="q_replace" string="Cần thay thế" domain="[('tp_replacement_needed', '=', True)]"/>
+                <filter name="q_draft" string="Hồ sơ nháp" domain="[('tp_lifecycle', '=', 'draft')]"/>
+                <filter name="q_archived_holder" string="Người giữ đã nghỉ" domain="[('tp_employee_archived', '=', True)]"/>
+                <separator/>
+                <filter name="not_retired" string="Chưa ngừng quản lý" domain="[('tp_lifecycle', '!=', 'retired')]"/>
+                <filter name="retired" string="Ngừng quản lý" domain="[('tp_lifecycle', '=', 'retired')]"/>
+                <separator/>
+                <filter name="source_unverified" string="Theo nguồn – chưa xác minh" domain="[('tp_verification', '=', 'source')]"/>
+                <filter name="warranty_unknown" string="Chưa rõ bảo hành" domain="[('tp_warranty_state', '=', 'unknown')]"/>
+                <filter name="devices" string="Thiết bị" domain="[('tp_asset_class', '=', 'device')]"/>
+                <filter name="components" string="Linh kiện / phụ kiện" domain="[('tp_asset_class', '=', 'component')]"/>
+                <filter name="services" string="Dịch vụ / đường truyền" domain="[('tp_asset_class', '=', 'service')]"/>
+                <separator/>
+                <filter name="inactive" string="Đã lưu trữ" domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter name="q_printer_copier" string="Máy in" domain="[('category_id.tp_code', 'in', ('MI', 'PT'))]"/>
+                <separator/>
+                <!-- EQUIP-SIMPLE-003 segmented control: same leaves as IN_USE_DOMAIN / STOCK_DOMAIN in quick_action.py -->
+                <filter name="seg_in_use" string="Đang sử dụng" domain="[('tp_custody', 'in', ('employee', 'loan')), ('tp_employee_id', '!=', False)]"/>
+                <filter name="seg_stock" string="Trong kho" domain="[('tp_custody', '=', 'stock'), ('tp_employee_id', '=', False)]"/>
+                <group>
+                    <filter name="group_category" string="Phân loại" context="{'group_by': 'category_id'}"/>
+                    <filter name="group_custody" string="Nơi giữ" context="{'group_by': 'tp_custody'}"/>
+                    <filter name="group_technical" string="Tình trạng kỹ thuật" context="{'group_by': 'tp_technical_state'}"/>
+                    <filter name="group_availability" string="Khả dụng" context="{'group_by': 'tp_availability'}"/>
+                    <filter name="group_location" string="Vị trí" context="{'group_by': 'tp_location_id'}"/>
+                    <filter name="group_employee" string="Người đang giữ" context="{'group_by': 'tp_employee_id'}"/>
+                    <filter name="group_ownership" string="Sở hữu" context="{'group_by': 'tp_ownership'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="equipment_form" model="ir.ui.view">
+        <field name="name">tp.equipment.form</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <form string="Thiết bị văn phòng" class="tp_eq_form o_tp_eq_form_wide" js_class="tp_equipment_form">
+                <header>
+                    <button name="action_tp_register" type="object" string="Đăng ký vào kho" class="btn-primary" invisible="tp_lifecycle != 'draft' or not id" help="Khóa thông tin nơi giữ ban đầu; từ đây mọi thay đổi người giữ phải lập phiếu."/>
+                    <button name="action_tp_mark_verified" type="object" string="Xác nhận đã kiểm tra thực tế" class="btn-secondary" invisible="tp_lifecycle == 'retired' or tp_verification == 'verified' or not id"/>
+                    <button name="action_tp_open_pending_move" type="object" string="Mở phiếu chờ bàn giao" class="btn-primary" invisible="not tp_pending_move_id"/>
+                    <button name="action_tp_quick_assign" type="object" string="Gán thiết bị" class="btn-primary" invisible="not id or not tp_can_assign"/>
+                    <button name="action_tp_quick_swap" type="object" string="Đổi máy" class="btn-primary" invisible="not id or not tp_can_swap"/>
+                    <button name="action_tp_quick_return" type="object" string="Trả về kho" class="btn-secondary" invisible="not id or not tp_can_return"/>
+                    <button name="action_tp_new_move" type="object" string="Nhận về sau sửa" class="btn-secondary" context="{'tp_move_type': 'repair_return'}" invisible="not id or tp_lifecycle != 'active' or tp_custody != 'vendor' or tp_pending_move_id"/>
+                    <button name="action_tp_quick_edit" type="object" string="Sửa" class="btn-secondary" invisible="not id"/>
+                    <field name="tp_lifecycle" widget="statusbar" statusbar_visible="draft,active,retired"/>
+                    <field name="tp_can_assign" invisible="1"/>
+                    <field name="tp_can_swap" invisible="1"/>
+                    <field name="tp_can_return" invisible="1"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_tp_open_requests" type="object" class="oe_stat_button" icon="build" invisible="not id"><field name="tp_open_request_count" widget="statinfo" string="Phiếu sửa đang mở"/></button>
+                        <button name="action_tp_open_moves" type="object" class="oe_stat_button" icon="swap_horiz" invisible="not tp_move_count">
+                            <field name="tp_move_count" widget="statinfo" string="Phiếu"/>
+                        </button>
+                        <button name="action_tp_open_children" type="object" class="oe_stat_button" icon="widgets" invisible="not tp_child_ids">
+                            <div class="o_stat_info"><span class="o_stat_text">Linh kiện đi kèm</span></div>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Ngừng quản lý" bg_color="text-bg-secondary" invisible="tp_lifecycle != 'retired'"/>
+                    <div class="tp_eq_hero_card">
+                        <div class="tp_eq_hero_main">
+                            <field name="tp_image" widget="image" class="oe_avatar tp_eq_avatar" options="{'size': [96, 96]}"/>
+                            <div class="oe_title">
+                                <div class="tp_eq_hero_top_meta">
+                                    <span class="o_tp_eq_code" invisible="not tp_code"><field name="tp_code" readonly="1"/></span>
+                                </div>
+                                <label for="name" string="Tên thiết bị"/>
+                                <h1><field name="name" placeholder="Ví dụ: Máy tính để bàn phòng Kỹ thuật"/></h1>
+                                <div class="tp_eq_hero_sub" invisible="not tp_display_subtitle"><field name="tp_display_subtitle" readonly="1"/></div>
+                                <div class="o_tp_eq_states" role="group" aria-label="Các trạng thái của thiết bị">
+                                    <span class="o_tp_eq_state"><span>Khả dụng</span><field name="tp_availability" widget="badge" nolabel="1" decoration-success="tp_availability == 'available'" decoration-info="tp_availability in ('in_use', 'reserved')" decoration-warning="tp_availability in ('check', 'repair')" decoration-danger="tp_availability == 'blocked'" decoration-muted="tp_availability in ('draft', 'retired')"/></span>
+                                    <span class="o_tp_eq_state"><span>Kỹ thuật</span><field name="tp_technical_state" widget="badge" readonly="1" nolabel="1" decoration-success="tp_technical_state == 'good'" decoration-warning="tp_technical_state == 'limited'" decoration-danger="tp_technical_state == 'broken'" decoration-muted="tp_technical_state == 'unverified'"/></span>
+                                    <span class="o_tp_eq_state"><span>Bảo hành</span><field name="tp_warranty_state" widget="badge" nolabel="1" decoration-success="tp_warranty_state == 'active'" decoration-warning="tp_warranty_state == 'expiring'" decoration-danger="tp_warranty_state == 'expired'" decoration-muted="tp_warranty_state in ('none', 'unknown')"/></span>
+                                    <span class="o_tp_eq_state"><span>Xác minh</span><field name="tp_verification" widget="badge" readonly="1" nolabel="1" decoration-warning="tp_verification == 'source'" decoration-success="tp_verification == 'verified'"/></span>
+                                    <span class="o_tp_eq_state" invisible="not tp_replacement_needed"><span>Nhu cầu</span><span class="badge text-bg-warning">Cần thay thế / nâng cấp</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <details class="tp_eq_action_drawer" invisible="not id">
+                            <summary class="tp_eq_action_drawer_toggle">Thao tác khác</summary>
+                            <div class="tp_eq_action_drawer_menu">
+                                <button name="action_tp_new_request" type="object" string="Báo hỏng" class="btn btn-sm btn-secondary" context="{'tp_request_kind': 'fault'}" invisible="not id or tp_lifecycle != 'active'"/>
+                                <button name="action_tp_new_request" type="object" string="Bảo trì" class="btn btn-sm btn-secondary" context="{'tp_request_kind': 'maintenance'}" invisible="not id or tp_lifecycle != 'active'"/>
+                                <button name="action_tp_new_request" type="object" string="Nâng cấp" class="btn btn-sm btn-secondary" context="{'tp_request_kind': 'upgrade'}" invisible="not id or tp_lifecycle != 'active'"/>
+                                <button name="action_tp_new_move" type="object" string="Gửi sửa ngoài" class="btn btn-sm btn-secondary" context="{'tp_move_type': 'send_repair'}" invisible="not id or tp_lifecycle != 'active' or tp_custody in ('vendor', 'none') or tp_pending_move_id"/>
+                                <button name="action_tp_new_move" type="object" string="Trả thiết bị thuê" class="btn btn-sm btn-secondary" context="{'tp_move_type': 'rental_return'}" invisible="not id or tp_lifecycle != 'active' or tp_ownership != 'rented' or tp_custody not in ('stock', 'vendor') or tp_pending_move_id"/>
+                                <button name="action_tp_new_move" type="object" string="Ngừng quản lý" class="btn btn-sm btn-secondary" context="{'tp_move_type': 'retire'}" invisible="not id or tp_lifecycle != 'active' or tp_custody not in ('stock', 'vendor') or tp_pending_move_id"/>
+                                <button name="action_tp_new_move" type="object" string="Báo mất" class="btn btn-sm btn-outline-danger" context="{'tp_move_type': 'lost'}" invisible="not id or tp_lifecycle != 'active' or tp_pending_move_id"/>
+                            </div>
+                        </details>
+                    </div>
+                    <div class="tp_eq_summary_strip" role="group" aria-label="Tóm tắt người dùng và tình trạng">
+                        <div class="tp_eq_summary_item tp_eq_summary_holder">
+                            <span class="tp_eq_summary_lbl">Người đang dùng</span>
+                            <field name="tp_employee_id" widget="tp_eq_holder" readonly="1" nolabel="1" invisible="not tp_employee_id or tp_custody not in ('employee', 'loan')"/>
+                            <field name="tp_holder_summary" readonly="1" nolabel="1" invisible="tp_employee_id and tp_custody in ('employee', 'loan')"/>
+                        </div>
+                        <div class="tp_eq_summary_item">
+                            <span class="tp_eq_summary_lbl">Phòng ban</span>
+                            <field name="tp_department_name" readonly="1" nolabel="1"/>
+                        </div>
+                        <div class="tp_eq_summary_item">
+                            <span class="tp_eq_summary_lbl">Trạng thái</span>
+                            <field name="tp_usage_status" widget="tp_eq_status" readonly="1" nolabel="1"/>
+                        </div>
+                        <div class="tp_eq_summary_item">
+                            <span class="tp_eq_summary_lbl">Loại thiết bị</span>
+                            <field name="category_id" readonly="1" nolabel="1" options="{'no_open': True}"/>
+                        </div>
+                        <div class="tp_eq_summary_item">
+                            <span class="tp_eq_summary_lbl">Tình trạng</span>
+                            <field name="tp_technical_state" widget="tp_eq_status" readonly="1" nolabel="1"/>
+                        </div>
+                        <div class="tp_eq_summary_item tp_eq_summary_note" invisible="not tp_condition_note">
+                            <span class="tp_eq_summary_lbl">Ghi chú hỏng hóc / tình trạng</span>
+                            <field name="tp_condition_note" widget="tp_eq_clamp" readonly="1" nolabel="1" options="{'blank': True}"/>
+                        </div>
+                    </div>
+                    <div class="alert alert-info" role="status" invisible="not tp_pending_move_id">
+                        Thiết bị đang được giữ chỗ ở phiếu <field name="tp_pending_move_id" readonly="1" class="d-inline"/>:
+                        hoàn tất hoặc hủy phiếu đó trước khi lập phiếu khác.
+                    </div>
+                    <div class="alert alert-warning" role="status" invisible="not tp_employee_archived">
+                        Người đã nghỉ/cần thu hồi: bấm <strong>Trả về kho</strong> để thu hồi thiết bị.
+                    </div>
+                    <div class="tp_eq_custody_card">
+                        <div class="tp_eq_custody_head">
+                            <div>
+                                <div class="tp_eq_custody_title">Ai đang sử dụng / Đang ở đâu</div>
+                                <p class="o_tp_eq_note mb-0" invisible="tp_lifecycle == 'draft'">
+                                    Người giữ chỉ đổi qua Gán / Đổi máy / Trả về kho để giữ nguyên lịch sử.
+                                </p>
+                            </div>
+                            <field name="tp_custody" widget="badge" readonly="1" nolabel="1" decoration-info="tp_custody == 'employee'" decoration-primary="tp_custody in ('department', 'location')" decoration-success="tp_custody == 'stock'" decoration-warning="tp_custody in ('loan', 'vendor')" decoration-muted="tp_custody == 'none'"/>
+                        </div>
+                        <div class="tp_eq_custody_body">
+                            <div class="tp_eq_hr_photo_wrap" invisible="not tp_employee_id">
+                                <field name="tp_employee_image_128" widget="image" class="tp_eq_hr_photo" options="{'size': [68, 68]}" readonly="1" nolabel="1"/>
+                            </div>
+                            <group class="tp_eq_custody_fields">
+                                <group>
+                                    <field name="tp_custody" readonly="1"/>
+                                    <field name="tp_employee_id" string="Nhân viên đang giữ" options="{'no_create': True}" invisible="tp_custody not in ('employee', 'loan')" readonly="1"/>
+                                    <field name="tp_employee_job_title" string="Chức danh" readonly="1" invisible="not tp_employee_id"/>
+                                    <field name="tp_holder_department_id" options="{'no_create': True}" invisible="tp_custody != 'department'" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="tp_current_department_id" string="Phòng ban hiện tại"/>
+                                    <field name="tp_location_id" string="Vị trí đặt máy" options="{'no_create': True}" readonly="1"/>
+                                    <field name="tp_stock_location_display" string="Vị trí kho" readonly="1" invisible="tp_custody != 'stock'"/>
+                                    <field name="tp_vendor_id" options="{'no_create': True}" invisible="tp_custody != 'vendor'" readonly="1"/>
+                                    <field name="tp_employee_archived" invisible="1"/>
+                                </group>
+                            </group>
+                        </div>
+                    </div>
+                    <notebook>
+                        <page name="info" string="Thông tin">
+                            <group class="tp_eq_form_cards">
+                                <group string="Nhận diện">
+                                    <field name="category_id" string="Phân loại" options="{'no_create': True}" required="1"/>
+                                    <field name="tp_asset_class"/>
+                                    <field name="tp_brand"/>
+                                    <field name="model" string="Model"/>
+                                    <field name="serial_no" string="Serial"/>
+                                    <field name="tp_parent_id" options="{'no_create': True}"/>
+                                    <field name="tp_replaces_id" options="{'no_create': True}"/>
+                                </group>
+                                <group string="Tình trạng &amp; Sở hữu">
+                                    <field name="tp_technical_state" readonly="tp_lifecycle == 'retired'"/>
+                                    <field name="tp_replacement_needed"/>
+                                    <field name="tp_verification"/>
+                                    <field name="tp_verified_date" invisible="tp_verification != 'verified'"/>
+                                    <field name="tp_condition_note" placeholder="Mô tả hiện trạng thực tế, lỗi đang gặp…"/>
+                                    <field name="tp_ownership"/>
+                                    <field name="tp_owner_partner_id" invisible="tp_ownership == 'company'" options="{'no_create': True}"/>
+                                    <field name="tp_owner_note" invisible="tp_ownership == 'company'"/>
+                                </group>
+                            </group>
+                            <group invisible="tp_lifecycle != 'retired'" string="Ngừng quản lý">
+                                <field name="tp_retire_reason" readonly="1"/>
+                                <field name="tp_retire_date" readonly="1"/>
+                                <field name="tp_retire_note" readonly="1"/>
+                            </group>
+                            <details class="tp_eq_collapsible">
+                                <summary>Cấu hình phần cứng &amp; linh kiện đi kèm</summary>
+                                <div class="tp_eq_collapsible_body">
+                                    <group>
+                                        <group string="Cấu hình hiện tại">
+                                            <field name="tp_cpu" placeholder="Ví dụ: Intel Core i5-10400"/>
+                                            <field name="tp_ram" placeholder="Ví dụ: 16GB DDR4"/>
+                                            <field name="tp_storage" placeholder="Ví dụ: SSD 512GB"/>
+                                            <field name="tp_gpu"/>
+                                            <field name="tp_mainboard"/>
+                                            <field name="tp_screen"/>
+                                        </group>
+                                        <group string="Ghi chú cấu hình">
+                                            <field name="tp_config_note" nolabel="1" colspan="2" placeholder="Ghi nguyên văn cấu hình theo nguồn khi chưa tách được từng mục."/>
+                                        </group>
+                                    </group>
+                                    <p class="o_tp_eq_note">Nâng cấp linh kiện (ví dụ thêm RAM) cập nhật cấu hình của thiết bị này qua phiếu sửa chữa / nâng cấp, không tạo máy mới.</p>
+                                    <separator string="Linh kiện / phụ kiện gắn kèm"/>
+                                    <field name="tp_child_ids" readonly="1" nolabel="1" widget="tp_equipment_relation">
+                                        <list class="tp_eq_table">
+                                            <field name="tp_code" string="Mã"/>
+                                            <field name="name" string="Tên"/>
+                                            <field name="category_id" string="Phân loại"/>
+                                            <field name="tp_technical_state" string="Tình trạng" widget="badge"/>
+                                        </list>
+                                    </field>
+                                </div>
+                            </details>
+                            <details class="tp_eq_collapsible">
+                                <summary>Mua sắm, giá trị &amp; bảo hành</summary>
+                                <div class="tp_eq_collapsible_body">
+                                    <group>
+                                        <group string="Mua sắm">
+                                            <field name="tp_supplier_id" options="{'no_create': True}"/>
+                                            <field name="tp_purchase_date"/>
+                                            <field name="tp_first_use_date"/>
+                                            <field name="tp_date_source" class="o_tp_eq_source"/>
+                                            <field name="tp_currency_id" invisible="1"/>
+                                            <field name="tp_purchase_value_known"/>
+                                            <field name="tp_purchase_value" invisible="not tp_purchase_value_known"/>
+                                        </group>
+                                        <group string="Bảo hành">
+                                            <field name="tp_warranty_basis"/>
+                                            <field name="tp_warranty_start" invisible="tp_warranty_basis not in ('duration', 'date_or_meter')"/>
+                                            <field name="tp_warranty_months" invisible="tp_warranty_basis not in ('duration', 'date_or_meter')"/>
+                                            <field name="warranty_date" string="Ngày hết bảo hành (theo chứng từ)" invisible="tp_warranty_basis not in ('date', 'date_or_meter')"/>
+                                            <field name="tp_warranty_meter_limit" invisible="tp_warranty_basis not in ('meter', 'date_or_meter')"/>
+                                            <field name="tp_warranty_meter_unit" invisible="tp_warranty_basis not in ('meter', 'date_or_meter')"/>
+                                            <field name="tp_warranty_source" class="o_tp_eq_source"/>
+                                            <field name="tp_warranty_state" widget="badge"/>
+                                            <field name="tp_warranty_end"/>
+                                            <field name="tp_warranty_days_left" invisible="not tp_warranty_end"/>
+                                            <field name="tp_meter_last" invisible="not tp_meter_ids"/>
+                                            <field name="tp_meter_last_date" invisible="not tp_meter_ids"/>
+                                        </group>
+                                    </group>
+                                    <separator string="Chỉ số đếm (máy in / photocopy)"/>
+                                    <field name="tp_meter_ids" nolabel="1" widget="tp_equipment_relation">
+                                        <list editable="bottom" class="tp_eq_table">
+                                            <field name="date"/>
+                                            <field name="value"/>
+                                            <field name="unit"/>
+                                            <field name="source"/>
+                                            <field name="note"/>
+                                        </list>
+                                    </field>
+                                </div>
+                            </details>
+                            <details class="tp_eq_collapsible">
+                                <summary>Phần mềm &amp; bản quyền</summary>
+                                <div class="tp_eq_collapsible_body">
+                                    <p class="o_tp_eq_note">“Khai báo nguồn” ghi theo tệp nguồn; chỉ “Kết quả kiểm tra” kèm chứng từ mới xác nhận bản quyền.</p>
+                                    <field name="tp_software_ids" nolabel="1" widget="tp_equipment_relation">
+                                        <list editable="bottom" class="tp_eq_table">
+                                            <field name="kind"/>
+                                            <field name="name"/>
+                                            <field name="license_declared"/>
+                                            <field name="license_check"/>
+                                            <field name="evidence_ref"/>
+                                            <field name="checked_date"/>
+                                            <field name="note" optional="hide"/>
+                                        </list>
+                                    </field>
+                                </div>
+                            </details>
+                            <details class="tp_eq_collapsible">
+                                <summary>Ghi chú sử dụng &amp; nhãn QR</summary>
+                                <div class="tp_eq_collapsible_body">
+                                    <group>
+                                        <group string="Ghi chú">
+                                            <field name="note" nolabel="1" colspan="2" placeholder="Ghi chú chung, hướng dẫn sử dụng…"/>
+                                        </group>
+                                        <group string="Nhãn QR" invisible="not tp_qr_image_url" groups="base.group_system">
+                                            <field name="tp_qr_image_url" widget="image_url" options="{'size': [128, 128]}" nolabel="1" colspan="2"/>
+                                            <p class="o_tp_eq_note" colspan="2">
+                                                Nhãn chỉ chứa mã ngẫu nhiên, không chứa tên người giữ, serial hay địa chỉ IP. Quét bằng điện thoại
+                                                hoặc máy quét ở menu Quét mã thiết bị; chỉ quản trị hệ thống mở được.
+                                            </p>
+                                            <button name="action_tp_print_labels" type="object" string="In nhãn QR (A4, 24 nhãn/trang)" class="btn-secondary" icon="qr_code" colspan="2"/>
+                                        </group>
+                                    </group>
+                                </div>
+                            </details>
+                        </page>
+                        <page name="handover" string="Sử dụng &amp; bàn giao">
+                            <group>
+                                <group string="Hiện tại">
+                                    <field name="tp_holder_text"/>
+                                    <field name="tp_pending_move_id" invisible="not tp_pending_move_id" readonly="1"/>
+                                </group>
+                                <group string="Quy tắc">
+                                    <p class="o_tp_eq_note" colspan="2">
+                                        Mỗi lần giao, thu hồi, điều chuyển, cho mượn, gửi sửa đều lập phiếu: Nháp → Chờ bàn giao →
+                                        Hoàn tất. Phiếu hoàn tất không sửa được; sai sót sửa bằng Đảo phiếu.
+                                    </p>
+                                </group>
+                            </group>
+                            <separator string="Nhật ký bàn giao &amp; điều chuyển"/>
+                            <field name="tp_move_line_ids" readonly="1" nolabel="1" widget="tp_equipment_relation">
+                                <list create="0" delete="0" default_order="id desc" class="tp_eq_table" decoration-muted="state == 'cancel'" decoration-info="state == 'pending'">
+                                    <field name="date" string="Ngày lập"/>
+                                    <field name="move_id" string="Phiếu"/>
+                                    <field name="move_type" string="Loại"/>
+                                    <field name="from_text" string="Từ"/>
+                                    <field name="to_text" string="Đến"/>
+                                    <field name="condition" string="Tình trạng ghi nhận" optional="show"/>
+                                    <field name="accessories" optional="hide"/>
+                                    <field name="state" string="Trạng thái" widget="badge" decoration-info="state == 'pending'" decoration-success="state == 'done'"/>
+                                </list>
+                            </field>
+                            <separator string="Sửa chữa &amp; bảo trì"/>
+                            <div class="mb-2">
+                                <button name="action_tp_open_requests" type="object" string="Mở danh sách sửa chữa / bảo trì" class="btn-secondary"/>
+                            </div>
+                            <field name="maintenance_ids" readonly="1" nolabel="1" widget="tp_equipment_relation">
+                                <list js_class="tp_equipment_table" class="tp_eq_table" limit="20">
+                                    <field name="tp_code"/>
+                                    <field name="name"/>
+                                    <field name="tp_kind"/>
+                                    <field name="tp_report_date"/>
+                                    <field name="tp_deadline"/>
+                                    <field name="tp_state"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="history" string="Lịch sử">
+                            <group string="Nguồn dữ liệu &amp; kiểm soát">
+                                <field name="tp_source_ref"/>
+                                <field name="tp_registered_date"/>
+                                <field name="tp_registered_by_id"/>
+                                <field name="tp_version"/>
+                            </group>
+                            <p class="o_tp_eq_note">Mọi thay đổi hồ sơ, ghi chú nội bộ và chứng từ đính kèm được lưu bên dưới. Không gửi thông báo cho người nhận máy.</p>
+                            <div class="o_tp_eq_history"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_equipment" model="ir.actions.act_window">
+        <field name="name">Thiết bị</field>
+        <field name="res_model">maintenance.equipment</field>
+        <field name="path">kho-thiet-bi</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="equipment_main_list"/>
+        <field name="search_view_id" ref="equipment_search"/>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('equipment_main_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('equipment_form')})]"/>
+        <!-- EQUIP-SIMPLE-003 (DEC-047): one scope for the single list: managed devices/components not mounted in
+             another machine. List, counts (tp_main_summary) and XLSX use this domain + the active search. -->
+        <field name="domain">[('tp_asset_class', 'in', ('device', 'component')), ('tp_parent_id', '=', False), ('tp_lifecycle', '=', 'active')]</field>
+        <field name="context">{'tp_filter_profile': 'equipment_main', 'tp_eq_leaf': 'tp_equipment.menu_equipment_all', 'create': False}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Không có thiết bị khớp điều kiện này</p>
+            <p>Thử xóa bộ lọc, hoặc tìm theo tên, mã thiết bị, serial, tên / mã nhân viên.</p>
+            <p>Hồ sơ nháp, ngừng quản lý, dịch vụ, linh kiện đã gắn vào máy khác và dòng nguồn chờ bổ sung nằm ở nút “Phạm vi nâng cao” trên đầu bảng.</p>
+        </field>
+    </record>
+
+    <record id="action_equipment_shared" model="ir.actions.act_window">
+        <field name="name">Thiết bị dùng chung &amp; chưa xác định người</field>
+        <field name="res_model">maintenance.equipment</field>
+        <field name="path">thiet-bi-dung-chung</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="equipment_search"/>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('equipment_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('equipment_form')})]"/>
+        <field name="domain">[('tp_asset_class', 'in', ('device', 'component')), ('tp_parent_id', '=', False), ('tp_lifecycle', '=', 'active'), '|', ('tp_custody', 'in', ('department', 'location', 'none')), '&amp;', ('tp_custody', 'in', ('employee', 'loan')), ('tp_employee_id', '=', False)]</field>
+        <field name="context">{'tp_filter_profile': 'equipment_shared', 'tp_eq_leaf': 'tp_equipment.menu_equipment_all', 'create': False}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Không có thiết bị dùng chung hoặc chưa xác định người giữ khớp điều kiện này</p>
+            <p>Thử xóa bộ lọc. Dòng nguồn chưa nhập nằm ở Thiết bị → Phạm vi nâng cao → “Dòng nguồn chờ bổ sung”.</p>
+        </field>
+    </record>
+
+    <record id="action_equipment_all_records" model="ir.actions.act_window">
+        <field name="name">Tất cả hồ sơ thiết bị</field>
+        <field name="res_model">maintenance.equipment</field>
+        <field name="path">ho-so-thiet-bi</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="equipment_search"/>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('equipment_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('equipment_form')})]"/>
+        <field name="context">{'tp_filter_profile': 'equipment', 'tp_eq_leaf': 'tp_equipment.menu_equipment_all'}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có thiết bị nào</p>
+            <p>Thêm máy mới bằng nút “Thêm thiết bị” ở danh sách Thiết bị; mã do hệ thống cấp.</p>
+        </field>
+    </record>
+
+    <record id="action_equipment_stock" model="ir.actions.act_window">
+        <field name="name">Thiết bị tồn kho</field>
+        <field name="res_model">maintenance.equipment</field>
+        <field name="path">ton-kho-thiet-bi</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="equipment_stock_list"/>
+        <field name="search_view_id" ref="equipment_search"/>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('equipment_stock_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('equipment_form')})]"/>
+        <field name="domain">[('tp_asset_class', 'in', ('device', 'component')), ('tp_parent_id', '=', False), ('tp_lifecycle', '=', 'active'), ('tp_custody', '=', 'stock')]</field>
+        <field name="context">{'tp_filter_profile': 'equipment_stock', 'tp_eq_leaf': 'tp_equipment.menu_equipment_all'}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Hiện chưa có thiết bị tồn kho</p>
+            <p>Các thiết bị đang lưu kho và sẵn sàng bàn giao sẽ hiển thị tại đây.</p>
+        </field>
+    </record>
+
+    <record id="action_equipment_available" model="ir.actions.act_window">
+        <field name="name">Sẵn sàng cấp phát</field>
+        <field name="res_model">maintenance.equipment</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="equipment_search"/>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('equipment_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('equipment_form')})]"/>
+        <field name="domain">[('tp_availability', '=', 'available')]</field>
+        <field name="context">{'tp_filter_profile': 'equipment', 'tp_eq_leaf': 'tp_equipment.menu_equipment_all'}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+    </record>
+
+    <record id="action_equipment_in_use" model="ir.actions.act_window">
+        <field name="name">Đang sử dụng</field>
+        <field name="res_model">maintenance.equipment</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="equipment_search"/>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('equipment_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('equipment_form')})]"/>
+        <field name="domain">[('tp_availability', 'in', ('in_use', 'reserved'))]</field>
+        <field name="context">{'tp_filter_profile': 'equipment', 'tp_eq_leaf': 'tp_equipment.menu_equipment_all'}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+    </record>
+
+    <record id="action_equipment_attention" model="ir.actions.act_window">
+        <field name="name">Cần xử lý</field>
+        <field name="res_model">maintenance.equipment</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="equipment_search"/>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('equipment_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('equipment_form')})]"/>
+        <field name="domain">[('tp_availability', 'in', ('check', 'blocked', 'repair'))]</field>
+        <field name="context">{'tp_filter_profile': 'equipment', 'tp_eq_leaf': 'tp_equipment.menu_equipment_all'}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+        <field name="help" type="html"><p>Không có thiết bị cần kiểm tra, hỏng hoặc đang sửa chữa.</p></field>
+    </record>
+
+    <record id="action_equipment_draft" model="ir.actions.act_window">
+        <field name="name">Hồ sơ nháp</field>
+        <field name="res_model">maintenance.equipment</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="equipment_search"/>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('equipment_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('equipment_form')})]"/>
+        <field name="domain">[('tp_lifecycle', '=', 'draft')]</field>
+        <field name="context">{'tp_filter_profile': 'equipment', 'tp_eq_leaf': 'tp_equipment.menu_equipment_all'}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+    </record>
+
+    <record id="action_equipment_retired" model="ir.actions.act_window">
+        <field name="name">Ngừng quản lý</field>
+        <field name="res_model">maintenance.equipment</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="equipment_search"/>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('equipment_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('equipment_form')})]"/>
+        <field name="domain">[('tp_lifecycle', '=', 'retired')]</field>
+        <field name="context">{'tp_filter_profile': 'equipment', 'active_test': False, 'tp_eq_leaf': 'tp_equipment.menu_equipment_all'}</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+    </record>
+</odoo>

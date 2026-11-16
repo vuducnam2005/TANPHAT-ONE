@@ -7,5 +7,6 @@
     'data': [
         'security/ir.access.csv',
         'views/tp_contract_native_views.xml',
+        'views/tp_contract_search_views.xml',
     ],
 }

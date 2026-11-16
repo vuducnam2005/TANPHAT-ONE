@@ -5,9 +5,18 @@ import { registry } from "@web/core/registry";
 import { user } from "@web/core/user";
 import { useService } from "@web/core/utils/hooks";
 import { standardActionServiceProps } from "@web/webclient/actions/action_plugin";
-import { ADMIN_MODULES, ALL_APPS_KEY, buildCatalog, filterTiles, homeSections, monogram } from "./home_catalog";
+import { buildCatalog, filterTiles, homeSections, monogram } from "./home_catalog";
 
-const EMPTY_CATALOG = Object.freeze({ isAdmin: false, admin: null, home: [], system: [], all: [], otherApps: 0 });
+const EMPTY_CATALOG = Object.freeze({
+    isAdmin: false,
+    admin: null,
+    tools: [],
+    entries: [],
+    home: [],
+    system: [],
+    all: [],
+    otherApps: 0,
+});
 
 /** A click the browser should handle itself (new tab/window, download, non-primary button). */
 export function isModifiedClick(ev) {
@@ -47,8 +56,7 @@ export class HomeLauncher extends Component {
         }
         const catalog = buildCatalog(this.menuService.getMenuAsTree("root"), {
             debug: odoo.debug,
-            // Session flag for base.group_system; presentation only, the server still
-            // filters every menu and record.
+            // Session flag for base.group_system; server-filtered menus remain authoritative.
             isSystem: Boolean(user.isSystem),
         });
         const broken = this.brokenIcons();
@@ -62,32 +70,19 @@ export class HomeLauncher extends Component {
         };
     });
 
-    isAdmin = computed(() => Boolean(user.isSystem));
-    adminTools = computed(() => {
-        if (!this.isAdmin()) return [];
-        const sys = this.catalog().system || [];
-        const settings = sys.find((t) => t.xmlid === "base.menu_administration");
-        const apps = sys.find((t) => t.xmlid === "base.menu_management");
-        const all = sys.find((t) => t.key === ALL_APPS_KEY);
-        return [settings, apps, all].filter(Boolean);
-    });
-    adminDepartmentEntries = computed(() => this.catalog().admin?.departments || []);
-    adminHrEntries = computed(() => this.catalog().admin?.hr || []);
-    adminAllModules = computed(() => this.catalog().admin?.modules || []);
-    selectedModuleItem = computed(() => {
-        const key = this.selectedModule();
-        if (!key) return null;
-        return (
-            this.adminAllModules().find((m) => m.key === key) ||
-            ADMIN_MODULES.find((m) => m.key === key) ||
-            null
-        );
-    });
-
+    tools = computed(() => this.catalog().tools || []);
     sections = computed(() => homeSections(this.catalog(), this.query()));
     visibleEntries = computed(() => this.sections().flatMap((section) => section.tiles));
     panelTiles = computed(() => filterTiles(this.catalog().all, this.panelQuery()));
     hasAdminPanel = computed(() => this.catalog().all.length > 0);
+
+    selectedModuleItem = computed(() => {
+        const key = this.selectedModule();
+        if (!key) {
+            return null;
+        }
+        return this.catalog().entries.find((m) => m.key === key && !m.menu) || null;
+    });
 
     setup() {
         this.menuService = useService("menu");
@@ -129,39 +124,25 @@ export class HomeLauncher extends Component {
     }
 
     syncFromHash() {
+        if (this.menuState() !== "ready") {
+            return;
+        }
         const hash = browser.location.hash || "";
         const match = hash.match(/(?:unit|detail)=([a-z0-9_-]+)/);
         let key = match ? match[1] : null;
-        if (key === "tech") key = "technical";
-        const found = ADMIN_MODULES.find((m) => m.key === key);
+        if (key === "tech") {
+            key = "technical";
+        }
+        const found = key ? this.catalog().entries.find((m) => m.key === key && !m.menu) : null;
         if (found) {
             this.selectedModule.set(found.key);
-        } else if (!key && this.selectedModule()) {
+        } else if (this.selectedModule()) {
             this.selectedModule.set(null);
             if (this.lastClickedModuleKey) {
                 const btn = document.querySelector(`[data-module="${this.lastClickedModuleKey}"]`);
                 btn?.focus();
             }
         }
-    }
-
-    onAdminModuleClick(ev, item) {
-        if (item.key === "business" && item.menu) {
-            if (isModifiedClick(ev)) return;
-            ev.preventDefault();
-            this.menuService.selectMenu(item.menu);
-            return;
-        }
-        if (item.key === "hr" && item.menu) {
-            if (isModifiedClick(ev)) return;
-            ev.preventDefault();
-            this.menuService.selectMenu(item.menu);
-            return;
-        }
-        ev.preventDefault();
-        this.lastClickedModuleKey = item.key;
-        this.selectedModule.set(item.key);
-        browser.location.hash = `unit=${item.key}`;
     }
 
     onBackClick() {
@@ -181,6 +162,7 @@ export class HomeLauncher extends Component {
         this.menuState.set("loading");
         this.panelOpen.set(false);
         this.panelQuery.set("");
+        this.selectedModule.set(null);
         try {
             // IndexedDB can belong to a previous user. Only a fresh, applied response may
             // unlock the catalog; a failed request must never fall back to cached menus.
@@ -193,20 +175,30 @@ export class HomeLauncher extends Component {
                 this.syncFromHash();
             }
         } catch {
-            if (sequence === this.loadSequence) this.menuState.set("error");
+            if (sequence === this.loadSequence) {
+                this.menuState.set("error");
+            }
         }
     }
 
     /** Which empty state applies when Home itself has nothing to show. */
     emptyKind() {
-        if (this.menuState() !== "ready" || this.visibleEntries().length) return "";
-        if (this.query().trim()) return "search";
+        if (this.menuState() !== "ready" || this.visibleEntries().length) {
+            return "";
+        }
+        if (this.query().trim()) {
+            return "search";
+        }
         return this.catalog().otherApps ? "switcher" : "none";
     }
 
     resultMessage() {
-        if (this.menuState() === "loading") return "Đang tải không gian làm việc…";
-        if (this.menuState() === "error") return "Chưa tải được Trang chủ";
+        if (this.menuState() === "loading") {
+            return "Đang tải không gian làm việc…";
+        }
+        if (this.menuState() === "error") {
+            return "Chưa tải được Trang chủ";
+        }
         const count = this.visibleEntries().length;
         if (!this.query().trim()) {
             return `${count} lối vào trên Trang chủ`;
@@ -219,7 +211,9 @@ export class HomeLauncher extends Component {
     }
 
     onSearchKeydown(ev) {
-        if (isComposing(ev, this.composing)) return;
+        if (isComposing(ev, this.composing)) {
+            return;
+        }
         if (ev.key === "Escape" && this.query()) {
             ev.preventDefault();
             ev.stopPropagation();
@@ -233,25 +227,34 @@ export class HomeLauncher extends Component {
         }
     }
 
-    onCompositionStart() { this.composing = true; }
-    onCompositionEnd() { this.composing = false; }
+    onCompositionStart() {
+        this.composing = true;
+    }
+
+    onCompositionEnd() {
+        this.composing = false;
+    }
 
     clearSearch() {
         this.query.set("");
         this.searchInput()?.focus();
     }
 
-    /** Opens a menu entry like the native apps menu, or toggles the administrators' panel. */
+    /** Opens a menu entry, toggles the all-apps panel, or opens a placeholder detail view. */
     activate(entry) {
         if (entry.kind === "panel") {
             this.togglePanel();
-        } else {
+        } else if (entry.menu) {
             this.menuService.selectMenu(entry.menu);
+        } else if (entry.placeholderOnly || !entry.menu) {
+            this.lastClickedModuleKey = entry.key;
+            this.selectedModule.set(entry.key);
+            browser.location.hash = `unit=${entry.key}`;
         }
     }
 
     onEntryClick(ev, entry) {
-        if (entry.kind === "menu" && isModifiedClick(ev)) {
+        if (entry.menu && isModifiedClick(ev)) {
             return;
         }
         ev.preventDefault();
@@ -286,7 +289,9 @@ export class HomeLauncher extends Component {
 
     /** Escape clears the panel search first, then closes the panel; it never leaves Home. */
     onPanelKeydown(ev) {
-        if (ev.key !== "Escape" || isComposing(ev, this.composing)) return;
+        if (ev.key !== "Escape" || isComposing(ev, this.composing)) {
+            return;
+        }
         ev.preventDefault();
         ev.stopPropagation();
         if (this.panelQuery() && ev.target === this.panelInput()) {
@@ -297,7 +302,9 @@ export class HomeLauncher extends Component {
     }
 
     onPanelSearchKeydown(ev) {
-        if (isComposing(ev, this.composing) || ev.key !== "Enter") return;
+        if (isComposing(ev, this.composing) || ev.key !== "Enter") {
+            return;
+        }
         const [first] = this.panelTiles();
         if (first) {
             ev.preventDefault();

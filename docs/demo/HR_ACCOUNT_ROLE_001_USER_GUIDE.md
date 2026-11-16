@@ -1,9 +1,37 @@
 # HR-ACCOUNT-ROLE-001 — Hướng dẫn hồ sơ, tài khoản và vai trò
 
-Cập nhật 12/11/2026. Hướng dẫn này thay các bước chọn/liên kết/gỡ tài khoản
+**HR-EMP-014 (13/11/2026):** Hồ sơ hiện có sáu tab, bổ sung Hợp đồng lao động; xem [hướng dẫn loại hình, hợp đồng, hồ sơ cần bổ sung và Excel](HR_EMP_014_USER_GUIDE.md). Tài khoản/role/password vẫn theo luồng bên dưới.
+
+**HR-LIST-013 (13/11/2026):** Danh sách nhân viên luôn chia thành các nhóm
+phòng ban có dải xanh. Không có thẻ “Phòng ban ×” cần giữ trên thanh tìm kiếm;
+xóa tìm kiếm/bộ lọc vẫn giữ các nhóm. Tên phòng ban chỉ hiện ở đầu nhóm,
+không lặp trước từng tên nhân viên. Vẫn có thể tìm theo đơn vị để thu hẹp
+kết quả. Bấm tên/dòng để mở hồ sơ hiện có. [Bằng chứng013](HR_LIST_013_ACCEPTANCE.md).
+
+Cập nhật 13/11/2026. Hướng dẫn này thay các bước chọn/liên kết/gỡ tài khoản
 trong hướng dẫn HR trước đây. Mở TP HR → Nhân viên → Danh sách nhân viên → hồ sơ.
 
 ## Giao diện hồ sơ và quản lý tài khoản
+
+Từ HR-UI-011, chỉ còn một menu **Danh sách nhân viên**. Bấm tên/dòng để mở chi tiết; **Quay lại** giữ bộ lọc/trang của danh sách vừa mở. Từ HR-LIST-013, bảng luôn chia theo phòng ban với dải tên nhóm xanh nhạt;
+không lặp cột Đơn vị/Phòng ban trong từng dòng và tên nhân viên là chữ như trước.
+Bảng cho chọn 10/20/50/100 dòng; khi nhóm theo phòng ban, đơn vị phân trang là
+**nhóm**, số hồ sơ nằm cạnh từng nhóm. Có thể xóa tìm kiếm/bộ lọc thật bằng
+các thẻ ở phía trên bảng; các nhóm phòng ban vẫn giữ cố định. Có thể cuộn ngang bảng và bật/tắt cột bằng nút tùy chọn cột.
+
+Chi tiết mở ở chế độ xem. **Sửa hồ sơ → Lưu / Hủy** cũng có trên điện thoại.
+Hủy khi đã sửa sẽ hỏi trước khi bỏ thay đổi; rời trang khi còn thay đổi sẽ hỏi
+lưu hoặc tiếp tục chỉnh sửa. Năm tab là **Tổng quan**, **Thông tin cá nhân**,
+**Hồ sơ và năng lực**, **Tài khoản và phân quyền**, **Lịch sử**. Thông tin công
+việc bổ sung, sơ đồ native, phiên bản và chứng chỉ/tệp vẫn được giữ trong hồ sơ.
+
+Phòng ban, chức vụ, nơi làm việc và nhãn có trang chi tiết riêng. Bấm số nhân
+viên để mở hồ sơ đang sử dụng đúng phạm vi quyền. **Nhãn nhân viên** là tên
+mới của **Thẻ nhân viên**, dùng phân loại hồ sơ. Sơ đồ quản lý chỉ nối quan hệ
+quản lý trực tiếp đã khai báo; mở/thu nhánh bằng số cấp dưới. Lọc phòng ban
+chọn hồ sơ phù hợp, mở nhánh có thể lấy cấp dưới ngoài kết quả lọc. Màu tổ
+chức khác với trạng thái tài khoản. Nhập Excel có bốn bước hiển thị, giữ ba
+trạng thái backend và lịch sử sau áp dụng. Xem [acceptance HR-UI-011](HR_UI_011_ACCEPTANCE.md).
 
 Từ CHG-20261112-008, hồ sơ dùng nền xanh nhạt, ảnh/tên lớn, năm tab có biểu
 tượng và hai khối **Thông tin công việc / Liên hệ công việc** theo ảnh mẫu.
@@ -41,27 +69,42 @@ Lịch sử. Dữ liệu cá nhân vẫn theo quyền HR Odoo. Nguồn đối ch
 thu gọn ở Công việc & hồ sơ. Bấm Sửa hồ sơ → Lưu hoặc Hủy; validation và cảnh
 báo dữ liệu chưa lưu do Odoo xử lý. Lịch sử giữ chatter và phiên bản native.
 
-## Xóa hồ sơ nhập nhầm hoặc lưu trữ
+## Xóa vĩnh viễn nhân viên hoặc lưu trữ
 
-Từ CHG-20261112-013. Trong Danh sách nhân viên, tick hồ sơ (thanh trên hiện
-**Đã chọn 1 hồ sơ**) → **Tác vụ** → **Xóa hồ sơ nhập nhầm** (chỉ Quản trị viên
-hệ thống). Không còn nút Xóa thường cho nhân viên.
+Từ CHG-20261112-016 (thay “Xóa hồ sơ nhập nhầm”). Chỉ Quản trị viên hệ thống có
+quyền quản lý nhân sự. **Lưu trữ** chỉ ẩn hồ sơ, giữ lịch sử và có thể Bỏ lưu trữ;
+**Xóa vĩnh viễn** gỡ hồ sơ khỏi hệ thống, kể cả danh sách lưu trữ, tìm kiếm và
+xuất dữ liệu, không thể khôi phục bằng Bỏ lưu trữ.
 
-- Hồ sơ đủ điều kiện: cửa sổ hiện họ tên, mã và cảnh báo xóa vĩnh viễn. Nhập
-  **Lý do** rồi bấm **Xác nhận xóa**. Thao tác được ghi ở Nhân viên → **Nhật ký
-  xóa hồ sơ và sửa mã**.
-- Chỉ xóa được hồ sơ nhập tay chưa dùng. Hồ sơ từ danh sách nhân sự, đã có tài
-  khoản, vai trò, phân công, tài liệu, trao đổi, lịch sử hoặc liên kết khác sẽ
-  hiện **Không xóa được** kèm lý do từng hồ sơ. Khi đó bấm **Lưu trữ nhân viên**
-  để ẩn hồ sơ và giữ lịch sử, hoặc **Hủy**.
-- Chọn nhiều hồ sơ: chỉ cần một hồ sơ bị chặn là không hồ sơ nào bị xóa.
-- Lưu trữ không khóa tài khoản. Muốn chặn đăng nhập, khóa ở tab Tài khoản &
-  phân quyền như mục “Khóa, mở và mật khẩu”.
+1. Trong Danh sách nhân viên (hoặc chi tiết hồ sơ), tick một hay nhiều hồ sơ →
+   **Tác vụ** → **Xóa vĩnh viễn nhân viên**. Hồ sơ đã lưu trữ hoặc nhập từ Excel
+   vẫn xóa được.
+2. Cửa sổ hiện họ tên, mã, phòng ban, tài khoản, số hồ sơ và ba khối:
+   **Sẽ xóa** (phiên bản hồ sơ, kỹ năng, trao đổi, tệp... của chính hồ sơ),
+   **Giữ lại** (dòng/lô/file Excel gốc, tài khoản, liên hệ còn dùng) và
+   **Đang chặn — chưa thể xóa** (dữ liệu nghiệp vụ độc lập, ví dụ đang là quản lý
+   trực tiếp hoặc quản lý phòng ban, kèm cách xử lý). Khi còn khối chặn, nút đỏ bị
+   tắt: xử lý theo gợi ý rồi bấm **Xem trước lại**, hoặc Hủy và dùng Lưu trữ.
+3. Tài khoản mặc định được giữ nguyên. Tick **Xóa hồ sơ và khóa tài khoản** nếu muốn
+   khóa đăng nhập, kết thúc phiên và thu hồi vai trò/phân công/quyền dự án,
+   KH-KD trong công ty. Tài khoản quản trị/hệ thống hoặc của chính bạn không bị
+   khóa từ đây; nếu tài khoản còn quyền mà không chọn khóa thì phải hạ quyền trước.
+4. Nhập **Lý do** và **mật khẩu của chính bạn** (tài khoản đang đăng nhập; mỗi lần
+   xóa đều hỏi lại). Bấm **Xác nhận xóa vĩnh viễn** hoặc **Hủy** (không ghi gì).
+5. Sai mật khẩu: không có gì bị xóa, ô mật khẩu được xóa trắng để nhập lại. Sai
+   nhiều lần sẽ phải chờ ít phút như khi đăng nhập. Nếu dữ liệu đổi sau khi xem
+   trước, hệ thống từ chối cả lô và yêu cầu xem trước lại.
+
+Chọn nhiều hồ sơ là một lần xác nhận, tất cả-hoặc-không. Mỗi lần xóa được ghi ở
+Nhân viên → **Nhật ký xóa hồ sơ và sửa mã** (người làm, lý do, mã, tài khoản, phần
+đã xóa/giữ; không có mật khẩu). Mã TP của hồ sơ đã xóa không bao giờ cấp lại;
+nhập lại cùng người từ Excel sẽ báo xung đột để xử lý tay. Lưu trữ không khóa tài
+khoản; muốn chặn đăng nhập mà vẫn giữ hồ sơ, khóa ở tab Tài khoản & phân quyền.
 
 ## Mã nhân viên
 
 Mã có dạng TP + số. Hồ sơ mới nhận số kế tiếp sau mã hợp lệ cao nhất từng cấp
-(kể cả hồ sơ lưu trữ hoặc đã xóa); mã đã dùng không cấp lại, có thể có khoảng
+(kể cả hồ sơ lưu trữ hoặc đã xóa vĩnh viễn); mã đã dùng không cấp lại, có thể có khoảng
 trống. Mã từ danh sách nhân sự giữ nguyên. Ngày 12/11/2026 mã kế tiếp trên main
 là TP10071; hồ sơ nhập tay từng nhận nhầm `TP20000` đã được sửa thành `TP10070`
 và ghi nhật ký.

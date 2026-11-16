@@ -2,7 +2,7 @@ import importlib.util
 from unittest.mock import patch
 
 from odoo import Command
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.modules.module import get_module_path
 from odoo.tests import TransactionCase, tagged
 from odoo.tools import BinaryBytes
@@ -17,7 +17,7 @@ from odoo.addons.tp_organization.models.hr_employee import (
 
 @tagged('post_install', '-at_install')
 class TestEmployeeCorrection(TransactionCase):
-    """HR-CORRECTION-008: TP code allocation and deletion of mistaken entries (synthetic data)."""
+    """HR-CORRECTION-008 TP codes and HR-DELETE-010 permanent deletion core (synthetic data)."""
 
     @classmethod
     def setUpClass(cls):
@@ -91,7 +91,7 @@ class TestEmployeeCorrection(TransactionCase):
         self.assertEqual(self.number(self.manual('Synthetic After Archived')), floor + 5)
         mistaken = self.manual('Synthetic Deleted Code')
         deleted_code = mistaken.tp_employee_code
-        mistaken.with_user(self.admin)._tp_delete_mistaken('Synthetic duplicate entry')
+        self.delete(mistaken, 'Synthetic duplicate entry')
         # Even if the sequence is moved back, a code recorded by a deletion is not issued again.
         self.Employee._tp_reset_code_sequence(code_number(deleted_code))
         self.assertGreater(self.number(self.manual('Synthetic After Deleted')), code_number(deleted_code))
@@ -181,89 +181,159 @@ class TestEmployeeCorrection(TransactionCase):
         self.assertEqual(self.number(self.manual('Synthetic After Migration')), floor + 3)
 
     # ------------------------------------------------------------------
-    # Delete a mistaken entry vs archive
+    # HR-DELETE-010: permanent deletion core (password/accounts: tp_hr_workspace)
     # ------------------------------------------------------------------
-    def test_admin_deletes_unused_manual_entry_with_durable_audit(self):
-        employee = self.manual('Synthetic Mistaken Entry')
-        self.assertFalse(employee._tp_deletion_blockers(), 'auto sidecars (resource, first version, avatar, log) must not block')
+    def delete(self, employees, reason='Synthetic permanent delete', actor=None):
+        """The guarded core path used by the dialog after the password check."""
+        employees = employees.with_user(actor or self.admin).with_context(active_test=False)
+        employees._tp_check_permanent_delete_rights()
+        employees._tp_delete_lock()
+        plan = employees._tp_delete_plan()
+        vals = [{'action': 'permanent_delete', 'employee_ref': employee.id, 'employee_name': employee.name,
+                 'employee_code': employee.tp_employee_code, 'source_code': employee.tp_source_code,
+                 'company_id': employee.company_id.id, 'reason': reason, 'snapshot': {}} for employee in employees.sudo()]
+        return employees._tp_permanent_unlink(plan, vals)
+
+    def test_permanent_delete_removes_profile_and_owned_rows(self):
+        employee = self.manual('Synthetic Permanent Entry')
+        employee.message_post(body='Synthetic note on the profile', message_type='comment')
+        employee.activity_schedule('mail.mail_activity_data_todo', summary='Synthetic follow up', user_id=self.admin.id)
+        file = self.env['ir.attachment'].create({'name': 'synthetic.txt', 'raw': b'x', 'res_model': 'hr.employee', 'res_id': employee.id})
+        version = employee.version_id
+        version.message_post(body='Synthetic note on the version', message_type='comment')
+        version_file = self.env['ir.attachment'].create({'name': 'synthetic-version.txt', 'raw': b'y', 'res_model': 'hr.version', 'res_id': version.id})
+        self.env['ir.model.data'].create({'module': '__synthetic__', 'name': f'hr010_version_{version.id}', 'model': 'hr.version', 'res_id': version.id})
         partner, resource, code, ref = employee.work_contact_id, employee.resource_id, employee.tp_employee_code, employee.id
-        with self.assertRaises(UserError):
-            employee.with_user(self.admin)._tp_delete_mistaken('   ')
-        count = employee.with_user(self.admin)._tp_delete_mistaken('Synthetic duplicate manual entry')
-        self.assertEqual(count, 1)
-        self.assertFalse(employee.exists())
-        self.assertFalse(resource.exists())
-        self.assertTrue(partner.exists(), 'the shared work contact is never cascaded')
+        plan = employee._tp_delete_plan()['employees'][ref]
+        self.assertFalse(plan['block'], 'auto sidecars, chatter and files never block')
+        labels = ' '.join(label for label, _value in plan['delete'])
+        self.assertIn('Phiên bản hồ sơ', labels)
+        self.assertIn('Tệp đính kèm', labels)
+        self.delete(employee, 'Synthetic duplicate manual entry')
+        Employee = self.env['hr.employee'].with_context(active_test=False)
+        self.assertFalse(Employee.search([('id', '=', ref)]), 'gone from active and archived lists')
+        self.assertFalse(Employee.search_count([('tp_employee_code', '=', code)]))
+        self.assertFalse(resource.exists() or version.exists() or file.exists() or version_file.exists())
+        for model, res_id in (('hr.employee', ref), ('hr.version', version.id)):
+            self.assertFalse(self.env['mail.message'].sudo().search_count([('model', '=', model), ('res_id', '=', res_id)]), model)
+            self.assertFalse(self.env['mail.followers'].sudo().search_count([('res_model', '=', model), ('res_id', '=', res_id)]), model)
+            self.assertFalse(self.env['mail.activity'].sudo().search_count([('res_model', '=', model), ('res_id', '=', res_id)]), model)
+            self.assertFalse(self.env['ir.attachment'].sudo().search_count([('res_model', '=', model), ('res_id', '=', res_id)]), model)
+            self.assertFalse(self.env['ir.model.data'].sudo().search_count([('model', '=', model), ('res_id', '=', res_id)]), model)
+        self.assertFalse(partner.exists(), 'an unused private work contact goes with the profile')
         self.assertTrue(self.admin.exists() and self.admin.active)
         audit = self.env['tp.hr.employee.audit'].with_user(self.admin).search([('employee_ref', '=', ref)])
         self.assertEqual((audit.action, audit.employee_code, audit.employee_name, audit.actor_id),
-                         ('delete', code, 'Synthetic Mistaken Entry', self.admin))
-        self.assertEqual(audit.snapshot['work_contact_id'], partner.id)
+                         ('permanent_delete', code, 'Synthetic Permanent Entry', self.admin))
+        self.assertEqual(audit.snapshot['work_contact'], 'Đã xóa')
         with self.assertRaises(AccessError):
             audit.with_user(self.admin).write({'reason': 'tamper'})
         with self.assertRaises(AccessError):
             audit.with_user(self.admin).unlink()
         with self.assertRaises(AccessError):
-            self.env['tp.hr.employee.audit'].create({'action': 'delete', 'employee_ref': 1, 'reason': 'forged', 'company_id': self.env.company.id})
+            self.env['tp.hr.employee.audit'].create({'action': 'permanent_delete', 'employee_ref': 1, 'reason': 'forged', 'company_id': self.env.company.id})
+
+    def test_archived_and_imported_profiles_are_deleted_import_trace_kept(self):
+        archived = self.manual('Synthetic Archived Permanent')
+        archived.action_archive()
+        batch = self.env['tp.hr.import.batch'].create({'file_data': BinaryBytes(workbook([[1, 981201, 'Synthetic Imported Permanent', 981201, '']])),
+                                                       'file_name': 'synthetic.xlsx'})
+        batch.action_preview()
+        batch.action_apply()
+        line = batch.line_ids
+        imported = line.employee_id
+        source, code = imported.tp_source_code, imported.tp_employee_code
+        plan = (archived | imported)._tp_delete_plan()['employees']
+        self.assertFalse(plan[archived.id]['block'] or plan[imported.id]['block'], 'Excel source and archive never block')
+        self.assertIn('Dòng nhập', ' '.join(label for label, _value in plan[imported.id]['keep']))
+        self.delete(archived | imported, 'Synthetic batch of archived and imported')
+        self.assertFalse(archived.exists() or imported.exists())
+        self.assertTrue(batch.exists() and line.exists() and batch.file_data, 'import batch, line and file stay')
+        self.assertFalse(line.employee_id)
+        self.assertEqual(line.source_code, source)
+        audit = self.env['tp.hr.employee.audit'].search([('employee_code', '=', code)])
+        self.assertEqual((audit.source_code, audit.snapshot['import_lines']), (source, [[line.id, batch.id]]))
+        # The same identity in a new file is a conflict, never a silent re-creation.
+        again = self.env['tp.hr.import.batch'].create({'file_data': BinaryBytes(workbook([[1, 981201, 'Synthetic Imported Permanent', 981201, '']])),
+                                                       'file_name': 'synthetic-again.xlsx'})
+        again.action_preview()
+        self.assertEqual(again.line_ids.action, 'conflict')
+        self.assertIn('đã xóa vĩnh viễn', again.line_ids.detail)
+        again.action_apply()
+        self.assertFalse(again.line_ids.employee_id)
+        self.assertFalse(self.Employee.search([('tp_source_code', '=', source)]))
+
+    def test_deleted_code_is_never_issued_again(self):
+        employee = self.manual('Synthetic Retired Code')
+        code = employee.tp_employee_code
+        self.delete(employee)
+        self.Employee._tp_reset_code_sequence(code_number(code))
+        self.assertGreater(self.number(self.manual('Synthetic After Retired')), code_number(code))
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            self.Employee.create({'name': 'Synthetic Reused Code', 'tp_employee_code': code})
 
     def test_native_and_unauthorized_deletion_are_blocked(self):
         employee = self.manual('Synthetic Guarded Entry')
         with self.assertRaises(UserError):
             employee.unlink()
         with self.assertRaises(UserError):
+            employee.sudo().unlink()
+        with self.assertRaises(UserError):
             employee.with_context(_tp_employee_delete=True).unlink()
         with self.assertRaises(AccessError):
-            employee.with_user(self.manager)._tp_delete_mistaken('Synthetic not admin')
+            employee.with_user(self.manager)._tp_check_permanent_delete_rights()
+        system_only = self.env['res.users'].create({
+            'name': 'Synthetic System Only', 'login': 'hr010.synthetic.system',
+            'group_ids': [Command.set([self.env.ref('base.group_system').id])],
+        })
+        if not system_only.has_group('hr.group_hr_manager'):
+            with self.assertRaises(AccessError):
+                employee.with_user(system_only)._tp_check_permanent_delete_rights()
         foreign_company = self.env['res.company'].create({'name': 'Synthetic Foreign Delete Co'})
         foreign = self.Employee.create({'name': 'Synthetic Foreign Entry', 'company_id': foreign_company.id})
         self.admin.write({'company_ids': [Command.link(foreign_company.id)]})
         with self.assertRaises(AccessError):
-            foreign.with_user(self.admin)._tp_delete_mistaken('Synthetic other company')
+            foreign.with_user(self.admin)._tp_check_permanent_delete_rights()
         self.assertTrue(employee.exists() and foreign.exists())
 
-    def test_used_records_are_blocked_with_reasons(self):
-        user = self.env['res.users'].create({'name': 'Synthetic With Account', 'login': 'hr008.synthetic.linked'})
-        with_account = self.linked('Synthetic With Account', user)
+    def test_independent_links_block_with_resolution_hint(self):
         manager = self.manual('Synthetic Referenced Manager')
-        self.manual('Synthetic Report', parent_id=manager.id)
-        department = self.env['hr.department'].create({'name': 'Synthetic Head Unit', 'manager_id': manager.id})
-        noted = self.manual('Synthetic With Note')
-        noted.message_post(body='Synthetic business note', message_type='comment')
-        attached = self.manual('Synthetic With File')
-        self.env['ir.attachment'].create({'name': 'synthetic.txt', 'raw': b'x', 'res_model': 'hr.employee', 'res_id': attached.id})
-        batch = self.env['tp.hr.import.batch'].create({'file_data': BinaryBytes(workbook([[1, 981101, 'Synthetic Imported', 981101, '']])),
-                                                       'file_name': 'synthetic.xlsx'})
-        batch.action_preview()
-        batch.action_apply()
-        imported = batch.line_ids.employee_id
-        blockers = (with_account | manager | noted | attached | imported)._tp_deletion_blockers()
-        self.assertIn('hr008.synthetic.linked', ' '.join(blockers[with_account.id]))
-        self.assertTrue(any('Phòng ban' in reason or department._description in reason for reason in blockers[manager.id]))
-        self.assertTrue(blockers[noted.id] and blockers[attached.id])
-        self.assertIn('981101', ' '.join(blockers[imported.id]))
-        for employee in (with_account, manager, noted, attached, imported):
-            with self.assertRaises(UserError) as error:
-                employee.with_user(self.admin)._tp_delete_mistaken('Synthetic should be blocked')
-            self.assertIn('Lưu trữ nhân viên', str(error.exception))
-            self.assertTrue(employee.exists())
-        self.assertTrue(user.exists() and user.active)
-
-    def test_batch_is_all_or_nothing_and_rolls_back_mid_process(self):
-        free = self.manual('Synthetic Free Entry')
-        used = self.manual('Synthetic Used Entry')
-        used.message_post(body='Synthetic work note', message_type='comment')
+        report = self.manual('Synthetic Report', parent_id=manager.id)
+        self.env['hr.department'].create({'name': 'Synthetic Head Unit', 'manager_id': manager.id})
+        user = self.env['res.users'].create({'name': 'Synthetic With Account', 'login': 'hr010.synthetic.linked'})
+        with_account = self.linked('Synthetic With Account', user)
+        plan = (manager | with_account)._tp_delete_plan()
+        blocks = plan['employees'][manager.id]['block']
+        hints = ' '.join(hint for _label, _count, hint in blocks)
+        self.assertIn('đổi người quản lý', hints)
+        self.assertIn('đổi quản lý phòng ban', hints)
+        self.assertFalse(plan['employees'][with_account.id]['block'], 'the account is decided in the dialog, not here')
+        self.assertFalse(plan['partners'][str(with_account.work_contact_id.id)]['delete'], 'account contact is kept')
         with self.assertRaises(UserError):
-            (free | used).with_user(self.admin)._tp_delete_mistaken('Synthetic batch')
-        self.assertTrue(free.exists() and used.exists())
-        Audit = self.env['tp.hr.employee.audit']
+            self.delete(manager | with_account)
+        self.assertTrue(manager.exists() and with_account.exists() and report.parent_id == manager)
+        self.assertFalse(self.env['tp.hr.employee.audit'].search([('employee_ref', 'in', (manager | with_account).ids)]))
+        report.parent_id = False
+        self.env['hr.department'].search([('manager_id', '=', manager.id)]).manager_id = False
+        # Odoo keeps the former manager as coach: still a link to resolve first.
+        hints = ' '.join(hint for _label, _count, hint in manager._tp_delete_plan()['employees'][manager.id]['block'])
+        self.assertIn('đổi người hướng dẫn', hints)
+        report.coach_id = False
+        self.delete(manager | with_account)
+        self.assertFalse(manager.exists() or with_account.exists())
+        self.assertTrue(user.exists() and user.active and user.partner_id.exists(), 'the account and its contact stay')
+
+    def test_batch_rolls_back_mid_process(self):
+        free = self.manual('Synthetic Free Entry')
         other = self.manual('Synthetic Second Free')
+        Audit = self.env['tp.hr.employee.audit']
         with patch.object(self.registry['resource.resource'], 'unlink', autospec=True, side_effect=RuntimeError('Synthetic failure')):
             with self.assertRaises(RuntimeError), self.cr.savepoint():
-                (free | other).with_user(self.admin)._tp_delete_mistaken('Synthetic mid-process failure')
+                self.delete(free | other, 'Synthetic mid-process failure')
         self.Employee.invalidate_model()
         self.assertTrue(free.exists() and other.exists())
         self.assertFalse(Audit.search([('employee_ref', 'in', (free | other).ids)]))
-        self.assertEqual((free | other).with_user(self.admin)._tp_delete_mistaken('Synthetic batch ok'), 2)
+        self.delete(free | other, 'Synthetic batch ok')
         self.assertEqual(len(Audit.search([('employee_ref', 'in', [free.id, other.id])])), 2)
 
     def test_archive_keeps_account_state(self):

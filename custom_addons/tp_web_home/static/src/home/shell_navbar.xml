@@ -17,7 +17,7 @@
         </xpath>
         <xpath expr="//t[@t-call='web.NavBar.AppsMenu']" position="after">
             <div class="tp-shell-brand" title="TANPHAT ONE">
-                <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 23h26M6 23V10m20 13V10M6 12c6 11 14 11 20 0M11 18v5m5-3v3m5-5v5"/></svg>
+                <span class="tp-shell-logo" aria-hidden="true"><img src="/tp_web_home/static/img/brand/tp_logo_mark.png" alt="" width="24" height="24" draggable="false"/></span>
                 <span class="tp-shell-wordmark">TANPHAT ONE</span>
                 <span class="tp-shell-shortmark">TP ONE</span>
             </div>
@@ -30,22 +30,36 @@
     <t t-inherit="web.UserMenu" t-inherit-mode="extension">
         <xpath expr="//button[hasclass('o_user_menu')]" position="attributes">
             <attribute name="t-att-title">this.userName</attribute>
-            <attribute name="aria-label">Tài khoản</attribute>
+            <attribute name="t-att-aria-label">this.userName</attribute>
+            <attribute name="t-on-error.capture">() => this.onAvatarImageError()</attribute>
+            <attribute name="t-att-class">{ 'tp-avatar-broken': this.tpIdentity?.avatarFailed or !this.tpIdentity?.partnerId }</attribute>
         </xpath>
         <xpath expr="//button[hasclass('o_user_menu')]" position="inside">
+            <TpIdentityAvatar t-if="this.tpIdentity?.avatarFailed or !this.tpIdentity?.partnerId" size="26"/>
             <span class="tp-shell-user-name" t-out="this.userName"/>
             <i class="oi tp-shell-user-chevron" data-icon="expand_more" aria-hidden="true"/>
         </xpath>
-        <xpath expr="//t[@t-set-slot='content']/t[@t-foreach]" position="before">
-            <div class="tp-shell-user-heading"><small>Đang đăng nhập</small><strong t-out="this.userName"/></div>
-        </xpath>
         <xpath expr="//DropdownItem" position="attributes">
-            <attribute name="class">'tp-shell-user-item'</attribute>
+            <attribute name="class">element.id === 'logout' ? 'tp-shell-user-item tp-logout-menu-item' : 'tp-shell-user-item tp-profile-menu-item'</attribute>
         </xpath>
         <xpath expr="//t[@t-out='element.description']" position="replace">
-            <span t-if="element.id === 'logout'">Đăng xuất</span>
-            <span t-elif="element.id === 'preferences'">Tài khoản và tùy chọn</span>
-            <t t-else="" t-out="element.description"/>
+            <svg t-if="element.id === 'personal_profile'" class="tp-profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+            <svg t-elif="element.id === 'logout'" class="tp-logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+            <span t-out="element.description"/>
+        </xpath>
+    </t>
+    <t t-inherit="web.BurgerUserMenu" t-inherit-mode="extension">
+        <xpath expr="//a[@t-out='element.description']" position="replace">
+            <a t-if="element.type == 'item'"
+               class="d-flex align-items-center gap-2 py-2 tp-burger-logout-item"
+               t-att-class="{ 'tp-burger-profile-item': element.id === 'personal_profile', 'text-body': element.id !== 'logout' }"
+               t-att-data-menu="element.id"
+               t-att-href="element.href or ''"
+               t-on-click.stop.prevent="this._onItemClicked(element.callback)">
+                <svg t-if="element.id === 'personal_profile'" class="tp-profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+                <svg t-elif="element.id === 'logout'" class="tp-logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                <span t-out="element.description"/>
+            </a>
         </xpath>
     </t>
 </templates>

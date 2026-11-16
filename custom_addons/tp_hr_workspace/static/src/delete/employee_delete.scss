@@ -1,0 +1,42 @@
+// HR-DELETE-010: compact light confirmation dialog (same palette as account dialogs).
+.o_tp_hr_delete {
+    color: #17324d; background: #fff; color-scheme: light;
+    .modal-header { padding: 20px 24px 12px; border-bottom: 0; .modal-title { font-size: 20px; font-weight: 600; } }
+    .modal-body { padding: 0 24px 16px; font-size: 14px; line-height: 1.5; }
+    .modal-footer { padding: 14px 24px 20px; border-top: 1px solid #dce3eb; gap: 10px; .btn-danger { --btn-bg: #b42318; --btn-border-color: #b42318; --btn-hover-bg: #912018; --btn-hover-border-color: #912018; } }
+    .o_tp_hr_delete_loading { padding: 16px; color: #526477; background: #f4f7fb; }
+    .o_tp_hr_delete_warning { margin: 0 0 12px; padding: 12px 14px; border-left: 3px solid #b42318; background: #fdeaea; color: #7a1a12; }
+    .o_tp_hr_delete_count { margin: 0 0 10px; color: #526477; }
+    .o_tp_hr_delete_table { margin-bottom: 12px; border: 1px solid #dce3eb; border-radius: 6px; max-height: 220px; overflow-y: auto;
+        th { position: sticky; top: 0; background: #f4f7fb; color: #526477; font-weight: 600; font-size: 13px; }
+        th, td { padding: 7px 10px; border-color: #e7edf3; vertical-align: top; } }
+    .o_tp_hr_delete_tag { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 10px; background: #eef2f6; color: #526477; font-size: 12px; }
+    .o_tp_hr_delete_section { margin-bottom: 10px; padding: 10px 14px; border: 1px solid #dce3eb; border-radius: 6px;
+        h3 { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+        ul { margin: 0; padding-left: 18px; } li { margin: 2px 0; } ul ul { margin-top: 2px; }
+        p { margin: 6px 0 2px; } }
+    .o_tp_hr_delete_remove h3 { color: #912018; }
+    .o_tp_hr_delete_keep h3 { color: #087f8c; }
+    .o_tp_hr_delete_block { border-color: #f1b8b2; background: #fff6f5; h3 { color: #912018; } }
+    .o_tp_hr_delete_owner { font-weight: 600; }
+    .o_tp_hr_delete_value { margin-left: 6px; color: #526477; &:empty { display: none; } &::before { content: "· "; } }
+    .o_tp_hr_delete_form { margin-top: 14px; }
+    .o_tp_hr_delete_option { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: start; margin-bottom: 14px; padding: 10px 14px; background: #f4f7fb; border-radius: 6px;
+        input { margin-top: 3px; width: 18px; height: 18px; } label { font-weight: 600; } small { grid-column: 2; color: #526477; font-size: 13px; } }
+    .o_tp_hr_delete_field { margin-bottom: 14px;
+        label { display: block; margin-bottom: 6px; font-weight: 600; span { color: #b42318; } }
+        textarea, input { display: block; width: 100%; min-height: var(--tp-input-h); padding: 6px var(--tp-input-px); border: 1px solid var(--tp-input-border); border-radius: var(--tp-input-radius); background: var(--tp-input-bg); color: var(--tp-input-text); font-size: var(--tp-input-font); box-shadow: none; &::placeholder { color: var(--tp-input-placeholder); opacity: 1; } &:hover { border-color: var(--tp-input-border-hover); } &:focus { outline: 2px solid transparent; border-color: var(--tp-input-focus); box-shadow: var(--tp-input-ring); } &:disabled { background: var(--tp-input-disabled-bg); color: var(--tp-input-disabled-text); } }
+        textarea { resize: vertical; }
+        [aria-invalid="true"] { border-color: var(--tp-input-error); background: var(--tp-input-error-bg); box-shadow: inset 0 0 0 1px var(--tp-input-error); }
+        small { display: block; margin-top: 6px; color: #526477; font-size: 13px; } }
+    .o_tp_hr_delete_password { position: relative; input { padding-right: 64px; } }
+    .o_tp_hr_delete_toggle { position: absolute; right: 2px; top: 2px; bottom: 2px; width: 60px; border: 0; border-radius: 4px; background: transparent; color: #526477; font-size: 13px; font-weight: 600; }
+    .o_tp_hr_delete_error { margin-bottom: 8px; padding: 10px 14px; border-left: 3px solid #b42318; background: #fdeaea; color: #8c2020; white-space: pre-line; }
+    input, textarea, button { transition: border-color 180ms, background-color 180ms; } :is(.o_tp_hr_delete_option input, button):focus-visible { outline: 2px solid #087f8c; outline-offset: 2px; }
+    @media (max-width: 575px) {
+        .modal-header, .modal-body, .modal-footer { padding-left: 16px; padding-right: 16px; }
+        .modal-footer { flex-direction: column-reverse; align-items: stretch; .btn { min-height: 44px; width: 100%; margin: 0; } }
+        .o_tp_hr_delete_table { max-height: none; }
+    }
+    @media (prefers-reduced-motion: reduce) { input, textarea, button { transition: none; } }
+}

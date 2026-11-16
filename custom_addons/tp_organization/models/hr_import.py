@@ -69,6 +69,19 @@ class HrImportBatch(models.Model):
         self.invalidate_recordset()
         self.env.cr.execute('SELECT pg_advisory_xact_lock(%s, %s)', [761101, self.company_id.id])
 
+    def _removed_identity(self, code):
+        """Reconciliation note when ``code`` belongs to a permanently deleted profile."""
+        try:
+            tp_code = employee_code(code)
+        except ValueError:
+            tp_code = False
+        removed = self.env['tp.hr.employee.audit']._tp_removed_identities(self.company_id.id, [code], [tp_code])
+        if not removed:
+            return ''
+        # ``source`` is the positional name of Environment._(); use another placeholder.
+        return self.env._('Mã nguồn %(source_code)s (mã %(code)s) thuộc hồ sơ đã xóa vĩnh viễn ngày %(date)s. Không tự tạo lại; cần đối chiếu với người phụ trách nhân sự.',
+                          source_code=code, code=removed[0].employee_code or tp_code or '-', date=removed[0].create_date.strftime('%d/%m/%Y'))
+
     def action_preview(self):
         self.ensure_one()
         self._manager()
@@ -92,6 +105,8 @@ class HrImportBatch(models.Model):
             action, detail = 'create', ''
             if collision and collision != match:
                 action, detail = 'conflict', self.env._('Mã TP đã thuộc về một danh tính khác. Cần đối chiếu, không tự gộp.')
+            elif not match and self._removed_identity(row['source_code']):
+                action, detail = 'conflict', self._removed_identity(row['source_code'])
             elif match:
                 action = 'skip' if {k: v for k, v in (match.tp_source_snapshot or {}).items() if not k.startswith('_')} == row else 'update'
                 detail = '' if action == 'skip' else json.dumps({'before': match.tp_source_snapshot, 'after': row}, ensure_ascii=False)
@@ -136,6 +151,8 @@ class HrImportBatch(models.Model):
                         action = 'update'
                 elif employees.search_count([('company_id', '=', self.company_id.id), ('tp_employee_code', '=', employee_code(line.source_code))]):
                     action, detail = 'conflict', self.env._('Trùng mã TP với hồ sơ khác; cần đối chiếu danh tính trước khi nhập.')
+                elif self._removed_identity(line.source_code):
+                    action, detail = 'conflict', self._removed_identity(line.source_code)
                 else:
                     action = 'create'
                 if action in ('create', 'update'):

@@ -1,15 +1,29 @@
-# tp_web_home — TANPHAT ONE Trang chủ (UI-HOME-003)
+# tp_web_home — TANPHAT ONE Trang chủ & Shell thống nhất
 
-Native Odoo Community home page. Since UI-HOME-003 (DEC-031, KH-KD first) Home is a short
-entry page, not a launcher for every app: one workspace (Kế hoạch Kinh doanh), three personal
-tools and, for system administrators only, an administration area. Every other app the user
-is granted stays in the native app switcher. Version 20.0.1.4.0.
+Native Odoo Community home page and unified shell identity layer. Since `UI-SHELL-UNIFY-001` (`DEC-043`, `CHG-20261114-001`), Home uses one unified component/template (`#tp-unified-home`) and visual design (ice-blue gradient wave backdrop, consistent navbar, `"Trang chủ"` / `"Không gian làm việc của TANPHAT ONE"`, 3-column desktop grid preserving card size) for every user while server-filtered menus and `user.isSystem` determine which sections (`Phòng ban và đơn vị`, `Nhân sự và tuyển dụng`, `Công cụ cá nhân`) and admin tools (`Tất cả ứng dụng`, `Cài đặt`, `Quản lý ứng dụng`) appear.
 
-UI-SHELL-AUTH-001 extends the native navbar with a local bridge wordmark, current
-application context, 56px navy styling and an account heading/name. Section
-measurement/More, company switcher, systray, HomeButton, native logout and the
-KH-KD body grid are retained. Mobile keeps app and account drawers; scoped
-hover/focus styles respect reduced motion. See docs/demo/UI_SHELL_AUTH_001_ACCEPTANCE.md.
+### Logo hệ thống (`BRAND-LOGO-001`, `CHG-20261116-009`, 20.0.1.9.0)
+
+Nguồn: `logo/logo.png` (người dùng cung cấp). `static/img/brand/` chứa bản tách từ ảnh gốc, giữ đúng màu `#0092dd`, nền trong suốt:
+- `tp_logo_mark.png` (512×512): biểu tượng tam giác TP, dùng trên navbar (ô trắng 32px, mobile 28px) và trang đăng nhập (ô trắng 48px, mobile 34px).
+- `tp_logo_full.png` (900×885): biểu tượng + `TAN PHAT JOINT STOCK.Co`, dùng cho thẻ logo trên trang đăng nhập (`tp_web_login`) và logo công ty.
+- `favicon.ico` (16/32/48/64): template `layout_brand_favicon` kế thừa `web.layout`, giữ `x_icon` của trang tự đặt.
+- `tp_logo_touch.png` (180×180, nền trắng): `apple-touch-icon` của web client; `theme-color` đổi sang `#061b40` theo navbar.
+
+Biểu tượng cây cầu cũ (SVG) đã bỏ khỏi navbar và trang đăng nhập. Logo công ty (`res.company.logo`) được đặt bằng dữ liệu trên main, không nằm trong module.
+
+Shared shell identity & logout live under `static/src/identity/`:
+- `identity_service.js`: Singleton `tp_identity` service providing reactive logged-in user identity (`name`, `partnerId`, `avatarUrl`, `initials`), broken-avatar fallback, single `bus_service.subscribe("tp.identity/changed")` subscription (updating only when `payload.partner_id === user.partnerId`), `openPersonalProfile()` via the `tp_personal_profile` registry (falling back to native `res.users` `action_get`), and `performNativeLogout()` (`/web/session/logout` + CSRF + service worker + error toast on failure).
+- `user_menu_patch.js`: Patches `UserMenu` (and BurgerMenu template via `shell_navbar.xml`) so the dropdown contains `[profile icon] Thông tin cá nhân` and `[logout icon] Đăng xuất` while leaving `user_menuitems`, presence (`im_status`), and systray registries intact.
+- `user_account_menu.js` / `.xml` / `.scss`: Reusable `<TpIdentityAvatar>` and `<TpUserAccountMenu>` (with 2-item dropdown `Thông tin cá nhân` + `Đăng xuất`) mounted in HR and KH-KD sidebars; navbar hides `.o_user_menu` and `.o_mobile_menu_toggle` only while `body.o_tp_hr_shell` or `body.o_tp_kd_shell` is active so each view keeps a single user menu entry point.
+- Note: `"Quản lý nhân sự"` only maps to `tp_hr_workspace.menu_tp_hr_root` (no fallback to base `hr.menu_hr_root`), ensuring users without HR workspace access do not see HR on Home.
+
+See `docs/demo/UI_SHELL_UNIFY_001_ACCEPTANCE.md` and `docs/demo/UI_SHELL_AUTH_001_ACCEPTANCE.md`.
+
+### Shared Table Filter Bar (`UI-TABLE-FILTER-001` — 14/11/2026)
+
+Shared OWL search/filter components live under `static/src/search/` (`filter_domain.js`, `relation_search_helper.js`, `table_filter_bar.js`, `table_filter_bar.xml`, `table_filter_bar.scss`) and HOOT tests under `static/tests/search/`:
+- Pending vs Applied state (`Chưa áp dụng` -> `Áp dụng` / `Xóa bộ lọc` / `Bộ lọc nâng cao`), chip removal, `Tất cả` vs `Chưa khai báo` (`__false__`), multi-select `OR` across `AND` criteria, `Asia/Ho_Chi_Minh` date/datetime bounds validation (`from <= to`), server-side `Many2one` (`name_search(domain=...)`), bidirectional sync with Odoo `SearchModel` / Favorites, and desktop/mobile grid layout in ControlPanel without overlapping pagers.
 
 ## What it adds
 
@@ -20,15 +34,16 @@ hover/focus styles respect reduced motion. See docs/demo/UI_SHELL_AUTH_001_ACCEP
 | Systray item | `tp_web_home.home_button` | home icon in the navbar, label "Trang chủ" |
 
 Nothing else: no model, no ACL, no controller, no override of another module's record.
-Depends only on `web`. Static files: launcher JS/XML/SCSS, local SVG icons (incl. `apps.svg`).
+Depends only on `web`. Static files: launcher JS/XML/SCSS, shared `identity/` components/service, local SVG icons (incl. `apps.svg`).
 
-## Layout (UI-HOME-003)
+## Layout (UI-SHELL-UNIFY-001)
 
 | Section | Entries | Shown when |
 | --- | --- | --- |
-| Không gian làm việc | Kế hoạch Kinh doanh (`tp_kd_workspace.menu_kd`) | the menu is in the user's tree |
-| Công cụ cá nhân | Việc cá nhân (`project_todo.menu_todo_todos`), Lịch làm việc (`calendar.mail_menu_calendar`), Trao đổi (`mail.menu_root_discuss`) | each menu is in the user's tree |
-| Quản trị hệ thống | Tất cả ứng dụng (in-page panel), Cài đặt (`base.menu_administration`), Quản lý ứng dụng (`base.menu_management`) | session `is_system` (`base.group_system`) and, for the two links, the menu is in the tree |
+| Phòng ban và đơn vị | Kế hoạch Kinh doanh (`tp_kd_workspace.menu_kd`) + placeholder Phòng Thiết kế, Phòng Kỹ Thuật, Phòng BIM-QC, TADIC (`user.isSystem`) | at least 1 permitted entry |
+| Nhân sự và tuyển dụng | Quản lý nhân sự (`tp_hr_workspace.menu_tp_hr_root`) + placeholder Tuyển dụng (`user.isSystem`) | at least 1 permitted entry |
+| Công cụ cá nhân | Việc cá nhân (`project_todo.menu_todo_todos`), Lịch làm việc (`calendar.mail_menu_calendar`), Trao đổi (`mail.menu_root_discuss`) | at least 1 menu in the user's tree |
+| Công cụ hệ thống (header tools) | Tất cả ứng dụng (in-page panel), Cài đặt (`base.menu_administration`), Quản lý ứng dụng (`base.menu_management`) | session `is_system` (`base.group_system`) and permitted menu |
 
 - There is no "Ứng dụng nghiệp vụ" grid any more. CRM, Project, TP Projects, TP Contracts,
   HR, Invoicing, dashboards and unknown apps open from the native switcher (desktop: apps
@@ -79,6 +94,38 @@ Depends only on `web`. Static files: launcher JS/XML/SCSS, local SVG icons (incl
   Escape closes it, focus moves to its close button when it opens and back to the ☰ toggle
   when it closes. Opening/closing by button or backdrop tap stays native.
 - No `overflow-x: hidden`, no smaller fonts, no PWA/service worker/offline cache.
+
+## Back button (UI-BACK-001, DEC-046, CHG-20261115-002)
+
+- `static/src/back/back_button.{js,xml,scss}` patches the ControlPanel so every act_window
+  form (not dialogs, lists, kanban, client dashboards, `res.config.settings` or module
+  wizards) shows one `← Quay lại` button (40px, 44px on small screens) with the tooltip
+  `Quay lại: <previous screen>`.
+- `static/src/back/back_navigation.js` holds the shared helpers: `action.restore` of the
+  previous breadcrumb (keeps filters, page and page size), otherwise a model fallback from
+  the `tp_back_fallbacks` registry (xmlids only), the action's own list, then Home. A dirty
+  form asks Save and go back / Discard / Stay; a failed save stays on the form.
+- New screens register `registry.category("tp_back_fallbacks").add(model, xmlid)` instead of
+  drawing their own button. Standard and coverage: `docs/ui/UI_BACK_001_STANDARD.md`.
+
+## Input fields (UI-INPUT-001, CHG-20261113-009)
+
+- `static/src/inputs/input_tokens.css` is the only source of input colours and sizes
+  (`--tp-input-*`). It is in `web.assets_backend` (glob) and, through this manifest, in
+  `tp_web_login.assets_login`. Modules use the tokens and never copy the values.
+- `static/src/inputs/inputs.scss` styles native widgets:
+  - Editable fields get a 4-sided frame with hover, focus (blue ring), error (red border,
+    tint and inset line) and disabled states.
+  - Many2one/selection carets are always visible; date fields show a calendar icon.
+  - Labels of required fields get a `*` from the same `o_required_modifier` Odoo validates.
+  - A locked field in edit mode reads as read-only (tint, no frame).
+  - Editable list rows get an inset cell frame, so the row height does not change.
+- Scope: only the outermost `.o_input` of an editable widget in `.o_form_editable`. Nested
+  inputs, checkbox/radio/toggle, file inputs and list cells are left out. No bare
+  `input, select, textarea` selectors and no `!important`.
+- Below md, Odoo's outlined field box is the single frame. Reduced motion turns transitions off.
+- Rollback: remove `static/src/inputs/` only together with the module SCSS that reads the
+  tokens (see [acceptance](../../docs/demo/UI_INPUT_001_ACCEPTANCE.md)).
 
 ## Install / upgrade / uninstall
 

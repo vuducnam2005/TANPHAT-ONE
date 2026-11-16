@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_equipment.HolderCell">
+        <div class="tp_eq_holder_cell" t-att-title="this.tooltip">
+            <t t-if="this.employee">
+                <img class="tp_eq_holder_avatar" t-att-src="this.avatarUrl" alt="" loading="lazy" width="32" height="32"/>
+                <div class="tp_eq_holder_text">
+                    <span class="tp_eq_clamp tp_eq_holder_name" t-out="this.employee.display_name"/>
+                    <span class="tp_eq_holder_code">
+                        <t t-if="this.code" t-out="this.code"/>
+                        <t t-else="">Chưa có mã NV</t>
+                    </span>
+                    <span t-if="this.archived" class="tp_eq_archived_chip">Người đã nghỉ/cần thu hồi</span>
+                </div>
+            </t>
+            <span t-elif="this.props.emptyText" class="tp_eq_cell_empty" t-out="this.props.emptyText"/>
+        </div>
+    </t>
+    <t t-name="tp_equipment.ClampCell">
+        <span t-if="this.text" class="tp_eq_clamp" t-att-title="this.text" t-out="this.text"/>
+        <span t-elif="!this.props.blank" class="tp_eq_cell_empty" t-out="this.props.placeholder || '—'"/>
+    </t>
+    <t t-name="tp_equipment.DeviceCell">
+        <div class="tp_eq_device_cell" t-att-title="this.meta ? this.name + ' · ' + this.meta : this.name">
+            <span class="tp_eq_clamp tp_eq_device_name" t-out="this.name"/>
+            <span t-if="this.meta or this.type" class="tp_eq_device_meta">
+                <span t-if="this.type" class="tp_eq_type_badge" t-out="this.type"/>
+                <t t-if="this.meta" t-out="this.meta"/>
+            </span>
+        </div>
+    </t>
+    <t t-name="tp_equipment.StatusCell">
+        <span t-if="this.label" t-attf-class="tp_eq_status tp_eq_status_{{this.tone}}" t-att-title="this.label">
+            <span class="tp_eq_status_dot" aria-hidden="true"/>
+            <span class="tp_eq_status_text" t-out="this.label"/>
+        </span>
+    </t>
+    <t t-name="tp_equipment.RowMenu">
+        <div class="tp_eq_row_menu" t-on-click.stop="">
+            <Dropdown position="'bottom-end'" menuClass="'tp_eq_row_menu_list'">
+                <button type="button" class="btn btn-sm btn-light tp_eq_row_menu_btn o-dropdown--no-caret" title="Thao tác khác" aria-label="Thao tác khác">
+                    <i class="oi" data-icon="more_vert" aria-hidden="true"/>
+                </button>
+                <t t-set-slot="content">
+                    <DropdownItem onSelected="() => this.run('action_tp_quick_edit')">Sửa thông tin</DropdownItem>
+                    <DropdownItem onSelected="() => this.run('action_tp_open_moves')">Lịch sử bàn giao</DropdownItem>
+                    <DropdownItem t-if="this.canVerify" onSelected="() => this.verify()">Xác nhận đã kiểm tra thực tế</DropdownItem>
+                    <DropdownItem onSelected="() => this.run('action_tp_print_labels')">In nhãn QR</DropdownItem>
+                </t>
+            </Dropdown>
+        </div>
+    </t>
+</templates>
