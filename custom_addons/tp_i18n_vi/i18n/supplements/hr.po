@@ -1,0 +1,984 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/employee_user_status/user_deactivation_dialog.xml:0
+msgid "Are you sure you want to deactivate this user?"
+msgstr "Bạn có chắc muốn khóa tài khoản này?"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/web/avatar_card/avatar_card_patch.xml:0
+msgid "At Home"
+msgstr "Tại nhà"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/web/avatar_card/avatar_card_patch.xml:0
+msgid "At Home - Present"
+msgstr "Tại nhà — đang làm việc"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/web/avatar_card/avatar_card_patch.xml:0
+msgid "At Office"
+msgstr "Tại văn phòng"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/web/avatar_card/avatar_card_patch.xml:0
+msgid "At Office - Present"
+msgstr "Tại văn phòng — đang làm việc"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/web/avatar_card/avatar_card_patch.xml:0
+msgid "At Other"
+msgstr "Tại địa điểm khác"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/form/multi_version_update_confirmation_dialog.xml:0
+msgid "Cancel"
+msgstr "Hủy"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/js/departure_conflict_dialog.js:0
+msgid "Cancel Departure"
+msgstr "Hủy nghỉ việc"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/form/multi_version_update_confirmation_dialog.xml:0
+msgid "Change all"
+msgstr "Thay đổi tất cả"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/employee_user_status/user_deactivation_dialog.xml:0
+msgid "Confirmation"
+msgstr "Xác nhận"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/resource_calendar_form/form_controller.js:0
+#: code:addons/hr/static/src/components/resource_calendar_form/resource_calendar_plugin_patch.js:0
+msgid "Confirmation Warning"
+msgstr "Cảnh báo xác nhận"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/employee_user_status/employee_user_status.js:0
+msgid "Confirmed"
+msgstr "Đã xác nhận"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/employee_user_status/employee_user_status.js:0
+msgid "Copy Invitation Link"
+msgstr "Sao chép liên kết mời"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/contract_end_dialog/contract_end_dialog.xml:0
+msgid "Correct terms"
+msgstr "Điều chỉnh điều khoản"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/contract_end_dialog/contract_end_dialog.xml:0
+msgid "Correction of contract terms"
+msgstr "Điều chỉnh điều khoản hợp đồng"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_action_helper/hr_employee_action_helper.xml:0
+msgid "Create an employee"
+msgstr "Tạo hồ sơ nhân viên"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_action_helper/onboarding_helper_blocks.xml:0
+msgid "Dashboard"
+msgstr "Báo cáo tổng quan"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/employee_user_status/employee_user_status.js:0
+#: code:addons/hr/static/src/components/employee_user_status/user_deactivation_dialog.xml:0
+msgid "Deactivate"
+msgstr "Vô hiệu"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/employee_user_status/user_deactivation_dialog.xml:0
+msgid "Deactivate & End Collaboration"
+msgstr "Khóa tài khoản và kết thúc cộng tác"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/contract_end_dialog/contract_end_dialog.xml:0
+msgid "End of contract?"
+msgstr "Kết thúc hợp đồng?"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_action_helper/onboarding_helper_blocks.xml:0
+msgid "Fleet"
+msgstr "Đội xe"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/fields/hr_org_chart.xml:0
+msgid "Indirect subordinates"
+msgstr "Nhân viên cấp dưới gián tiếp"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/employee_user_status/employee_user_status.js:0
+msgid "Invitation link copied to clipboard."
+msgstr "Đã sao chép liên kết mời."
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/employee_user_status/employee_user_status.js:0
+msgid "Invite"
+msgstr "Mời"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/employee_user_status/employee_user_status.js:0
+msgid "Invited"
+msgstr "Đã mời"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_action_helper/onboarding_helper_blocks.xml:0
+msgid "Leaves"
+msgstr "Nghỉ phép"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/xml/contract_template_button.xml:0
+msgid "Load Contract Template"
+msgstr "Nạp mẫu hợp đồng"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/xml/contract_template_button.xml:0
+msgid "Load Template"
+msgstr "Nạp mẫu"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/xml/contract_template_button.xml:0
+msgid "Load a Template"
+msgstr "Nạp mẫu"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_action_helper/hr_employee_action_helper.xml:0
+msgid "Load sample data"
+msgstr "Nạp dữ liệu mẫu"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_action_helper/onboarding_helper_blocks.xml:0
+msgid "Lunch"
+msgstr "Bữa ăn"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/fields/hr_org_chart.xml:0
+msgid "More managers"
+msgstr "Quản lý khác"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/versions_timeline/versions_timeline.xml:0
+msgid "New Employee Record"
+msgstr "Hồ sơ nhân viên mới"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/versions_timeline/versions_timeline.js:0
+msgid "No contract"
+msgstr "Chưa có hợp đồng"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/employee_user_status/employee_user_status.js:0
+msgid "Not Invited"
+msgstr "Chưa mời"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/web/avatar_card/avatar_card_patch.xml:0
+msgid "Open Contact Profile"
+msgstr "Mở hồ sơ liên hệ"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/web/avatar_card/avatar_card_patch.xml:0
+msgid "Open Employee Profile (activates company)"
+msgstr "Mở hồ sơ nhân viên (chuyển sang công ty tương ứng)"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_action_helper/onboarding_helper_blocks.xml:0
+msgid "Performance"
+msgstr "Hiệu suất"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_action_helper/onboarding_helper_blocks.xml:0
+msgid "Planning"
+msgstr "Kế hoạch"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/employee_user_status/employee_user_status.js:0
+msgid "Reactivate"
+msgstr "Kích hoạt lại"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_action_helper/hr_employee_action_helper.xml:0
+msgid "Ready to start your experience?"
+msgstr "Bạn đã sẵn sàng bắt đầu?"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_action_helper/onboarding_helper_blocks.xml:0
+msgid "Referral"
+msgstr "Giới thiệu"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/employee_user_status/employee_user_status.js:0
+msgid "Resend Invitation"
+msgstr "Gửi lại lời mời"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/employee_user_status/employee_user_status.js:0
+msgid "Reset Password"
+msgstr "Đặt lại mật khẩu"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/fields/many2many_avatar_employee_field/many2many_avatar_employee_field.js:0
+msgid "Search employee..."
+msgstr "Tìm nhân viên…"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/fields/hr_org_chart.xml:0
+msgid "See All"
+msgstr "Xem tất cả"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/fields/hr_org_chart.xml:0
+msgid "Set a manager or reports to show in org chart."
+msgstr "Khai báo quản lý hoặc nhân viên cấp dưới để hiển thị sơ đồ tổ chức."
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_action_helper/onboarding_helper_blocks.xml:0
+msgid "Sign"
+msgstr "Ký tên"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/contract_end_dialog/contract_end_dialog.xml:0
+msgid "Start a new contract"
+msgstr "Bắt đầu hợp đồng mới"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_action_helper/onboarding_helper_blocks.xml:0
+msgid "Talent"
+msgstr "Nhân tài"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/form/multi_version_update_confirmation_dialog.xml:0
+msgid "This version"
+msgstr "Phiên bản này"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/resource_calendar_form/form_controller.js:0
+msgid ""
+"This working schedule is used by  employee(s), are you sure you want change "
+"it for all employees?"
+msgstr ""
+"Lịch làm việc này đang có nhân viên sử dụng. Bạn có chắc muốn thay đổi cho "
+"tất cả nhân viên đó?"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/resource_calendar_form/resource_calendar_plugin_patch.js:0
+msgid ""
+"This working schedule is used by %s employee(s), are you sure you want "
+"change it for all employees?"
+msgstr ""
+"Lịch làm việc này đang được %s nhân viên sử dụng. Bạn có chắc muốn thay đổi "
+"cho tất cả nhân viên đó?"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/fields/hr_org_chart.xml:0
+msgid "Total"
+msgstr "Tổng"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/hr_presence_status/hr_presence_status.js:0
+msgid "Unspecified"
+msgstr "Chưa xác định"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/contract_end_dialog/contract_end_dialog.xml:0
+msgid "Use Employee's current version information"
+msgstr "Dùng thông tin phiên bản hiện tại của nhân viên"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/common/im_status_patch.js:0
+msgid "User is at home"
+msgstr "Người dùng đang ở nhà"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/common/im_status_patch.js:0
+msgid "User is at home and busy"
+msgstr "Người dùng đang ở nhà và bận"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/common/im_status_patch.js:0
+msgid "User is at home and idle"
+msgstr "Người dùng đang ở nhà và tạm vắng"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/common/im_status_patch.js:0
+msgid "User is at home and offline"
+msgstr "Người dùng đang ở nhà và ngoại tuyến"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/common/im_status_patch.js:0
+msgid "User is at home and online"
+msgstr "Người dùng đang ở nhà và trực tuyến"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/common/im_status_patch.js:0
+msgid "User is at other location"
+msgstr "Người dùng đang ở địa điểm khác"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/common/im_status_patch.js:0
+msgid "User is at other location and busy"
+msgstr "Người dùng đang ở địa điểm khác và bận"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/common/im_status_patch.js:0
+msgid "User is at other location and idle"
+msgstr "Người dùng đang ở địa điểm khác và tạm vắng"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/common/im_status_patch.js:0
+msgid "User is at other location and offline"
+msgstr "Người dùng đang ở địa điểm khác và ngoại tuyến"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/common/im_status_patch.js:0
+msgid "User is at other location and online"
+msgstr "Người dùng đang ở địa điểm khác và trực tuyến"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/common/im_status_patch.js:0
+msgid "User is at the office"
+msgstr "Người dùng đang ở văn phòng"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/common/im_status_patch.js:0
+msgid "User is at the office and busy"
+msgstr "Người dùng đang ở văn phòng và bận"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/common/im_status_patch.js:0
+msgid "User is at the office and idle"
+msgstr "Người dùng đang ở văn phòng và tạm vắng"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/common/im_status_patch.js:0
+msgid "User is at the office and offline"
+msgstr "Người dùng đang ở văn phòng và ngoại tuyến"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/common/im_status_patch.js:0
+msgid "User is at the office and online"
+msgstr "Người dùng đang ở văn phòng và trực tuyến"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/core/web/avatar_card/avatar_card_patch.xml:0
+#: code:addons/hr/static/src/core/web/thread_actions.js:0
+msgid "View Profile"
+msgstr "Xem trang cá nhân"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/fields/hr_org_chart.xml:0
+msgid "View employee"
+msgstr "Xem nhân viên"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/contract_end_dialog/contract_end_dialog.xml:0
+msgid "Why did you change the contract end date?"
+msgstr "Lý do thay đổi ngày kết thúc hợp đồng?"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/form/multi_version_update_confirmation_dialog.xml:0
+msgid ""
+"You changed an old version of the employee. Do you want to apply the "
+"following changes to future versions too?"
+msgstr ""
+"Bạn đã sửa phiên bản cũ của hồ sơ nhân viên. Bạn có muốn áp dụng các thay "
+"đổi này cho các phiên bản sau không?"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_action_helper/onboarding_helper_blocks.xml:0
+msgid "eLearning"
+msgstr "Học online"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_hierarchy/hr_employee_hierarchy_renderer.xml:0
+msgid "here"
+msgstr "ở đây"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/mail_activity_plan_template.py:0
+msgid "%(employee_name)s has no manager."
+msgstr "%(employee_name)s không có người quản lý."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/mail_activity_plan_template.py:0
+msgid "%(employee_name)s has no user."
+msgstr "%(employee_name)s chưa có người dùng."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/mail_activity_plan_template.py:0
+msgid "%(employee_name)s's manager (%(manager_name)s) has no user."
+msgstr ""
+"Trình quản lý của %(employee_name)s (%(manager_name)s) không có người dùng."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"A portal user already exist with the following login: %(login)s. User Name: "
+"%(user_name)s. You should set another email address on the employee."
+msgstr ""
+"Một người dùng cổng thông tin đã tồn tại với thông tin đăng nhập sau: "
+"%(login)s. Tên người dùng: %(user_name)s. Bạn nên đặt một địa chỉ email khác"
+" cho nhân viên."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "A signup link was sent by email"
+msgstr "Một liên kết đăng ký đã được gửi qua email"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"A user already exist with the following login: %(login)s. User Name: "
+"%(user_name)s. Please link the user instead before sending invitation."
+msgstr ""
+"Một người dùng đã tồn tại với thông tin đăng nhập sau: %(login)s. Tên người "
+"dùng: %(user_name)s. Vui lòng liên kết người dùng trước khi gửi lời mời."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"A user with the same login (%(login)s) already has an employee in this "
+"company. User Name: %(user_name)s / Employee Name: %(employee)s"
+msgstr ""
+"Người dùng có cùng thông tin đăng nhập (%(login)s) đã có nhân viên trong "
+"công ty này. Tên người dùng: %(user_name)s / Tên nhân viên: %(employee)s"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"An inactive user already exist with the following login: %(login)s. User "
+"Name: %(user_name)s."
+msgstr ""
+"Một người dùng không hoạt động đã tồn tại với thông tin đăng nhập sau: "
+"%(login)s. Tên người dùng: %(user_name)s."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "As of %(start)s to %(end)s"
+msgstr "Kể từ %(start)s đến %(end)s"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "Bank Account Allocation"
+msgstr "Phân bổ tài khoản ngân hàng"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/wizard/hr_bank_account_wizard.py:0
+msgid ""
+"Bank account %s not found within the salary distribution of the employee"
+msgstr ""
+"Không tìm thấy tài khoản ngân hàng %s trong phân bổ lương của nhân viên"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_version.py:0
+msgid ""
+"Before creating a new contract, close the current one by setting an end "
+"date."
+msgstr ""
+"Trước khi tạo hợp đồng mới, hãy đóng hợp đồng hiện tại bằng cách đặt ngày "
+"kết thúc."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_version.py:0
+msgid "Cannot archive all the active versions of an employee."
+msgstr ""
+"Không thể lưu trữ tất cả các phiên bản đang hoạt động của một nhân viên."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"Cannot create light user for an employee without login (email address or "
+"related contact)."
+msgstr ""
+"Không thể tạo người dùng nhẹ cho nhân viên nếu không đăng nhập (địa chỉ "
+"email hoặc liên hệ liên quan)."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_version.py:0
+msgid ""
+"Cannot modify multiple versions contract dates with different contracts at "
+"once."
+msgstr ""
+"Không thể sửa đổi nhiều phiên bản ngày hợp đồng với các hợp đồng khác nhau "
+"cùng một lúc."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "Cannot search or group by hr_presence state: too many employees (%s)"
+msgstr ""
+"Không thể tìm kiếm hoặc nhóm theo trạng thái hr_presence: quá nhiều nhân "
+"viên (%s)"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_version.py:0
+msgid "Cannot unassign all the active versions of an employee."
+msgstr ""
+"Không thể bỏ chỉ định tất cả các phiên bản đang hoạt động của một nhân viên."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "Congratulations!"
+msgstr "Xin chúc mừng!"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/js/DynamicMinDateTimeField.js:0
+msgid "Date with Dynamic Minimum Value"
+msgstr "Ngày có Giá trị Tối thiểu Động"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/fields/boolean_radio.js:0
+msgid "Defines which values comes first."
+msgstr "Xác định giá trị nào đến trước."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "Departure already configured"
+msgstr "Khởi hành đã được định cấu hình"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee_departure.py:0
+msgid ""
+"Departure date is earlier than the start date of the current contract(s) of "
+"%s."
+msgstr ""
+"Ngày khởi hành sớm hơn ngày bắt đầu của (các) hợp đồng hiện tại của %s."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "Each amount percentage must be a number between 0 and 100."
+msgstr "Mỗi phần trăm số tiền phải là một số từ 0 đến 100."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_version.py:0
+msgid "Employee %s must always have at least one active version."
+msgstr "Nhân viên %s phải luôn có ít nhất một phiên bản hoạt động."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"Employee is already configured in a Departure process. \n"
+"Cancel it before configurating a new End of Collaboration."
+msgstr ""
+"Nhân viên đã được cấu hình trong quy trình Khởi hành. \n"
+"Hãy hủy nó trước khi định cấu hình Kết thúc cộng tác mới."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "Employees profile"
+msgstr "Hồ sơ nhân viên"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/components/contract_end_dialog/contract_end_dialog.xml:0
+msgid "End of Collaboration"
+msgstr "Cho nghỉ việc"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "End of collaboration"
+msgstr "Kết thúc hợp tác"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/fields/boolean_radio.js:0
+msgid "First Element"
+msgstr "Yếu tố đầu tiên"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/res_partner.py:0
+msgid "Go to contact"
+msgstr "Đi tới liên hệ"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_version.py:0
+msgid "HR Responsible Update"
+msgstr "Cập nhật trách nhiệm nhân sự"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "May I recommend you to setup an"
+msgstr "Tôi có thể khuyên bạn nên thiết lập một"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/js/DynamicMinDateTimeField.js:0
+msgid "Minimum Date Field"
+msgstr "Trường ngày tối thiểu"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "Only HR users can access first version date on an employee."
+msgstr ""
+"Chỉ người dùng nhân sự mới có thể truy cập ngày phiên bản đầu tiên của nhân "
+"viên."
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/js/DynamicMinDateTimeField.js:0
+msgid "Reference another date/datetime field to use as minimum date"
+msgstr "Tham chiếu trường ngày/ngày khác để sử dụng làm ngày tối thiểu"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "Some employee already has a work contact"
+msgstr "Một số nhân viên đã có người liên hệ công việc"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_hierarchy/hr_employee_hierarchy_renderer.xml:0
+msgid ""
+"Some employees are present in a loop.\n"
+"                Click"
+msgstr ""
+"Một số nhân viên có mặt trong một vòng lặp.\n"
+"                nhấp chuột"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"Some of these fields %(field_name)s don't exist on this model (hr.version)."
+msgstr ""
+"Một số trường %(field_name)s không tồn tại trên mô hình này (hr.version)."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_version.py:0
+msgid ""
+"Start date (%(start)s) must be earlier than contract end date (%(end)s)."
+msgstr ""
+"Ngày bắt đầu (%(start)s) phải sớm hơn ngày kết thúc hợp đồng (%(end)s)."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "Template for Employees"
+msgstr "Mẫu dành cho nhân viên"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"The Badge ID must contain only printable ASCII characters, without spaces, "
+"and be no longer than 18 characters."
+msgstr ""
+"ID huy hiệu chỉ được chứa các ký tự ASCII có thể in được, không có dấu cách "
+"và không dài quá 18 ký tự."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee_departure.py:0
+msgid "The apply date isn't reached yet for the departure of %(emp)s."
+msgstr "Vẫn chưa đến ngày đăng ký cho sự ra đi của %(emp)s."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "The contract of %(employee_name)s is about to expire."
+msgstr "Hợp đồng của %(employee_name)s sắp hết hạn."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"The employee is already in contract on %s. Please select a date outside "
+"existing contracts"
+msgstr ""
+"Nhân viên đã có hợp đồng %s. Vui lòng chọn một ngày ngoài hợp đồng hiện tại"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee_departure.py:0
+msgid "The following users have been archived: %s"
+msgstr "Những người dùng sau đã được lưu trữ: %s"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "The work permit of %(employee_name)s is about to expire."
+msgstr "Giấy phép lao động của %(employee_name)s sắp hết hạn."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/resource_calendar.py:0
+msgid ""
+"The working schedule '%s' is linked to version(s) not compatible with its "
+"new company."
+msgstr ""
+"Lịch làm việc '%s' được liên kết với (các) phiên bản không tương thích với "
+"công ty mới."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee_departure.py:0
+msgid "There is no valid version starting before the departure date for %s."
+msgstr "Không có phiên bản hợp lệ bắt đầu trước ngày khởi hành cho %s."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "This employee has no user."
+msgstr "Nhân viên này không có người dùng."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee_type.py:0
+msgid ""
+"This employee type is used in another company, you can't modify the country where it's applicable for now.\n"
+"Change the employee type on the employees of the other company to be able to modify this."
+msgstr ""
+"Loại nhân viên này được sử dụng ở một công ty khác, hiện tại bạn không thể sửa đổi quốc gia áp dụng loại nhân viên này.\n"
+"Thay đổi loại nhân viên của nhân viên của công ty khác để có thể sửa đổi điều này."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "This field %(field_name)s doesn't exist on this model (hr.version)."
+msgstr ""
+"Trường %(field_name)s này không tồn tại trên mô hình này (hr.version)."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/wizard/hr_bank_account_wizard.py:0
+msgid "Total percentage allocation must equal 100%."
+msgstr "Tổng tỷ lệ phân bổ phải bằng 100%."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "Total salary distribution on bank accounts must be exactly 100%."
+msgstr "Tổng lương phân bổ trên tài khoản ngân hàng phải chính xác 100%."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee_departure.py:0
+msgid "User Archive Notification"
+msgstr "Thông báo lưu trữ người dùng"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"You are not allowed to access \"Employee\" (hr.employee) records.\n"
+"    We can redirect you to the public employee list."
+msgstr ""
+"Bạn không được phép truy cập hồ sơ \"Nhân viên\" (hr.employee).\n"
+"    Chúng tôi có thể chuyển hướng bạn đến danh sách nhân viên công cộng."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/resource_calendar.py:0
+msgid ""
+"You can't change this working schedule, it's used by employees from other "
+"companies you don't have access to. Contact your admin or create a new "
+"working schedule."
+msgstr ""
+"Bạn không thể thay đổi lịch làm việc này, nó được sử dụng bởi nhân viên từ "
+"các công ty khác mà bạn không có quyền truy cập. Hãy liên hệ với quản trị "
+"viên của bạn hoặc tạo lịch làm việc mới."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"You can't end the collaboration of an employee without contract, archive it "
+"instead."
+msgstr ""
+"Bạn không thể kết thúc sự hợp tác của nhân viên mà không có hợp đồng, thay "
+"vào đó hãy lưu trữ nó."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid ""
+"You can't modify the departure of an employee that has already departed."
+msgstr "Bạn không thể sửa đổi sự ra đi của một nhân viên đã rời đi."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/res_partner.py:0
+msgid ""
+"You cannot delete contact that are linked to an employee, please archive "
+"them instead."
+msgstr ""
+"Bạn không thể xóa liên hệ được liên kết với nhân viên, thay vào đó hãy lưu "
+"trữ chúng."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/res_partner.py:0
+msgid ""
+"You cannot delete contact(s) linked to employee(s).\n"
+"Please archive them instead.\n"
+"\n"
+"Affected contact(s): %(names)s"
+msgstr ""
+"Bạn không thể xóa (các) liên hệ được liên kết với (các) nhân viên.\n"
+"Thay vào đó hãy lưu trữ chúng.\n"
+"\n"
+"(Các) liên hệ bị ảnh hưởng: %(names)s"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_work_location.py:0
+msgid "You cannot delete locations that are being used by your employees"
+msgstr "Bạn không thể xóa các địa điểm đang được nhân viên của bạn sử dụng"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "You do not have the rights to load the Employees sample data."
+msgstr "Bạn không có quyền tải dữ liệu mẫu Nhân viên."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_version.py:0
+msgid "Your HR Responsible has been updated to %s."
+msgstr "Người chịu trách nhiệm nhân sự của bạn đã được cập nhật lên %s."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "onboarding plan"
+msgstr "kế hoạch giới thiệu"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/resource_calendar.py:0
+msgid "resource_calendar_id"
+msgstr "tài nguyên_calendar_id"
+
+#. module: hr
+#. odoo-javascript
+#: code:addons/hr/static/src/views/hr_employee_hierarchy/hr_employee_hierarchy_renderer.xml:0
+msgid "to see those employees."
+msgstr "để gặp những nhân viên đó."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/resource_calendar.py:0
+msgid "version_ids"
+msgstr "phiên bản_ids"

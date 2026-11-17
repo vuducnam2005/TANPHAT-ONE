@@ -80,9 +80,25 @@ class TestVietnameseCatalog(TransactionCase):
         self.env['res.lang']._activate_lang('vi_VN')
         modules, _params = self.env['ir.http']._get_translations_for_webclient(['web', 'tp_i18n_vi'], 'vi_VN')
         served = {message['id']: message['string'] for message in modules['tp_i18n_vi']['messages']}
-        web = {message['id'] for message in modules['web']['messages']}
+        web = {message['id']: message['string'] for message in modules['web']['messages']}
         self.assertEqual(served['Are you sure you want to delete the selected record?'], 'Bạn có chắc muốn xóa hồ sơ đã chọn?')
         self.assertEqual(served['Are you sure you want to delete the %(nbSelected)s selected records?'],
                          'Bạn có chắc muốn xóa %(nbSelected)s hồ sơ đã chọn?')
-        # Only gaps: a term web already translates keeps the native wording.
-        self.assertFalse(set(served) & web)
+        from odoo.tools.translate import CodeTranslations  # noqa: PLC0415
+        native_web = {row['id']: row['string'] for row in CodeTranslations().get_web_translations('web', 'vi_VN')['messages']}
+        for source in set(served) & set(native_web):
+            if native_web[source] != source and not native_web[source].isascii():
+                self.assertEqual(web[source], native_web[source], source)
+
+    def test_native_namespaces_and_server_errors_are_supplemented(self):
+        from odoo.tools.translate import get_translation  # noqa: PLC0415
+        modules, _params = self.env['ir.http']._get_translations_for_webclient(['web', 'mail'], 'vi_VN')
+        web = {row['id']: row['string'] for row in modules['web']['messages']}
+        mail = {row['id']: row['string'] for row in modules['mail']['messages']}
+        self.assertEqual(web['Developer Tools'], 'Công cụ dành cho nhà phát triển')
+        self.assertEqual(mail['Unread'], 'Chưa đọc')
+        self.assertEqual(mail['Meetings'], 'Cuộc họp')
+        self.assertEqual(get_translation('base', 'vi_VN', 'The operation cannot be completed: %s', ('X',)),
+                         'Không thể hoàn tất thao tác: X')
+        self.assertEqual(get_translation('base', 'en_US', 'The operation cannot be completed: %s', ('X',)),
+                         'The operation cannot be completed: X')

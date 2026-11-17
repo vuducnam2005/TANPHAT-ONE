@@ -78,6 +78,10 @@ class TestIdentityOrg(TransactionCase):
         wizard = self.env['tp.hr.identity.wizard'].with_user(self.admin).create({'employee_id': self.employee.id})
         wizard.action_preview()
         self.assertFalse(wizard.choice)
+        self.assertIn('Ảnh đã tải lên', wizard.preview)
+        self.assertNotIn('employee_image', wizard.preview)
+        self.assertNotIn('generated', wizard.preview)
+        self.assertNotIn('{', wizard.preview)
         with self.assertRaises(UserError):
             wizard.action_apply()
         wizard.choice = 'account'

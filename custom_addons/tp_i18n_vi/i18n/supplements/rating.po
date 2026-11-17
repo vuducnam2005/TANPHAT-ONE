@@ -1,0 +1,19 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: rating
+#. odoo-python
+#: code:addons/rating/controllers/main.py:0
+msgid ""
+"Incorrect rating: should be %(rating_unhappy)d, %(rating_neutral)d or "
+"%(rating_happy)d (received %(rate)d)"
+msgstr ""
+"Đánh giá sai: phải là %(rating_unhappy)d, %(rating_neutral)d hoặc "
+"%(rating_happy)d (đã nhận %(rate)d)"

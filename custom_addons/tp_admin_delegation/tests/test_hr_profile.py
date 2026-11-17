@@ -9,6 +9,22 @@ from .test_delegation import DelegationCase
 
 
 class TestDelegatedHrProfile(DelegationCase):
+    def test_open_edit_and_archive_without_reason_rejects_confirmation(self):
+        self.grant()
+        employee = self.env['hr.employee'].create({
+            'name': 'Synthetic unopened reason', 'company_id': self.company.id,
+            'department_id': self.departments[1].id,
+        }).with_user(self.users[0])
+        for method in ('action_tp_edit_delegated_profile', 'action_tp_archive_delegated_profile'):
+            action = getattr(employee, method)()
+            wizard = self.env[action['res_model']].with_user(self.users[0]).browse(action['res_id'])
+            self.assertFalse(wizard.reason)
+            for reason in (False, '  \n '):
+                wizard.reason = reason
+                with self.assertRaises(UserError):
+                    wizard.action_apply()
+            self.assertTrue(employee.active)
+
     def test_native_hr_views_only_request_allowed_fields_and_keep_original_hr_views(self):
         self.grant()
         model = self.env['hr.employee'].with_user(self.users[0])

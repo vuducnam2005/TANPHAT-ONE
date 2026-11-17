@@ -1,0 +1,15 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: resource_mail
+#. odoo-javascript
+#: code:addons/resource_mail/static/src/views/fields/many2many_avatar_resource/many2many_avatar_resource_field.js:0
+msgid "Search resources..."
+msgstr "Tìm kiếm tài nguyên..."

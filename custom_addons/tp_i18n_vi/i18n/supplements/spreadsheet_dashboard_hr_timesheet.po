@@ -1,0 +1,21 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: spreadsheet_dashboard_hr_timesheet
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard_hr_timesheet/data/files/tasks_dashboard.json:0
+msgid "% of allocated hours"
+msgstr "% số giờ được phân bổ"
+
+#. module: spreadsheet_dashboard_hr_timesheet
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard_hr_timesheet/data/files/tasks_dashboard.json:0
+msgid "Allocated Hours"
+msgstr "Số giờ được phân bổ"

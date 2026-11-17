@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261117-006 — VI-WEB-002: sửa hộp Lý do, đối chiếu danh tính và mở rộng tiếng Việt native
+
+- Ngày17/11/2026. Tiếp tục yêu cầu tại public `/app/action-528/35` và ảnh người dùng. Wizard grant/revoke và edit/archive được precreate trước khi nhập lý do; bỏ required ở transient, giữ required native form và kiểm backend cả chuỗi trống/khoảng trắng trước mutation. Không thay quyền/cấp người thật.
+- Đối chiếu danh tính: dialog vừa màn hình, thumbnail128px, nhãn hồ sơ/tài khoản, kết quả tiếng Việt thay JSON/hash; đồng bộ vẫn dùng ảnh gốc/digest/lock, audit giữ trước/sau. Không xác nhận đồng bộ thật.
+- tp_i18n_vi20.0.1.1.0:5.247overlay+5.243namespace (6.694nguồn khác nhau),4thông báo server; hook cache native giữ bản Việt/en_US, locale FullCalendar bổ sung nhãn tuần dài. Nguồn dịch tự động chỉ UI upstream công khai, không DB/credential/hồ sơ; kiểm định dạng/rà mẫu, chưa nghiệm thu thuật ngữ/toàn bộ luồng. Không sửa core/DOM/React/ACL.
+- Main18069 đã áp3addon sau backup `.local/admin-delegate001/backup-dev-vi-web002/` (dump9.646.950byte/filestore254.446.424byte/checksum). Upgrade exit0/0ERROR; checker10.494mục/Ruff/XML/locale PASS;2.177XMLID/source match; backend rollback lý do trống PASS. Browser35/35 ở1440/768/390/320 và14màn không lỗi;20bảng/baseURL/ledger0/0 giữ. Không suite fixture trên main/server hoặc18079/clone; test Odoo mới chưa chạy. Subagent không khởi tạo do modelruntime, không audit độc lập.
+- PCserver chưa áp trong mốc006: source16file cũ đúng Git baseline,66file addon mới không xung đột; chuẩn bị gói commit để push/deploy, bổ sung kết quả server sau. Foreign Reporting/login/branding/sidebar/status giữ riêng. [Acceptance](demo/VI_WEB_002_ACCEPTANCE.md) ghi nguyên nhân, kiểm thực, rollback và gap. Không đóng các gap CRUD/multiworker của ADMIN-DELEGATE-001 bằng sửa dialog.
+
 ## CHG-20261117-005 — ADMIN-DELEGATE-001: push và áp PC server, kiểm public và bàn giao giới hạn
 
 - Ngày 17/11/2026 (Asia/Saigon). Commit chức năng cffa70d6 đã push origin/main. Deploy đúng delta của task; 44 tệp khớp checksum. Home giữ 2 thay đổi branding có trước đã đối chiếu, không đưa foreign Reporting/login/branding vào commit. Server dùng Reporting Git hiện hành và cài dependency 20.0.1.1.0; tp_admin_delegation 20.0.1.0.0 cài exit0/0ERROR.

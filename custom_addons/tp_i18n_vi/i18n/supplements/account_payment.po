@@ -1,0 +1,41 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: account_payment
+#. odoo-python
+#: code:addons/account_payment/models/payment_transaction.py:0
+msgid "The payment related to transaction %(ref)s has been posted: %(link)s"
+msgstr "Thanh toán liên quan đến giao dịch %(ref)s đã được đăng: %(link)s"
+
+#. module: account_payment
+#. odoo-python
+#: code:addons/account_payment/models/account_payment_method_line.py:0
+msgid ""
+"You can't delete a payment method that is linked to an installed provider.\n"
+"Linked providers(s): %s"
+msgstr ""
+"Bạn không thể xóa phương thức thanh toán được liên kết với nhà cung cấp đã cài đặt.\n"
+"(Các) nhà cung cấp được liên kết: %s"
+
+#. module: account_payment
+#. odoo-python
+#: code:addons/account_payment/models/account_journal.py:0
+msgid ""
+"You must first uninstall a payment provider before deleting its journal.\n"
+"Linked providers: %s"
+msgstr ""
+"Trước tiên, bạn phải gỡ cài đặt nhà cung cấp dịch vụ thanh toán trước khi xóa nhật ký của nhà cung cấp dịch vụ đó.\n"
+"Nhà cung cấp liên kết: %s"
+
+#. module: account_payment
+#. odoo-python
+#: code:addons/account_payment/models/payment_provider.py:0
+msgid "pricelist not allowed"
+msgstr "bảng giá không được phép"

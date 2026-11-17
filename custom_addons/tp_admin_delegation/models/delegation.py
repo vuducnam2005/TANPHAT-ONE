@@ -153,15 +153,15 @@ class AdminDelegation(models.Model):
     _description = 'Lịch sử ủy quyền quản trị'
     _order = 'id desc'
 
-    user_id = fields.Many2one('res.users', required=True, ondelete='restrict', index=True, readonly=True)
-    company_id = fields.Many2one('res.company', required=True, ondelete='restrict', index=True, readonly=True)
-    state = fields.Selection([('active', 'Đang được ủy quyền'), ('revoked', 'Đã thu hồi')], required=True, readonly=True)
-    granted_by_id = fields.Many2one('res.users', required=True, ondelete='restrict', readonly=True)
-    granted_at = fields.Datetime(required=True, readonly=True)
-    grant_reason = fields.Text(required=True, readonly=True)
-    revoked_by_id = fields.Many2one('res.users', ondelete='restrict', readonly=True)
-    revoked_at = fields.Datetime(readonly=True)
-    revoke_reason = fields.Text(readonly=True)
+    user_id = fields.Many2one('res.users', string='Tài khoản', required=True, ondelete='restrict', index=True, readonly=True)
+    company_id = fields.Many2one('res.company', string='Công ty', required=True, ondelete='restrict', index=True, readonly=True)
+    state = fields.Selection([('active', 'Đang được ủy quyền'), ('revoked', 'Đã thu hồi')], string='Trạng thái', required=True, readonly=True)
+    granted_by_id = fields.Many2one('res.users', string='Người cấp quyền', required=True, ondelete='restrict', readonly=True)
+    granted_at = fields.Datetime(string='Thời điểm cấp quyền', required=True, readonly=True)
+    grant_reason = fields.Text(string='Lý do cấp quyền', required=True, readonly=True)
+    revoked_by_id = fields.Many2one('res.users', string='Người thu hồi', ondelete='restrict', readonly=True)
+    revoked_at = fields.Datetime(string='Thời điểm thu hồi', readonly=True)
+    revoke_reason = fields.Text(string='Lý do thu hồi', readonly=True)
 
     _one_live = models.UniqueIndex('(user_id, company_id) WHERE state=\'active\'', 'Tài khoản đã được ủy quyền tại công ty này.')
     _reason_required = models.Constraint('CHECK(length(btrim(grant_reason)) > 0)', 'Cần lý do cấp quyền.')
@@ -268,9 +268,10 @@ class AdminDelegationWizard(models.TransientModel):
     employee_id = fields.Many2one('hr.employee', required=True, readonly=True, string='Nhân viên')
     user_id = fields.Many2one(related='employee_id.user_id', readonly=True, string='Tài khoản')
     expected_user_id = fields.Many2one('res.users', readonly=True)
-    company_id = fields.Many2one(related='employee_id.company_id', readonly=True)
-    operation = fields.Selection([('grant', 'Cấp quyền quản trị'), ('revoke', 'Thu hồi quyền quản trị')], required=True)
-    reason = fields.Text(required=True, string='Lý do')
+    company_id = fields.Many2one(related='employee_id.company_id', readonly=True, string='Công ty')
+    operation = fields.Selection([('grant', 'Cấp quyền quản trị'), ('revoke', 'Thu hồi quyền quản trị')], required=True, string='Thao tác')
+    # The dialog is created before the administrator can enter a reason.
+    reason = fields.Text(string='Lý do')
     scope_preview = fields.Text(compute='_compute_preview', string='Phạm vi thực tế')
 
     @api.model_create_multi
@@ -299,6 +300,8 @@ class AdminDelegationWizard(models.TransientModel):
         self.ensure_one()
         if not self.env.user._tp_is_main_admin():
             raise AccessError(self.env._('Chỉ Quản trị chính được quản lý ủy quyền.'))
+        if not (self.reason or '').strip():
+            raise UserError(self.env._('Nhập lý do cấp hoặc thu hồi quyền quản trị.'))
         self.employee_id.check_access('read')
         self.env.cr.execute('SELECT id FROM hr_employee WHERE id=%s FOR UPDATE', [self.employee_id.id])
         self.employee_id.invalidate_recordset(['user_id', 'company_id'])

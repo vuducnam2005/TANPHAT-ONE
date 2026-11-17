@@ -1,0 +1,39 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: google_gmail
+#. odoo-python
+#: code:addons/google_gmail/controllers/main.py:0
+msgid "An error occurred during the authentication process."
+msgstr "Đã xảy ra lỗi trong quá trình xác thực."
+
+#. module: google_gmail
+#. odoo-python
+#: code:addons/google_gmail/models/google_gmail_mixin.py:0
+msgid "Oops, we could not authenticate you. Please try again later."
+msgstr "Rất tiếc, chúng tôi không thể xác thực bạn. Vui lòng thử lại sau."
+
+#. module: google_gmail
+#. odoo-python
+#: code:addons/google_gmail/models/google_gmail_mixin.py:0
+msgid "Please enter a valid email address."
+msgstr "Vui lòng nhập địa chỉ email hợp lệ."
+
+#. module: google_gmail
+#. odoo-python
+#: code:addons/google_gmail/tools.py:0
+msgid "Something went wrong. Try again later"
+msgstr "Đã xảy ra lỗi. Hãy thử lại sau"
+
+#. module: google_gmail
+#. odoo-python
+#: code:addons/google_gmail/tools.py:0
+msgid "You don't have an active subscription"
+msgstr "Bạn không có đăng ký đang hoạt động"

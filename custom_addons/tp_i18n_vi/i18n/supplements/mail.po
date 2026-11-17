@@ -1,0 +1,3760 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/store_service_patch.js:0
+msgid "%(amount)s items marked as read"
+msgstr "Đã đánh dấu đã đọc %(amount)s mục"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/sub_channel_preview.js:0
+msgid "%(count)s Messages"
+msgstr "%(count)s tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/mail_poll_model.js:0
+msgid "%(count)s votes"
+msgstr "%(count)s lượt bình chọn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/utils/common/dates.js:0
+msgid "%(datetime)s local time"
+msgstr "%(datetime)s giờ địa phương"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/follower_subtype_dialog.js:0
+msgid "%(follower_name)s is no longer following this record."
+msgstr "%(follower_name)s đã ngừng theo dõi hồ sơ này."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/recipients_input.js:0
+msgid "%(followersCount)s Followers"
+msgstr "%(followersCount)s người theo dõi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll.js:0
+msgid "%(hours)s hours left"
+msgstr "Còn %(hours)s giờ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll.js:0
+msgid "%(minutes)s minutes left"
+msgstr "Còn %(minutes)s phút"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_presentation_bar.js:0
+msgid "%(name)s is presenting"
+msgstr "%(name)s đang trình bày"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_presentation_bar.js:0
+msgid "%(name_1)s and %(name_2)s are presenting"
+msgstr "%(name_1)s và %(name_2)s đang trình bày"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_presentation_bar.js:0
+msgid "%(name_1)s, %(name_2)s and %(count)s more are presenting"
+msgstr "%(name_1)s, %(name_2)s và %(count)s người khác đang trình bày"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll.js:0
+msgid "%(seconds)s seconds left"
+msgstr "Còn %(seconds)s giây"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_model.js:0
+msgid "%(user)s changed the channel name to %(name)s"
+msgstr "%(user)s đã đổi tên kênh thành %(name)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_model.js:0
+msgid "%(user)s changed the thread name to %(name)s"
+msgstr "%(user)s đã đổi tên chủ đề thành %(name)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_model.js:0
+msgid "%(user)s deleted the thread \"%(thread_name)s\""
+msgstr "%(user)s đã xóa chủ đề “%(thread_name)s”"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_model.js:0
+msgid "%(user)s started a thread: "
+msgstr "%(user)s đã bắt đầu chủ đề: "
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.js:0
+msgid "%s are not valid email addresses"
+msgstr "%s không phải địa chỉ email hợp lệ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.js:0
+msgid "%s is not a valid email address"
+msgstr "%s không phải địa chỉ email hợp lệ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/models/discuss/discuss_channel.py:0
+#: code:addons/mail/static/src/discuss/core/common/discuss_channel_model.js:0
+msgid "%s others"
+msgstr "%s người khác"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.xml:0
+msgid "(Keep formatting)"
+msgstr "(Giữ định dạng)"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.xml:0
+msgid "(Remove formatting)"
+msgstr "(Bỏ định dạng)"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message.xml:0
+#: code:addons/mail/static/src/core/common/message_in_reply.xml:0
+msgid "(edited)"
+msgstr "(đã chỉnh sửa)"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/mail_poll_model.js:0
+msgid "0 votes"
+msgstr "0 lượt bình chọn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/recipients_input.js:0
+msgid "1 Follower"
+msgstr "1 người theo dõi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/sub_channel_preview.js:0
+msgid "1 Message"
+msgstr "1 tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "1 hour"
+msgstr "1 giờ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/store_service_patch.js:0
+msgid "1 item marked as read"
+msgstr "Đã đánh dấu đã đọc 1 mục"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/search_message_result.js:0
+msgid "1 message found"
+msgstr "Tìm thấy 1 tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/models/discuss/discuss_channel.py:0
+#: code:addons/mail/static/src/discuss/core/common/discuss_channel_model.js:0
+msgid "1 other"
+msgstr "1 người khác"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll.js:0
+msgid "1 second left"
+msgstr "Còn 1 giây"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/mail_poll_model.js:0
+msgid "1 vote"
+msgstr "1 lượt bình chọn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "1 week"
+msgstr "1 tuần"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "10 minutes"
+msgstr "10 phút"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "2 weeks"
+msgstr "2 tuần"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "24 hours"
+msgstr "24 giờ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "3 days"
+msgstr "3 ngày"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "4 hours"
+msgstr "4 giờ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "8 hours"
+msgstr "8 giờ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/thread_model.js:0
+msgid "Accessible to anyone with the link"
+msgstr "Bất kỳ ai có liên kết đều có thể truy cập"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity.xml:0
+msgid "Activity type:"
+msgstr "Loại hoạt động:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/discuss_channel_member_list/discuss_channel_member_list_field.js:0
+msgid "Add Members"
+msgstr "Thêm thành viên"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/meeting_ready_banner.xml:0
+msgid "Add Others"
+msgstr "Thêm người khác"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member_list.xml:0
+msgid "Add People"
+msgstr "Thêm người"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "Add another option"
+msgstr "Thêm lựa chọn khác"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/thread_actions.js:0
+msgid "Add to Favorites"
+msgstr "Thêm vào Danh sách yêu thích"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/thread_actions.js:0
+msgid "Added %(name)s to Favorites"
+msgstr "Đã thêm %(name)s vào mục yêu thích"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/follower_subtype_dialog.xml:0
+msgid "All Notifications"
+msgstr "Tất cả thông báo"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_preview.xml:0
+msgid "Allow Microphone and Camera"
+msgstr "Cho phép dùng micrô và máy ảnh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "Allow multiple options"
+msgstr "Cho phép chọn nhiều đáp án"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/channel_member_list_patch.js:0
+msgid "Also invited"
+msgstr "Cũng được mời"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/thread.js:0
+msgid "An error occurred while loading messages."
+msgstr "Đã xảy ra lỗi khi tải tin nhắn."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member_list.xml:0
+msgid "And"
+msgstr "Và"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_delete_dialog.xml:0
+msgid "Are you sure you want to permanently delete this message?"
+msgstr "Bạn có chắc muốn xóa vĩnh viễn tin nhắn này?"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member_actions.js:0
+msgid "Are you sure you want to remove %(member_name)s from the call?"
+msgstr "Bạn có chắc muốn đưa %(member_name)s ra khỏi cuộc gọi?"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_pin_dialog.js:0
+msgid "Are you sure you want to unpin this message?"
+msgstr "Bạn có chắc muốn bỏ ghim tin nhắn này?"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity.xml:0
+#: code:addons/mail/static/src/core/web/activity_assign_popover.xml:0
+#: code:addons/mail/static/src/core/web/activity_list_popover_item.xml:0
+msgid "Assign"
+msgstr "Chỉ định"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity.xml:0
+msgid "Assigned to:"
+msgstr "Giao cho:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "At least two options are required"
+msgstr "Cần có ít nhất hai lựa chọn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "Audio player:"
+msgstr "Trình phát âm thanh:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/discuss_call_history_indicators/discuss_call_history_indicators_field.js:0
+msgid "Audio recording"
+msgstr "Bản ghi âm"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/change_layout_dialog.js:0
+msgid "Auto (dynamic)"
+msgstr "Tự động (linh hoạt)"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_model.js:0
+msgid "Auto-translate future messages?"
+msgstr "Tự động dịch các tin nhắn tiếp theo?"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/action_panel.js:0
+msgid "Back to previous panel"
+msgstr "Quay lại bảng trước"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_actions.js:0
+msgid "Bookmark"
+msgstr "Đánh dấu"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_model.js:0
+msgid "Bookmark removed"
+msgstr "Đã bỏ đánh dấu"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message.xml:0
+msgid "Bookmarked"
+msgstr "Đã đánh dấu"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/public_web/messaging_menu/messaging_menu_model.js:0
+msgid "Bookmarks"
+msgstr "Mục đã đánh dấu"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/pip_banner.xml:0
+msgid "Bring back"
+msgstr "Khôi phục"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/pip_banner.xml:0
+msgid "Bring the call back here"
+msgstr "Đưa cuộc gọi về đây"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/device_select.js:0
+msgid "Browser Default"
+msgstr "Mặc định trình duyệt"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/call_debrief/call_debrief.js:0
+msgid "Call Debrief"
+msgstr "Tổng kết cuộc gọi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/discuss_call_history_duration/discuss_call_history_duration_field.js:0
+msgid "Call Duration"
+msgstr "Thời lượng cuộc gọi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/discuss_call_history_indicators/discuss_call_history_indicators_field.js:0
+msgid "Call Recording Indicators"
+msgstr "Chỉ báo ghi âm cuộc gọi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+msgid "Call Switch Confirmation"
+msgstr "Xác nhận chuyển cuộc gọi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_model.js:0
+msgid "Cancel auto-translate?"
+msgstr "Hủy dịch tự động?"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/discuss_channel_model.js:0
+msgid "Cannot undo; the conversation was deleted."
+msgstr "Không thể hoàn tác vì cuộc trò chuyện đã bị xóa."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web/composer_patch.xml:0
+msgid "Cc recipients"
+msgstr "Người nhận bản sao"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web/composer_patch.xml:0
+msgid "Cc:"
+msgstr "Bản sao:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_actions.js:0
+msgid "Change Layout"
+msgstr "Đổi bố cục"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/public_web/discuss_content.xml:0
+msgid "Change Picture"
+msgstr "Đổi ảnh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/change_layout_dialog.xml:0
+msgid "Change layout"
+msgstr "Đổi bố cục"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/search_message_input.js:0
+msgid "Changes"
+msgstr "Thay đổi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/discuss_channel_member_list/discuss_channel_member_list_field.js:0
+msgid "Channel Members"
+msgstr "Thành viên kênh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/chat_hub.xml:0
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_empty_channel.xml:0
+msgid "Channel image"
+msgstr "Ảnh kênh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_model_patch.js:0
+msgid "Chat with your coworkers on desktop or on mobile."
+msgstr "Trò chuyện với đồng nghiệp trên máy tính hoặc điện thoại."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_model_patch.js:0
+msgid "Chats"
+msgstr "Trò chuyện"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/search_input.xml:0
+msgid "Clear"
+msgstr "Xoá"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/fields/scheduled_date_field/scheduled_date_dialog.xml:0
+msgid "Clear Time"
+msgstr "Xóa thời gian"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/device_select.js:0
+msgid "Click to Activate"
+msgstr "Nhấn để kích hoạt"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message.js:0
+msgid "Click to see delivery errors"
+msgstr "Nhấn để xem lỗi gửi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_in_reply.xml:0
+msgid "Click to see the attachments"
+msgstr "Nhấn để xem tệp đính kèm"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/js/tours/discuss_channel_tour.js:0
+msgid "Click to view more actions on the message"
+msgstr "Nhấn để xem thêm thao tác với tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity.xml:0
+msgid "Compose Mail"
+msgstr "Soạn email"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/action_dialog_patch.js:0
+msgid "Compress"
+msgstr "Nén"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/mail_server_configurator_selection/mail_server_configurator_selection.js:0
+msgid "Connection failed: %s"
+msgstr "Kết nối thất bại: %s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "Connection type:"
+msgstr "Loại kết nối:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "Connection:"
+msgstr "Kết nối:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.xml:0
+msgid "Continue with Full Composer?"
+msgstr "Tiếp tục trong trình soạn thảo đầy đủ?"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/discuss_channel_model.js:0
+msgid "Conversation hidden until new messages arrive."
+msgstr "Đã ẩn cuộc trò chuyện đến khi có tin nhắn mới."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/discuss_channel_model.js:0
+msgid "Conversation hidden."
+msgstr "Đã ẩn cuộc trò chuyện."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/thread_actions.js:0
+msgid "Convert to Chat"
+msgstr "Chuyển thành trò chuyện"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity.xml:0
+msgid "Copied!"
+msgstr "Đã sao chép!"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity.xml:0
+msgid "Copy"
+msgstr "Sao chép"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_invitation.xml:0
+msgid "Copy Invitation Link"
+msgstr "Sao chép liên kết mời"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/thread_actions.js:0
+msgid "Copy Invite Link"
+msgstr "Sao chép liên kết mời"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_actions.js:0
+msgid "Copy Message Link"
+msgstr "Sao chép liên kết tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_actions.js:0
+msgid "Copy Text"
+msgstr "Sao chép văn bản"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/meeting_ready_banner.xml:0
+msgid "Copy link"
+msgstr "Sao chép liên kết"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/call_debrief/call_debrief.js:0
+msgid "Could not load call recordings"
+msgstr "Không tải được bản ghi cuộc gọi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+msgid "Could not start the recording"
+msgstr "Không thể bắt đầu ghi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+msgid "Could not stop the recording"
+msgstr "Không thể dừng ghi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_invitation.js:0
+msgid "Create Chat"
+msgstr "Tạo cuộc trò chuyện"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer_actions.js:0
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "Create Poll"
+msgstr "Tạo bình chọn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity.xml:0
+msgid "Created by:"
+msgstr "Tạo bởi:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity.xml:0
+msgid "Created on:"
+msgstr "Được tạo vào:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "Data channel:"
+msgstr "Kênh dữ liệu:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/message_patch.xml:0
+msgid "Date:"
+msgstr "Ngày:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_settings.xml:0
+msgid "Delay:"
+msgstr "Độ trễ:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web/chatter_patch.js:0
+msgid "Delete %(count)s files"
+msgstr "Xóa %(count)s tệp"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web/chatter_patch.js:0
+msgid "Delete 1 file"
+msgstr "Xóa 1 tệp"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/list/archive_disabled_list_controller.js:0
+msgid "Delete Activities"
+msgstr "Xóa hoạt động"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/attachment_delete_dialog.js:0
+msgid "Delete All"
+msgstr "Xóa tất cả"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/attachment_list.js:0
+msgid "Delete Attachment"
+msgstr "Xóa tệp đính kèm"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/attachment_delete_dialog.js:0
+msgid "Delete Attachment & Duplicates"
+msgstr "Xóa tệp đính kèm và bản trùng"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/attachment_delete_dialog.js:0
+msgid "Delete Attachments"
+msgstr "Xóa các tệp đính kèm"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_delete_dialog.xml:0
+msgid "Delete Message"
+msgstr "Xóa tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/delete_thread_dialog.xml:0
+#: code:addons/mail/static/src/discuss/core/common/thread_actions.js:0
+msgid "Delete Thread"
+msgstr "Xóa chủ đề"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/attachment_delete_dialog.xml:0
+msgid "Delete only Duplicates"
+msgstr "Chỉ xóa các bản trùng"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_option_dialog.xml:0
+msgid "Delete option"
+msgstr "Xóa lựa chọn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/notification_model.js:0
+msgid "Detected As Spam"
+msgstr "Được nhận diện là thư rác"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_model.js:0
+msgid "Disable"
+msgstr "Tắt"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_preview.js:0
+msgid "Disable background blur"
+msgstr "Tắt làm mờ nền"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.xml:0
+msgid "Discard editing"
+msgstr "Hủy chỉnh sửa"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web/chatter.xml:0
+msgid "Discard selection"
+msgstr "Bỏ lựa chọn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+msgid "Disconnected from the call by the server"
+msgstr "Máy chủ đã ngắt kết nối cuộc gọi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/blur_performance_warning.xml:0
+#: code:addons/mail/static/src/discuss/call/common/microphone_warning.xml:0
+msgid "Dismiss warning"
+msgstr "Đóng cảnh báo"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity_markasdone_popover.xml:0
+msgid "Done & Schedule Next"
+msgstr "Hoàn thành và lên lịch tiếp"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_settings.xml:0
+msgid "Download Logs"
+msgstr "Tải nhật ký"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "Download:"
+msgstr "Tải xuống:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/mail_attachment_dropzone.xml:0
+msgid "Drop files here"
+msgstr "Thả tệp vào đây"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity_list_popover_item.js:0
+msgid "Due %s"
+msgstr "Đến hạn %s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity.xml:0
+msgid "Due in"
+msgstr "Đến hạn sau"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity_list_popover_item.js:0
+msgid "Due in 1 week"
+msgstr "Đến hạn sau 1 tuần"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity.xml:0
+msgid "Due on:"
+msgstr "Ngày đến hạn:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "Duration"
+msgstr "Thời hạn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/follower.xml:0
+#: code:addons/mail/static/src/core/web/follower_list.xml:0
+msgid "Edit Notification Preferences"
+msgstr "Sửa tùy chọn thông báo"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer_actions.js:0
+msgid "Edit in Full Composer"
+msgstr "Sửa trong trình soạn thảo đầy đủ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.js:0
+msgid "Editing message"
+msgstr "Đang sửa tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.js:0
+msgid "Editing note"
+msgstr "Đang sửa ghi chú"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/mail_server_configurator_selection/mail_server_configurator_selection.xml:0
+msgid "Emails sent via"
+msgstr "Email được gửi qua"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
+msgid "Enable GIFs"
+msgstr "Bật ảnh GIF"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_preview.js:0
+msgid "Enable background blur"
+msgstr "Bật làm mờ nền"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_actions.js:0
+msgid "End Poll"
+msgstr "Kết thúc bình chọn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/call_debrief/call_debrief.js:0
+msgid "End of Media"
+msgstr "Đã phát hết"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_invitation.js:0
+msgid "Enter name or email"
+msgstr "Nhập tên hoặc email"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public/welcome_page.xml:0
+msgid "Enter your name"
+msgstr "Nhập tên của bạn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/call_debrief/call_debrief_media_controls.js:0
+msgid "Exit fullscreen (F)"
+msgstr "Thoát toàn màn hình (F)"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/store_service.js:0
+msgid "Failed to post the message (%s). Click to retry"
+msgstr "Không gửi được tin nhắn (%s). Nhấn để thử lại"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_item_patch.js:0
+msgid "Favorite"
+msgstr "Yêu thích"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web/chatter.xml:0
+msgid "Files"
+msgstr "Tệp"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/search_message_input.xml:0
+msgid "Filter Messages"
+msgstr "Lọc tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_model_patch.js:0
+msgid "Find channels to follow below"
+msgstr "Tìm kênh để theo dõi bên dưới"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_empty_channel.xml:0
+msgid "Find more channels"
+msgstr "Tìm thêm kênh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/follower_list.xml:0
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_empty_channel.xml:0
+msgid "Follow"
+msgstr "Theo dõi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.xml:0
+msgid "Formatting can only be restored in Full Composer."
+msgstr "Chỉ có thể khôi phục định dạng trong trình soạn thảo đầy đủ."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/message_patch.xml:0
+msgid "From:"
+msgstr "Từ:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/call_debrief/call_debrief_media_controls.js:0
+msgid "Fullscreen (F)"
+msgstr "Toàn màn hình (F)"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_invitation.js:0
+msgid "Generate"
+msgstr "Tạo tự động"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_invitation.xml:0
+msgid "Generate new invite link"
+msgstr "Tạo liên kết mời mới"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll.xml:0
+msgid "Go back to vote"
+msgstr "Quay lại bình chọn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/attachment_panel.xml:0
+msgid "Go online to load attachments."
+msgstr "Kết nối mạng để tải tệp đính kèm."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/pinned_messages_panel.js:0
+msgid "Go online to load pinned messages."
+msgstr "Kết nối mạng để tải tin nhắn đã ghim."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/sub_channel_list.xml:0
+msgid "Go online to load threads."
+msgstr "Kết nối mạng để tải chủ đề."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/thread_actions.js:0
+msgid "Hide"
+msgstr "Ẩn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/thread_actions.js:0
+msgid "Hide Until New Message"
+msgstr "Ẩn đến khi có tin nhắn mới"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_invitation.js:0
+msgid "Hide camera preview"
+msgstr "Ẩn xem trước máy ảnh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/js/tours/discuss_channel_tour.js:0
+msgid "Hover over your message to reveal its actions"
+msgstr "Di chuột lên tin nhắn để xem các thao tác"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/public_web/messaging_menu/messaging_menu_item_patch.xml:0
+msgid "In a call"
+msgstr "Đang trong cuộc gọi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/meeting_chat.xml:0
+msgid "In call messages"
+msgstr "Tin nhắn trong cuộc gọi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/channel_member_list_patch.js:0
+msgid "In this call"
+msgstr "Trong cuộc gọi này"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_invitation.xml:0
+msgid "Incoming call..."
+msgstr "Có cuộc gọi đến…"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_actions.js:0
+msgid "Initial Language"
+msgstr "Ngôn ngữ ban đầu"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer_actions.js:0
+msgid "Insert Canned Response"
+msgstr "Chèn câu trả lời mẫu"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/plugin/mail_code_block_plugin.js:0
+msgid "Insert code block"
+msgstr "Chèn khối mã"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_settings.xml:0
+msgid "Intensity"
+msgstr "Cường độ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/call_debrief/call_debrief.js:0
+msgid "Invalid call timing: end date is before start date."
+msgstr ""
+"Thời gian cuộc gọi không hợp lệ: thời điểm kết thúc trước thời điểm bắt đầu."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member.xml:0
+msgid "Invitation Pending"
+msgstr "Lời mời đang chờ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_invitation.xml:0
+msgid "Invitation already sent to this address"
+msgstr "Đã gửi lời mời tới địa chỉ này"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/discuss_channel_model.js:0
+msgid "Invitation link copied"
+msgstr "Đã sao chép liên kết mời"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member_model.js:0
+msgid "Invitation sent again to %(member_name)s."
+msgstr "Đã gửi lại lời mời cho %(member_name)s."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/fields/avatar_autocomplete/avatar_many2x_autocomplete.js:0
+msgid "Invite \"%s\""
+msgstr "Mời “%s”"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_invitation.js:0
+msgid "Invite people to \"%(name)s\""
+msgstr "Mời người vào “%(name)s”"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_invitation.js:0
+msgid "Invite people to the channel \"%(name)s\""
+msgstr "Mời người vào kênh “%(name)s”"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_invitation.xml:0
+msgid "Invite suggestions are loading…"
+msgstr "Đang tải gợi ý người mời…"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/fields/avatar_autocomplete/avatar_many2x_autocomplete.js:0
+msgid "Invite teammates"
+msgstr "Mời đồng nghiệp"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/fields/avatar_autocomplete/avatar_many2x_autocomplete.js:0
+msgid "Invite teammates via email"
+msgstr "Mời đồng nghiệp qua email"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_invitation.js:0
+msgid "Invite to Meeting"
+msgstr "Mời họp"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public/welcome_page.xml:0
+msgid "Invited by"
+msgstr "Được mời bởi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public/welcome_page.xml:0
+msgid "Join Conversation"
+msgstr "Tham gia trò chuyện"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public/welcome_page.xml:0
+msgid "Joining as"
+msgstr "Tham gia với tên"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web/mail_composer_form.js:0
+msgid "Keep editing"
+msgstr "Tiếp tục chỉnh sửa"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_model.js:0
+msgid "Last edited %(editedDate)s"
+msgstr "Sửa lần cuối %(editedDate)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity_menu.xml:0
+msgid "Late"
+msgstr "Trễ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web/mail_composer_form.js:0
+msgid "Leaving will stop editing this message."
+msgstr "Rời trang sẽ dừng chỉnh sửa tin nhắn này."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_commands.js:0
+msgid "List the members of this conversation"
+msgstr "Xem thành viên cuộc trò chuyện"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/discuss_category/discuss_category_kanban_renderer.xml:0
+msgid "Load more... ("
+msgstr "Nhiều hơn... ("
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/mail_composer_template_selector.xml:0
+msgid "Manage Templates"
+msgstr "Quản lý mẫu"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_model.js:0
+msgid "Marked as unread"
+msgstr "Đã đánh dấu chưa đọc"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/call_debrief/call_debrief.js:0
+msgid "Media Error"
+msgstr "Lỗi phát nội dung"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/store_service.js:0
+msgid "Meeting, %(date)s"
+msgstr "Cuộc họp, %(date)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_model_patch.js:0
+msgid "Meetings"
+msgstr "Cuộc họp"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member.xml:0
+msgid "Member Actions"
+msgstr "Thao tác với thành viên"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.js:0
+msgid "Message #%(channelName)s…"
+msgstr "Nhắn vào #%(channelName)s…"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/public_web/messaging_menu/messaging_menu_item.js:0
+msgid "Message Actions"
+msgstr "Thao tác với tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_model.js:0
+msgid "Message Link Copied"
+msgstr "Đã sao chép liên kết tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_model.js:0
+msgid "Message Link Copy Failed (Permission denied?)"
+msgstr "Không thể sao chép liên kết tin nhắn (có thể thiếu quyền)"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/thread_model.js:0
+msgid "Message pinned"
+msgstr "Đã ghim tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/discuss_notification_settings.xml:0
+msgid "Message sounds"
+msgstr "Âm báo tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/thread_model.js:0
+msgid "Message unpinned"
+msgstr "Đã bỏ ghim tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_settings.xml:0
+#: code:addons/mail/static/src/discuss/call/common/quick_voice_settings.xml:0
+msgid "Microphone"
+msgstr "Micrô"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/microphone_warning.xml:0
+msgid "Microphone muted by system"
+msgstr "Hệ thống đã tắt micrô"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_actions.js:0
+msgid "Minimize"
+msgstr "Thu nhỏ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/call_debrief/call_debrief_media_controls.js:0
+msgid "Mute (M)"
+msgstr "Tắt tiếng (M)"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_participant_card.xml:0
+msgid "Muted for you"
+msgstr "Đã tắt tiếng đối với bạn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/mention_list.xml:0
+msgid "Navigate"
+msgstr "Điều hướng"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_invitation.js:0
+msgid "New Chat"
+msgstr "Cuộc trò chuyện mới"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_model_patch.js:0
+msgid "New Meeting"
+msgstr "Cuộc họp mới"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/store_service.js:0
+msgid "New Meeting Confirmation"
+msgstr "Xác nhận cuộc họp mới"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_model_patch.js:0
+msgid "New channel"
+msgstr "Kênh mới"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/fields/scheduled_date_field/scheduled_date_dialog.xml:0
+msgid "Next Monday Morning"
+msgstr "Sáng thứ Hai tới"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_preview.xml:0
+msgid "No Camera Preview"
+msgstr "Không có xem trước máy ảnh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/follower_list.xml:0
+msgid "No Followers"
+msgstr "Chưa có người theo dõi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/action_list.xml:0
+msgid "No content."
+msgstr "Chưa có nội dung."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/public_web/messaging_menu/messaging_menu.js:0
+msgid "No conversation matches this filter."
+msgstr "Không có cuộc trò chuyện phù hợp với bộ lọc này."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member_list.xml:0
+msgid "No members found."
+msgstr "Không tìm thấy thành viên."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_model_patch.js:0
+msgid "No messages yet!"
+msgstr "Chưa có tin nhắn!"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/thread.xml:0
+msgid "No messages yet."
+msgstr "Chưa có tin nhắn."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/microphone_warning.xml:0
+msgid "No microphone permissions"
+msgstr "Chưa có quyền dùng micrô"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_invitation.xml:0
+msgid "No one found to invite."
+msgstr "Không tìm thấy người để mời."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/public_web/messaging_menu/messaging_menu.js:0
+msgid "No results for \"%s\"."
+msgstr "Không có kết quả cho “%s”."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/mail_composer_template_selector.xml:0
+msgid "No saved templates"
+msgstr "Chưa có mẫu đã lưu"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/sub_channel_list.xml:0
+msgid "No threads found."
+msgstr "Không tìm thấy chủ đề."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_invitation.xml:0
+msgid "No users found."
+msgstr "Không tìm thấy người dùng."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_model_patch.js:0
+msgid "No video conference planned!"
+msgstr "Chưa có cuộc họp trực tuyến được lên lịch!"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/list/archive_disabled_list_controller.js:0
+msgid "No, go back"
+msgstr "Không, quay lại"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/search_message_input.js:0
+msgid "Notes"
+msgstr "Ghi chú"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/public_web/messaging_menu/messaging_menu_tab_model.js:0
+msgid "Nothing here yet."
+msgstr "Chưa có nội dung tại đây."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/follower_subtype_dialog.js:0
+msgid "Notification Preferences"
+msgstr "Tùy chọn thông báo"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/follower_subtype_dialog.js:0
+msgid "Notification preferences updated."
+msgstr "Đã cập nhật tùy chọn thông báo."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/public_web/messaging_menu/messaging_menu_model.js:0
+msgid "Notifications of the documents you follow will appear here."
+msgstr "Thông báo của các hồ sơ bạn theo dõi sẽ xuất hiện tại đây."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/store_service.js:0
+msgid "Notify all members of this conversation"
+msgstr "Thông báo cho tất cả thành viên cuộc trò chuyện"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/store_service.js:0
+msgid "Notify all members of this conversation who are online"
+msgstr "Thông báo cho các thành viên đang trực tuyến trong cuộc trò chuyện"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/im_status_dropdown.js:0
+#: code:addons/mail/static/src/core/common/im_status_dropdown.xml:0
+#: code:addons/mail/static/src/discuss/core/common/channel_member_list.js:0
+msgid "Offline"
+msgstr "Ngoại tuyến"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/im_status_dropdown.js:0
+#: code:addons/mail/static/src/core/common/im_status_dropdown.xml:0
+#: code:addons/mail/static/src/discuss/core/common/channel_member_list.js:0
+msgid "Online"
+msgstr "Trực tuyến"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/attachment/ir_attachment_download.js:0
+msgid "Only files will be downloaded."
+msgstr "Chỉ tải xuống tệp."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/attachment/ir_attachment_download.js:0
+msgid "Only the selected files will be downloaded."
+msgstr "Chỉ tải xuống các tệp đã chọn."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_menu.xml:0
+msgid "Open Conversation"
+msgstr "Mở cuộc trò chuyện"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member_list.js:0
+msgid "Others"
+msgstr "Khác"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message.js:0
+msgid "Out-of-office message"
+msgstr "Thông báo vắng mặt"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/call_debrief/call_debrief_media_controls.js:0
+msgid "Pause (K)"
+msgstr "Tạm dừng (K)"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/blur_performance_warning.xml:0
+msgid "Performance Warning:"
+msgstr "Cảnh báo hiệu năng:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/delete_thread_dialog.xml:0
+msgid "Permanently delete this thread?"
+msgstr "Xóa vĩnh viễn chủ đề này?"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/discuss_channel_model.js:0
+msgid "Permission denied: invitation link copy failed"
+msgstr "Không đủ quyền: không thể sao chép liên kết mời"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/fields/scheduled_date_field/scheduled_date_dialog.xml:0
+msgid "Pick a specific time"
+msgstr "Chọn thời điểm cụ thể"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_pin_dialog.js:0
+msgid "Pin Message"
+msgstr "Ghim tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_pin_dialog.js:0
+msgid "Pin this message?"
+msgstr "Ghim tin nhắn này?"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web/chatter.xml:0
+msgid "Planned Activities"
+msgstr "Hoạt động đã lên lịch"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/call_debrief/call_debrief_media_controls.js:0
+msgid "Play (K)"
+msgstr "Phát (K)"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/call_debrief/call_debrief.js:0
+msgid "Playback Error"
+msgstr "Lỗi phát"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/call_debrief/call_debrief_media_controls.xml:0
+msgid "Playback speed"
+msgstr "Tốc độ phát"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_preview.xml:0
+msgid "Please allow access in your browser settings."
+msgstr "Vui lòng cho phép truy cập trong cài đặt trình duyệt."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll.xml:0
+msgid "Poll closed"
+msgstr "Đã đóng bình chọn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll.js:0
+msgid "Poll ends on %(date)s"
+msgstr "Bình chọn kết thúc vào %(date)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll.js:0
+msgid "Poll will end soon"
+msgstr "Bình chọn sắp kết thúc"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/attachment_view.js:0
+msgid "Pop out is not supported on mobile."
+msgstr "Không hỗ trợ cửa sổ nổi trên điện thoại."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "Post"
+msgstr "Vào sổ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_presentation_bar.xml:0
+msgid "Presentation Audio"
+msgstr "Âm thanh trình bày"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/quick_voice_settings.js:0
+msgid "Press [%(shortcut)s]"
+msgstr "Nhấn [%(shortcut)s]"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_settings.xml:0
+msgid "Press any key to register it as your shortcut."
+msgstr "Nhấn phím bất kỳ để đặt làm phím tắt."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/change_layout_dialog.xml:0
+msgid "Prioritize tiles with video"
+msgstr "Ưu tiên ô có video"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "Question"
+msgstr "Câu hỏi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web/scheduled_message.xml:0
+msgid "Read Less"
+msgstr "Thu gọn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web/scheduled_message.xml:0
+msgid "Read More"
+msgstr "Tìm hiểu thêm"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/discuss_command_palette.xml:0
+msgid "Read-only"
+msgstr "Chỉ xem"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/recording_dialog.xml:0
+msgid "Record the call"
+msgstr "Ghi cuộc gọi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/recording_dialog.xml:0
+msgid "Record transcription"
+msgstr "Tạo bản chép lời"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/recording_dialog.xml:0
+msgid "Record video"
+msgstr "Ghi video"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/recording_dialog.xml:0
+msgid "Recording"
+msgstr "Ghi nhận"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+msgid "Recording cannot start due to insufficient disk space"
+msgstr "Không thể bắt đầu ghi vì không đủ dung lượng lưu trữ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+msgid "Recording has started"
+msgstr "Đã bắt đầu ghi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_recording_indicator.xml:0
+#: code:addons/mail/static/src/discuss/call/common/recording_dialog.xml:0
+msgid "Recording in progress"
+msgstr "Đang ghi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+msgid "Recording is not allowed"
+msgstr "Không được phép ghi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+msgid "Recording stopped due to an internal error"
+msgstr "Đã dừng ghi do lỗi hệ thống"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+msgid "Recording stopped due to timeout"
+msgstr "Đã dừng ghi do hết thời gian"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_settings.xml:0
+msgid "Register new shortcut"
+msgstr "Đặt phím tắt mới"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_option_dialog.xml:0
+msgid "Remove Emoji"
+msgstr "Xóa biểu tượng cảm xúc"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member_actions.js:0
+msgid "Remove Member"
+msgstr "Xóa thành viên"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll.xml:0
+msgid "Remove Vote"
+msgstr "Bỏ bình chọn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/public_web/messaging_menu/messaging_menu_model.js:0
+msgid "Remove all"
+msgstr "Xóa tất cả"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_actions.js:0
+msgid "Remove from Bookmarks"
+msgstr "Bỏ khỏi mục đã lưu"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/thread_actions.js:0
+msgid "Remove from Favorites"
+msgstr "Xóa khỏi Danh sách yêu thích"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "Remove from call"
+msgstr "Đưa ra khỏi cuộc gọi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/thread_actions.js:0
+msgid "Removed %(name)s from Favorites"
+msgstr "Đã bỏ %(name)s khỏi mục yêu thích"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_option_dialog.xml:0
+msgid "Replace Emoji"
+msgstr "Thay biểu tượng cảm xúc"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.xml:0
+msgid "Replying to"
+msgstr "Đang trả lời"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/activity/activity_cell.xml:0
+msgid "Role Assigned"
+msgstr "Đã gán vai trò"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity.xml:0
+msgid "Role:"
+msgstr "Vai trò:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/mail_composer_template_selector.xml:0
+msgid "Save as Template"
+msgstr "Lưu làm mẫu"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/activity/activity_renderer.xml:0
+msgid "Schedule activity"
+msgstr "Lên lịch hoạt động"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+msgid "Screen sharing access blocked. Enable in browser settings."
+msgstr "Chia sẻ màn hình đang bị chặn. Hãy bật trong cài đặt trình duyệt."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/search_message_input.js:0
+msgid "Search %(threadName)s"
+msgstr "Tìm trong %(threadName)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/public_web/discuss_search.xml:0
+msgid "Search Conversation"
+msgstr "Tìm cuộc trò chuyện"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
+msgid "Search Klipy"
+msgstr "Tìm trên Klipy"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/discuss_command_palette.js:0
+msgid "Search conversations"
+msgstr "Tìm cuộc trò chuyện"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/search_input.xml:0
+msgid "Search is loading..."
+msgstr "Đang tìm kiếm…"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member_list.xml:0
+msgid "Search members"
+msgstr "Tìm thành viên"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_menu.xml:0
+msgid "Select Actions"
+msgstr "Chọn thao tác"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/list/mail_activity_list_reschedule.xml:0
+msgid "Select date"
+msgstr "Chọn ngày"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web/chatter.xml:0
+msgid "Select files"
+msgstr "Chọn tệp"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll.xml:0
+msgid "Select one option"
+msgstr "Chọn một đáp án"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll.xml:0
+msgid "Select one or more options"
+msgstr "Chọn một hoặc nhiều đáp án"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/view_dialog/avatar_user_form_view_dialog.xml:0
+msgid "Send & New Invitation"
+msgstr "Gửi và tạo lời mời mới"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/message_actions_patch.js:0
+msgid "Send Again"
+msgstr "Gửi lại"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/gif_picker/common/composer_actions_patch.js:0
+msgid "Send GIF"
+msgstr "Gửi ảnh GIF"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/view_dialog/avatar_user_form_view_dialog.xml:0
+msgid "Send Invitation"
+msgstr "Gửi lời mời"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member_actions.js:0
+msgid "Send Invite again"
+msgstr "Gửi lại lời mời"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.js:0
+msgid "Send Message"
+msgstr "Gửi tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web_portal_project/composer_patch.js:0
+msgid "Send a message to all followers and selected contacts…"
+msgstr "Gửi tin nhắn tới người theo dõi và liên hệ đã chọn…"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/fields/scheduled_date_field/scheduled_date_field.xml:0
+msgid "Sending"
+msgstr "Đang gửi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member_actions.js:0
+msgid "Set Admin"
+msgstr "Đặt làm quản trị viên"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member_actions.js:0
+msgid "Set Member"
+msgstr "Đặt làm thành viên"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member_actions.js:0
+msgid "Set Owner"
+msgstr "Đặt làm chủ sở hữu"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_participant_card.xml:0
+msgid "Show My Screen Anyway"
+msgstr "Vẫn chia sẻ màn hình của tôi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_commands.js:0
+msgid "Show a help message"
+msgstr "Hiện hướng dẫn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/attachment_list.xml:0
+msgid "Show all copies"
+msgstr "Hiện tất cả bản sao"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_invitation.js:0
+msgid "Show camera preview"
+msgstr "Hiện xem trước máy ảnh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member_list.js:0
+msgid "Showing first %(limit)s members. Narrow your search to see more."
+msgstr ""
+"Đang hiện %(limit)s thành viên đầu tiên. Thu hẹp tìm kiếm để xem thêm."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_invitation.js:0
+msgid ""
+"Showing the first %(search_limit)s results. Narrow your search to see more "
+"choices."
+msgstr ""
+"Đang hiện %(search_limit)s kết quả đầu tiên. Thu hẹp tìm kiếm để xem thêm "
+"lựa chọn."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/change_layout_dialog.js:0
+msgid "Sidebar"
+msgstr "Thanh bên"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_settings.xml:0
+#: code:addons/mail/static/src/discuss/call/common/quick_voice_settings.xml:0
+msgid "Speakers"
+msgstr "Loa"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/change_layout_dialog.js:0
+msgid "Spotlight"
+msgstr "Tiêu điểm"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/store_service.js:0
+msgid "Start Meeting"
+msgstr "Bắt đầu cuộc họp"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_model_patch.js:0
+msgid "Start Now"
+msgstr "Bắt đầu ngay"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/store_service.js:0
+msgid "Start a new Meeting?"
+msgstr "Bắt đầu cuộc họp mới?"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_actions.js:0
+#: code:addons/mail/static/src/discuss/call/common/recording_dialog.xml:0
+msgid "Start recording"
+msgstr "Bắt đầu ghi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/sub_channel_preview.js:0
+msgid "Started by %(name)s"
+msgstr "Bắt đầu bởi %(name)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_model_patch.js:0
+msgid "Stay updated on your favourite topics"
+msgstr "Theo dõi cập nhật về các chủ đề bạn quan tâm"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_participant_card.xml:0
+msgid "Stop Presenting"
+msgstr "Dừng trình bày"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web/mail_composer_form.js:0
+msgid "Stop editing"
+msgstr "Dừng chỉnh sửa"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_presentation_bar.xml:0
+msgid "Stop presenting"
+msgstr "Dừng trình bày"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_actions.js:0
+#: code:addons/mail/static/src/discuss/call/common/call_recording_indicator.xml:0
+#: code:addons/mail/static/src/discuss/call/common/recording_dialog.xml:0
+msgid "Stop recording"
+msgstr "Dừng ghi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web/composer_patch.xml:0
+#: code:addons/mail/static/src/chatter/web/scheduled_message.xml:0
+#: code:addons/mail/static/src/core/common/message.xml:0
+#: code:addons/mail/static/src/core/web/message_patch.xml:0
+msgid "Subject:"
+msgstr "Chủ đề:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+msgid "Switch"
+msgstr "Chuyển"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_actions.js:0
+#: code:addons/mail/static/src/discuss/call/common/quick_video_settings.xml:0
+msgid "Switch Camera"
+msgstr "Đổi máy ảnh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+msgid "Switch to the other call?"
+msgstr "Chuyển sang cuộc gọi khác?"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/mail_server_configurator_selection/mail_server_configurator_selection.xml:0
+msgid "Test Connection"
+msgstr "Kiểm tra kết nối"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_model.js:0
+msgid "Text Copy Failed (Permission denied?)"
+msgstr "Không thể sao chép văn bản (có thể thiếu quyền)"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_model.js:0
+msgid "Text copied"
+msgstr "Văn bản đã được sao chép"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/discuss_channel_model.js:0
+msgid "The conversation was deleted."
+msgstr "Cuộc trò chuyện đã bị xóa."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/voice_message/common/voice_recorder.js:0
+msgid "The duration of voice messages is limited to %s minute(s)."
+msgstr "Tin nhắn thoại có thời lượng tối đa %s phút."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "The question cannot be empty."
+msgstr "Câu hỏi không được để trống."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll_votes_panel.xml:0
+msgid "There are no votes for this answer"
+msgstr "Chưa có lượt bình chọn cho đáp án này"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll_result.xml:0
+msgid "There was no winner"
+msgstr "Không có đáp án thắng cuộc"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/discuss_channel_model.js:0
+msgid "This channel is read-only."
+msgstr "Kênh này chỉ cho phép xem."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/sub_channel_list.xml:0
+msgid "This conversation has no threads yet."
+msgstr "Cuộc trò chuyện chưa có chủ đề."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/store_service.js:0
+msgid "This conversation isn’t available."
+msgstr "Cuộc trò chuyện này không khả dụng."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/thread.js:0
+msgid "This is the start of the #%(channelName)s channel"
+msgstr "Đây là phần bắt đầu của kênh #%(channelName)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/chat_bubble.js:0
+#: code:addons/mail/static/src/core/public_web/messaging_menu/messaging_menu_item.js:0
+msgid "This is the start of your conversation"
+msgstr "Đây là phần bắt đầu cuộc trò chuyện của bạn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/store_service.js:0
+msgid "This thread is no longer available."
+msgstr "Chủ đề này không còn khả dụng."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+msgid "This will disconnect you from your ongoing call."
+msgstr "Thao tác này sẽ ngắt cuộc gọi hiện tại của bạn."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/delete_thread_dialog.js:0
+msgid "Thread \"%(thread_name)s\" has been deleted"
+msgstr "Đã xóa chủ đề “%(thread_name)s”"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/public_web/messaging_menu/messaging_menu_item.js:0
+msgid "Thread Actions"
+msgstr "Thao tác với chủ đề"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/change_layout_dialog.js:0
+msgid "Tiled"
+msgstr "Dạng lưới"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity_menu.xml:0
+msgid "To Assign"
+msgstr "Cần phân công"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+msgid "To minimize, press ESC"
+msgstr "Nhấn Esc để thu nhỏ"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/chatter/web/composer_patch.xml:0
+msgid "To:"
+msgstr "Đến:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_presentation_bar.xml:0
+msgid "Toggle Presentation Audio"
+msgstr "Bật hoặc tắt âm thanh trình bày"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/fields/scheduled_date_field/scheduled_date_dialog.xml:0
+msgid "Tomorrow Afternoon"
+msgstr "Chiều mai"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/fields/scheduled_date_field/scheduled_date_dialog.xml:0
+msgid "Tomorrow Morning"
+msgstr "Sáng mai"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/properties/property_definition.xml:0
+msgid "Track in chatter"
+msgstr "Theo dõi trong lịch sử trao đổi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/recording_dialog.xml:0
+msgid "Transcription in progress"
+msgstr "Đang tạo bản chép lời"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/thread.xml:0
+msgid "Try again"
+msgstr "Thử lại"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_actions.js:0
+#: code:addons/mail/static/src/discuss/call/common/call_preview.js:0
+msgid "Turn camera off"
+msgstr "Tắt máy ảnh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_permission_denied_dialog.js:0
+msgid "Turn on the camera and microphone permissions"
+msgstr "Bật quyền dùng máy ảnh và micrô"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_permission_denied_dialog.js:0
+msgid "Turn on the camera permission"
+msgstr "Bật quyền dùng máy ảnh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_permission_denied_dialog.js:0
+msgid "Turn on the microphone permission"
+msgstr "Bật quyền dùng micrô"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_preview.xml:0
+msgid "Turn on your camera to see the preview."
+msgstr "Bật máy ảnh để xem trước."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_invitation.xml:0
+msgid "Type email to invite"
+msgstr "Nhập email để mời"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_option_dialog.xml:0
+msgid "Type your option"
+msgstr "Nhập lựa chọn của bạn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_permission_denied_dialog.js:0
+msgid "Unable to access your camera"
+msgstr "Không truy cập được máy ảnh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_permission_denied_dialog.js:0
+msgid "Unable to access your camera and microphone"
+msgstr "Không truy cập được máy ảnh và micrô"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_permission_denied_dialog.js:0
+msgid "Unable to access your microphone"
+msgstr "Không truy cập được micrô"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/call_debrief/call_debrief_media_controls.js:0
+msgid "Unmute (M)"
+msgstr "Bật tiếng (M)"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/public_web/messaging_menu/messaging_menu_model.js:0
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_model_patch.js:0
+msgid "Unread"
+msgstr "Chưa đọc"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/follower_subtype_dialog.xml:0
+#: code:addons/mail/static/src/discuss/call/common/recording_dialog.xml:0
+msgid "Update"
+msgstr "Cập nhật"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/follower_subtype_dialog.xml:0
+msgid "Update All"
+msgstr "Cập nhật tất cả"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/recording_dialog.xml:0
+msgid "Updating recording"
+msgstr "Đang cập nhật bản ghi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "Upload:"
+msgstr "Tải lên:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_permission_dialog.js:0
+msgid "Use camera"
+msgstr "Dùng máy ảnh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_permission_dialog.js:0
+msgid "Use microphone"
+msgstr "Dùng micrô"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_permission_dialog.xml:0
+msgid "Use microphone and camera"
+msgstr "Dùng micrô và máy ảnh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public/welcome_page.xml:0
+msgid "User Avatar"
+msgstr "Ảnh đại diện người dùng"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public/welcome_page.xml:0
+msgid "User avatar"
+msgstr "Ảnh đại diện người dùng"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "Video player:"
+msgstr "Trình phát video:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/recording_dialog.xml:0
+#: code:addons/mail/static/src/views/fields/discuss_call_history_indicators/discuss_call_history_indicators_field.js:0
+msgid "Video recording"
+msgstr "Bản ghi video"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll_result.xml:0
+msgid "View Poll"
+msgstr "Xem bình chọn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/web/thread_actions.js:0
+msgid "View Recordings"
+msgstr "Xem bản ghi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity_menu.xml:0
+msgid "View all activities"
+msgstr "Xem tất cả hoạt động"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_invitation.js:0
+msgid "View chat with %(channel_name)s"
+msgstr "Xem trò chuyện với %(channel_name)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/discuss_command_palette.js:0
+msgid "View hidden conversations"
+msgstr "Xem cuộc trò chuyện đã ẩn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll.xml:0
+msgid "View results"
+msgstr "Xem kết quả"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_invitation.js:0
+msgid "View the %(channel_name)s channel"
+msgstr "Xem kênh %(channel_name)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_settings.xml:0
+msgid "Voice & Audio"
+msgstr "Giọng nói và âm thanh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll.xml:0
+msgid "Vote"
+msgstr "Bình chọn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/create_poll_dialog.xml:0
+msgid "What question do you want to ask?"
+msgstr "Bạn muốn đặt câu hỏi gì?"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/recipients_input_tags_list_popover.xml:0
+msgid "What's the email address of"
+msgstr "Địa chỉ email của"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_actions.js:0
+msgid "Wide View"
+msgstr "Chế độ xem rộng"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/poll_result.xml:0
+msgid "Winning Answer"
+msgstr "Đáp án thắng cuộc"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/follower_subtype_dialog.js:0
+msgid "Yes, Update All"
+msgstr "Đồng ý, cập nhật tất cả"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/list/archive_disabled_list_controller.js:0
+msgid "Yes, delete"
+msgstr "Đồng ý, xóa"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/sub_channel_preview.xml:0
+msgid "You"
+msgstr "Bạn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_presentation_bar.js:0
+msgid "You and %(name)s are presenting"
+msgstr "Bạn và %(name)s đang trình bày"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_participant_card.xml:0
+msgid "You are Presenting"
+msgstr "Bạn đang trình bày"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/follower_subtype_dialog.js:0
+msgid "You are no longer following this record."
+msgstr "Bạn đã ngừng theo dõi hồ sơ này."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/rtc_service.js:0
+msgid "You are not allowed to stop the recording"
+msgstr "Bạn không được phép dừng ghi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_presentation_bar.js:0
+msgid "You are presenting"
+msgstr "Bạn đang trình bày"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/message_pin_dialog.js:0
+msgid "You can always pin it again later if needed."
+msgstr "Bạn có thể ghim lại sau khi cần."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/attachment/ir_attachment_download.js:0
+msgid "You can only download %s files at a time."
+msgstr "Bạn chỉ có thể tải xuống %s tệp mỗi lần."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_permission_dialog.js:0
+msgid "You can still turn off your camera anytime."
+msgstr "Bạn có thể tắt máy ảnh bất cứ lúc nào."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_permission_dialog.js:0
+msgid "You can still turn off your microphone anytime."
+msgstr "Bạn có thể tắt micrô bất cứ lúc nào."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/store_service.js:0
+msgid ""
+"You will leave the ongoing call and automatically join the new meeting."
+msgstr "Bạn sẽ rời cuộc gọi hiện tại và tự động tham gia cuộc họp mới."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/im_status_dropdown.xml:0
+msgid "You will not receive any notifications"
+msgstr "Bạn sẽ không nhận thông báo"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/public_web/messaging_menu/messaging_menu_model.js:0
+msgid "You're all caught up!"
+msgstr "Bạn đã xem hết thông báo mới!"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_presentation_bar.js:0
+msgid "You, %(name)s and %(count)s more are presenting"
+msgstr "Bạn, %(name)s và %(count)s người khác đang trình bày"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/meeting_ready_banner.xml:0
+msgid "Your Meeting is Ready"
+msgstr "Cuộc họp của bạn đã sẵn sàng"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/pip_banner.xml:0
+msgid "Your call is in another window."
+msgstr "Cuộc gọi đang ở cửa sổ khác."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/attachment/ir_attachment_download.js:0
+msgid "Your download will start soon."
+msgstr "Quá trình tải xuống sẽ sớm bắt đầu."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/js/tours/discuss_channel_tour.js:0
+msgid "click to bookmark your message"
+msgstr "Nhấn để lưu tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/fields/shortcut_char_field/shortcut_char_field.js:0
+msgid "e.g. hello"
+msgstr "Ví dụ: xin chào"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public_web/messaging_menu_empty_channel.xml:0
+msgid "followers"
+msgstr "theo dõi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity.xml:0
+msgid "for"
+msgstr "cho"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_thread.py:0
+msgid "%(author)s started a poll: \"%(question)s\"."
+msgstr "%(author)s đã bắt đầu một cuộc thăm dò: \"%(question)s\"."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_thread.py:0
+msgid "%(author)s's poll \"%(question)s\" has closed."
+msgstr "Cuộc bình chọn \"%(question)s\" của %(author)s đã kết thúc."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_thread.py:0
+msgid "%(author)s's poll \"%(question)s\" has closed. Winning answer: \"%(answer)s\"."
+msgstr ""
+"Cuộc bình chọn \"%(question)s\" của %(author)s đã kết thúc. Câu trả lời "
+"chiến thắng: \"%(answer)s\"."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/mail_poll_model.js:0
+msgid ""
+"%(author)s's poll %(strong_tag_start)s\"%(question)s\"%(strong_tag_end)s has"
+" closed."
+msgstr ""
+"Cuộc bình chọn của %(author)s "
+"%(strong_tag_start)s\"%(question)s\"%(strong_tag_end)s đã đóng."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/discuss/discuss_channel.py:0
+msgid "%(author_name)s has invited you to a channel"
+msgstr "%(author_name)s đã mời bạn vào kênh"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_role.py:0
+msgid "%(count)s Server Action(s)"
+msgstr "(Các) Hành động của Máy chủ %(count)s"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_activity.py:0
+msgid ""
+"%(count)s activities on \"%(res_name)s\" (%(model_description)s) assigned to"
+" you"
+msgstr ""
+"Hoạt động %(count)s trên \"%(res_name)s\" (%(model_description)s) được giao "
+"cho bạn"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_role.py:0
+msgid "%(count)s unassigned activity(ies)"
+msgstr "%(count)s (các) hoạt động chưa được chỉ định"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/discuss/mail_guest.py:0
+msgid "%(guest_name)s (External)"
+msgstr "%(guest_name)s (Bên ngoài)"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/discuss/discuss_channel.py:0
+msgid ""
+"%(new_line)s%(new_line)s%(bold_start)s@username%(bold_end)s to mention "
+"someone%(new_line)s%(bold_start)s@role%(bold_end)s to notify multiple "
+"people%(new_line)s%(bold_start)s/command%(bold_end)s to run a "
+"command%(new_line)s%(bold_start)s::shortcut%(bold_end)s to insert a canned "
+"response%(new_line)s%(bold_start)s:emoji:%(bold_end)s to insert an emoji"
+msgstr ""
+"%(new_line)s%(new_line)s%(bold_start)s@username%(bold_end)s đề cập đến ai "
+"đó%(new_line)s%(bold_start)s@role%(bold_end)s để thông báo cho nhiều "
+"người%(new_line)s%(bold_start)s/command%(bold_end)s để chạy "
+"lệnh%(new_line)s%(bold_start)s::shortcut%(bold_end)s để chèn hộp thư "
+"reply%(new_line)s%(bold_start)s:emoji:%(bold_end)s để chèn biểu tượng cảm "
+"xúc"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/controllers/discuss/channel.py:0
+msgid "%(user)s converted this meeting into a group chat"
+msgstr "%(user)s đã chuyển cuộc họp này thành cuộc trò chuyện nhóm"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/discuss/discuss_channel.py:0
+msgid "%(user)s has invited you to this channel"
+msgstr "%(user)s đã mời bạn vào kênh này"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/discuss/discuss_channel_rtc_session.py:0
+msgid "%(user)s started a call"
+msgstr "%(user)s đã bắt đầu cuộc gọi"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/discuss/discuss_channel.py:0
+msgid ""
+"%(user_name)s has invited you to the "
+"%(strong_start)s%(channel_name)s%(strong_end)s channel."
+msgstr ""
+"%(user_name)s đã mời các bạn đến với kênh "
+"%(strong_start)s%(channel_name)s%(strong_end)s."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_users.py:0
+msgid "%s's outgoing email"
+msgstr "Email gửi đi của %s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/js/tours/discuss_channel_tour.js:0
+msgid ""
+"<p><b>Write a message</b> to the members of the channel here.</p> <p>You can"
+" notify someone with <i>'@'</i>. Start your message with <i>'/'</i> to get "
+"the list of possible commands.</p>"
+msgstr ""
+"<p><b>Viết tin nhắn</b> tới các thành viên của kênh tại đây.</p> <p>Bạn có "
+"thể thông báo cho ai đó bằng <i>'@'</i>. Bắt đầu tin nhắn của bạn với "
+"<i>'/'</i> để nhận danh sách các lệnh có thể thực hiện được.</p>"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/js/tours/discuss_channel_tour.js:0
+msgid ""
+"<p>Channels make it easy to organize information across different topics and"
+" groups.</p>"
+msgstr ""
+"<p>Channel giúp dễ dàng sắp xếp thông tin theo các chủ đề và nhóm khác "
+"nhau.</p>"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/js/tours/discuss_channel_tour.js:0
+msgid "<p>Click a channel to open the discussion.</p>"
+msgstr "<p>Nhấp vào một kênh để mở cuộc thảo luận.</p>"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/__init__.py:0
+msgid ""
+"A place to connect and exchange news with colleagues across the company."
+msgstr "Nơi kết nối và trao đổi tin tức với đồng nghiệp trên toàn công ty."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/notification_message.js:0
+msgid ""
+"A recording is being processed and will be available "
+"%(anchor_start)shere%(anchor_end)s."
+msgstr ""
+"Bản ghi đang được xử lý và sẽ có sẵn %(anchor_start)stại đây%(anchor_end)s."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_role.py:0
+msgid "Activity Plans: %(plans)s"
+msgstr "Kế hoạch hoạt động: %(plans)s"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_role.py:0
+msgid "Activity Types: %(types)s"
+msgstr "Loại hoạt động: %(types)s"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_activity.py:0
+msgid "Activity: Todo"
+msgstr "Hoạt động: Việc cần làm"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_settings.xml:0
+msgid "Adjust the slider to set the voice detection sensitivity."
+msgstr "Điều chỉnh thanh trượt để đặt độ nhạy phát hiện giọng nói."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/__init__.py:0
+msgid "Administrators"
+msgstr "Quản trị viên"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/recording_dialog.xml:0
+msgid "Applying recording request"
+msgstr "Áp dụng yêu cầu ghi âm"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/attachment_list.js:0
+msgid ""
+"Are you sure you want to delete \"%(name)s\"?\n"
+"This action cannot be undone."
+msgstr ""
+"Bạn có chắc chắn muốn xóa \"%(name)s\" không?\n"
+"Không thể hoàn tác hành động này."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/attachment_delete_dialog.js:0
+msgid ""
+"Are you sure you want to delete the %(count)s copies of \"%(name)s\"?\n"
+"This action cannot be undone."
+msgstr ""
+"Bạn có chắc chắn muốn xóa bản sao %(count)s của \"%(name)s\" không?\n"
+"Không thể hoàn tác hành động này."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/attachment_delete_dialog.js:0
+msgid ""
+"Are you sure you want to delete the %(count)s selected files and their copies?\n"
+"This action cannot be undone."
+msgstr ""
+"Bạn có chắc chắn muốn xóa các tập tin đã chọn %(count)s và các bản sao của chúng không?\n"
+"Không thể hoàn tác hành động này."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/list/archive_disabled_list_controller.js:0
+msgid ""
+"Are you sure you want to delete these activities? They will be gone forever!\n"
+"Think twice before you click that 'Delete' button!"
+msgstr ""
+"Bạn có chắc chắn muốn xóa các hoạt động này không? Họ sẽ ra đi mãi mãi!\n"
+"Hãy suy nghĩ kỹ trước khi nhấp vào nút 'Xóa' đó!"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/follower_subtype_dialog.js:0
+msgid ""
+"Are you sure you want to mass-update notifications preferences of all "
+"existing records of the %(parent_model_name)s \"%(parent_record_name)s\"?"
+msgstr ""
+"Bạn có chắc chắn muốn cập nhật hàng loạt tùy chọn thông báo của tất cả các "
+"bản ghi hiện có của %(parent_model_name)s \"%(parent_record_name)s\" không?"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_thread.py:0
+msgid "Auto: %(subject)s"
+msgstr "Tự động: %(subject)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/blur_performance_warning.xml:0
+msgid "Background Blur Performance Warning"
+msgstr "Cảnh báo hiệu suất làm mờ nền"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_thread.py:0
+msgid "Batch log cannot support attachments that is not a per-document dict"
+msgstr ""
+"Nhật ký hàng loạt không thể hỗ trợ các tệp đính kèm không phải là lệnh cho "
+"mỗi tài liệu"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_thread.py:0
+msgid "Batch log cannot support recipients that is not a per-document dict"
+msgstr ""
+"Nhật ký hàng loạt không thể hỗ trợ người nhận không phải là lệnh chính tả "
+"cho mỗi tài liệu"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_thread.py:0
+msgid ""
+"Batch log cannot support tracking values that is not a per-document dict"
+msgstr ""
+"Nhật ký hàng loạt không thể hỗ trợ các giá trị theo dõi không phải là lệnh "
+"cho mỗi tài liệu"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/mail_boolean_toggle_label/boolean_toggle_label_field.js:0
+msgid "Boolean Label"
+msgstr "Nhãn Boolean"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_config_settings.py:0
+msgid "Cannot activate custom SFU client without providing a source."
+msgstr ""
+"Không thể kích hoạt ứng dụng khách SFU tùy chỉnh mà không cung cấp nguồn."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/discuss/discuss_channel.py:0
+msgid "Cannot change the member combination of: %(channel_names)s"
+msgstr "Không thể thay đổi tổ hợp thành viên của: %(channel_names)s"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/controllers/discuss/rtc.py:0
+msgid "Cannot join a call in a read-only channel."
+msgstr "Không thể tham gia cuộc gọi trong kênh chỉ đọc."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_activity.py:0
+msgid "Cannot search, too many activities"
+msgstr "Không thể tìm kiếm, quá nhiều hoạt động"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_message.py:0
+msgid "Cannot search, too many messages"
+msgstr "Không thể tìm kiếm, quá nhiều tin nhắn"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_scheduled_message.py:0
+msgid "Cannot search, too many scheduled messages"
+msgstr "Không thể tìm kiếm, quá nhiều tin nhắn đã lên lịch"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_poll_vote.py:0
+msgid "Cannot vote on closed poll: \"%s\""
+msgstr "Không thể bỏ phiếu trong cuộc thăm dò kín: \"%s\""
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_thread.py:0
+msgid "Cannot write on message partners"
+msgstr "Không thể viết lên đối tác tin nhắn"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_settings.xml:0
+msgid "Click the button below to register a new shortcut."
+msgstr "Nhấp vào nút bên dưới để đăng ký một phím tắt mới."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/public/welcome_page.xml:0
+msgid "E.g: John Doe"
+msgstr "Ví dụ: John Doe"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_settings.xml:0
+msgid "Edge Softness"
+msgstr "Độ mềm của cạnh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer_actions.js:0
+msgid "Emoji"
+msgstr "Biểu tượng cảm xúc"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/call_debrief/call_debrief.js:0
+msgid "End Date Field"
+msgstr "Trường ngày kết thúc"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_render_mixin.py:0
+msgid ""
+"Failed to render QWeb template for %(template_label)s\n"
+"Target Model: %(model_name)s\n"
+"Language context: %(lang_context)s\n"
+"Error: %(error_details)s\n"
+"\n"
+"Template Source Snippet:\n"
+"%(template_src)s"
+msgstr ""
+"Không thể hiển thị mẫu QWeb cho %(template_label)s\n"
+"Mẫu mục tiêu: %(model_name)s\n"
+"Ngữ cảnh ngôn ngữ: %(lang_context)s\n"
+"Lỗi: %(error_details)s\n"
+"\n"
+"Đoạn mã nguồn mẫu:\n"
+"%(template_src)s"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_render_mixin.py:0
+msgid ""
+"Failed to render inline_template template: %(template_txt)s\n"
+"Error details: %(error)s"
+msgstr ""
+"Không thể hiển thị mẫu inline_template: %(template_txt)s\n"
+"Chi tiết lỗi: %(error)s"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_activity.py:0
+msgid "First Activity: %s"
+msgstr "Hoạt động đầu tiên: %s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "From peer:"
+msgstr "Từ ngang hàng:"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/__init__.py:0
+msgid "General"
+msgstr "chung"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/__init__.py:0
+msgid "General channel for administrators."
+msgstr "Kênh tổng hợp dành cho quản trị viên."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/microphone_warning.xml:0
+msgid ""
+"Go to your computer's settings to unmute your mic and increase its level"
+msgstr ""
+"Đi tới phần cài đặt trên máy tính của bạn để bật tiếng micrô và tăng cấp độ "
+"micrô"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/blur_performance_warning.xml:0
+msgid ""
+"Hardware acceleration is disabled. Blur effect impacts performance "
+"significantly."
+msgstr ""
+"Tăng tốc phần cứng bị vô hiệu hóa. Hiệu ứng làm mờ ảnh hưởng đáng kể đến "
+"hiệu suất."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "ICE connection:"
+msgstr "Kết nối băng:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "ICE gathering:"
+msgstr "Thu thập ICE:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
+msgid ""
+"If you were using a Tenor API key, please replace it with a Klipy API key in"
+" the General Settings."
+msgstr ""
+"Nếu bạn đang sử dụng khóa API Tenor, vui lòng thay thế bằng khóa API Klipy "
+"trong Cài đặt chung."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_track_mixin.py:0
+msgid "Impossible to find end value when tracking %(col_name)s"
+msgstr "Không thể tìm thấy giá trị cuối khi theo dõi %(col_name)s"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_users.py:0
+msgid "In %(country)s"
+msgstr "Trong %(country)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "Log step:"
+msgstr "Bước đăng nhập:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity_mail_template.xml:0
+msgid "Mail"
+msgstr "Thư"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_render_mixin.py:0
+msgid "Mail Template: '%(name)s' (ID: %(record_id)s)"
+msgstr "Mẫu thư: '%(name)s' (ID: %(record_id)s)"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_render_mixin.py:0
+msgid "Mass Mailing Template: '%(name)s' (ID: %(record_id)s)"
+msgstr "Mẫu gửi thư hàng loạt: '%(name)s' (ID: %(record_id)s)"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_call_artifact.py:0
+msgid "Media artifacts overlap."
+msgstr "Các tạo tác truyền thông chồng chéo."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_call_artifact.py:0
+msgid "Meeting recording from “%(channel)s”"
+msgstr "Ghi âm cuộc họp từ “%(channel)s”"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/discuss/discuss_channel.py:0
+msgid "Members of this conversation: %(members)s."
+msgstr "Thành viên của cuộc trò chuyện này: %(members)s."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_tracking_duration_mixin.py:0
+msgid "Model configuration does not support the rotting feature"
+msgstr "Cấu hình mô hình không hỗ trợ tính năng thối rữa"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_render_mixin.py:0
+msgid "No language detected in context"
+msgstr "Không phát hiện thấy ngôn ngữ nào trong ngữ cảnh"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_users.py:0
+msgid "No mail server configured"
+msgstr "Không có máy chủ thư nào được định cấu hình"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_activity_plan_template.py:0
+msgid ""
+"No responsible or role specified for %(activity_type_name)s: "
+"%(activity_summary)s.%(error_detail)s"
+msgstr ""
+"Không có trách nhiệm hoặc vai trò cụ thể cho %(activity_type_name)s: "
+"%(activity_summary)s.%(error_detail)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/discuss_category/discuss_category_kanban_renderer.xml:0
+msgid "None ("
+msgstr "không có ("
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/controllers/attachment.py:0
+msgid "Only PDF and videos files can have thumbnail."
+msgstr "Chỉ các tệp PDF và video mới có thể có hình thu nhỏ."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_users.py:0
+msgid "Only internal users can configure personal mail servers."
+msgstr "Chỉ người dùng nội bộ mới có thể định cấu hình máy chủ thư cá nhân."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/controllers/discuss/channel.py:0
+msgid "Only members can send the invitation link again."
+msgstr "Chỉ thành viên mới có thể gửi lại liên kết lời mời."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/discuss/discuss_channel.py:0
+msgid ""
+"Only the channel owner or database admins can convert a meeting to a chat."
+msgstr ""
+"Chỉ chủ sở hữu kênh hoặc quản trị viên cơ sở dữ liệu mới có thể chuyển cuộc "
+"họp thành cuộc trò chuyện."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_template.py:0
+msgid ""
+"Oops! We couldn't save your template due to an issue.\n"
+"\n"
+"Error: %(error_details)s\n"
+"\n"
+"Correct it and try again."
+msgstr ""
+"Rất tiếc! Chúng tôi không thể lưu mẫu của bạn do có sự cố.\n"
+"\n"
+"Lỗi: %(error_details)s\n"
+"\n"
+"Hãy sửa nó và thử lại."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_users.py:0
+msgid "Other Activities"
+msgstr "Hoạt động khác"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "Packets received:"
+msgstr "Các gói nhận được:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "Packets sent:"
+msgstr "Các gói đã gửi:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_permission_dialog.xml:0
+msgid "Permissions Lady"
+msgstr "Quyền của phụ nữ"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/ir_actions_server.py:0
+msgid "Plan activities: %(activity_plan_name)s"
+msgstr "Kế hoạch hoạt động: %(activity_plan_name)s"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_thread.py:0
+msgid ""
+"Posting a message should receive copy carbon partners as a list of IDs "
+"(received %(pids)s)"
+msgstr ""
+"Đăng tin cần nhận copy carbon đối tác dưới dạng danh sách ID (đã nhận "
+"%(pids)s)"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_thread.py:0
+msgid "Posting with tracking should be done using tracking message type"
+msgstr ""
+"Việc đăng bài có theo dõi phải được thực hiện bằng loại thông báo theo dõi"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/common/composer.js:0
+msgid ""
+"Press %(open_samp)sESC%(close_samp)s %(open_em)sto "
+"%(open_cancel)scancel%(close_cancel)s%(close_em)s, "
+"%(open_samp)s%(save_keyboard_shortcut)s%(close_samp)s %(open_em)sto "
+"%(open_save)ssave%(close_save)s%(close_em)s"
+msgstr ""
+"Nhấn %(open_samp)sESC%(close_samp)s %(open_em)sđể "
+"%(open_cancel)scancel%(close_cancel)s%(close_em)s, "
+"%(open_samp)s%(save_keyboard_shortcut)s%(close_samp)s %(open_em)sđể "
+"%(open_save)ssave%(close_save)s%(close_em)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "RTC Session ID:"
+msgstr "ID phiên RTC:"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_config_settings.py:0
+msgid "SFU Client Bundle"
+msgstr "Gói khách hàng SFU"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/mention_list.xml:0
+msgid "Select"
+msgstr "Chọn"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/wizard/mail_activity_schedule.py:0
+msgid "Some activities are unassigned and will be assigned to you:"
+msgstr "Một số hoạt động chưa được chỉ định và sẽ được giao cho bạn:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/call_debrief/call_debrief.js:0
+msgid "Start Date Field"
+msgstr "Trường ngày bắt đầu"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_users.py:0
+msgid "Switching back to the default server."
+msgstr "Chuyển về máy chủ mặc định."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_template.py:0
+msgid "Template Preview: \"%(template_name)s\""
+msgstr "Xem trước mẫu: \"%(template_name)s\""
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_render_mixin.py:0
+msgid "Template name not identified"
+msgstr "Tên mẫu không được xác định"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/ir_actions_server.py:0
+msgid "The 'Due In' value can't be negative."
+msgstr "Giá trị 'Hết hạn' không thể âm."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/ir_actions_server.py:0
+msgid ""
+"The model of the mail template is different from the one on the action "
+"server"
+msgstr "Mẫu thư khác với mẫu trên máy chủ hành động"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/ir_actions_server.py:0
+msgid "This action cannot be done on transient or abstract models."
+msgstr ""
+"Hành động này không thể được thực hiện trên các mô hình tạm thời hoặc trừu "
+"tượng."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/__init__.py:0
+msgid "This is a space for the whole team to connect and share updates."
+msgstr "Đây là không gian để cả nhóm kết nối và chia sẻ thông tin cập nhật."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/follower_subtype_dialog.js:0
+msgid ""
+"This sets default notifications for all future records under this "
+"%(model_name)s."
+msgstr ""
+"Điều này đặt thông báo mặc định cho tất cả các bản ghi trong tương lai theo "
+"%(model_name)s này."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "To peer:"
+msgstr "Để ngang hàng:"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_mail.py:0
+msgid "Unauthorized server for some of the sending mails."
+msgstr "Máy chủ trái phép đối với một số thư gửi."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/controllers/im_status.py:0
+msgid "Unexpected IM status %(status)s"
+msgstr "Trạng thái IM không mong đợi %(status)s"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/controllers/messaging_menu.py:0
+msgid "Unknown messaging menu filter %(filter_id)s for tab %(tab_id)s"
+msgstr "Bộ lọc menu nhắn tin không xác định %(filter_id)s cho tab %(tab_id)s"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/controllers/messaging_menu.py:0
+msgid "Unknown messaging menu tab %(tab_id)s"
+msgstr "Tab menu nhắn tin không xác định %(tab_id)s"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_track_mixin.py:0
+msgid "Unnamed %(record_model_name)s (%(record_id)s)"
+msgstr "%(record_model_name)s chưa có tên (%(record_id)s)"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_render_mixin.py:0
+msgid "Unnamed Mail Template"
+msgstr "Mẫu thư không tên"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_render_mixin.py:0
+msgid "Unnamed Mailing"
+msgstr "Gửi thư không tên"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/recording_dialog.xml:0
+msgid ""
+"Video captures participants' audio, video, and screen shares. Transcription "
+"creates a written record of the call. Results will be available in the chat "
+"and call history once they are ready."
+msgstr ""
+"Video ghi lại âm thanh, video và chia sẻ màn hình của người tham gia. Phiên "
+"âm tạo ra một bản ghi cuộc gọi bằng văn bản. Kết quả sẽ có trong lịch sử trò"
+" chuyện và cuộc gọi khi chúng sẵn sàng."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_call_artifact.py:0
+msgid "View recording"
+msgstr "Xem bản ghi"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/__init__.py:0
+msgid "Welcome to the #General channel 🎉"
+msgstr "Chào mừng các bạn đến với kênh #General 🎉"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_activity_plan_template.py:0
+msgid "When selecting \"Role\" assignment, you must specify an assigned role."
+msgstr "Khi chọn gán \"Vai trò\", bạn phải chỉ định vai trò được giao."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_activity_plan_template.py:0
+msgid ""
+"When selecting \"Specific User\" assignment, you must specify a responsible "
+"user."
+msgstr ""
+"Khi chọn nhiệm vụ \"Người dùng cụ thể\", bạn phải chỉ định người dùng chịu "
+"trách nhiệm."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/fields/properties/property_definition.xml:0
+msgid "Whether or not this Property Field is tracked on change"
+msgstr "Trường thuộc tính này có được theo dõi khi thay đổi hay không"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_users.py:0
+msgid "Wrong email address %s."
+msgstr "Sai địa chỉ email %s."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/discuss/discuss_channel.py:0
+msgid "You are in %(bold_start)s#%(channel_name)s%(bold_end)s."
+msgstr "Bạn đang ở %(bold_start)s#%(channel_name)s%(bold_end)s."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_users.py:0
+msgid "You are not allowed to test personal mail servers."
+msgstr "Bạn không được phép kiểm tra máy chủ thư cá nhân."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_alias_domain.py:0
+msgid "You cannot assign an empty domain name."
+msgstr "Bạn không thể chỉ định một tên miền trống."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_message_subtype.py:0
+msgid ""
+"You cannot delete %(subtype_names)s as they are required in various apps."
+msgstr ""
+"Bạn không thể xóa %(subtype_names)s vì chúng được yêu cầu trong nhiều ứng "
+"dụng khác nhau."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/res_role.py:0
+msgid ""
+"You cannot delete these roles because they are still in use in:\n"
+"- %(blocking_list)s\n"
+"\n"
+"Please archive the role(s) instead, or reassign these items."
+msgstr ""
+"Bạn không thể xóa những vai trò này vì chúng vẫn đang được sử dụng trong:\n"
+"- %(blocking_list)s\n"
+"\n"
+"Thay vào đó, vui lòng lưu trữ (các) vai trò hoặc chỉ định lại các mục này."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_message_subtype.py:0
+msgid ""
+"You cannot modify %(subtype_names)s as their configuration are required in "
+"various apps."
+msgstr ""
+"Bạn không thể sửa đổi %(subtype_names)s vì cấu hình của chúng được yêu cầu "
+"trong nhiều ứng dụng khác nhau."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/discuss/discuss_channel.py:0
+msgid "You cannot pin messages in a read-only channel."
+msgstr "Bạn không thể ghim tin nhắn vào kênh chỉ đọc."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/discuss/discuss_channel.py:0
+msgid ""
+"You do not have the rights to change the name, description or avatar as a "
+"regular member of these read-only channels: %(channels)s."
+msgstr ""
+"Bạn không có quyền thay đổi tên, mô tả hoặc hình đại diện khi là thành viên "
+"thường xuyên của các kênh chỉ đọc này: %(channels)s."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/wizard/mail_compose_message.py:0
+msgid ""
+"Your attachments exceed %(max_email_size)s and will be sent as secure links "
+"to ensure they reach your recipients"
+msgstr ""
+"Tệp đính kèm của bạn vượt quá %(max_email_size)s và sẽ được gửi dưới dạng "
+"liên kết an toàn để đảm bảo chúng đến tay người nhận của bạn"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_call_artifact.py:0
+msgid "Your meeting recording is available in Odoo."
+msgstr "Bản ghi cuộc họp của bạn có sẵn trong Odoo."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/wizard/mail_followers_edit.py:0
+msgid "You’ve been added as a follower of %(count)s %(document_model)s."
+msgstr "Bạn đã được thêm làm người theo dõi %(count)s %(document_model)s."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/wizard/mail_followers_edit.py:0
+msgid "You’ve been added as a follower of %(document_name)s"
+msgstr "Bạn đã được thêm làm người theo dõi %(document_name)s"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_thread.py:0
+msgid "alias %(name)s: %(error)s"
+msgstr "bí danh %(name)s: %(error)s"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "available bitrate:"
+msgstr "tốc độ bit có sẵn:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "clock rate:"
+msgstr "tốc độ đồng hồ:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "codec:"
+msgstr "giải mã:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity.xml:0
+msgid "days overdue:"
+msgstr "số ngày quá hạn:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity.xml:0
+msgid "days:"
+msgstr "ngày:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "down DTLS:"
+msgstr "xuống DTLS:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "down ICE:"
+msgstr "xuống ICE:"
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/wizard/mail_compose_message.py:0
+msgid "e.g. Welcome to MyCompany!"
+msgstr "ví dụ: Chào mừng đến với Công ty của tôi!"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/activity.xml:0
+msgid "for @"
+msgstr "cho @"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
+msgid "list-item"
+msgstr "mục danh sách"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/meeting_ready_banner.xml:0
+msgid "or share this permanent link with others you want in the meeting:"
+msgstr ""
+"hoặc chia sẻ liên kết cố định này với những người khác mà bạn muốn trong "
+"cuộc họp:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/core/common/channel_member_list.xml:0
+msgid "other members."
+msgstr "các thành viên khác."
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_recording_indicator.xml:0
+msgid "recording audio only"
+msgstr "chỉ ghi âm thanh"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_recording_indicator.xml:0
+msgid "recording video"
+msgstr "quay video"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/views/web/discuss_category/discuss_category_kanban_renderer.xml:0
+msgid "remaining)"
+msgstr "còn lại)"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_recording_indicator.xml:0
+msgid "transcription active"
+msgstr "phiên âm đang hoạt động"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "up DTLS:"
+msgstr "lên DTLS:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/call/common/call_context_menu.xml:0
+msgid "up ICE:"
+msgstr "lên ICE:"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/core/web/follower_subtype_dialog.js:0
+msgid ""
+"💡 You can set default notifications for all future records in the "
+"notification preferences of the %(parent_model_name)s "
+"%(parent_record_name)s."
+msgstr ""
+"💡 Bạn có thể đặt thông báo mặc định cho tất cả các bản ghi trong tương lai "
+"trong tùy chọn thông báo của %(parent_model_name)s %(parent_record_name)s."
+
+#. module: mail
+#. odoo-python
+#: code:addons/mail/models/mail_canned_response.py:0
+msgid "🔒 Private"
+msgstr "🔒 Riêng tư"

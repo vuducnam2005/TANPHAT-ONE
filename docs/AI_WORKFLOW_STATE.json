@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-17T08:26:48.971410+00:00",
-  "last_change_id": "CHG-20261117-005",
-  "code_digest": "b38d1ebc3dc1a397a7e9162fc642be12cddc5ffd085be1836f354616ee20ea73",
-  "code_file_count": 597,
+  "updated_at": "2026-11-17T09:43:07.783562+00:00",
+  "last_change_id": "CHG-20261117-006",
+  "code_digest": "a2c8f38f484c4da8558a87cc63b43619e84780155cdfdacbcaf06e1cec692c6f",
+  "code_file_count": 601,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "16e85b4f2fcd1268ac09d58bf0da3f3a7ff22e8e6a77317b3943af3d1ef647b7",
-    "docs/CHANGELOG.md": "e4a3ed1b6fb26707ef1a1bde121a3ad0c6fdc04fb2dbb71be041e958d416e26f",
+    "docs/PROJECT_STATUS.md": "da13ce0e96743c9ac7957503619e0f66a53eebe2db5ace927e0b12d9c2cd7fee",
+    "docs/CHANGELOG.md": "ff3e98805c1b9211d85035384a7fb38024d5047c0f6d0b3fc2d085f3bfbc950a",
     "AGENTS.md": "ac7c7a6ce9929b1cc7f2f3752b5006bd91e9ca570228c9aed8a5210b2798cc5c",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "MAIN+PCserver installed20.0.1.0.0; serverReporting20.0.1.1.0; exit0/0ERROR;44sourcechecks; ledger0; main/publicbrowser4/4; HOOT48/48; media83/83,666rows/169blob; realPDFpreview1page/Excel2sheets; anonymous303; no new18079/fixtures. Gaps recorded."
+    "Catalog 10494 entries + native/en_US/idempotence, FullCalendar locale, Ruff/XML, registry 2177 refs, backend rollback smoke PASS; 18069 browser35/35 and14screens; 20table/baseURL fingerprints unchanged; Odoo fixture tests NOT RUN; server pending"
   ]
 }

@@ -1,0 +1,43 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: l10n_vn
+#. odoo-python
+#: code:addons/l10n_vn/models/template_vn.py:0
+msgid "Cash"
+msgstr "Tiền mặt"
+
+#. module: l10n_vn
+#. odoo-python
+#: code:addons/l10n_vn/models/res_bank.py:0
+msgid "Missing Account Identifier Type."
+msgstr "Thiếu loại mã nhận dạng tài khoản."
+
+#. module: l10n_vn
+#. odoo-python
+#: code:addons/l10n_vn/models/res_bank.py:0
+msgid "Missing Identifier Value."
+msgstr "Thiếu giá trị nhận dạng."
+
+#. module: l10n_vn
+#. odoo-python
+#: code:addons/l10n_vn/models/res_bank.py:0
+msgid ""
+"The account identifier type %s is not supported for Vietnamese partners. It "
+"must be either Merchant ID, ATM Card Number or Bank Account"
+msgstr ""
+"Loại mã định danh tài khoản %s không được hỗ trợ cho đối tác Việt Nam. Phải "
+"là ID người bán, Số thẻ ATM hoặc Tài khoản ngân hàng"
+
+#. module: l10n_vn
+#. odoo-python
+#: code:addons/l10n_vn/models/res_bank.py:0
+msgid "VietQR Code"
+msgstr "Mã VietQR"

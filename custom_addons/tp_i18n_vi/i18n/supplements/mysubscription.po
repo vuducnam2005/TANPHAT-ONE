@@ -1,0 +1,373 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/subscription_dialog.xml:0
+msgid "Apply"
+msgstr "Áp dụng"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.xml:0
+#: code:addons/mysubscription/static/src/components/subscription_dialog.xml:0
+msgid "Cancel"
+msgstr "Hủy"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Database"
+msgstr "Cơ sở dữ liệu"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Delete"
+msgstr "Xoá"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Duplicate"
+msgstr "Nhân bản"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/navbar.xml:0
+msgid "Home Menu"
+msgstr "Menu Chính"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/navbar.js:0
+#: code:addons/mysubscription/static/src/user_menu.js:0
+msgid "My Subscription"
+msgstr "Gói dịch vụ của tôi"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Rename"
+msgstr "Đổi tên"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Selection"
+msgstr "Lựa chọn"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/iap_section.xml:0
+msgid "Services"
+msgstr "Dịch vụ"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Upgrade"
+msgstr "Nâng cấp"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/subscription_dialog.xml:0
+msgid "'Subscription'"
+msgstr "'Đăng ký'"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.js:0
+msgid "A network error occurred."
+msgstr "Đã xảy ra lỗi mạng."
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.js:0
+msgid "Action completed successfully!"
+msgstr "Hành động đã hoàn tất thành công!"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.js:0
+msgid "Action failed. Invalid or missing master password."
+msgstr ""
+"Hành động không thành công. Mật khẩu chính không hợp lệ hoặc bị thiếu."
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.xml:0
+msgid ""
+"All the data for this database will be deleted for all the users and cannot "
+"be restored."
+msgstr ""
+"Tất cả dữ liệu cho cơ sở dữ liệu này sẽ bị xóa đối với tất cả người dùng và "
+"không thể khôi phục được."
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.xml:0
+msgid "Backup Format"
+msgstr "Định dạng sao lưu"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Backups"
+msgstr "Sao lưu"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Cancel Subscription"
+msgstr "Hủy đăng ký"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/plan_section.xml:0
+msgid "Contact your dedicated account manager or the"
+msgstr "Hãy liên hệ với người quản lý tài khoản chuyên dụng của bạn hoặc"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/plan_section.xml:0
+msgid "Current Plan"
+msgstr "Gói hiện tại"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Danger Zone"
+msgstr "Vùng nguy hiểm"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Delete Database"
+msgstr "Xóa cơ sở dữ liệu"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Download Backup"
+msgstr "Tải xuống bản sao lưu"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.xml:0
+msgid "Duplicate Name"
+msgstr "Tên trùng lặp"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Duplicate for testing or production purpose"
+msgstr "Bản sao cho mục đích thử nghiệm hoặc sản xuất"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.xml:0
+msgid "Filename"
+msgstr "Tên tệp"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/plan_section.xml:0
+msgid "Flexible, change at any time"
+msgstr "Linh hoạt, thay đổi bất cứ lúc nào"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/iap_section.xml:0
+msgid "IAP Icon"
+msgstr "Biểu tượng IAP"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/iap_section.xml:0
+msgid "In-App Purchases"
+msgstr "Mua hàng trong ứng dụng"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/plan_section.xml:0
+msgid "Manage your"
+msgstr "Quản lý của bạn"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.xml:0
+msgid "Master Password"
+msgstr "Mật khẩu chính"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/plan_section.xml:0
+msgid "Need Help?"
+msgstr "Cần trợ giúp?"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.xml:0
+msgid "New Name"
+msgstr "Tên mới"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/plan_section.xml:0
+msgid "Odoo Account"
+msgstr "Tài khoản Odoo"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Open a transfer request ticket and provide relevant documentation"
+msgstr "Mở phiếu yêu cầu chuyển khoản và cung cấp tài liệu liên quan"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid ""
+"Proceed with caution as these actions will affect your access to this "
+"database"
+msgstr ""
+"Hãy thận trọng vì những hành động này sẽ ảnh hưởng đến quyền truy cập của "
+"bạn vào cơ sở dữ liệu này"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/iap_section.xml:0
+msgid ""
+"Provide Services to Odoo Users directly from their database through In-App "
+"Purchases"
+msgstr ""
+"Cung cấp Dịch vụ cho Người dùng Odoo trực tiếp từ cơ sở dữ liệu của họ thông"
+" qua Mua hàng trong ứng dụng"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "SLA policy"
+msgstr "Chính sách SLA"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Select the database you want to act on"
+msgstr "Chọn cơ sở dữ liệu bạn muốn hành động"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/subscription_dialog.xml:0
+msgid "Subscription Code"
+msgstr "Mã đăng ký"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/plan_section.xml:0
+msgid "Switch Plan"
+msgstr "Chuyển đổi gói"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.xml:0
+msgid "Testing purposes:"
+msgstr "Mục đích thử nghiệm:"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "This action will delete the database and close the subscription"
+msgstr "Hành động này sẽ xóa cơ sở dữ liệu và đóng đăng ký"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/iap_section.xml:0
+msgid "Top Up"
+msgstr "Nạp tiền"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Transfer Ownership"
+msgstr "Chuyển quyền sở hữu"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Version"
+msgstr "Phiên bản"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.xml:0
+msgid "We advise you to"
+msgstr "Chúng tôi khuyên bạn nên"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.xml:0
+msgid "You are going to definitively delete"
+msgstr "Bạn sẽ xóa dứt khoát"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Your data is safe, check our"
+msgstr "Dữ liệu của bạn được an toàn, hãy kiểm tra"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Your database runs on"
+msgstr "Cơ sở dữ liệu của bạn chạy trên"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/database_section.xml:0
+msgid "Your version:"
+msgstr "Phiên bản của bạn:"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.xml:0
+msgid "Zip (includes filestore)"
+msgstr "Zip (bao gồm kho tập tin)"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.xml:0
+msgid "backup your database"
+msgstr "sao lưu cơ sở dữ liệu của bạn"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.xml:0
+msgid "before deleting it."
+msgstr "trước khi xóa nó."
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.xml:0
+msgid "disable external integrations, outgoing emails and scheduled actions."
+msgstr ""
+"vô hiệu hóa tích hợp bên ngoài, email gửi đi và hành động theo lịch trình."
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/components/database_dialog.xml:0
+msgid "pg_dump (custom format without filestore)"
+msgstr "pg_dump (định dạng tùy chỉnh không có filestore)"
+
+#. module: mysubscription
+#. odoo-javascript
+#: code:addons/mysubscription/static/src/plan_section.xml:0
+msgid "support"
+msgstr "hỗ trợ"

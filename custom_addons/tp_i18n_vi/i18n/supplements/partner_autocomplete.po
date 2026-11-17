@@ -1,0 +1,47 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: partner_autocomplete
+#. odoo-javascript
+#: code:addons/partner_autocomplete/static/src/xml/partner_autocomplete.xml:0
+msgid "Buy"
+msgstr "Mua"
+
+#. module: partner_autocomplete
+#. odoo-python
+#: code:addons/partner_autocomplete/models/res_partner.py:0
+msgid "Enrich notification"
+msgstr "Làm phong phú thông báo"
+
+#. module: partner_autocomplete
+#. odoo-python
+#: code:addons/partner_autocomplete/models/res_partner.py:0
+msgid ""
+"It seems that we didn't found some information for the following partners: "
+"%s"
+msgstr "Có vẻ như chúng tôi không tìm thấy thông tin của các đối tác sau: %s"
+
+#. module: partner_autocomplete
+#. odoo-javascript
+#: code:addons/partner_autocomplete/static/src/xml/partner_autocomplete.xml:0
+msgid "Search Worldwide 🌎"
+msgstr "Tìm kiếm trên toàn thế giới 🌎"
+
+#. module: partner_autocomplete
+#. odoo-javascript
+#: code:addons/partner_autocomplete/static/src/xml/partner_autocomplete.xml:0
+msgid "Set Your Account Token"
+msgstr "Đặt mã thông báo tài khoản của bạn"
+
+#. module: partner_autocomplete
+#. odoo-python
+#: code:addons/partner_autocomplete/models/res_partner.py:0
+msgid "Some errors occurred during the enrich: %s"
+msgstr "Một số lỗi xảy ra trong quá trình làm giàu: %s"

@@ -1,0 +1,145 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: hr_skills
+#. odoo-javascript
+#: code:addons/hr_skills/static/src/components/internal_resume_lines/internal_resume_one2many.xml:0
+#: code:addons/hr_skills/static/src/fields/resume_one2many/resume_one2many.xml:0
+msgid "Current"
+msgstr "Hiện tại"
+
+#. module: hr_skills
+#. odoo-python
+#: code:addons/hr_skills/models/hr_employee_skill.py:0
+msgid ""
+"<p class=\"o_view_nocontent_smiling_face\">No Certifications available!</p>"
+msgstr "<p class=\"o_view_nocontent_smiling_face\">Không có chứng nhận nào!</p>"
+
+#. module: hr_skills
+#. odoo-python
+#: code:addons/hr_skills/models/hr_employee_skill.py:0
+msgid ""
+"<p class=\"o_view_nocontent_smiling_face\">No Certifications available. Navigate to Skill types!</p>\n"
+"                <a type=\"action\" name=\"hr_skills.hr_skill_type_action\" class=\"btn btn-primary\">\n"
+"                Show Skill Types\n"
+"                </a>"
+msgstr ""
+"<p class=\"o_view_nocontent_smiling_face\">Không có chứng nhận nào. Điều hướng đến các loại Kỹ năng!</p>\n"
+"                <a type=\"action\" name=\"hr_skills.hr_skill_type_action\" class=\"btn btn-primary\">\n"
+"                Hiển thị các loại kỹ năng\n"
+"                </a>"
+
+#. module: hr_skills
+#. odoo-javascript
+#: code:addons/hr_skills/static/src/fields/resume_one2many/resume_one2many.xml:0
+msgid "Create Resume Lines"
+msgstr "Tạo dòng sơ yếu lý lịch"
+
+#. module: hr_skills
+#. odoo-javascript
+#: code:addons/hr_skills/static/src/fields/skills_one2many/skills_one2many.xml:0
+msgid "Create Skills"
+msgstr "Tạo kỹ năng"
+
+#. module: hr_skills
+#. odoo-javascript
+#: code:addons/hr_skills/static/src/components/internal_resume_lines/internal_resume_one2many.xml:0
+msgid "Experience -"
+msgstr "Kinh nghiệm -"
+
+#. module: hr_skills
+#. odoo-javascript
+#: code:addons/hr_skills/static/src/fields/skills_one2many/skills_one2many.xml:0
+msgid "If skills are missing, they can be created by an HR officer."
+msgstr "Nếu thiếu kỹ năng, nhân viên nhân sự có thể tạo ra chúng."
+
+#. module: hr_skills
+#. odoo-javascript
+#: code:addons/hr_skills/static/src/fields/resume_one2many/resume_one2many.js:0
+msgid "New Resume Line"
+msgstr "Dòng sơ yếu lý lịch mới"
+
+#. module: hr_skills
+#. odoo-javascript
+#: code:addons/hr_skills/static/src/fields/skills_one2many/skills_one2many.xml:0
+msgid "Pick a skill from the list"
+msgstr "Chọn một kỹ năng từ danh sách"
+
+#. module: hr_skills
+#. odoo-javascript
+#: code:addons/hr_skills/static/src/fields/skills_one2many/skills_one2many.xml:0
+msgid "Skills & Certifications"
+msgstr "Kỹ năng & Chứng chỉ"
+
+#. module: hr_skills
+#. odoo-python
+#: code:addons/hr_skills/models/hr_individual_skill_mixin.py:0
+msgid ""
+"The following skills can't be created as they overlap or exactly match existing skills:\n"
+"%(collisions)s"
+msgstr ""
+"Không thể tạo các kỹ năng sau vì chúng trùng lặp hoặc khớp hoàn toàn với các kỹ năng hiện có:\n"
+"%(collisions)s"
+
+#. module: hr_skills
+#. odoo-python
+#: code:addons/hr_skills/models/hr_individual_skill_mixin.py:0
+msgid ""
+"The following skills have their valid stop date prior to their valid start "
+"date:\n"
+msgstr "Các kỹ năng sau đây có ngày dừng hợp lệ trước ngày bắt đầu hợp lệ:"
+
+#. module: hr_skills
+#. odoo-python
+#: code:addons/hr_skills/models/hr_individual_skill_mixin.py:0
+msgid "The skill %(name)s and skill type %(type)s don't match"
+msgstr "Kỹ năng %(name)s và loại kỹ năng %(type)s không khớp nhau"
+
+#. module: hr_skills
+#. odoo-javascript
+#: code:addons/hr_skills/static/src/components/internal_resume_lines/internal_resume_one2many.xml:0
+msgid "There are no resume lines on this employee."
+msgstr "Không có dòng sơ yếu lý lịch về nhân viên này."
+
+#. module: hr_skills
+#. odoo-javascript
+#: code:addons/hr_skills/static/src/fields/skills_one2many/skills_one2many.xml:0
+msgid "There are no skills defined in the library."
+msgstr "Không có kỹ năng nào được xác định trong thư viện."
+
+#. module: hr_skills
+#. odoo-javascript
+#: code:addons/hr_skills/static/src/fields/skills_one2many/skills_one2many.xml:0
+msgid "Timeline"
+msgstr "Dòng thời gian"
+
+#. module: hr_skills
+#. odoo-python
+#: code:addons/hr_skills/models/hr_employee.py:0
+msgid "Upload a document for a missing certification"
+msgstr "Tải lên tài liệu cho chứng nhận bị thiếu"
+
+#. module: hr_skills
+#. odoo-python
+#: code:addons/hr_skills/models/hr_employee.py:0
+msgid "You cannot access the resume of this employee."
+msgstr "Bạn không thể truy cập sơ yếu lý lịch của nhân viên này."
+
+#. module: hr_skills
+#. odoo-javascript
+#: code:addons/hr_skills/static/src/fields/resume_one2many/resume_one2many.xml:0
+msgid "hours)"
+msgstr "giờ)"
+
+#. module: hr_skills
+#. odoo-python
+#: code:addons/hr_skills/models/hr_individual_skill_mixin.py:0
+msgid "• %(skill_name)s from %(valid_from)s to %(valid_to)s"
+msgstr "• %(skill_name)s từ %(valid_from)s đến %(valid_to)s"

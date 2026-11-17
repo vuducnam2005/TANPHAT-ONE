@@ -1,0 +1,122 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/bundle/dashboard_action/dashboard_search_bar_menu/dashboard_custom_favorite_item.js:0
+msgid "A name for your favorite filter is required."
+msgstr "Bạn cần chọn tên cho nội dung yêu thích này."
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/bundle/dashboard_action/dashboard_action.xml:0
+msgid "Close sidebar"
+msgstr "Đóng bảng bên"
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/bundle/dashboard_action/dashboard_search_bar_menu/dashboard_search_bar_menu.xml:0
+msgid "Discard"
+msgstr "Huỷ bỏ"
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/bundle/dashboard_action/dashboard_search_bar_menu/dashboard_search_bar_menu.xml:0
+msgid "Favorites"
+msgstr "Danh sách yêu thích"
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/bundle/dashboard_action/dashboard_search_bar_menu/dashboard_search_bar_menu.xml:0
+msgid "Filter"
+msgstr "Bộ lọc"
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/public/public_dashboard.xml:0
+msgid "Filters"
+msgstr "Bộ lọc"
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/bundle/dashboard_action/dashboard_search_bar_menu/dashboard_search_bar_menu.xml:0
+msgid "More..."
+msgstr "Thêm..."
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/public/public_dashboard.xml:0
+msgid "Show Filters"
+msgstr "Hiển thị bộ lọc"
+
+#. module: spreadsheet_dashboard
+#. odoo-python
+#: code:addons/spreadsheet_dashboard/models/spreadsheet_dashboard_share.py:0
+msgid "%s - Share Link"
+msgstr "%s - Chia sẻ liên kết"
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/bundle/dashboard_action/dashboard_search_model.js:0
+msgid "(Any value)"
+msgstr "(Bất kỳ giá trị nào)"
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/bundle/dashboard_action/dashboard_action.xml:0
+msgid "An error occurred while loading the dashboard"
+msgstr "Đã xảy ra lỗi khi tải trang tổng quan"
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/assets/global_filter_widget_loader.js:0
+msgid "Global Filters"
+msgstr "Bộ lọc toàn cầu"
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/bundle/global_filter_widget/global_filter_widget.xml:0
+msgid "No global filters defined for this dashboard."
+msgstr "Không có bộ lọc chung nào được xác định cho trang tổng quan này."
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/bundle/dashboard_action/mobile_figure_container/mobile_figure_container.xml:0
+msgid ""
+"Only chart figures are displayed in small screens but this dashboard doesn't"
+" contain any"
+msgstr ""
+"Chỉ có số liệu biểu đồ được hiển thị trên màn hình nhỏ nhưng bảng điều khiển"
+" này không chứa bất kỳ"
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/bundle/dashboard_action/dashboard_action.xml:0
+msgid "Open sidebar"
+msgstr "Mở thanh bên"
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/bundle/global_filter_widget/global_filter_widget.xml:0
+msgid "Select a dashboard to edit a global filter."
+msgstr "Chọn một trang tổng quan để chỉnh sửa bộ lọc chung."
+
+#. module: spreadsheet_dashboard
+#. odoo-python
+#: code:addons/spreadsheet_dashboard/controllers/share.py:0
+msgid ""
+"You don't have the rights to export data. Please contact an Administrator."
+msgstr "Bạn không có quyền xuất dữ liệu. Vui lòng liên hệ với Quản trị viên."
+
+#. module: spreadsheet_dashboard
+#. odoo-javascript
+#: code:addons/spreadsheet_dashboard/static/src/bundle/dashboard_action/dashboard_search_model.js:0
+msgid "has"
+msgstr "có"

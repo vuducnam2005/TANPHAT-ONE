@@ -63,7 +63,7 @@
                 <field name="department_id" readonly="operation != 'create'" domain="[('id','in',allowed_department_ids)]" options="{'no_create': True}"/></group>
             <group><field name="name" readonly="operation == 'archive'"/><field name="job_title" readonly="operation == 'archive'"/>
                 <field name="work_email" readonly="operation == 'archive'"/><field name="work_phone" readonly="operation == 'archive'"/>
-                <field name="mobile_phone" readonly="operation == 'archive'"/><field name="reason"/></group>
+                <field name="mobile_phone" readonly="operation == 'archive'"/><field name="reason" required="1" placeholder="Nhập lý do cập nhật hoặc lưu trữ hồ sơ…"/></group>
             <p class="text-muted">Chức danh mô tả không cấp vai trò hoặc quyền duyệt. Quyền hệ thống, phòng ban, tài khoản và lịch sử công tác giữ qua quy trình riêng của Quản trị chính.</p>
         </sheet><footer><button name="action_apply" type="object" string="Xác nhận" class="btn-primary"/><button special="cancel" string="Hủy"/></footer></form></field>
     </record>

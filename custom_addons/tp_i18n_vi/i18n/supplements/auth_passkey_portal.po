@@ -1,0 +1,15 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: auth_passkey_portal
+#. odoo-javascript
+#: code:addons/auth_passkey_portal/static/src/xml/passkeys_portal_popups.xml:0
+msgid "Rename your key"
+msgstr "Đổi tên chìa khóa của bạn"

@@ -1,0 +1,32 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. module: base
+#. odoo-python
+#: code:addons/models.py:0
+msgid "Missing required field %(field_display)s for model %(model_display)s"
+msgstr "Thiếu trường bắt buộc %(field_display)s của %(model_display)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/web/models/models.py:0
+msgid "The operation cannot be completed: %s"
+msgstr "Không thể hoàn tất thao tác: %s"
+
+#. module: web
+#. odoo-python
+#: code:addons/web/models/models.py:0
+msgctxt "web"
+msgid "The operation cannot be completed: %s"
+msgstr "Không thể hoàn tất thao tác: %s"
+
+#. module: web
+#. odoo-python
+#: code:addons/web/models/models.py:0
+msgid "this record is used by %(model_name)s"
+msgstr "Hồ sơ này đang được %(model_name)s sử dụng"

@@ -1,0 +1,273 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_provider.py:0
+msgid "Could not establish the connection to the payment provider."
+msgstr "Không thể thiết lập kết nối với nhà cung cấp thanh toán."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/const.py:0
+msgid "Express checkout not supported"
+msgstr "Thanh toán nhanh không được hỗ trợ"
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/const.py:0
+msgid "Incompatible country"
+msgstr "Quốc gia không tương thích"
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/const.py:0
+msgid "Incompatible currency"
+msgstr "Tiền tệ không tương thích"
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/const.py:0
+msgid "Incompatible website"
+msgstr "Trang web không tương thích"
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/const.py:0
+msgid "Manual capture not supported"
+msgstr "Chụp thủ công không được hỗ trợ"
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "Manually confirmed by the user."
+msgstr "Được người dùng xác nhận theo cách thủ công."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/const.py:0
+msgid "Minimum or maximum amount exceeded"
+msgstr "Đã vượt quá số tiền tối thiểu hoặc tối đa"
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "Operations"
+msgstr "Hoạt động"
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_provider.py:0
+msgid "Payment History"
+msgstr "Lịch sử thanh toán"
+
+#. module: payment
+#. odoo-javascript
+#: code:addons/payment/static/src/interactions/payment_form.js:0
+msgid "Payment method unavailable"
+msgstr "Phương thức thanh toán không có sẵn"
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/const.py:0
+msgid "Payment method with duplicate code"
+msgstr "Phương thức thanh toán có mã trùng lặp"
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid ""
+"Payment transactions should not be updated directly. Either use _record() to"
+" queue payment data for processing, or pass payment_safe_write=True to the "
+"context after ensuring that the update can tolerate a rollback."
+msgstr ""
+"Giao dịch thanh toán không nên được cập nhật trực tiếp. Sử dụng _record() để"
+" xếp hàng dữ liệu thanh toán để xử lý hoặc chuyển Payment_safe_write=True "
+"vào ngữ cảnh sau khi đảm bảo rằng bản cập nhật có thể cho phép khôi phục."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "Pending Updates"
+msgstr "Cập nhật đang chờ xử lý"
+
+#. module: payment
+#. odoo-javascript
+#: code:addons/payment/static/src/interactions/payment_form.js:0
+msgid "Please choose another payment method."
+msgstr "Vui lòng chọn phương thức thanh toán khác."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "The %(tx_label)s %(ref)s of %(formatted_amount)s encountered an error."
+msgstr "%(tx_label)s %(ref)s của %(formatted_amount)s gặp lỗi."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "The %(tx_label)s %(ref)s of %(formatted_amount)s has been authorized."
+msgstr "%(tx_label)s %(ref)s của %(formatted_amount)s đã được cấp phép."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "The %(tx_label)s %(ref)s of %(formatted_amount)s has been canceled."
+msgstr "%(tx_label)s %(ref)s của %(formatted_amount)s đã bị hủy."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "The %(tx_label)s %(ref)s of %(formatted_amount)s has been confirmed."
+msgstr "%(tx_label)s %(ref)s của %(formatted_amount)s đã được xác nhận."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "The %(tx_label)s %(ref)s of %(formatted_amount)s is pending."
+msgstr "%(tx_label)s %(ref)s của %(formatted_amount)s đang chờ xử lý."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid ""
+"The amount from the payment data doesn't match the one from the transaction."
+msgstr "Số tiền từ dữ liệu thanh toán không khớp với số tiền từ giao dịch."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "The amount or currency is missing from the payment data."
+msgstr "Số tiền hoặc đơn vị tiền tệ bị thiếu trong dữ liệu thanh toán."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid ""
+"The currency from the payment data doesn't match the one from the "
+"transaction."
+msgstr ""
+"Đơn vị tiền tệ trong dữ liệu thanh toán không khớp với đơn vị tiền tệ trong "
+"giao dịch."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_provider.py:0
+msgid ""
+"The payment provider rejected the request.\n"
+"%s"
+msgstr ""
+"Nhà cung cấp thanh toán đã từ chối yêu cầu.\n"
+"%s"
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "The provider must not be archived to make a request."
+msgstr "Nhà cung cấp không được lưu trữ để đưa ra yêu cầu."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "The refund %(ref)s of %(formatted_amount)s has been initiated."
+msgstr "Việc hoàn tiền %(ref)s của %(formatted_amount)s đã được bắt đầu."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "The transaction %(ref)s of %(formatted_amount)s has been initiated."
+msgstr "Giao dịch %(ref)s của %(formatted_amount)s đã được bắt đầu."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_provider.py:0
+msgid ""
+"This action will also archive %s tokens that are registered with this "
+"provider."
+msgstr ""
+"Hành động này cũng sẽ lưu trữ mã thông báo %s đã được đăng ký với nhà cung "
+"cấp này."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/const.py:0
+msgid "Tokenization not supported"
+msgstr "Mã thông báo không được hỗ trợ"
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/const.py:0
+msgid "Tokenization without payment no supported"
+msgstr "Mã thông báo mà không cần thanh toán không được hỗ trợ"
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_token.py:0
+msgid ""
+"You can't unarchive tokens linked to inactive payment methods or archived "
+"providers."
+msgstr ""
+"Bạn không thể hủy lưu trữ mã thông báo được liên kết với các phương thức "
+"thanh toán không hoạt động hoặc nhà cung cấp đã lưu trữ."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_method.py:0
+msgid "You cannot delete the default payment method."
+msgstr "Bạn không thể xóa phương thức thanh toán mặc định."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_provider.py:0
+msgid ""
+"You cannot delete the payment provider %s; archive or uninstall it instead."
+msgstr ""
+"Bạn không thể xóa nhà cung cấp thanh toán %s; thay vào đó hãy lưu trữ hoặc "
+"gỡ cài đặt nó."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_provider.py:0
+msgid "Your payment has been processed but is waiting for approval."
+msgstr "Thanh toán của bạn đã được xử lý nhưng đang chờ phê duyệt."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "Your payment method has not been saved yet."
+msgstr "Phương thức thanh toán của bạn chưa được lưu."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid ""
+"Your payment operation could not be completed for following transactions: "
+"%(tx_refs)s"
+msgstr ""
+"Hoạt động thanh toán của bạn không thể hoàn tất đối với các giao dịch sau: "
+"%(tx_refs)s"
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "Your payment operation has been successfully submitted."
+msgstr "Hoạt động thanh toán của bạn đã được gửi thành công."
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "source_transaction_id"
+msgstr "nguồn_transaction_id"
+
+#. module: payment
+#. odoo-python
+#: code:addons/payment/models/payment_transaction.py:0
+msgid "transaction_id"
+msgstr "giao dịch_id"

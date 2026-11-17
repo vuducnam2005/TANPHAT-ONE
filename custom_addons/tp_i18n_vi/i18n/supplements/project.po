@@ -1,0 +1,562 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/components/subtask_kanban_list/subtask_kanban_create/subtask_kanban_create.xml:0
+msgid "Add"
+msgstr "Thêm"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/components/subtask_kanban_list/subtask_kanban_list.xml:0
+msgid "Add Sub-task"
+msgstr "Thêm công việc con"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/components/project_many2one_field/project_many2one_field.js:0
+msgid "All Projects"
+msgstr "Tất cả dự án"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/components/subtask_one2many_field/subtask_list_renderer.js:0
+msgid ""
+"Are you sure you want to delete this subtask? All its content will be lost."
+msgstr ""
+"Bạn có chắc muốn xóa công việc con này? Toàn bộ nội dung của công việc sẽ bị"
+" mất."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/components/project_configure_project_cog_menu/project_configure_project_cog_menu.xml:0
+msgid "Configure Project"
+msgstr "Cấu hình dự án"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/components/project_convert_project_to_template_cog_menu/project_convert_project_to_template_cog_menu.xml:0
+msgid "Convert Project to Template"
+msgstr "Chuyển dự án thành mẫu"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/components/subtask_one2many_field/subtask_list_renderer.js:0
+msgid "Delete Subtask"
+msgstr "Xóa công việc con"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/project_sharing/chatter/portal_chatter_patch.xml:0
+msgid "Follow"
+msgstr "Theo dõi"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/webclient/share_target/project_share_target_item.xml:0
+msgid "In Project"
+msgstr "Trong dự án"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/components/subtask_kanban_list/subtask_kanban_list.js:0
+msgid "Invalid Display Name"
+msgstr "Tên hiển thị không hợp lệ"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/actions/client_actions.js:0
+msgid "Project converted to template."
+msgstr "Đã chuyển dự án thành mẫu."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/actions/client_actions.js:0
+msgid "Revert to Project"
+msgstr "Chuyển lại thành dự án"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/views/project_task_control_panel/project_task_control_panel.xml:0
+msgid "Show Sub-Tasks"
+msgstr "Hiện công việc con"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/views/project_task_control_panel/project_task_control_panel.js:0
+msgid "Show sub-tasks & top menu"
+msgstr "Hiện công việc con và menu phía trên"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/models/project_task.py:0
+#: code:addons/project/static/src/actions/client_actions.js:0
+msgid "Task converted to template"
+msgstr "Đã chuyển công việc thành mẫu"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/views/components/project_task_template_dropdown.js:0
+msgid "Tasks Templates"
+msgstr "Mẫu công việc"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/project_sharing/components/depend_on_ids_one2many/depend_on_ids_list_renderer.xml:0
+msgid "This task is currently blocked by"
+msgstr "Công việc này đang bị chặn bởi"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/views/project_task_control_panel/project_task_control_panel.xml:0
+msgid "Top Menu"
+msgstr "Menu phía trên"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/project_sharing/chatter/portal_chatter_patch.xml:0
+msgid "Unfollow"
+msgstr "Ngừng theo dõi"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/views/components/project_task_template_dropdown.xml:0
+msgid "View More"
+msgstr "Xem thêm"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/project_sharing/chatter/composer_patch.js:0
+msgid "Write a message…"
+msgstr "Viết một thông điệp…"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/components/subtask_kanban_list/subtask_kanban_create/subtask_kanban_create.js:0
+msgid "Write a task name"
+msgstr "Nhập tên công việc"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid "and"
+msgstr "và"
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_project.py:0
+msgid "%(name)s Updates"
+msgstr "Cập nhật %(name)s"
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_project.py:0
+msgid "%(name)s's Time by Stage"
+msgstr "Thời gian của %(name)s theo từng giai đoạn"
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_project.py:0
+msgid ""
+"%(warning_messages)s\n"
+"Are you sure you want to continue?"
+msgstr ""
+"%(warning_messages)s\n"
+"Bạn có chắc chắn muốn tiếp tục không?"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/project_sharing/components/depend_on_ids_one2many/depend_on_ids_list_renderer.xml:0
+msgid "(other) tasks to which you do not have access."
+msgstr "(khác) nhiệm vụ mà bạn không có quyền truy cập."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/js/tours/project.js:0
+msgid ""
+"<b>Log internal notes</b> and use @<b>mentions</b> to notify your "
+"colleagues."
+msgstr ""
+"<b>Ghi lại các ghi chú nội bộ</b> và sử dụng @<b>mentions</b> để thông báo "
+"cho đồng nghiệp của bạn."
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_project.py:0
+msgid ""
+"Add internal users as team members and invite portal users as collaborators "
+"to give them access to the project. They can also access tasks they follow."
+msgstr ""
+"Thêm người dùng nội bộ làm thành viên nhóm và mời người dùng cổng thông tin "
+"làm cộng tác viên để cấp cho họ quyền truy cập vào dự án. Họ cũng có thể "
+"truy cập các nhiệm vụ họ làm theo."
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_project.py:0
+msgid ""
+"Add internal users as team members to give them access to the project. They "
+"can also access tasks they follow."
+msgstr ""
+"Thêm người dùng nội bộ làm thành viên nhóm để cấp cho họ quyền truy cập vào "
+"dự án. Họ cũng có thể truy cập các nhiệm vụ họ làm theo."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
+msgid "Agile Scrum"
+msgstr "Scrum linh hoạt"
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_project.py:0
+msgid ""
+"All internal users have access to the project. Invite portal users as "
+"collaborators to give them access. They can also access tasks they follow."
+msgstr ""
+"Tất cả người dùng nội bộ đều có quyền truy cập vào dự án. Mời người dùng "
+"cổng thông tin làm cộng tác viên để cấp cho họ quyền truy cập. Họ cũng có "
+"thể truy cập các nhiệm vụ họ làm theo."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid ""
+"Attach all documents or links to the task directly, to have all research "
+"information centralized."
+msgstr ""
+"Đính kèm trực tiếp tất cả tài liệu hoặc liên kết đến nhiệm vụ để tập trung "
+"tất cả thông tin nghiên cứu."
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_task.py:0
+msgid ""
+"Cannot convert back to regular task because the task has no project defined "
+"but has a parent or sub-tasks."
+msgstr ""
+"Không thể chuyển đổi trở lại nhiệm vụ thông thường vì nhiệm vụ không có dự "
+"án được xác định nhưng có nhiệm vụ chính hoặc nhiệm vụ phụ."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid ""
+"Communicate with customers on the task using the email gateway. Attach logo designs to the task, so that information flows from\n"
+"      designers to the workers who print the t-shirt."
+msgstr ""
+"Giao tiếp với khách hàng về nhiệm vụ bằng cổng email. Đính kèm các thiết kế logo vào nhiệm vụ để thông tin được truyền từ\n"
+"      nhà thiết kế cho đến công nhân in áo thun."
+
+#. module: project
+#. odoo-python
+#: code:addons/project/wizard/project_template_create_wizard.py:0
+msgid "Create Project (Template: %s)"
+msgstr "Tạo dự án (Template: %s)"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid ""
+"Customers propose feedbacks by email; Odoo creates tasks automatically, and you can\n"
+"      communicate on the task directly."
+msgstr ""
+"Khách hàng đề xuất phản hồi qua email; Odoo tự động tạo các tác vụ và bạn có thể\n"
+"      trao đổi trực tiếp về công việc."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid "Everyone can propose ideas, and the Editor marks the best ones as"
+msgstr ""
+"Mọi người đều có thể đề xuất ý tưởng và Người biên tập sẽ đánh giá những ý "
+"tưởng hay nhất là"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid ""
+"Handle your idea gathering within Tasks of your new Project and discuss them"
+" in the chatter of the tasks."
+msgstr ""
+"Xử lý việc thu thập ý tưởng của bạn trong Nhiệm vụ của Dự án mới và thảo "
+"luận về chúng trong cuộc trò chuyện về các nhiệm vụ."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/js/tours/project.js:0
+msgid "Let's create a regular <b>project</b>."
+msgstr "Hãy tạo một <b>project</b> thông thường."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid "Look for the"
+msgstr "Hãy tìm"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid ""
+"Manage the lifecycle of your project using the kanban view. Add newly acquired projects,\n"
+"      assign them and use the"
+msgstr ""
+"Quản lý vòng đời dự án của bạn bằng chế độ xem Kanban. Thêm các dự án mới mua lại,\n"
+"      chỉ định chúng và sử dụng"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid "Organize priorities amongst orders using the"
+msgstr "Sắp xếp mức độ ưu tiên giữa các đơn hàng bằng cách sử dụng"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid "Prioritize your tasks by marking important ones using the"
+msgstr ""
+"Ưu tiên các nhiệm vụ của bạn bằng cách đánh dấu những nhiệm vụ quan trọng "
+"bằng cách sử dụng"
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_task.py:0
+msgid ""
+"Private (non-template) tasks cannot be converted into sub-tasks. Please set "
+"a project on the task to gain access to this feature."
+msgstr ""
+"Các tác vụ riêng tư (không phải mẫu) không thể được chuyển đổi thành các tác"
+" vụ phụ. Vui lòng đặt một dự án cho nhiệm vụ để có quyền truy cập vào tính "
+"năng này."
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_project.py:0
+msgid "Project Overview"
+msgstr "Tổng quan dự án"
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_project.py:0
+msgid "Project created from template %(name)s."
+msgstr "Dự án được tạo từ mẫu %(name)s."
+
+#. module: project
+#. odoo-python
+#: code:addons/project/controllers/portal.py:0
+msgid "Search in Parent Task"
+msgstr "Tìm kiếm trong Nhiệm vụ của phụ huynh"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid ""
+"Sort your tasks by sprint using milestones, tags, or a dedicated property. "
+"At the end of each sprint, just pick the remaining tasks in your list and "
+"move them all at once to the next sprint by editing the milestone, tag, or "
+"property."
+msgstr ""
+"Sắp xếp nhiệm vụ của bạn bằng cách chạy nước rút bằng cách sử dụng các mốc "
+"quan trọng, thẻ hoặc thuộc tính chuyên dụng. Vào cuối mỗi lần chạy nước rút,"
+" chỉ cần chọn các nhiệm vụ còn lại trong danh sách của bạn và chuyển tất cả "
+"chúng cùng một lúc sang lần chạy nước rút tiếp theo bằng cách chỉnh sửa cột "
+"mốc, thẻ hoặc thuộc tính."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
+msgid "Sprint Backlog"
+msgstr "Tồn đọng nước rút"
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_task.py:0
+msgid "Task templates cannot be shared."
+msgstr "Mẫu nhiệm vụ không thể được chia sẻ."
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_project.py:0
+msgid "Template converted back to regular project."
+msgstr "Mẫu được chuyển đổi trở lại dự án thông thường."
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_task.py:0
+msgid "Template converted back to regular task"
+msgstr "Mẫu được chuyển đổi trở lại nhiệm vụ thông thường"
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_project.py:0
+msgid "Template created from %s."
+msgstr "Mẫu được tạo từ %s."
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_task.py:0
+msgid "Template for Tasks"
+msgstr "Mẫu nhiệm vụ"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
+msgid "Tests"
+msgstr "Kiểm thử"
+
+#. module: project
+#. odoo-python
+#: code:addons/project/report/project_task_burndown_chart_report.py:0
+msgid "The view must be grouped by date and by Stage - Burndown chart"
+msgstr ""
+"Chế độ xem phải được nhóm theo ngày và theo Giai đoạn - Biểu đồ Burndown"
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_task.py:0
+msgid "This new task has been created in the \"%(project_name)s\" project."
+msgstr "Nhiệm vụ mới này đã được tạo trong dự án \"%(project_name)s\"."
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_task.py:0
+msgid "This new task is not part of any project."
+msgstr "Nhiệm vụ mới này không phải là một phần của bất kỳ dự án nào."
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_project.py:0
+msgid "This project can’t be shared with external people."
+msgstr "Không thể chia sẻ dự án này với người bên ngoài."
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_task.py:0
+msgid "This task can’t be shared with external people."
+msgstr "Không thể chia sẻ nhiệm vụ này với người bên ngoài."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid "Use the"
+msgstr "Sử dụng"
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/project_task.py:0
+msgid ""
+"You need Advanced Edit access to change the stage or priority of a task."
+msgstr ""
+"Bạn cần quyền truy cập Chỉnh sửa nâng cao để thay đổi giai đoạn hoặc mức độ "
+"ưu tiên của nhiệm vụ."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid "Your managers decide which feedback is accepted"
+msgstr "Người quản lý của bạn quyết định phản hồi nào được chấp nhận"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid ""
+"and which feedback is\n"
+"      moved to the \"Refused\" column."
+msgstr ""
+"và phản hồi nào là\n"
+"      đã chuyển sang cột \"Từ chối\"."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid "button."
+msgstr "nút."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid "icon to organize your daily activities."
+msgstr "biểu tượng để sắp xếp các hoạt động hàng ngày của bạn."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid ""
+"icon to see tasks waiting on other ones. Once a task is marked as complete "
+"or cancelled, all of its dependencies will be unblocked."
+msgstr ""
+"biểu tượng để xem các nhiệm vụ đang chờ trên những nhiệm vụ khác. Khi một "
+"tác vụ được đánh dấu là hoàn thành hoặc bị hủy, tất cả các phần phụ thuộc "
+"của tác vụ đó sẽ được bỏ chặn."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid "icon."
+msgstr "biểu tượng."
+
+#. module: project
+#. odoo-python
+#: code:addons/project/controllers/portal.py:0
+msgid "project_id"
+msgstr "dự án_id"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid ""
+"state to indicate a request for changes or a need for discussion on a task."
+msgstr ""
+"trạng thái để biểu thị yêu cầu thay đổi hoặc nhu cầu thảo luận về một nhiệm "
+"vụ."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid ""
+"state to inform your colleagues that a task is approved for the next stage."
+msgstr ""
+"nêu rõ để thông báo cho đồng nghiệp của bạn rằng một nhiệm vụ đã được phê "
+"duyệt cho giai đoạn tiếp theo."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid "state to mark the task as cancelled."
+msgstr "trạng thái để đánh dấu nhiệm vụ là đã hủy."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid "state to mark the task as complete."
+msgstr "state để đánh dấu nhiệm vụ là hoàn thành."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/components/project_task_name_with_subtask_count_char_field/project_task_name_with_subtask_count_char_field.xml:0
+msgid "sub-tasks)"
+msgstr "nhiệm vụ phụ)"
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid ""
+"to define if the project is\n"
+"      ready for the next step."
+msgstr ""
+"để xác định liệu dự án có\n"
+"      sẵn sàng cho bước tiếp theo."
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
+msgid "to signalize what is the current status of your Idea."
+msgstr "để báo hiệu trạng thái hiện tại của Ý tưởng của bạn là gì."

@@ -5,6 +5,27 @@
         .badge.text-bg-#{$state} { background-color: nth($colors, 1) !important; color: nth($colors, 2) !important; border-radius: 5px !important; }
     }
 }
+.o_tp_hr_identity_wizard {
+    .o_tp_hr_identity_photos {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin: 12px 0 20px;
+        h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+        img { width: 112px; height: 112px; object-fit: contain; border-radius: 8px; }
+    }
+    .o_field_text { overflow-wrap: anywhere; }
+    .o_tp_hr_identity_summary {
+        padding: 12px;
+        margin: 12px 0;
+        border-radius: 8px;
+        background: #f4f7fb;
+        h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    }
+    @media (max-width: 400px) {
+        .o_tp_hr_identity_photos img { width: 88px; height: 88px; }
+    }
+}
 .o_tp_hr_mobile_form_actions { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 12px; background: #fff; border-bottom: 1px solid #dce4ef; .btn { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; } }
 .o_tp_hr_catalog_view {
     .o_form_renderer { display: flex; flex-direction: column; }

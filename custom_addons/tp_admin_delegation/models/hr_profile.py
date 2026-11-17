@@ -41,13 +41,13 @@ class ScopedHrProfile(models.TransientModel):
     _description = 'Cập nhật hồ sơ nhân sự ngoài phòng'
 
     operation = fields.Selection([('edit', 'Cập nhật hồ sơ'), ('create', 'Tạo hồ sơ'),
-                                  ('archive', 'Lưu trữ hồ sơ chưa có tài khoản')], default='create', required=True)
+                                  ('archive', 'Lưu trữ hồ sơ chưa có tài khoản')], default='create', required=True, string='Thao tác')
     employee_id = fields.Many2one('hr.employee', readonly=True, string='Hồ sơ hiện có')
     expected_write_date = fields.Datetime(readonly=True)
     expected_version_date = fields.Datetime(readonly=True)
     expected_resource_date = fields.Datetime(readonly=True)
     expected_digest = fields.Char(readonly=True)
-    company_id = fields.Many2one('res.company', required=True, readonly=True, default=lambda self: self.env.company)
+    company_id = fields.Many2one('res.company', string='Công ty', required=True, readonly=True, default=lambda self: self.env.company)
     allowed_department_ids = fields.Many2many('hr.department', compute='_compute_departments')
     department_id = fields.Many2one('hr.department', required=True, string='Phòng ban')
     name = fields.Char(required=True, string='Họ và tên')
@@ -55,7 +55,7 @@ class ScopedHrProfile(models.TransientModel):
     work_phone = fields.Char(string='Điện thoại công ty')
     mobile_phone = fields.Char(string='Di động')
     job_title = fields.Char(string='Chức danh mô tả')
-    reason = fields.Text(required=True, string='Lý do')
+    reason = fields.Text(string='Lý do')
 
     @api.model
     def _employee_digest(self, employee):

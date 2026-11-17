@@ -1,0 +1,33 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: web_unsplash
+#. odoo-python
+#: code:addons/web_unsplash/models/ir_attachment.py:0
+msgid "Unsplash attachments must be images."
+msgstr "Tệp đính kèm Unsplash phải là hình ảnh."
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
+msgid "and paste"
+msgstr "và dán"
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
+msgid "and paste it here:"
+msgstr "và dán nó vào đây:"
+
+#. module: web_unsplash
+#. odoo-javascript
+#: code:addons/web_unsplash/static/src/unsplash_credentials/unsplash_credentials.xml:0
+msgid "here:"
+msgstr "đây:"

@@ -38,6 +38,18 @@ class DelegationCase(TransactionCase):
 
 class TestAdminDelegation(DelegationCase):
 
+    def test_open_grant_and_revoke_dialog_without_reason_does_not_grant(self):
+        for method in ('action_tp_grant_admin', 'action_tp_revoke_admin'):
+            action = getattr(self.employees[0].with_user(self.admin), method)()
+            wizard = self.env[action['res_model']].browse(action['res_id'])
+            self.assertFalse(wizard.reason)
+            self.assertEqual(wizard.expected_user_id, self.users[0])
+            for reason in (False, '  \n '):
+                wizard.reason = reason
+                with self.assertRaises(UserError):
+                    wizard.action_apply.__wrapped__(wizard)
+            self.assertFalse(self.actor()._tp_has_admin_delegation())
+
     def test_grant_revoke_preserve_business_groups_and_identity(self):
         before = [(user.id, user.group_ids.ids, user.company_ids.ids) for user in self.users]
         self.grant()

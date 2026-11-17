@@ -1,0 +1,27 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: base_install_request
+#. odoo-python
+#: code:addons/base_install_request/models/ir_module_module.py:0
+msgid "Activation Request for %(module_desc)s"
+msgstr "Yêu cầu kích hoạt %(module_desc)s"
+
+#. module: base_install_request
+#. odoo-python
+#: code:addons/base_install_request/wizard/base_module_install_request.py:0
+msgid "Module Activation Request for \"%(module_desc)s\""
+msgstr "Yêu cầu kích hoạt mô-đun cho \"%(module_desc)s\""
+
+#. module: base_install_request
+#. odoo-python
+#: code:addons/base_install_request/wizard/base_module_install_request.py:0
+msgid "Request sent"
+msgstr "Đã gửi yêu cầu"

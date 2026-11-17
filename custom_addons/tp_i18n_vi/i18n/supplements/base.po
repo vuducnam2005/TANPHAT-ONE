@@ -1,0 +1,1294 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid ""
+"\n"
+"Example: %(example)s"
+msgstr "Ví dụ: %(example)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+msgid "0123456789016 or 1234545678781 [13 digits]"
+msgstr "0123456789016 hoặc 1234545678781 [13 chữ số]"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+#: code:addons/partner_identifiers.py:0
+msgid ""
+"10XXXXXXXXY or 20XXXXXXXXY or 15XXXXXXXXY or 16XXXXXXXXY or 17XXXXXXXXY"
+msgstr ""
+"10XXXXXXXXXXY hoặc 20XXXXXXXXXX hoặc 15XXXXXXXXXXY hoặc 16XXXXXXXXXY hoặc "
+"17XXXXXXXXXX"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+#: code:addons/partner_identifiers.py:0
+msgid "11111111111 (NIN) or 2222222222 (VKN)"
+msgstr "11111111111 (NIN) hoặc 2222222222 (VKN)"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+#: code:addons/partner_identifiers.py:0
+msgid ""
+"12345678 or UA12345678 (EDRPOU), 1234567890 (RNOPP) or 123456789012 (IPN)"
+msgstr ""
+"12345678 hoặc UA12345678 (EDRPOU), 1234567890 (RNOPP) hoặc 123456789012 "
+"(IPN)"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+msgid "123456789 (TIN) or 12345678901234 (PINFL)"
+msgstr "123456789 (TIN) hoặc 12345678901234 (PINFL)"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "3002707692 [Tax identification number]"
+msgstr "3002707692 [Mã số thuế]"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+#: code:addons/partner_identifiers.py:0
+msgid "310175397400003 [Fifteen digits, first and last digits should be \"3\"]"
+msgstr ""
+"310175397400003 [Mười lăm chữ số, chữ số đầu tiên và cuối cùng phải là "
+"\"3\"]"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "700 Number"
+msgstr "Số 700"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid "A sequence must only be used with character fields."
+msgstr "Một chuỗi chỉ được sử dụng với các trường ký tự."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_groups.py:0
+msgid "Access Rules"
+msgstr "Quy tắc truy cập"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_access.py:0
+msgid "Accesses with domain can not be applied on model Access itself."
+msgstr "Không thể áp dụng quyền truy cập bằng miền trên chính mô hình Access."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid "Actual Code"
+msgstr "Mã thực tế"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Australian Company Number."
+msgstr "Mã số Công ty Úc."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Austrian company ID number (UID)."
+msgstr "Số ID công ty Áo (UID)."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner_bank.py:0
+msgid "Bank Code length must be 3."
+msgstr "Độ dài Mã Ngân hàng phải là 3."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Belgian Crossroads Bank for Enterprises number."
+msgstr "Số Ngân hàng Crossroads dành cho Doanh nghiệp Bỉ."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Belgian national identification number."
+msgstr "Số nhận dạng quốc gia Bỉ."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_access.py:0
+msgid ""
+"Blame the following accesses:\n"
+"%s"
+msgstr ""
+"Đổ lỗi cho các truy cập sau:\n"
+"%s"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Branch Code"
+msgstr "Mã chi nhánh"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Branch Number"
+msgstr "Số chi nhánh"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Branch Number of your company, leave empty for headquarters."
+msgstr "Mã số chi nhánh của công ty bạn, để trống cho trụ sở chính."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Brazilian company identification number. 14 digits."
+msgstr "Số nhận dạng công ty Brazil. 14 chữ số."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Business ID"
+msgstr "Mã doanh nghiệp"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Business ID (Y-tunnus)."
+msgstr "ID doanh nghiệp (Y-tunnus)."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Business Registration Number."
+msgstr "Số đăng ký kinh doanh."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+#: code:addons/partner_identifiers.py:0
+msgid "CHE-123.456.788 TVA or CHE-123.456.788 MWST or CHE-123.456.788 IVA"
+msgstr ""
+"CHE-123.456.788 TVA hoặc CHE-123.456.788 MWST hoặc CHE-123.456.788 IVA"
+
+#. module: base
+#. odoo-python
+#: code:addons/bank_account_number.py:0
+msgid "CLABE should be a string of 18 digits."
+msgstr "CLABE phải là một chuỗi gồm 18 chữ số."
+
+#. module: base
+#. odoo-python
+#: code:addons/models.py:0
+msgid "Cannot grab a lock on records"
+msgstr "Không thể lấy khóa trên hồ sơ"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_attachment.py:0
+msgid "Cannot search, too many attachments"
+msgstr "Không thể tìm kiếm, quá nhiều tệp đính kèm"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Citizen Identification"
+msgstr "Nhận dạng công dân"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid "Code History"
+msgstr "Lịch sử mã"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Commercial Registration Number"
+msgstr "Số đăng ký thương mại"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Company identification number"
+msgstr "Mã số công ty"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Consumer Identification"
+msgstr "Nhận dạng người tiêu dùng"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid "Create %(model_name)s"
+msgstr "Tạo %(model_name)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Croatian company ID number."
+msgstr "Số ID công ty Croatia."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_cron.py:0
+msgid ""
+"Cron job %(name)s (%(id)s) is failing and will be deactivated if you don't "
+"take action. More information can be found in the server logs around "
+"%(time)s."
+msgstr ""
+"Công việc định kỳ %(name)s (%(id)s) đang thất bại và sẽ bị vô hiệu hóa nếu "
+"bạn không thực hiện hành động. Thông tin thêm có thể được tìm thấy trong "
+"nhật ký máy chủ xung quanh %(time)s."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Czech business identification number (IČO)."
+msgstr "Số nhận dạng doanh nghiệp Séc (IČO)."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Danish Central Business Register number."
+msgstr "Số đăng ký doanh nghiệp trung tâm của Đan Mạch."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Danish tax entity number (SE-nummer)."
+msgstr "Mã số thực thể thuế của Đan Mạch (số SE)."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Dun & Bradstreet unique 9-digit business identifier."
+msgstr "Mã định danh doanh nghiệp duy nhất gồm 9 chữ số của Dun & Bradstreet."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid "Duplicate %(record)s"
+msgstr "Sao chép %(record)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid "Duplicate ..."
+msgstr "Nhân đôi..."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Dutch Chamber of Commerce registration number."
+msgstr "Số đăng ký của Phòng Thương mại Hà Lan."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Dutch government Organisation Identification Number."
+msgstr "Số nhận dạng tổ chức của chính phủ Hà Lan."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Electronic address for French e-invoicing platforms (PDP/PPF)."
+msgstr "Địa chỉ điện tử dành cho nền tảng hóa đơn điện tử của Pháp (PDP/PPF)."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Estonian business registry code."
+msgstr "Mã đăng ký kinh doanh của Estonia."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+msgid ""
+"Example: '219999830019' (format: 12 digits, all numbers, valid check digit)"
+msgstr ""
+"Ví dụ: '219999830019' (định dạng: 12 chữ số, tất cả các số, chữ số kiểm tra "
+"hợp lệ)"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_binary.py:0
+msgid "Expected singleton: %(record)s"
+msgstr "Đĩa đơn dự kiến: %(record)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/fields_relational.py:0
+msgid "Failed to write field %s"
+msgstr "Không thể ghi trường %s"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_model.py:0
+msgid ""
+"Field \"%(field_name)s\" in related path \"%(related_field)s\" is not "
+"searchable. Non-searchable fields cannot be used in related fields."
+msgstr ""
+"Trường \"%(field_name)s\" trong đường dẫn liên quan \"%(related_field)s\" "
+"không thể tìm kiếm được. Các trường không thể tìm kiếm không thể được sử "
+"dụng trong các trường liên quan."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_binary.py:0
+msgid ""
+"Field “%(field)s” is type “%(field_type)s” but it is only possible to stream"
+" Binary or Image fields."
+msgstr ""
+"Trường “%(field)s” thuộc loại “%(field_type)s” nhưng chỉ có thể truyền phát "
+"các trường Nhị phân hoặc Hình ảnh."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid "Following child actions have warnings: %(children)s"
+msgstr "Các hành động sau của trẻ có cảnh báo: %(children)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid ""
+"Following child actions should have the same groups (%(groups)s): "
+"%(children)s"
+msgstr ""
+"Các hành động con sau đây phải có cùng nhóm (%(groups)s): %(children)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid ""
+"Following child actions should have the same model (%(model)s): %(children)s"
+msgstr ""
+"Các hành động con sau đây phải có cùng kiểu mẫu (%(model)s): %(children)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "France FRCTC Electronic Address"
+msgstr "Địa chỉ điện tử FRCTC của Pháp"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "France Register of legal persons"
+msgstr "Pháp Sổ đăng ký pháp nhân"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "French 14-digit establishment identification number (SIREN + NIC)."
+msgstr "Số nhận dạng cơ sở gồm 14 chữ số của Pháp (SIREN + NIC)."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "French 9-digit business identification number."
+msgstr "Số nhận dạng doanh nghiệp gồm 9 chữ số của Pháp."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "French national identification number (NIR)."
+msgstr "Số nhận dạng quốc gia Pháp (NIR)."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "GCC ID Number"
+msgstr "Số ID GCC"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "German Commercial Register (Handelsregister) number."
+msgstr "Số Đăng ký Thương mại Đức (Handelsregister)."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "German Electronic Business Address."
+msgstr "Địa chỉ doanh nghiệp điện tử của Đức."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Global Location Number, used to identify parties and locations."
+msgstr ""
+"Mã số Địa điểm Toàn cầu, được sử dụng để xác định các bên và địa điểm."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid ""
+"Group-restricted fields cannot be included in webhook payloads, as it could allow any user to accidentally leak sensitive information. You will have to remove the following fields from the webhook payload:\n"
+"%(restricted_fields)s"
+msgstr ""
+"Các trường bị hạn chế theo nhóm không thể được đưa vào tải trọng webhook vì nó có thể cho phép bất kỳ người dùng nào vô tình làm rò rỉ thông tin nhạy cảm. Bạn sẽ phải xóa các trường sau khỏi tải trọng webhook:\n"
+"%(restricted_fields)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "HRB Nr"
+msgstr "số HRB"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Hungarian Tax ID"
+msgstr "Mã số thuế Hungary"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Hungarian company ID number."
+msgstr "Số ID công ty Hungary."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid ""
+"I'll be happy to send a webhook for you, but you really need to give me a "
+"URL to reach out to..."
+msgstr ""
+"Tôi rất sẵn lòng gửi webhook cho bạn nhưng bạn thực sự cần cung cấp cho tôi "
+"URL để liên hệ..."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid ""
+"I'm sorry to say that JSON fields (such as '%s') are currently not "
+"supported."
+msgstr ""
+"Tôi rất tiếc phải thông báo rằng các trường JSON (chẳng hạn như '%s') hiện "
+"không được hỗ trợ."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+msgid ""
+"If you are trying to input a European number, this is the expected format: "
+msgstr "Nếu bạn đang cố nhập số Châu Âu thì đây là định dạng mong muốn:"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_model.py:0
+msgid ""
+"Inconsistent values: model=%(model)s does not match model_id=%(model_id)s."
+msgstr ""
+"Các giá trị không nhất quán: model=%(model)s không khớp với "
+"model_id=%(model_id)s."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_ui_view.py:0
+msgid ""
+"Inherited view cannot have '%(attr)s' defined on the record. Use '%(attr)s' "
+"attributes inside the view definition"
+msgstr ""
+"Chế độ xem được kế thừa không thể xác định '%(attr)s' trên bản ghi. Sử dụng "
+"thuộc tính '%(attr)s' bên trong định nghĩa chế độ xem"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_access.py:0
+msgid "Invalid domain %(domain)s: %(error)s"
+msgstr "Tên miền không hợp lệ %(domain)s: %(error)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid ""
+"Invalid identifier: %(identifier_value)s%(identifier_label)s.%(example)s"
+msgstr ""
+"Mã định danh không hợp lệ: "
+"%(identifier_value)s%(identifier_label)s.%(example)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_users.py:0
+msgid "Invalid user group."
+msgstr "Nhóm người dùng không hợp lệ."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Iqama ID Number"
+msgstr "Số ID Iqama"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Iqama Number"
+msgstr "Số Iqama"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Ireland Personal Public Service Number."
+msgstr "Số dịch vụ công cộng cá nhân Ireland."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Japanese corporate number (Specified Subject to Tax)."
+msgstr "Mã số công ty Nhật Bản (Đối tượng cụ thể phải chịu thuế)."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_qweb_fields.py:0
+msgid "Json"
+msgstr "JSON"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Latvian unified registration number."
+msgstr "Số đăng ký thống nhất của Latvia."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Legal Entity Identifier"
+msgstr "Mã định danh pháp nhân"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_users.py:0
+msgid "Limit of %s API keys is reached for programmatic creation"
+msgstr "Đã đạt đến giới hạn khóa API %s để tạo theo chương trình"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Lithuanian legal entity code (JAK)."
+msgstr "Mã pháp nhân Litva (JAK)."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Luxembourg business registry number."
+msgstr "Số đăng ký kinh doanh của Luxembourg."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "MHRSD License"
+msgstr "Giấy phép MHRSD"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "MHRSD License Number"
+msgstr "Số giấy phép MHRSD"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "MISA License"
+msgstr "Giấy phép MISA"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "MISA License Number"
+msgstr "Số giấy phép MISA"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "MOMRAH License"
+msgstr "Giấy phép MOMRAH"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "MOMRAH License Number"
+msgstr "Số giấy phép MOMRAH"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Malaysian company registration number."
+msgstr "Số đăng ký công ty Malaysia."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Mauritian Business Registration Number."
+msgstr "Số đăng ký kinh doanh của Mauritius."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Mersis Number"
+msgstr "Số Mersis"
+
+#. module: base
+#. odoo-python
+#: code:addons/template_inheritance.py:0
+msgid "Missing 'expr' attribute in xpath specification"
+msgstr "Thiếu thuộc tính 'expr' trong đặc tả xpath"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid ""
+"Moroccan joint business identifier (Identifiant Commun de l'Entreprise)."
+msgstr ""
+"Mã nhận dạng doanh nghiệp chung của Ma-rốc (Identifiant Commun de "
+"l'Entreprise)."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "National ID"
+msgstr "CMND"
+
+#. module: base
+#. odoo-python
+#: code:addons/models.py:0
+msgid "Need groupby or aggregates."
+msgstr "Cần nhóm hoặc tổng hợp."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "New Zealand Business Number."
+msgstr "Số doanh nghiệp New Zealand."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_binary.py:0
+msgid ""
+"No record found for xmlid=%(xmlid)s, res_model=%(res_model)s, id=%(res_id)s"
+msgstr ""
+"Không tìm thấy bản ghi nào cho xmlid=%(xmlid)s, res_model=%(res_model)s, "
+"id=%(res_id)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_sequence.py:0
+msgid "Non-ASCII characters in %s"
+msgstr "Các ký tự không phải ASCII trong %s"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Norwegian Register of Legal Entities (Brønnøysund Register Center)"
+msgstr "Cơ quan đăng ký pháp nhân Na Uy (Trung tâm đăng ký Brønnøysund)"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions_report.py:0
+msgid ""
+"Not enough workers to generate the PDF. Please try another engine or upgrade"
+" your setup."
+msgstr ""
+"Không đủ công nhân để tạo bản PDF. Vui lòng thử công cụ khác hoặc nâng cấp "
+"thiết lập của bạn."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+msgid "Note: the expected format is %(expected_format)s"
+msgstr "Lưu ý: định dạng dự kiến là %(expected_format)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_access.py:0
+msgid ""
+"Note: this might be a multi-company issue. Switching company may help - in "
+"Odoo, not in real life!"
+msgstr ""
+"Lưu ý: đây có thể là vấn đề của nhiều công ty. Việc chuyển đổi công ty có "
+"thể giúp ích - trong Odoo, không phải trong đời thực!"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "OB-number cannot be computed from the VAT for sole proprietorships."
+msgstr "Số OB không thể được tính từ VAT cho doanh nghiệp tư nhân."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_model.py:0
+msgid "Only stored fields with a database column can be indexed."
+msgstr ""
+"Chỉ các trường được lưu trữ có cột cơ sở dữ liệu mới có thể được lập chỉ "
+"mục."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Other ID"
+msgstr "ID khác"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Other ID Number"
+msgstr "Số ID khác"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid ""
+"Pakistani Computerized National Identity Card number (CNIC), 13 digits."
+msgstr ""
+"Số Chứng minh nhân dân quốc gia được vi tính hóa của Pakistan (CNIC), 13 chữ"
+" số."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Passport"
+msgstr "Hộ chiếu"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Passport ID"
+msgstr "ID hộ chiếu"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Passport number."
+msgstr "Số hộ chiếu."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Peruvian unique taxpayer registry number (RUC)."
+msgstr "Số đăng ký người nộp thuế duy nhất của Peru (RUC)."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner_bank.py:0
+msgid ""
+"Please add your own bank account manually: %(account_number)s (%(partner)s)"
+msgstr ""
+"Vui lòng thêm tài khoản ngân hàng của bạn theo cách thủ công: "
+"%(account_number)s (%(partner)s)"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_users.py:0
+msgid "Programmatic API keys are not enabled"
+msgstr "Khóa API lập trình chưa được bật"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_binary.py:0
+msgid "Record has no field “%s”"
+msgstr "Bản ghi không có trường “%s”"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid "Recursion found in child server actions"
+msgstr "Đệ quy được tìm thấy trong hành động của máy chủ con"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Registrikood"
+msgstr "Cơ quan đăng ký"
+
+#. module: base
+#. odoo-python
+#: code:addons/models.py:0
+msgid "Resolve other errors first"
+msgstr "Giải quyết các lỗi khác trước"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid "Revision Code"
+msgstr "Mã sửa đổi"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Routing ID for invoicing German public authorities."
+msgstr "ID định tuyến để lập hóa đơn cho các cơ quan công quyền của Đức."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Saudi Arabia 700 Number"
+msgstr "Số 700 của Ả Rập Saudi"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Saudi Arabia Commercial Registration Number"
+msgstr "Số đăng ký thương mại của Ả Rập Saudi"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Saudi Arabia GCC ID Number"
+msgstr "Số ID GCC của Ả Rập Saudi"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Saudi Arabia Iqama ID Number"
+msgstr "Số ID Iqama của Ả Rập Saudi"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Saudi Arabia MHRSD License Number"
+msgstr "Số giấy phép MHRSD của Ả Rập Saudi"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Saudi Arabia MISA License Number"
+msgstr "Số giấy phép MISA của Ả Rập Saudi"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Saudi Arabia MOMRAH License Number"
+msgstr "Số giấy phép MOMRAH của Ả Rập Saudi"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Saudi Arabia National ID Number"
+msgstr "Số ID quốc gia của Ả Rập Saudi"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Saudi Arabia Other ID Number"
+msgstr "Ả Rập Saudi Số ID khác"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Saudi Arabia Passport ID Number"
+msgstr "Số ID hộ chiếu Ả Rập Saudi"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Saudi Arabia Tax Identification Number"
+msgstr "Mã số thuế của Ả Rập Saudi"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid ""
+"Server action %(action_name)s has one or more warnings, address them first."
+msgstr ""
+"Hành động của máy chủ %(action_name)s có một hoặc nhiều cảnh báo, hãy giải "
+"quyết chúng trước tiên."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Singapore Unique Entity Number."
+msgstr "Mã số thực thể duy nhất của Singapore."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_qweb_fields.py:0
+msgid "Slash"
+msgstr "Chém"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Slovak company identification number (IČO)."
+msgstr "Mã số công ty Slovakia (IČO)."
+
+#. module: base
+#. odoo-python
+#: code:addons/fields_textual.py:0
+msgid "Some of the languages are not active: %s"
+msgstr "Một số ngôn ngữ không hoạt động: %s"
+
+#. module: base
+#. odoo-python
+#: code:addons/fields_textual.py:0
+msgid "Some of the translations are False: %s"
+msgstr "Một số bản dịch sai: %s"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Swedish organization number (Organisationsnummer)."
+msgstr "Mã số tổ chức Thụy Điển (Organisationsnummer)."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Swiss company identification number (UIDB)."
+msgstr "Số nhận dạng công ty Thụy Sĩ (UIDB)."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Tax Identification Number"
+msgstr "Mã số thuế"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+msgid "Template for Contacts"
+msgstr "Mẫu cho Danh bạ"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_sequence.py:0
+msgid ""
+"The %(field)s %(value)s contains non-ASCII characters. Names generated by "
+"this sequence may be printed as Code128 barcodes in reports, which only "
+"support ASCII characters."
+msgstr ""
+"%(field)s %(value)s chứa các ký tự không phải ASCII. Tên được tạo bởi chuỗi "
+"này có thể được in dưới dạng mã vạch Code128 trong báo cáo, chỉ hỗ trợ các "
+"ký tự ASCII."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+msgid ""
+"The %(vat_label)s number [%(wrong_vat)s] does not seem to be valid. "
+"%(expected_note)s"
+msgstr ""
+"Số %(vat_label)s [%(wrong_vat)s] dường như không hợp lệ. %(expected_note)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+msgid ""
+"The %(vat_label)s number [%(wrong_vat)s] for %(record_label)s does not seem "
+"to be valid. %(expected_note)s"
+msgstr ""
+"Số %(vat_label)s [%(wrong_vat)s] cho %(record_label)s dường như không hợp "
+"lệ. %(expected_note)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid ""
+"The 5-digit branch code as registered with the Revenue Department. Leave "
+"empty for Head Office."
+msgstr ""
+"Mã chi nhánh gồm 5 chữ số được đăng ký với Cục Thuế. Để trống cho Trụ sở "
+"chính."
+
+#. module: base
+#. odoo-python
+#: code:addons/bank_account_number.py:0
+msgid ""
+"The IBAN does not seem to be correct. You should have entered something like this %s\n"
+"Where B = National bank code, S = Branch code, C = Account No, k = Check digit"
+msgstr ""
+"IBAN có vẻ không chính xác. Đáng lẽ bạn phải nhập một cái gì đó như %s này\n"
+"Trong đó B = Mã ngân hàng quốc gia, S = Mã chi nhánh, C = Mã số tài khoản, k = Số kiểm tra"
+
+#. module: base
+#. odoo-python
+#: code:addons/bank_account_number.py:0
+msgid "The IBAN is invalid, it should begin with the country code"
+msgstr "IBAN không hợp lệ, nó phải bắt đầu bằng mã quốc gia"
+
+#. module: base
+#. odoo-python
+#: code:addons/fields_textual.py:0
+msgid ""
+"The field value you're saving (%(model)s %(field)s)(%(record)s) includes "
+"content that is restricted for security reasons. It is possible that someone"
+" with higher privileges previously modified it, and you are therefore not "
+"able to modify it yourself while preserving the content."
+msgstr ""
+"Giá trị trường bạn đang lưu (%(model)s %(field)s)(%(record)s) bao gồm nội "
+"dung bị hạn chế vì lý do bảo mật. Có thể ai đó có đặc quyền cao hơn đã sửa "
+"đổi nó trước đó và do đó bạn không thể tự sửa đổi nó trong khi vẫn giữ được "
+"nội dung."
+
+#. module: base
+#. odoo-python
+#: code:addons/fields_textual.py:0
+msgid ""
+"The non translatable content of the written value are not consistent: %s"
+msgstr "Nội dung không thể dịch được của giá trị viết không nhất quán: %s"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid ""
+"The path contained by the field '%(searched_field)s' contains a non-"
+"relational field (%(current_field)s) that is not the last field in the path."
+" You can't traverse non-relational fields (even in the quantum realm). Make "
+"sure only the last field in the path is non-relational."
+msgstr ""
+"Đường dẫn chứa trong trường '%(searched_field)s' chứa trường không quan hệ "
+"(%(current_field)s) không phải là trường cuối cùng trong đường dẫn. Bạn "
+"không thể đi qua các trường không quan hệ (ngay cả trong cõi lượng tử). Đảm "
+"bảo chỉ có trường cuối cùng trong đường dẫn là không có quan hệ."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions_report.py:0
+msgid "The pdf engine on this system is not working."
+msgstr "Công cụ pdf trên hệ thống này không hoạt động."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_users.py:0
+msgid ""
+"The provided API key is invalid or does not belong to the current user."
+msgstr ""
+"Khóa API được cung cấp không hợp lệ hoặc không thuộc về người dùng hiện tại."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_users.py:0
+msgid "The provided API key is invalid."
+msgstr "Khóa API được cung cấp không hợp lệ."
+
+#. module: base
+#. odoo-python
+#: code:addons/bank_account_number.py:0
+msgid "There is no IBAN code."
+msgstr "Không có mã IBAN."
+
+#. module: base
+#. odoo-python
+#: code:addons/bank_account_number.py:0
+msgid "This CLABE does not pass the checksum check, please verify it."
+msgstr ""
+"CLABE này không vượt qua được quá trình kiểm tra tổng kiểm tra, vui lòng xác"
+" minh nó."
+
+#. module: base
+#. odoo-python
+#: code:addons/bank_account_number.py:0
+msgid "This IBAN does not pass the validation check, please verify it."
+msgstr ""
+"IBAN này không vượt qua được quá trình kiểm tra xác thực, vui lòng xác minh "
+"nó."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_access.py:0
+msgid ""
+"This seems to be a multi-company issue, but you do not have access to the "
+"proper company to access the record anyhow."
+msgstr ""
+"Đây có vẻ là vấn đề của nhiều công ty nhưng dù sao đi nữa, bạn cũng không có"
+" quyền truy cập vào công ty phù hợp để truy cập vào hồ sơ."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_access.py:0
+msgid ""
+"This seems to be a multi-company issue, you might be able to access the "
+"record by switching to the company: %s."
+msgstr ""
+"Đây có vẻ là vấn đề của nhiều công ty, bạn có thể truy cập bản ghi bằng cách"
+" chuyển sang công ty: %s."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+msgid "To explicitly indicate no (valid) VAT, use '/', 'na' or 'NA' instead. "
+msgstr ""
+"Để biểu thị rõ ràng không có VAT (hợp lệ), thay vào đó hãy sử dụng '/', 'na'"
+" hoặc 'NA'."
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "Trade Registry Number"
+msgstr "Số đăng ký thương mại"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_model.py:0
+msgid "Translated fields only support trigram indexes."
+msgstr "Các trường được dịch chỉ hỗ trợ chỉ mục bát quái."
+
+#. module: base
+#. odoo-python
+#: code:addons/translate.py:0
+msgid ""
+"Translations %(translations)s for field %(field)s has None value for "
+"language '%(language)s'"
+msgstr ""
+"Bản dịch %(translations)s cho trường %(field)s không có giá trị nào cho ngôn"
+" ngữ '%(language)s'"
+
+#. module: base
+#. odoo-python
+#: code:addons/translate.py:0
+msgid ""
+"Translations %(translations)s for field %(field)s has invalid language "
+"'%(language)s'"
+msgstr ""
+"Bản dịch %(translations)s cho trường %(field)s có ngôn ngữ không hợp lệ "
+"'%(language)s'"
+
+#. module: base
+#. odoo-python
+#: code:addons/translate.py:0
+msgid ""
+"Translations %(translations)s for field %(field)s has technical language "
+"%(technical_language)s but not corresponding language '%(language)s'"
+msgstr ""
+"Bản dịch %(translations)s cho trường %(field)s có ngôn ngữ kỹ thuật "
+"%(technical_language)s nhưng không có ngôn ngữ tương ứng '%(language)s'"
+
+#. module: base
+#. odoo-python
+#: code:addons/translate.py:0
+msgid ""
+"Translations %(translations)s for field %(field)s have different structures"
+msgstr "Bản dịch %(translations)s cho trường %(field)s có cấu trúc khác nhau"
+
+#. module: base
+#. odoo-python
+#: code:addons/translate.py:0
+msgid "Translations %(translations)s for field %(field)s must have 'en_US'"
+msgstr "Bản dịch %(translations)s cho trường %(field)s phải có 'en_US'"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_model.py:0
+msgid ""
+"Trigram indexes are only supported on stored Char, Text, and HTML fields."
+msgstr ""
+"Chỉ mục bát quái chỉ được hỗ trợ trên các trường Char, Text và HTML được lưu"
+" trữ."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_model.py:0
+msgid "Trigram indexes require the PostgreSQL pg_trgm extension."
+msgstr "Các chỉ mục bát quái yêu cầu phần mở rộng pg_trgm của PostgreSQL."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions_report.py:0
+msgid ""
+"Unable to find the pdf engine on this system. The PDF can not be created."
+msgstr "Không thể tìm thấy công cụ pdf trên hệ thống này. Không thể tạo PDF."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid "Update %(model_name)s"
+msgstr "Cập nhật %(model_name)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/partner_identifiers.py:0
+msgid "VAT Registry (VAT ID)"
+msgstr "Cơ quan đăng ký VAT (ID VAT)"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+#: code:addons/partner_identifiers.py:0
+msgid "XXXXXXXXX [9 digits] and it should respect the Luhn algorithm checksum"
+msgstr ""
+"XXXXXXXXX [9 chữ số] và nó phải tôn trọng tổng kiểm tra thuật toán Luhn"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_attachment.py:0
+msgid ""
+"You cannot attach an attachment to itself.\n"
+"Attachment %(record)s cannot have res_id: %(res_id)s"
+msgstr ""
+"Bạn không thể đính kèm tệp đính kèm vào chính nó.\n"
+"Tệp đính kèm %(record)s không thể có res_id: %(res_id)s"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_actions.py:0
+msgid "You don't have enough access rights to run this action."
+msgstr "Bạn không có đủ quyền truy cập để thực hiện tác vụ này."
+
+#. module: base
+#. odoo-python
+#: code:addons/models.py:0
+msgid "custom field access rules"
+msgstr "quy tắc truy cập trường tùy chỉnh"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_fields.py:0
+msgid "database id"
+msgstr "id cơ sở dữ liệu"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_access.py:0
+msgid "delete"
+msgstr "xóa"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+msgid "either 11 digits for CPF or 14 characters for CNPJ"
+msgstr "11 chữ số cho CPF hoặc 14 ký tự cho CNPJ"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_fields.py:0
+msgid "external id"
+msgstr "id bên ngoài"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_company.py:0
+msgid "parent_id"
+msgstr "id_cha_mẹ"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/res_partner.py:0
+msgid "partner%s"
+msgstr "đối tác%s"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_access.py:0
+msgid "write"
+msgstr "viết"

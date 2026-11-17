@@ -38,7 +38,7 @@ class EmployeeIdentity(models.Model):
         for employee in self.filtered('user_id'):
             linked = self.sudo().with_context(active_test=False).search([('user_id', '=', employee.user_id.id)])
             if linked != employee or employee.work_contact_id != employee.user_id.partner_id or employee.user_id.partner_id.user_ids != employee.user_id:
-                raise UserError(self.env._('Mapping danh tính chưa duy nhất hoặc liên hệ công việc khác partner tài khoản. Cần admin đối chiếu theo ID trước khi đồng bộ.'))
+                raise UserError(self.env._('Liên kết danh tính chưa duy nhất hoặc liên hệ công việc khác liên hệ của tài khoản. Quản trị viên cần đối chiếu hồ sơ trước khi đồng bộ.'))
 
     def _compute_avatar(self, avatar_field, image_field):
         super()._compute_avatar(avatar_field, image_field)
@@ -73,7 +73,7 @@ class EmployeeIdentity(models.Model):
     def write(self, vals):
         internal = self.env.context.get('_tp_identity') is _IDENTITY
         if 'work_contact_id' in vals and any(e.user_id and vals['work_contact_id'] != e.user_id.partner_id.id for e in self):
-            raise AccessError(self.env._('Liên hệ công việc của tài khoản đã gắn cần giữ đúng partner danh tính.'))
+            raise AccessError(self.env._('Liên hệ công việc phải khớp liên hệ của tài khoản đã liên kết.'))
         if not internal and set(vals) & {'name', 'image_1920'}:
             self.check_access('write')
         result = super().write(vals)
@@ -98,7 +98,7 @@ class UserIdentity(models.Model):
         if 'partner_id' in vals:
             employees = self.env['hr.employee'].sudo().with_context(active_test=False).search([('user_id', 'in', self.ids)])
             if any(e.user_id.partner_id.id != vals['partner_id'] for e in employees):
-                raise AccessError(self.env._('Không được thay partner danh tính của tài khoản nhân viên đã liên kết.'))
+                raise AccessError(self.env._('Không được thay liên hệ định danh của tài khoản nhân viên đã liên kết.'))
         return super().write(vals)
 
 
@@ -111,7 +111,7 @@ class PartnerIdentity(models.Model):
             ('user_id.partner_id', 'in', self.ids),
         ]) if not internal and set(vals) & {'name', 'image_1920'} else self.env['hr.employee']
         if 'name' in vals and any(e.name != vals['name'] for e in employees):
-            raise AccessError(self.env._('Họ tên chính thức được quản lý tại hồ sơ nhân viên. Vui lòng liên hệ HR.'))
+            raise AccessError(self.env._('Họ tên chính thức được quản lý tại hồ sơ nhân viên. Vui lòng liên hệ bộ phận Nhân sự.'))
         # Native access is checked before the narrow employee synchronization.
         if employees:
             employees._tp_assert_identity_mapping()
@@ -147,12 +147,14 @@ class IdentityWizard(models.TransientModel):
     _name = 'tp.hr.identity.wizard'
     _description = 'Đối chiếu danh tính tài khoản nhân viên'
 
-    employee_id = fields.Many2one('hr.employee', required=True, readonly=True)
-    employee_image = fields.Image(related='employee_id.image_1920', readonly=True)
-    account_image = fields.Image(related='employee_id.user_id.image_1920', readonly=True)
+    employee_id = fields.Many2one('hr.employee', required=True, readonly=True, string='Hồ sơ nhân viên')
+    employee_code = fields.Char(related='employee_id.tp_employee_code', string='Mã nhân viên')
+    account_name = fields.Char(related='employee_id.user_id.name', string='Tên tài khoản')
+    employee_image = fields.Image(related='employee_id.image_128', readonly=True)
+    account_image = fields.Image(related='employee_id.user_id.image_128', readonly=True)
     choice = fields.Selection([('employee', 'Giữ ảnh hồ sơ nhân viên'), ('account', 'Giữ ảnh tài khoản')], string='Ảnh thống nhất')
-    reason = fields.Text(required=True, string='Lý do', default='Đối chiếu danh tính theo ID hồ sơ và tài khoản')
-    preview = fields.Text(readonly=True, string='Đối chiếu ID và các trường sẽ sửa')
+    reason = fields.Text(required=True, string='Lý do', default='Đối chiếu tên và ảnh giữa hồ sơ nhân viên và tài khoản')
+    preview = fields.Text(readonly=True, string='Kết quả đối chiếu')
     expected_digest = fields.Char(readonly=True)
 
     @api.model_create_multi
@@ -183,8 +185,11 @@ class IdentityWizard(models.TransientModel):
                 self.choice = 'account'
             elif bytes(employee.image_1920 or b'') == bytes(partner.image_1920 or b'') or (left != 'photo' and right != 'photo'):
                 self.choice = 'employee'
-        text = json.dumps(employee._tp_identity_state(), ensure_ascii=False, indent=2)
-        text += f'\nẢnh HR: {left}; ảnh tài khoản: {right}.\nTên tài khoản sẽ khớp hồ sơ; login/mật khẩu/MFA giữ nguyên.'
+        kinds = {'empty': 'Chưa có ảnh', 'generated': 'Ảnh chữ cái tự tạo', 'photo': 'Ảnh đã tải lên'}
+        text = f'Ảnh hồ sơ: {kinds[left]}.\nẢnh tài khoản: {kinds[right]}.'
+        text += ('\nHọ tên hồ sơ và tài khoản đã khớp.' if employee.name == partner.name
+                 else f'\nTên tài khoản sẽ được đổi từ “{partner.name}” thành “{employee.name}”.')
+        text += '\nTên đăng nhập, mật khẩu và xác thực hai bước được giữ nguyên.'
         if not self.choice:
             text += '\nHai bên có ảnh thật khác nhau: admin cần chọn ảnh, không tự ghi đè.'
         self.with_context(_tp_identity=_IDENTITY).write({'preview': text, 'expected_digest': self._digest(employee)})
@@ -207,6 +212,7 @@ class IdentityWizard(models.TransientModel):
             current = current_env['hr.employee'].browse(employee.id).exists()
             if current and self._digest(current) != self._digest(employee):
                 raise UserError(self.env._('Danh tính vừa đổi từ phiên khác. Hãy xem trước lại.'))
+        before = employee._tp_identity_state()
         with self.env.cr.savepoint():
             image = employee.image_1920 if self.choice == 'employee' else employee.user_id.sudo().image_1920
             employee.with_context(_tp_identity=_IDENTITY).write({'image_1920': image})
@@ -214,7 +220,7 @@ class IdentityWizard(models.TransientModel):
             self.env['tp.hr.employee.audit']._tp_record([{
                 'action': 'identity', 'employee_ref': employee.id, 'employee_name': employee.name,
                 'employee_code': employee.tp_employee_code, 'company_id': employee.company_id.id,
-                'reason': self.reason, 'snapshot': {'preview': self.preview, 'after': employee._tp_identity_state()},
+                'reason': self.reason, 'snapshot': {'before': before, 'preview': self.preview, 'after': employee._tp_identity_state()},
             }])
             employee.message_post(body=self.env._('Đã đồng bộ tên và ảnh hồ sơ với tài khoản. Lý do: %s', self.reason))
             self.with_context(_tp_identity=_IDENTITY).write({'expected_digest': False})

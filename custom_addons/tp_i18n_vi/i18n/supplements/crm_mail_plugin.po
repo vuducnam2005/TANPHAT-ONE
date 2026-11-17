@@ -1,0 +1,67 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: crm_mail_plugin
+#. odoo-javascript
+#: code:addons/crm_mail_plugin/static/src/to_translate/translations_gmail.xml:0
+#: code:addons/crm_mail_plugin/static/src/to_translate/translations_outlook.xml:0
+msgid "New"
+msgstr "Mới"
+
+#. module: crm_mail_plugin
+#. odoo-javascript
+#: code:addons/crm_mail_plugin/static/src/to_translate/translations_gmail.xml:0
+#: code:addons/crm_mail_plugin/static/src/to_translate/translations_outlook.xml:0
+msgid "Search Opportunities"
+msgstr "Tìm kiếm cơ hội"
+
+#. module: crm_mail_plugin
+#. odoo-python
+#: code:addons/crm_mail_plugin/controllers/mail_plugin.py:0
+msgid ""
+"%(expected_revenue)s + %(recurring_revenue)s %(recurring_plan)s at "
+"%(probability)s%%"
+msgstr ""
+"%(expected_revenue)s + %(recurring_revenue)s %(recurring_plan)s tại "
+"%(probability)s%%"
+
+#. module: crm_mail_plugin
+#. odoo-python
+#: code:addons/crm_mail_plugin/controllers/mail_plugin.py:0
+msgid "%(expected_revenue)s at %(probability)s%%"
+msgstr "%(expected_revenue)s tại %(probability)s%%"
+
+#. module: crm_mail_plugin
+#. odoo-javascript
+#: code:addons/crm_mail_plugin/static/src/to_translate/translations_gmail.xml:0
+#: code:addons/crm_mail_plugin/static/src/to_translate/translations_outlook.xml:0
+msgid "Could not create the opportunity"
+msgstr "Không thể tạo ra cơ hội"
+
+#. module: crm_mail_plugin
+#. odoo-javascript
+#: code:addons/crm_mail_plugin/static/src/to_translate/translations_gmail.xml:0
+#: code:addons/crm_mail_plugin/static/src/to_translate/translations_outlook.xml:0
+msgid "Email already logged on the opportunity"
+msgstr "Email đã đăng nhập vào cơ hội"
+
+#. module: crm_mail_plugin
+#. odoo-javascript
+#: code:addons/crm_mail_plugin/static/src/to_translate/translations_gmail.xml:0
+#: code:addons/crm_mail_plugin/static/src/to_translate/translations_outlook.xml:0
+msgid "Log the email on the opportunity"
+msgstr "Đăng nhập email vào cơ hội"
+
+#. module: crm_mail_plugin
+#. odoo-javascript
+#: code:addons/crm_mail_plugin/static/src/to_translate/translations_gmail.xml:0
+#: code:addons/crm_mail_plugin/static/src/to_translate/translations_outlook.xml:0
+msgid "Show all"
+msgstr "Hiển thị tất cả"
