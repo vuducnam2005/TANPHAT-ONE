@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-17T14:14:15.374921+00:00",
-  "last_change_id": "CHG-20261117-021",
-  "code_digest": "ffedf0a6d14ead9bd2f9eedc5b604c4d3cd3430f25d4dc0c1f26672f563a579b",
-  "code_file_count": 637,
+  "updated_at": "2026-11-17T15:14:49.614494+00:00",
+  "last_change_id": "CHG-20261117-022",
+  "code_digest": "a4d152d09f0f4d1c7327789c92dc2f8618660f57a85dd4fc889040a5e3769957",
+  "code_file_count": 626,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "112a3aaa9f46aaedcd19c6ede937c476a55544e381e2868586ef33e2f05d85cf",
-    "docs/CHANGELOG.md": "b7edf66017001654854ee6c3368f8905263a0e0a0c766baff6c2c243c6aaeabe",
+    "docs/PROJECT_STATUS.md": "a8d994cf1ec1ae5dec21c77642108e167b3caf40fec90db05b52b9c0c7d02598",
+    "docs/CHANGELOG.md": "2933606eb76113dc828d9bbc2c36fae01a4580084fcaa2986f4e7297ce14f1db",
     "AGENTS.md": "ac7c7a6ce9929b1cc7f2f3752b5006bd91e9ca570228c9aed8a5210b2798cc5c",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "81c2a55f116a8a8c3281c2489ada1abb5e483f5158c4e94077be26b45eea072b",
-    "docs/DECISIONS.md": "f20dea44c828ab3d3454dce658f876f15c5349761a6df14b2e352d8c0ad5a4f2",
+    "docs/ROADMAP.md": "f3206a42ddacf5f7b7c5dbdd69318f8b74b13c1346036ab727762d8ff57a01bf",
+    "docs/DECISIONS.md": "d54aa39544bd4d20190aeabd4c7aefe2734e9a11d3593ce1a122171aafbaea7e",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "S3 Ruff/XML and 14 in-memory guards PASS; main upgrade exit0/0ERROR; browser16/16 includes9render-only checks, no employee auth E2E; ORM fixtures NOT_RUN; foreign diff excluded from commit and acceptance"
+    "S4:19noDBtests+JS/Ruff/AST/XML PASS;readonlyORM61/61;main50/50browser afterprivacy;upgrade0/0ERROR;noORMfixtures/race/employee-browser/restore. Clean staged snapshot only; foreign diffs not accepted."
   ]
 }

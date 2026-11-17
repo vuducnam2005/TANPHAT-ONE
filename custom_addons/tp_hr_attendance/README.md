@@ -55,6 +55,13 @@ Công xác nhận chỉ có khi **Quy tắc công đã xác nhận** phủ ngày
 
 ## Kiểm thử
 
+Version20.0.1.2.0 bổ sung **Tổng quan công** (`/app/cham-cong`), **Công của tôi**
+(`/app/cong-cua-toi`, cùng tab profile), phiếu điều chỉnh riêng/duyệt/trả và chốt kỳ.
+Dashboard tái sử dụng bộ dựng bảng công, loại tương lai, count ngày-người; mobile cards.
+CSV own lấy owner session và whitelist. Bổ sung bảo vệ mobile/contact, export proxy
+employee và resume/certificate theo owner/HR. Xem guide và acceptance để phân biệt
+kiểm source/in-memory/read-only browser với các ORM/transition/race chưa chạy.
+
 ```bash
 .venv/Scripts/python.exe odoo-bin -c .local/test/odoo.conf -d tp_tanphat_test -i tp_hr_attendance --test-tags /tp_hr_attendance --stop-after-init --no-http
 ```

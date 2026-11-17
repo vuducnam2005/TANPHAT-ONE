@@ -4,7 +4,7 @@ Ngày 17/11/2026 · Batch `CHG-20261117-020` · Prompt
 [CLAUDE_HR_ATTENDANCE_001_AND_DIRECTORY_READONLY](../prompts/CLAUDE_HR_ATTENDANCE_001_AND_DIRECTORY_READONLY.md)
 · Policy [HR_ATTENDANCE_001_POLICY](../security/HR_ATTENDANCE_001_POLICY.md).
 
-Trạng thái: **S1/S2_APPLIED_S3_MAIN_VERIFIED_WITH_GAPS** (S4 tiếp theo). Cột kết quả ghi `NOT_RUN` tới khi
+Trạng thái: **S3_MAIN_AND_SERVER_APPLIED_S4_MAIN_VERIFIED_SERVER_PENDING**. Cột kết quả ghi `NOT_RUN` tới khi
 có bằng chứng thật; không ghi PASS cho bước chỉ review mã.
 
 ## 1. Môi trường và tài khoản
@@ -103,5 +103,37 @@ S3 (CHG-20261117-021): main20.0.1.1.0, backup `backup-s3-20261117T210850` (dump9
   ẩn danh và E2E trên 18069.
 - Chưa có ảnh giao diện bằng tài khoản nhân viên thường trên 18069 (không có mật khẩu
   tài khoản thật; không tạo user giả trên main).
-- `hr.employee.public` native vẫn chứa `mobile_phone`/`phone`/`email`/sơ yếu lý lịch;
-  danh bạ không hiển thị, RPC đọc trực tiếp vẫn trả theo baseline native.
+- Gap native mobile/contact, proxy export và hồ sơ đính kèm được xử lý trong S4 bên dưới; không dùng việc ẩn view làm bằng chứng bảo mật.
+
+## 5. S3 đã giao và S4 — CHG-20261117-022
+
+S3 `14eaf388b34232ce0bdc51fa7bec5fb206ec0ff5` đã push và chạy trên18069/PCserver,
+version20.0.1.1.0. Server backup `C:/TANPHAT-backups/hr-attendance001/s3-20261117T211705`,
+31/31 tệp khớp SHA256, `-u` exit0/0ERROR. Public smoke7/7 tại
+`.local/hr-attendance001/e2e/s3-public-retry/`; không gửi/duyệt/chốt hoặc phân công người thật.
+
+S4 version20.0.1.2.0 thêm Tổng quan công từ cùng bộ dựng ô bảng công. KPI/donut/cột ngày
+cùng kỳ/phòng/tên-mãTP, loại tương lai; chi tiết dùng ngày-người, lọc chất lượng/ngày/chốt,
+10/20/50/100. Chọn điều kiện chưa Áp dụng không đổi dataset. Có chip đang áp, thẻ mobile,
+keyboard/focus/reduced-motion; chart300/340px. Công chưa có policy giữ null/Chưa xác nhận.
+Xuất Công của tôi là CSV BOM8 cột whitelist, owner lấy từ session; không attachment/public URL,
+không lý do/minh chứng; native export cũng chặn field liên kết/riêng tư cho viewer.
+
+| Phạm vi | Kiểm thực | Kết quả / giới hạn |
+| --- | --- | --- |
+| AT07-A/B | `.local/hr-attendance001/e2e_s4_extended.cjs`, `e2e/s4-final/results.json` | 40/40: 39nhân viên/663ngày-người;182đủ/64thiếu/6kiểmtra/60khônggiờ/351chưanguồn; partition/daily/5state/drilldown/filterAND/draft/clear/chips/pager/back/empty/future đúng;0JSerror |
+| AT07-C | 1440/1366/768/390/375, ảnh dashboard/detail; keyboard Enter/focus/reduced preference | Không tràn ngang trang, mobile cards. CSS zoom200% chỉ xấp xỉ, native browser zoom và thiết bị thật NOT_RUN |
+| AT05-D, CSV | `python -m unittest scripts.tests.test_hr_attendance_s3 scripts.tests.test_hr_attendance_metrics`; `node scripts/tests/test_hr_attendance_dashboard.cjs` | 19Python ca khôngDB và JS guard PASS: future/null/0/partition/CSV formula guard + stale-response/clear/pager. Không thay Odoo ORM suite |
+| S1 hardening | `models/directory_privacy.py`, `tests/test_directory_privacy.py` | Chặn proxy `hr.employee.export_data`; mobile/contact và biến thể groupsHR ở cả employee/public; work_phone compute tách khỏi mobile. Resume/certificate owner hoặcHR qua restriction native20 `ir.access`, không ir.rule cũ. ORM regression3ca có source, NOT_RUN fixture |
+| AT06/AT02 | Sáu ORM methods S3 + regression ownCSV/nestedexport/privacy mới | Chưa chạy fixture theo chỉ thị; không nghiệm thu full transition/race/multiworker/download với dữ liệu thật |
+
+Backup S4 main đầu: `backup-s4-20261117T214431` (dump9.928.226B,
+filestore413.396.968B); backup trước hardening cuối `backup-s4final-20261117T220459`
+(dump9.931.764B, filestore424.824.655B, source/config/restore-list/SHA256).
+Một lần upgrade hardening bị rollback vì dùng `ir.rule` đã bỏ trong native20; đổi sang
+`ir.access` restriction đúng source rồi retry. Kết quả cuối/local/server ghi tiếp sau khi kiểm.
+
+Không có policy công hoặc reviewer được gán trong lần triển khai. Native user/resource ID
+và kỹ năng công việc vẫn theo native consumers; không coi ID nội bộ là quyền đọc login/token/groups.
+Employee browser thật/own CSV bằng tài khoản nhân viên chưa có credential; admin không mapping.
+Chưa có kỳ chốt hoặc phiếu thật để kiểm queue/dialog có dữ liệu, không tạo fixture trênmain/server.

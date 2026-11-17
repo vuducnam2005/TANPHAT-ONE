@@ -290,3 +290,11 @@ CR-P07 — `tp_reporting_reviewer` (reviewer_id): một select từ document.get
 | action_periods / period_list/search | Tên kỳ, từ/đến, trạng thái, người chốt; native filter/page, company rule | Main empty/list đạt; filled/pager/multi-filter và chốt nghiệp vụ NOT_RUN |
 | action_mine + profile tab / OWL mine | Tháng, trạng thái dữ liệu/chốt; owner luôn từ backend; count ngày và page10/20/50/100; mobile cards, calendar/detail cùng payload | ORM uid41/42 read-only30ngày; render5viewport+filter/profile đạt. Auth employee browser chưa có password; render không thay E2E. Bảng phiên tối đa một ngày chỉ đọc không pager riêng (N/A); phiếu ngày là link sang list đầy đủ |
 | review/period wizard | Một phiếu hoặc một kỳ cố định, không bảng/picker rộng | N/A filter cho dialog một record; nghiệp vụ xác nhận chưa chạy trênmain |
+
+## HR-ATTENDANCE-001 S4 — CHG-20261117-022
+
+| Vị trí | Tiêu chí/phạm vi | Kiểm thực/còn thiếu |
+| --- | --- | --- |
+| Tổng quan công/action_dashboard/tp_dashboard | Kỳ/phòng/tên-mãTP, draft→applied/chip; detail chất lượng/ngày/chốt; AND giữa tiêu chí, OR tên/mã; company/backend giữ | Browser40/40 read-only admin sauprivacy; chart partition663=182+64+6+60+351 ngày-người, tương lai loại; mỗi detail filter/pager10/20/50/100 vàback giữ đúng; empty/future không donutgiả;5viewport/CSSzoom200/focus/reducedmedia PASS. Lockpopulation chưa có bản đãchốt, employee browser NOT_RUN |
+| Công của tôi/action_mine/profile | XuấtCSV đúng tháng/chất lượng/chốt đangáp, owner session và scalarwhitelist; không bảng picker mở rộng | ORMread uid41/42 forgedowner/fields vẫnown, CSV8cột/30ngày, noDBformula/null0 PASS; download browseremployee chưa cócredential. Native ownexport chặn nestedfield; không export danh bạ/công đồngnghiệp |
+| Dashboard charts vàKPI | Cùng bộ dựng ô tháng/phòng/search, count ngày-người khôngphântrang; drilldown chỉlọc detail, khôngđổi KPI | 19noDBtests+JS, ORMpartition vàbrowsercount/chart/state/date/filterAND PASS; khôngenginefilter mới/dependencyBI. Generic advanced SearchModel áp ởnative lists S3; dashboard customRPC chỉ tiêu chí công khai, không domain tùy ý |

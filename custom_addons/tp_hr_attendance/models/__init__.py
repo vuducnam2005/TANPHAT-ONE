@@ -4,4 +4,5 @@ from . import (
     attendance_day,
     attendance_import,
     attendance_menu,
+    directory_privacy,
 )

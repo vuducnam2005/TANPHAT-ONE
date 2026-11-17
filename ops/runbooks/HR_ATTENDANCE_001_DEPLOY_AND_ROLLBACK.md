@@ -9,3 +9,11 @@ Chỉ deploy source đã commit/push. Không copy working tree có foreign diff.
 5. Kiểm version, source hash, roster/user/phòng/nhóm/nguồn công/baseURL trước-sau. Public: anonymous về đăng nhập, đăng nhập hợp lệ, mở màn vừa giao, avatar và bundle, console/5xx. Chỉ đọc/mở/hủy form, không phân công, gửi/duyệt/chốt thật để smoke.
 
 Hoàn nguyên: dừng tp-odoo, khôi phục source/config từ backup đúng môi trường và dùng -u bản trước nếu schema tương thích; kiểm log rồi khởi động. Nếu cần rollback schema/dữ liệu đầy đủ, dùng dump **cùng server và cùng backup** với filestore của nó trong thời gian bảo trì; không restore local/test đè server. Giữ bằng chứng trước khi hoàn nguyên. Chưa diễn tập restore đầy đủ trong batch này.
+
+S4 `20.0.1.2.0` dùng baseline S3 `14eaf388` cho toàn bộ addon. Ngoài dashboard/CSV,
+có field groups liên hệ và restriction `ir.access` cho hồ sơ cá nhân của native20;
+build này không có model `ir.rule`. Backup đúng DB/filestore/config trước nâng cấp.
+Kiểm sau áp: proxy export employee bị chặn với non-HR, field metadata/đọc/domain/order
+liên hệ riêng bị từ chối, work-phone/avatar/self-profile vẫn hoạt động; source công
+và roster không đổi. Không coi ca resume trống hoặc bộ test không DB là bằng chứng
+tải certificate với hồ sơ thật; không tạo chứng từ giả trênmain để lấp ca này.

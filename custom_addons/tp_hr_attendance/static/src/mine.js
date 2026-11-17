@@ -41,9 +41,24 @@ export class MyAttendance extends Component {
                 writeStore("tp_att_mine", { month: data.month });
             }
         } catch (error) {
+            if (request !== this.request) return;
             if (/SessionExpired/.test(error.data?.name || error.name || "")) throw error;
             this.state.error = error.data?.message || "Không tải được công cá nhân. Vui lòng thử lại.";
         } finally { if (request === this.request) this.state.loading = false; }
+    }
+    async exportOwn() {
+        try {
+            const file = await this.orm.call("tp.hr.attendance.day", "tp_export_my_attendance", [{month: this.data.month, state: this.state.filter, lock: this.state.lock}]);
+            const url = URL.createObjectURL(new Blob([file.content], {type: "text/csv;charset=utf-8"}));
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = file.filename;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (error) {
+            if (/SessionExpired/.test(error.data?.name || error.name || "")) throw error;
+            this.state.error = error.data?.message || "Không xuất được công cá nhân. Vui lòng thử lại.";
+        }
     }
     step(delta) { this.state.month = shiftMonth(this.state.month, delta); return this.load(); }
     onMonth(ev) { if (ev.target.value) { this.state.month = ev.target.value; return this.load(); } }

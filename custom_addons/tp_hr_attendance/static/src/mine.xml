@@ -15,6 +15,7 @@
             <button class="btn btn-outline-primary" t-on-click="this.openRequests">Yêu cầu của tôi</button>
         </header>
         <div class="o_tp_att_mine_toolbar">
+            <button class="btn btn-outline-primary" t-att-disabled="this.state.loading" t-on-click="this.exportOwn">Xuất CSV công của tôi</button>
             <button class="btn btn-outline-primary" t-on-click="() => this.state.view = this.state.view === 'calendar' ? 'days' : 'calendar'" t-out="this.state.view === 'calendar' ? 'Xem theo ngày' : 'Xem lịch tháng'"/>
             <button class="btn btn-light" t-on-click="() => this.step(-1)" aria-label="Tháng trước">‹</button>
             <input type="month" t-att-value="this.state.month" t-on-change="this.onMonth" aria-label="Tháng công của tôi"/>
@@ -69,7 +70,7 @@
                 <td><span t-att-class="'o_tp_att_badge o_tp_att_s_' + row.state" t-out="row.label"/></td><td t-out="row.lock === 'locked' ? 'Đã chốt' : 'Đang mở'"/>
             </tr></tbody></table></div>
         <p t-if="!this.rows.length" class="alert alert-info">Không có ngày phù hợp bộ lọc.</p>
-        <nav class="o_tp_att_mine_toolbar" aria-label="Phân trang công cá nhân"><label>Số ngày <select t-on-change="(ev) => { this.state.size = Number(ev.target.value); this.state.page = 1; }"><option t-foreach="[10,20,50,100]" t-as="size" t-key="size" t-att-value="size" t-att-selected="size === this.state.size" t-out="size"/></select></label><button class="btn btn-light" t-att-disabled="this.state.page === 1" t-on-click="() => this.state.page--">Trang trước</button><span><t t-out="this.state.page"/>/<t t-out="this.pages"/> · <t t-out="this.filteredRows.length"/> ngày</span><button class="btn btn-light" t-att-disabled="this.state.page === this.pages" t-on-click="() => this.state.page++">Trang sau</button></nav>
+        <nav class="o_tp_att_mine_toolbar" aria-label="Phân trang công cá nhân"><label>Số ngày <select t-on-change="(ev) => { this.state.size = +ev.target.value; this.state.page = 1; }"><option t-foreach="[10,20,50,100]" t-as="size" t-key="size" t-att-value="size" t-att-selected="size === this.state.size" t-out="size"/></select></label><button class="btn btn-light" t-att-disabled="this.state.page === 1" t-on-click="() => this.state.page--">Trang trước</button><span><t t-out="this.state.page"/>/<t t-out="this.pages"/> · <t t-out="this.filteredRows.length"/> ngày</span><button class="btn btn-light" t-att-disabled="this.state.page === this.pages" t-on-click="() => this.state.page++">Trang sau</button></nav>
     </t>
 </section>
 </t>

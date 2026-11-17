@@ -38,18 +38,20 @@ Nguồn: model native `hr.employee.public` (read-only SQL view; ACL native chỉ
 | Sinh nhật (ngày/tháng) | `birthday_public_display_string` — chỉ có giá trị khi cờ chia sẻ native bật |
 
 Không hiển thị trong danh bạ: `mobile_phone` (chưa phân loại là số công việc),
-`user_id`/login, trạng thái tài khoản/bảo mật, API key, nhóm quyền. Hiện
-`mobile_phone` trống với toàn bộ hồ sơ (kiểm 17/11/2026); native vẫn coi đây là
-"Work Mobile", HR chỉ nhập số công việc vào trường này.
+`user_id`/login, trạng thái tài khoản/bảo mật, API key, nhóm quyền. S4 giới hạn
+mobile và biến thể chuẩn hóa/định dạng, `phone`/`email` liên kết tài khoản bằng
+field groupsHR trên cả employee/public; work_phone/work_email công việc giữ chia sẻ.
 
 Private (field `groups="hr.group_hr_user"` native + TP): hợp đồng/file, lương,
 phụ cấp, CCCD/hộ chiếu/thuế/BHXH/ngân hàng, địa chỉ nhà, liên hệ khẩn cấp, gia
 đình, sức khỏe, kỷ luật, đánh giá, ngày sinh đầy đủ, điện thoại/email riêng.
 Nhân viên thường không có ACL `hr.employee`: native chỉ trả field công khai qua
 `hr.employee.public` (proxy đọc); đọc, lọc, đếm hoặc sắp xếp theo field private bị
-AccessError; tạo/sửa/xóa/sao chép bị từ chối. `hr.employee.public` native còn mang
-`mobile_phone`, `phone`, `email`, `user_id`, sơ yếu lý lịch/kỹ năng (baseline native,
-không thêm mới); view danh bạ không hiển thị các field này.
+AccessError; tạo/sửa/xóa/sao chép bị từ chối. S4 bổ sung restriction không nhóm
+trên `hr.resume.line` bằng `ir.access` native20: non-HR chỉ hồ sơ của mình,
+HR giữ phạm vi đã có; description/certificate/download/export theo quyền nguồn.
+Native user/resource IDs và kỹ năng công việc giữ để native consumers hoạt động;
+các ID này không cho phép đọc thông tin bảo mật tài khoản hoặc hồ sơ riêng.
 
 ## 3. Bảng công — trường chia sẻ
 
@@ -72,9 +74,12 @@ nội dung/minh chứng điều chỉnh, GPS/ảnh/sinh trắc. Nghỉ chỉ hi�
 
 ## 4. Export và file
 
-- `hr.employee.public.export_data`: chỉ HR (`hr.group_hr_user`); người khác AccessError.
+- `hr.employee.public.export_data` và proxy `hr.employee.export_data`: chỉ HR (`hr.group_hr_user`); người khác AccessError.
 - `tp.hr.attendance.day/session.export_data`: HR/người phụ trách theo company;
-  nhân viên chỉ khi mọi dòng là của chính mình (Công của tôi).
+  nhân viên chỉ khi mọi dòng là của chính mình, whitelist scalar công khai, không field liên kết.
+- `tp_export_my_attendance`: CSV UTF-8 BOM8 cột ngày/giờ/công/trạng thái/kỳ/nguồn;
+  owner từ session, month/state/lock đã áp; không nhận field hoặc owner client.
+  Chống công thức ô, không tạo attachment/token. Employee thiếu mapping bị từ chối rõ.
 - Minh chứng phiếu: `ir.attachment` gắn `res_model=tp.hr.attendance.correction`,
   quyền theo record phiếu (native), không public, không token chia sẻ.
 - File Excel nguồn: attachment của lô nhập, chỉ HR/người nhập; không vào Git.

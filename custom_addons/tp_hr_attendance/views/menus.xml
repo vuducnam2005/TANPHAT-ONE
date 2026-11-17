@@ -2,6 +2,7 @@
 <!-- HR-ATTENDANCE-001 menus inside TP HR; processing items follow assignments, config stays with HR manager. -->
 <odoo>
     <menuitem id="menu_group_attendance" name="Chấm công" parent="tp_hr_workspace.menu_hr" sequence="15" groups="base.group_user"/>
+    <menuitem id="menu_dashboard" name="Tổng quan công" parent="menu_group_attendance" action="action_dashboard" sequence="10" groups="base.group_user"/>
     <menuitem id="menu_board" name="Bảng công" parent="menu_group_attendance" action="action_board" sequence="20" groups="base.group_user"/>
     <menuitem id="menu_mine" name="Công của tôi" parent="menu_group_attendance" action="action_mine" sequence="30" groups="base.group_user"/>
     <menuitem id="menu_my_requests" name="Yêu cầu của tôi" parent="menu_group_attendance" action="action_my_requests" sequence="40" groups="base.group_user"/>

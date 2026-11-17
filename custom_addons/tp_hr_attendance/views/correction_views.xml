@@ -126,4 +126,5 @@
         </form></field>
     </record>
     <record id="action_mine" model="ir.actions.client"><field name="name">Công của tôi</field><field name="tag">tp_hr_attendance.mine</field><field name="path">cong-cua-toi</field></record>
+    <record id="action_dashboard" model="ir.actions.client"><field name="name">Tổng quan công</field><field name="tag">tp_hr_attendance.dashboard</field><field name="path">cham-cong</field></record>
 </odoo>

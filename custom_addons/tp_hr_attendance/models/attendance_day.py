@@ -19,6 +19,7 @@ from .attendance_common import (
     utc_to_local,
 )
 from .attendance_correction import clock_label
+from .attendance_metrics import metrics, own_csv
 
 WEEKDAY_LABELS = ('T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN')
 CELL_LABELS = {
@@ -81,7 +82,7 @@ class AttendanceSession(models.Model):
         return super().unlink()
 
     def export_data(self, fields_to_export):
-        self.env['tp.hr.attendance.day']._tp_check_export(self)
+        self.env['tp.hr.attendance.day']._tp_check_export(self, fields_to_export)
         return super().export_data(fields_to_export)
 
 
@@ -169,7 +170,7 @@ class AttendanceDay(models.Model):
 
     # ------------------------------------------------------------------ export
     @api.model
-    def _tp_check_export(self, records):
+    def _tp_check_export(self, records, fields_to_export):
         records.check_access('read')
         user = self.env.user
         if user.has_group(HR_MANAGER):
@@ -182,11 +183,21 @@ class AttendanceDay(models.Model):
             return True
         own = self.env['hr.employee'].sudo().search([('user_id', '=', user.id)]).ids
         if own and all(record.sudo().employee_id.id in own for record in records):
+            allowed = {
+                'tp.hr.attendance.day': {
+                    'work_date', 'weekday', 'employee_code', 'employee_name', 'first_in', 'last_out',
+                    'in_time', 'out_time', 'session_count', 'recorded_hours', 'scheduled_hours',
+                    'units', 'units_state', 'units_display', 'data_state', 'lock_state', 'source_updated_at', 'version',
+                },
+                'tp.hr.attendance.session': {'work_date', 'check_in', 'check_out', 'worked_hours', 'source'},
+            }.get(records._name, set())
+            if any(field not in allowed for field in fields_to_export):
+                raise AccessError(self.env._('Chỉ được xuất các cột công cá nhân công khai; không xuất trường liên kết hoặc dữ liệu riêng.'))
             return True
         raise AccessError(self.env._('Chỉ được xuất công của chính mình. HR hoặc người phụ trách công xuất dữ liệu chung.'))
 
     def export_data(self, fields_to_export):
-        self._tp_check_export(self)
+        self._tp_check_export(self, fields_to_export)
         return super().export_data(fields_to_export)
 
     # --------------------------------------------------------------- recompute
@@ -326,6 +337,7 @@ class AttendanceDay(models.Model):
             if record:
                 result.update(day_id=record.id, in_time=record.in_time or '', out_time=record.out_time or '',
                               hours=record.recorded_hours, units=record.units_display, units_state=record.units_state,
+                              units_value=record.units if record.units_state == 'confirmed' else None,
                               rule=record.rule_id.name or '', version=record.version)
             return result
         return cell, day_map
@@ -405,7 +417,52 @@ class AttendanceDay(models.Model):
         }
 
     @api.model
+    def tp_export_my_attendance(self, params=None):
+        # Owner is resolved by tp_my_attendance from the current session, never client IDs.
+        params = dict(params or {})
+        data = self.tp_my_attendance({'month': params.get('month')})
+        if not data.get('has_employee'):
+            raise UserError(data['message'])
+        state = params.get('state') or ''
+        lock = params.get('lock') or ''
+        if (state and state not in CELL_LABELS) or (lock and lock not in ('open', 'locked')):
+            raise UserError(self.env._('Bộ lọc xuất công không hợp lệ.'))
+        return {'filename': 'cong-cua-toi-' + data['month'] + '.csv',
+                'content': own_csv(data['rows'], state, lock)}
+
+    @api.model
     def tp_board(self, params=None):
+        return self._tp_board_data(params)
+
+    @api.model
+    def tp_dashboard(self, params=None):
+        params = dict(params or {})
+        board = self._tp_board_data({'month': params.get('month'), 'department_id': params.get('department_id'),
+                                     'search': params.get('search'), 'mode': 'month'}, paginate=False)
+        result = metrics(board['rows'], board['dates'], board['today'])
+        cells = result.pop('cells')
+        selected = params.get('detail_state') or 'attention'
+        if selected == 'attention':
+            cells = [row for row in cells if row['state'] in ('missing', 'review')]
+        elif selected in CELL_LABELS:
+            cells = [row for row in cells if row['state'] == selected]
+        chosen_date = params.get('detail_date') or ''
+        if chosen_date:
+            cells = [row for row in cells if row['date'] == chosen_date]
+        lock = params.get('lock') or ''
+        if lock in ('locked', 'open'):
+            cells = [row for row in cells if row['lock'] == lock]
+        size = int(params.get('page_size') or 20)
+        size = size if size in (10, 20, 50, 100) else 20
+        pages = max(1, -(-len(cells) // size))
+        page = min(max(1, int(params.get('page') or 1)), pages)
+        result.update(rows=cells[(page - 1) * size:page * size], detail_total=len(cells), page=page, page_count=pages, page_size=size,
+                      month=board['month'], today=board['today'], updated=board['updated'], labels=board['labels'],
+                      departments=board['departments'], has_rule=board['has_rule'])
+        return result
+
+    @api.model
+    def _tp_board_data(self, params=None, paginate=True):
         """Month matrix / day table for every internal employee (read-only, record rules apply)."""
         self.check_access('read')
         params = dict(params or {})
@@ -479,7 +536,7 @@ class AttendanceDay(models.Model):
             'end': end.isoformat(), 'today': today.isoformat(), 'anchor': anchor.isoformat(),
             'dates': [{'date': d.isoformat(), 'day': d.day, 'weekday': WEEKDAY_LABELS[d.weekday()], 'weekend': d.weekday() >= 5,
                        'future': d > today} for d in dates],
-            'rows': rows[(page - 1) * page_size: page * page_size], 'total': len(rows), 'page': page, 'page_size': page_size,
+            'rows': rows[(page - 1) * page_size: page * page_size] if paginate else rows, 'total': len(rows), 'page': page, 'page_size': page_size,
             'page_count': page_count, 'counts': counts, 'labels': CELL_LABELS, 'updated': updated,
             'departments': [{'id': dept.id, 'name': dept.complete_name or dept.name} for dept in departments],
             'batches': [{'id': batch.id, 'name': batch.name} for batch in applied] if processor else [],

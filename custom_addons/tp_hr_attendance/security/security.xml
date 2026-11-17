@@ -5,4 +5,11 @@
         <field name="name">Chấm công: người phụ trách được phân công</field>
         <field name="comment">Tự đồng bộ từ Phân công xử lý công. Chỉ mở quyền đọc dữ liệu nhập và nhật ký; quyền thao tác vẫn kiểm theo từng phân công.</field>
     </record>
+    <!-- Global intersection: native read-all ACL must not expose colleagues' personal resume/files. -->
+    <record id="rule_resume_personal_privacy" model="ir.access">
+        <field name="name">TP HR: personal resume only, HR keeps its existing scope</field>
+        <field name="model_id" ref="hr_skills.model_hr_resume_line"/>
+        <field name="operation">crud</field>
+        <field name="domain">[(1, '=', 1)] if user.has_group('hr.group_hr_user') else [('employee_id.user_id', '=', user.id)]</field>
+    </record>
 </odoo>

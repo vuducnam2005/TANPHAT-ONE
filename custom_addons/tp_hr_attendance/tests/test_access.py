@@ -66,6 +66,14 @@ class TestAttendanceAccess(AttendanceCase):
         Day = self.env_for(self.viewer)['tp.hr.attendance.day']
         exported = Day.browse(self.day_a.id).export_data(['work_date', 'in_time'])
         self.assertEqual(exported['datas'][0][1], '07:37')
+        for field in ('employee_id/parent_id/work_email', 'employee_id.parent_id.work_email',
+                      'employee_id', 'issue_ids/message', 'create_uid/login', 'unknown_field'):
+            with self.assertRaises(AccessError, msg=field):
+                Day.browse(self.day_a.id).export_data([field])
+        own_sessions = self.env_for(self.viewer)['tp.hr.attendance.session'].search([('employee_id', '=', self.emp_a.id)])
+        self.assertTrue(own_sessions.export_data(['check_in'])['datas'])
+        with self.assertRaises(AccessError):
+            own_sessions.export_data(['employee_id/parent_id/work_email'])
         with self.assertRaises(AccessError):
             Day.browse([self.day_a.id, self.day_b.id]).export_data(['work_date'])
         colleague_sessions = self.env_for(self.viewer)['tp.hr.attendance.session'].search([('employee_id', '=', self.emp_b.id)])
@@ -74,6 +82,16 @@ class TestAttendanceAccess(AttendanceCase):
             colleague_sessions.export_data(['check_in'])
         manager_rows = self.env_for(self.manager)['tp.hr.attendance.day'].browse([self.day_a.id, self.day_b.id]).export_data(['work_date'])
         self.assertEqual(len(manager_rows['datas']), 2)
+
+    def test_own_csv_ignores_forged_employee_and_fields(self):
+        Day = self.env_for(self.viewer)['tp.hr.attendance.day']
+        result = Day.tp_export_my_attendance({'month': '2026-11', 'employee_id': self.emp_b.id,
+                                             'fields': ['requests', 'reason'], 'state': 'ok'})
+        self.assertIn('07:37', result['content'])
+        self.assertNotIn('08:00', result['content'])
+        self.assertEqual(result['filename'], 'cong-cua-toi-2026-11.csv')
+        with self.assertRaises(UserError):
+            Day.tp_export_my_attendance({'month': '2026-11', 'state': 'forged'})
 
     def test_viewer_cannot_import_or_tamper_with_batches(self):
         with self.assertRaises(AccessError):
