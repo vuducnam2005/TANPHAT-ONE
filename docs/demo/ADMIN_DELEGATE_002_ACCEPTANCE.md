@@ -52,14 +52,14 @@ có bằng chứng một phần; `NOT_RUN` chưa chạy. Static check không là
 | --- | --- | --- | --- |
 | AD2-01 | Ledger thực, không hardcode actor | PASS (đọc) | Server: actor lấy từ ledger hiệu lực 1/1, capability/scope sống; không grant/revoke thử. |
 | AD2-02 | HR/Kho dashboard delegate nhất quán | PASS (đọc) | Server S1: HR KPI = danh sách, Kho 10 ô = danh sách, 0 dòng phòng mình; browser render NOT_RUN. |
-| AD2-03 | KH-KD ghi ngoài phòng qua đường thật | PARTIAL | S4: dự án ngoài phòng mở qua ủy quyền dùng command gốc cho metadata/đối tác/tình trạng/ghi chú/WBS/giao việc/gói thầu của mình/workflow hợp đồng; lịch sử dự án/công việc và giá gói thầu đọc được. Ngoại lệ có chủ đích: tiến độ task (người được giao/HEAD), gói thầu owner khác và thao tác HEAD hợp đồng, ghi CRM hồ sơ dự án (owner-only, chưa adapter), hồ sơ KD baseline. Main/server 0 dự án được quản lý: hành vi theo bản ghi và ghi thật NOT_RUN. |
+| AD2-03 | KH-KD ghi ngoài phòng qua đường thật | PARTIAL | S4: dự án ngoài phòng mở qua ủy quyền dùng command gốc cho metadata/đối tác/tình trạng/ghi chú/WBS/giao việc/gói thầu của mình/workflow hợp đồng; lịch sử dự án/công việc và giá gói thầu đọc được. Ngoại lệ có chủ đích: tiến độ task (người được giao/HEAD), gói thầu owner khác và thao tác HEAD hợp đồng, ghi CRM hồ sơ dự án (owner-only, chưa adapter), hồ sơ KD baseline. Server sau deploy (delegate ledger 1/1, chỉ đọc): lịch sử dự án/công việc từ không đọc → đọc theo scope (tổng 0/0 dòng), command dự án/công việc và workflow hợp đồng mở, không nhóm CRM/HEAD, không tạo CRM. Main/server 0 dự án được quản lý: hành vi theo bản ghi và ghi thật NOT_RUN. |
 | AD2-04 | Gán/đổi/trả stock, race, mixed/own/unknown | PARTIAL | S3: adapter khóa + kiểm lại rồi chạy RPC gốc; main probe chỉ đọc: admin chính như cũ, nhân viên thường 0 máy kho/không tạo popup/AccessError. Server sau deploy (delegate ledger 1/1, chỉ đọc): 7/7 máy rảnh chỉ đọc, 0 ghi/tệp/chatter, popup tạo được, người nhận 35 (0 phòng mình/0 không phòng), in nhãn máy kho AccessError; `tp_quick_action` tới khóa nguồn; người nhận phòng mình và trả máy phòng mình AccessError, người nhận ngoài phòng hợp lệ, máy có chủ UserError. Gán/đổi/trả thật, race hai người và 2 ca Odoo NOT_RUN theo chính sách. |
 | AD2-05 | Reporting baseline + delegate | PARTIAL | S2 main + server: admin chính vào dashboard/hồ sơ/nghĩa vụ, tự cấp bị chặn; delegate thật có dashboard nhãn ủy quyền và 9 model đọc, 0 dòng phòng mình, không ghi/assignment. Nhánh dữ liệu chưa chạy thật: cả hai nơi 0 hồ sơ/kế hoạch/snapshot; logic SQL kiểm trên CTE tổng hợp; 6 ca Odoo NOT_RUN. |
-| AD2-06 | Baseline phòng mình/kiêm nhiệm giữ | NOT_RUN | |
-| AD2-07 | RPC/context/nested/import/default không lách | NOT_RUN | |
-| AD2-08 | Thu hồi phiên cũ/worker | NOT_RUN | Không grant/revoke thử trên main/server. |
-| AD2-09 | Nhân viên thường không mở thêm | PARTIAL | Slice 1 main + server: HR/Kho dashboard, summary, XLSX AccessError; đề xuất 0; không thêm menu. S2 main + server: 10 model Báo cáo và dashboard vẫn AccessError như trước, không menu Báo cáo (server giống hệt probe trước deploy). S3 main + server: 0/7 máy kho rảnh, không tạo popup, `tp_quick_action`/mở popup/in nhãn AccessError (server giống hệt trước deploy). S4 main: lịch sử dự án/công việc theo baseline, 0 dự án/command mới; server ghi ở Slice 4. |
-| AD2-10 | Browser thực tế desktop/mobile | NOT_RUN | |
+| AD2-06 | Baseline phòng mình/kiêm nhiệm giữ | PARTIAL (đọc) | Scope phòng mình gộp hồ sơ nhân viên, vai trò KD, assignment/grant dự án, CRM team, assignment báo cáo; scope chưa đầy đủ thì từ chối. Server: HR 0 hồ sơ/đơn vị phòng mình, lọc phòng mình → 0 (S1); Kho 0 dòng phòng mình (S1); Báo cáo 0 dòng phòng mình (S2); người nhận 0 phòng mình, người nhận/trả máy phòng mình AccessError (S3). Dự án phòng mình không đổi chỉ có ca Odoo S4 (NOT_RUN). Chưa có actor kiêm nhiệm thật để kiểm riêng; ghi thật NOT_RUN. |
+| AD2-07 | RPC/context/nested/import/default không lách | PARTIAL | S1: drill-down HR chỉ whitelist field/toán tử (kiểm thuần 17 ca), lọc `private_email` bị từ chối trên server. S1b: RPC thẳng `open_ui_detail('pending_import')` của delegate trên server AccessError (admin chính vẫn mở). S3: `tp_quick_action` bỏ context lạ (`clean_context`), sentinel chạy RPC gốc không giả được qua JSON-RPC, `default_get` chỉ đóng dấu version cho máy đọc được, replay chỉ trả kết quả của chính người gửi. S4: ghi chỉ qua command gốc có version/mã thao tác. Import/nested write thật và fuzz context NOT_RUN. |
+| AD2-08 | Thu hồi phiên cũ/worker | NOT_RUN | Thiết kế: mỗi lần đọc/ghi kiểm ledger sống (`_tp_has_admin_delegation`, `lock=True` khi ghi), không ormcache tập ủy quyền; các ca Odoo S3/S4 có bước thu hồi nhưng NOT_RUN. Không grant/revoke thử trên main/server; phiên cũ/nhiều worker chưa chạy. |
+| AD2-09 | Nhân viên thường không mở thêm | PARTIAL | Slice 1 main + server: HR/Kho dashboard, summary, XLSX AccessError; đề xuất 0; không thêm menu. S2 main + server: 10 model Báo cáo và dashboard vẫn AccessError như trước, không menu Báo cáo (server giống hệt probe trước deploy). S3 main + server: 0/7 máy kho rảnh, không tạo popup, `tp_quick_action`/mở popup/in nhãn AccessError (server giống hệt trước deploy). S4 main + server: lịch sử dự án/công việc, command, tạo CRM giống hệt trước deploy (chỉ đổi tên module override `_kd_money_read`). |
+| AD2-10 | Browser thực tế desktop/mobile | NOT_RUN | Không đăng nhập bằng mật khẩu/phiên người thật, không tạo tài khoản thử. Chỉ smoke public không đăng nhập (`/web/health`, `/dang-nhap`, chuyển hướng `/web/login`, `/odoo`) sau mỗi slice. |
 
 ## 4. Kết quả theo slice
 
@@ -305,3 +305,48 @@ Cập nhật sau mỗi slice đã áp.
   0 dự án được quản lý/0 hợp đồng/0 CRM gắn dự án/0 hồ sơ KD; admin chính và
   nhân viên thường đọc lịch sử theo baseline, override `_kd_money_read` nạp
   đúng module. Delegate trên main NOT_RUN (ledger 0).
+- PC server `f91d699c`: preflight 7/7 tệp đúng baseline; backup
+  `C:/TANPHAT-backups/admin-delegate002/s4-20261118T050616` (dump 9.570.166B,
+  filestore 29.819.146B/597 mục, source-config, `pg_restore -l` 15.437 dòng,
+  SHA256). `-u tp_admin_delegation` exit 0/0 ERROR, checksum 7/7. Snapshot
+  nhân viên/tài khoản/nhóm/roster/thiết bị/đề xuất/ledger/ngày công/nhóm ngụ
+  ý/Báo cáo/baseURL giữ, chỉ đổi version.
+- Probe server chỉ đọc (kết nối READ ONLY, delegate lấy từ ledger 1/1, không
+  đổi quyền ai), 49 khóa so trước/sau deploy, chỉ 5 khóa đổi:
+  - Delegate: `tp.project.update`/`tp.task.update` đọc False → True; đếm dòng
+    0/0 (tổng 0/0). Command dự án/công việc, workflow hợp đồng như trước; không
+    `scoped_staff`/`core_user`/CRM/system, 0 vai trò HEAD, tạo CRM bị chặn.
+  - Override `_kd_money_read` của cả ba actor trỏ module ủy quyền; admin chính
+    và nhân viên thường không đổi giá trị nào khác.
+  - Server có 0 dự án được quản lý, 0 công việc, 0 hợp đồng, 0 gói thầu, 0 CRM
+    gắn dự án, 0 hồ sơ KD: đi qua bản ghi NOT_RUN.
+- Public: `/web/health` 200, `/dang-nhap` 200, `/web/login` → `/dang-nhap`,
+  `/odoo` → `/app` như cũ. Command thật, race, browser phiên delegate NOT_RUN.
+
+## 5. Tổng kết batch (S1–S4)
+
+| Trạng thái | AD2 |
+| --- | --- |
+| PASS (đọc) | AD2-01, AD2-02 |
+| PARTIAL | AD2-03, AD2-04, AD2-05, AD2-06, AD2-07, AD2-09 |
+| NOT_RUN | AD2-08 (thu hồi phiên cũ/worker), AD2-10 (browser) |
+
+- Admin chính: giữ toàn quyền như cũ; cấp/thu ủy quyền qua ledger có lý do và
+  xác thực lại; S2 vào được Báo cáo với vai trò cấu hình (không reviewer, không
+  tự cấp).
+- Delegate (ngoài phòng mình, cùng company, nguồn xác định): HR tổng quan/
+  drill-down whitelist/XLSX; Kho dashboard/summary/đề xuất đọc, máy rảnh để chọn
+  và Gán/Đổi/Trả qua RPC gốc; Báo cáo đọc hồ sơ đã gửi/kế hoạch/nghĩa vụ/chỉ
+  đạo/phản hồi công khai; KH-KD dự án ngoài phòng qua command gốc (metadata,
+  đối tác, tình trạng, ghi chú, WBS, giao việc, gói thầu của mình, workflow hợp
+  đồng, lịch sử, giá gói thầu). Không Settings/Apps/ACL/server action/module,
+  không cấp tiếp admin, không nhóm HR/Báo cáo toàn cục, không HEAD/assignment.
+- Phòng mình, unknown, mixed, khác company: baseline ở mọi miền.
+- Gap chưa có adapter: duyệt/trả lại/thực hiện đề xuất Kho qua ủy quyền; ghi
+  CRM hồ sơ dự án; hồ sơ KD (giao khoán/sản lượng/nghiệm thu/thanh toán/năng
+  lực/nghĩa vụ/kế hoạch); phiếu thiết bị thiếu phòng frozen không mở. Ngoại lệ có
+  chủ đích: tiến độ task, gói thầu owner khác, thao tác HEAD hợp đồng; chấm công
+  import/duyệt/chốt không mở từ ủy quyền.
+- Chưa kiểm: 10 ca Odoo mới/sửa (cần môi trường test được phép, không
+  18079/clone/fixture trên main/server), ghi thật/race/thu hồi trên dữ liệu thật,
+  browser phiên delegate desktop/mobile, nhiều worker.
