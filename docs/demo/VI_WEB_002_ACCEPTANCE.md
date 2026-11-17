@@ -1,40 +1,67 @@
-# VI-WEB-002 — Lỗi lý do, hộp đối chiếu và tiếng Việt
+# VI-WEB-002 — Lý do, đối chiếu danh tính và tiếng Việt
 
-Ngày 17/11/2026, CHG-20261117-006/007. Người dùng báo lỗi tại `/app/action-528/35` trên public và yêu cầu Việt hóa toàn web, đồng thời sửa bố cục hộp Đối chiếu danh tính. Phạm vi này tiếp tục bản ADMIN-DELEGATE-001 đã giao; không tự cấp người thật hoặc mở rộng quyền nghiệp vụ.
+Ngày 17/11/2026; CHG-20261117-006/007/008. Trạng thái: **đã áp 18069 và PC server, còn giới hạn được ghi rõ dưới đây**. Tiếp tục yêu cầu trên `/app/action-528/35` và hai ảnh người dùng cung cấp.
 
-## Nguyên nhân và thay đổi
+## Nguyên nhân và bản sửa
 
-- Hành động cấp/thu hồi tạo transient trước khi mở form, nhưng `reason` bắt buộc ở database. Người dùng chưa kịp nhập đã nhận lỗi. Hai hành động sửa/lưu trữ hồ sơ được ủy quyền có cùng lỗi. Cho phép lý do trống lúc mở; form vẫn bắt nhập và backend từ chối cả chuỗi trống/khoảng trắng khi xác nhận. Giữ xác thực lại, khóa bản ghi, tài khoản đích, scope, thu hồi và audit.
-- Hộp đối chiếu xuất thẳng JSON ID/checksum trong `preview`, trường không có nhãn và ảnh gốc không giới hạn. Thay bằng nhãn và kết quả tiếng Việt, ảnh đọc từ bản thu nhỏ 128px, dialog vừa màn hình và hai cột ảnh co được. Digest, kiểm tra đồng thời và snapshot trước/sau vẫn ở backend; không đồng bộ tên/ảnh khi chỉ mở hoặc hủy.
-- `base`/`web` thiếu bản Việt của chính thông báo lỗi; nhiều catalog mới còn trống hoặc giữ nguyên tiếng Anh. Mở rộng `tp_i18n_vi` qua catalog native, bổ sung cache theo namespace trong hook `ir.http`; không sửa core hoặc thay DOM. JavaScript/Python giữ cơ chế dịch, định dạng và placeholder gốc. Không đổi ngôn ngữ tài khoản hàng loạt, dữ liệu nhập tay, API payload hoặc tên sản phẩm.
+- **Thiếu Lý do:** hành động cấp/thu hồi tạo transient trước khi mở form, nhưng trường `reason` bắt buộc ở database. Người dùng chưa kịp nhập đã nhận lỗi. Hành động sửa/lưu trữ hồ sơ được ủy quyền có cùng lỗi. Cho phép trống lúc mở; form và backend vẫn bắt lý do khi xác nhận, kể cả trường hợp chỉ nhập khoảng trắng. Giữ xác thực lại, tài khoản đích, khóa, scope và audit.
+- **Đối chiếu danh tính:** form cũ xuất JSON ID/checksum, ảnh gốc quá lớn và thiếu nhãn. Form mới dùng nhãn rõ, hai ảnh thu nhỏ 128px, hộp thoại vừa màn hình và kết quả tiếng Việt. Backend vẫn giữ digest, kiểm đồng thời, snapshot trước/sau và ảnh gốc khi đồng bộ. Chỉ mở/hủy không đổi tên hoặc ảnh.
+- **Tiếng Việt:** bổ sung catalog native và cache dịch theo namespace `web`, `mail`… cho `vi`/`vi_VN`; giữ bản Việt native và en_US. FullCalendar thiếu nhãn tuần dài trong locale Việt, nên addon bổ sung đúng locale trước khi khởi tạo lịch. Không sửa core hoặc thay DOM.
+- **Dashboard mẫu:** phản hồi native thiếu `translation_namespace`; ô nhãn tĩnh của mẫu cũng không dùng công thức `_t`. Route kế thừa bổ sung namespace và dịch những ô literal khớp catalog của module nguồn. Giữ auth/readonly và mọi từ chối native; không ghi database, đổi công thức/số hoặc phản hồi en_US/dashboard thật.
 
-## Tiêu chí và kiểm chứng
+## Môi trường, source và sao lưu
 
-| Tiêu chí | Cách kiểm / bằng chứng |
+Hai commit chức năng **35e1c11f** và **73ffae56** đã push `origin/main`, áp trực tiếp trên 18069 rồi triển khai PC server. Gói đầu 90 tệp và delta 11 tệp có tổng cộng 92 tệp riêng biệt; tất cả khớp SHA256 từ commit. Giữ các thay đổi Reporting, branding, login và sidebar của phiên khác.
+
+| Addon | Phiên bản trên 18069 và PC server |
 | --- | --- |
-| Admin mở cấp/thu hồi được trước khi nhập lý do | Mở/hủy trên hồ sơ có sẵn; kiểm reason trống và tài khoản đích chốt đúng. Không xác nhận cấp/thu hồi thật. |
-| Không thể bỏ lý do | Backend smoke trong transaction rollback với `False` và khoảng trắng; browser nhấn xác nhận khi trống phải giữ dialog và báo trường thiếu. |
-| Bố cục đọc được | 1440/768/390/320px; hai ảnh tải thật, thumbnail giới hạn, không JSON/hash, không cuộn ngang trong dialog, Esc đóng được. |
-| Bản dịch không phá source | `scripts/check_vi_catalog.py`: PO không trùng/fuzzy/trống, placeholder, XML, hook chạy lặp, bản Việt native và en_US giữ đúng. Kiểm XML ID/source trên registry đang chạy bằng thao tác đọc. |
-| Dữ liệu/quyền giữ nguyên | Fingerprint user/group/HR/nghiệp vụ trước/sau; ledger vẫn 0, không chọn người nhận, không upload tệp thử vào main/server. |
-| Native UI | HR, Trao đổi, Việc cá nhân, Lịch, Liên hệ, CRM, Dự án, Giờ làm việc, Kho, Báo cáo, Cài đặt; chờ nội dung tải xong, kiểm console, public và các hộp thoại liên quan. |
+| tp_admin_delegation | 20.0.1.0.1 |
+| tp_hr_workspace | 20.0.1.11.6 |
+| tp_i18n_vi | 20.0.1.1.1 |
 
-Catalog hiện có 5.247 mục overlay và 5.243 mục bổ sung namespace, 6.694 nguồn khác nhau (có mục dùng chung giữa catalog). Bổ sung khoảng 6.546 nguồn so với bản 148 mục trước; thêm 4 mục thông báo server ở catalog riêng. Trong phần mở rộng tự động, 39 tham chiếu metadata cũ không khớp runtime được loại; 387 mục dịch vẫn bằng nguồn được giữ ngoài bản thêm (định danh, ví dụ, tên riêng và thuật ngữ kỹ thuật cần bảo toàn). Hai nhãn kiểm trực quan cuối được bổ sung theo source runtime: `Week ` và hướng dẫn Barcode Lookup. FullCalendar thiếu `weekTextLong` trong locale `vi`, nên asset bổ sung đúng locale trước khi khởi tạo lịch; không sửa core/DOM hoặc locale khác. Không nhận số mục là bằng chứng kiểm thủ công từng màn hình.
+Backup local: `.local/admin-delegate001/backup-dev-vi-web002/`, gồm dump 9.646.950 byte, filestore ZIP 254.446.424 byte, source/config và checksum. Dump đã đọc được mục lục.
 
-Chuỗi nguồn gửi dịch tự động chỉ lấy từ catalog upstream công khai; không có nội dung database, hồ sơ, credential hoặc filestore. Các thông báo quan trọng/thuật ngữ đang dùng được rà thủ công; phần chuyên sâu có kiểm định dạng và rà mẫu, chưa được người dùng nghiệm thu thuật ngữ. Không dịch dữ liệu mẫu tiếng Anh thành dữ liệu doanh nghiệp.
+Backup server: `C:/TANPHAT-backups/vi-web002/20261117T164626/` và bản tiếp theo `20261117T170450/`. Bản sau gồm dump 9.341.539 byte, filestore 28.564.607 byte, source/config 4.477.936 byte, mục lục pg_restore và SHA256. Hai lần upgrade đều exit0/0ERROR; runtime sau restart có 0ERROR và 0FileNotFoundError. Không đổi tunnel/DNS. Chưa diễn tập phục hồi toàn DB.
 
-## Môi trường và giao bản
+## Kết quả kiểm
 
-Đã áp trên 18069, đang chuẩn bị PC server. Bằng chứng private `.local/vi-web002/`; backup local `.local/admin-delegate001/backup-dev-vi-web002/` gồm dump 9.646.950 byte đã đọc được mục lục, filestore ZIP 254.446.424 byte và manifest checksum. Chỉ nâng cấp `tp_admin_delegation` 20.0.1.0.1, `tp_hr_workspace` 20.0.1.11.6, `tp_i18n_vi` 20.0.1.1.0. PC server đã áp commit35e1c11f,90/90tệp checksum,upgrade0/0ERROR;backup C:/TANPHAT-backups/vi-web002/20261117T164626. Patch dashboard20.0.1.1.1 đã áp18069, đang giao tiếp server.
+| Phạm vi | Kết quả và bằng chứng private |
+| --- | --- |
+| Catalog | 10.494 mục PASS: không trùng/fuzzy/trống, placeholder; hook chạy lặp, bản Việt native và en_US. `scripts/check_vi_catalog.py`. |
+| Source runtime | 2.177 tham chiếu XML ID/source khớp registry ở cả hai môi trường. Ruff, Python/XML và kiểm locale lịch đạt. |
+| Backend | Mở cấp/thu hồi được khi chưa nhập lý do; `False`/khoảng trắng bị từ chối. Identity digest còn nguyên. Smoke dùng transaction rollback, không tạo grant thật. |
+| Hai hộp thoại | 35/35 trên 18069 và public, tại 1440/768/390/320px. Ảnh decode, kích thước giới hạn, không JSON/hash hoặc cuộn ngang; Esc đóng. Public dùng đúng hồ sơ35. |
+| Màn hình | Main rà14 màn; public có13 màn tải được và Reporting bị native AccessError vì admin server thiếu nhóm Báo cáo có trước. Không tự cấp nhóm để kiểm. Lịch/Settings/dashboard chờ renderer thật, có nhãn Tuần47, hướng dẫn Barcode và tiêu đề/cột mẫu tiếng Việt. 0 lỗi JavaScript hoặc cuộn ngang ở các màn đã rà. |
+| Dashboard mẫu | Checker12 tổ hợp ngôn ngữ/sample/namespace và việc giữ native denial đạt. Public API200, có namespace,23 ô nhãn được dịch; mọi giá trị snapshot khác giữ nguyên so file upstream. Anonymous303. |
+| Bảo toàn | Local20 bảng giữ fingerprint đến cuối. Server20 bảng/base URL/ledger0/0 giữ ngay sau cả hai lần cài; các bảng user/group/nghiệp vụ giữ đến cuối. Ở mốc cài đầu chỉ lịch cron tự tiến. Không cấp/thu hoặc xác nhận đối chiếu người thật. |
 
-Kiểm local: catalog 10.494 mục PASS; Ruff/XML/Python AST và kiểm locale lịch PASS; 2.177 tham chiếu XML ID/source khớp registry. Backend mở cấp/thu hồi không lý do, từ chối `False`/khoảng trắng và kiểm digest trong transaction rollback. Browser 35/35 ở 1440/768/390/320px, 14 màn hình chính không lỗi trang. Fingerprint 20 bảng, base URL và ledger 0/0 giữ nguyên; chỉ phiên bản 3 addon đổi. Các log upgrade thành công exit0/0ERROR. Không có audit độc lập vì subagent không khởi tạo được với model runtime hiện tại.
+Evidence ở `.local/vi-web002/`: các thư mục `dev-verified`, `public-verified`, `dev-final-vi`, `public-final-vi`, `public-sample-final`; log upgrade, fingerprint và manifest source. Ảnh loading đầu của Lịch/Bảng tổng hợp không được tính là màn đạt; đã chờ renderer rồi kiểm lại.
 
-Public35/35 ở4kíchthước;13màn tải được và Reporting báo từ chối do nhóm hiện có, không đổi quyền để kiểm.0JSerror/overflow;Lịch/Bảng tổng hợp đã chờ renderer sau ảnh loading đầu. Backend2177refs/rollback PASS.20bảng ngay saucài/baseURL/ledger0/0giữ;cuối chỉcron tựtiến. Media83/83,666row/169blobđủ/hashđúng;Excel2sheet vàPDF hợp lệ/no-store/anonymous303. Không có attachment PDF/Word/Excel thật trênserver.
+## Ảnh và từng loại tệp
 
-Dashboard mẫu thiếu namespace trong native response;20.0.1.1.1 bổ sung namespace và dịch các ô literal khớp catalog nguồn trên phản hồi tiếng Việt, không thay dữ liệu lưu, công thức/số hoặc en_US. Kiểm12tổhợp phản hồi và native denial khôngDB PASS. Nội dung mẫu/tên riêng không có trong catalog có thể vẫn giữ tiếng Anh, ví dụ giá trị mẫu ngày/số hoặc trạng thái nhập dưới dạng dữ liệu; không nhận là đã dịch mọi dữ liệu.
+Nguyên nhân ảnh của DEPLOY-MEDIA-001 là149 blob thiếu vật lý tại filestore thật; đã phục hồi add-only theo size/checksum ở bản trước. Lượt này không đổi ACL/public để chữa ảnh.
 
-Không chạy suite Odoo tạo fixture trên main/server; không chạy hoặc thay DB18079/clone. Test hồi quy Odoo mới được lưu trong source để chạy ở môi trường được phép sau này. Smoke hiện tại chỉ dùng hồ sơ có sẵn, mở/hủy hoặc transaction rollback; không chứng minh trọn luồng cấp thật, chỉnh danh tính thật, delegate profile hoặc multiworker.
+| Loại | Kết quả sau deploy |
+| --- | --- |
+| Filestore/ảnh/đính kèm hiện có | 666 stored rows/169 blob:0 thiếu,0 khác checksum/size; Docker mount đúng. 83/83 kiểm origin/public đạt. |
+| Excel | Export HR từ dữ liệu hiện có qua HTTPS200,9749 byte,MIME đúng; đọc được2 sheet. `no-store`, anonymous303. Không có XLSX attachment thật lưu sẵn để kiểm. |
+| PDF | Export nhãn thiết bị qua HTTPS200,29028 byte,MIME/header/EOF đúng; `no-store`, anonymous303. Bản trước đã xem1 trang bằng PDF viewer. Không có PDF attachment thật lưu sẵn trên server. |
+| Word | Không có DOCX attachment thật trên server để kiểm tải/đọc thực tế. Fixture lịch sử trên test không thay cho mẫu thật. Không upload dữ liệu giả lên main/server. |
 
-N/A bộ lọc: không thêm bảng hay đổi domain/count/export; chỉ đổi bản dịch và form transient. Coverage quyền nghiệp vụ ADMIN-DELEGATE-001 vẫn theo [bản riêng](../security/ADMIN_DELEGATE_001_COVERAGE.md), không được nhận là đã đóng các gap quyền chỉ từ sửa dialog.
+## Độ phủ và giới hạn
 
-Rollback: giữ backup trước áp; hoàn source đúng phạm vi, khởi động lại mọi worker để bỏ cache dịch bổ sung, nâng cấp lại các addon tương ứng. Không tự phục hồi toàn DB đè dữ liệu mới. Catalog model đã import cần nạp lại bản native/overlay cũ với overwrite nếu muốn hoàn bản dịch; gỡ addon đơn thuần không xóa các giá trị đã dịch.
+Catalog gồm5.247 mục overlay,5.243 mục namespace và4 mục thông báo server, có6.694 nguồn khác nhau giữa overlay/namespace (so với148 nguồn của bản cũ). Không dùng số lượng thuật ngữ làm bằng chứng đã kiểm thủ công toàn bộ web.
+
+Phần mở rộng dùng dịch tự động chuỗi UI upstream công khai, có kiểm định dạng và rà mẫu; thông báo quan trọng/thuật ngữ đang dùng được rà thủ công. Không gửi database, hồ sơ, credential hoặc filestore tới dịch vụ dịch.39 tham chiếu metadata cũ không khớp runtime được loại;387 mục vẫn bằng nguồn là tên riêng, ví dụ hoặc thuật ngữ kỹ thuật không được thêm tự động.
+
+Chưa nghiệm thu mọi thuật ngữ, popup, role và luồng chuyên sâu. Tên người, nội dung nhập tay, mã kỹ thuật và một số giá trị mẫu ngoài catalog vẫn giữ nguyên; ví dụ `379 days`/`Not Paid` trong dữ liệu mẫu. Không thay dữ liệu nhập tay thành nhãn Việt.
+
+Không chạy suite Odoo tạo fixture trên main/server,18079 hoặc DB clone; các test hồi quy mới đã lưu trong source nhưng chưa chạy. Không xác nhận grant/sync thật; chưa kiểm trọn luồng multiworker hoặc mọi nghiệp vụ của delegate. Không có audit độc lập vì subagent không khởi tạo được với model runtime hiện tại.
+
+Coverage quyền ADMIN-DELEGATE-001 vẫn theo [bản riêng](../security/ADMIN_DELEGATE_001_COVERAGE.md): còn CRUD của một số model/phòng và multiworker; sửa dialog không đóng các gap này. Technical acceptance, business acceptance và pilot vẫn riêng. Không tự chọn người thật nhận quyền.
+
+Bộ lọc N/A: không thêm bảng hoặc đổi domain/count/export; chỉ đổi form transient và bản dịch. Không phát triển filter engine khác.
+
+## Hoàn bản trước
+
+Giữ backup và source đã commit. Khi cần rollback, hoàn đúng scope source, restart mọi worker để bỏ cache bổ sung rồi nạp lại catalog native/overlay cũ với overwrite. Gỡ addon đơn thuần không xóa các bản dịch model đã ghi. Không tự restore toàn DB đè dữ liệu mới; chưa diễn tập rollback.

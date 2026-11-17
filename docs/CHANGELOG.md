@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261117-008 — VI-WEB-002: xác nhận bản cuối trên18069/PCserver/public
+
+- Ngày17/11/2026. Source35e1c11f +73ffae56 đã pushorigin/main;đúng3addon trên18069/PCserver:delegation20.0.1.0.1,HR20.0.1.11.6,i18n20.0.1.1.1. Góiđầu90 vàdelta11tệp,union92tệp SHA256đúngcommit. Khôngbroadpull/copyworkingtreeforeign;Reporting/branding/login/sidebar vàhunkdocs khác giữunstaged. Tài liệu008 chỉ đồng bộsource,khôngrestart thêm.
+- Delta dashboard upgrade0/0ERROR saubackup C:/TANPHAT-backups/vi-web002/20261117T170450:dump9.341.539B,filestore28.564.607B,source/config4.477.936B,mục lục pg_restore vàSHA256. Bảnbackupđầu164626 vẫn giữ. KhôngrollbackDB/đổiDNS/tunnel. Logs runtime saurestart0ERROR/0FileNotFoundError.
+- Publiccuối:35/35 ở1440/768/390/320,đúnghồsơ35;dialog mở được,blankreasonbị chặn,ảnhdecode/giớihạn/khôngJSON/hash/khôngoverflow,Escđóng. Lịchcả2nhãnTuần47,SettingshướngdẫnBarcodeViệt;dashboardtiêuđề/cộtViệt. API dashboardmẫu200/namespaceđúng/23ôliteralđược dịch;mọigiátrịsnapshotkhác giữnguyênsofileupstream,anonymous303.14routeđãrà gồm13màn tải vàReportingtừchối doadminserver thiếunhóm cótrước;khônggrantđểtest.
+- Catalog10.494/native/en_US/placeholders/idempotence và12tổhợp dashboard+denial checker khôngDB PASS;Ruff/XML/locale/2177XMLID-source/rollback backend đạt.20fingerprintbảng localgiữ;serverngaysaucả2lầncài giữ20bảng/baseURL/ledger0/0,cuốikhôngđổiuser/group/nghiệpvụ;cronởmốcđầutựtiếnlịch. KhôngfixtureOdoo/18079/clone/grant/sync thật;test mới chỉ lưu source,khôngnhậnUAT/auditđộclập.
+- Filestorecuối666storedrows/169blobđủđúnghash;media83/83origin/public. ExcelHR200/9749B/2sheet/MIMEđúng;PDFnhãn200/29028B/header+EOFđúng;no-store,anonymous303. KhôngcóattachmentPDF/Word/Excelthậtđểkiểmbađịnhdạnglưusẵn,khônguploadgiả/mởprivate. Nguyênnhânảnhcũ là149blobthiếuvậtlýđãphụchồi,khôngdoACL.
+- Giớihạn:cònthuậtngữ/nộidungmẫu hoặcnhậptay vàluồngchuyênsâu chưađihết;vídụgiátrịmẫu379days/NotPaidkhôngphảinhãntrongcatalog,côngthức/số/tênngườigiữ. Reportingpublicthiếunhóm làbaseline,chưađượccấpthử. QuyềnủyquyềnchưađủCRUDmọimodel/multiworker vàbusinessacceptance/pilot vẫnriêng;khôngđónggapbằngsửadialog. Xemacceptance/coveragechoNextaction.
+
 ## CHG-20261117-007 — VI-WEB-002: giao server và sửa bản dịch dashboard mẫu
 
 - Ngày17/11/2026.35e1c11f push origin/main và deploy90/90tệp đúng checksum. PCserver backup C:/TANPHAT-backups/vi-web002/20261117T164626:dump9.293.131B/filestore30.188.646B/source-config4.076.825B/pg_restore-list/SHA256;3addon upgradeexit0/0ERROR. Wrapper đầu từ chối định dạng đường dẫn mount Windows trước mutation; đã kiểm mount thật, sửa validator và triển khai. Không đụng tunnel/DNS.
