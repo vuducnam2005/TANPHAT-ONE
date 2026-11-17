@@ -48,15 +48,15 @@ có bằng chứng một phần; `NOT_RUN` chưa chạy. Static check không là
 
 | ID | Điều kiện | Trạng thái | Evidence / giới hạn |
 | --- | --- | --- | --- |
-| AD2-01 | Ledger thực, không hardcode actor | NOT_RUN | Chờ probe server. |
-| AD2-02 | HR/Kho dashboard delegate nhất quán | PARTIAL | Slice 1 main: admin chính giữ baseline; delegate chờ probe server (main không ledger). |
+| AD2-01 | Ledger thực, không hardcode actor | PASS (đọc) | Server: actor lấy từ ledger hiệu lực 1/1, capability/scope sống; không grant/revoke thử. |
+| AD2-02 | HR/Kho dashboard delegate nhất quán | PASS (đọc) | Server S1: HR KPI = danh sách, Kho 10 ô = danh sách, 0 dòng phòng mình; browser render NOT_RUN. |
 | AD2-03 | KH-KD ghi ngoài phòng qua đường thật | NOT_RUN | Slice 4. |
 | AD2-04 | Gán/đổi/trả stock, race, mixed/own/unknown | NOT_RUN | Slice 3. |
 | AD2-05 | Reporting baseline + delegate | NOT_RUN | Slice 2. |
 | AD2-06 | Baseline phòng mình/kiêm nhiệm giữ | NOT_RUN | |
 | AD2-07 | RPC/context/nested/import/default không lách | NOT_RUN | |
 | AD2-08 | Thu hồi phiên cũ/worker | NOT_RUN | Không grant/revoke thử trên main/server. |
-| AD2-09 | Nhân viên thường không mở thêm | PARTIAL | Slice 1 main: HR/Kho dashboard, summary, XLSX AccessError; đề xuất 0; không thêm menu. Các slice sau kiểm lại. |
+| AD2-09 | Nhân viên thường không mở thêm | PARTIAL | Slice 1 main + server: HR/Kho dashboard, summary, XLSX AccessError; đề xuất 0; không thêm menu. Các slice sau kiểm lại. |
 | AD2-10 | Browser thực tế desktop/mobile | NOT_RUN | |
 
 ## 4. Kết quả theo slice
@@ -94,3 +94,27 @@ Cập nhật sau mỗi slice đã áp.
   XLSX, Kho 55 hồ sơ, summary, đề xuất 1 và menu như cũ; nhân viên thường vẫn
   AccessError ở HR overview/XLSX/Kho dashboard/summary, đề xuất đếm 0, không thêm
   menu, không đọc Settings.
+- PC server (`955c9625`): preflight 16/16 tệp đúng baseline; backup
+  `C:/TANPHAT-backups/admin-delegate002/s1-20261118T004531` (dump 9.568.047B,
+  filestore 32.054.505B/606 mục, source-config, `pg_restore -l` 15.437 dòng,
+  SHA256); `-u tp_admin_delegation` exit 0/0 ERROR, checksum 16/16. Snapshot nhân
+  viên 39/tài khoản 29/nhóm/roster/thiết bị 55/đề xuất/ledger/ngày công 252/
+  baseURL trước và sau giống hệt, chỉ đổi version.
+- Probe chỉ đọc trên server (`SET TRANSACTION READ ONLY` + `with_user`, rollback;
+  actor lấy từ ledger hiệu lực 1/1, không hardcode):
+  - Delegate: HR tổng 35 = danh sách 35, có tài khoản 8 = 8, thiếu thông tin 0 = 0,
+    8 đơn vị, 0 hồ sơ/đơn vị/catalog thuộc phòng mình; lọc phòng mình → 0; lọc
+    `private_email` bị từ chối; XLSX tạo được; `can_create` false; có nhãn ủy quyền.
+    Kho 24 thiết bị; 10 ô KPI/phân bổ/chất lượng đang hiển thị mở đúng số dòng đã đếm, 0 dòng
+    phòng mình; không thấy dòng lô nhập; summary chạy. Đề xuất đọc được 0/1 (bản
+    hiện có không thỏa điều kiện ngoài phòng), không quyền ghi/tạo. Không Settings,
+    không ghi nhóm, không tạo ledger, không `base.group_system`/nhóm HR. Menu thêm
+    Tổng quan HR và Yêu cầu đề xuất, không có menu Quản trị.
+  - Admin chính: HR 39/9 đơn vị, Kho 54 vật lý/55 hồ sơ, 10 ô KPI khớp danh sách (ô lô nhập mở action chuỗi domain như cũ),
+    đề xuất 1, Settings như cũ. Nhân viên thường: AccessError toàn bộ HR/Kho,
+    đề xuất 0, chỉ menu dự án vốn có.
+  - Gọi RPC thẳng `open_ui_detail('pending_import')` vẫn trả action cho delegate dù
+    dashboard đã ẩn → S1b thêm `check_access` lô/dòng nhập (admin chính vẫn mở).
+- Public không đăng nhập: `/web/health` 200, `/dang-nhap` 200, `/web/login` và
+  `/odoo` chuyển hướng như cũ. Browser có phiên delegate: NOT_RUN (không dùng mật
+  khẩu/phiên của người thật).

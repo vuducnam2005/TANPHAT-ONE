@@ -78,6 +78,8 @@ class TestEquipmentDelegation(TransactionCase):
         self.assertEqual(data['scope_meta']['all_records'], 1)
         self.assertNotIn(self.departments[0].id, [row['id'] for row in data['options']['departments']])
         self.assertNotIn('pending_import', [row['key'] for row in data['quality']])
+        with self.assertRaises(AccessError):
+            dashboard.open_ui_detail('pending_import')
         self.assertTrue(data['delegated_scope'])
         self.assertTrue(self.env['maintenance.equipment'].with_user(self.user).tp_main_summary())
         model = self.env['tp.equipment.proposal'].with_user(self.user)

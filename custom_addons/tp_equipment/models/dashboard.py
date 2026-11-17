@@ -439,6 +439,9 @@ class EquipmentDashboard(models.AbstractModel):
         domain = self._scope_domain(filters)
         phys = domain + PHYS_ACTIVE
         if kind == "pending_import":
+            # Hidden on the dashboard for scoped callers; a direct call is refused the same way.
+            self.env["tp.equipment.import.batch"].check_access("read")
+            self.env["tp.equipment.import.line"].check_access("read")
             return self.env["ir.actions.act_window"]._for_xml_id("tp_equipment.action_import_pending")
         if kind == "open_repairs":
             # Same scope as the count: open requests of the equipment matching the dashboard filters.
