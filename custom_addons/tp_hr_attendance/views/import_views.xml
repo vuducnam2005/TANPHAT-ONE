@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- HR-ATTENDANCE-001: preview → apply import; staging stays with HR / assigned officers. -->
+<odoo>
+    <record id="batch_list" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.batch.list</field>
+        <field name="model">tp.hr.attendance.batch</field>
+        <field name="arch" type="xml">
+            <list string="Nhập dữ liệu công" js_class="tp_hr_table" limit="20" import="0" export_xlsx="0">
+                <field name="name"/>
+                <field name="file_name"/>
+                <field name="period_from"/>
+                <field name="period_to"/>
+                <field name="state" widget="badge" decoration-info="state == 'preview'" decoration-success="state == 'applied'" decoration-muted="state == 'cancelled'"/>
+                <field name="applied_count" string="Đã ghi nhận"/>
+                <field name="duplicate_count" string="Trùng"/>
+                <field name="conflict_count" string="Xung đột"/>
+                <field name="missing_count" string="Thiếu giờ"/>
+                <field name="review_count" string="Cần kiểm tra"/>
+                <field name="unmapped_count" string="Chưa đối chiếu" optional="show"/>
+                <field name="applied_by" optional="show"/>
+                <field name="applied_at" optional="show"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="batch_search" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.batch.search</field>
+        <field name="model">tp.hr.attendance.batch</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Lô / tệp" filter_domain="['|', ('name', 'ilike', self), ('file_name', 'ilike', self)]"/>
+                <field name="state"/>
+                <field name="period_from"/>
+                <field name="applied_by"/>
+                <filter name="has_conflict" string="Có xung đột" domain="[('conflict_count', '>', 0)]"/>
+                <filter name="has_unmapped" string="Có dòng chưa đối chiếu" domain="['|', ('unmapped_count', '>', 0), ('name_conflict_count', '>', 0)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="batch_form" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.batch.form</field>
+        <field name="model">tp.hr.attendance.batch</field>
+        <field name="arch" type="xml">
+            <form string="Lô nhập dữ liệu công" class="o_tp_att_batch_form" duplicate="0">
+                <header>
+                    <button name="action_preview" type="object" string="Đọc tệp và xem trước" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_apply" type="object" string="Áp dụng dòng hợp lệ" class="btn-primary" invisible="state != 'preview'"
+                            confirm="Chỉ các dòng Hợp lệ được ghi nhận. Dòng thiếu giờ, cần kiểm tra hoặc xung đột được giữ lại để xử lý; dòng trùng bị bỏ qua. Tiếp tục?"/>
+                    <button name="action_cancel" type="object" string="Hủy lô" invisible="state != 'preview'"/>
+                    <button name="action_open_lines" type="object" string="Xem và lọc tất cả dòng" invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,preview,applied"/>
+                </header>
+                <sheet>
+                    <div class="alert alert-info" role="status" invisible="state != 'draft'">
+                        Chọn tệp <strong>.xlsx</strong> xuất từ máy chấm công (tiêu đề STT / Mã nhân viên / Tên nhân viên / ID, mỗi người hai dòng Vào và Ra, dòng "Từ ngày … Đến ngày …" phía trên).
+                        Hệ thống chỉ đọc giờ vào/ra theo ngày; không đọc cột tổng hợp, ghi chú, macro hoặc liên kết ngoài, và không tạo hay sửa hồ sơ nhân viên.
+                    </div>
+                    <div class="alert alert-warning" role="status" invisible="not same_file_batch_id">
+                        Tệp này đã được áp dụng ở lô <field name="same_file_batch_id" readonly="1" class="d-inline"/>; các dòng đã ghi nhận sẽ hiện là Trùng.
+                    </div>
+                    <div class="oe_title"><h1><field name="name" placeholder="Tên lô nhập"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="file_data" filename="file_name" readonly="state != 'draft'" required="state == 'draft'"/>
+                            <field name="file_name" invisible="1"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
+                            <field name="tz"/>
+                        </group>
+                        <group invisible="state == 'draft'">
+                            <field name="period_from"/>
+                            <field name="period_to"/>
+                            <field name="applied_by" invisible="not applied_by"/>
+                            <field name="applied_at" invisible="not applied_at"/>
+                        </group>
+                    </group>
+                    <group invisible="state == 'draft'" string="Kết quả đối chiếu">
+                        <group>
+                            <field name="line_count"/>
+                            <field name="valid_count" invisible="state == 'applied'"/>
+                            <field name="applied_count" invisible="state != 'applied'"/>
+                            <field name="duplicate_count"/>
+                            <field name="empty_count"/>
+                        </group>
+                        <group>
+                            <field name="missing_count"/>
+                            <field name="review_count"/>
+                            <field name="conflict_count"/>
+                            <field name="unmapped_count"/>
+                            <field name="name_conflict_count"/>
+                            <field name="locked_count"/>
+                        </group>
+                    </group>
+                    <notebook invisible="state == 'draft'">
+                        <page string="Dòng cần chú ý" name="attention">
+                            <field name="attention_line_ids" readonly="1">
+                                <list create="0" edit="0" delete="0" limit="40">
+                                    <field name="sheet_name"/>
+                                    <field name="cell_ref"/>
+                                    <field name="machine_code"/>
+                                    <field name="source_name"/>
+                                    <field name="employee_id"/>
+                                    <field name="work_date"/>
+                                    <field name="raw_in"/>
+                                    <field name="raw_out"/>
+                                    <field name="kind"/>
+                                    <field name="state" widget="badge" decoration-success="state in ('valid', 'applied')" decoration-muted="state == 'duplicate'" decoration-warning="state in ('review', 'conflict', 'name_conflict', 'unmapped')" decoration-danger="state == 'missing'"/>
+                                    <field name="message"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Theo trang tính" name="sheets">
+                            <field name="summary_html" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_import" model="ir.actions.act_window">
+        <field name="name">Nhập dữ liệu công</field>
+        <field name="res_model">tp.hr.attendance.batch</field>
+        <field name="path">nhap-cong</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('batch_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('batch_form')})]"/>
+        <field name="search_view_id" ref="batch_search"/>
+        <field name="context">{'tp_filter_profile': 'batches'}</field>
+        <field name="help" type="html"><p>Chưa có lô nhập. Tạo lô, chọn tệp báo cáo máy chấm công rồi bấm Đọc tệp và xem trước.</p></field>
+    </record>
+
+    <record id="line_list" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.line.list</field>
+        <field name="model">tp.hr.attendance.line</field>
+        <field name="arch" type="xml">
+            <list string="Dòng nhập dữ liệu công" js_class="tp_hr_table" create="0" edit="0" delete="0" import="0" limit="50">
+                <field name="batch_id" optional="hide"/>
+                <field name="sheet_name"/>
+                <field name="cell_ref"/>
+                <field name="machine_code"/>
+                <field name="source_name"/>
+                <field name="employee_id"/>
+                <field name="work_date"/>
+                <field name="raw_in"/>
+                <field name="raw_out"/>
+                <field name="kind"/>
+                <field name="state" widget="badge" decoration-success="state in ('valid', 'applied')" decoration-muted="state == 'duplicate'" decoration-warning="state in ('review', 'conflict', 'name_conflict', 'unmapped')" decoration-danger="state == 'missing'"/>
+                <field name="issue_open" optional="show"/>
+                <field name="message"/>
+                <field name="resolution" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="line_search" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.line.search</field>
+        <field name="model">tp.hr.attendance.line</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="source_name" string="Tên / mã máy" filter_domain="['|', ('source_name', 'ilike', self), ('machine_code', '=', self)]"/>
+                <field name="employee_id"/>
+                <field name="batch_id"/>
+                <field name="sheet_name"/>
+                <field name="work_date"/>
+                <field name="state"/>
+                <field name="kind"/>
+                <filter name="attention" string="Cần chú ý" domain="[('state', 'not in', ('valid', 'applied', 'duplicate'))]"/>
+                <filter name="open_issues" string="Đang chờ xử lý" domain="[('issue_open', '=', True)]"/>
+                <group>
+                    <filter name="group_state" string="Kết quả" context="{'group_by': 'state'}"/>
+                    <filter name="group_sheet" string="Trang" context="{'group_by': 'sheet_name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_import_lines" model="ir.actions.act_window">
+        <field name="name">Dòng nhập dữ liệu công</field>
+        <field name="res_model">tp.hr.attendance.line</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="line_list"/>
+        <field name="search_view_id" ref="line_search"/>
+        <field name="context">{'tp_filter_profile': 'import_lines'}</field>
+    </record>
+</odoo>

@@ -1,0 +1,26 @@
+id,name,model_id,group_id/id,operation,domain
+access_att_day_user,Attendance days read,tp.hr.attendance.day,base.group_user,r,
+rule_att_day_company,Attendance days company,tp.hr.attendance.day,,crud,"[('company_id', 'in', company_ids)]"
+access_att_session_user,Attendance sessions read,tp.hr.attendance.session,base.group_user,r,
+rule_att_session_company,Attendance sessions company,tp.hr.attendance.session,,crud,"[('company_id', 'in', company_ids)]"
+access_att_period_user,Attendance periods read,tp.hr.attendance.period,base.group_user,r,
+access_att_period_manager,Attendance periods HR manager,tp.hr.attendance.period,hr.group_hr_manager,crud,
+rule_att_period_company,Attendance periods company,tp.hr.attendance.period,,crud,"[('company_id', 'in', company_ids)]"
+access_att_rule_user,Attendance rules read,tp.hr.attendance.rule,base.group_user,r,
+access_att_rule_manager,Attendance rules HR manager,tp.hr.attendance.rule,hr.group_hr_manager,crud,
+rule_att_rule_company,Attendance rules company,tp.hr.attendance.rule,,crud,"[('company_id', 'in', company_ids)]"
+access_att_code_manager,Attendance machine codes HR manager,tp.hr.attendance.code,hr.group_hr_manager,crud,
+access_att_code_officer,Attendance machine codes officer,tp.hr.attendance.code,tp_hr_attendance.group_attendance_officer,r,
+rule_att_code_company,Attendance machine codes company,tp.hr.attendance.code,,crud,"[('company_id', 'in', company_ids)]"
+access_att_assignment_manager,Attendance assignments HR manager,tp.hr.attendance.assignment,hr.group_hr_manager,crud,
+access_att_assignment_own,Attendance assignments own,tp.hr.attendance.assignment,base.group_user,r,"[('user_id', '=', user.id)]"
+rule_att_assignment_company,Attendance assignments company,tp.hr.attendance.assignment,,crud,"[('company_id', 'in', company_ids)]"
+access_att_batch_manager,Attendance imports HR manager,tp.hr.attendance.batch,hr.group_hr_manager,crud,
+access_att_batch_officer,Attendance imports officer,tp.hr.attendance.batch,tp_hr_attendance.group_attendance_officer,cru,
+rule_att_batch_company,Attendance imports company,tp.hr.attendance.batch,,crud,"[('company_id', 'in', company_ids)]"
+access_att_line_manager,Attendance import lines HR manager,tp.hr.attendance.line,hr.group_hr_manager,r,
+access_att_line_officer,Attendance import lines officer,tp.hr.attendance.line,tp_hr_attendance.group_attendance_officer,r,
+rule_att_line_company,Attendance import lines company,tp.hr.attendance.line,,crud,"[('company_id', 'in', company_ids)]"
+access_att_log_manager,Attendance log HR manager,tp.hr.attendance.log,hr.group_hr_manager,r,
+access_att_log_officer,Attendance log officer,tp.hr.attendance.log,tp_hr_attendance.group_attendance_officer,r,
+rule_att_log_company,Attendance log company,tp.hr.attendance.log,,crud,"[('company_id', 'in', company_ids)]"

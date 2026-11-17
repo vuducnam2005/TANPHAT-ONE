@@ -118,8 +118,13 @@ thể chuyển sang native sau khi được duyệt.
 ## 8. Công thức
 
 - Giờ ghi nhận = tổng thời lượng các phiên vào-ra đầy đủ (không lấy min/max punch).
-- Giờ theo lịch, công xác nhận: chỉ khi có **Quy tắc công đã xác nhận** phủ ngày
-  đó: giờ theo lịch = giao phiên với lịch làm việc (`resource.calendar`, đã trừ
-  nghỉ trưa theo lịch); công = min(giờ theo lịch, giờ chuẩn ngày)/giờ chuẩn ngày,
-  làm tròn 2 số. Không có quy tắc → **Chưa xác nhận** (null, không phải 0).
+- Giờ theo lịch, công xác nhận: chỉ khi có **Quy tắc công đã xác nhận**
+  (`tp.hr.attendance.rule`, HR manager xác nhận) phủ ngày, phòng và thứ đó. Giờ
+  theo lịch = phần giao của các phiên với khung giờ của quy tắc (giờ bắt đầu–kết
+  thúc, theo giờ `Asia/Ho_Chi_Minh`) trừ khoảng nghỉ trưa của quy tắc; công =
+  min(giờ theo lịch, giờ chuẩn một công)/giờ chuẩn một công, làm tròn 2 số. Không
+  dùng `resource.calendar` để khỏi suy quy tắc từ lịch mặc định chưa được HR xác
+  nhận. Không có quy tắc → **Chưa xác nhận** (null, không phải 0); thứ không thuộc
+  quy tắc → **Ngoài lịch**. Đưa quy tắc về nháp → mọi ngày phủ bởi nó trở lại
+  **Chưa xác nhận**.
 - Không tính đi muộn, phạt, nghỉ không phép, tăng ca hoặc lương.

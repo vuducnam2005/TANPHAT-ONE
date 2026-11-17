@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- HR-ATTENDANCE-001: shared, read-only day summaries. Nobody edits hours here. -->
+<odoo>
+    <record id="day_form" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.day.form</field>
+        <field name="model">tp.hr.attendance.day</field>
+        <field name="arch" type="xml">
+            <form string="Ngày công" create="0" edit="0" delete="0" duplicate="0" class="o_tp_att_day_form">
+                <sheet>
+                    <div class="o_tp_hr_readonly_note" role="status">
+                        <span class="o_tp_hr_readonly_badge">Chỉ xem</span>
+                        Giờ lấy từ báo cáo máy chấm công đã nhập. Không sửa trực tiếp; cần điều chỉnh thì liên hệ người phụ trách công.
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="employee_name" readonly="1"/></h1>
+                        <h2><field name="weekday"/> · <field name="work_date" readonly="1"/></h2>
+                    </div>
+                    <group>
+                        <group string="Ngày công">
+                            <field name="employee_code"/>
+                            <field name="department_id" options="{'no_open': True}"/>
+                            <field name="data_state" widget="badge" decoration-success="data_state == 'ok'" decoration-danger="data_state == 'missing'" decoration-warning="data_state == 'review'"/>
+                            <field name="lock_state" widget="badge" decoration-info="lock_state == 'locked'"/>
+                        </group>
+                        <group string="Giờ ghi nhận">
+                            <field name="in_time"/>
+                            <field name="out_time"/>
+                            <field name="session_count"/>
+                            <field name="recorded_hours" widget="float_time"/>
+                            <field name="units_state" invisible="1"/>
+                            <field name="scheduled_hours" widget="float_time" invisible="units_state not in ('confirmed', 'off_schedule')"/>
+                            <field name="units_display" string="Công xác nhận"/>
+                            <field name="rule_id" options="{'no_open': True}" invisible="not rule_id"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-light border" role="status" invisible="units_state != 'unconfirmed'">
+                        <strong>Chưa xác nhận</strong>: chưa có quy tắc tính công được HR xác nhận cho ngày này.
+                        Đây không phải nghỉ không phép và không dùng để trừ lương.
+                    </div>
+                    <h3 class="mt-3">Phiên vào - ra</h3>
+                    <field name="session_ids" readonly="1">
+                        <list create="0" edit="0" delete="0" no_open="1">
+                            <field name="check_in"/>
+                            <field name="check_out"/>
+                            <field name="worked_hours" widget="float_time"/>
+                            <field name="source"/>
+                        </list>
+                    </field>
+                    <div groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer">
+                        <h3 class="mt-3">Dòng nguồn cần xử lý</h3>
+                        <field name="issue_ids" readonly="1">
+                            <list create="0" edit="0" delete="0">
+                                <field name="batch_id"/>
+                                <field name="sheet_name"/>
+                                <field name="cell_ref"/>
+                                <field name="raw_in"/>
+                                <field name="raw_out"/>
+                                <field name="kind"/>
+                                <field name="state" widget="badge"/>
+                                <field name="message"/>
+                            </list>
+                        </field>
+                    </div>
+                    <p class="text-muted small mt-3">Cập nhật nguồn <field name="source_updated_at" class="d-inline"/> · phiên bản <field name="version" class="d-inline"/></p>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="day_list" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.day.list</field>
+        <field name="model">tp.hr.attendance.day</field>
+        <field name="arch" type="xml">
+            <list string="Ngày công" js_class="tp_hr_table" create="0" edit="0" delete="0" import="0" limit="20" default_order="work_date desc, employee_code">
+                <field name="employee_code" string="Mã TP"/>
+                <field name="employee_name" string="Nhân viên"/>
+                <field name="department_id" string="Phòng"/>
+                <field name="work_date" string="Ngày"/>
+                <field name="weekday" string="Thứ"/>
+                <field name="in_time"/>
+                <field name="out_time"/>
+                <field name="recorded_hours" widget="float_time" sum="Tổng"/>
+                <field name="units_display"/>
+                <field name="data_state" widget="badge" decoration-success="data_state == 'ok'" decoration-danger="data_state == 'missing'" decoration-warning="data_state == 'review'"/>
+                <field name="lock_state" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="day_search" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.day.search</field>
+        <field name="model">tp.hr.attendance.day</field>
+        <field name="arch" type="xml">
+            <search string="Ngày công">
+                <field name="employee_name" string="Nhân viên / mã TP" filter_domain="['|', ('employee_name', 'ilike', self), ('employee_code', 'ilike', self)]"/>
+                <field name="department_id" operator="child_of"/>
+                <field name="work_date"/>
+                <field name="data_state"/>
+                <field name="lock_state"/>
+                <filter name="state_missing" string="Thiếu giờ vào/ra" domain="[('data_state', '=', 'missing')]"/>
+                <filter name="state_review" string="Cần kiểm tra" domain="[('data_state', '=', 'review')]"/>
+                <group>
+                    <filter name="group_department" string="Phòng" context="{'group_by': 'department_id'}"/>
+                    <filter name="group_date" string="Ngày" context="{'group_by': 'work_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_days" model="ir.actions.act_window">
+        <field name="name">Ngày công</field>
+        <field name="res_model">tp.hr.attendance.day</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('day_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('day_form')})]"/>
+        <field name="search_view_id" ref="day_search"/>
+        <field name="context">{'tp_filter_profile': 'days'}</field>
+    </record>
+
+    <record id="action_board" model="ir.actions.client">
+        <field name="name">Bảng công</field>
+        <field name="tag">tp_hr_attendance.board</field>
+        <field name="path">bang-cong</field>
+    </record>
+</odoo>

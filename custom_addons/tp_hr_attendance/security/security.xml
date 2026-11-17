@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- HR-ATTENDANCE-001: mirrors active "Phân công xử lý công" records; never granted by hand or by job title. -->
+    <record id="group_attendance_officer" model="res.groups">
+        <field name="name">Chấm công: người phụ trách được phân công</field>
+        <field name="comment">Tự đồng bộ từ Phân công xử lý công. Chỉ mở quyền đọc dữ liệu nhập và nhật ký; quyền thao tác vẫn kiểm theo từng phân công.</field>
+    </record>
+</odoo>

@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- HR-ATTENDANCE-001: HR manager configuration (rules, machine codes, assignments, audit log). -->
+<odoo>
+    <record id="code_list" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.code.list</field>
+        <field name="model">tp.hr.attendance.code</field>
+        <field name="arch" type="xml">
+            <list string="Mã máy chấm công" js_class="tp_hr_table" editable="bottom" limit="20" import="0">
+                <field name="machine_code"/>
+                <field name="employee_id" options="{'no_create': True}"/>
+                <field name="source" readonly="1"/>
+                <field name="note"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="code_search" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.code.search</field>
+        <field name="model">tp.hr.attendance.code</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="machine_code"/>
+                <field name="employee_id"/>
+                <field name="source"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_codes" model="ir.actions.act_window">
+        <field name="name">Mã máy chấm công</field>
+        <field name="res_model">tp.hr.attendance.code</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="code_list"/>
+        <field name="search_view_id" ref="code_search"/>
+        <field name="context">{'tp_filter_profile': 'codes'}</field>
+        <field name="help" type="html"><p>Mã máy được tự đối chiếu khi nhập lô (mã nguồn trùng và họ tên khớp). HR khai báo thêm khi máy dùng mã khác hồ sơ.</p></field>
+    </record>
+
+    <record id="rule_list" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.rule.list</field>
+        <field name="model">tp.hr.attendance.rule</field>
+        <field name="arch" type="xml">
+            <list string="Quy tắc công" js_class="tp_hr_table" limit="20" import="0">
+                <field name="name"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="department_ids" widget="many2many_tags"/>
+                <field name="start_hour" widget="float_time"/>
+                <field name="end_hour" widget="float_time"/>
+                <field name="standard_hours" widget="float_time"/>
+                <field name="state" widget="badge" decoration-success="state == 'confirmed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="rule_form" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.rule.form</field>
+        <field name="model">tp.hr.attendance.rule</field>
+        <field name="arch" type="xml">
+            <form string="Quy tắc công">
+                <header>
+                    <button name="action_confirm" type="object" string="Xác nhận quy tắc" class="btn-primary" invisible="state != 'draft'"
+                            confirm="Sau khi xác nhận, công các ngày trong phạm vi được tính lại theo quy tắc này. Tiếp tục?"/>
+                    <button name="action_reset" type="object" string="Đưa về nháp" invisible="state != 'confirmed'"
+                            confirm="Công các ngày trong phạm vi sẽ trở về Chưa xác nhận cho đến khi quy tắc được xác nhận lại. Tiếp tục?"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="alert alert-info" role="status">
+                        Quy tắc chỉ dùng để quy đổi giờ có mặt thành <strong>công xác nhận</strong>; không tính đi muộn, phạt, nghỉ không phép, tăng ca hoặc lương.
+                        Khi chưa có quy tắc đã xác nhận, bảng công hiển thị <strong>Chưa xác nhận</strong>.
+                    </div>
+                    <div class="oe_title"><h1><field name="name" placeholder="Ví dụ: Giờ hành chính văn phòng" readonly="state == 'confirmed'"/></h1></div>
+                    <group>
+                        <group string="Phạm vi">
+                            <field name="date_from" readonly="state == 'confirmed'"/>
+                            <field name="date_to" readonly="state == 'confirmed'"/>
+                            <field name="department_ids" widget="many2many_tags" readonly="state == 'confirmed'" options="{'no_create': True}"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state == 'confirmed'"/>
+                        </group>
+                        <group string="Khung giờ (giờ Việt Nam)">
+                            <field name="start_hour" widget="float_time" readonly="state == 'confirmed'"/>
+                            <field name="end_hour" widget="float_time" readonly="state == 'confirmed'"/>
+                            <field name="break_start" widget="float_time" readonly="state == 'confirmed'"/>
+                            <field name="break_end" widget="float_time" readonly="state == 'confirmed'"/>
+                            <field name="standard_hours" widget="float_time" readonly="state == 'confirmed'"/>
+                        </group>
+                    </group>
+                    <group string="Ngày làm việc">
+                        <group>
+                            <field name="mon" readonly="state == 'confirmed'"/>
+                            <field name="tue" readonly="state == 'confirmed'"/>
+                            <field name="wed" readonly="state == 'confirmed'"/>
+                            <field name="thu" readonly="state == 'confirmed'"/>
+                        </group>
+                        <group>
+                            <field name="fri" readonly="state == 'confirmed'"/>
+                            <field name="sat" readonly="state == 'confirmed'"/>
+                            <field name="sun" readonly="state == 'confirmed'"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note" readonly="state == 'confirmed'" placeholder="Văn bản/quyết định làm căn cứ"/>
+                        <field name="confirmed_by" invisible="not confirmed_by"/>
+                        <field name="confirmed_at" invisible="not confirmed_at"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_rules" model="ir.actions.act_window">
+        <field name="name">Quy tắc công</field>
+        <field name="res_model">tp.hr.attendance.rule</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('rule_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('rule_form')})]"/>
+        <field name="context">{'tp_filter_profile': 'rules'}</field>
+        <field name="help" type="html"><p>Chưa có quy tắc công. Bảng công hiển thị "Chưa xác nhận" cho đến khi HR khai báo và xác nhận quy tắc theo căn cứ đã duyệt.</p></field>
+    </record>
+
+    <record id="assignment_list" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.assignment.list</field>
+        <field name="model">tp.hr.attendance.assignment</field>
+        <field name="arch" type="xml">
+            <list string="Phân công xử lý công" js_class="tp_hr_table" limit="20" import="0">
+                <field name="user_id"/>
+                <field name="department_ids" widget="many2many_tags"/>
+                <field name="can_import"/>
+                <field name="can_review"/>
+                <field name="can_lock"/>
+                <field name="note"/>
+                <field name="active" column_invisible="True"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="assignment_form" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.assignment.form</field>
+        <field name="model">tp.hr.attendance.assignment</field>
+        <field name="arch" type="xml">
+            <form string="Phân công xử lý công">
+                <sheet>
+                    <div class="alert alert-info" role="status">
+                        Quyền xử lý công chỉ đến từ phân công này; không suy ra từ chức danh hay trưởng phòng.
+                        Người được phân công không duyệt được đề nghị của chính mình.
+                    </div>
+                    <group>
+                        <group>
+                            <field name="user_id" options="{'no_create': True}"/>
+                            <field name="department_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                        <group string="Được làm">
+                            <field name="can_import"/>
+                            <field name="can_review"/>
+                            <field name="can_lock"/>
+                        </group>
+                    </group>
+                    <group><field name="note" placeholder="Văn bản/quyết định phân công"/></group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_assignments" model="ir.actions.act_window">
+        <field name="name">Phân công xử lý công</field>
+        <field name="res_model">tp.hr.attendance.assignment</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('assignment_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('assignment_form')})]"/>
+        <field name="context">{'tp_filter_profile': 'assignments', 'active_test': False}</field>
+        <field name="help" type="html"><p>Chưa phân công ai xử lý công. HR manager vẫn nhập được dữ liệu; duyệt điều chỉnh và chốt kỳ cần phân công rõ.</p></field>
+    </record>
+
+    <record id="log_list" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.log.list</field>
+        <field name="model">tp.hr.attendance.log</field>
+        <field name="arch" type="xml">
+            <list string="Nhật ký chấm công" js_class="tp_hr_table" create="0" edit="0" delete="0" import="0" limit="50">
+                <field name="create_date" string="Thời điểm"/>
+                <field name="actor_id"/>
+                <field name="action"/>
+                <field name="model"/>
+                <field name="res_id"/>
+                <field name="detail"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="log_search" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.log.search</field>
+        <field name="model">tp.hr.attendance.log</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="action"/>
+                <field name="actor_id"/>
+                <field name="model"/>
+                <field name="create_date"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_logs" model="ir.actions.act_window">
+        <field name="name">Nhật ký chấm công</field>
+        <field name="res_model">tp.hr.attendance.log</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="log_list"/>
+        <field name="search_view_id" ref="log_search"/>
+        <field name="context">{'tp_filter_profile': 'logs'}</field>
+    </record>
+</odoo>
