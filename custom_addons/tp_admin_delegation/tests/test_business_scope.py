@@ -77,6 +77,61 @@ class TestDelegatedBusinessScope(TransactionCase):
         with self.assertRaises(AccessError):
             result['contract'].read(['name'])
 
+    def test_foreign_project_status_note_and_history_via_command(self):
+        own = self.projects[0].with_user(self.user).with_context(allowed_company_ids=self.company.ids)
+        own_before = (own._kd_money_read(), own.kd_can_status, own.kd_can_note)
+        self.change()
+        foreign = self.projects[2].with_user(self.user).with_context(allowed_company_ids=self.company.ids)
+        self.assertTrue(foreign._kd_money_read())
+        self.assertTrue(foreign.kd_can_status and foreign.kd_can_note)
+        own.invalidate_recordset()
+        self.assertEqual((own._kd_money_read(), own.kd_can_status, own.kd_can_note), own_before)
+        wizard = self.model('tp.project.command').create({'project_id': self.projects[2].id, 'kind': 'status'})
+        wizard.write({'target_state': 'executing', 'reason': 'Synthetic delegated status'})
+        wizard.action_confirm()
+        self.assertEqual(self.projects[2].kd_lifecycle, 'executing')
+        note = self.model('tp.project.command').create({'project_id': self.projects[2].id, 'kind': 'note'})
+        note.write({'reason': 'Synthetic delegated note'})
+        note.action_confirm()
+        history = self.model('tp.project.update').search([('project_id', '=', self.projects[2].id)])
+        self.assertEqual(len(history), 2)
+        self.assertEqual(history.actor_id, self.user)
+        self.assertFalse(self.env['tp.project.assignment'].search_count([
+            ('project_id', '=', self.projects[2].id), ('user_id', '=', self.user.id)]))
+        self.assertFalse(self.env['tp.kd.grant'].search_count([('user_id', '=', self.user.id)]))
+        with self.assertRaises(AccessError):
+            self.model('tp.project.command').create({'project_id': self.projects[1].id, 'kind': 'status'})
+        self.change('revoke')
+        foreign.invalidate_recordset()
+        self.assertFalse(foreign._kd_money_read())
+        with self.assertRaises(AccessError):
+            self.model('tp.project.command').create({'project_id': self.projects[2].id, 'kind': 'status'})
+        self.assertFalse(self.model('tp.project.update').search_count([('project_id', '=', self.projects[2].id)]))
+
+    def test_foreign_wbs_assignment_keeps_progress_with_assignee(self):
+        self.env['tp.project.assignment'].create({
+            'project_id': self.projects[2].id, 'user_id': self.admin.id, 'role': 'coordinator',
+        })
+        self.change()
+        command = self.model('tp.task.command').create({'project_id': self.projects[2].id, 'operation': 'create'})
+        command.write({'name': 'Synthetic delegated WBS', 'deliverable': 'Synthetic output',
+                       'responsible_id': self.admin.id, 'reason': 'Synthetic delegated WBS'})
+        command.action_confirm()
+        task = self.env['project.task'].search([('project_id', '=', self.projects[2].id)])
+        self.assertEqual((task.name, task.kd_responsible_id), ('Synthetic delegated WBS', self.admin))
+        self.assertEqual(self.model('tp.task.update').search([('task_id', '=', task.id)]).actor_id, self.user)
+        delegated = task.with_user(self.user).with_context(allowed_company_ids=self.company.ids)
+        self.assertTrue(delegated.kd_can_wbs and delegated.kd_can_assign)
+        # Progress is the assignee's report (or HEAD's); delegation never acts as either.
+        self.assertFalse(delegated.kd_can_progress)
+        progress = self.model('tp.task.command').create({
+            'project_id': self.projects[2].id, 'task_id': task.id, 'operation': 'progress'})
+        progress.write({'target_state': '1_done', 'reason': 'Synthetic progress'})
+        with self.assertRaises(AccessError):
+            progress.action_confirm()
+        with self.assertRaises(AccessError):
+            self.model('tp.task.command').create({'project_id': self.projects[0].id, 'operation': 'create'})
+
     def test_mixed_contract_source_and_unknown_crm_block_parent_union(self):
         self.env['tp.contract'].create({
             'name': 'Synthetic mixed contract', 'code': 'AD-MIXED', 'project_id': self.projects[2].id,

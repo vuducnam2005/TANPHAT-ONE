@@ -91,6 +91,13 @@ class Project(models.Model):
     def _tp_granted_project_ids(self, capability):
         return super()._tp_granted_project_ids(capability) | set(self.sudo().search(self._tp_delegated_domain()).ids)
 
+    def _kd_money_read(self):
+        # Status/note commands, project history and bid values of a project opened by delegation
+        # follow the financial.read the delegation already holds there (ProjectCapability); the
+        # baseline also asks for a project assignment, which a delegate is never given for this.
+        # Own, mixed and unknown sources keep the assignment-based baseline.
+        return super()._kd_money_read() or bool(self.has_access('read') and other_project(self, lock=True))
+
 
 class Task(models.Model):
     _inherit = 'project.task'
@@ -259,6 +266,16 @@ class BidAmount(models.Model):
 class Participation(models.Model):
     _name = 'tp.project.participation'
     _inherit = ['tp.project.participation', 'tp.admin.project.scope.mixin']
+
+
+class ProjectUpdate(models.Model):
+    _name = 'tp.project.update'
+    _inherit = ['tp.project.update', 'tp.admin.project.scope.mixin']
+
+
+class TaskUpdate(models.Model):
+    _name = 'tp.task.update'
+    _inherit = ['tp.task.update', 'tp.admin.project.scope.mixin']
 
 
 class Opportunity(models.Model):

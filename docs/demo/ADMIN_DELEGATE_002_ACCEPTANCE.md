@@ -37,7 +37,7 @@ hoặc khác company giữ baseline.
 | Kho | `tp.equipment.dashboard.get_dashboard`, `open_ui_detail`, `maintenance.equipment.tp_main_summary` | Như cũ | Chạy trên thiết bị đọc được theo scope; không đổi `common.is_admin` | Thiết bị phòng mình/unknown không vào |
 | Kho | `tp.equipment.proposal` đọc | Như cũ | Đề xuất người/phòng khác xác định ngoài phòng | Đề xuất của mình/phòng mình/unknown: baseline |
 | Kho | Gán/đổi/trả stock chưa có chủ | Như cũ | Kiểm lại dưới lock, đổi máy nguyên tử | Target phòng mình bị chặn |
-| KH-KD | Project/WBS/CRM/hợp đồng ghi | Như cũ | Qua command/wizard có sẵn trên record ngoài phòng | Mixed/own: baseline |
+| KH-KD | Project/WBS/CRM/hợp đồng ghi | Như cũ | Qua command/wizard có sẵn trên record ngoài phòng (S4 áp: tình trạng/ghi chú/lịch sử/giá gói thầu; CRM/HEAD/hồ sơ KD là ngoại lệ) | Mixed/own/unknown: baseline |
 | Báo cáo | Dashboard/document/obligation | Lỗi baseline server → sửa riêng: system ngụ ý vai trò cấu hình (không phải reviewer) | Đọc obligation/directive/kế hoạch ngoài phòng; không tự duyệt/chốt, không snapshot/tài chính | Own/mixed: baseline |
 | Báo cáo (S2 áp) | Dashboard, hồ sơ, kế hoạch, nghĩa vụ, chỉ đạo, phản hồi, xuất | System ngụ ý cấu hình + người dùng Báo cáo; hàng nghiệp vụ vẫn theo assignment, tự cấp bị chặn | Đọc hồ sơ cá nhân đã gửi/hồ sơ phòng, cả cây kế hoạch, nghĩa vụ, chỉ đạo, phản hồi công khai khi mọi nguồn truy được ngoài phòng; snapshot chỉ đọc; không ghi/duyệt/chốt/tài chính | Nháp/trả lại của người khác, tài chính, cấp công ty, nguồn trộn/unknown: baseline |
 | Kho (S3 áp) | Gán / Đổi máy / Trả về kho (`tp_quick_action`, popup) | Như cũ | Kho chung chỉ hiện máy rảnh để chọn; người nhận và máy trả/đổi phải ở phòng khác xác định; khóa máy NOWAIT + nguồn FOR SHARE, kiểm lại company/phòng/version/người giữ rồi chạy đúng RPC gốc trong một giao dịch | Người nhận/máy ở phòng mình, không phòng, khác company, máy có chủ, version cũ: bị chặn; tệp/chatter/sửa/nhãn của máy kho: baseline |
@@ -52,13 +52,13 @@ có bằng chứng một phần; `NOT_RUN` chưa chạy. Static check không là
 | --- | --- | --- | --- |
 | AD2-01 | Ledger thực, không hardcode actor | PASS (đọc) | Server: actor lấy từ ledger hiệu lực 1/1, capability/scope sống; không grant/revoke thử. |
 | AD2-02 | HR/Kho dashboard delegate nhất quán | PASS (đọc) | Server S1: HR KPI = danh sách, Kho 10 ô = danh sách, 0 dòng phòng mình; browser render NOT_RUN. |
-| AD2-03 | KH-KD ghi ngoài phòng qua đường thật | NOT_RUN | Slice 4. |
+| AD2-03 | KH-KD ghi ngoài phòng qua đường thật | PARTIAL | S4: dự án ngoài phòng mở qua ủy quyền dùng command gốc cho metadata/đối tác/tình trạng/ghi chú/WBS/giao việc/gói thầu của mình/workflow hợp đồng; lịch sử dự án/công việc và giá gói thầu đọc được. Ngoại lệ có chủ đích: tiến độ task (người được giao/HEAD), gói thầu owner khác và thao tác HEAD hợp đồng, ghi CRM hồ sơ dự án (owner-only, chưa adapter), hồ sơ KD baseline. Main/server 0 dự án được quản lý: hành vi theo bản ghi và ghi thật NOT_RUN. |
 | AD2-04 | Gán/đổi/trả stock, race, mixed/own/unknown | PARTIAL | S3: adapter khóa + kiểm lại rồi chạy RPC gốc; main probe chỉ đọc: admin chính như cũ, nhân viên thường 0 máy kho/không tạo popup/AccessError. Server sau deploy (delegate ledger 1/1, chỉ đọc): 7/7 máy rảnh chỉ đọc, 0 ghi/tệp/chatter, popup tạo được, người nhận 35 (0 phòng mình/0 không phòng), in nhãn máy kho AccessError; `tp_quick_action` tới khóa nguồn; người nhận phòng mình và trả máy phòng mình AccessError, người nhận ngoài phòng hợp lệ, máy có chủ UserError. Gán/đổi/trả thật, race hai người và 2 ca Odoo NOT_RUN theo chính sách. |
 | AD2-05 | Reporting baseline + delegate | PARTIAL | S2 main + server: admin chính vào dashboard/hồ sơ/nghĩa vụ, tự cấp bị chặn; delegate thật có dashboard nhãn ủy quyền và 9 model đọc, 0 dòng phòng mình, không ghi/assignment. Nhánh dữ liệu chưa chạy thật: cả hai nơi 0 hồ sơ/kế hoạch/snapshot; logic SQL kiểm trên CTE tổng hợp; 6 ca Odoo NOT_RUN. |
 | AD2-06 | Baseline phòng mình/kiêm nhiệm giữ | NOT_RUN | |
 | AD2-07 | RPC/context/nested/import/default không lách | NOT_RUN | |
 | AD2-08 | Thu hồi phiên cũ/worker | NOT_RUN | Không grant/revoke thử trên main/server. |
-| AD2-09 | Nhân viên thường không mở thêm | PARTIAL | Slice 1 main + server: HR/Kho dashboard, summary, XLSX AccessError; đề xuất 0; không thêm menu. S2 main + server: 10 model Báo cáo và dashboard vẫn AccessError như trước, không menu Báo cáo (server giống hệt probe trước deploy). S3 main + server: 0/7 máy kho rảnh, không tạo popup, `tp_quick_action`/mở popup/in nhãn AccessError (server giống hệt trước deploy). Các slice sau kiểm lại. |
+| AD2-09 | Nhân viên thường không mở thêm | PARTIAL | Slice 1 main + server: HR/Kho dashboard, summary, XLSX AccessError; đề xuất 0; không thêm menu. S2 main + server: 10 model Báo cáo và dashboard vẫn AccessError như trước, không menu Báo cáo (server giống hệt probe trước deploy). S3 main + server: 0/7 máy kho rảnh, không tạo popup, `tp_quick_action`/mở popup/in nhãn AccessError (server giống hệt trước deploy). S4 main: lịch sử dự án/công việc theo baseline, 0 dự án/command mới; server ghi ở Slice 4. |
 | AD2-10 | Browser thực tế desktop/mobile | NOT_RUN | |
 
 ## 4. Kết quả theo slice
@@ -262,3 +262,46 @@ Cập nhật sau mỗi slice đã áp.
 - Public: `/web/health` 200, `/dang-nhap` 200, `/web/login` và `/odoo` chuyển
   hướng như cũ. Gán/đổi/trả thật, race hai phiên, browser phiên delegate
   NOT_RUN (không dùng mật khẩu/phiên người thật, không CRUD dữ liệu thật).
+
+### Slice 4 — KH-KD: tình trạng/ghi chú/lịch sử dự án và giá gói thầu ngoài phòng (D)
+
+- Chẩn đoán từ source: adapter 001 đã cho dự án ngoài mọi phòng được bảo vệ
+  (không hợp đồng/CRM nguồn phòng mình hoặc chưa rõ) capability KD `prepare`,
+  `financial.read`/`financial.draft_edit`/hợp đồng và mở `tp.project.command`/
+  `tp.task.command` theo `create_uid`. Vì vậy delegate đã sửa metadata, đối tác,
+  tạo gói thầu (owner là chính mình), tạo/sửa/giao việc WBS và chạy workflow
+  hợp đồng nháp/nộp/rà soát bằng đường gốc. Lỗ còn lại: `_kd_money_read` đòi
+  phân công dự án (delegate không bao giờ được cấp), nên nút Tình trạng/Ghi
+  chú ẩn, `_kd_apply` từ chối status/note, lịch sử dự án và giá gói thầu không
+  đọc được.
+- `business_scope.py`: `_kd_money_read` = baseline **hoặc** (đọc được và
+  `other_project(lock=True)`: ủy quyền sống, `tp_managed`, phòng dự án ngoài
+  phòng mình, nguồn hợp đồng/CRM/team không thuộc phòng mình/không rõ; khóa
+  FOR SHARE project/hợp đồng/CRM/team khi ghi). `tp.project.update`/
+  `tp.task.update` đọc theo cùng scope dự án. Ghi vẫn qua command gốc: phiên
+  bản, mã thao tác, `tp.project.update` ghi actor là delegate. Không cấp
+  assignment, KD grant, HEAD; tiền/tài liệu ở dự án phòng mình không tăng
+  (ca test kiểm `_kd_money_read`/`kd_can_status`/`kd_can_note` dự án phòng mình
+  không đổi sau khi cấp).
+- Ngoại lệ giữ (không cấp HEAD, chưa có adapter):
+  - Báo tiến độ task: chỉ người được giao hoặc HEAD; delegate giao việc được
+    nhưng không báo thay.
+  - Sửa gói thầu của owner khác, giao owner/tài liệu/nhận rà soát hợp đồng:
+    HEAD.
+  - CRM hồ sơ dự án: workflow theo owner (admin chính cũng không chuẩn bị/nộp
+    thay owner); delegate không có nhóm CRM; ghi CRM qua ủy quyền chưa có
+    adapter.
+  - Hồ sơ KD (giao khoán/sản lượng/nghiệm thu/thanh toán/năng lực/nghĩa vụ/kế
+    hoạch): baseline. Ký/hiệu lực/tài chính chưa có: không mở.
+  - Cấu hình dự án, phân công, KD grant: admin chính.
+- Kiểm tĩnh: Ruff/AST đạt. 2 ca Odoo mới trong `test_business_scope.py`
+  (tình trạng/ghi chú/lịch sử qua command + dự án phòng mình không đổi + thu
+  hồi; WBS giao việc, tiến độ vẫn của người được giao, dự án phòng mình từ chối)
+  NOT_RUN theo chính sách.
+- Main 18069: backup `.local/admin-delegate002/backup-s4-20261118T020749` (dump
+  9.934.484B, filestore 998 mục, nguồn/config, SHA256). Chỉ
+  `-u tp_admin_delegation` → 20.0.1.4.0, exit 0/0 ERROR, cảnh báo giống S3.
+  Fingerprint 26 bảng giữ, chỉ đổi version. Probe chỉ đọc (kết nối READ ONLY):
+  0 dự án được quản lý/0 hợp đồng/0 CRM gắn dự án/0 hồ sơ KD; admin chính và
+  nhân viên thường đọc lịch sử theo baseline, override `_kd_money_read` nạp
+  đúng module. Delegate trên main NOT_RUN (ledger 0).

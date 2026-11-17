@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-005 — ADMIN-DELEGATE-002 S4: KH-KD — tình trạng/ghi chú/lịch sử dự án và giá gói thầu ngoài phòng qua command gốc
+
+- Ngày 18/11/2026. `tp_admin_delegation` 20.0.1.4.0. Chẩn đoán từ source: adapter 001 đã cho delegate capability KD `prepare` và capability hợp đồng/financial.read trên dự án ngoài phòng (metadata, đối tác, tạo gói thầu, WBS tạo/sửa/giao việc, workflow hợp đồng chạy thật). Riêng cổng `_kd_money_read` còn đòi phân công dự án, nên nút Tình trạng/Ghi chú bị ẩn, `_kd_apply` từ chối status/note/bid/amount, lịch sử dự án và giá gói thầu không đọc được: có capability nhưng backend chặn.
+- `business_scope.py`: `_kd_money_read` cộng đúng dự án `other_project` (khóa và kiểm lại nguồn project/hợp đồng/CRM/team, ủy quyền sống); own/mixed/unknown giữ baseline. `tp.project.update`/`tp.task.update` đọc theo cùng scope dự án ngoài phòng. Không cấp assignment/grant/HEAD; ghi vẫn qua `tp.project.command`/`tp.task.command` gốc (phiên bản, mã thao tác, lịch sử actor thật).
+- Ngoại lệ giữ: báo tiến độ task chỉ người được giao/HEAD; sửa gói thầu của owner khác, giao owner/tài liệu/nhận rà soát hợp đồng cần HEAD; CRM hồ sơ dự án theo owner (admin chính cũng không chạy chuẩn bị/nộp thay owner), chưa có adapter ghi CRM; hồ sơ KD (giao khoán/sản lượng/nghiệm thu/thanh toán/năng lực/nghĩa vụ/kế hoạch) baseline; ký/hiệu lực không mở.
+- Kiểm: Ruff/AST đạt; 2 ca Odoo mới (status/note/lịch sử qua command, dự án phòng mình không đổi, thu hồi; WBS giao việc, tiến độ vẫn của người được giao) NOT_RUN theo chính sách. Main: backup `.local/admin-delegate002/backup-s4-20261118T020749` (dump 9.934.484B, filestore 998 mục, SHA256); `-u tp_admin_delegation` exit0/0ERROR, cảnh báo giống S3; fingerprint 26 bảng giữ, chỉ đổi version; health 200. Probe chỉ đọc: admin chính/nhân viên thường như trước; delegate trên main NOT_RUN (ledger 0). Main và server đang có 0 dự án được quản lý, 0 hợp đồng, 0 CRM gắn dự án, 0 hồ sơ KD: hành vi theo bản ghi NOT_RUN.
+
 ## CHG-20261118-004 — ADMIN-DELEGATE-002 S3: Kho — máy rảnh trong kho chung và Gán / Đổi máy / Trả về kho qua ủy quyền
 
 - Ngày 18/11/2026. `tp_admin_delegation` 20.0.1.3.0. Kho dùng chung không bao giờ là "phòng khác": delegate chỉ đọc máy rảnh (trong kho, chưa có người giữ, đủ điều kiện gốc) của công ty có ủy quyền để chọn; máy thay thế mua cho người phòng mình/không rõ bị ẩn. Tệp/chatter/lịch sử/sửa/nhãn/đăng ký/tạo phiếu trên máy kho vẫn baseline.
