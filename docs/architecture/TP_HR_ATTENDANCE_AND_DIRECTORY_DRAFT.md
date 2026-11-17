@@ -1,9 +1,13 @@
 # HR — Danh bạ chỉ xem và bảng công dùng chung (thiết kế17/11/2026)
 
-**IDEA_DRAFT_NOT_IMPLEMENTED.** Người dùng muốn quản lý công trong Nhân sự,
+**PROMPT_READY_NOT_IMPLEMENTED — CHG-20261117-091.** Người dùng đã giao viết
+[prompt triển khai](../prompts/CLAUDE_HR_ATTENDANCE_001_AND_DIRECTORY_READONLY.md),
+rollout từng phần theo DEC-051; chưa code/nhập công/cấp quyền trong phiên này.
+Người dùng muốn quản lý công trong Nhân sự,
 nhân viên xem công ngày của mình tại Hồ sơ cá nhân; bổ sung mọi nhân viên
 được vào module Nhân sự chỉ xem, xem thông tin đồng nghiệp và bảng công của
-đồng nghiệp, nhưng ẩn hợp đồng và thông tin quan trọng. Chưa giao code phần này.
+đồng nghiệp, nhưng ẩn hợp đồng và thông tin quan trọng. Phiên thực thi code
+trong scope prompt; không mở payroll/GPS hoặc quyền HR rộng ngoài yêu cầu.
 
 ## Quyền hiển thị được yêu cầu
 
@@ -17,7 +21,7 @@ nhân viên xem công ngày của mình tại Hồ sơ cá nhân; bổ sung mọ
 - Nhân viên xem thông tin công khai nội bộ của đồng nghiệp; không tự sửa
   thông tin mình trong module HR nếu chỉ có vai trò đọc. Luồng đề nghị chỉnh
   công riêng không phải quyền ghi trực tiếp bản công. Quyền tự sửa Hồ sơ cá
-  nhân hiện có cần được chốt riêng trước khi thay, không âm thầm mở thêm.
+  nhân giữ allowlist hiện có, không âm thầm mở thêm hoặc vô hiệu trong task này.
 
 ## Phân loại trường đề xuất, chưa là whitelist đã duyệt
 
@@ -30,9 +34,10 @@ nhân viên xem công ngày của mình tại Hồ sơ cá nhân; bổ sung mọ
 | Nội dung kèm công không chia sẻ rộng | Lý do nghỉ chi tiết, chứng từ y tế, minh chứng/nhận xét của yêu cầu điều chỉnh, ảnh khuôn mặt/vân tay/GPS/dữ liệu máy thô |
 
 Người dùng nói "thông tin cá nhân thì xem được" nhưng chưa chỉ định từng
-trường; bảng này là đề xuất phân loại, cần chốt trước khi code. Không suy ra
-được xem mọi field hr.employee. Ngày sinh/liên hệ riêng nếu công ty muốn chia
-sẻ cần chọn rõ; không mở mặc định toàn bộ thông tin riêng của đồng nghiệp.
+trường; prompt áp mặc định whitelist công việc ở trên, giấu trường riêng
+chưa rõ và ghi phân loại là đề xuất. Không chờ hỏi từng trường để code phần
+độc lập hoặc suy được đọc mọi field hr.employee. Ngày sinh chỉ ngày/tháng
+khi có cờ chia sẻ hiện có; liên hệ riêng không mở mặc định.
 Trên bảng công chung, hiển thị nghỉ đã duyệt mà không lộ chẩn đoán/lý do riêng.
 
 Backend phải bảo vệ field/read/search/filter/options/count/read_group/
