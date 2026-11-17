@@ -158,7 +158,7 @@ class MaintenanceEquipment(models.Model):
     @api.model
     def tp_main_summary(self):
         """Counts of the default scope; the scope is read from the list action itself (one domain)."""
-        check_admin(self.env)
+        check_admin(self.env, self)
         action = self.env.ref("tp_equipment.action_equipment")
         scope = ast.literal_eval(action.domain or "[]")
         stock_with_holder = [("tp_custody", "=", "stock"), ("tp_employee_id", "!=", False)]

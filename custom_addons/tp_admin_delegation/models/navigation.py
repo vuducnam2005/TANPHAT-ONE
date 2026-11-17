@@ -9,10 +9,13 @@ _ENTRIES = (
     ('tp_reporting.menu_root', 'tp_reporting.action_personal', 'tp.report.document'),
     ('tp_equipment.menu_root', 'tp_equipment.action_equipment', 'maintenance.equipment'),
 )
+# Leaf menu and the live check its destination needs; None keeps the app gate only.
 _LEAVES = (
-    'tp_hr_workspace.menu_employees', 'tp_kd_workspace.menu_projects',
-    'tp_reporting.menu_personal', 'tp_equipment.menu_equipment_all',
-    'tp_admin_delegation.menu_delegated_hr_create',
+    ('tp_hr_workspace.menu_overview', '_tp_hr_overview'),
+    ('tp_hr_workspace.menu_employees', None), ('tp_kd_workspace.menu_projects', None),
+    ('tp_reporting.menu_personal', None), ('tp_equipment.menu_equipment_all', None),
+    ('tp_equipment.menu_proposals', 'tp.equipment.proposal'),
+    ('tp_admin_delegation.menu_delegated_hr_create', None),
 )
 
 
@@ -27,6 +30,16 @@ class DelegationSession(models.AbstractModel):
 
 class DelegationMenus(models.Model):
     _inherit = 'ir.ui.menu'
+
+    @api.model
+    def _tp_delegated_leaf(self, gate):
+        if not gate:
+            return True
+        if gate == '_tp_hr_overview':
+            # The overview raises for an incomplete own-department scope.
+            return (self.env['tp.hr.workspace']._tp_delegated_hr()
+                    and self.env.user._tp_delegation_scope(self.env.company)[1])
+        return self.env[gate].has_access('read')
 
     @api.model
     def load_menus(self, debug):
@@ -60,7 +73,9 @@ class DelegationMenus(models.Model):
             add(menu, menu.id, action)
             if menu.id not in result['root']['children']:
                 result['root']['children'].append(menu.id)
-        for xmlid in _LEAVES:
+        for xmlid, gate in _LEAVES:
+            if not self._tp_delegated_leaf(gate):
+                continue
             leaf = self.env.ref(xmlid).sudo()
             ancestors = [leaf]
             parent = leaf.parent_id
@@ -75,4 +90,6 @@ class DelegationMenus(models.Model):
                 children = result[child.parent_id.id]['children']
                 if child.id not in children:
                     children.append(child.id)
+                    order = {menu.id: (menu.sequence, menu.id) for menu in self.sudo().browse(children)}
+                    children.sort(key=order.get)
         return result

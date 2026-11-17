@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-002 — ADMIN-DELEGATE-002 S1: HR overview và Kho dashboard/summary/đề xuất theo scope ủy quyền
+
+- Ngày 18/11/2026; tiếp checkpoint 17:21:28Z, không reset batch khác. Ma trận actor/action/nguồn và bảng AD2 lập trước code trong [acceptance](demo/ADMIN_DELEGATE_002_ACCEPTANCE.md). `tp_admin_delegation` 20.0.1.1.0.
+- HR: tổng quan/KPI/biểu đồ/bộ lọc/drill-down/XLSX dùng chung một tập hồ sơ do chính actor đọc được: công ty đang xem, phòng xác định và khác phòng mình; scope phòng chưa đầy đủ thì từ chối. Drill-down chỉ nhận field whitelist và `= != in not in`; không cấp nhóm HR, `can_create` theo quyền tạo thật. Hook `_tp_population_source`/`_tp_action_domain` trong `tp_hr_workspace` giữ nguyên hành vi admin/HR.
+- Kho: dashboard, drill-down và `tp_main_summary` đi qua `check_admin(env, self)` tới adapter delegate; `common.is_admin` không đổi. Đếm theo quyền đọc đã scope; dòng lô nhập chờ bổ sung ẩn khi không đọc được. Đề xuất/dòng/nhật ký đọc khi người cần, người nhận và thiết bị đều xác định ngoài phòng mình, actor không phải người tạo/phụ trách/người cần; ghi, tạo và workflow đề xuất vẫn chỉ admin chính (PARTIAL).
+- Navigation: lá Tổng quan HR (scope đủ) và Yêu cầu đề xuất (đọc được) theo capability sống, giữ thứ tự menu; nhãn "Quản trị được ủy quyền" trên hai dashboard. Settings/Apps giữ admin chính.
+- Kiểm: AST/XML/CSV, Ruff cho file sửa (2 lỗi có sẵn ở HEAD `dashboard.py` giữ nguyên), kiểm thuần bộ lọc projection 17 ca PASS. 2 ca Odoo mới NOT_RUN (không fixture main/server, không 18079/clone). Main: backup `.local/admin-delegate002/backup-s1-20261118T003551`, chỉ `-u tp_admin_delegation` exit0/0ERROR, 20 bảng fingerprint giữ, ledger 0/0; probe chỉ đọc: admin chính như cũ, nhân viên thường không mở thêm. Delegate trên main NOT_RUN (không ledger, không grant thử). Server/public ghi sau deploy.
+
 ## CHG-20261118-001 — ADMIN-DELEGATE-002: audit chỉ đọc và prompt hoàn thiện quyền quản trị
 
 - Ngày18/11/2026, Asia/Saigon; kiểm runtime bắt đầu17/11. Phạm vi: rà quyền ứng dụng đã được ủy quyền, chưa sửa ứng dụng/quyền/dữ liệu. Audit và prompt mới; cập nhật status/roadmap/index prompt đúng scope.

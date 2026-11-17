@@ -2,7 +2,7 @@
 <t t-name="tp_hr_workspace.Overview">
 <div class="o_tp_hr_overview" aria-label="Tổng quan TP HR" t-att-aria-busy="this.state.loading" t-on-scroll="this.clearHighlight" t-on-keydown="this.onKeydown">
     <header>
-        <div><h1>Tổng quan nhân sự</h1><small t-if="this.state.data">Cập nhật <t t-out="this.state.data.updated_at"/></small></div>
+        <div><h1>Tổng quan nhân sự</h1><small t-if="this.state.data">Cập nhật <t t-out="this.state.data.updated_at"/></small><small t-if="this.state.data?.delegated_scope" class="d-block" role="note" t-out="this.state.data.delegated_scope"/></div>
         <div class="o_tp_hr_actions">
             <button t-if="this.state.data?.can_create" class="btn btn-primary" t-on-click="this.createEmployee" t-att-disabled="!this.ready"><i class="fa fa-plus me-2"/>Thêm nhân viên</button>
             <button class="btn btn-outline-primary" t-on-click="this.exportFile" t-att-disabled="!this.ready"><i class="fa fa-download me-2"/>Xuất Excel nhân sự</button>

@@ -63,6 +63,35 @@ class TestEquipmentDelegation(TransactionCase):
         with self.assertRaises(AccessError):
             other.read(['name'])
 
+    def test_dashboard_summary_and_outside_proposal_share_scope(self):
+        proposals = self.env['tp.equipment.proposal'].with_user(self.main).create([
+            {'title': 'Synthetic outside need', 'company_id': self.company.id,
+             'requester_employee_id': self.other_employee.id, 'requester_department_id': self.departments[1].id},
+            {'title': 'Synthetic own need', 'company_id': self.company.id,
+             'requester_employee_id': self.employee.id, 'requester_department_id': self.departments[0].id},
+        ])
+        dashboard = self.env['tp.equipment.dashboard'].with_user(self.user)
+        with self.assertRaises(AccessError):
+            dashboard.get_dashboard()
+        self.grant()
+        data = dashboard.get_dashboard()
+        self.assertEqual(data['scope_meta']['all_records'], 1)
+        self.assertNotIn(self.departments[0].id, [row['id'] for row in data['options']['departments']])
+        self.assertNotIn('pending_import', [row['key'] for row in data['quality']])
+        self.assertTrue(data['delegated_scope'])
+        self.assertTrue(self.env['maintenance.equipment'].with_user(self.user).tp_main_summary())
+        model = self.env['tp.equipment.proposal'].with_user(self.user)
+        self.assertEqual(model.search([('id', 'in', proposals.ids)]), proposals[0])
+        with self.assertRaises(AccessError):
+            proposals[1].with_user(self.user).read(['title'])
+        with self.assertRaises(AccessError):
+            proposals[0].with_user(self.user).write({'title': 'Synthetic change'})
+        with self.assertRaises(AccessError):
+            model.create({'title': 'Synthetic delegated create', 'company_id': self.company.id})
+        self.grant('revoke')
+        with self.assertRaises(AccessError):
+            dashboard.get_dashboard()
+
     def test_metadata_sudo_parent_and_bulk_cannot_change_own_or_stock(self):
         self.grant()
         own, other = self.equipment.with_user(self.user)

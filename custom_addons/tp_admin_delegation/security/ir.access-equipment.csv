@@ -1,2 +1,5 @@
 id,name,model_id,group_id/id,operation,domain
 equipment_delegate_read,Audited held equipment read,maintenance.equipment,base.group_user,r,"[(0,'=',1)]"
+equipment_proposal_delegate_read,Audited outside proposal read,tp.equipment.proposal,base.group_user,r,"[(0,'=',1)]"
+equipment_proposal_line_delegate_read,Audited outside proposal line read,tp.equipment.proposal.line,base.group_user,r,"[(0,'=',1)]"
+equipment_proposal_review_delegate_read,Audited outside proposal review read,tp.equipment.proposal.review,base.group_user,r,"[(0,'=',1)]"

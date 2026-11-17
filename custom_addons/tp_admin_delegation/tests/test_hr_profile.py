@@ -116,3 +116,29 @@ class TestDelegatedHrProfile(DelegationCase):
         self.assertNotEqual(user.partner_id, self.admin.partner_id)
         self.assertFalse(user.has_group('base.group_system'))
         self.assertFalse(user.has_group('tp_core.group_manager'))
+
+    def test_delegated_overview_projection_matches_list_and_export(self):
+        workspace = self.env['tp.hr.workspace'].with_user(self.users[0])
+        with self.assertRaises(AccessError):
+            workspace.get_overview()
+        self.grant()
+        data = workspace.get_overview()
+        own = self.departments[0]
+        self.assertFalse(data['can_create'])
+        self.assertTrue(data['delegated_scope'])
+        self.assertNotIn(own.id, [row['id'] for row in data['departments']])
+        self.assertNotIn(own.id, [row['id'] for row in data['catalog_departments']])
+        action = workspace.action_employees({}, [('user_id', '!=', False)])
+        listed = self.env['hr.employee'].with_user(self.users[0]).search(action['domain'])
+        self.assertIn(self.employees[1], listed)
+        self.assertNotIn(self.employees[0], listed)
+        # HR-only or private fields are never accepted as a delegated drill-down.
+        for extra in ([('private_email', '!=', False)], [('department_id.name', '=', 'x')], 'bad'):
+            with self.assertRaises(UserError):
+                workspace.action_employees({}, extra)
+        # A filter on the actor's own department cannot widen the counted rows.
+        self.assertEqual(workspace.get_overview({'department_id': own.id})['total'], 0)
+        self.assertTrue(workspace._build_xlsx({}))
+        self.grant(operation='revoke')
+        with self.assertRaises(AccessError):
+            workspace.get_overview()

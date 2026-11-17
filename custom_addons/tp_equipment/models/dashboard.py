@@ -41,7 +41,7 @@ class EquipmentDashboard(models.AbstractModel):
     _description = "Kho thiết bị — tổng quan quản trị"
 
     def _scope_domain(self, filters=None):
-        check_admin(self.env)
+        check_admin(self.env, self)
         filters = filters or {}
         domain = [("tp_code", "!=", False), ("company_id", "in", self.env.companies.ids)]
         for key, field in (("department_id", "tp_current_department_id"), ("location_id", "tp_location_id")):
@@ -354,11 +354,12 @@ class EquipmentDashboard(models.AbstractModel):
                 "members": ", ".join((cat.name if cat else "Chưa phân loại") for cat, _cnt in rest),
             })
 
+        # Source import is main-admin work; a scoped caller gets no row instead of a false zero.
+        batches = self.env["tp.equipment.import.batch"]
         pending_import = sum(
-            self.env["tp.equipment.import.batch"]
-            .search([("company_id", "in", self.env.companies.ids), ("state", "!=", "applied")])
+            batches.search([("company_id", "in", self.env.companies.ids), ("state", "!=", "applied")])
             .mapped("pending_count"),
-        )
+        ) if batches.has_access("read") else None
 
         open_repairs = self.env["maintenance.request"].search_count([
             ("company_id", "in", self.env.companies.ids), ("equipment_id", "in", equipment.search(domain).ids),
@@ -391,6 +392,7 @@ class EquipmentDashboard(models.AbstractModel):
             {"key": "draft", "kind": "draft", "label": "Hồ sơ nháp", "count": draft_count,
              "hint": "Chưa đăng ký vào kho", "tone": "neutral"},
         ]
+        quality = [row for row in quality if row["count"] is not None]
         return {
             "ui_kpis": ui_kpis,
             "allocation": allocation,
@@ -433,7 +435,7 @@ class EquipmentDashboard(models.AbstractModel):
     @api.model
     def open_ui_detail(self, kind, key=None, filters=None):
         """Every drill-down opens exactly the set counted on the dashboard (scope filters + bucket domain)."""
-        check_admin(self.env)
+        check_admin(self.env, self)
         domain = self._scope_domain(filters)
         phys = domain + PHYS_ACTIVE
         if kind == "pending_import":

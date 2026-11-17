@@ -9,6 +9,7 @@
                 <div class="tp_eq_dash_title_wrap">
                     <h1>Tổng quan thiết bị</h1>
                     <span t-if="this.state.data" class="tp_eq_scope_pill"><t t-out="this.scopeSummaryText"/></span>
+                    <small t-if="this.state.data?.delegated_scope" class="d-block" role="note" t-out="this.state.data.delegated_scope"/>
                 </div>
                 <div class="tp_eq_toolbar" role="toolbar" aria-label="Bộ lọc và thao tác tổng quan">
                     <label class="tp_eq_tool_field">

@@ -10,10 +10,15 @@ _POST = object()
 EDITABLE_MODELS = frozenset({
     'maintenance.equipment', 'maintenance.request', 'tp.equipment.software', 'tp.equipment.meter',
 })
-READ_MODELS = EDITABLE_MODELS | {
+PROPOSAL_MODELS = frozenset({
+    'tp.equipment.proposal', 'tp.equipment.proposal.line', 'tp.equipment.proposal.review',
+})
+READ_MODELS = EDITABLE_MODELS | PROPOSAL_MODELS | {
     'tp.equipment.move', 'tp.equipment.move.line', 'maintenance.equipment.category',
     'tp.equipment.location', 'maintenance.stage',
 }
+DELEGATED_LABEL = ('Quản trị được ủy quyền: chỉ thiết bị và đề xuất có nguồn ở phòng khác. '
+                   'Kho dùng chung, nhập nguồn và phòng của bạn giữ quyền như cũ.')
 EQUIPMENT_SCOPE_FIELDS = frozenset({
     'company_id', 'tp_custody', 'tp_employee_id', 'tp_holder_department_id', 'tp_location_id',
     'tp_vendor_id', 'tp_parent_id', 'tp_child_ids', 'tp_replaces_id', 'employee_id', 'department_id',
@@ -109,10 +114,43 @@ def _move_ids(env, equipment_ids):
     return result
 
 
+def _proposal_ids(env, equipment_ids):
+    """Requester, recipients and old devices must all be proven outside sources."""
+    allowed = set(equipment_ids)
+    actor = env.user
+    result = []
+    for company in env.companies:
+        if not actor._tp_has_admin_delegation(company):
+            continue
+        own, complete = actor._tp_delegation_scope(company)
+        if not complete:
+            continue
+        proposals = env['tp.equipment.proposal'].sudo().with_context(active_test=False, version_id=False)
+        for proposal in proposals.search([('company_id', '=', company.id)]):
+            # A request the actor wrote, records or needs keeps the baseline.
+            if env.uid in (proposal.create_uid.id, proposal.responsible_id.id,
+                           proposal.requester_employee_id.user_id.id):
+                continue
+            departments = proposal.requester_department_id
+            valid = bool(departments)
+            for employee in proposal.requester_employee_id | proposal.line_ids.target_employee_id:
+                current = _employee_department(employee)
+                valid &= bool(current and employee.company_id == company)
+                departments |= current
+            departments |= proposal.line_ids.target_department_id
+            valid &= all(not line.equipment_id or line.equipment_id.id in allowed for line in proposal.line_ids)
+            if (valid and not (departments & own)
+                    and all(department.company_id == company for department in departments)):
+                result.append(proposal.id)
+    return result
+
+
 def equipment_domain(env, model, operation='read'):
     if model not in READ_MODELS or (operation != 'read' and model not in EDITABLE_MODELS):
         return Domain.FALSE
     ids = _equipment_ids(env)
+    if model in PROPOSAL_MODELS:
+        return Domain('id' if model == 'tp.equipment.proposal' else 'proposal_id', 'in', _proposal_ids(env, ids))
     if model == 'maintenance.equipment':
         return Domain('id', 'in', ids)
     if model in ('tp.equipment.software', 'tp.equipment.meter'):
@@ -314,6 +352,40 @@ class Location(models.Model):
 class Stage(models.Model):
     _name = 'maintenance.stage'
     _inherit = ['maintenance.stage', 'tp.admin.equipment.scope.mixin']
+
+
+class Proposal(models.Model):
+    _name = 'tp.equipment.proposal'
+    _inherit = ['tp.equipment.proposal', 'tp.admin.equipment.scope.mixin']
+
+
+class ProposalLine(models.Model):
+    _name = 'tp.equipment.proposal.line'
+    _inherit = ['tp.equipment.proposal.line', 'tp.admin.equipment.scope.mixin']
+
+
+class ProposalReview(models.Model):
+    _name = 'tp.equipment.proposal.review'
+    _inherit = ['tp.equipment.proposal.review', 'tp.admin.equipment.scope.mixin']
+
+
+class EquipmentDashboard(models.AbstractModel):
+    _inherit = 'tp.equipment.dashboard'
+
+    def _tp_equipment_delegate_check(self):
+        # Overview counts run with the caller's own scoped record access.
+        self.env['maintenance.equipment']._tp_equipment_delegate_check()
+
+    @api.model
+    def get_dashboard(self, filters=None):
+        result = super().get_dashboard(filters)
+        user = self.env.user
+        if user._tp_has_admin_delegation():
+            own = user._tp_delegation_departments()
+            result['options']['departments'] = [
+                row for row in result['options']['departments'] if row['id'] not in own.ids]
+            result['delegated_scope'] = DELEGATED_LABEL
+        return result
 
 
 def _equipment_parent(env, model, record_id):

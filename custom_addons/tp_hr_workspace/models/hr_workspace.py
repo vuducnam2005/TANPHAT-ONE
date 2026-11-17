@@ -12,16 +12,28 @@ class HrWorkspace(models.AbstractModel):
     _description = 'TP HR overview and reports'
 
     @api.model
-    def _population(self, filters=None):
+    def _tp_population_source(self):
+        """Employee model and fixed row scope; a scoped adapter may narrow rows."""
         if not self.env.user.has_group('hr.group_hr_user'):
             raise AccessError(self.env._('Chỉ nhân sự được giao mới được xem báo cáo HR.'))
+        employees = self.env['hr.employee'].with_context(active_test=False)
+        employees.check_access('read')
+        return employees, []
+
+    @api.model
+    def _tp_action_domain(self, employees, domain, extra_domain):
+        return domain + (extra_domain or [])
+
+    @api.model
+    def _population(self, filters=None):
+        employees, scope = self._tp_population_source()
         filters = filters or {}
         if not isinstance(filters, dict) or set(filters) - {'department_id', 'job_id', 'status', 'employment_kind', 'missing_basic'}:
             raise ValidationError(self.env._('Bộ lọc HR không hợp lệ.'))
         status = filters.get('status') or 'active'
         if status not in ('active', 'archived', 'all'):
             raise ValidationError(self.env._('Trạng thái hồ sơ không hợp lệ.'))
-        domain = [('company_id', '=', self.env.company.id)]
+        domain = [('company_id', '=', self.env.company.id)] + scope
         if status != 'all':
             domain.append(('active', '=', status == 'active'))
         for field, model, label in [('department_id', 'hr.department', 'Đơn vị'), ('job_id', 'hr.job', 'Chức vụ')]:
@@ -48,8 +60,6 @@ class HrWorkspace(models.AbstractModel):
             raise ValidationError(self.env._('Bộ lọc hồ sơ cần bổ sung không hợp lệ.'))
         if filters.get('missing_basic'):
             domain += self.env['hr.employee']._tp_missing_domain()
-        employees = self.env['hr.employee'].with_context(active_test=False)
-        employees.check_access('read')
         return employees, domain, status
 
     @api.model
@@ -86,7 +96,7 @@ class HrWorkspace(models.AbstractModel):
             'departments': departments, 'missing_basic': missing, 'complete_basic': total - missing,
             'linked': linked, 'pending': total - linked, 'domain': domain,
             'jobs': jobs, 'catalog_departments': catalog('hr.department'), 'catalog_jobs': catalog('hr.job'),
-            'can_create': employees.has_access('create'), 'employee_form_id': self.env.ref('tp_hr_workspace.employee_form').id,
+            'can_create': self.env['hr.employee'].has_access('create'), 'employee_form_id': self.env.ref('tp_hr_workspace.employee_form').id,
             'missing_domain': employees._tp_missing_domain(),
             'missing_code': employees.search_count(domain + [('tp_employee_code', '=', False)]),
             'missing_department': employees.search_count(domain + [('department_id', '=', False)]),
@@ -105,7 +115,7 @@ class HrWorkspace(models.AbstractModel):
         if extra_domain is not None and not isinstance(extra_domain, list):
             raise ValidationError(self.env._('Bộ lọc danh sách không hợp lệ.'))
         action = self.env['ir.actions.actions']._for_xml_id('tp_hr_workspace.action_employees')
-        action.update(domain=domain + (extra_domain or []), context={
+        action.update(domain=self._tp_action_domain(employees, domain, extra_domain), context={
             'active_test': False, 'tp_hr_leaf': 'tp_hr_workspace.menu_employees',
             'tp_hr_missing': [tuple(item) if isinstance(item, list) else item for item in (extra_domain or [])] == employees._tp_missing_domain(),
         })
