@@ -1,6 +1,7 @@
 from . import (
     business_scope,
     delegation,
+    equipment_handover,
     equipment_scope,
     guards,
     hr_accounts,

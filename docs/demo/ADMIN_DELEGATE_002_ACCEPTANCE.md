@@ -40,6 +40,7 @@ hoặc khác company giữ baseline.
 | KH-KD | Project/WBS/CRM/hợp đồng ghi | Như cũ | Qua command/wizard có sẵn trên record ngoài phòng | Mixed/own: baseline |
 | Báo cáo | Dashboard/document/obligation | Lỗi baseline server → sửa riêng: system ngụ ý vai trò cấu hình (không phải reviewer) | Đọc obligation/directive/kế hoạch ngoài phòng; không tự duyệt/chốt, không snapshot/tài chính | Own/mixed: baseline |
 | Báo cáo (S2 áp) | Dashboard, hồ sơ, kế hoạch, nghĩa vụ, chỉ đạo, phản hồi, xuất | System ngụ ý cấu hình + người dùng Báo cáo; hàng nghiệp vụ vẫn theo assignment, tự cấp bị chặn | Đọc hồ sơ cá nhân đã gửi/hồ sơ phòng, cả cây kế hoạch, nghĩa vụ, chỉ đạo, phản hồi công khai khi mọi nguồn truy được ngoài phòng; snapshot chỉ đọc; không ghi/duyệt/chốt/tài chính | Nháp/trả lại của người khác, tài chính, cấp công ty, nguồn trộn/unknown: baseline |
+| Kho (S3 áp) | Gán / Đổi máy / Trả về kho (`tp_quick_action`, popup) | Như cũ | Kho chung chỉ hiện máy rảnh để chọn; người nhận và máy trả/đổi phải ở phòng khác xác định; khóa máy NOWAIT + nguồn FOR SHARE, kiểm lại company/phòng/version/người giữ rồi chạy đúng RPC gốc trong một giao dịch | Người nhận/máy ở phòng mình, không phòng, khác company, máy có chủ, version cũ: bị chặn; tệp/chatter/sửa/nhãn của máy kho: baseline |
 | Mọi miền | Settings/Apps, security/ACL/server action, cài module, cấp tiếp admin | Chỉ admin chính | Bị chặn | Bị chặn |
 
 ## 3. Bảng AD2
@@ -52,12 +53,12 @@ có bằng chứng một phần; `NOT_RUN` chưa chạy. Static check không là
 | AD2-01 | Ledger thực, không hardcode actor | PASS (đọc) | Server: actor lấy từ ledger hiệu lực 1/1, capability/scope sống; không grant/revoke thử. |
 | AD2-02 | HR/Kho dashboard delegate nhất quán | PASS (đọc) | Server S1: HR KPI = danh sách, Kho 10 ô = danh sách, 0 dòng phòng mình; browser render NOT_RUN. |
 | AD2-03 | KH-KD ghi ngoài phòng qua đường thật | NOT_RUN | Slice 4. |
-| AD2-04 | Gán/đổi/trả stock, race, mixed/own/unknown | NOT_RUN | Slice 3. |
+| AD2-04 | Gán/đổi/trả stock, race, mixed/own/unknown | PARTIAL | S3: adapter khóa + kiểm lại rồi chạy RPC gốc; main probe chỉ đọc: admin chính như cũ, nhân viên thường 0 máy kho/không tạo popup/AccessError. Chính sách người nhận/máy kiểm trên server (xem slice 3). Gán/đổi/trả thật, race hai người và 2 ca Odoo NOT_RUN theo chính sách. |
 | AD2-05 | Reporting baseline + delegate | PARTIAL | S2 main + server: admin chính vào dashboard/hồ sơ/nghĩa vụ, tự cấp bị chặn; delegate thật có dashboard nhãn ủy quyền và 9 model đọc, 0 dòng phòng mình, không ghi/assignment. Nhánh dữ liệu chưa chạy thật: cả hai nơi 0 hồ sơ/kế hoạch/snapshot; logic SQL kiểm trên CTE tổng hợp; 6 ca Odoo NOT_RUN. |
 | AD2-06 | Baseline phòng mình/kiêm nhiệm giữ | NOT_RUN | |
 | AD2-07 | RPC/context/nested/import/default không lách | NOT_RUN | |
 | AD2-08 | Thu hồi phiên cũ/worker | NOT_RUN | Không grant/revoke thử trên main/server. |
-| AD2-09 | Nhân viên thường không mở thêm | PARTIAL | Slice 1 main + server: HR/Kho dashboard, summary, XLSX AccessError; đề xuất 0; không thêm menu. S2 main + server: 10 model Báo cáo và dashboard vẫn AccessError như trước, không menu Báo cáo (server giống hệt probe trước deploy). Các slice sau kiểm lại. |
+| AD2-09 | Nhân viên thường không mở thêm | PARTIAL | Slice 1 main + server: HR/Kho dashboard, summary, XLSX AccessError; đề xuất 0; không thêm menu. S2 main + server: 10 model Báo cáo và dashboard vẫn AccessError như trước, không menu Báo cáo (server giống hệt probe trước deploy). S3 main: 0/7 máy kho rảnh, không tạo popup, `tp_quick_action`/mở popup/in nhãn AccessError. Các slice sau kiểm lại. |
 | AD2-10 | Browser thực tế desktop/mobile | NOT_RUN | |
 
 ## 4. Kết quả theo slice
@@ -196,3 +197,48 @@ Cập nhật sau mỗi slice đã áp.
 - Public không đăng nhập: `/web/health` 200, `/dang-nhap` 200, `/web/login` và
   `/odoo` chuyển hướng như cũ. Browser phiên delegate NOT_RUN (không dùng mật
   khẩu/phiên người thật).
+
+### Slice 3 — Kho: máy rảnh trong kho chung và Gán / Đổi máy / Trả về kho (C)
+
+- Chính sách: kho dùng chung công ty không bao giờ là "phòng khác". Delegate
+  chỉ thấy máy **rảnh** (trong kho, chưa có người giữ, đang quản lý, không hỏng,
+  không chờ bàn giao/sửa) của công ty có ủy quyền để chọn gán/đổi cho phòng
+  khác; máy thay thế mua cho người ở phòng mình/không rõ bị ẩn. Đọc này chỉ cho
+  danh sách chọn: tệp, chatter, lịch sử, sửa thông tin, in nhãn, đăng ký, tạo
+  phiếu trên máy kho vẫn baseline (`_tp_equipment_delegate_check` từ chối máy
+  không do phòng khác giữ). Không suy kho là phòng khác, không dùng đường kho
+  để đổi máy của phòng mình.
+- `models/equipment_handover.py`: delegate gọi đúng `tp_quick_action` (popup
+  gốc gọi qua cùng RPC). Thứ tự: capability sống dưới lock → chuẩn hóa payload,
+  replay chỉ trả kết quả của chính người đó → khóa máy `ORDER BY id FOR UPDATE
+  NOWAIT` (hai người chọn một máy: người sau nhận "đang được xử lý") → khóa
+  nguồn FOR SHARE (máy, parent/replaces, người giữ, version HR, phòng, công ty)
+  → kiểm lại: một công ty, công ty trong phạm vi và có ủy quyền, scope phòng
+  mình đầy đủ, người nhận có phòng hiện tại xác định ngoài phòng mình và không
+  phải chính mình, máy trả/đổi do phòng khác giữ, máy mới còn trong kho chưa có
+  chủ → chạy `_tp_quick_run` gốc dưới `sudo` có sentinel nội bộ (JSON-RPC không
+  giả được), trong savepoint, kiểm hậu điều kiện. Đổi máy = trả A và gán B
+  trong một giao dịch; lỗi bất kỳ không đổi bên nào. Version cũ, máy có chủ,
+  sai company, người nghỉ, chưa xác minh chưa xác nhận: lỗi như đường gốc.
+  Phiếu ghi `create_uid`/`done_by_id` là delegate; follower lọc như gốc.
+- Popup `tp.equipment.quick.action`: dòng ACL nhân viên với domain rỗng +
+  override chỉ delegate (thấy popup do chính mình tạo); danh sách người nhận bỏ
+  phòng mình và người không phòng; version chỉ cho máy đã đọc được. Nhân viên
+  thường vẫn không mở được popup.
+- Đề xuất của người/phòng khác: S1 chỉ đọc; duyệt/trả lại/thực hiện đề xuất qua
+  ủy quyền **chưa có adapter** (gap). Đề xuất của chính mình/phòng mình giữ
+  baseline, không tự duyệt.
+- Lịch sử: phiếu thiếu phòng frozen (giữ theo người) không mở, không suy từ
+  phòng hiện tại của người giữ (giữ nguyên S1).
+- Giao diện giữ bản đơn giản: không thêm tab/menu; nhãn ủy quyền nói rõ kho
+  chung chỉ để chọn máy rảnh.
+- Kiểm tĩnh: Ruff/AST/CSV đạt. 2 ca Odoo mới trong `test_equipment_scope.py`
+  (kho chỉ đọc để chọn; gán/đổi/trả chỉ ngoài phòng, replay, máy đã có chủ, đổi
+  hỏng không đổi gì, version cũ, thu hồi) NOT_RUN theo chính sách.
+- Main 18069: backup `.local/admin-delegate002/backup-s3-20261118T014719` (dump
+  9.934.366B, filestore 998 mục, nguồn/config, SHA256). Chỉ
+  `-u tp_admin_delegation` → 20.0.1.3.0, exit 0/0 ERROR. Fingerprint 26 bảng giữ
+  nguyên, chỉ đổi version. Probe chỉ đọc: 7 máy kho rảnh; admin chính thấy/ghi
+  7, mở popup, in nhãn như cũ; nhân viên thường 0 máy, không tạo popup, mở
+  popup/in nhãn/`tp_quick_action` AccessError. Delegate trên main NOT_RUN
+  (ledger 0/0).

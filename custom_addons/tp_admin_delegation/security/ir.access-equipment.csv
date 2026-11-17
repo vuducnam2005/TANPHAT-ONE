@@ -3,3 +3,4 @@ equipment_delegate_read,Audited held equipment read,maintenance.equipment,base.g
 equipment_proposal_delegate_read,Audited outside proposal read,tp.equipment.proposal,base.group_user,r,"[(0,'=',1)]"
 equipment_proposal_line_delegate_read,Audited outside proposal line read,tp.equipment.proposal.line,base.group_user,r,"[(0,'=',1)]"
 equipment_proposal_review_delegate_read,Audited outside proposal review read,tp.equipment.proposal.review,base.group_user,r,"[(0,'=',1)]"
+equipment_quick_action_delegate,Delegated handover popup (own rows only),tp.equipment.quick.action,base.group_user,cru,"[(0,'=',1)]"

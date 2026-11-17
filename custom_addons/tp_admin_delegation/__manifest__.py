@@ -1,6 +1,6 @@
 {
     'name': 'TANPHAT ONE — Quản trị được ủy quyền',
-    'version': '20.0.1.2.0',
+    'version': '20.0.1.3.0',
     'license': 'LGPL-3',
     'author': 'Tan Phat JSC',
     'depends': ['tp_hr_workspace', 'tp_equipment', 'tp_reporting'],

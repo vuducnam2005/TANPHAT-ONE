@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-004 — ADMIN-DELEGATE-002 S3: Kho — máy rảnh trong kho chung và Gán / Đổi máy / Trả về kho qua ủy quyền
+
+- Ngày 18/11/2026. `tp_admin_delegation` 20.0.1.3.0. Kho dùng chung không bao giờ là "phòng khác": delegate chỉ đọc máy rảnh (trong kho, chưa có người giữ, đủ điều kiện gốc) của công ty có ủy quyền để chọn; máy thay thế mua cho người phòng mình/không rõ bị ẩn. Tệp/chatter/lịch sử/sửa/nhãn/đăng ký/tạo phiếu trên máy kho vẫn baseline.
+- `equipment_handover.py`: delegate gọi đúng `tp_quick_action`/popup gốc. Capability sống dưới lock → replay chỉ của chính mình → khóa máy `FOR UPDATE NOWAIT` (race hai người chọn một máy: người sau bị từ chối) → khóa nguồn FOR SHARE → kiểm lại công ty, scope phòng mình, người nhận có phòng hiện tại ngoài phòng mình và không phải chính mình, máy trả/đổi do phòng khác giữ, máy mới còn trong kho chưa có chủ → chạy `_tp_quick_run` gốc dưới `sudo` có sentinel nội bộ, savepoint, kiểm hậu điều kiện. Đổi máy trả A + gán B nguyên tử. Phiếu ghi người thao tác là delegate. Popup: dòng ACL domain rỗng + override chỉ delegate (popup của chính mình); người nhận bỏ phòng mình/không phòng.
+- Gap còn lại: duyệt/trả lại/thực hiện đề xuất của người/phòng khác qua ủy quyền chưa có adapter (chỉ đọc từ S1); lịch sử thiếu phòng frozen không mở.
+- Kiểm: Ruff/AST/CSV đạt; 2 ca Odoo mới NOT_RUN theo chính sách. Main: backup `.local/admin-delegate002/backup-s3-20261118T014719` (dump 9.934.366B, filestore 998 mục, SHA256); `-u tp_admin_delegation` exit0/0ERROR; fingerprint 26 bảng giữ, chỉ đổi version. Probe chỉ đọc: admin chính 7/7 máy rảnh, popup/nhãn như cũ; nhân viên thường 0 máy, không tạo popup, `tp_quick_action` AccessError. Delegate trên main NOT_RUN (ledger 0/0); gán/đổi/trả thật và race NOT_RUN.
+
 ## CHG-20261118-003 — ADMIN-DELEGATE-002 S2: Báo cáo — sửa baseline admin chính và scope đọc ủy quyền có truy nguồn
 
 - Ngày 18/11/2026. `tp_admin_delegation` 20.0.1.2.0. Chẩn đoán trước sửa (server, chỉ đọc): admin chính có `base.group_system` nhưng không có nhóm Báo cáo nên dashboard/hồ sơ/nghĩa vụ AccessError (`dashboard.py:20`); delegate dừng ở nghĩa vụ (`dashboard.py:29`). Scope cũ mở nháp cá nhân chưa có snapshot (trái baseline riêng tư) và bỏ sót mọi hồ sơ đã gửi.

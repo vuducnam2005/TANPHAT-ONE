@@ -1,11 +1,20 @@
-"""Equipment authority follows all holders and sources; company-common stock stays private."""
+"""Equipment authority follows all holders and sources.
+
+Company-common stock is never another department: a live delegate only sees the free machines
+(in stock, no holder, fit to hand over) to pick one for another department. The handover itself
+is the audited adapter in equipment_handover.py; files, chatter and edits of stock stay baseline.
+"""
 from odoo import api, fields, models
 from odoo.exceptions import AccessError
 from odoo.fields import Domain
 
 from odoo.addons.tp_equipment.models.common import GENERIC_DENIED, TP_EQUIPMENT_MODELS
+from odoo.addons.tp_equipment.models.quick_action import free_domain
 
 _POST = object()
+# Set only by equipment_handover.py after its own checks under lock; JSON-RPC cannot forge it.
+_HANDOVER = object()
+HANDOVER_KEY = '_tp_delegated_handover'
 
 EDITABLE_MODELS = frozenset({
     'maintenance.equipment', 'maintenance.request', 'tp.equipment.software', 'tp.equipment.meter',
@@ -17,8 +26,9 @@ READ_MODELS = EDITABLE_MODELS | PROPOSAL_MODELS | {
     'tp.equipment.move', 'tp.equipment.move.line', 'maintenance.equipment.category',
     'tp.equipment.location', 'maintenance.stage',
 }
-DELEGATED_LABEL = ('Quản trị được ủy quyền: chỉ thiết bị và đề xuất có nguồn ở phòng khác. '
-                   'Kho dùng chung, nhập nguồn và phòng của bạn giữ quyền như cũ.')
+DELEGATED_LABEL = ('Quản trị được ủy quyền: thiết bị và đề xuất có nguồn ở phòng khác; kho dùng chung chỉ '
+                   'xem máy rảnh để gán/đổi cho phòng khác. Nhập nguồn và phòng của bạn giữ quyền như cũ.')
+STOCK_DENIED = 'Kho dùng chung chỉ mở để chọn máy gán/đổi cho phòng khác; việc khác cần Quản trị chính.'
 EQUIPMENT_SCOPE_FIELDS = frozenset({
     'company_id', 'tp_custody', 'tp_employee_id', 'tp_holder_department_id', 'tp_location_id',
     'tp_vendor_id', 'tp_parent_id', 'tp_child_ids', 'tp_replaces_id', 'employee_id', 'department_id',
@@ -72,6 +82,38 @@ def _equipment_ids(env):
             if departments and not (departments & own):
                 ids.append(equipment.id)
     return ids
+
+
+def _free_stock_ids(env):
+    """Free company-common stock a delegate may pick for another department (read only)."""
+    ids = []
+    actor = env.user
+    for company in env.companies:
+        if not actor._tp_has_admin_delegation(company):
+            continue
+        own, complete = actor._tp_delegation_scope(company)
+        if not complete:
+            continue
+        machines = env['maintenance.equipment'].sudo().with_context(version_id=False).search(
+            Domain(free_domain(env)) & Domain('company_id', '=', company.id))
+        for machine in machines:
+            # A replacement bought for a holder keeps that holder's source.
+            if machine.tp_replaces_id:
+                departments = _held_departments(machine.tp_replaces_id)
+                if not departments or departments & own:
+                    continue
+            ids.append(machine.id)
+    return ids
+
+
+def free_stock_domain(env, model):
+    """Picker rows only; equipment_domain (files, chatter, history, edits) never includes stock."""
+    if model not in ('maintenance.equipment', 'maintenance.equipment.category'):
+        return Domain.FALSE
+    ids = _free_stock_ids(env)
+    if model == 'maintenance.equipment':
+        return Domain('id', 'in', ids)
+    return Domain('id', 'in', env['maintenance.equipment'].sudo().browse(ids).category_id.ids)
 
 
 def _move_ids(env, equipment_ids):
@@ -207,7 +249,13 @@ class EquipmentScope(models.AbstractModel):
     _description = 'Audited equipment sources for delegated administration'
 
     def _access_domain(self, operation):
-        return super()._access_domain(operation) | equipment_domain(self.env, self._name, operation)
+        domain = super()._access_domain(operation) | equipment_domain(self.env, self._name, operation)
+        if operation == 'read':
+            domain |= free_stock_domain(self.env, self._name)
+        return domain
+
+    def _tp_delegated_handover(self):
+        return self.env.su and self.env.context.get(HANDOVER_KEY) is _HANDOVER
 
     def _tp_equipment_delegate_check(self):
         if not self.env.user._tp_has_admin_delegation():
@@ -215,6 +263,9 @@ class EquipmentScope(models.AbstractModel):
         if self._name not in READ_MODELS:
             raise AccessError(GENERIC_DENIED)
         self.sudo(False).check_access('read')
+        if self._name == 'maintenance.equipment' and set(self.ids) - set(_equipment_ids(self.env)):
+            # Labels, register, moves and other record actions never treat free stock as held.
+            raise AccessError(self.env._(STOCK_DENIED))
 
     def _tp_lock_equipment_sources(self, vals_list=None):
         equipment = self.env['maintenance.equipment']
@@ -237,6 +288,8 @@ class EquipmentScope(models.AbstractModel):
 
     @api.model_create_multi
     def create(self, vals_list):
+        if self._tp_delegated_handover():
+            return super().create(vals_list)
         delegated = self.env.user._tp_has_admin_delegation(lock=True)
         if not delegated:
             return super().create(vals_list)
@@ -254,7 +307,7 @@ class EquipmentScope(models.AbstractModel):
             return records
 
     def write(self, vals):
-        if not self.env.user._tp_has_admin_delegation(lock=True):
+        if self._tp_delegated_handover() or not self.env.user._tp_has_admin_delegation(lock=True):
             return super().write(vals)
         self._tp_lock_equipment_sources()
         self.sudo(False).check_access('write')
@@ -277,7 +330,8 @@ class EquipmentScope(models.AbstractModel):
         return super().unlink()
 
     def _tp_equipment_post_context(self, kwargs):
-        if not self.env.user._tp_has_admin_delegation(lock=True):
+        # The handover adapter posts the native move note under its own checks.
+        if self._tp_delegated_handover() or not self.env.user._tp_has_admin_delegation(lock=True):
             return self
         self._tp_lock_equipment_sources()
         self.sudo(False).check_access('write')
