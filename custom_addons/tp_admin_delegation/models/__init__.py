@@ -7,4 +7,5 @@ from . import (
     hr_overview,
     hr_profile,
     navigation,
+    reporting_scope,
 )

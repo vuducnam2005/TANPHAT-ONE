@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Main admin manages reporting templates, schedules and assignments (decided role).
+         Report rows still follow ownership/assignments; review, finalize and finance
+         need their own assignment, and assignments cannot be granted to oneself. -->
+    <record id="base.group_system" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('tp_reporting.group_reporting_config'))]"/>
+    </record>
+</odoo>

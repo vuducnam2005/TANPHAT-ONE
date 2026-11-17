@@ -1,6 +1,5 @@
 """Explicit native business scopes; baseline rights remain live and unchanged."""
 from odoo import api, models
-from odoo.exceptions import AccessError
 from odoo.fields import Domain
 
 from .guards import deny_authority, lock_scope_users
@@ -271,61 +270,3 @@ class Opportunity(models.Model):
             return baseline | (Domain('tp_project_id', '!=', False) & other_domain(
                 self.env, 'company_id', ['tp_project_id.tp_department_id', 'team_id.kd_department_id']))
         return baseline
-
-
-class ReportScope(models.AbstractModel):
-    _inherit = 'tp.report.scope.mixin'
-
-    def _tp_delegated_report_domain(self):
-        domain = other_domain(self.env, 'company_id', ['department_id'])
-        # Reports may embed snapshots/children or project results. Those shared
-        # sources retain baseline until each dependency can be proven separately.
-        if self._name == 'tp.report.document':
-            domain &= (Domain('level', '=', 'personal') & Domain('dependency_ids', '=', False)
-                       & Domain('owner_id', '!=', self.env.uid) & Domain('project_id', '=', False)
-                       & Domain('snapshot_ids', '=', False)
-                       & Domain('value_ids', '=', False)
-                       & ~Domain('line_ids', 'any', Domain('project_id', '!=', False)
-                                 | Domain('plan_id', '!=', False) | Domain('task_id', '!=', False)
-                                 | Domain('origin_line_id', '!=', False) | Domain('rollup_source', '=', True)))
-        elif self._name == 'tp.report.plan':
-            domain &= (Domain('parent_id', '=', False) & Domain('child_ids', '=', False)
-                       & Domain('project_id', '=', False) & Domain('task_id', '=', False))
-        elif self._name == 'tp.report.line':
-            domain &= Domain('document_id', 'any', self.env['tp.report.document']._tp_delegated_report_domain())
-        else:
-            return Domain.FALSE
-        permitted = []
-        for company in self.env.companies:
-            own, complete = self.env.user._tp_delegation_scope(company)
-            if not complete:
-                continue
-            known = self.env['hr.employee'].sudo()._search([
-                ('company_id', '=', company.id), ('current_version_id.department_id', '!=', False),
-                ('current_version_id.department_id', 'not in', own.ids),
-            ])
-            blocked = self.env['hr.employee'].sudo().with_context(active_test=False)._search([
-                ('company_id', '=', company.id), '|', ('current_version_id.department_id', '=', False),
-                ('current_version_id.department_id', 'in', own.ids),
-            ])
-            permitted.append(Domain('company_id', '=', company.id)
-                             & Domain('owner_id', 'in', known.subselect(known.table.user_id))
-                             & ~Domain('owner_id', 'in', blocked.subselect(blocked.table.user_id)))
-        domain &= Domain.OR(permitted)
-        return domain
-
-    def _access_domain(self, operation):
-        baseline = super()._access_domain(operation)
-        if operation == 'read' and self._name in {
-            'tp.report.document', 'tp.report.plan', 'tp.report.line',
-        }:
-            return baseline | self._tp_delegated_report_domain()
-        return baseline
-
-    def write(self, vals):
-        if set(vals) & {'company_id', 'department_id', 'owner_id', 'document_id', 'plan_id', 'parent_id'}:
-            for record in self:
-                source = record.sudo()
-                if self.env.user._tp_delegated_other_department(source.company_id, source.department_id, lock=True):
-                    raise AccessError(self.env._('Chuyển nguồn hoặc phạm vi báo cáo cần quản trị chính.'))
-        return super().write(vals)

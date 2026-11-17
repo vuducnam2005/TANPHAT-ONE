@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Delegated read-only list; rows come only from the backend delegated scope. -->
+    <record id="action_delegated_reports" model="ir.actions.act_window">
+        <field name="name">Báo cáo ngoài phòng (ủy quyền)</field>
+        <field name="res_model">tp.report.document</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('owner_id', '!=', uid), ('level', 'in', ['personal', 'department'])]</field>
+        <field name="context">{'create': False, 'edit': False, 'delete': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Chưa có báo cáo ngoài phòng đủ nguồn</p>
+            <p>Chỉ hiện báo cáo đã gửi có nguồn xác định ngoài phòng của bạn; nháp và nguồn chung giữ quyền gốc.</p>
+        </field>
+    </record>
+    <menuitem id="menu_delegated_reports" name="Báo cáo ngoài phòng" parent="tp_reporting.menu_root"
+              action="action_delegated_reports" sequence="35" active="False"/>
+</odoo>

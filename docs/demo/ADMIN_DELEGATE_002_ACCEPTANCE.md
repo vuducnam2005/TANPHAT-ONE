@@ -39,6 +39,7 @@ hoặc khác company giữ baseline.
 | Kho | Gán/đổi/trả stock chưa có chủ | Như cũ | Kiểm lại dưới lock, đổi máy nguyên tử | Target phòng mình bị chặn |
 | KH-KD | Project/WBS/CRM/hợp đồng ghi | Như cũ | Qua command/wizard có sẵn trên record ngoài phòng | Mixed/own: baseline |
 | Báo cáo | Dashboard/document/obligation | Lỗi baseline server → sửa riêng: system ngụ ý vai trò cấu hình (không phải reviewer) | Đọc obligation/directive/kế hoạch ngoài phòng; không tự duyệt/chốt, không snapshot/tài chính | Own/mixed: baseline |
+| Báo cáo (S2 áp) | Dashboard, hồ sơ, kế hoạch, nghĩa vụ, chỉ đạo, phản hồi, xuất | System ngụ ý cấu hình + người dùng Báo cáo; hàng nghiệp vụ vẫn theo assignment, tự cấp bị chặn | Đọc hồ sơ cá nhân đã gửi/hồ sơ phòng, cả cây kế hoạch, nghĩa vụ, chỉ đạo, phản hồi công khai khi mọi nguồn truy được ngoài phòng; snapshot chỉ đọc; không ghi/duyệt/chốt/tài chính | Nháp/trả lại của người khác, tài chính, cấp công ty, nguồn trộn/unknown: baseline |
 | Mọi miền | Settings/Apps, security/ACL/server action, cài module, cấp tiếp admin | Chỉ admin chính | Bị chặn | Bị chặn |
 
 ## 3. Bảng AD2
@@ -52,11 +53,11 @@ có bằng chứng một phần; `NOT_RUN` chưa chạy. Static check không là
 | AD2-02 | HR/Kho dashboard delegate nhất quán | PASS (đọc) | Server S1: HR KPI = danh sách, Kho 10 ô = danh sách, 0 dòng phòng mình; browser render NOT_RUN. |
 | AD2-03 | KH-KD ghi ngoài phòng qua đường thật | NOT_RUN | Slice 4. |
 | AD2-04 | Gán/đổi/trả stock, race, mixed/own/unknown | NOT_RUN | Slice 3. |
-| AD2-05 | Reporting baseline + delegate | NOT_RUN | Slice 2. |
+| AD2-05 | Reporting baseline + delegate | PARTIAL | S2: admin chính vào dashboard/hồ sơ/nghĩa vụ, tự cấp bị chặn (main). Nhánh dữ liệu chưa chạy thật: main 0 hồ sơ/kế hoạch/snapshot; logic SQL kiểm trên CTE tổng hợp; 6 ca Odoo NOT_RUN. |
 | AD2-06 | Baseline phòng mình/kiêm nhiệm giữ | NOT_RUN | |
 | AD2-07 | RPC/context/nested/import/default không lách | NOT_RUN | |
 | AD2-08 | Thu hồi phiên cũ/worker | NOT_RUN | Không grant/revoke thử trên main/server. |
-| AD2-09 | Nhân viên thường không mở thêm | PARTIAL | Slice 1 main + server: HR/Kho dashboard, summary, XLSX AccessError; đề xuất 0; không thêm menu. Các slice sau kiểm lại. |
+| AD2-09 | Nhân viên thường không mở thêm | PARTIAL | Slice 1 main + server: HR/Kho dashboard, summary, XLSX AccessError; đề xuất 0; không thêm menu. S2 main: 10 model Báo cáo và dashboard vẫn AccessError như HEAD, không menu Báo cáo. Các slice sau kiểm lại. |
 | AD2-10 | Browser thực tế desktop/mobile | NOT_RUN | |
 
 ## 4. Kết quả theo slice
@@ -118,3 +119,56 @@ Cập nhật sau mỗi slice đã áp.
 - Public không đăng nhập: `/web/health` 200, `/dang-nhap` 200, `/web/login` và
   `/odoo` chuyển hướng như cũ. Browser có phiên delegate: NOT_RUN (không dùng mật
   khẩu/phiên của người thật).
+
+### Slice 2 — Báo cáo: baseline admin chính và scope đọc ủy quyền (E)
+
+- Chẩn đoán trước khi sửa (server, chỉ đọc): admin chính có `base.group_system`
+  nhưng không có nhóm Báo cáo → dashboard/hồ sơ/nghĩa vụ AccessError
+  (`dashboard.py:20`); delegate dừng ở nghĩa vụ (`dashboard.py:29`). Scope cũ
+  của delegate mở nháp cá nhân chưa có snapshot (trái baseline riêng tư) và bỏ
+  sót mọi hồ sơ đã gửi.
+- Admin chính: `data/reporting_admin.xml` cho `base.group_system` ngụ ý
+  `tp_reporting.group_reporting_config` (vai trò cấu hình đã chốt, kéo theo
+  người dùng Báo cáo). Hàng nghiệp vụ vẫn theo `_tp_report_domain`/assignment:
+  không thành reviewer, không thấy nháp người khác, tự cấp assignment vẫn
+  AccessError. Không `sudo()` dashboard, không cấp nhóm cho mọi actor, không sửa
+  core. Đặt ở `tp_admin_delegation` vì `tp_reporting` đang có source dở của
+  batch khác.
+- Delegate (`models/reporting_scope.py`), một scope dùng chung cho list/form/
+  dashboard/export:
+  - nguồn có company/phòng/owner xác định ngoài phòng mình; owner là nhân viên
+    hiện tại của phòng xác định, không có hồ sơ khác ở phòng mình/không phòng;
+  - hồ sơ cá nhân đã gửi (không nháp/trả lại) và hồ sơ phòng; không giá trị tài
+    chính, dự án (nếu có) phải mở;
+  - dòng hiện tại, mọi payload snapshot bất biến (header company/phòng/owner
+    khớp hồ sơ; plan/project/task trong payload), dòng carry/rollup và
+    dependency phải trỏ tới nguồn cũng mở; lặp tới điểm cố định;
+  - kế hoạch mở theo cả cây quý → tháng → tuần, một nút phòng mình/unknown/khác
+    company/mồ côi đóng cả cây;
+  - nghĩa vụ; chỉ đạo khi cả chỉ đạo và hồ sơ gốc ngoài phòng; phản hồi
+    `published`; lịch sử; nội dung phần mẫu theo hồ sơ (override chỉ cho
+    delegate, nhân viên thường giữ AccessError).
+  - Ghi/nộp/rà soát/chốt/chỉ đạo/hợp nhất/tài chính/assignment giữ capability;
+    đổi company/phòng/owner/hồ sơ/kế hoạch/cha trên nguồn ngoài phòng bị chặn
+    dưới lock. Dashboard thêm nhãn "Quản trị được ủy quyền" và ghi chú số thực
+    hiện chỉ cộng báo cáo đã gửi có nguồn mở.
+- Navigation: gốc Báo cáo mở dashboard; lá Tổng quan, Kế hoạch, Chỉ đạo và
+  "Báo cáo ngoài phòng" (menu ẩn, chỉ thêm khi đọc được, không tạo/sửa/xóa)
+  theo capability sống. Settings/Apps/cấu hình Báo cáo giữ admin chính.
+- Kiểm tĩnh: Ruff/AST/XML đạt. Logic SQL: chạy đúng câu lệnh của module trên
+  CTE tổng hợp cùng tên bảng (không DDL/DML, giao dịch chỉ đọc, rollback) —
+  5/5 hồ sơ có dòng/payload/header không truy được bị loại, 4 cạnh nguồn
+  (origin, rollup thiếu gốc, dependency thiếu/không phải số), cây kế hoạch bỏ
+  nhánh khác company và nút mồ côi. 6 ca Odoo trong `test_reporting_scope.py`
+  (nháp riêng, cây kế hoạch, nghĩa vụ/chỉ đạo/dashboard, admin cấu hình không
+  thẩm quyền, task/carry/tài chính) NOT_RUN theo chính sách.
+- Main 18069: backup `.local/admin-delegate002/backup-s2-20261118T011220` (dump
+  9.933.725B, filestore 998 mục, nguồn/config, SHA256). Chỉ
+  `-u tp_admin_delegation`, exit 0/0 ERROR; chạy lần hai sau khi thay dòng ACL
+  đọc nội dung phần cho mọi nhân viên bằng override chỉ delegate (dòng cũ đã bị
+  gỡ). Fingerprint 26 bảng: chỉ `res_groups_implied_rel` +1 và version.
+- Probe chỉ đọc main: admin chính có nhóm cấu hình/người dùng Báo cáo; 10 model
+  và dashboard chạy (0 dòng), 13 menu Báo cáo, tự cấp AccessError; nhân viên
+  thường không nhóm Báo cáo vẫn AccessError cả 10 model/dashboard, không menu.
+  Main/server có 0 hồ sơ/kế hoạch/snapshot/nghĩa vụ/chỉ đạo nên nhánh dữ liệu
+  chưa chạy thật; delegate trên main NOT_RUN (ledger 0/0).

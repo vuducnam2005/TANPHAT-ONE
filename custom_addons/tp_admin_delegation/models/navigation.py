@@ -6,14 +6,16 @@ from odoo import api, models
 _ENTRIES = (
     ('tp_hr_workspace.menu_hr', 'tp_hr_workspace.action_employees', 'hr.employee'),
     ('tp_kd_workspace.menu_kd', 'tp_kd_workspace.action_projects', 'project.project'),
-    ('tp_reporting.menu_root', 'tp_reporting.action_personal', 'tp.report.document'),
+    ('tp_reporting.menu_root', 'tp_reporting.action_dashboard', 'tp.report.document'),
     ('tp_equipment.menu_root', 'tp_equipment.action_equipment', 'maintenance.equipment'),
 )
 # Leaf menu and the live check its destination needs; None keeps the app gate only.
 _LEAVES = (
     ('tp_hr_workspace.menu_overview', '_tp_hr_overview'),
     ('tp_hr_workspace.menu_employees', None), ('tp_kd_workspace.menu_projects', None),
-    ('tp_reporting.menu_personal', None), ('tp_equipment.menu_equipment_all', None),
+    ('tp_reporting.menu_overview', 'tp.report.obligation'), ('tp_reporting.menu_plans', 'tp.report.plan'),
+    ('tp_reporting.menu_personal', None), ('tp_admin_delegation.menu_delegated_reports', 'tp.report.document'),
+    ('tp_reporting.menu_directives', 'tp.report.directive'), ('tp_equipment.menu_equipment_all', None),
     ('tp_equipment.menu_proposals', 'tp.equipment.proposal'),
     ('tp_admin_delegation.menu_delegated_hr_create', None),
 )
