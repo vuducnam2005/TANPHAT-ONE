@@ -53,12 +53,12 @@ có bằng chứng một phần; `NOT_RUN` chưa chạy. Static check không là
 | AD2-01 | Ledger thực, không hardcode actor | PASS (đọc) | Server: actor lấy từ ledger hiệu lực 1/1, capability/scope sống; không grant/revoke thử. |
 | AD2-02 | HR/Kho dashboard delegate nhất quán | PASS (đọc) | Server S1: HR KPI = danh sách, Kho 10 ô = danh sách, 0 dòng phòng mình; browser render NOT_RUN. |
 | AD2-03 | KH-KD ghi ngoài phòng qua đường thật | NOT_RUN | Slice 4. |
-| AD2-04 | Gán/đổi/trả stock, race, mixed/own/unknown | PARTIAL | S3: adapter khóa + kiểm lại rồi chạy RPC gốc; main probe chỉ đọc: admin chính như cũ, nhân viên thường 0 máy kho/không tạo popup/AccessError. Chính sách người nhận/máy kiểm trên server (xem slice 3). Gán/đổi/trả thật, race hai người và 2 ca Odoo NOT_RUN theo chính sách. |
+| AD2-04 | Gán/đổi/trả stock, race, mixed/own/unknown | PARTIAL | S3: adapter khóa + kiểm lại rồi chạy RPC gốc; main probe chỉ đọc: admin chính như cũ, nhân viên thường 0 máy kho/không tạo popup/AccessError. Server sau deploy (delegate ledger 1/1, chỉ đọc): 7/7 máy rảnh chỉ đọc, 0 ghi/tệp/chatter, popup tạo được, người nhận 35 (0 phòng mình/0 không phòng), in nhãn máy kho AccessError; `tp_quick_action` tới khóa nguồn; người nhận phòng mình và trả máy phòng mình AccessError, người nhận ngoài phòng hợp lệ, máy có chủ UserError. Gán/đổi/trả thật, race hai người và 2 ca Odoo NOT_RUN theo chính sách. |
 | AD2-05 | Reporting baseline + delegate | PARTIAL | S2 main + server: admin chính vào dashboard/hồ sơ/nghĩa vụ, tự cấp bị chặn; delegate thật có dashboard nhãn ủy quyền và 9 model đọc, 0 dòng phòng mình, không ghi/assignment. Nhánh dữ liệu chưa chạy thật: cả hai nơi 0 hồ sơ/kế hoạch/snapshot; logic SQL kiểm trên CTE tổng hợp; 6 ca Odoo NOT_RUN. |
 | AD2-06 | Baseline phòng mình/kiêm nhiệm giữ | NOT_RUN | |
 | AD2-07 | RPC/context/nested/import/default không lách | NOT_RUN | |
 | AD2-08 | Thu hồi phiên cũ/worker | NOT_RUN | Không grant/revoke thử trên main/server. |
-| AD2-09 | Nhân viên thường không mở thêm | PARTIAL | Slice 1 main + server: HR/Kho dashboard, summary, XLSX AccessError; đề xuất 0; không thêm menu. S2 main + server: 10 model Báo cáo và dashboard vẫn AccessError như trước, không menu Báo cáo (server giống hệt probe trước deploy). S3 main: 0/7 máy kho rảnh, không tạo popup, `tp_quick_action`/mở popup/in nhãn AccessError. Các slice sau kiểm lại. |
+| AD2-09 | Nhân viên thường không mở thêm | PARTIAL | Slice 1 main + server: HR/Kho dashboard, summary, XLSX AccessError; đề xuất 0; không thêm menu. S2 main + server: 10 model Báo cáo và dashboard vẫn AccessError như trước, không menu Báo cáo (server giống hệt probe trước deploy). S3 main + server: 0/7 máy kho rảnh, không tạo popup, `tp_quick_action`/mở popup/in nhãn AccessError (server giống hệt trước deploy). Các slice sau kiểm lại. |
 | AD2-10 | Browser thực tế desktop/mobile | NOT_RUN | |
 
 ## 4. Kết quả theo slice
@@ -242,3 +242,23 @@ Cập nhật sau mỗi slice đã áp.
   7, mở popup, in nhãn như cũ; nhân viên thường 0 máy, không tạo popup, mở
   popup/in nhãn/`tp_quick_action` AccessError. Delegate trên main NOT_RUN
   (ledger 0/0).
+- PC server `1a248463`: preflight 10/10 tệp đúng baseline; backup
+  `C:/TANPHAT-backups/admin-delegate002/s3-20261118T015400` (dump 9.570.622B,
+  filestore 29.819.146B/597 mục, source-config, `pg_restore -l` 15.437 dòng,
+  SHA256). `-u tp_admin_delegation` exit 0/0 ERROR, checksum 10/10. Snapshot
+  nhân viên/tài khoản/nhóm/roster/thiết bị (55)/đề xuất/ledger/ngày công/Báo
+  cáo/baseURL giữ, chỉ đổi version.
+- Probe server chỉ đọc (delegate lấy từ ledger 1/1, không đổi quyền ai):
+  - Trước deploy: delegate 0 máy kho, không tạo popup, mở popup/in nhãn/
+    `tp_quick_action` AccessError; 24 thiết bị giữ ngoài phòng như S1.
+  - Sau deploy: 7/7 máy rảnh thấy được (0 bị ẩn), 0 ghi, 0 tệp, 0 chatter; tạo
+    popup được (0 popup cũ); người nhận 35, 0 thuộc phòng mình, 0 không phòng;
+    mở Gán và `default_get` chạy; in nhãn máy kho AccessError (kho chỉ để
+    chọn); 24 thiết bị giữ ngoài phòng giữ nguyên.
+  - `tp_quick_action` dừng ở khóa nguồn vì giao dịch chỉ đọc; kiểm chính sách
+    trực tiếp: người nhận phòng mình AccessError, trả máy phòng mình
+    AccessError, người nhận ngoài phòng hợp lệ, chọn máy đã có chủ UserError.
+  - Admin chính và nhân viên thường giống hệt trước deploy.
+- Public: `/web/health` 200, `/dang-nhap` 200, `/web/login` và `/odoo` chuyển
+  hướng như cũ. Gán/đổi/trả thật, race hai phiên, browser phiên delegate
+  NOT_RUN (không dùng mật khẩu/phiên người thật, không CRUD dữ liệu thật).
