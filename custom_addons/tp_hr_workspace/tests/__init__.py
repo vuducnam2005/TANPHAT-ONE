@@ -1,6 +1,7 @@
 from . import (
     test_account_role,
     test_dashboard_lock,
+    test_directory_readonly,
     test_employee_delete,
     test_employment_contract,
     test_hr_ui,

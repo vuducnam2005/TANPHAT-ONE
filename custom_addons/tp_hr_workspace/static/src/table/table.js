@@ -75,6 +75,7 @@ const TABLE_CONTENT = {
     "hr.work.location": ["Nơi làm việc", "Quản lý địa điểm để phân công nơi làm việc cho nhân viên.", "Thêm nơi làm việc", "Chưa có nơi làm việc"],
     "hr.employee.category": ["Nhãn nhân viên", "Phân loại hồ sơ bằng nhãn; nhãn không thay đổi phòng ban hoặc quyền.", "Thêm nhãn nhân viên", "Chưa có nhãn nhân viên"],
     "tp.hr.import.batch": ["Nhập và đối chiếu", "Chọn tệp, xem trước và đối chiếu trước khi áp dụng vào hồ sơ.", "Tạo lô nhập", "Chưa có lô nhập"],
+    "hr.employee.public": ["Danh bạ nhân viên", "Chỉ xem: thông tin công việc của đồng nghiệp. Hợp đồng, lương và thông tin riêng tư không hiển thị.", "", "Chưa có nhân viên"],
     "tp.hr.import.line": ["Đối chiếu từng dòng", "Rà soát ánh xạ và xử lý xung đột trước khi áp dụng lô nhập.", "", "Không có dòng đối chiếu"],
 };
 

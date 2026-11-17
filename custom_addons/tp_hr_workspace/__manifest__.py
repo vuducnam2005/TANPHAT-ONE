@@ -1,11 +1,12 @@
 {
     "name": "TANPHAT ONE — TP HR",
-    "version": "20.0.1.11.6",
+    "version": "20.0.1.12.0",
     "license": "LGPL-3",
     "author": "Tan Phat JSC",
     "depends": ["tp_organization", "hr_skills", "hr_timesheet", "tp_web_home", "tp_web_login", "tp_kd_workspace", "calendar"],
     "data": [
         "security/ir.access.csv",
+        "views/directory.xml",
         "views/workspace.xml",
         "views/identity_org.xml",
         "views/hr_ui.xml",
@@ -21,6 +22,9 @@
             "tp_hr_workspace/static/src/sidebar/sidebar.js",
             "tp_hr_workspace/static/src/sidebar/sidebar.xml",
             "tp_hr_workspace/static/src/sidebar/sidebar.scss",
+            "tp_hr_workspace/static/src/sidebar/readonly_badge.js",
+            "tp_hr_workspace/static/src/sidebar/readonly_badge.xml",
+            "tp_hr_workspace/static/src/sidebar/readonly_badge.scss",
             "tp_hr_workspace/static/src/table/filter_profiles.js",
             "tp_hr_workspace/static/src/table/table.js",
             "tp_hr_workspace/static/src/table/table.xml",

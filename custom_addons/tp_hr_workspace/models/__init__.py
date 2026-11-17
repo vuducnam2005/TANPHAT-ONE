@@ -10,5 +10,6 @@ from . import (
     identity,
     mail_bot_silencer,
     my_profile,
+    workspace_directory,
     workspace_scope,
 )

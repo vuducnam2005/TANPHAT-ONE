@@ -483,20 +483,21 @@
     <record id="action_pending" model="ir.actions.act_window"><field name="name">Chưa có tài khoản</field><field name="res_model">hr.employee</field><field name="view_mode">list,form</field><field name="view_id" ref="employee_list"/><field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('employee_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('employee_form')})]"/><field name="search_view_id" ref="employee_search"/><field name="domain">[('user_id','=',False)]</field><field name="help" type="html"><p>Hồ sơ chưa có tài khoản là trạng thái hợp lệ. Admin mở hồ sơ → Tài khoản &amp; phân quyền → Tạo tài khoản riêng khi cần. Không dùng lại tài khoản của người khác.</p></field></record>
 
     <!-- Menus -->
-    <menuitem id="menu_hr" name="TP HR" sequence="30" action="action_overview" groups="hr.group_hr_user"/>
-    <menuitem id="menu_overview" name="Tổng quan" parent="menu_hr" action="action_overview" sequence="1"/>
+    <menuitem id="menu_hr" name="TP HR" sequence="30" action="action_hr_entry" groups="-hr.group_hr_user,base.group_user"/>
+    <menuitem id="menu_overview" name="Tổng quan" parent="menu_hr" action="action_overview" sequence="1" groups="hr.group_hr_user"/>
     <menuitem id="menu_group_employees" name="Nhân viên" parent="menu_hr" sequence="10"/>
-    <menuitem id="menu_employees" name="Danh sách nhân viên" parent="menu_group_employees" action="action_employees"/>
-    <menuitem id="menu_missing" name="Hồ sơ cần bổ sung" parent="menu_group_employees" action="action_missing" sequence="20"/>
-    <menuitem id="menu_archived" name="Lưu trữ" parent="menu_group_employees" action="action_archived" sequence="30"/>
-    <menuitem id="menu_group_organization" name="Tổ chức" parent="menu_hr" sequence="20"/>
+    <menuitem id="menu_employees" name="Danh sách nhân viên" parent="menu_group_employees" action="action_employees" groups="hr.group_hr_user"/>
+    <menuitem id="menu_directory" name="Danh sách" parent="menu_group_employees" action="action_directory" sequence="5" groups="base.group_user"/>
+    <menuitem id="menu_missing" name="Hồ sơ cần bổ sung" parent="menu_group_employees" action="action_missing" sequence="20" groups="hr.group_hr_user"/>
+    <menuitem id="menu_archived" name="Lưu trữ" parent="menu_group_employees" action="action_archived" sequence="30" groups="hr.group_hr_user"/>
+    <menuitem id="menu_group_organization" name="Tổ chức" parent="menu_hr" sequence="20" groups="hr.group_hr_user"/>
     <menuitem id="menu_departments" name="Phòng ban và đơn vị" parent="menu_group_organization" action="action_departments"/>
     <menuitem id="menu_jobs" name="Chức vụ" parent="menu_group_organization" action="action_jobs" sequence="20"/>
     <menuitem id="menu_locations" name="Nơi làm việc" parent="menu_group_organization" action="action_locations" sequence="30"/>
     <menuitem id="menu_hierarchy" name="Sơ đồ quản lý đã khai báo" parent="menu_group_organization" action="action_hierarchy" sequence="40"/>
     <menuitem id="menu_import" name="Nhập và đối chiếu" parent="menu_hr" action="action_import" sequence="40" groups="hr.group_hr_manager"/>
     <menuitem id="menu_pending" name="Chưa có tài khoản" parent="menu_group_employees" action="action_pending" sequence="40" groups="hr.group_hr_manager"/>
-    <menuitem id="menu_reports" name="Báo cáo cơ cấu và Excel" parent="menu_hr" action="action_overview" sequence="50"/>
+    <menuitem id="menu_reports" name="Báo cáo cơ cấu và Excel" parent="menu_hr" action="action_overview" sequence="50" groups="hr.group_hr_user"/>
 
     <record id="skill_types_list" model="ir.ui.view"><field name="name">tp.hr.skill_types.list</field><field name="model">hr.skill.type</field><field name="inherit_id" ref="hr_skills.hr_skill_type_view_tree"/><field name="mode">primary</field><field name="arch" type="xml"><xpath expr="//list" position="attributes"><attribute name="js_class">tp_hr_table</attribute><attribute name="limit">20</attribute></xpath></field></record>
     <record id="action_skill_types" model="ir.actions.act_window"><field name="name">Loại kỹ năng và cấp độ</field><field name="res_model">hr.skill.type</field><field name="view_mode">list,form</field><field name="view_id" ref="skill_types_list"/></record>

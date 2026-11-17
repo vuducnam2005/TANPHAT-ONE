@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- HR-DIRECTORY-READONLY-001: whitelist views on the native hr.employee.public projection. -->
+<odoo>
+    <record id="directory_search" model="ir.ui.view">
+        <field name="name">tp.hr.directory.search</field>
+        <field name="model">hr.employee.public</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <search string="Danh bạ nhân viên">
+                <field name="name" string="Họ tên hoặc mã TP" filter_domain="['|', ('name', 'ilike', self), ('tp_employee_code', 'ilike', self)]"/>
+                <field name="department_id" string="Phòng ban" operator="child_of"/>
+                <field name="job_id" string="Chức vụ"/>
+                <field name="parent_id" string="Quản lý trực tiếp"/>
+                <field name="work_location_id" string="Nơi làm việc"/>
+                <filter name="my_department" string="Phòng của tôi" domain="[('member_of_department', '=', True)]"/>
+                <group>
+                    <filter name="group_department" string="Phòng ban" context="{'group_by': 'department_id'}"/>
+                    <filter name="group_job" string="Chức vụ" context="{'group_by': 'job_id'}"/>
+                    <filter name="group_location" string="Nơi làm việc" context="{'group_by': 'work_location_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="directory_list" model="ir.ui.view">
+        <field name="name">tp.hr.directory.list</field>
+        <field name="model">hr.employee.public</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <list string="Danh bạ nhân viên" js_class="tp_hr_table" limit="20" create="0" edit="0" delete="0" import="0" export_xlsx="0">
+                <field name="tp_employee_code" string="Mã TP"/>
+                <field name="avatar_128" widget="image" options="{'size': [28, 28]}" string=" " width="44px"/>
+                <field name="name" string="Họ tên"/>
+                <field name="department_id" string="Phòng / đơn vị"/>
+                <field name="job_title" string="Chức vụ"/>
+                <field name="parent_id" string="Quản lý trực tiếp" optional="show"/>
+                <field name="work_email" string="Email công việc" widget="email" optional="show"/>
+                <field name="work_phone" string="Điện thoại công việc" widget="phone" optional="show"/>
+                <field name="work_location_id" string="Nơi làm việc" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="directory_kanban" model="ir.ui.view">
+        <field name="name">tp.hr.directory.kanban</field>
+        <field name="model">hr.employee.public</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <kanban class="o_tp_hr_directory_kanban" create="0" edit="0" delete="0">
+                <templates>
+                    <t t-name="card" class="flex-row">
+                        <aside class="o_card_aside_full">
+                            <field name="avatar_256" class="d-block position-relative" widget="background_image"/>
+                        </aside>
+                        <main class="ms-2">
+                            <field class="fw-bolder" name="name"/>
+                            <field name="tp_employee_code" class="text-muted small"/>
+                            <field t-if="record.job_title.raw_value" name="job_title"/>
+                            <field t-if="record.department_id.raw_value" name="department_id" class="text-muted"/>
+                            <div t-if="record.work_email.raw_value" class="text-truncate">
+                                <i class="oi oi-fw me-2 text-primary" data-icon="mail" title="Email công việc"/>
+                                <field name="work_email"/>
+                            </div>
+                            <div t-if="record.work_phone.raw_value" class="d-flex align-items-baseline">
+                                <i class="oi oi-fw me-2 text-primary" data-icon="phone" title="Điện thoại công việc"/>
+                                <field name="work_phone" widget="phone"/>
+                            </div>
+                        </main>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="directory_form" model="ir.ui.view">
+        <field name="name">tp.hr.directory.form</field>
+        <field name="model">hr.employee.public</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <form string="Thông tin công việc" create="0" edit="0" delete="0" duplicate="0" class="o_tp_hr_directory_form">
+                <sheet>
+                    <div class="o_tp_hr_readonly_note" role="note">
+                        <span class="o_tp_hr_readonly_badge">Chỉ xem</span>
+                        Thông tin công việc của đồng nghiệp. Hợp đồng, lương và thông tin riêng tư không hiển thị.
+                    </div>
+                    <field name="avatar_128" invisible="1"/>
+                    <field name="image_1920" widget="image" class="oe_avatar" options="{'preview_image': 'avatar_128'}" readonly="1"/>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                        <h2><field name="job_title" readonly="1"/></h2>
+                    </div>
+                    <group>
+                        <group string="Công việc">
+                            <field name="tp_employee_code" string="Mã TP"/>
+                            <field name="department_id" string="Phòng / đơn vị" options="{'no_open': True}"/>
+                            <field name="job_id" string="Chức vụ" options="{'no_open': True}"/>
+                            <field name="parent_id" string="Quản lý trực tiếp" options="{'no_open': True}"/>
+                            <field name="work_location_id" string="Nơi làm việc" options="{'no_open': True}"/>
+                            <field name="company_id" string="Đơn vị" options="{'no_open': True}" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Liên hệ công việc">
+                            <field name="work_email" string="Email công việc" widget="email"/>
+                            <field name="work_phone" string="Điện thoại công việc" widget="phone"/>
+                            <field name="birthday_public_display_string" string="Sinh nhật" invisible="birthday_public_display_string == 'hidden'"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_directory" model="ir.actions.act_window">
+        <field name="name">Danh bạ nhân viên</field>
+        <field name="res_model">hr.employee.public</field>
+        <field name="path">danh-ba</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('directory_list')}),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('directory_kanban')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('directory_form')})]"/>
+        <field name="search_view_id" ref="directory_search"/>
+        <field name="context">{'tp_filter_profile': 'directory'}</field>
+        <field name="help" type="html"><p>Chưa có nhân viên đang làm việc trong đơn vị được xem.</p></field>
+    </record>
+
+    <record id="action_hr_entry" model="ir.actions.server">
+        <field name="name">TP HR</field>
+        <field name="model_id" ref="tp_hr_workspace.model_tp_hr_workspace"/>
+        <field name="state">code</field>
+        <field name="path">nhan-su</field>
+        <field name="group_ids" eval="[(6, 0, [ref('base.group_user')])]"/>
+        <field name="code">action = model._tp_entry_action()</field>
+    </record>
+</odoo>

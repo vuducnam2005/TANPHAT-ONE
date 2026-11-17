@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_hr_workspace.SidebarReadonly" t-inherit="tp_hr_workspace.Sidebar" t-inherit-mode="extension">
+        <xpath expr="//span[hasclass('o_tp_hr_sb_title')]" position="after">
+            <span t-if="this.tpReadonly and !this.rail()" class="o_tp_hr_readonly_badge" title="Bạn chỉ xem được thông tin công việc; không thêm, sửa hoặc xóa hồ sơ.">Chỉ xem</span>
+        </xpath>
+        <xpath expr="//span[hasclass('o_tp_hr_mobilebar_title')]" position="after">
+            <span t-if="this.tpReadonly" class="o_tp_hr_readonly_badge">Chỉ xem</span>
+        </xpath>
+    </t>
+</templates>
