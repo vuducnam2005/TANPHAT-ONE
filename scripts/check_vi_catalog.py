@@ -7,6 +7,8 @@ import os
 import re
 import sys
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import polib
 from lxml import etree
@@ -20,8 +22,14 @@ config["addons_path"] = "addons,custom_addons"
 from odoo.modules.module import initialize_sys_path
 
 initialize_sys_path()
+from werkzeug.wrappers import Response
+
 from odoo.tools.translate import CodeTranslations, code_translations, get_translation
 
+from odoo.addons.spreadsheet_dashboard.controllers.dashboards_controllers import (
+    DashboardDataRoute,
+)
+from odoo.addons.tp_i18n_vi.controllers.dashboard import VietnameseDashboardData
 from odoo.addons.tp_i18n_vi.models.ir_http import IrHttp
 
 root = ROOT
@@ -92,6 +100,33 @@ assert {
     x["id"]: x["string"]
     for x in code_translations.get_web_translations("mail", "vi_VN")["messages"]
 }["Meetings"] == "Cuộc họp"
+controller = VietnameseDashboardData()
+dashboard = SimpleNamespace(_get_dashboard_translation_namespace=lambda: 'spreadsheet_dashboard_account')
+for language in ('vi', 'vi_VN', 'en_US'):
+    for sample in (True, False):
+        for namespace in (None, 'original_namespace'):
+            payload = {'snapshot': {'sheets': [{'cells': {'A1': 'Customer', 'A2': 'Acme Corporation', 'A3': '=SUM(B1:B2)', 'A4': 0}}]}, 'is_sample': sample}
+            if namespace:
+                payload['translation_namespace'] = namespace
+            response = Response(json.dumps(payload), content_type='application/json')
+            with (
+                patch.object(DashboardDataRoute, 'get_dashboard_data', return_value=response),
+                patch('odoo.addons.tp_i18n_vi.controllers.dashboard.request', SimpleNamespace(env=SimpleNamespace(lang=language))),
+            ):
+                actual = type(controller).get_dashboard_data.__wrapped__(controller, dashboard).get_json()
+            expected = dict(payload)
+            if language in ('vi', 'vi_VN') and sample and not namespace:
+                expected = json.loads(json.dumps(payload))
+                expected['translation_namespace'] = 'spreadsheet_dashboard_account'
+                expected['snapshot']['sheets'][0]['cells']['A1'] = 'Khách hàng'
+            assert actual == expected, (language, sample, namespace)
+with patch.object(DashboardDataRoute, 'get_dashboard_data', side_effect=PermissionError('native denied')):
+    try:
+        type(controller).get_dashboard_data.__wrapped__(controller, dashboard)
+    except PermissionError:
+        pass
+    else:
+        raise AssertionError
 print(
     json.dumps(
         {

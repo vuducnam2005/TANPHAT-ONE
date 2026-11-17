@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-17T09:43:07.783562+00:00",
-  "last_change_id": "CHG-20261117-006",
-  "code_digest": "a2c8f38f484c4da8558a87cc63b43619e84780155cdfdacbcaf06e1cec692c6f",
-  "code_file_count": 601,
+  "updated_at": "2026-11-17T10:03:52.029063+00:00",
+  "last_change_id": "CHG-20261117-007",
+  "code_digest": "d3b71683b4548409340382d5ffee1aa2a9d62fb6d1291f1812634391de3d4234",
+  "code_file_count": 603,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "da13ce0e96743c9ac7957503619e0f66a53eebe2db5ace927e0b12d9c2cd7fee",
-    "docs/CHANGELOG.md": "ff3e98805c1b9211d85035384a7fb38024d5047c0f6d0b3fc2d085f3bfbc950a",
+    "docs/PROJECT_STATUS.md": "ae45ed9f725f0e5f2386183670aa421e660c1aa29c9983e6271800ac70601539",
+    "docs/CHANGELOG.md": "550e96534bd64996def25751e5229a086a6253d126602b47f5c8564450c4d0ad",
     "AGENTS.md": "ac7c7a6ce9929b1cc7f2f3752b5006bd91e9ca570228c9aed8a5210b2798cc5c",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Catalog 10494 entries + native/en_US/idempotence, FullCalendar locale, Ruff/XML, registry 2177 refs, backend rollback smoke PASS; 18069 browser35/35 and14screens; 20table/baseURL fingerprints unchanged; Odoo fixture tests NOT RUN; server pending"
+    "35e1c11f PCserver90checksums/upgrade0ERROR/public35of35 +13screens/Reporting native denied; media83of83 XLSX2sheets/PDF valid private; sample dashboard route12cases+denial noDB, main rendered Calendar and translated sample PASS; fixture suites NOT RUN"
   ]
 }

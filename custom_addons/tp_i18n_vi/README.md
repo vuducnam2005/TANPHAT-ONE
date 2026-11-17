@@ -21,3 +21,5 @@ Từ 20.0.1.1.0, hook đăng ký của `ir.http` nạp catalog bổ sung vào ca
 Kiểm độc lập không cần database: `python scripts/check_vi_catalog.py` và `node custom_addons/tp_i18n_vi/tests/fullcalendar_locale.cjs`. Catalog mở rộng từ chuỗi giao diện upstream công khai, có bản dịch tự động đã kiểm định dạng và rà mẫu; thông báo quan trọng và thuật ngữ đang dùng được rà thủ công. Không gửi hồ sơ, dữ liệu doanh nghiệp hoặc secret tới dịch vụ dịch. Tên người, nội dung hồ sơ và mã kỹ thuật giữ nguyên.
 
 Catalog bổ sung được kiểm placeholder, XML ID/source, bản native, en_US và UI. Phạm vi thực kiểm và những màn hình chưa đi hết nằm ở tài liệu coverage; không nhận số thuật ngữ là bằng chứng đã kiểm mọi luồng nghiệp vụ.
+
+Từ20.0.1.1.1, route dashboard kế thừa bổ sung `translation_namespace` còn thiếu ở phản hồi dashboard mẫu khi dùng tiếng Việt. Nhãn ô tĩnh của mẫu được dịch theo catalog cùng namespace; tên doanh nghiệp không có trong catalog, công thức và giá trị số giữ nguyên. Giữ auth/readonly và kiểm quyền native; không ghi database hoặc đổi phản hồi en_US. Dashboard thật đã có namespace được giữ nguyên.

@@ -1,6 +1,6 @@
 # VI-WEB-002 — Lỗi lý do, hộp đối chiếu và tiếng Việt
 
-Ngày 17/11/2026, CHG-20261117-006. Người dùng báo lỗi tại `/app/action-528/35` trên public và yêu cầu Việt hóa toàn web, đồng thời sửa bố cục hộp Đối chiếu danh tính. Phạm vi này tiếp tục bản ADMIN-DELEGATE-001 đã giao; không tự cấp người thật hoặc mở rộng quyền nghiệp vụ.
+Ngày 17/11/2026, CHG-20261117-006/007. Người dùng báo lỗi tại `/app/action-528/35` trên public và yêu cầu Việt hóa toàn web, đồng thời sửa bố cục hộp Đối chiếu danh tính. Phạm vi này tiếp tục bản ADMIN-DELEGATE-001 đã giao; không tự cấp người thật hoặc mở rộng quyền nghiệp vụ.
 
 ## Nguyên nhân và thay đổi
 
@@ -25,9 +25,13 @@ Chuỗi nguồn gửi dịch tự động chỉ lấy từ catalog upstream côn
 
 ## Môi trường và giao bản
 
-Đã áp trên 18069, đang chuẩn bị PC server. Bằng chứng private `.local/vi-web002/`; backup local `.local/admin-delegate001/backup-dev-vi-web002/` gồm dump 9.646.950 byte đã đọc được mục lục, filestore ZIP 254.446.424 byte và manifest checksum. Chỉ nâng cấp `tp_admin_delegation` 20.0.1.0.1, `tp_hr_workspace` 20.0.1.11.6, `tp_i18n_vi` 20.0.1.1.0. PC server ghi bổ sung sau deploy.
+Đã áp trên 18069, đang chuẩn bị PC server. Bằng chứng private `.local/vi-web002/`; backup local `.local/admin-delegate001/backup-dev-vi-web002/` gồm dump 9.646.950 byte đã đọc được mục lục, filestore ZIP 254.446.424 byte và manifest checksum. Chỉ nâng cấp `tp_admin_delegation` 20.0.1.0.1, `tp_hr_workspace` 20.0.1.11.6, `tp_i18n_vi` 20.0.1.1.0. PC server đã áp commit35e1c11f,90/90tệp checksum,upgrade0/0ERROR;backup C:/TANPHAT-backups/vi-web002/20261117T164626. Patch dashboard20.0.1.1.1 đã áp18069, đang giao tiếp server.
 
 Kiểm local: catalog 10.494 mục PASS; Ruff/XML/Python AST và kiểm locale lịch PASS; 2.177 tham chiếu XML ID/source khớp registry. Backend mở cấp/thu hồi không lý do, từ chối `False`/khoảng trắng và kiểm digest trong transaction rollback. Browser 35/35 ở 1440/768/390/320px, 14 màn hình chính không lỗi trang. Fingerprint 20 bảng, base URL và ledger 0/0 giữ nguyên; chỉ phiên bản 3 addon đổi. Các log upgrade thành công exit0/0ERROR. Không có audit độc lập vì subagent không khởi tạo được với model runtime hiện tại.
+
+Public35/35 ở4kíchthước;13màn tải được và Reporting báo từ chối do nhóm hiện có, không đổi quyền để kiểm.0JSerror/overflow;Lịch/Bảng tổng hợp đã chờ renderer sau ảnh loading đầu. Backend2177refs/rollback PASS.20bảng ngay saucài/baseURL/ledger0/0giữ;cuối chỉcron tựtiến. Media83/83,666row/169blobđủ/hashđúng;Excel2sheet vàPDF hợp lệ/no-store/anonymous303. Không có attachment PDF/Word/Excel thật trênserver.
+
+Dashboard mẫu thiếu namespace trong native response;20.0.1.1.1 bổ sung namespace và dịch các ô literal khớp catalog nguồn trên phản hồi tiếng Việt, không thay dữ liệu lưu, công thức/số hoặc en_US. Kiểm12tổhợp phản hồi và native denial khôngDB PASS. Nội dung mẫu/tên riêng không có trong catalog có thể vẫn giữ tiếng Anh, ví dụ giá trị mẫu ngày/số hoặc trạng thái nhập dưới dạng dữ liệu; không nhận là đã dịch mọi dữ liệu.
 
 Không chạy suite Odoo tạo fixture trên main/server; không chạy hoặc thay DB18079/clone. Test hồi quy Odoo mới được lưu trong source để chạy ở môi trường được phép sau này. Smoke hiện tại chỉ dùng hồ sơ có sẵn, mở/hủy hoặc transaction rollback; không chứng minh trọn luồng cấp thật, chỉnh danh tính thật, delegate profile hoặc multiworker.
 

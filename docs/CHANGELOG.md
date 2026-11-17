@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261117-007 — VI-WEB-002: giao server và sửa bản dịch dashboard mẫu
+
+- Ngày17/11/2026.35e1c11f push origin/main và deploy90/90tệp đúng checksum. PCserver backup C:/TANPHAT-backups/vi-web002/20261117T164626:dump9.293.131B/filestore30.188.646B/source-config4.076.825B/pg_restore-list/SHA256;3addon upgradeexit0/0ERROR. Wrapper đầu từ chối định dạng đường dẫn mount Windows trước mutation; đã kiểm mount thật, sửa validator và triển khai. Không đụng tunnel/DNS.
+- Public hồ sơ35:35/35 ở1440/768/390/320.14route kiểm:13màn tải được, Reporting từ chối vì admin server thiếu nhómBáo cáo có trước (groups hash giữ);không tựgrant đểsmoke.0JSerror/overflow;Lịch/Bảng tổng hợp lượt đầu chụp lúc tải lạnh nên đã chờ renderer và kiểm lại, không tính ảnh loading là màn đạt. Backend2177refs vàrollback lý do/digest PASS;90sourcefile chuẩn.20bảng ngay saucài/baseURL/ledger0/0 giữ;cuối chỉcron tựtiến,0runtimeERROR/FileNotFoundError.
+- Media kiểm lại83/83 origin/public;666storedrows/169blob,0thiếu/khác. ExcelHR HTTPS200/9749B/MIMEđúng/2sheet;PDFnhãn200/29028B/header+EOFđúng;no-store,anonymous303. Không có PDF/DOCX/XLSXattachment thật nên chưa kiểm tệp lưu sẵn ba loại, không upload giả/mởprivate. Kết quả này kế thừa nguyên nhân149blob thiếu vật lý đã phục hồi ởDEPLOY-MEDIA-001.
+- Dashboardmẫu native trảsnapshot mà thiếutranslation_namespace nên không dùng catalog;nhãn ô tĩnh không có công thức_t. tp_i18n_vi20.0.1.1.1 kế thừa route, giữnative auth/readonly/denial, bổ sungnamespace và dịch ôliteral có đúng source trong catalog module. Không sửaDB/công thức/số/tên công ty ngoàicatalog/phản hồi en_US/dashboardthật. Checker12tổhợp vi/vi_VN/en_US×sample/thật×namespace +denial PASS;Ruff/catalog/locale đạt;áp18069 saubackupđãcó,upgrade0ERROR. DeltaPCserver chờcommit/push/deploy sau mốc này.
+- Không suitefixture18079/main/server;không cấp/người thật/đối chiếu thật. Việt hóa hơn6.500nguồn bổ sung có kiểm định dạng/ràmẫu, chưa nghiệmthu mọi từ/ngữ cảnh/role. GapCRUD/multiworker củaủyquyền không bịđóng bởiUI. ForeignReporting/branding/login/sidebar giữunstaged.
+
 ## CHG-20261117-006 — VI-WEB-002: sửa hộp Lý do, đối chiếu danh tính và mở rộng tiếng Việt native
 
 - Ngày17/11/2026. Tiếp tục yêu cầu tại public `/app/action-528/35` và ảnh người dùng. Wizard grant/revoke và edit/archive được precreate trước khi nhập lý do; bỏ required ở transient, giữ required native form và kiểm backend cả chuỗi trống/khoảng trắng trước mutation. Không thay quyền/cấp người thật.
