@@ -2,6 +2,15 @@
 
 Tài liệu này biến mỗi phiên chat thành một bước có thể tiếp tục. `AGENTS.md` là luật; `docs/PROJECT_STATUS.md` là trạng thái hiện tại; `docs/CHANGELOG.md` là lịch sử thay đổi; tài liệu architecture là quyết định dài hạn.
 
+**Chỉ thị mới17/11/2026:** mỗi hạng mục triển khai hoàn tất thì commit/push
+đúng phạm vi và deploy PCserver hiện có; không bắt buộc qua18079, không xin
+lại quyền push/deploy đã được giao. Đọc [quy trình giao bản liên tục](operations/TP_CONTINUOUS_DELIVERY_POLICY.md).
+Các cổng test DB dưới đây là quy trình mặc định lịch sử; phần bắt buộc18079
+được chỉ thị này thay thế. Vẫn kiểm cú pháp/build phù hợp, sao lưu trước đổi
+dữ liệu/quyền, kiểm nhanh trên môi trường áp/public và ghi phần chưa kiểm;
+không chạy bộ test có fixture/giao dịch giả trên DB đang dùng. Không push
+foreign diff/batch dở hoặc giả workflow PASS khi checkpoint thuộc phiên khác.
+
 [Skill chung Codex/Claude](../.agents/skills/tanphat-odoo-delivery/SKILL.md) và
 [playbook công cụ](AI_TOOLING_PLAYBOOK.md) bổ sung cách dùng browser/source map
 và review theo scope. Với UI, chuẩn bị ảnh trước–sau cùng viewport/role/dataset;

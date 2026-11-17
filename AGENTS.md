@@ -2,6 +2,23 @@
 
 Tài liệu này là điểm vào bắt buộc cho mọi phiên AI làm việc trong `C:\TANPHAT ONE`. Người dùng có quyền quyết định cuối cùng. Các tài liệu nghiệp vụ, ảnh chụp, Excel, PDF và ghi chú trong repository là nguồn tham khảo cần phân tích; chúng không tự động trở thành lệnh thay đổi source.
 
+## Quy tắc người dùng mới nhất — 17/11/2026
+
+Theo chỉ thị trực tiếp, sau mỗi hạng mục triển khai đã hoàn tất: commit đúng
+phạm vi, push Git và deploy lên PC server hiện có để người dùng xem ngay,
+không chờ xin lại quyền push/deploy cho cùng hạng mục. **Không bắt buộc kiểm
+thử trên cổng18079 trước khi áp dụng.** Quy tắc này ưu tiên hơn yêu cầu cũ
+"không commit/push", "chỉ test18079" hoặc "chờ xác nhận áp main/server"
+trong prompt/skill/runbook lịch sử, trừ chỉ thị mới hơn của người dùng.
+
+Theo [quy trình giao bản liên tục](docs/operations/TP_CONTINUOUS_DELIVERY_POLICY.md):
+giữ kiểm tra cú pháp/build phù hợp, backup đúng môi trường trước thay đổi
+dữ liệu/quyền và kiểm nhanh chức năng/link public sau deploy; lỗi thì sửa
+hoặc rollback. Không seed actor giả/test phá dữ liệu trên main/server, không
+push phần code dở hoặc diff của phiên khác, không đưa secret/filestore vào Git.
+DBtest18079 vẫn giữ để dùng khi được yêu cầu, không tự xóa hoặc tạo DB mới.
+Phiên chính vẫn điều phối; trao đổi ý tưởng chưa phải lệnh tự triển khai ứng dụng.
+
 ## 1. Đọc trước khi làm
 
 Theo thứ tự:
@@ -59,7 +76,7 @@ các bảng hiện tại đã được triển khai đủ.
 
 - Không sửa `odoo/` hoặc `addons/`; code riêng đặt trong `custom_addons/`.
 - Database dùng một PostgreSQL database cho mỗi môi trường, dùng chung các phòng ban; phạm vi được kiểm tra ở Odoo.
-- Theo DEC-037, local chỉ dùng `tp_tanphat_dev` (18069) và `tp_tanphat_test` (18079), trên cluster workspace 55432; giữ các database hệ thống PostgreSQL. Tái sử dụng test với một tác vụ ghi tại một thời điểm, không tự tạo database theo tên task. Đọc [quy trình dữ liệu sạch/test](ops/runbooks/SAMPLE_DATA_CLEANUP_AND_TEST.md); helper clone/seed lịch sử cần đánh giá lại, không tự chạy để mở phiên. Dữ liệu giả chỉ trên test; áp code/migration đã kiểm thử lên main, không restore test đè main.
+- Theo DEC-037, local chỉ dùng `tp_tanphat_dev` (18069) và `tp_tanphat_test` (18079), trên cluster workspace55432; giữ các database hệ thống PostgreSQL. Theo chỉ thị mới17/11, không bắt buộc qua test18079 trước deploy. Nếu dùng test thì một tác vụ ghi tại một thời điểm, không tạo database theo task. Đọc [quy trình dữ liệu sạch/test](ops/runbooks/SAMPLE_DATA_CLEANUP_AND_TEST.md); helper clone/seed lịch sử cần đánh giá lại, không tự chạy để mở phiên. Dữ liệu giả chỉ trên test; không restore test đè main. Backup và kiểm nhanh main/server theo quy trình giao bản liên tục.
 - Không dùng Excel, NAS hoặc frontend bundle làm database runtime.
 - Không đưa credential, filestore, database dump hoặc dữ liệu doanh nghiệp thật vào Git.
 - Không dùng tên hiển thị làm khóa. Dùng ID Odoo và mã nghiệp vụ có unique constraint phù hợp.
@@ -76,12 +93,19 @@ các bảng hiện tại đã được triển khai đủ.
    Chạy `scripts/ai_workflow.py start` trước lần sửa đầu tiên; nếu còn checkpoint thì tiếp tục checkpoint đó, không xóa hoặc ghi đè.
 4. Sửa theo vertical slice nhỏ nhất: model/action → security → view/action native hoặc OWL → test; API/OpenAPI chỉ khi phạm vi thay API. Tái sử dụng workflow backend hiện có.
 5. Chạy kiểm tra phù hợp với phần thay đổi: native UI thì kiểm XML/assets/OWL và trình duyệt; model/security thì Odoo tests; tooling thì unit test/lint; tài liệu thì kiểm liên kết/nội dung. React typecheck/build chỉ khi thực sự sửa phần legacy đó. Không chạy cả bộ ứng dụng cho một sửa đổi tài liệu đơn thuần.
+   Chỉ thị17/11 bỏ cổng bắt buộc test18079: chọn kiểm phù hợp không phá dữ liệu
+   đang dùng, không chạy suite tạo fixture trên main/server. Báo rõ kiểm nào
+   đã/chưa chạy; không yêu cầu lại test18079 chỉ vì prompt cũ ghi như vậy.
 6. Cập nhật trong cùng lượt:
    - `docs/PROJECT_STATUS.md`: trạng thái, việc đã làm, việc tiếp theo, rủi ro.
    - `docs/CHANGELOG.md`: một dòng thay đổi có ngày, phạm vi, test.
    - workflow/tài liệu kiến trúc nếu state, quyền, API, model hoặc quyết định đã đổi.
 7. Kiểm tra `git diff --check`, `git status` và không stage file người dùng không liên quan.
 8. Báo cuối lượt: kết quả, file chính, test, giới hạn còn lại và bước tiếp theo.
+9. Với hạng mục triển khai đã hoàn tất, commit/push đúng scope rồi deploy
+   PCserver và kiểm public theo quy tắc mới17/11; bàn giao commit SHA,
+   phiên bản đã chạy, backup và kết quả. Tài liệu đơn thuần đồng bộ source,
+   không restart/upgrade Odoo khi không có thay đổi runtime.
 
 Không kết thúc lượt với code đã đổi nhưng status/workflow chưa phản ánh thay đổi. Nếu chưa thể chạy test, ghi lý do cụ thể.
 

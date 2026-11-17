@@ -2,6 +2,13 @@
 
 Tài liệu này bổ sung `AGENTS.md`: phiên hiện tại giữ vai trò điều phối, còn Claude là implementation agent. Không dùng nó để bỏ qua cổng nghiệp vụ hoặc thay `PROJECT_STATUS.md`.
 
+**Cập nhật theo người dùng17/11/2026:** sau mỗi hạng mục triển khai hoàn tất,
+phiên thực thi commit/push đúng scope và deploy PCserver ngay; không bắt
+buộc test18079 hoặc xin lại quyền rollout cho cùng hạng mục. [Quy trình](operations/TP_CONTINUOUS_DELIVERY_POLICY.md)
+ưu tiên hơn câu "không commit/push" và bước chờ deploy trong nội dung lịch sử
+bên dưới. Giữ kiểm nhanh, backup/rollback, phân quyền backend và chống đưa
+secret/dữ liệu thật/foreign diff lên Git. Phiên chính vẫn điều phối.
+
 **Hướng hiện hành — DEC-030 (05/11/2026):** giao diện chính là Odoo native; React riêng được giữ legacy. Đọc [hiện trạng và hướng native](architecture/TP_NATIVE_ODOO_DIRECTION.md). Mẫu prompt cũ phải chuyển UI sang native và chỉ yêu cầu OpenAPI/types khi thay API; không coi test React cũ là kiểm chứng UI native mới.
 
 ## 1. Vai trò
@@ -12,7 +19,7 @@ Khi yêu cầu liên quan CRM, Request, Bid, Base, xây dựng hoặc Data Platf
 
 Với Request/BASE, đọc [kiến thức nghiệp vụ Request](architecture/TP_BASE_REQUEST_BUSINESS_KNOWLEDGE.md): phân biệt group/tab/form đã quan sát, actor/quyền chưa xác minh và workflow Proposed-TP theo BIZ-002 H/I. Không map nhãn “đã chấp nhận” thành ký, hiệu lực hoặc tiền đã chi.
 
-**Claude:** làm đúng task/change ID trong prompt, đọc repository instructions, sửa code trong scope, chạy test thật, cập nhật handoff, không commit/push. Claude không tự chốt owner, hạn mức, thuế, ký, hiệu lực, grant người thật hoặc quyết định business chưa được ghi.
+**Claude:** làm đúng task/change ID trong prompt, đọc repository instructions, sửa code trong scope, kiểm phù hợp, cập nhật handoff, commit/push và deploy từng hạng mục hoàn tất theo chỉ thị17/11; không bắt buộc18079. Claude không tự chốt owner, hạn mức, thuế, ký, hiệu lực, grant người thật hoặc quyết định business chưa được ghi.
 
 **Chủ nghiệp vụ/người dùng:** xác nhận business acceptance, owner/evidence, pilot charter và yêu cầu commit/push/deploy khi cần. Technical test không thay chữ ký hoặc ủy quyền.
 
