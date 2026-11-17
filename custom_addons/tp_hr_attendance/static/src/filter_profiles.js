@@ -1,6 +1,26 @@
 /** @odoo-module **/
 import { registerTableFilterProfile } from "@tp_web_home/search/filter_domain";
 
+registerTableFilterProfile("tp.hr.attendance.correction::corrections", {
+    criteria: [
+        { key: "name", field: "name", label: "Mã phiếu", type: "char" },
+        { key: "employee_name", field: "employee_name", label: "Nhân viên / mã TP", type: "char" },
+        { key: "department_id", field: "department_id", label: "Phòng", type: "many2one" },
+        { key: "work_date", field: "work_date", label: "Ngày công", type: "date" },
+        { key: "state", field: "state", label: "Trạng thái", type: "selection", multi: true },
+        { key: "reviewer_id", field: "reviewer_id", label: "Người xử lý", type: "many2one" },
+    ],
+});
+registerTableFilterProfile("tp.hr.attendance.period::periods", {
+    criteria: [
+        { key: "name", field: "name", label: "Kỳ công", type: "char" },
+        { key: "date_from", field: "date_from", label: "Từ ngày", type: "date" },
+        { key: "date_to", field: "date_to", label: "Đến ngày", type: "date" },
+        { key: "state", field: "state", label: "Trạng thái", type: "selection" },
+        { key: "locked_by", field: "locked_by", label: "Người chốt", type: "many2one" },
+    ],
+});
+
 /**
  * HR-ATTENDANCE-001 table filter profiles (DEC-044 inventory: docs/ui/TP_TABLE_FILTER_INVENTORY.md).
  * Every criterion maps to a stored field present in the action's search view.

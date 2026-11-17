@@ -256,15 +256,21 @@ class AttendanceBatch(models.Model):
         if groups:
             employee_ids = list({key[0] for key in groups})
             work_dates = list({key[1] for key in groups})
-            sessions, issues = defaultdict(list), defaultdict(list)
-            for session in self.env['tp.hr.attendance.session'].sudo().search([
+            sessions, issues, handled = defaultdict(list), defaultdict(list), defaultdict(set)
+            # Punches replaced by an approved correction stay inactive; they still count as already recorded.
+            for session in self.env['tp.hr.attendance.session'].sudo().with_context(active_test=False).search([
                     ('employee_id', 'in', employee_ids), ('work_date', 'in', work_dates)]):
                 sessions[session.employee_id.id, session.work_date].append(session)
             for issue in Line.search([('employee_id', 'in', employee_ids), ('work_date', 'in', work_dates),
                                       ('issue_open', '=', True), ('batch_id', '!=', self.id)]):
                 issues[issue.employee_id.id, issue.work_date].append(issue)
+            # Issues already settled (completed by a later import or by an approved correction) must not reopen on re-import.
+            for issue in Line.search([('employee_id', 'in', employee_ids), ('work_date', 'in', work_dates), ('issue_open', '=', False),
+                                      ('state', 'in', ISSUE_STATES), ('batch_id.state', '=', 'applied'), ('batch_id', '!=', self.id)]):
+                handled[issue.employee_id.id, issue.work_date].add(issue.signature)
             for key, members in groups.items():
-                for line, (state, message) in self._tp_decide(members, sessions.get(key, []), issues.get(key, []), decided).items():
+                decisions = self._tp_decide(members, sessions.get(key, []), issues.get(key, []), decided, handled.get(key, set()))
+                for line, (state, message) in decisions.items():
                     decided[line].update(state=state, message=message)
         for line, vals in decided.items():
             internal(line).write(vals)
@@ -273,14 +279,15 @@ class AttendanceBatch(models.Model):
             counts[line.state] += 1
         internal(self).write(dict({f'{state}_count': value for state, value in counts.items()}, line_count=len(lines)))
 
-    def _tp_decide(self, members, sessions, issues, decided):
+    def _tp_decide(self, members, sessions, issues, decided, handled=frozenset()):
         _ = self.env._
         recorded = {signature(s.employee_id.id, s.work_date, 'pair', s.check_in, s.check_out) for s in sessions}
-        open_sigs = {issue.signature for issue in issues}
+        sessions = [session for session in sessions if session.active]
+        known = recorded | {issue.signature for issue in issues} | set(handled)
         result = {}
         for line in members:
-            if decided[line]['signature'] in recorded | open_sigs:
-                result[line] = ('duplicate', _('Đã có trong dữ liệu đã nhập trước đó.'))
+            if decided[line]['signature'] in known:
+                result[line] = ('duplicate', _('Đã có trong dữ liệu đã nhập hoặc đã xử lý trước đó.'))
         fresh = [line for line in members if line not in result]
         if not fresh:
             return result

@@ -128,3 +128,7 @@ thể chuyển sang native sau khi được duyệt.
   quy tắc → **Ngoài lịch**. Đưa quy tắc về nháp → mọi ngày phủ bởi nó trở lại
   **Chưa xác nhận**.
 - Không tính đi muộn, phạt, nghỉ không phép, tăng ca hoặc lương.
+
+## 9. S3 — Phiếu và kỳ chốt
+
+Owner từ session/company, chỉ sửa nháp/trả. Reviewer active đúng company/phòng và khác owner; HR manager chỉ đọc sau gửi, không ngầm có quyền duyệt. Thu hồi assignment bỏ read scope reviewer ngay, người từng xử lý không tự giữ quyền. Minh chứng cấm public/token/reparent, chỉ owner sửa khi nháp/trả. Giải trình/ý kiến ở phiếu riêng, không vào log chung. Duyệt khóa phiếu và công ty, giữ phiên gốc inactive; retry từ chối. Kỳ chốt cần capability lock toàn công ty; đính chính cần review+lock+lý do, tăng version, giữ log. Chốt không xác nhận công/lương; recompute do đổi rule bỏ qua kỳ chốt. Odoo regression mới chưa chạy, không xác nhận race multiworker bằng kiểm source.

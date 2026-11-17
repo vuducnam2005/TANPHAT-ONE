@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261117-021 — HR-ATTENDANCE-001 S3: công cá nhân và xử lý điều chỉnh
+
+- Ngày17/11/2026; tiếp tục checkpoint attendance11:07:17Z, không reset/chiếm checkpoint khác. S1/S2 runtime/source đã xác minh. Hoàn tất UI native/list/search/form/wizard/menu và OWL Công của tôi/profile tab, bộ lọc/ngày/tháng/thẻmobile/pager. Manifest20.0.1.1.0.
+- Backend: own mapping session/company; write/state/owner guards, current assignment/revoke, no self-review, row/company lock + pending unique index; duyệt giữ phiên gốc, audit không chứa giải trình/minh chứng, lock/unlock/amendment lý do/version. Tệp minh chứng không public/token/reparent và chỉ owner sửa nháp/trả. Kỳ đã chốt không tính lại do thay quy tắc. Export officers kiểm capability/scope thay vì chỉ group.
+- Main backup210850 (dump9.927.107B,filestore409.988.594B,source/config), upgrade -u exit0/0ERROR,39employee/28user/101grouprel/252day/182session giữ;0assignment/phiếu/kỳ, không phân công hoặc chốt thật. XML/Python/Ruff PASS;14test guard không DB PASS; browser16/16 gồm admin màn không mapping/list/form chưa lưu/kỳ và render riêng bằng ORM employee payload ở5viewport; không gọi render đó là employee E2E. Native dialogs approve/lock chưa thử với phiếu thật.
+- Odoo regression6ca AT02-C/03-C/06A-D đã viết nhưng NOT_RUN: người dùng cấm fixture trên main/server và không mở18079/clone. Giữ gap legacy privacy native-public và employee browser/race multiworker. Script deploy mới kiểm drift trước ghi và upgrade bằng -u, backupDB/filestore/source/config; server/public sẽ ghi khi chạy thật. Không sửa API/core/roster hoặc đưaPII/secret vàoGit. S4 tiếp theo. Guide/policy/acceptance/inventory cập nhật; không stage foreign batch.
+
+
 ## CHG-20261117-008 — VI-WEB-002: xác nhận bản cuối trên18069/PCserver/public
 
 - Ngày17/11/2026. Source35e1c11f +73ffae56 đã pushorigin/main;đúng3addon trên18069/PCserver:delegation20.0.1.0.1,HR20.0.1.11.6,i18n20.0.1.1.1. Góiđầu90 vàdelta11tệp,union92tệp SHA256đúngcommit. Khôngbroadpull/copyworkingtreeforeign;Reporting/branding/login/sidebar vàhunkdocs khác giữunstaged. Tài liệu008 chỉ đồng bộsource,khôngrestart thêm.

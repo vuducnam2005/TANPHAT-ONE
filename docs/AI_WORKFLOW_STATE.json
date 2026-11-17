@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-17T10:11:17.198728+00:00",
-  "last_change_id": "CHG-20261117-008",
-  "code_digest": "d3b71683b4548409340382d5ffee1aa2a9d62fb6d1291f1812634391de3d4234",
-  "code_file_count": 603,
+  "updated_at": "2026-11-17T14:14:15.374921+00:00",
+  "last_change_id": "CHG-20261117-021",
+  "code_digest": "ffedf0a6d14ead9bd2f9eedc5b604c4d3cd3430f25d4dc0c1f26672f563a579b",
+  "code_file_count": 637,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "8e54cdd327874229d0a2465e1b37404c8268a64548cf322e0852f3ea50c15289",
-    "docs/CHANGELOG.md": "8859f5c551ae5a42c792f758455a712ebb10f09239f845b1e1497d0ac89842a1",
+    "docs/PROJECT_STATUS.md": "112a3aaa9f46aaedcd19c6ede937c476a55544e381e2868586ef33e2f05d85cf",
+    "docs/CHANGELOG.md": "b7edf66017001654854ee6c3368f8905263a0e0a0c766baff6c2c243c6aaeabe",
     "AGENTS.md": "ac7c7a6ce9929b1cc7f2f3752b5006bd91e9ca570228c9aed8a5210b2798cc5c",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "35ca9a11f8b33b07ad3090e1ba97b150d4785fd4eb806b3dca0687f78b3bef4d",
+    "docs/ROADMAP.md": "81c2a55f116a8a8c3281c2489ada1abb5e483f5158c4e94077be26b45eea072b",
     "docs/DECISIONS.md": "f20dea44c828ab3d3454dce658f876f15c5349761a6df14b2e352d8c0ad5a4f2",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Final main+server versions1.0.1/1.11.6/1.1.1, pushed35e1c11f+73ffae56, scoped92sha256 PASS; public35of35, Calendar/Settings/sample UI and sample23cells preservation/anonymous303 PASS; catalog10494+12cases/denial PASS; main/server20business fingerprints/baseURL/ledger unchanged except natural cron; media83of83 and666rows169blobs/XLSX2sheet/PDFvalid/private PASS; Odoo fixtures/fullrole/UAT NOT RUN"
+    "S3 Ruff/XML and 14 in-memory guards PASS; main upgrade exit0/0ERROR; browser16/16 includes9render-only checks, no employee auth E2E; ORM fixtures NOT_RUN; foreign diff excluded from commit and acceptance"
   ]
 }

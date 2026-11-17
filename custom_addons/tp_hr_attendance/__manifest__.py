@@ -1,7 +1,7 @@
 {
     "name": "TANPHAT ONE — Chấm công",
     "summary": "Bảng công ngày/tháng chỉ xem, nhập báo cáo máy chấm công có xem trước và chống trùng",
-    "version": "20.0.1.0.0",
+    "version": "20.0.1.1.0",
     "license": "LGPL-3",
     "author": "Tan Phat JSC",
     "depends": ["tp_hr_workspace"],
@@ -12,6 +12,7 @@
         "views/attendance_views.xml",
         "views/import_views.xml",
         "views/config_views.xml",
+        "views/correction_views.xml",
         "views/menus.xml",
     ],
     "assets": {
@@ -20,6 +21,9 @@
             "tp_hr_attendance/static/src/board/board.js",
             "tp_hr_attendance/static/src/board/board.xml",
             "tp_hr_attendance/static/src/board/board.scss",
+            "tp_hr_attendance/static/src/mine.js",
+            "tp_hr_attendance/static/src/mine.xml",
+            "tp_hr_attendance/static/src/mine.scss",
         ],
     },
     "installable": True,

@@ -67,6 +67,8 @@ def can(env, capability, company, departments=None):
     Review and lock never follow from a job title or group: only an active assignment whose
     department scope (empty = whole company) covers every given department.
     """
+    if company not in env.companies:
+        return False
     if capability == 'import' and env.user.has_group(HR_MANAGER):
         return True
     for assignment in assignments(env, company, capability):

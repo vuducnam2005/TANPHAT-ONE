@@ -4,7 +4,7 @@ Ngày 17/11/2026 · Batch `CHG-20261117-020` · Prompt
 [CLAUDE_HR_ATTENDANCE_001_AND_DIRECTORY_READONLY](../prompts/CLAUDE_HR_ATTENDANCE_001_AND_DIRECTORY_READONLY.md)
 · Policy [HR_ATTENDANCE_001_POLICY](../security/HR_ATTENDANCE_001_POLICY.md).
 
-Trạng thái: **S1_DIRECTORY_VERIFIED** (S2–S4 chưa chạy). Cột kết quả ghi `NOT_RUN` tới khi
+Trạng thái: **S1/S2_APPLIED_S3_MAIN_VERIFIED_WITH_GAPS** (S4 tiếp theo). Cột kết quả ghi `NOT_RUN` tới khi
 có bằng chứng thật; không ghi PASS cho bước chỉ review mã.
 
 ## 1. Môi trường và tài khoản
@@ -95,6 +95,8 @@ Log trong `.local/hr-attendance001/` (ignored).
 | Smoke S | curl ẩn danh LAN `192.168.1.73:8069` + public, tải bundle backend | xem AT09-B |
 
 ## 4. Gap đã biết
+
+S3 (CHG-20261117-021): main20.0.1.1.0, backup `backup-s3-20261117T210850` (dump9.927.107B, filestore409.988.594B, source/config), `-u` exit0/0ERROR. Roster39/user28/grouprel101/day252/session182/baseURL giữ. Không assignment/phiếu/kỳ thật được tạo. In-memory guard14/14, Ruff/XML PASS; six ORM regression methods AT02-C/03-C/06A-D đã viết, **NOT_RUN** (không fixturemain/server/18079/clone). Browser `.local/hr-attendance001/e2e/s3-main-final/`:16/16, gồm6admin UI/9render-only/1noerror. Admin không employee; dữ liệu own được đọc ORM theo uid41/42, browser render replay payload uid41 riêng ở5viewport và tab profile; **không phải authenticated employee E2E**. Review/lock dialog filled và race multiworker chưa chạy. Server/public sẽ ghi riêng sau deploy.
 
 - HttpCase của `tp_hr_workspace`/`tp_web_home` không chạy được khi 18069 đang phục vụ
   `tp_tanphat_dev`; prompt không cho mở cổng test khác. Phần route được kiểm bằng smoke

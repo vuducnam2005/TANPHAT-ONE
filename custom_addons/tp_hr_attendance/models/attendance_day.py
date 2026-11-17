@@ -12,11 +12,13 @@ from .attendance_common import (
     LOCK_STATES,
     OFFICER,
     UNITS_STATES,
+    can,
     deny_direct,
     internal,
     local_today,
     utc_to_local,
 )
+from .attendance_correction import clock_label
 
 WEEKDAY_LABELS = ('T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN')
 CELL_LABELS = {
@@ -47,9 +49,14 @@ class AttendanceSession(models.Model):
     check_out = fields.Datetime('Giờ ra', required=True)
     worked_hours = fields.Float('Giờ ghi nhận', compute='_compute_worked_hours', store=True)
     source = fields.Selection([('import', 'Nhập từ báo cáo máy'), ('correction', 'Điều chỉnh đã duyệt')], 'Nguồn', required=True, default='import')
+    # A punch replaced by an approved correction is kept inactive (never deleted) so the original stays auditable.
+    active = fields.Boolean('Đang hiệu lực', default=True, index=True)
     day_id = fields.Many2one('tp.hr.attendance.day', 'Ngày công tổng hợp', index=True, ondelete='set null')
     batch_id = fields.Many2one('tp.hr.attendance.batch', 'Lô nhập', groups=PROCESSOR_GROUPS, ondelete='restrict')
     line_id = fields.Many2one('tp.hr.attendance.line', 'Dòng nguồn', groups=PROCESSOR_GROUPS, ondelete='restrict')
+    correction_id = fields.Many2one('tp.hr.attendance.correction', 'Từ đề nghị', groups=PROCESSOR_GROUPS, readonly=True, ondelete='set null')
+    superseded_by_id = fields.Many2one('tp.hr.attendance.correction', 'Được thay bởi đề nghị', groups=PROCESSOR_GROUPS, readonly=True,
+                                       ondelete='set null')
 
     _punch_unique = models.UniqueIndex('(employee_id, check_in, check_out)', 'Phiên vào-ra này đã được ghi nhận.')
     _order_valid = models.Constraint('CHECK(check_out > check_in)', 'Giờ ra phải sau giờ vào.')
@@ -163,8 +170,15 @@ class AttendanceDay(models.Model):
     # ------------------------------------------------------------------ export
     @api.model
     def _tp_check_export(self, records):
+        records.check_access('read')
         user = self.env.user
-        if user.has_group(HR_MANAGER) or user.has_group(OFFICER):
+        if user.has_group(HR_MANAGER):
+            return True
+        if records and all(can(self.env, 'import', company) for company in records.company_id):
+            return True
+        if records and records._name == 'tp.hr.attendance.day' and all(
+                can(self.env, 'review', company, records.filtered(lambda r: r.company_id == company).department_id)
+                for company in records.company_id):
             return True
         own = self.env['hr.employee'].sudo().search([('user_id', '=', user.id)]).ids
         if own and all(record.sudo().employee_id.id in own for record in records):
@@ -202,7 +216,7 @@ class AttendanceDay(models.Model):
         return 'confirmed', scheduled, round(min(scheduled, rule.standard_hours) / rule.standard_hours, 2)
 
     @api.model
-    def _tp_refresh(self, company, keys):
+    def _tp_refresh(self, company, keys, allow_locked=False):
         """Create, update or drop day summaries for ``{(employee_id, work_date)}`` from sessions and open issues."""
         if not keys:
             return self.browse()
@@ -229,12 +243,15 @@ class AttendanceDay(models.Model):
             touched |= day
             internal(sessions.filtered(lambda session, day=day: session.day_id != day)).write({'day_id': day.id})
             internal(issues.filtered(lambda line, day=day: line.day_id != day)).write({'day_id': day.id})
-        touched._tp_recompute()
+        touched._tp_recompute(allow_locked=allow_locked)
         return touched
 
-    def _tp_recompute(self):
+    def _tp_recompute(self, allow_locked=False):
         now = fields.Datetime.now()
+        ranges = self.env['tp.hr.attendance.period']._tp_locked_ranges(self.company_id.ids)
         for day in internal(self):
+            if not allow_locked and self.env['tp.hr.attendance.period']._tp_is_locked(day.company_id.id, day.work_date, ranges):
+                continue
             sessions = day.session_ids.sorted('check_in')
             issues = day.sudo().issue_ids
             if any(issue.kind not in ('missing_in', 'missing_out') or issue.state == 'conflict' for issue in issues):
@@ -278,6 +295,116 @@ class AttendanceDay(models.Model):
             raise UserError(self.env._('Ngày không hợp lệ.')) from None
 
     @api.model
+    def _tp_month_range(self, month):
+        try:
+            year, number = (int(part) for part in month.split('-'))
+            start = date(year, number, 1)
+        except (TypeError, ValueError, AttributeError):
+            raise UserError(self.env._('Tháng không hợp lệ.')) from None
+        return start, date(year, number, calendar.monthrange(year, number)[1])
+
+    @api.model
+    def _tp_cell_factory(self, company, days, start, end, today):
+        """Return ``(cell, day_map)``; ``cell(employee_id, date)`` gives the shared state shown on boards."""
+        day_map = {(day.employee_id.id, day.work_date): day for day in days}
+        coverage = self.env['tp.hr.attendance.batch']._tp_coverage(company, start, end)
+        Period = self.env['tp.hr.attendance.period']
+        locked_ranges = Period._tp_locked_ranges([company.id])
+
+        def cell(employee_id, work_date):
+            record = day_map.get((employee_id, work_date))
+            if record:
+                state = record.data_state
+            elif work_date > today:
+                state = 'future'
+            elif any(employee_id in employees_ and first <= work_date <= last for first, last, employees_ in coverage):
+                state = 'no_punch'
+            else:
+                state = 'no_source'
+            locked = Period._tp_is_locked(company.id, work_date, locked_ranges)
+            result = {'date': work_date.isoformat(), 'state': state, 'label': CELL_LABELS[state], 'lock': 'locked' if locked else 'open'}
+            if record:
+                result.update(day_id=record.id, in_time=record.in_time or '', out_time=record.out_time or '',
+                              hours=record.recorded_hours, units=record.units_display, units_state=record.units_state,
+                              rule=record.rule_id.name or '', version=record.version)
+            return result
+        return cell, day_map
+
+    @api.model
+    def _tp_updated(self, company):
+        """``({'to', 'at'} | None, applied batches)``: how far the imported source reaches and when it last changed."""
+        applied = self.env['tp.hr.attendance.batch'].sudo().search(
+            [('company_id', '=', company.id), ('state', '=', 'applied')], order='applied_at desc')
+        if not applied:
+            return None, applied
+        covered_to = max(applied.mapped('period_to'))
+        stamp = fields.Datetime.context_timestamp(self.with_context(tz=self.env.user.tz or DEFAULT_TZ), applied[0].applied_at)
+        return {'to': covered_to.strftime('%d/%m/%Y'), 'at': stamp.strftime('%d/%m/%Y %H:%M')}, applied
+
+    @api.model
+    def tp_my_attendance(self, params=None):
+        """Own month for "Công của tôi". The employee always comes from the session user; a client
+        ``employee_id`` (or any other key) is ignored, so opening a colleague never changes the owner (AT06-A)."""
+        self.check_access('read')
+        params = dict(params or {})
+        company = self.env.company
+        today = local_today(DEFAULT_TZ)
+        Correction = self.env['tp.hr.attendance.correction']
+        employee = Correction._tp_own_employee(company)
+        if not employee:
+            return {'has_employee': False, 'today': today.isoformat(),
+                    'message': self.env._('Tài khoản chưa gắn hồ sơ nhân viên trong công ty đang chọn; cần admin/HR gắn hồ sơ.')}
+        latest = self.search([('employee_id', '=', employee.id), ('work_date', '<=', today)], order='work_date desc', limit=1)
+        anchor = latest.work_date or today
+        month = params.get('month') or anchor.strftime('%Y-%m')
+        start, end = self._tp_month_range(month)
+        days = self.search([('employee_id', '=', employee.id), ('work_date', '>=', start), ('work_date', '<=', end)])
+        cell, day_map = self._tp_cell_factory(company, days, start, end, today)
+        requests = Correction.search([('employee_id', '=', employee.id), ('work_date', '>=', start), ('work_date', '<=', end)])
+        sources = dict(self.env['tp.hr.attendance.session']._fields['source'].selection)
+        request_states = dict(Correction._fields['state'].selection)
+        by_date = {}
+        for request in requests:
+            by_date.setdefault(request.work_date, []).append({
+                'id': request.id, 'name': request.name, 'state': request.state, 'state_label': request_states[request.state],
+                'requested_in': clock_label(request.requested_in), 'requested_out': clock_label(request.requested_out),
+                'review_note': request.review_note or '', 'is_amendment': request.is_amendment,
+            })
+        rows = []
+        for offset in range((end - start).days + 1):
+            work_date = start + timedelta(days=offset)
+            item = cell(employee.id, work_date)
+            record = day_map.get((employee.id, work_date))
+            item.update(day=work_date.day, weekday=WEEKDAY_LABELS[work_date.weekday()], weekend=work_date.weekday() >= 5,
+                        future=work_date > today, is_today=work_date == today, requests=by_date.get(work_date, []),
+                        sessions=[{'in': _clock(session.check_in), 'out': _clock(session.check_out), 'hours': session.worked_hours,
+                                   'source': session.source, 'source_label': sources[session.source]}
+                                  for session in record.session_ids.sorted('check_in')] if record else [])
+            rows.append(item)
+        past = [row for row in rows if not row['future']]
+        totals = {state: sum(1 for row in past if row['state'] == state) for state in CELL_LABELS}
+        confirmed = [row for row in rows if row.get('units_state') == 'confirmed']
+        totals.update(
+            hours=round(sum(row.get('hours') or 0 for row in rows), 2),
+            units=round(sum(day_map[employee.id, date.fromisoformat(row['date'])].units for row in confirmed), 2) if confirmed else None,
+            unconfirmed=sum(1 for row in rows if row.get('day_id') and row.get('units_state') != 'confirmed'),
+            pending=sum(1 for request in requests if request.state == 'submitted'),
+            returned=sum(1 for request in requests if request.state == 'returned'),
+        )
+        periods = self.env['tp.hr.attendance.period'].search([
+            ('company_id', '=', company.id), ('state', '=', 'locked'), ('date_from', '<=', end), ('date_to', '>=', start)])
+        updated, _applied = self._tp_updated(company)
+        return {
+            'has_employee': True, 'month': month, 'start': start.isoformat(), 'end': end.isoformat(), 'today': today.isoformat(),
+            'anchor': anchor.isoformat(), 'lead': start.weekday(), 'rows': rows, 'totals': totals, 'labels': CELL_LABELS,
+            'employee': {'name': employee.name, 'code': employee.tp_employee_code or '', 'department': employee.department_id.name or ''},
+            'locked_periods': [{'name': period.name, 'from': period.date_from.isoformat(), 'to': period.date_to.isoformat()} for period in periods],
+            'updated': updated,
+            'has_reviewer': bool(Correction._tp_reviewers_for(company, employee.department_id, self.env.user)),
+            'has_rule': bool(self.env['tp.hr.attendance.rule'].sudo().search_count([('company_id', '=', company.id), ('state', '=', 'confirmed')])),
+        }
+
+    @api.model
     def tp_board(self, params=None):
         """Month matrix / day table for every internal employee (read-only, record rules apply)."""
         self.check_access('read')
@@ -294,12 +421,7 @@ class AttendanceDay(models.Model):
             month = start.strftime('%Y-%m')
         else:
             month = params.get('month') or anchor.strftime('%Y-%m')
-            try:
-                year, number = (int(part) for part in month.split('-'))
-                start = date(year, number, 1)
-            except (TypeError, ValueError):
-                raise UserError(self.env._('Tháng không hợp lệ.')) from None
-            end = date(year, number, calendar.monthrange(year, number)[1])
+            start, end = self._tp_month_range(month)
         dates = [start + timedelta(days=offset) for offset in range((end - start).days + 1)]
 
         department_id = int(params.get('department_id') or 0)
@@ -324,28 +446,7 @@ class AttendanceDay(models.Model):
             batch_days = self.sudo().search([('id', 'in', days.ids), '|', ('session_ids.batch_id', '=', batch_id), ('issue_ids.batch_id', '=', batch_id)])
             days = days & self.browse(batch_days.ids)
             people = {key: value for key, value in people.items() if key in set(days.employee_id.ids)}
-        day_map = {(day.employee_id.id, day.work_date): day for day in days}
-        coverage = self.env['tp.hr.attendance.batch']._tp_coverage(company, start, end)
-        locked_ranges = self.env['tp.hr.attendance.period']._tp_locked_ranges([company.id])
-
-        def cell(employee_id, work_date):
-            record = day_map.get((employee_id, work_date))
-            if record:
-                state = record.data_state
-            elif work_date > today:
-                state = 'future'
-            elif any(employee_id in employees_ and first <= work_date <= last for first, last, employees_ in coverage):
-                state = 'no_punch'
-            else:
-                state = 'no_source'
-            locked = self.env['tp.hr.attendance.period']._tp_is_locked(company.id, work_date, locked_ranges)
-            result = {'date': work_date.isoformat(), 'state': state, 'label': CELL_LABELS[state], 'lock': 'locked' if locked else 'open'}
-            if record:
-                result.update(day_id=record.id, in_time=record.in_time or '', out_time=record.out_time or '',
-                              hours=record.recorded_hours, units=record.units_display, units_state=record.units_state,
-                              rule=record.rule_id.name or '', version=record.version)
-            return result
-
+        cell, day_map = self._tp_cell_factory(company, days, start, end, today)
         rows = []
         for person in sorted(people.values(), key=lambda row: (row['code'] or 'ZZZ', row['name'])):
             cells = [cell(person['id'], work_date) for work_date in dates]
@@ -371,13 +472,7 @@ class AttendanceDay(models.Model):
         page_size = page_size if page_size in (10, 20, 50, 100) else 20
         page_count = max(1, -(-len(rows) // page_size))
         page = min(max(1, int(params.get('page') or 1)), page_count)
-        applied = self.env['tp.hr.attendance.batch'].sudo().search(
-            [('company_id', '=', company.id), ('state', '=', 'applied')], order='applied_at desc')
-        updated = None
-        if applied:
-            covered_to = max(applied.mapped('period_to'))
-            updated = {'to': covered_to.strftime('%d/%m/%Y'), 'at': fields.Datetime.context_timestamp(
-                self.with_context(tz=user.tz or DEFAULT_TZ), applied[0].applied_at).strftime('%d/%m/%Y %H:%M')}
+        updated, applied = self._tp_updated(company)
         departments = self.env['hr.department'].search([('company_id', 'in', [company.id, False])]).sorted(lambda d: d.complete_name or '')
         return {
             'mode': mode, 'month': month, 'date': start.isoformat() if mode == 'day' else '', 'start': start.isoformat(),

@@ -1,10 +1,12 @@
 """Configuration models: machine codes, work rules, assignments, periods and the audit log."""
+import hashlib
 import json
 
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 
-from .attendance_common import HR_MANAGER, OFFICER, deny_direct, internal
+from .attendance_common import HR_MANAGER, OFFICER, can, deny_direct, internal, require
+from .attendance_import import ADVISORY_KEY
 
 
 class AttendanceCode(models.Model):
@@ -152,20 +154,25 @@ class AttendanceAssignment(models.Model):
         for record in records:
             self.env['tp.hr.attendance.log']._tp_log(record, 'assignment_create', record._tp_snapshot())
         self._tp_sync_officers()
+        self.env['tp.hr.attendance.correction']._tp_refresh_reviewers(records.company_id)
         return records
 
     def write(self, vals):
+        companies = self.company_id
         result = super().write(vals)
         for record in self:
             self.env['tp.hr.attendance.log']._tp_log(record, 'assignment_write', record._tp_snapshot())
         self._tp_sync_officers()
+        self.env['tp.hr.attendance.correction']._tp_refresh_reviewers(companies | self.company_id)
         return result
 
     def unlink(self):
+        companies = self.company_id
         for record in self:
             self.env['tp.hr.attendance.log']._tp_log(record, 'assignment_unlink', record._tp_snapshot())
         result = super().unlink()
         self._tp_sync_officers()
+        self.env['tp.hr.attendance.correction']._tp_refresh_reviewers(companies)
         return result
 
     def _tp_snapshot(self):
@@ -195,8 +202,46 @@ class AttendancePeriod(models.Model):
     locked_by = fields.Many2one('res.users', 'Người chốt', readonly=True)
     locked_at = fields.Datetime('Thời điểm chốt', readonly=True)
     version = fields.Integer('Phiên bản', default=1, readonly=True)
+    day_count = fields.Integer('Ngày công trong kỳ', compute='_compute_tp_counts')
+    ok_count = fields.Integer('Đủ dữ liệu', compute='_compute_tp_counts')
+    missing_count = fields.Integer('Thiếu giờ vào/ra', compute='_compute_tp_counts')
+    review_count = fields.Integer('Cần kiểm tra', compute='_compute_tp_counts')
+    pending_count = fields.Integer('Đề nghị chờ duyệt', compute='_compute_tp_counts')
+    amend_count = fields.Integer('Đính chính sau chốt', compute='_compute_tp_counts')
+    can_lock = fields.Boolean('Được chốt/mở kỳ', compute='_compute_tp_counts')
 
     _dates_valid = models.Constraint('CHECK(date_from <= date_to)', 'Ngày kết thúc kỳ phải sau ngày bắt đầu.')
+
+    @api.depends('company_id', 'date_from', 'date_to', 'state')
+    @api.depends_context('uid')
+    def _compute_tp_counts(self):
+        Day = self.env['tp.hr.attendance.day'].sudo()
+        Correction = self.env['tp.hr.attendance.correction'].sudo()
+        for period in self:
+            period.can_lock = bool(period.company_id) and can(self.env, 'lock', period.company_id)
+            if not (period.company_id and period.date_from and period.date_to):
+                period.update({'day_count': 0, 'ok_count': 0, 'missing_count': 0, 'review_count': 0, 'pending_count': 0, 'amend_count': 0})
+                continue
+            domain = [('company_id', '=', period.company_id.id), ('work_date', '>=', period.date_from), ('work_date', '<=', period.date_to)]
+            counts = dict(Day._read_group(domain, ['data_state'], ['__count']))
+            period.day_count = sum(counts.values())
+            period.ok_count = counts.get('ok', 0)
+            period.missing_count = counts.get('missing', 0)
+            period.review_count = counts.get('review', 0)
+            period.pending_count = Correction.search_count(domain + [('state', '=', 'submitted')])
+            origin = period._origin.id
+            period.amend_count = Correction.search_count([('period_id', '=', origin), ('is_amendment', '=', True)]) if origin else 0
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('state', 'open') != 'open' or vals.get('locked_by') or vals.get('locked_at') or vals.get('version', 1) != 1:
+                deny_direct(self)
+        if not self.env.user.has_group(HR_MANAGER):
+            for vals in vals_list:
+                company = self.env['res.company'].browse(vals['company_id']) if vals.get('company_id') else self.env.company
+                require(self.env, 'lock', company)
+        return super().create(vals_list)
 
     @api.constrains('date_from', 'date_to', 'company_id')
     def _check_overlap(self):
@@ -229,6 +274,71 @@ class AttendancePeriod(models.Model):
     def _tp_is_locked(self, company_id, day, ranges=None):
         ranges = self._tp_locked_ranges([company_id]) if ranges is None else ranges
         return any(start <= day <= end for start, end in ranges.get(company_id, []))
+
+    # ------------------------------------------------------------ lock / unlock
+    def _tp_take_lock(self):
+        self.ensure_one()
+        self.check_access('read')
+        require(self.env, 'lock', self.company_id)
+        self.env.cr.execute('SELECT pg_advisory_xact_lock(%s, %s)', [ADVISORY_KEY, self.company_id.id])
+        self.env.cr.execute('SELECT id FROM tp_hr_attendance_period WHERE id=%s FOR UPDATE', [self.id])
+        self.invalidate_recordset()
+
+    def _tp_lock(self, reason=None):
+        """Freeze the period: imports land as 'locked', changes only through an approved amendment."""
+        self._tp_take_lock()
+        reason = (reason or '').strip()
+        if self.state == 'locked':
+            raise UserError(self.env._('Kỳ %(name)s đã chốt.', name=self.name))
+        if self.pending_count:
+            raise UserError(self.env._('Còn %(count)s đề nghị điều chỉnh chờ duyệt trong kỳ; duyệt hoặc trả lại trước khi chốt.',
+                                       count=self.pending_count))
+        if (self.missing_count or self.review_count) and not reason:
+            raise UserError(self.env._('Kỳ còn %(count)s ngày thiếu giờ hoặc cần kiểm tra; ghi chú lý do chốt để lưu vết.',
+                                       count=self.missing_count + self.review_count))
+        days = self.env['tp.hr.attendance.day'].sudo().search([
+            ('company_id', '=', self.company_id.id), ('work_date', '>=', self.date_from), ('work_date', '<=', self.date_to)], order='id')
+        digest = hashlib.sha256(','.join(f'{day.id}:{day.version}' for day in days).encode()).hexdigest()
+        snapshot = {'reason': reason, 'days': len(days), 'ok': self.ok_count, 'missing': self.missing_count, 'review': self.review_count,
+                    'digest': digest, 'from': self.date_from, 'to': self.date_to}
+        internal(self).write({'state': 'locked', 'locked_by': self.env.user.id, 'locked_at': fields.Datetime.now(), 'version': self.version + 1})
+        self.env['tp.hr.attendance.log']._tp_log(self, 'period_lock', dict(snapshot, version=self.version))
+        return True
+
+    def _tp_unlock(self, reason=None):
+        self._tp_take_lock()
+        reason = (reason or '').strip()
+        if self.state != 'locked':
+            raise UserError(self.env._('Kỳ %(name)s đang mở.', name=self.name))
+        if not reason:
+            raise UserError(self.env._('Nhập lý do mở lại kỳ đã chốt.'))
+        previous = {'locked_by': self.locked_by.id, 'locked_at': self.locked_at}
+        internal(self).write({'state': 'open', 'locked_by': False, 'locked_at': False, 'version': self.version + 1})
+        self.env['tp.hr.attendance.log']._tp_log(self, 'period_unlock', dict(previous, reason=reason, version=self.version))
+        return True
+
+    def _tp_period_wizard(self, operation):
+        self.ensure_one()
+        require(self.env, 'lock', self.company_id)
+        return {
+            'type': 'ir.actions.act_window', 'res_model': 'tp.hr.attendance.period.wizard', 'view_mode': 'form',
+            'views': [[False, 'form']], 'target': 'new',
+            'name': self.env._('Chốt kỳ công') if operation == 'lock' else self.env._('Mở lại kỳ công'),
+            'context': {'default_period_id': self.id, 'default_operation': operation},
+        }
+
+    def action_open_lock(self):
+        return self._tp_period_wizard('lock')
+
+    def action_open_unlock(self):
+        return self._tp_period_wizard('unlock')
+
+    def action_open_logs(self):
+        self.ensure_one()
+        action = self.env['ir.actions.act_window']._for_xml_id('tp_hr_attendance.action_logs')
+        action['domain'] = [('model', '=', self._name), ('res_id', '=', self.id)]
+        action['display_name'] = self.env._('Nhật ký kỳ %(name)s', name=self.name)
+        return action
 
 
 class AttendanceLog(models.Model):

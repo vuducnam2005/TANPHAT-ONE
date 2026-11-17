@@ -1,1 +1,7 @@
-from . import attendance_config, attendance_day, attendance_import, attendance_menu
+from . import (
+    attendance_config,
+    attendance_correction,
+    attendance_day,
+    attendance_import,
+    attendance_menu,
+)

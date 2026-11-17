@@ -280,3 +280,13 @@ CR-M19 / CR-S10 — `action_section_contents`, `section_content_list/search`, `t
 CR-P05 / CR-P06 — `copy_plan_form` và `carry_work_form`: modal một nguồn + kỳ/đích/lý do cho một action, không là bảng; N/A bộ lọc độc lập, QA/security_reviewer cần kiểm source/target picker native có scope, dirty/cancel/stale và giữ ID gốc. Picker đích giữ owner/current personal draft/returned; sao chép không mang actual/baseline/confirmation. Source implemented, runtime pending.
 
 CR-P07 — `tp_reporting_reviewer` (reviewer_id): một select từ document.get_reviewer_options own persisted draft/returned, chỉ ID/display_name eligible; lưu nháp trước, empty/retry/error rõ, không dùng res.users.name_search rộng. `tp_reporting_person` (plan owner/collaborators, doc owner, line collaborators, directive owner, configuration users): tp.report.people.get_options purpose allowlist + company/phòng/resource, server search cap100 ghi rõ thu hẹp từ khóa; single native record.update, multi native relational commands. Đây là picker hữu hạn sau search, không miễn scope; runtime selector proof pending khi restart cập nhật.
+
+## HR-ATTENDANCE-001 S3 — CHG-20261117-021
+
+| Vị trí | Tiêu chí / phạm vi | Kiểm thực và còn thiếu |
+| --- | --- | --- |
+| action_my_requests / correction_list/search / tp.hr.attendance.correction | Mã phiếu, tên/mãTP, phòng, ngày, trạng thái, reviewer; SearchModel/TpTableFilterBar, owner domain bắt buộc; clear giữ owner/company/rule; page10/20/50/100 | Main admin empty/list/form chưa lưu đạt. AND/OR/page nhiều dữ liệu/export privacy lưu regression, NOT_RUN fixture |
+| action_review / cùng list/search | Như trên, mặc định Chờ duyệt; record rule current assigned reviewer/HR (sau gửi), action không cấp quyền | Không có phiếu thật nên filled queue/dialog/race NOT_RUN, không tạo giả |
+| action_periods / period_list/search | Tên kỳ, từ/đến, trạng thái, người chốt; native filter/page, company rule | Main empty/list đạt; filled/pager/multi-filter và chốt nghiệp vụ NOT_RUN |
+| action_mine + profile tab / OWL mine | Tháng, trạng thái dữ liệu/chốt; owner luôn từ backend; count ngày và page10/20/50/100; mobile cards, calendar/detail cùng payload | ORM uid41/42 read-only30ngày; render5viewport+filter/profile đạt. Auth employee browser chưa có password; render không thay E2E. Bảng phiên tối đa một ngày chỉ đọc không pager riêng (N/A); phiếu ngày là link sang list đầy đủ |
+| review/period wizard | Một phiếu hoặc một kỳ cố định, không bảng/picker rộng | N/A filter cho dialog một record; nghiệp vụ xác nhận chưa chạy trênmain |
