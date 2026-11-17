@@ -53,11 +53,11 @@ có bằng chứng một phần; `NOT_RUN` chưa chạy. Static check không là
 | AD2-02 | HR/Kho dashboard delegate nhất quán | PASS (đọc) | Server S1: HR KPI = danh sách, Kho 10 ô = danh sách, 0 dòng phòng mình; browser render NOT_RUN. |
 | AD2-03 | KH-KD ghi ngoài phòng qua đường thật | NOT_RUN | Slice 4. |
 | AD2-04 | Gán/đổi/trả stock, race, mixed/own/unknown | NOT_RUN | Slice 3. |
-| AD2-05 | Reporting baseline + delegate | PARTIAL | S2: admin chính vào dashboard/hồ sơ/nghĩa vụ, tự cấp bị chặn (main). Nhánh dữ liệu chưa chạy thật: main 0 hồ sơ/kế hoạch/snapshot; logic SQL kiểm trên CTE tổng hợp; 6 ca Odoo NOT_RUN. |
+| AD2-05 | Reporting baseline + delegate | PARTIAL | S2 main + server: admin chính vào dashboard/hồ sơ/nghĩa vụ, tự cấp bị chặn; delegate thật có dashboard nhãn ủy quyền và 9 model đọc, 0 dòng phòng mình, không ghi/assignment. Nhánh dữ liệu chưa chạy thật: cả hai nơi 0 hồ sơ/kế hoạch/snapshot; logic SQL kiểm trên CTE tổng hợp; 6 ca Odoo NOT_RUN. |
 | AD2-06 | Baseline phòng mình/kiêm nhiệm giữ | NOT_RUN | |
 | AD2-07 | RPC/context/nested/import/default không lách | NOT_RUN | |
 | AD2-08 | Thu hồi phiên cũ/worker | NOT_RUN | Không grant/revoke thử trên main/server. |
-| AD2-09 | Nhân viên thường không mở thêm | PARTIAL | Slice 1 main + server: HR/Kho dashboard, summary, XLSX AccessError; đề xuất 0; không thêm menu. S2 main: 10 model Báo cáo và dashboard vẫn AccessError như HEAD, không menu Báo cáo. Các slice sau kiểm lại. |
+| AD2-09 | Nhân viên thường không mở thêm | PARTIAL | Slice 1 main + server: HR/Kho dashboard, summary, XLSX AccessError; đề xuất 0; không thêm menu. S2 main + server: 10 model Báo cáo và dashboard vẫn AccessError như trước, không menu Báo cáo (server giống hệt probe trước deploy). Các slice sau kiểm lại. |
 | AD2-10 | Browser thực tế desktop/mobile | NOT_RUN | |
 
 ## 4. Kết quả theo slice
@@ -172,3 +172,27 @@ Cập nhật sau mỗi slice đã áp.
   thường không nhóm Báo cáo vẫn AccessError cả 10 model/dashboard, không menu.
   Main/server có 0 hồ sơ/kế hoạch/snapshot/nghĩa vụ/chỉ đạo nên nhánh dữ liệu
   chưa chạy thật; delegate trên main NOT_RUN (ledger 0/0).
+- PC server `42682b51`: preflight 12/12 tệp đúng baseline; backup
+  `C:/TANPHAT-backups/admin-delegate002/s2-20261118T012716` (dump 9.568.634B,
+  filestore 29.819.146B/597 mục, source-config, `pg_restore -l` 15.437 dòng,
+  SHA256); `-u tp_admin_delegation` exit 0/0 ERROR, checksum 12/12. Snapshot nhân
+  viên 39/tài khoản 29/nhóm người dùng/roster/thiết bị/đề xuất/ledger/ngày công/
+  Báo cáo (0 hồ sơ/kế hoạch/snapshot/nghĩa vụ/chỉ đạo/assignment)/baseURL giữ;
+  chỉ đổi version và `res_groups_implied_rel` 88 → 89. Kiểm SQL chỉ đọc trên dữ
+  liệu server trước deploy: 0 hồ sơ/snapshot nên không có payload thật để đối
+  chiếu.
+- Probe chỉ đọc trên server trước/sau deploy (`SET TRANSACTION READ ONLY` +
+  `with_user`, rollback; actor lấy từ ledger hiệu lực 1/1, không hardcode):
+  - Admin chính: trước AccessError cả 10 model và dashboard → sau có nhóm cấu
+    hình/người dùng Báo cáo (không tài chính), 10 model và dashboard chạy, menu
+    Báo cáo đầy đủ, tự cấp assignment AccessError.
+  - Delegate: trước lỗi nghĩa vụ/chỉ đạo/snapshot/phản hồi/lịch sử/dashboard →
+    sau 9 model và dashboard chạy (nhãn "Quản trị được ủy quyền", thêm ghi chú),
+    assignment vẫn AccessError; 0 dòng phòng mình/không phòng/khác company/của
+    chính mình, 0 quyền ghi; menu thêm Tổng quan, Kế hoạch, Chỉ đạo, Báo cáo
+    ngoài phòng; không Settings, không nhóm Báo cáo/system.
+  - Nhân viên thường: kết quả giống hệt probe trước deploy (AccessError 10 model
+    và dashboard, không menu Báo cáo).
+- Public không đăng nhập: `/web/health` 200, `/dang-nhap` 200, `/web/login` và
+  `/odoo` chuyển hướng như cũ. Browser phiên delegate NOT_RUN (không dùng mật
+  khẩu/phiên người thật).
