@@ -1,6 +1,6 @@
 # TANPHAT ONE — Danh mục Prompt và Kho lưu trữ
 
-**Cập nhật:** 16/11/2026 (thêm CORP-REPORT-001 full module R0–R5; metadata kho SOURCE-CLEANUP-001 giữ nguyên)
+**Cập nhật:** 18/11/2026 (thêm ADMIN-DELEGATE-002; metadata kho SOURCE-CLEANUP-001 giữ nguyên)
 **Kho lưu trữ an toàn ngoài source:** `C:\TANPHAT ONE ARCHIVE\SOURCE-CLEANUP-001\20261112T194934\docs\prompts`  
 **File mapping khôi phục:** `C:\TANPHAT ONE ARCHIVE\SOURCE-CLEANUP-001\20261112T194934\recovery-mapping.json`
 
@@ -17,6 +17,8 @@ EQUIP-UI-001/002 bên dưới giữ để tra cứu lịch sử, không giao ch�
 
 | Tệp prompt | Nhiệm vụ | Mô tả | Trạng thái | Tài liệu đặc tả / Kế hoạch |
 | --- | --- | --- | --- | --- |
+| [`CLAUDE_ADMIN_DELEGATE_002_COMPLETE_SCOPED_ADMIN.md`](CLAUDE_ADMIN_DELEGATE_002_COMPLETE_SCOPED_ADMIN.md) | **ADMIN-DELEGATE-002** | Hoàn thiện quản trị ngoài phòng, giữ baseline tại phòng mình; HR/Kho dashboard, CRUD theo nguồn và Reporting admin baseline | `AUDITED_PARTIAL_PROMPT_READY` CHG-20261118-001 | Server có1delegation hiệu lực; [audit chỉ đọc](../security/ADMIN_DELEGATE_002_READONLY_AUDIT.md); push/deploy18069/PCserver từng slice, không bắt18079, không tự grant/revoke người thật |
+| [`CLAUDE_ADMIN_DELEGATE_001_AND_PUBLIC_FILES.md`](CLAUDE_ADMIN_DELEGATE_001_AND_PUBLIC_FILES.md) | **ADMIN-DELEGATE-001 / DEPLOY-MEDIA-001** | Lịch sử triển khai delegation/media; không chạy lại để hoàn thiện quyền | `APPLIED_WITH_GAPS; CONTINUE_002` | [Acceptance001](../demo/ADMIN_DELEGATE_001_ACCEPTANCE.md); bản runtime20.0.1.0.1, server đã có1grant hiệu lực tại audit17/11; dùng prompt002 cho sửa tiếp, policy17/11 thay yêu cầu test18079 cũ |
 | [`CLAUDE_CORP_REPORT_001_FULL_MODULE.md`](CLAUDE_CORP_REPORT_001_FULL_MODULE.md) | **CORP-REPORT-001** | Full quý→tháng→tuần và báo cáo ngược; dashboard sáng/chart lớn, UI/filter/detail/mobile mọi tab, nguồn/quyền/version, chỉ đạo và Excel/Word/PDF | `FULL_MODULE_PROMPT_READY_NOT_IMPLEMENTED` CHG-20261116-006 | [Thiết kế](../architecture/TP_COMPANY_REPORTING_001_DESIGN.md), DEC-048; R0–R5 trên18079, cấu hình lịch/role test, không grant/nhập thật/main/commit/push. Đối chiếu baseline workflow FAIL trước code; không finish hộ source chưa kiểm |
 | [`CLAUDE_EQUIP_SIMPLE_003.md`](CLAUDE_EQUIP_SIMPLE_003.md) | **EQUIP-SIMPLE-003** | Hai menu Thiết bị/Yêu cầu đề xuất; gán/đổi chỉ máy stock chưa có người giữ; trả kho, bỏ tab dư/chuyển trực tiếp | `IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK` CHG-20261116-003 (prompt CHG-20261116-001/002) | Đã áp main18069 `tp_equipment` 20.0.1.5.0; mức bằng chứng ở [acceptance](../demo/EQUIP_001_ACCEPTANCE.md). DEC-047 bổ sung trước code: cấm chọn máy có chủ/cấm đổi chéo, backend kiểm lại sau khóa; cùng DB/HR/admin-only/data/history; main18069 sau backup, không18079/bộ test riêng/fixture |
 | [`CLAUDE_EQUIP_UI_002_USERS_AND_GLOBAL_BACK.md`](CLAUDE_EQUIP_UI_002_USERS_AND_GLOBAL_BACK.md) | **EQUIP-UI-002 / UI-BACK-001** | Bảng thiết bị gắn HR/người dùng, stock riêng; Quay lại dùng chung toàn hệ thống; nâng dashboard theo phản hồi | `IMPLEMENTED_RUNTIME_VERIFIED_MAIN_PENDING_VISUAL_REVIEW` CHG-20261115-002 (prompt CHG-20261115-001) | DEC-045/046; [chuẩn Quay lại](../ui/UI_BACK_001_STANDARD.md), [acceptance](../demo/EQUIP_001_ACCEPTANCE.md); main18069 sau backup; dữ liệu/HR/quyền giữ |

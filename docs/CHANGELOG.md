@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-001 — ADMIN-DELEGATE-002: audit chỉ đọc và prompt hoàn thiện quyền quản trị
+
+- Ngày18/11/2026, Asia/Saigon; kiểm runtime bắt đầu17/11. Phạm vi: rà quyền ứng dụng đã được ủy quyền, chưa sửa ứng dụng/quyền/dữ liệu. Audit và prompt mới; cập nhật status/roadmap/index prompt đúng scope.
+- Main18069 ledger0/0; PCserver/public1/1 hiệu lực, actor có hồ sơ TADIC, capability delegated và scope xác định. HR20.0.1.12.0/delegation20.0.1.0.1/attendance20.0.1.2.0 hai nơi. Không lấy trạng thái lịch sử0/0 để nói chưa cấp người thật. Chi tiết danh tính nằm riêng ignored.local.
+- Kiểm thực: RPC chỉ đọc module/ledger; DockerOdoo shell SET TRANSACTION READ ONLY +with_user thật và rollback. Delegate HRoverview/Khodashboard/summary/proposal bị chặn, main HR/Kho thành công. Reportingmain cũng lỗi document,delegate lỗiobligation; tách baseline admin. HRget_view thành công chưa là browserrender.27tệp delegation/helper khớp máy chủ sau chuẩn hóa xuống dòng.
+- Nguồn xác nhận Project/CRM CUD, Reporting workflow/aggregate và Kho stock/quick-action còn thiếu so yêu cầu. Không coi nativehas_access là toàn bộ quyền wizard. Prompt002 hoàn thiện scopedadapter, nguyên tử đổi máy, ownbaseline/privacy/thu hồi; giữ main-only security/role/reviewerassignment. Chỉ thị push/deploy ngay, không bắt18079 vẫn áp dụng.
+- Không grant/revoke/seed/CRUD phá dữ liệu, không clone/test18079 hoặc chạy fixturemain/server. Chưa browserHTTP actor thật, chưa thửwrite/revoke/multiworker. Subagent không khởi tạo do modelruntime; không gọi audit độc lập nhiều người. Prompt không phải code đã sửa.
+- Kiểm tài liệu: link tương đối, diffcheck và source trước/sau; workflowseal chỉ snapshotGit của batchdocs, không nhận foreignReporting/branding/login/sidebar/docs đã kiểm. Commit/push/sync đúng blob tài liệu, không restart/upgradeOdoo. Next: giao CLAUDE_ADMIN_DELEGATE_002_COMPLETE_SCOPED_ADMIN.md để triển khai từng miền và ghi evidence thật.
+
 ## CHG-20261117-024 — HR-ATTENDANCE-001: giao S4 lên server và chốt bàn giao
 
 - Ngày 17/11/2026. S4 `cc2bfcb60ee361931eb7a3748291004d3d560dca` đã push origin/main, deploy 37/37 tệp đúng SHA256 lên PC server; addon 20.0.1.2.0 trên cả 18069 và server, nâng cấp `-u` exit0/0ERROR. S3 `14eaf388` đã giao trước đó. Không nhập lại nguồn, cấp quyền, gửi/duyệt/chốt thật, mở 18079/clone hoặc restart tunnel.
