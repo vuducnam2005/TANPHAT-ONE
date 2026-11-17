@@ -6,7 +6,7 @@ Ngày 17/11/2026, CHG-20261117-004. Đọc cùng
 
 ## Cấp và thu hồi
 
-Quản trị chính mở **Quản lý nhân sự → Nhân viên → hồ sơ → Tài khoản**.
+Quản trị chính mở **TP HR → Nhân viên → Danh sách nhân viên → hồ sơ → Tài khoản và phân quyền**.
 Phần **Quyền quản trị** tách riêng với chức vụ, vai trò nghiệp vụ và trạng thái
 tài khoản. Nhân viên cần có tài khoản nội bộ riêng đang mở trước khi cấp.
 

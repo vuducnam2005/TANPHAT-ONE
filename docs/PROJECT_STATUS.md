@@ -1,8 +1,11 @@
 # TANPHAT ONE — Trạng thái dự án
 
-**Cập nhật:** 16/11/2026 (Asia/Saigon)
+**Cập nhật:** 17/11/2026 (Asia/Saigon)
 
 **Thư mục:** `C:\TANPHAT ONE`  
+
+**Đã áp — CHG-20261117-005: ADMIN-DELEGATE-001 / DEPLOY-MEDIA-001 — MAIN_AND_PC_SERVER_APPLIED_WITH_GAPS.** Source chức năng cffa70d6 đã push origin/main; addon 20.0.1.0.0 chạy trên 18069 và Docker PCserver. Server cài thêm dependency Reporting 20.0.1.1.0 từ Git hiện hành, giữ foreign diff Reporting ở local. Gói 44 tệp đúng checksum; riêng Home áp delta đã commit lên baseline branding được xác minh, giữ URL hiện hành. Backup mới local backup-dev-resume và server C:/TANPHAT-backups/admin-delegate001/20261117T151401. Cài exit0/0ERROR; 20 bảng local và 18 bảng server giữ fingerprint ngay sau cài; lần cuối chỉ lịch cron server tự tiến (30 dòng), không đổi user/group/nghiệp vụ, baseURL hai môi trường giữ sau hoàn nguyên host probe local. Ledger đều 0/0: chưa cấp cho người thật. Browser admin main4/4 và public4/4; HOOT Home48/48/243 assertions. Media sau deploy83/83, server666 stored rows/169 blob đúng, không thiếu/khác; Excel HR xuất qua HTTPS đọc2sheet, PDF nhãn thiết bị xem1trang, cả hai anonymous303/no-store. Chưa có attachment PDF/Word/Excel thật trênserver; Word chỉ có kiểm fixture lịch sử trên test. Quyền quản trị mới là phạm vi adapter trong [coverage](security/ADMIN_DELEGATE_001_COVERAGE.md), chưa fullCRUD mọi model; multiworker và browser delegate HR bản cuối chưa kiểm. Không chạy thêm18079/fixture main-server. [Acceptance](demo/ADMIN_DELEGATE_001_ACCEPTANCE.md). Next action: đóng các gap adapter/AD02–09 theo coverage; chỉ cấp người thật khi người dùng chỉ định, không tự suy nghiệm thu nghiệp vụ/pilot.
+
 
 **Giao bản — CHG-20261117-004: ADMIN-DELEGATE-001 — MAIN_APPLIED_PARTIAL_COVERAGE, SERVER_RELEASE_PENDING.** Tiếp tục checkpoint06:07:04Z theo chỉ thị trực tiếp. Addon20.0.1.0.0 đã cài18069 sau backup mới .local/admin-delegate001/backup-dev-resume/; exit0/0ERROR;20fingerprint bảng nghiệp vụ/quyền và baseURL giữ nguyên, ledger0/0, không cấp người thật. Native adminHR4/4, HOOT Home48/48 (243assertions) đạt; bản HR safe view cuối khớp focused test1/1 của phiên trước. R11security35/35, regression77/77, race23+7 là evidence lịch sử đúng snapshot; không chạy thêm18079/fixture main. Media kiểm lại83/83 origin/public, server665stored rows/168blob đủ/hashđúng; PDF/Word/Excel server không có mẫu thật. Chuẩn bị push/deploy đúng scope; server chưa càiReporting, dùng dependency Reporting từ Git, không mang foreign diff đang dở. [Coverage](security/ADMIN_DELEGATE_001_COVERAGE.md) chưa fullCRUD mọi phòng; multiworker và delegate browser trên bản cuối chưa kiểm. Gói giao chỉ gồm hunk/task; brandingURL có sẵn trênserver được đối chiếu và giữ nguyên. Next action: push release, backup/càiPCserver, kiểm fingerprint/public/filestore và ghi kết quả; không tự cấp ai.
 
@@ -33,7 +36,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261117-004`
+Last change: `CHG-20261117-005`
 
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.

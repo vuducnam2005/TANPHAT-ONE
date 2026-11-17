@@ -74,3 +74,7 @@ không tự xóa149 blob đã khôi phục hợp lệ.
 
 Đang cập nhật theo log thực tại `.local/admin-delegate001/`; bảng acceptance
 là nguồn kết luận môi trường đã áp/chưa áp. Chưa ghi PASS từ lệnh chuẩn bị.
+
+## Bàn giao áp thực — CHG-20261117-005
+
+Commit cffa70d6 đãpush. Local: backup-dev-resume,addon20.0.1.0.0,installexit0. PCserver: backup C:/TANPHAT-backups/admin-delegate001/20261117T151401,dump8.955.792byte/filestore29.714.074byte/source-config3.565.619byte,pg_restore-list/SHA256. Dockerwait0,log0ERROR,đãstarttp-odoo. WrapperPowerShell từng dừng do native stderr warning; không suy wrapperexit là upgradeexit. Reportingdependency20.0.1.1.0 từGit hiện hành đãcài,không cấpgroup. Checksum44/44; Home ápdelta đãcommit trênbrandingbaseline được xác minh,không đảoURL. Ledger0/0,publicadmin4/4,media83/83; publicPDF/Excel exportđúng,anonymousdenied. Rollback chưa diễn tập. Giữgapcoverage; không tự cấpngười thật.

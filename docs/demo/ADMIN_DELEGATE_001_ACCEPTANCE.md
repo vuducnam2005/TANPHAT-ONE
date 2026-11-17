@@ -6,7 +6,7 @@ Yêu cầu trực tiếp cho phép áp main18069, commit/push và deploy PC serv
 không tự chọn tài khoản thật nhận quyền. Fixture và ca cấp/thu thử chỉ dùng
 database canonical `tp_tanphat_test`. Chưa cấp delegation cho người thật.
 
-**Cập nhật tiếp tục17/11: MAIN_APPLIED_PARTIAL_COVERAGE; SERVER_RELEASE_PENDING.** 18069cài exit0/0ERROR,20fingerprint bảng/baseURLgiữ, ledger0/0. Browseradmin4/4,HOOT48/48/243assertions. HRsafe view khớp focusedmanifest hr-view-focused2(1/1); chỉ3fileHR khácR11. Không chạy thêm18079/fixture main-server. Mục pending lịch sử bên dưới giữ theo snapshot; delegateHR browser cuối vẫn NOT_RUN.
+**Kết luận triển khai: MAIN_AND_PC_SERVER_APPLIED_WITH_GAPS.** Addon20.0.1.0.0 chạy trên18069 vàPCserver; commitcffa70d6 đãpush. ServerReporting dependency20.0.1.1.0. Ledger0/0 hai nơi, không cấp người thật. Browseradmin main4/4/public4/4,HOOT48/48/243assertions; checksum44/44. HRsafe view cuối khớp focusedmanifest1/1; không chạy thêm18079/fixture main-server. Các snapshot và gapAD bên dưới giữ đúng giới hạn; chưa fullCRUD/multiworker/delegateHR browser cuối.
 
 **Kết luận snapshot trước: PARTIAL — các ca kỹ thuật đã chạy đạt, còn thiếu coverage
 và kiểm giao diện sau sửa HR.** R11 đạt 35/35 ca addon, hồi quy R2 đạt 77/77;
@@ -28,8 +28,8 @@ mật khẩu, dump, filestore hoặc hồ sơ nhân sự vào Git.
 | --- | --- | --- |
 | Test: `tp_tanphat_test`, PostgreSQL workspace55432 | Odoo model/security test chạy tiến trình riêng `--stop-after-init`, HTTP port18179; cùng database test, không tạo DB theo task | PASS snapshot R11 35/35, focused P1 2/2 và hồi quy R2 77/77. Source manifest đi cùng mỗi lượt; HR safe view thay sau R11 nên chưa niêm phong source tích hợp cuối. |
 | Test HTTP: `127.0.0.1:18079`, cùng `tp_tanphat_test` | Phiên delegate giả giữ cookie qua cấp/thu; Home/browser smoke; HTTP file; race bằng hai transaction PostgreSQL riêng | 23/23 kiểm AD06 và 7/7 kiểm race nguồn thiết bị đạt. HTTP hiện kiểm một tiến trình Odoo; chưa có bằng chứng nhiều Odoo worker. HR safe view/browser cần chạy lại. |
-| Main: `tp_tanphat_dev`/18069 | Chờ ghi backup, install/upgrade, fingerprint quyền/dữ liệu và smoke sau áp | PENDING — chủ batch cập nhật bằng evidence thực; không suy từ kết quả test hoặc source đã push. Không chạy fixture/cấp thử cho người thật tại đây. |
-| PC server: Docker `tp-odoo`, `192.168.1.73:8069` và URL public hiện hành | Chờ ghi backup, checksum source, install/upgrade, restart và smoke public của addon delegation | PENDING — chủ batch cập nhật bằng evidence thực. Kết quả phục hồi media là hạng mục riêng, không xác nhận addon delegation đã deploy. |
+| Main: `tp_tanphat_dev`/18069 | Chờ ghi backup, install/upgrade, fingerprint quyền/dữ liệu và smoke sau áp | APPLIED: backup-dev-resume, install-dev-resume.log exit0/0ERROR;20fingerprint bảng giữ,ledger0/0; browseradmin4/4. Không fixture/cấp thử người thật. |
+| PC server: Docker `tp-odoo`, `192.168.1.73:8069` và URL public hiện hành | Chờ ghi backup, checksum source, install/upgrade, restart và smoke public của addon delegation | APPLIED: backup20261117T151401, install-server.log exit0/0ERROR,docker wait0;18fingerprint bảng giữ ngay sau cài;44/44source hash;ledger0/0;publicadmin4/4. Reporting dependencyGit20.0.1.1.0. |
 
 `PASS` dưới đây chỉ áp cho actor/action/source đã nêu; `PARTIAL` nghĩa là có
 bằng chứng đạt nhưng chưa đủ toàn hàng yêu cầu; `NOT_RUN` là chưa chạy hoặc
@@ -112,3 +112,11 @@ Kết quả media và nguyên nhân thiếu blob ở
 ## 6. Tiếp tục và rollout
 
 Evidence mới: backup-dev-resume/ (dump9.601.550byte,924filestore entries/code/config/checksum), install-dev-resume.log exit0/0ERROR; dev-resume-before/after-install.json20bảng giữhash, baseURLgiữ, ledger0/0. ui-dev/result.json4/4; hoot-main-resume/result.json48/48/243assertions. Asset kỹ thuật mới, không user/nghiệp vụ giả. resume-media-result.json83/83,server665rows/168blob; PDF/Word/Excel0mẫu. Review cùng phiên; subagent không khởi tạo được do modelruntime. ServerReporting chưa cài, dùng dependencyGit hiện hành, không mang foreigndiff Reporting. Không chạmDBtest; fixture giả cũ vẫn giữ.
+
+## 7. Kết quả PC server — CHG-20261117-005
+
+- Commitcffa70d6,44/44checksum. Home giữ brandingbaseline hiện hữu đã xác minh; không copy foreigndiff. Server addon20.0.1.0.0,Reporting20.0.1.1.0. Backup C:/TANPHAT-backups/admin-delegate001/20261117T151401 (DB/filestore/source/config/checksum/pg_restore-list); install exit0/0ERROR,ledger0/0.
+- server-resume-before/after.json:18bảng cũ giữhash. server-final.json: user/group/nghiệp vụ giữ; lịch cron30dòng tự tiến. Local20bảng giữ,baseURL probe localhost đã khôi phục đúng127hash cũ; serverbaseURL giữ. Không cấp ai hoặc đổi chức vụ/phòng ban/nghiệp vụ.
+- ui-public/result.json4/4, đã xem screenshot. Hai lượt đầu timeout ở assetcold; lượt cuối hoàn tất. WrapperPowerShell nhậnstderrwarning nên dừng; Dockerupgrade vẫn hoàn tất,wait0 và log trước restart chứng minh kết quả, không giả exit từwrapper.
+- public-after-delegation.json83/83; origin-after-delegation.json666stored rows/169blob đầy đủ. public-generated-files.json: ExcelHR9747byte/2sheet,PDFnhãn29028byte; no-store,anonymous303. public-pdf-preview.json:1trangpdfjs. Export dữ liệu hiện hữu chỉ đọc; không là attachment đã upload. Word và attachmentPDF/Excel thật server chưa có mẫu.
+- Chưa kiểm lại browserdelegateHR cuối hoặc multiworker; không có người thật được chọn cấp để lấp gap. AD02–09 và CRUD chưa đủ theo coverage; kỹ thuật đãdeploy không tự đóng nghiệm thu nghiệp vụ/pilot. Fixturetest cũ giữ vì không chạmDBtest.

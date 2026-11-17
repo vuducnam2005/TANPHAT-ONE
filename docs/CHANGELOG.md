@@ -1,5 +1,15 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261117-005 — ADMIN-DELEGATE-001: push và áp PC server, kiểm public và bàn giao giới hạn
+
+- Ngày 17/11/2026 (Asia/Saigon). Commit chức năng cffa70d6 đã push origin/main. Deploy đúng delta của task; 44 tệp khớp checksum. Home giữ 2 thay đổi branding có trước đã đối chiếu, không đưa foreign Reporting/login/branding vào commit. Server dùng Reporting Git hiện hành và cài dependency 20.0.1.1.0; tp_admin_delegation 20.0.1.0.0 cài exit0/0ERROR.
+- Backup server mới C:/TANPHAT-backups/admin-delegate001/20261117T151401: dump8.955.792byte, filestore29.714.074byte, source/config3.565.619byte, pg_restore-list và SHA256. Local backup-dev-resume: dump9.601.550byte, filestore/code/config/checksum. Không restore test đè main; rollback chưa diễn tập.
+- Wrapper PowerShell dừng do native stderr warning từ Docker; tiến trình upgrade vẫn chạy, docker wait trả0, log kết thúc thành công rồi mới start tp-odoo. Không restart tunnel/DNS hoặc mở private file. Hai lần public browser timeout khi dựng asset lạnh; lượt sau 4/4, không lỗi trang. Main4/4, HOOT48/48/243 assertions; R11/focused/regression/race phiên trước giữ đúng snapshot.
+- So ngay sau cài: 20 bảng local và 18 bảng server giữ fingerprint; chỉ thêm hai module/schema dependency, ledger0/0. Cuối lượt user/group/nghiệp vụ vẫn giữ, cron server30dòng chỉ tự tiến lịch. Probe localhost từng đổi baseURL local; đã xác thực lại đúng127.0.0.1 và đối chiếu khôi phục hash cũ. Server baseURL hash giữ nguyên.
+- Media sau deploy:83/83 origin/public;666stored rows/169blob,0thiếu/khác. Tệp xuất từ dữ liệu hiện hữu chỉ đọc: Excel HR HTTP200/9747byte/MIMEđúng, đọc2sheet; PDF nhãn HTTP200/29028byte/MIMEđúng, pdfjs xem1trang; no-store và anonymous303. Đây là export thực, không phải attachment lưu sẵn. Server không có PDF/DOCX/XLSX attachment thật; Word chưa kiểm public bằng mẫu thật, fixture test lịch sử giữ riêng. Không tạo hồ sơ/tài khoản/tài liệu giả ở main/server.
+- Giới hạn triển khai: fullCRUD phòng khác chưa đủ (project/task/CRM CUD; Reporting aggregate/value/snapshot/CUD; nhiều workflow Kho/HR); multiworker và browser delegate HR bản cuối chưa kiểm. Actor test giả cũ vẫn ở DBtest, không chạm theo chỉ thị mới. Chưa cấp ai, chưa business acceptance/pilot. Acceptance/policy/coverage/user guide/runbook đã cập nhật; tiếp tục đóng gap trước khi gọi toàn phạm vi hoàn tất.
+- Workflow: checkpoint tiếp tục từ lượt đóng gói; finish004 đã đạt trước sửa docs đóng gói, lần cố dùng lại004 bị checker từ chối. Bàn giao mới005 ghi đúng deploy và niêm phong lại, không coi lỗi checker là lỗi cài ứng dụng.
+
 ## CHG-20261117-004 — ADMIN-DELEGATE-001: giao quyền quản trị có giới hạn, tiếp tục phiên trước
 
 - Ngày17/11/2026 (Asia/Saigon). Người dùng giao thực thi18069, push và deployPCserver; tiếp tục checkpoint06:07:04Z. Addon tp_admin_delegation20.0.1.0.0: ledger cấp/thu main-only, reason/re-auth native, giữ quyền nghiệp vụ phòng mình, scope theo nguồn/đa phòng; chặn self/identity/group/grant/import, thu hồi theo request/transaction; adapter HR/account, contract/project/CRM/report read và Kho trong coverage. Không cấp nhóm system/HR hoặc chọn người thật.

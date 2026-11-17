@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-17T08:10:53.188998+00:00",
-  "last_change_id": "CHG-20261117-004",
+  "updated_at": "2026-11-17T08:26:48.971410+00:00",
+  "last_change_id": "CHG-20261117-005",
   "code_digest": "b38d1ebc3dc1a397a7e9162fc642be12cddc5ffd085be1836f354616ee20ea73",
   "code_file_count": 597,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "1884ba8ab10f233f47a5dcdfb8fccd57b71c7e89ea2e35943a403b7d92eeea0d",
-    "docs/CHANGELOG.md": "0e48e20d011c7a4d6c61a7bdbff64a630a43e3a5a64c442398ffffe9677688e8",
+    "docs/PROJECT_STATUS.md": "16e85b4f2fcd1268ac09d58bf0da3f3a7ff22e8e6a77317b3943af3d1ef647b7",
+    "docs/CHANGELOG.md": "e4a3ed1b6fb26707ef1a1bde121a3ad0c6fdc04fb2dbb71be041e958d416e26f",
     "AGENTS.md": "ac7c7a6ce9929b1cc7f2f3752b5006bd91e9ca570228c9aed8a5210b2798cc5c",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "230a432643d361e65573cd4848d0b21464629628c8be2a2ee9a1b19b4a6d99fc",
+    "docs/ROADMAP.md": "35ca9a11f8b33b07ad3090e1ba97b150d4785fd4eb806b3dca0687f78b3bef4d",
     "docs/DECISIONS.md": "f20dea44c828ab3d3454dce658f876f15c5349761a6df14b2e352d8c0ad5a4f2",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Resume: Python/XML/Ruff PASS; prior35+focused1/regression77/race23+7; main install0 errors,20 fingerprints unchanged,ledger0; browser4/4,HOOT48/48/243; media83/83. No new18079 or fixtures; server next."
+    "MAIN+PCserver installed20.0.1.0.0; serverReporting20.0.1.1.0; exit0/0ERROR;44sourcechecks; ledger0; main/publicbrowser4/4; HOOT48/48; media83/83,666rows/169blob; realPDFpreview1page/Excel2sheets; anonymous303; no new18079/fixtures. Gaps recorded."
   ]
 }
