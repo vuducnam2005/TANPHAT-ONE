@@ -374,7 +374,7 @@ class MaintenanceEquipment(models.Model):
                 equipment.tp_department_name = False
 
     def action_tp_open_detail(self):
-        check_admin(self.env)
+        check_admin(self.env, self)
         self.ensure_one()
         return {
             "type": "ir.actions.act_window",
@@ -508,7 +508,7 @@ class MaintenanceEquipment(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        check_admin(self.env)
+        check_admin(self.env, self)
         sequence = self.env["ir.sequence"].sudo()
         for vals in vals_list:
             self._tp_prepare_vals(vals)
@@ -523,7 +523,7 @@ class MaintenanceEquipment(models.Model):
         return super().create(vals_list)
 
     def write(self, vals):
-        check_admin(self.env)
+        check_admin(self.env, self)
         vals = self._tp_prepare_vals(dict(vals))
         if "tp_version" in vals:
             raise UserError(_("Phiên bản hồ sơ do hệ thống quản lý."))
@@ -588,7 +588,7 @@ class MaintenanceEquipment(models.Model):
     def _unlink_tp_only_clean_drafts(self):
         if self.env.su and (self.env.context.get("tp_equipment_force_delete") is INTERNAL):
             return
-        check_admin(self.env)
+        check_admin(self.env, self)
         for equipment in self:
             if equipment.tp_lifecycle != "draft":
                 raise UserError(_("%(name)s đã đăng ký: dùng Ngừng quản lý, không xóa hồ sơ.", name=equipment.display_name))
@@ -599,7 +599,7 @@ class MaintenanceEquipment(models.Model):
 
     # ------------------------------------------------------------------ actions
     def action_tp_register(self):
-        check_admin(self.env)
+        check_admin(self.env, self)
         lock_records(self)
         for equipment in self:
             if equipment.tp_lifecycle != "draft":
@@ -621,13 +621,13 @@ class MaintenanceEquipment(models.Model):
         return True
 
     def action_tp_mark_verified(self):
-        check_admin(self.env)
+        check_admin(self.env, self)
         lock_records(self)
         self.write({"tp_verification": "verified", "tp_verified_date": fields.Date.context_today(self)})
         return True
 
     def action_tp_rotate_qr(self):
-        check_admin(self.env)
+        check_admin(self.env, self)
         for equipment in self:
             equipment.with_context(tp_equipment_rotate_qr=INTERNAL).write({"tp_qr_token": uuid.uuid4().hex})
             equipment.message_post(body=_("Đã cấp lại mã QR; nhãn cũ không còn hiệu lực."), subtype_xmlid="mail.mt_note")
@@ -649,7 +649,7 @@ class MaintenanceEquipment(models.Model):
 
     def action_tp_new_move(self):
         """Open a pre-filled move document (header buttons, list action). Nothing is saved here."""
-        check_admin(self.env)
+        check_admin(self.env, self)
         move_type = self.env.context.get("tp_move_type") or "assign"
         if move_type in ("opening", "adjust", "reversal"):
             raise UserError(_("Loại phiếu này do hệ thống tạo."))
@@ -675,7 +675,7 @@ class MaintenanceEquipment(models.Model):
         }
 
     def action_tp_open_pending_move(self):
-        check_admin(self.env)
+        check_admin(self.env, self)
         self.ensure_one()
         if not self.tp_pending_move_id:
             raise UserError(_("Thiết bị không có phiếu chờ bàn giao."))
@@ -689,7 +689,7 @@ class MaintenanceEquipment(models.Model):
         }
 
     def action_tp_open_moves(self):
-        check_admin(self.env)
+        check_admin(self.env, self)
         self.ensure_one()
         return {
             "type": "ir.actions.act_window",
@@ -703,7 +703,7 @@ class MaintenanceEquipment(models.Model):
         }
 
     def action_tp_print_labels(self):
-        check_admin(self.env)
+        check_admin(self.env, self)
         equipments = self.filtered(lambda e: e.tp_lifecycle != "draft")
         if not equipments:
             raise UserError(_("Chỉ in nhãn cho thiết bị đã đăng ký vào kho."))
@@ -715,7 +715,7 @@ class MaintenanceEquipment(models.Model):
     @api.model
     def tp_scan_lookup(self, value):
         """Keyboard-wedge / camera scanner input: QR URL, bare token, equipment code or serial."""
-        check_admin(self.env)
+        check_admin(self.env, self)
         value = (value or "").strip()
         if not value or len(value) > 512:
             return {"error": _("Quét hoặc nhập mã thiết bị.")}
@@ -745,11 +745,11 @@ class MaintenanceRequest(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        check_admin(self.env)
+        check_admin(self.env, self)
         return super().create(vals_list)
 
     def write(self, vals):
-        check_admin(self.env)
+        check_admin(self.env, self)
         return super().write(vals)
 
     @api.constrains("owner_user_id", "user_ids")
@@ -780,13 +780,13 @@ class MaintenanceEquipmentCategory(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        check_admin(self.env)
+        check_admin(self.env, self)
         for vals in vals_list:
             vals.setdefault("technician_user_id", False)
         return super().create(vals_list)
 
     def write(self, vals):
-        check_admin(self.env)
+        check_admin(self.env, self)
         return super().write(vals)
 
 

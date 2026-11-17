@@ -307,7 +307,7 @@ class TpContractWorkflow(models.AbstractModel):
             raise ValueError(f'Unknown contract workflow action {action!r}')
         if not isinstance(key, str) or not KEY_PATTERN.fullmatch(key):
             raise _error(400, 'invalid_request', 'An Idempotency-Key of 8-128 letters, digits or ._:- is required.')
-        if not self.env.user.has_group('tp_core.group_user'):
+        if not self._tp_can_use_workflow():
             raise _error(403, 'forbidden', 'Tan Phat platform membership is required.')
         if not isinstance(payload, dict):
             raise _error(400, 'invalid_request', 'The request body must be a JSON object.')
@@ -356,6 +356,9 @@ class TpContractWorkflow(models.AbstractModel):
         return self._tp_result(result['contract'], result['revision'], result.get('submission'), replayed=False)
 
     # Scope, capability, version and idempotency
+
+    def _tp_can_use_workflow(self):
+        return self.env.user.has_group('tp_core.group_user')
 
     def _tp_find_contract(self, contract_id):
         # Records outside the caller's scope are indistinguishable from missing ones.

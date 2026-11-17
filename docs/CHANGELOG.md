@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261117-004 — ADMIN-DELEGATE-001: giao quyền quản trị có giới hạn, tiếp tục phiên trước
+
+- Ngày17/11/2026 (Asia/Saigon). Người dùng giao thực thi18069, push và deployPCserver; tiếp tục checkpoint06:07:04Z. Addon tp_admin_delegation20.0.1.0.0: ledger cấp/thu main-only, reason/re-auth native, giữ quyền nghiệp vụ phòng mình, scope theo nguồn/đa phòng; chặn self/identity/group/grant/import, thu hồi theo request/transaction; adapter HR/account, contract/project/CRM/report read và Kho trong coverage. Không cấp nhóm system/HR hoặc chọn người thật.
+- 18069 cài exit0/0ERROR sau backup .local/admin-delegate001/backup-dev-resume/ (DB9.601.550byte +924filestore entries/code/config/checksum).20fingerprint bảng giữ nguyên, baseURL giữ, ledger0/0. Browseradmin4/4, HOOT48/48/243assertions; Python/XML/Ruff đạt. Probe ban đầu chọn employee admin không tồn tại nên mởlist; đã sửa probe chỉ đọc, chạy lại đạt.
+- Evidence phiên trước: R11security35/35, focusedHR safe view1/1 cùng hash source cuối, regression77/77; race23/23+7/7. Không chạy thêm18079/fixture main-server. Source khácR11 chỉ3fileHR đã có focused test. Subagent review không khởi tạo được do modelruntime; review cùng phiên, không audit độc lập.
+- Media đã push riêng f14bc49b: thiếu149blob tại mount thật, phục hồi add-only đúng checksum/size. Kiểm lại83/83origin/public; server665stored rows/168blob,0thiếu/khác; local661/169,0thiếu/khác. PDF/Word/Excel không có mẫu thật trênserver; giữ test lịch sử riêng, không mở private thànhpublic.
+- Gói source chỉ gồm hunk/task; brandingURL có sẵn trênserver được đối chiếu và giữ nguyên. ForeignReporting/UI-login/branding giữ unstaged.
+- Giới hạn: chưa fullCRUD mọi model/phòng khác; project/task/CRM CUD, reporting aggregate/value/snapshot và nhiều workflow vẫn baseline. Multiworker, browserdelegate HR cuối và nhiều caAD chưa kiểm; xem acceptance/coverage. Actor giả còn ởDBtest từ phiêntrước, lượt này không chạmDBtest. Serverrelease đang chuẩn bị; cập nhật deploy thực ở bàn giao kế tiếp.
+
 ## CHG-20261116-009 — BRAND-LOGO-001: logo công ty thay hình cây cầu trên toàn hệ thống
 
 - Ngày 16/11/2026 (Asia/Saigon). Theo yêu cầu trực tiếp của người dùng: dùng `logo/logo.png` làm logo toàn hệ thống, cân đối, rõ ràng, thay hình cây cầu. Áp main `18069` sau backup `.local/brand-logo/backup-pre-logo/`; không commit/push.

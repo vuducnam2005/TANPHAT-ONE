@@ -1,0 +1,11 @@
+<templates xml:space="preserve">
+    <t t-name="tp_admin_delegation.MyProfile" t-inherit="tp_hr_workspace.MyProfile" t-inherit-mode="extension">
+        <xpath expr="//div[@t-if=&quot;this.state.activeTab === 'account'&quot;]" position="inside">
+            <section class="o_tp_hr_card mt-3" t-if="this.state.data.header.admin_level">
+                <h2 class="o_tp_hr_card_title">Quyền quản trị</h2>
+                <span class="badge text-bg-light" t-out="this.state.data.header.admin_level"/>
+                <p class="mt-2 mb-0" t-out="this.state.data.header.admin_scope"/>
+            </section>
+        </xpath>
+    </t>
+</templates>

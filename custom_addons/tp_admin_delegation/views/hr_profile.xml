@@ -1,0 +1,85 @@
+<odoo>
+    <record id="delegated_employee_list" model="ir.ui.view">
+        <field name="name">tp.hr.employee.delegated.list</field><field name="model">hr.employee</field>
+        <field name="priority">200</field>
+        <field name="arch" type="xml"><list string="Danh sách nhân viên" js_class="tp_hr_table" limit="20" groups_limit="20" expand="1"
+                create="false" edit="false" delete="false" import="false" default_order="tp_employee_code">
+            <field name="department_id" string="Phòng ban"/><field name="tp_employee_code" string="Mã nhân viên"/>
+            <field name="name" string="Họ và tên"/><field name="job_id" string="Chức vụ" optional="hide"/>
+            <field name="job_title" string="Chức danh mô tả" optional="show"/><field name="work_email" optional="show"/>
+            <field name="work_phone" optional="show"/><field name="mobile_phone" optional="hide"/>
+            <field name="tp_user_login" optional="show"/>
+            <field name="tp_account_status" widget="badge" decoration-success="tp_account_status == 'active'"
+                   decoration-muted="tp_account_status == 'unlinked'" decoration-danger="tp_account_status == 'disabled'"/>
+            <field name="tp_admin_level" widget="badge" optional="show"/>
+        </list></field>
+    </record>
+    <record id="delegated_employee_search" model="ir.ui.view">
+        <field name="name">tp.hr.employee.delegated.search</field><field name="model">hr.employee</field>
+        <field name="priority">200</field>
+        <field name="arch" type="xml"><search>
+            <field name="name" string="Mã hoặc tên" filter_domain="['|',('name','ilike',self),('tp_employee_code','ilike',self)]"/>
+            <field name="department_id"/><field name="job_id"/><field name="job_title"/><field name="work_email"/>
+            <field name="tp_user_login"/>
+            <filter name="account_active" string="Tài khoản mở" domain="[('tp_account_status','=','active')]"/>
+            <filter name="account_disabled" string="Tài khoản khóa" domain="[('tp_account_status','=','disabled')]"/>
+            <filter name="account_unlinked" string="Chưa có tài khoản" domain="[('tp_account_status','=','unlinked')]"/>
+            <filter name="archived" string="Lưu trữ" domain="[('active','=',False)]"/>
+            <group><filter name="department" string="Phòng ban" context="{'group_by':'department_id'}"/>
+                <filter name="job" string="Chức vụ" context="{'group_by':'job_id'}"/>
+                <filter name="account" string="Tình trạng tài khoản" context="{'group_by':'tp_account_status'}"/>
+                <filter name="status" string="Trạng thái hồ sơ" context="{'group_by':'active'}"/></group>
+        </search></field>
+    </record>
+    <record id="delegated_employee_form" model="ir.ui.view">
+        <field name="name">tp.hr.employee.delegated.form</field><field name="model">hr.employee</field>
+        <field name="priority">200</field>
+        <field name="arch" type="xml"><form string="Hồ sơ nhân viên" class="o_tp_hr_employee_form" create="false" edit="false" delete="false" duplicate="false">
+            <header><field name="tp_can_manage_account" invisible="1"/><field name="user_id" invisible="1"/>
+                <button name="action_tp_edit_delegated_profile" type="object" string="Cập nhật hồ sơ ngoài phòng" class="btn-primary" invisible="not tp_can_manage_account"/>
+                <button name="action_tp_archive_delegated_profile" type="object" string="Lưu trữ hồ sơ chưa có tài khoản" invisible="user_id or not tp_can_manage_account"/>
+            </header><sheet>
+                <div class="oe_title"><h1><field name="name" readonly="1"/></h1></div>
+                <group><group string="Thông tin công việc"><field name="tp_employee_code" readonly="1"/>
+                    <field name="company_id" readonly="1" options="{'no_open': True}"/><field name="department_id" readonly="1" options="{'no_open': True}"/>
+                    <field name="job_title" readonly="1"/></group>
+                    <group string="Liên hệ công việc"><field name="work_email" readonly="1"/><field name="work_phone" readonly="1"/><field name="mobile_phone" readonly="1"/></group></group>
+                <notebook><page string="Tài khoản &amp; phân quyền" name="page_account">
+                    <group><field name="tp_user_login" readonly="1"/><field name="tp_account_status" widget="badge" readonly="1"/>
+                        <field name="tp_admin_level" widget="badge" readonly="1"/><field name="tp_admin_scope" readonly="1"/></group>
+                    <p class="text-muted">Phòng mình giữ quyền nghiệp vụ hiện hành. Hồ sơ ngoài phòng chỉ được quản lý bằng các thao tác đã kiểm phạm vi.</p>
+                    <div class="d-flex flex-wrap gap-2" invisible="not tp_can_manage_account">
+                        <button name="action_open_account_dialog" type="object" string="Quản lý tài khoản" class="btn-primary"/>
+                        <button name="action_reset_user_password" type="object" string="Đặt lại mật khẩu" invisible="not user_id"/>
+                    </div>
+                </page></notebook>
+            </sheet><chatter/></form></field>
+    </record>
+    <record id="delegated_hr_profile_form" model="ir.ui.view">
+        <field name="name">tp.hr.delegated.profile.wizard.form</field><field name="model">tp.hr.delegated.profile.wizard</field>
+        <field name="arch" type="xml"><form string="Hồ sơ nhân sự ngoài phòng"><sheet>
+            <group><field name="operation" readonly="1"/><field name="employee_id" invisible="operation == 'create'"/>
+                <field name="company_id"/><field name="allowed_department_ids" invisible="1"/>
+                <field name="department_id" readonly="operation != 'create'" domain="[('id','in',allowed_department_ids)]" options="{'no_create': True}"/></group>
+            <group><field name="name" readonly="operation == 'archive'"/><field name="job_title" readonly="operation == 'archive'"/>
+                <field name="work_email" readonly="operation == 'archive'"/><field name="work_phone" readonly="operation == 'archive'"/>
+                <field name="mobile_phone" readonly="operation == 'archive'"/><field name="reason"/></group>
+            <p class="text-muted">Chức danh mô tả không cấp vai trò hoặc quyền duyệt. Quyền hệ thống, phòng ban, tài khoản và lịch sử công tác giữ qua quy trình riêng của Quản trị chính.</p>
+        </sheet><footer><button name="action_apply" type="object" string="Xác nhận" class="btn-primary"/><button special="cancel" string="Hủy"/></footer></form></field>
+    </record>
+    <record id="employee_delegated_profile_buttons" model="ir.ui.view">
+        <field name="name">tp.employee.delegated.profile.buttons</field><field name="model">hr.employee</field>
+        <field name="inherit_id" ref="tp_hr_workspace.employee_form"/><field name="priority">120</field>
+        <field name="arch" type="xml"><xpath expr="//div[hasclass('o_tp_hr_header')]" position="after">
+            <div class="d-flex flex-wrap gap-2 my-2" groups="!base.group_system" invisible="not tp_can_manage_account">
+                <button name="action_tp_edit_delegated_profile" type="object" string="Cập nhật hồ sơ ngoài phòng" class="btn btn-outline-primary"/>
+                <button name="action_tp_archive_delegated_profile" type="object" string="Lưu trữ hồ sơ chưa có tài khoản" class="btn btn-outline-secondary" invisible="user_id"/>
+            </div>
+        </xpath></field>
+    </record>
+    <record id="action_delegated_hr_create" model="ir.actions.act_window"><field name="name">Tạo hồ sơ ngoài phòng</field>
+        <field name="res_model">tp.hr.delegated.profile.wizard</field><field name="view_mode">form</field><field name="target">new</field>
+        <field name="context">{'default_operation': 'create'}</field></record>
+    <menuitem id="menu_delegated_hr_create" name="Tạo hồ sơ ngoài phòng" parent="tp_hr_workspace.menu_group_employees"
+              action="action_delegated_hr_create" sequence="50" active="False"/>
+</odoo>

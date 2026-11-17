@@ -193,7 +193,7 @@ class MaintenanceRequestTp(models.Model):
     # ------------------------------------------------------------------ ORM
     @api.model_create_multi
     def create(self, vals_list):
-        check_admin(self.env)
+        check_admin(self.env, self)
         Equipment = self.env["maintenance.equipment"]
         for values in vals_list:
             if values.get('tp_proposal_line_id'):
@@ -226,7 +226,7 @@ class MaintenanceRequestTp(models.Model):
         return requests
 
     def write(self, vals):
-        check_admin(self.env)
+        check_admin(self.env, self)
         internal = self.env.context.get("tp_request_internal") is INTERNAL
         if not internal:
             # Native kanban / buttons (stage drag, done, cancel, reset) would bypass the result,
@@ -250,7 +250,7 @@ class MaintenanceRequestTp(models.Model):
 
     @api.ondelete(at_uninstall=False)
     def _unlink_tp_only_new(self):
-        check_admin(self.env)
+        check_admin(self.env, self)
         for request in self:
             if request.tp_state != "new" or request.tp_move_ids:
                 raise UserError(_("Chỉ xóa được phiếu mới ghi nhận chưa xử lý; phiếu khác dùng Hủy để giữ lịch sử."))
@@ -261,7 +261,7 @@ class MaintenanceRequestTp(models.Model):
 
     # ------------------------------------------------------------------ actions
     def _tp_lock(self):
-        check_admin(self.env)
+        check_admin(self.env, self)
         if not self:
             return
         if any(record.company_id not in self.env.companies for record in self):
@@ -283,7 +283,7 @@ class MaintenanceRequestTp(models.Model):
 
     def _tp_open_move(self, move_type):
         self.ensure_one()
-        check_admin(self.env)
+        check_admin(self.env, self)
         if not self.equipment_id:
             raise UserError(_("Phiếu chưa có thiết bị."))
         context = {
@@ -390,7 +390,7 @@ class MaintenanceRequestTp(models.Model):
         return True
 
     def action_tp_open_cancel(self):
-        check_admin(self.env)
+        check_admin(self.env, self)
         self.ensure_one()
         return self.env["tp.equipment.reason.wizard"]._tp_open(self, "cancel", _("Hủy phiếu sửa chữa"))
 
@@ -439,7 +439,7 @@ class MaintenanceEquipmentRepair(models.Model):
 
     def action_tp_new_request(self):
         """Open a pre-filled repair / maintenance / upgrade request. Nothing is saved here."""
-        check_admin(self.env)
+        check_admin(self.env, self)
         self.ensure_one()
         kind = self.env.context.get("tp_request_kind") or "fault"
         return {
@@ -460,7 +460,7 @@ class MaintenanceEquipmentRepair(models.Model):
         }
 
     def action_tp_open_requests(self):
-        check_admin(self.env)
+        check_admin(self.env, self)
         self.ensure_one()
         return {
             "type": "ir.actions.act_window",

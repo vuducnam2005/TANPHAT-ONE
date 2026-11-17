@@ -5,7 +5,7 @@
  *
  * UI-SHELL-UNIFY-001: One shared Home catalog and layout for all accounts. Groups render only
  * when they contain at least one permitted entry; developing placeholders stay restricted to
- * system administrators (`user.isSystem`) per existing policy.
+ * system administrators and live delegated administrators.
  */
 export const HOME_MENU_XMLID = "tp_web_home.menu_home";
 export const ALL_APPS_KEY = "all-apps";
@@ -347,7 +347,7 @@ function attachSearch(entry, extraText = "") {
  * Resolve department and HR entries against the server-filtered menu tree.
  * Without `isSystem`, only entries backed by an authorized menu in `rootTree` are returned.
  */
-export function buildAdminCatalog(rootTree, { debug = "", isSystem = true } = {}) {
+export function buildAdminCatalog(rootTree, { debug = "", isSystem = true, isDelegated = false } = {}) {
     const menuMap = indexMenuTree(rootTree);
     const items = [];
     for (const tpl of ADMIN_MODULES) {
@@ -356,10 +356,15 @@ export function buildAdminCatalog(rootTree, { debug = "", isSystem = true } = {}
             (tpl.fallbackXmlid && menuMap.get(tpl.fallbackXmlid)) ||
             null;
         const hasActionMenu = Boolean(matchedMenu && matchedMenu.actionID);
-        if (!hasActionMenu && !isSystem) {
+        if (!hasActionMenu && !isSystem && !(isDelegated && tpl.placeholderOnly)) {
             continue;
         }
         const item = { ...tpl };
+        if (isDelegated && !isSystem && item.key === "equipment") {
+            item.status = "Theo phạm vi ủy quyền";
+            item.description = "Thiết bị ngoài phòng trong phạm vi được quản lý";
+            item.copy = "Xem và cập nhật thiết bị thuộc phòng khác theo quyền được ủy quyền. Thiết bị dùng chung, kho chưa xác định phòng và thao tác chưa được cấp giữ quyền nghiệp vụ hiện hành.";
+        }
         if (matchedMenu) {
             item.xmlid = matchedMenu.xmlid;
             item.menu = matchedMenu;
@@ -419,9 +424,9 @@ function personalEntries(apps) {
  * Build the unified Home catalog from the server-filtered menu tree.
  * Backend permissions remain the source of truth: no unauthorized routes or menus are created.
  */
-export function buildCatalog(rootTree, { debug = "", isSystem = false } = {}) {
+export function buildCatalog(rootTree, { debug = "", isSystem = false, isDelegated = false } = {}) {
     const apps = buildTiles(rootTree, debug);
-    const modulesCatalog = buildAdminCatalog(rootTree, { debug, isSystem: Boolean(isSystem) });
+    const modulesCatalog = buildAdminCatalog(rootTree, { debug, isSystem: Boolean(isSystem), isDelegated });
     const personal = personalEntries(apps);
     // EQUIP-001: modules registered by other addons in their own SECTIONS group (e.g. office
     // equipment) appear after departments/HR; still only when the server sent their menu.

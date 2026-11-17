@@ -2,6 +2,18 @@
 
 Tài liệu kiểm kê tập trung cho toàn bộ bảng đang mở trên hệ thống TANPHAT ONE (`UI-TABLE-FILTER-001`, cổng test `18079`, đối chiếu runtime ngày `2026-11-14`).
 
+ADMIN-DELEGATE-001 (CHG-20261117-004): badge/modal cấp/thu/profile là `N/A` bộ
+lọc vì không có tập bảng/phân trang độc lập (review kỹ thuật/security). View
+danh sách an toàn cho delegate không có nhóm HR được ghi riêng ở AD-HR01.
+Các entry khác tái sử dụng action/list/SearchModel hiện có; domain read,
+count và export đi cùng backend scope, không tạo filter engine mới. Coverage
+runtime trong [acceptance](../demo/ADMIN_DELEGATE_001_ACCEPTANCE.md); không đổi
+các hàng TODO cũ thành DONE chỉ vì thêm quyền điều hướng.
+
+| ID | Màn / nguồn | Actor / domain | Bộ lọc và quyền trường | Phân trang / count / export | Trạng thái |
+| --- | --- | --- | --- | --- | --- |
+| AD-HR01 | `hr.employee`, cùng `tp_hr_workspace.action_employees`; view `tp_admin_delegation.delegated_employee_list/search/form` | Delegate thiếu `hr.group_hr_user`; baseline cộng nguồn ngoài phòng đã chứng minh, company hiện hành; không thêm nhóm HR | Tên/mã, phòng, chức vụ/chức danh, email công việc/login, trạng thái tài khoản/lưu trữ; group phòng/chức vụ/tài khoản/trạng thái. Badge quyền quản trị không có filter vì compute không lưu. Không đưa private/lương vào view. | Tái sử dụng `tp_hr_table`, SearchModel/count/pager20 và native export theo quyền export có sẵn; giữ backend source domain | PARTIAL: unit fields_get/view đã chuẩn bị; chờ browser final trong acceptance |
+
 ## 1. Quy ước cột và trạng thái
 
 Cột bảng kiểm kê theo chuẩn:

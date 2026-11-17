@@ -1,4 +1,4 @@
-import { animationFrame, describe, expect, queryAll, queryAllTexts, queryOne, test } from "@odoo/hoot";
+import { animationFrame, beforeEach, describe, expect, queryAll, queryAllTexts, queryOne, test } from "@odoo/hoot";
 import {
     contains,
     defineMenus,
@@ -6,13 +6,16 @@ import {
     makeTestApp,
     MockServer,
     mountWithCleanup,
+    onRpc,
     patchWithCleanup,
 } from "@web/../tests/web_test_helpers";
 import { browser } from "@web/core/browser/browser";
 import { user } from "@web/core/user";
+import { session } from "@web/session";
 import { HomeButton } from "@tp_web_home/home/home_button";
 import {
     ALL_APPS_KEY,
+    ADMIN_MODULES,
     buildAdminCatalog,
     buildCatalog,
     buildTiles,
@@ -66,11 +69,43 @@ function tree(...menus) {
 
 const keys = (tiles) => tiles.map((tile) => tile.xmlid || tile.key);
 
+beforeEach(() => patchWithCleanup(session, { tp_admin_delegation: false }));
+
 function asEmployee() {
     patchWithCleanup(user, { isSystem: false });
 }
 
 describe("catalog", () => {
+    test("delegated equipment copy describes its checked scope", () => {
+        const registered = ADMIN_MODULES.some((item) => item.key === "equipment");
+        if (!registered) {
+            ADMIN_MODULES.push({ key: "equipment", group: "departments", name: "Kho thiết bị văn phòng",
+                xmlid: "tp_equipment.menu_root", status: "Chỉ quản trị hệ thống" });
+        }
+        try {
+            const catalog = buildAdminCatalog(tree({ id: 18, xmlid: "tp_equipment.menu_root", actionID: 916 }),
+                { isSystem: false, isDelegated: true });
+            const equipment = catalog.modules.find((item) => item.key === "equipment");
+            expect(equipment.status).toBe("Theo phạm vi ủy quyền");
+            expect(equipment.description).toBe("Thiết bị ngoài phòng trong phạm vi được quản lý");
+            expect(equipment.copy).not.toMatch(/Chỉ quản trị hệ thống/);
+        } finally {
+            if (!registered) {
+                ADMIN_MODULES.pop();
+            }
+        }
+    });
+
+    test("delegated catalog shows developing departments without system tools", () => {
+        const catalog = buildCatalog(tree(KD, HR), { isSystem: false, isDelegated: true });
+        expect(catalog.entries.some((entry) => entry.key === "design")).toBe(true);
+        expect(catalog.entries.some((entry) => entry.key === "technical")).toBe(true);
+        expect(catalog.tools).toEqual([]);
+        expect(catalog.system).toEqual([]);
+        expect(catalog.all).toEqual([]);
+        expect(catalog.isAdmin).toBe(false);
+    });
+
     test("unified Home shows only authorized departments, HR (if granted), and personal tools", () => {
         const menus = tree(SETTINGS, APPS, UNKNOWN, PROJECT, CONTRACTS, INVOICE, DISCUSS, KD, CALENDAR, TP_ROOT, TODO);
         const catalog = buildCatalog(menus, { isSystem: false });
@@ -209,6 +244,23 @@ describe("catalog", () => {
 });
 
 describe("launcher", () => {
+    test("delegated capability is refreshed on each Home load without system tools", async () => {
+        asEmployee();
+        defineMenus([HOME, KD, HR]);
+        patchWithCleanup(session, { tp_admin_delegation: true });
+        let delegated = true;
+        onRpc("res.users", "get_tp_admin_capabilities", () => ({ delegated }));
+        const home = await mountWithCleanup(HomeLauncher, PROPS);
+        await animationFrame();
+        expect('[data-module="design"]').toHaveCount(1);
+        expect(".tp-admin-tools").toHaveCount(0);
+        delegated = false;
+        await home.loadMenus();
+        await animationFrame();
+        expect('[data-module="design"]').toHaveCount(0);
+        expect(".tp-admin-tools").toHaveCount(0);
+    });
+
     test("loading and failure never render cached entries; retry applies fresh menus", async () => {
         asEmployee();
         defineMenus([KD, SETTINGS]);

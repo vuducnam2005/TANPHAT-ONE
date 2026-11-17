@@ -1,0 +1,49 @@
+<odoo>
+    <record id="employee_admin_delegation_form" model="ir.ui.view">
+        <field name="name">tp.hr.employee.admin.delegation</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="tp_hr_workspace.employee_form"/>
+        <field name="priority">110</field>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='page_account']/div" position="inside">
+                <div class="o_tp_admin_delegation border rounded p-3 my-3" invisible="not user_id">
+                    <field name="tp_can_manage_delegation" invisible="1"/>
+                    <group string="Quyền quản trị">
+                        <field name="tp_admin_level" widget="badge" readonly="1"
+                               decoration-info="tp_admin_level == 'delegated'"
+                               decoration-success="tp_admin_level == 'main'"/>
+                        <field name="tp_admin_scope" readonly="1"/>
+                    </group>
+                    <p class="text-muted">Quyền quản trị độc lập với chức vụ, vai trò nghiệp vụ và trạng thái Mở/Khóa tài khoản. Phòng mình giữ quyền nghiệp vụ; phòng khác theo phạm vi được cấp và chức năng đã triển khai.</p>
+                    <div class="d-flex flex-wrap gap-2" invisible="not tp_can_manage_delegation">
+                        <button name="action_tp_grant_admin" type="object" string="Cấp quyền quản trị"
+                                class="btn btn-primary" groups="base.group_system"
+                                invisible="tp_admin_level != 'business'"/>
+                        <button name="action_tp_revoke_admin" type="object" string="Thu hồi quyền quản trị"
+                                class="btn btn-outline-danger" groups="base.group_system"
+                                invisible="tp_admin_level != 'delegated'"/>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+    <record id="admin_delegation_wizard_form" model="ir.ui.view">
+        <field name="name">tp.admin.delegation.wizard.form</field>
+        <field name="model">tp.admin.delegation.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Quyền quản trị được ủy quyền">
+                <sheet>
+                    <group><field name="employee_id" readonly="1" options="{'no_open': True}"/>
+                        <field name="company_id" readonly="1" options="{'no_open': True}"/>
+                        <field name="operation" readonly="1"/></group>
+                    <group string="Xem trước phạm vi"><field name="scope_preview" nolabel="1" readonly="1"/></group>
+                    <group><field name="reason" placeholder="Nhập lý do cấp hoặc thu hồi quyền quản trị…" required="1"/></group>
+                    <p class="text-muted">Bạn sẽ xác thực lại bằng cơ chế bảo mật hiện có. Không thay chức vụ, nhóm nghiệp vụ hoặc mật khẩu của người nhận. Thu hồi có hiệu lực cho yêu cầu tiếp theo sau khi lưu.</p>
+                </sheet>
+                <footer><button name="action_apply" type="object" string="Xác nhận cấp quyền" class="btn-primary" invisible="operation != 'grant'"/>
+                    <button name="action_apply" type="object" string="Xác nhận thu hồi" class="btn-danger" invisible="operation != 'revoke'"/>
+                    <button special="cancel" string="Hủy" class="btn-secondary"/></footer>
+            </form>
+        </field>
+    </record>
+</odoo>

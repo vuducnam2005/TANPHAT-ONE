@@ -4,12 +4,21 @@ import re
 from markupsafe import escape
 
 from odoo import http
+from odoo.exceptions import AccessError
 from odoo.http import request
 from odoo.http.stream import content_disposition
 
-from odoo.addons.tp_equipment.models.common import GENERIC_DENIED, is_admin
+from odoo.addons.tp_equipment.models.common import GENERIC_DENIED, check_admin
 
 TOKEN_RE = re.compile(r"^[0-9a-f]{32}$")
+
+
+def _can_read(model):
+    try:
+        check_admin(request.env, request.env[model])
+        return True
+    except AccessError:
+        return False
 
 
 def _page(title, message, status):
@@ -35,7 +44,7 @@ class TpEquipmentQr(http.Controller):
 
     @http.route("/tp_equipment/qr/<string:token>", type="http", auth="user", methods=["GET"], readonly=True)
     def open_by_qr(self, token, **kwargs):
-        if not is_admin(request.env):
+        if not _can_read('maintenance.equipment'):
             # Same answer whether the token exists or not: no existence oracle for non-admins.
             return _page("Không có quyền truy cập", GENERIC_DENIED, 403)
         token = (token or "").strip().lower()
@@ -65,7 +74,7 @@ class TpEquipmentPdfController(http.Controller):
     @http.route("/tp_equipment/move/<int:move_id>/handover.pdf", type="http", auth="user", methods=["GET"],
                 readonly=True)
     def move_handover(self, move_id, **kwargs):
-        if not is_admin(request.env):
+        if not _can_read('tp.equipment.move'):
             return _page("Không có quyền truy cập", GENERIC_DENIED, 403)
         move = request.env["tp.equipment.move"].browse(move_id).exists()
         if not move or move.state not in ("pending", "done"):
@@ -75,13 +84,14 @@ class TpEquipmentPdfController(http.Controller):
 
     @http.route("/tp_equipment/labels.pdf", type="http", auth="user", methods=["GET"], readonly=True)
     def labels(self, ids="", **kwargs):
-        if not is_admin(request.env):
+        if not _can_read('maintenance.equipment'):
             return _page("Không có quyền truy cập", GENERIC_DENIED, 403)
         try:
             id_list = [int(part) for part in (ids or "").split(",") if part.strip()][:240]
         except ValueError:
             id_list = []
         equipments = request.env["maintenance.equipment"].with_context(active_test=False).browse(id_list).exists()
+        equipments.check_access('read')
         equipments = equipments.filtered(lambda e: e.tp_lifecycle != "draft")
         if not equipments:
             return _page("Không có nhãn để in", "Chọn thiết bị đã đăng ký vào kho rồi in nhãn QR.", 404)
@@ -101,7 +111,7 @@ class TpEquipmentExcelController(http.Controller):
     @http.route(["/tp_equipment/export.xlsx", "/tp_equipment/equipment.xlsx"], type="http", auth="user",
                 methods=["GET", "POST"], readonly=True)
     def export(self, model="maintenance.equipment", domain="[]", **kwargs):
-        if not is_admin(request.env):
+        if model not in request.env or not _can_read(model):
             return _page("Không có quyền truy cập", GENERIC_DENIED, 403)
         try:
             parsed = json.loads(domain)
@@ -115,7 +125,7 @@ class TpEquipmentExcelController(http.Controller):
     @http.route("/tp_equipment/proposal/<int:proposal_id>/summary.xlsx", type="http", auth="user",
                 methods=["GET"], readonly=True)
     def proposal_summary(self, proposal_id, **kwargs):
-        if not is_admin(request.env):
+        if not _can_read('tp.equipment.proposal'):
             return _page("Không có quyền truy cập", GENERIC_DENIED, 403)
         proposal = request.env["tp.equipment.proposal"].browse(proposal_id).exists()
         if not proposal:

@@ -40,9 +40,9 @@ class EquipmentReports(models.AbstractModel):
     _description = "Xuất báo cáo thiết bị"
 
     def _xlsx(self, model_name, domain, *, summary=False):
-        check_admin(self.env)
         if model_name not in REPORTS or not isinstance(domain, list):
             raise UserError(_("Báo cáo không hợp lệ."))
+        check_admin(self.env, self.env[model_name])
         title, names = REPORTS[model_name]
         records = self.env[model_name].with_context(active_test=False).search(domain)
         records.check_access("read")

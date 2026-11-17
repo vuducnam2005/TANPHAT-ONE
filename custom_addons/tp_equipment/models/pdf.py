@@ -89,7 +89,7 @@ class TpEquipmentPdf(models.AbstractModel):
         return (_("NGƯỜI LẬP PHIẾU"), move.responsible_id.name or ""), (_("XÁC NHẬN CỦA ĐƠN VỊ"), company)
 
     def _tp_handover_pdf(self, move):
-        check_admin(self.env)
+        check_admin(self.env, move)
         move.ensure_one()
         _register_fonts()
 
@@ -198,7 +198,7 @@ class TpEquipmentPdf(models.AbstractModel):
 
     # ------------------------------------------------------------------ labels
     def _tp_labels_pdf(self, equipments):
-        check_admin(self.env)
+        check_admin(self.env, equipments)
         _register_fonts()
 
         buffer = BytesIO()

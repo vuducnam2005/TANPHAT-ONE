@@ -137,14 +137,19 @@ def is_admin(env):
     return bool(user.active and not user.share and user.has_group(ADMIN_GROUP))
 
 
-def check_admin(env):
-    if not is_admin(env):
-        raise AccessError(GENERIC_DENIED)
+def check_admin(env, records=None):
+    if is_admin(env):
+        return
+    # Delegation is checked on an audited source model, never on the environment alone.
+    if records is not None and hasattr(records, "_tp_equipment_delegate_check"):
+        records._tp_equipment_delegate_check()
+        return
+    raise AccessError(GENERIC_DENIED)
 
 
 def lock_records(records):
     """Serialize state transitions and refresh their preconditions after acquiring the lock."""
-    check_admin(records.env)
+    check_admin(records.env, records)
     records.check_access("write")
     if not records:
         return

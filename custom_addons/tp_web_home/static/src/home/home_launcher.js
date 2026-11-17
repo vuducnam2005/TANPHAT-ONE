@@ -2,6 +2,8 @@ import { Component, computed, onMounted, onWillDestroy, signal, useOnChange, use
 import { browser } from "@web/core/browser/browser";
 import { hasTouch } from "@web/core/browser/feature_detection";
 import { registry } from "@web/core/registry";
+import { rpc } from "@web/core/network/rpc";
+import { session } from "@web/session";
 import { user } from "@web/core/user";
 import { useService } from "@web/core/utils/hooks";
 import { standardActionServiceProps } from "@web/webclient/actions/action_plugin";
@@ -38,6 +40,7 @@ export class HomeLauncher extends Component {
     menuState = signal("loading");
     brokenIcons = signal(new Set());
     selectedModule = signal(null);
+    delegatedAdmin = signal(false);
 
     searchInput = signal.ref();
     panelInput = signal.ref();
@@ -58,6 +61,7 @@ export class HomeLauncher extends Component {
             debug: odoo.debug,
             // Session flag for base.group_system; server-filtered menus remain authoritative.
             isSystem: Boolean(user.isSystem),
+            isDelegated: this.delegatedAdmin(),
         });
         const broken = this.brokenIcons();
         const fix = (tile) =>
@@ -163,14 +167,21 @@ export class HomeLauncher extends Component {
         this.panelOpen.set(false);
         this.panelQuery.set("");
         this.selectedModule.set(null);
+        this.delegatedAdmin.set(false);
         try {
             // IndexedDB can belong to a previous user. Only a fresh, applied response may
             // unlock the catalog; a failed request must never fall back to cached menus.
             await this.menuService.reload();
+            const capabilities = session.tp_admin_delegation
+                ? await rpc("/web/dataset/call_kw/res.users/get_tp_admin_capabilities", {
+                      model: "res.users", method: "get_tp_admin_capabilities", args: [], kwargs: {},
+                  })
+                : { delegated: false };
             if (!this.menuService.getMenuAsTree("root")) {
                 throw new Error("Missing menu root");
             }
             if (sequence === this.loadSequence) {
+                this.delegatedAdmin.set(Boolean(capabilities.delegated));
                 this.menuState.set("ready");
                 this.syncFromHash();
             }
