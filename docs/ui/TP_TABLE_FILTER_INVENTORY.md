@@ -298,3 +298,11 @@ CR-P07 — `tp_reporting_reviewer` (reviewer_id): một select từ document.get
 | Tổng quan công/action_dashboard/tp_dashboard | Kỳ/phòng/tên-mãTP, draft→applied/chip; detail chất lượng/ngày/chốt; AND giữa tiêu chí, OR tên/mã; company/backend giữ | Browser40/40 read-only admin sauprivacy; chart partition663=182+64+6+60+351 ngày-người, tương lai loại; mỗi detail filter/pager10/20/50/100 vàback giữ đúng; empty/future không donutgiả;5viewport/CSSzoom200/focus/reducedmedia PASS. Lockpopulation chưa có bản đãchốt, employee browser NOT_RUN |
 | Công của tôi/action_mine/profile | XuấtCSV đúng tháng/chất lượng/chốt đangáp, owner session và scalarwhitelist; không bảng picker mở rộng | ORMread uid41/42 forgedowner/fields vẫnown, CSV8cột/30ngày, noDBformula/null0 PASS; download browseremployee chưa cócredential. Native ownexport chặn nestedfield; không export danh bạ/công đồngnghiệp |
 | Dashboard charts vàKPI | Cùng bộ dựng ô tháng/phòng/search, count ngày-người khôngphântrang; drilldown chỉlọc detail, khôngđổi KPI | 19noDBtests+JS, ORMpartition vàbrowsercount/chart/state/date/filterAND PASS; khôngenginefilter mới/dependencyBI. Generic advanced SearchModel áp ởnative lists S3; dashboard customRPC chỉ tiêu chí công khai, không domain tùy ý |
+
+S4 final CHG-20261117-024: sourcecc2bfcb6/20.0.1.2.0 chạy18069+server37/37files.
+Main50/public52browser-health PASS (40dashboard+10/12directory),20avatar thật,assets,
+0JS/console/5xx. ORMread61/61mỗi môi trường;filter/date/lock/count/pager/back/empty/future
+đúngdataset. Lockfilled/employee-auth/ownCSVdownload/fixture/race/restoreNOT_RUN;
+giữN/A/gapởacceptance,khônggánngười thật đểtest.
+
+S4 đã deploy PC server từ `cc2bfcb6`: 37/37 tệp checksum, public 40 dashboard +12 danh bạ/health đạt, 0JS/5xx. Phiên browser nhân viên/own CSV download và kỳ đã chốt có dữ liệu chưa kiểm; không dùng kết quả admin thay role đó.

@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-17T15:14:49.614494+00:00",
-  "last_change_id": "CHG-20261117-022",
+  "updated_at": "2026-11-17T15:26:24.148351+00:00",
+  "last_change_id": "CHG-20261117-024",
   "code_digest": "a4d152d09f0f4d1c7327789c92dc2f8618660f57a85dd4fc889040a5e3769957",
   "code_file_count": 626,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "a8d994cf1ec1ae5dec21c77642108e167b3caf40fec90db05b52b9c0c7d02598",
-    "docs/CHANGELOG.md": "2933606eb76113dc828d9bbc2c36fae01a4580084fcaa2986f4e7297ce14f1db",
+    "docs/PROJECT_STATUS.md": "878944d70e950c84fdb46618aa4430266010669f74d07b05bd4c29f290227caa",
+    "docs/CHANGELOG.md": "c1629cf6a60d719de811fb3092602c1d2ed9eb5c012c4f8922631dea535ba642",
     "AGENTS.md": "ac7c7a6ce9929b1cc7f2f3752b5006bd91e9ca570228c9aed8a5210b2798cc5c",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "f3206a42ddacf5f7b7c5dbdd69318f8b74b13c1346036ab727762d8ff57a01bf",
+    "docs/ROADMAP.md": "14034b105af336a4fd538f809f81b76611260a72db222d07eb359f9ebe33d3f6",
     "docs/DECISIONS.md": "d54aa39544bd4d20190aeabd4c7aefe2734e9a11d3593ce1a122171aafbaea7e",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "S4:19noDBtests+JS/Ruff/AST/XML PASS;readonlyORM61/61;main50/50browser afterprivacy;upgrade0/0ERROR;noORMfixtures/race/employee-browser/restore. Clean staged snapshot only; foreign diffs not accepted."
+    "S4 source cc2bfcb6 pushed/deployed both20.0.1.2.0;37files SHA256;upgrade0/0ERROR;snapshot preserved;main50/public52 browser PASS;61readonlyORM each;19noDB+JS/Ruff/XML PASS. No fixture/employee-browser/race/restore/SW. Clean staged snapshot; foreign retained."
   ]
 }

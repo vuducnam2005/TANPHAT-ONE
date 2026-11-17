@@ -4,7 +4,7 @@ Ngày 17/11/2026 · Batch `CHG-20261117-020` · Prompt
 [CLAUDE_HR_ATTENDANCE_001_AND_DIRECTORY_READONLY](../prompts/CLAUDE_HR_ATTENDANCE_001_AND_DIRECTORY_READONLY.md)
 · Policy [HR_ATTENDANCE_001_POLICY](../security/HR_ATTENDANCE_001_POLICY.md).
 
-Trạng thái: **S3_MAIN_AND_SERVER_APPLIED_S4_MAIN_VERIFIED_SERVER_PENDING**. Cột kết quả ghi `NOT_RUN` tới khi
+Trạng thái: **S1_TO_S4_MAIN_AND_SERVER_APPLIED_WITH_DOCUMENTED_GAPS**. Cột kết quả ghi `NOT_RUN` tới khi
 có bằng chứng thật; không ghi PASS cho bước chỉ review mã.
 
 ## 1. Môi trường và tài khoản
@@ -137,3 +137,31 @@ Không có policy công hoặc reviewer được gán trong lần triển khai. 
 và kỹ năng công việc vẫn theo native consumers; không coi ID nội bộ là quyền đọc login/token/groups.
 Employee browser thật/own CSV bằng tài khoản nhân viên chưa có credential; admin không mapping.
 Chưa có kỳ chốt hoặc phiếu thật để kiểm queue/dialog có dữ liệu, không tạo fixture trênmain/server.
+
+## 6. Bàn giao cuối — CHG-20261117-024
+
+Source S4 **`cc2bfcb60ee361931eb7a3748291004d3d560dca`** đã pushorigin/main và
+deploy đúng37/37tệp checksum lênPCserver; `tp_hr_attendance`20.0.1.2.0 ở18069 vàserver.
+Nâng cấp cuối hai môi trường exit0/0ERROR. Script kiểm lệch baseline trước mutation,
+backup đúng server rồi dùng `-u tp_hr_attendance`; không restart tunnel.
+
+| Kiểm thực | Kết quả và giới hạn |
+| --- | --- |
+| Không DB | 19Python (14guardS3+5metrics/CSV), JSdashboard, Ruff toànaddon, AST19Python/XML9 vàsyntaxJS PASS |
+| ORMchỉđọc | Main61/61 vàserver61/61 với quyền haiuser hiện có+admin; mobile/contact metadata/read/search/order/exportDENIED, workphone/avatar/profileOK; CSV own không đổi chủ vớiID/fields giả; dashboard partition663. Resumeown-only trongpopulation hiện có; không tạo resume/certificate để kiểmfilled |
+| E2Emain sauprivacy | 40dashboard+10directory/HR PASS,0JS/5xx; filterdraft/applied/AND/chip/clear/state/date/lock/pager/back/empty/future,5viewport1440/1366/768/390/375,keyboard/focus/reducedmotion/CSSzoom200 |
+| E2Epublic | 40dashboard+12directory/health PASS trên đúngHTTPS hiện hành;20avatar thật decoded,assetsCSS/JS/fonts quan sát được;0console/JS/5xx. Lượt đầu timeout chờload tài nguyên dài; retryDOMContentLoaded+chờelement đạt, không tínhtimeout làPASS |
+| Bảo toàn | Main39employee/28user/101grouprel/13dept/252day/182session; server39employee/29user/252day/182session, hashgroups/roster/baseURL giữ. Server snapshot chỉ moduleversion đổi1.1.0→1.2.0; mountfilestore đúng vàservice chạy |
+| Backupserver | `C:/TANPHAT-backups/hr-attendance001/s4-20261117T221550`:dump9.566.430B,filestore32.030.902B,source145.967B,config/restore-list/SHA256. Mainbackup cuối xem§5; nguồnS3đãpush cũng lưu riêng đểrollback |
+| Workflow/Git | CHG022 source vàCHG023 bàn giao seal bằng checker không đổi trênsnapshotindex sạch; foreignReporting/branding/login/sidebar/docs giữ. Workspacecheck toàncục vẫn báoforeign khácseal, không nhậnforeign đãnghiệmthu hoặc đưa vàoGit |
+
+Ảnh/log private trong `.local/hr-attendance001/e2e/s4-final-after-privacy/` và
+`e2e/s4-public-final/`; mainprofile/own renderS3 xem§4, không gọi đó là employeeE2E.
+Chưa authenticatedemployee browser/owndownload,filledreview-lock/certificate,
+ORMfixturesS3/S4,multiworker/restore/nativebrowserzoom/thiếtbịthật; không vì vậy
+grantngười thật hoặc seedmain. Businessacceptance/pilot vẫn riêng. Hướng dẫn
+[người dùng](HR_ATTENDANCE_001_USER_GUIDE.md), [policy](../security/HR_ATTENDANCE_001_POLICY.md),
+[deploy/rollback](../../ops/runbooks/HR_ATTENDANCE_001_DEPLOY_AND_ROLLBACK.md).
+
+Service worker kiểm riêng **NOT_RUN** vì không quan sát được URL đăng ký hiện hành;
+không suy tải assets thành đã kiểm SW/offline hoặc cache sau đổi tài khoản.

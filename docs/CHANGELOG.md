@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261117-024 — HR-ATTENDANCE-001: giao S4 lên server và chốt bàn giao
+
+- Ngày 17/11/2026. S4 `cc2bfcb60ee361931eb7a3748291004d3d560dca` đã push origin/main, deploy 37/37 tệp đúng SHA256 lên PC server; addon 20.0.1.2.0 trên cả 18069 và server, nâng cấp `-u` exit0/0ERROR. S3 `14eaf388` đã giao trước đó. Không nhập lại nguồn, cấp quyền, gửi/duyệt/chốt thật, mở 18079/clone hoặc restart tunnel.
+- Backup server `C:/TANPHAT-backups/hr-attendance001/s4-20261117T221550`: dump 9.566.430B, filestore 32.030.902B, source 145.967B, config/restore-list/SHA256. Backup local cuối22:04:59: dump 9.931.764B, filestore 424.824.655B; thêm nguồn S3 đã push để hoàn nguyên. Server snapshot chỉ đổi moduleversion; nhân viên39/tài khoản29/ngày công252/phiên182 và hash roster/nhóm/baseURL giữ, mount filestore và service đúng. Local nhân viên39/tài khoản28/nhóm101/phòng13/ngày252/phiên182 giữ.
+- Kiểm thực: 19 ca Python không DB, JS dashboard, Ruff, AST19/XML9 đạt; ORM chỉ đọc 61/61 mỗi môi trường. Browser main:40 dashboard+10 danh bạ/HR; public:40 dashboard+12 danh bạ/health, 20 avatar thật và CSS/JS/fonts tải, không lỗi console/JS/5xx. Public lượt đầu timeout chờ load, retry chờ DOM/element đạt. Viewport375/390/768/1366/1440, CSS zoom200%, bàn phím/focus/reduced-motion, form/back/filter/count/pager/empty/future đạt; không nhận CSS zoom là zoom trình duyệt hay thiết bị thật.
+- Guide/policy/acceptance/filter inventory/runbook cập nhật. ORM fixture S3/S4, phiên browser nhân viên/xuất CSV, hộp duyệt/chốt có dữ liệu, certificate, multiworker, SW và restore vẫn NOT_RUN. Quy tắc công/người duyệt chưa được HR xác nhận; không tự chọn người thật. Ảnh và log dữ liệu thật giữ trong ignored .local. Nghiệm thu nghiệp vụ/pilot riêng.
+- Resume checkpoint bàn giao S4; checker nguyên bản chạy trên snapshot index sạch để seal commit. Workspace vẫn có foreign Reporting/branding/login/sidebar/docs, không stage hoặc nhận đã kiểm các phần đó. Lần seal023 trước commit phát hiện roadmap còn nhãn pending; sửa đúng trạng thái, dùng ID024 mới theo checker. Next: người dùng xem public và HR xác nhận ca/quy tắc/phân công; các kiểm chưa chạy xem acceptance.
+
 ## CHG-20261117-022 — HR-ATTENDANCE-001 S4: tổng quan công, mobile và bảo vệ xuất/riêng tư
 
 - Ngày17/11/2026. Tiếp tục checkpoint14:17:53Z đúng attendance, không chiếm batch khác. S3 `14eaf388` đã push/áp server31/31tệp20.0.1.1.0,backup s3-20261117T211705,public7/7. S4 manifest20.0.1.2.0 thêm dashboard `/app/cham-cong`,5KPI/donut300px/cột340px,detail ngày-người/pager10/20/50/100/thẻmobile. Chart và KPI giữ phạm vi tháng/phòng/tên-mã; nhóm không chồng, loại tương lai, chưa quy tắc hiện Chưa xác nhận.
