@@ -1,6 +1,6 @@
 # HR-ATTENDANCE-SIMPLE-002 — Tổng quan chấm công gọn, chuẩn bị API máy
 
-Làm việc trong `C:\TANPHAT ONE`. Triển khai yêu cầu18/11/2026, DEC-055.
+Làm việc trong `C:\TANPHAT ONE`. Triển khai yêu cầu18/11/2026, DEC-055/056; bản hợp nhất đã cập nhật Excel.
 **Đơn giản hóa chấm công hiện có, giữ dữ liệu Excel đã nhập, chuẩn bị nền
 tích hợp máy chấm công sau này.** Chưa có tài liệu API/loại máy/credential;
 không giả lập đang kết nối thật và không mở live connector theo suy đoán.
@@ -12,6 +12,8 @@ Người dùng chỉ cần một nơi dễ nhìn để biết:
 - Công ty/phạm vi được xem có bao nhiêu nhân viên.
 - Hôm nay có bao nhiêu người nghỉ, bao nhiêu người đã về.
 - Xem danh sách và thống kê theo **ngày, tuần, tháng**.
+- Tải thẳng Excel xuất từ máy, tự nhận diện và lập bảng; giờ làm08:30–17:00,
+  số lần/phút đi muộn giữ nguyên tổng kỳ Excel theo mục2A.
 - Hiện tại sử dụng Excel đã import; sau này máy chấm công cập nhật cùng dữ
   liệu và dashboard trên web, không phải xây lại hoặc nhập nhân viên lần nữa.
 
@@ -39,6 +41,120 @@ acceptance HR-ATTENDANCE-001 và HR-DELEGATE-FIX-001. Baseline đã giao attenda
 - Hiện session yêu cầu cả `check_in` và `check_out`. **Không dùng riêng các
   phiên đã đóng để tính ai đang làm/đã về.** Điểm tích hợp phải lưu/chuẩn hóa
   được lượt IN chưa có OUT; không tự đặt OUT bằng giờ hiện tại.
+
+## 2A. Bổ sung đã chốt: tải Excel máy và tự tạo bảng công
+
+**Bản cập nhật18/11/2026 này đã gồm yêu cầu mới; người dùng chưa chạy prompt
+cũ, hãy thực hiện một bản hợp nhất này.** Giờ làm tham chiếu người dùng đã
+chốt cuối cùng: **08:30–17:00**, thay thông tin17:30 trước đó. **Số lần và tổng
+phút đi muộn giữ nguyên số xuất từ Excel, không tự tính lại bằng giờ vào.**
+Giờ làm không tự xác nhận/thay thế lịch HR cũ ngoài scope, không dùng làm
+căn cứ suy nghỉ không phép hoặc làm mất correction/chốt kỳ.
+
+### File thực tế đã đọc và khả năng tái sử dụng
+
+- File riêng của người dùng: `C:\Users\vuduc\Downloads\bang cham cong vao ra.xlsx`.
+  Đây là đường dẫn local để triển khai đọc khi có, **không phải đường dẫn
+  runtime trên PCserver**. Trên web, admin/HR tải file từ máy của mình lên.
+  Không commit file nguồn hoặc danh sách nhân viên vào Git.
+- Workbook có sheet `Report`, tiêu đề `BẢNG CÔNG THÁNG`, kỳ tại dòng
+  `Từ ngày09/11/2026 - Đến ngày15/11/2026`,39 người. Tên báo cáo có chữ tháng
+  nhưng kỳ thực tế chỉ7 ngày; ngày xuất và nhãn năm2017 cũ không là kỳ công.
+- Hai hàng header: STT, Mã nhân viên, Tên nhân viên, **ID máy**, Chức vụ;
+  cột ngày có9..15 và T2..CN; mỗi người hai dòng Vào/Ra; giữa các nhóm có
+  dòng tên đơn vị. `Mã nhân viên` dạngTP00x trong file khác ID máy và mãTP100xx
+  của HR. Dùng mapping ID máy đã có, giữ nguyên guard kiểm tra nhân viên;
+  không lấy số thứ tự hoặc vị trí hàng làm employee ID, không ghép chỉ bằng tên.
+- `Đi muộn` có hai cột con **Lần/Phút** (file nàyAC/AD). Phải dò hai tầng
+  header và merged cell để đọc ngữ nghĩa, không hardcodeAC/AD: file2–3 tuần/
+  tháng sẽ có nhiều cột ngày hơn và vị trí tổng hợp dịch sang phải.
+- Chạy bộ parser thuần hiện tại trên file thấy150 cặp đủ giờ,28 ngày có giờ
+  vào thiếu giờ ra,95 ô ngày-người trống, không lỗi định dạng. Đây là kết quả
+  phân tích file, **không phải bằng chứng dữ liệu đã nhập vào DB**. Không bỏ
+ 28 dòng thiếu giờ khi lên bảng chỉ vì chúng chưa tạo được session đóng.
+- Parser hiện đọc giờ nhưng chủ động bỏ cột tổng hợp; import view cũng có
+  câu giải thích tương ứng. Muốn đọc Đi muộn phải sửa parser/contract/lưu
+  nguồn/import/UI/test/help/README/policy/guide đồng bộ, không chỉ thay nhãn.
+  Tái sử dụng batch/preview/apply/mapping/dedupe hiện có, không viết importer
+  thứ hai hoặc yêu cầu người dùng chuyển đổi sang template của hệ thống.
+
+### Luồng thao tác mong muốn: tải file → xem trước → nhập
+
+1. Nút nổi bật **Nhập Excel máy chấm công** ở Bảng chấm công/Tổng quan cho
+   người có quyền. Hộp tải kéo-thả hoặc chọn tệp `.xlsx`; không phải gõ tên
+   lô, nhập từng người, kỳ công hoặc map từng cột với định dạng đã nhận diện.
+2. Chọn file xong tự đọc và tạo bản xem trước: kỳ ngày thực tế, nhân viên
+   đã khớp, dòng mới/trùng/thiếu giờ/chưa khớp/xung đột, số đi muộn từ file.
+   Nút **Nhập dữ liệu** ghi các dòng hợp lệ; không phải nhập lại bằng tay.
+   Có thể chọn file khác/hủy trước khi ghi. HR chỉ xử lý các ngoại lệ.
+3. Sau nhập, bảng công và dashboard đọc cùng dữ liệu đã lưu PostgreSQL;
+   refresh/đăng nhập máy khác không mất kết quả. Mở đúng kỳ vừa nhập với
+   nhãn ngày rõ, không thay ngày lịch sử thành hôm nay. Công cá nhân cập nhật
+   từ cùng nguồn. Lịch sử nhập gọn ghi file/người/giờ/kỳ/kết quả/nguồn.
+4. Không giới hạn đúng7 ngày hoặc cố định số cột. Nhận1 tuần,2 tuần,3 tuần,
+   cả tháng hoặc khoảng ngày trong phạm vi được hỗ trợ hiện có, gồm28/29/30/31
+   ngày, khác tháng/năm, nhiều sheet khi định dạng đủ căn cứ. Đọc thứ từ lịch
+   thực và đối chiếu header; tên file/tiêu đề không quyết định ngày tháng.
+   Nếu số ngày lặp giữa hai tháng mà header không đủ giải nghĩa, báo vị trí
+   lỗi cần xem lại, không đoán tháng. Không tự chặn cả tháng vì validation7 ngày.
+5. Ô trống = chưa có ghi nhận; thiếu Vào/Ra hiện riêng giờ còn lại và dấu—
+   ở giờ thiếu; không tự tạo giờ17:00, không mặc định nghỉ. Ký hiệu nghỉ hoặc
+   nhiều giờ trong cùng ô chưa hiểu thì giữ nguồn và gắn cảnh báo, không bịa.
+6. Nhập lại cùng file, đổi tên file hoặc tuần chồng với file tháng không nhân
+   đôi giờ và không cộng tổng Đi muộn hai lần. Sửa giờ/tổng khác cho kỳ đã
+   nhập phải phân loại xung đột, không âm thầm last-write-wins. Giữ ngày đã
+   chốt và correction có lịch sử; không clear nguồn cũ để làm lại giao diện.
+
+### Số đi muộn: giữ nguyên nguồn máy và đúng kỳ
+
+- Lưu số lần/phút **ở cấp nhân viên + kỳ nguồn + batch/provenance**, riêng
+  với giờ theo từng ngày. Chỉ đọc nhóm Đi muộn/Lần/Phút; bỏ nhóm Về sớm,
+  Tổng công, công ngày/đêm, tăng ca, tổng giờ, vắng mặt khỏi UI/import contract
+  mới nếu không còn được dùng; dữ liệu/model lịch sử vẫn giữ để không phá hệ thống.
+- Không tính lại số phút từ08:30, không trừ khoảng cho phép, không suy ca
+  chiều, không dùng default08:00 của rule cũ thay số máy. Cấu hình08:30–17:00
+  là giờ tham chiếu hiển thị; chưa xây engine tính muộn mới trong task này.
+- Tổng máy là tổng **cả kỳ của file**, không có phân bổ từng ngày. Khi xem
+  đúng kỳ: hiện N lần/M phút, nhãn **Theo Excel máy**. Khi lọc một ngày hoặc
+  phần của kỳ: không lấy/copy/chia đều tổng này cho ngày, không hiển thị0 như
+  đã xác nhận không muộn. Chỉ hiện giờ ngày đang xem và ghi ngắn **Số đi muộn
+  có ở tổng kỳ09–15/11**; mở panel tổng kỳ riêng, giữ bộ lọc ngày hiện tại.
+- File không có cột Đi muộn, có cột mà ô trống, hoặc số không hợp lệ: vẫn
+  nhập được giờ hợp lệ, số muộn hiện **Chưa có số liệu**, cảnh báo HR xem lại.
+  Phân biệt thiếu với số0; số lần phải nguyên không âm, số phút không âm;
+  không tự sửa số nguồn bất nhất để làm báo cáo đẹp. Không tính0 cho người
+  có phút chưa rõ hoặc chỉ map thành công một phần danh sách.
+- Bộ lọc phòng ban/nhân viên vẫn áp đúng scope. Tổng từ nhiều kỳ chỉ cộng
+  các khoảng **không chồng, phủ đủ kỳ đang xem và cùng nghĩa nguồn**. Trùng
+  kỳ chọn một bản được áp dụng hợp lệ; tuần chồng tháng không cộng hai bản,
+  không trừ để đoán phần còn lại. Nếu không có nguồn phủ chính xác thì hiện
+  các kỳ nguồn riêng/Chưa có tổng đúng kỳ, không bịa số tháng hoặc số từng ngày.
+- API sau này có thể chỉ gửi giờ vào/ra, không gửi tổng muộn của máy. Giữ
+  khả năng nhận cả sự kiện và tổng kỳ có nguồn, không buộc API tương lai có
+  cột Excel. Chưa có dữ liệu muộn/API rule thì báo thiếu; việc tính muộn tự
+  động về sau là quyết định riêng, không âm thầm thay số Excel đã lưu.
+
+### Bảng đầu ra tối giản theo yêu cầu mới
+
+- **Ngày/toàn bộ nhân viên:** Nhân viên (tên + mã chung), Phòng ban, Thứ/ngày,
+  Giờ vào, Giờ ra. Thứ và ngày chung một ô; không lặp7 cột tổng hợp máy.
+  Nguồn/lần nhập/cảnh báo nằm tooltip hoặc chi tiết có quyền, không ép thành
+  nhiều cột. Không thêm giờ công/OT/về sớm/lương/công ngày-đêm.
+- **Kỳ tuần/tháng/khoảng ngày:** một dòng mỗi nhân viên, chỉ Nhân viên,
+  Phòng ban, Số lần đi muộn, Tổng phút muộn. Nhãn kỳ số nguồn đặt rõ trên
+  bảng; chưa có tổng đúng kỳ thì không gán số khác kỳ. Bấm người mở giờ theo
+  ngày. Có nút **Kỳ theo file** để xem đúng khoảng của file2–3 tuần.
+- **Chi tiết một người/Công của tôi:** tiêu đề tên/mã/phòng, kỳ; hai chỉ số
+  nhỏ Số lần đi muộn/Tổng phút muộn theo đúng kỳ nguồn; bảng chỉ **Thứ/ngày,
+  Giờ vào, Giờ ra**. Cảnh báo thiếu giờ nhỏ ngay tại ô, không nhồi field raw.
+  Không tạo cột Muộn(phút) theo ngày vì file này không cung cấp số đó.
+- Xuất Excel gọn theo đúng quyền/bộ lọc: sheet giờ từng ngày với các cột
+  tối giản, sheet Tổng đi muộn khi có kỳ nguồn chính xác; ghi rõ khoảng ngày
+  của mỗi bảng. Tổng kỳ nguồn khác khoảng ngày chọn thì không trộn vào như
+  tổng của phạm vi xuất. Không xuất cả file/raw HR riêng cho người chỉ đọc.
+- Dashboard ba KPI theo mục3/4 vẫn giữ. Có chip nhỏ tổng muộn khi đúng kỳ
+  nguồn; không tăng thành dashboard chằng chịt. Biểu đồ tổng hợp/chỉ số chỉ
+  dựa nguồn đủ nghĩa; không vẽ xu hướng muộn từng ngày từ tổng tuần.
 
 ## 3. Định nghĩa số liệu trước khi vẽ biểu đồ
 
@@ -110,9 +226,10 @@ thứ hai hoặc frontend độc lập. OWL/QWeb/SCSS/native action trong addon 
 4. Biểu đồ đặt ngay phía trên bảng: donut lớn cho phân bố trạng thái ngày;
    biểu đồ cột xu hướng ngày cho tuần/tháng. Chú giải, tooltip số/đơn vị/ngày/
    nguồn; bấm KPI/lát/cột mở đúng tập dữ liệu cùng bộ lọc. Không vẽ đồ trang trí.
-5. Bảng rõ đường phân cách: Mã NV, Họ tên, Phòng ban, Ngày, Giờ vào, Giờ ra,
-   Trạng thái, Nguồn/Cập nhật. Thông tin không có hiển thị dấu —/Chưa có nguồn
-   đúng nghĩa. Chi tiết chỉ cần chuỗi vào-ra/nguồn/lưu ý, không nhồi phiếu HR.
+5. Bảng rõ đường phân cách, **dùng bộ cột tối giản theo mục2A** cho từng
+   chế độ; không giữ nguyên bảng nhiều cột cũ. Nguồn/cập nhật vẫn có ở dải
+   thông tin chung và chi tiết theo quyền, không cần lặp từng cột. Dữ liệu
+   thiếu hiện—/Chưa có số liệu đúng nghĩa; mở chi tiết chỉ xem giờ từng ngày.
 
 Màu nhất quán: xanh dương cho tổng/nhấn chính, xanh lá cho đang làm/đã ghi
 nhận hợp lệ, cam cho thiếu dữ liệu, tím cho nghỉ xác nhận, xám cho chưa rõ.
@@ -186,6 +303,15 @@ mốc dữ liệu. Không mở public/token hoặc broad sudo chỉ để dashbo
 Không thay tên/avatar/phòng ban/roster hoặc làm mất bản vá private-field HR.
 
 ## 7. Acceptance, áp dụng và bàn giao
+
+Acceptance bắt buộc cho bổ sungExcel: đọc đúng file thực tế chỉ đọc; tự
+nhận kỳ9–15/11 dù nhãnTHÁNG/ngàyxuất2017; mappingID đúng;150cặp và28thiếu
+giờ vẫn hiển thị đúng; tổngLần/Phút khớp từng ô nguồn, giữ0khác thiếu. Dùng
+fixture ẩn danh trong bộ nhớ cho7/14/21/ngày28–31, khác tháng/năm, header
+merged/dịch cột, lặp/chồng/đổi tên file, tổng máy xung đột/thiếu cột, lọc
+ngày không mang tổng tuần sang. Không ghi tên/giờ người thật vào testGit.
+Giữ08:30–17:00 và không tự tính lại muộn; UI tối giản ngày/kỳ/chi tiết/export
+và thao tác kéo-thả→preview→nhập cần ảnh/evidence khi triển khai.
 
 Viết kiểm có ý nghĩa cho: Excel cũ, nguồn thiếu hôm nay, chưa có dữ liệu nghỉ,
 IN chưa OUT, OUT→IN lại, ra buổi trưa, direction unknown, trùng/retry/đa nguồn,

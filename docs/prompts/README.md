@@ -12,6 +12,8 @@ Thư mục này quản lý các prompt giao việc cho các phiên AI thực thi
 
 ## 1. Prompt đang hiệu lực trong thư mục source
 
+**Cập nhậtExcel CHG-20261118-013:** người dùng chưa chạy bản cũ; giao cùng HR-ATTENDANCE-SIMPLE-002 đã hợp nhất tải Excel máy→tự tạo bảng,08:30–17:00 và giữ tổng Đi muộn/Lần/Phút nguyên nguồn đúng kỳ.
+
 **Chấm công từ18/11/2026:** dùng HR-ATTENDANCE-SIMPLE-002 cho UI gọn và API-ready; giữ nguồn Excel/backend hiện có, không chạy lại prompt001 để mở lại scope phức tạp.
 
 **Quyền admin từ18/11/2026:** dùng ADMIN-FULL-001 theo DEC-053/054. Chỉ admin gốc cấp/thu admin. Các prompt
@@ -22,7 +24,7 @@ EQUIP-UI-001/002 bên dưới giữ để tra cứu lịch sử, không giao ch�
 
 | Tệp prompt | Nhiệm vụ | Mô tả | Trạng thái | Tài liệu đặc tả / Kế hoạch |
 | --- | --- | --- | --- | --- |
-| [`CLAUDE_HR_ATTENDANCE_SIMPLE_002_DASHBOARD_AND_API_READY.md`](CLAUDE_HR_ATTENDANCE_SIMPLE_002_DASHBOARD_AND_API_READY.md) | **HR-ATTENDANCE-SIMPLE-002** | Tổng quan nhân viên/nghỉ/đã về; Ngày-Tuần-Tháng, Excel giữ và chuẩn bị API máy | `PROMPT_READY_NOT_IMPLEMENTED` CHG-20261118-011 | DEC-055; sharedHR/DB/ingestion, phân biệt nghỉ/no-source và latestINOUT; chưa liveAPI; rollout18069/PCserver không bắt18079 |
+| [`CLAUDE_HR_ATTENDANCE_SIMPLE_002_DASHBOARD_AND_API_READY.md`](CLAUDE_HR_ATTENDANCE_SIMPLE_002_DASHBOARD_AND_API_READY.md) | **HR-ATTENDANCE-SIMPLE-002** | Upload Excel máy tự lập bảng gọn; giữ tổngmuộn theo kỳ, Ngày/Tuần/Tháng và API-ready | `PROMPT_READY_NOT_IMPLEMENTED` CHG-20261118-011/013 | DEC-055/056;08:30–17:00, nguồnLần/Phút không tựtính/khôngchiangày/cộngchồng; sharedHR/DB, rollout18069/PCserver |
 | [`CLAUDE_ADMIN_FULL_001_SECOND_ADMIN.md`](CLAUDE_ADMIN_FULL_001_SECOND_ADMIN.md) | **ADMIN-FULL-001** | Người được cấp admin có toàn quyền như admin hiện tại, kể cả phòng mình; chỉ admin gốc cấp/thu admin; chuyển grant hiện hiệu lực và thu hồi đúng | `POLICY_CONFIRMED_PROMPT_READY_NOT_IMPLEMENTED` CHG-20261118-009/010 | DEC-053/054 thay giới hạn DEC-050; giữ native/workflow/quyền người thường; push/deploy18069/PCserver, không bắt18079; lượt viết prompt chưa migration |
 | [`CLAUDE_ADMIN_DELEGATE_002_COMPLETE_SCOPED_ADMIN.md`](CLAUDE_ADMIN_DELEGATE_002_COMPLETE_SCOPED_ADMIN.md) | **ADMIN-DELEGATE-002** | Hoàn thiện quản trị ngoài phòng, giữ baseline tại phòng mình; HR/Kho dashboard, CRUD theo nguồn và Reporting admin baseline | `AUDITED_PARTIAL_PROMPT_READY` CHG-20261118-001 | Server có1delegation hiệu lực; [audit chỉ đọc](../security/ADMIN_DELEGATE_002_READONLY_AUDIT.md); push/deploy18069/PCserver từng slice, không bắt18079, không tự grant/revoke người thật |
 | [`CLAUDE_ADMIN_DELEGATE_001_AND_PUBLIC_FILES.md`](CLAUDE_ADMIN_DELEGATE_001_AND_PUBLIC_FILES.md) | **ADMIN-DELEGATE-001 / DEPLOY-MEDIA-001** | Lịch sử triển khai delegation/media; không chạy lại để hoàn thiện quyền | `APPLIED_WITH_GAPS; CONTINUE_002` | [Acceptance001](../demo/ADMIN_DELEGATE_001_ACCEPTANCE.md); bản runtime20.0.1.0.1, server đã có1grant hiệu lực tại audit17/11; dùng prompt002 cho sửa tiếp, policy17/11 thay yêu cầu test18079 cũ |

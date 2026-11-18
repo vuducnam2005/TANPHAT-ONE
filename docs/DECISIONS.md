@@ -1,5 +1,26 @@
 # TANPHAT ONE — Sổ quyết định
 
+## DEC-056 — Nhập Excel máy tự tạo bảng công, giữ tổng đi muộn nguồn (18/11/2026)
+
+- Người dùng chưa thực thi prompt002; bổ sung vào cùng bản. Kéo-thả/chọn
+  Excel xuất máy, hệ thống tự nhận kỳ và nhân viên, xem trước rồi nhập;
+  không buộc gõ từng dòng hoặc chuyển template. Hỗ trợ1–3tuần/tháng và phạm
+  vi hợp lệ, không cố định7cột hoặc vị trí cột Đi muộn.
+- Chốt cuối của người dùng: **08:30–17:00** (thay17:30 vừa nói trước đó),
+  **giữ số lần/phút đi muộn trong Excel**, không tính lại theo giờ vào.
+  Chưa có dữ liệu từng ngày thì không chia/copy tổng kỳ xuống ngày; số muộn
+  phải có kỳ/nguồn, không cộng lặp hoặc chồng tuần-tháng.
+- Đã đọc file riêng:39người,kỳ09–15/11; hai dòngVào/Ra, có nhómĐi muộn/Lần/
+  Phút. Parser hiện nhận giờ nhưng bỏ tổng; kết quả đọc không là importDB.
+  Mã máy dùng mapping HR, không ghép tên hoặc nhầm mãTP00x vớiTP100xx.
+- UI gọn: ngày/chi tiết chỉ nhận diện cần thiết và thứ-ngày/giờ vào/ra;
+  tổng kỳ chỉ nhận diện và số lần/tổngphút. Không hiện côngngàyđêm/tăngca/
+  tổnggiờ/vềsớm/lương; không xóa model/lịch sử đang dùng. Giờ thiếu vẫn
+  hiện giờ có thật, không tạo giờra hoặc suy nghỉ từ ôtrống.
+- Bổ sung DEC-055; dashboard/ngày-tuần-tháng/API-ready/privacy/quyền admin
+  DEC-053/054 giữ nguyên. Mới prompt/tài liệu, chưa application hoặc import.
+
+
 ## DEC-055 — Chấm công gọn theo ngày/tuần/tháng, API máy chuẩn bị sau Excel (18/11/2026)
 
 - **Yêu cầu trực tiếp:** một dashboard tổng nhân viên, người nghỉ hôm nay và
@@ -38,8 +59,6 @@
   tại cùng file; đoạn cũ cho admin thứ hai cấp tiếp không còn hiệu lực.
   Giữ migration grant đang hiệu lực khi giao Claude thực thi, provenance và
   thu hồi về quyền nghiệp vụ hợp lệ. Lượt chốt này chưa sửa runtime/người thật.
-
-- **Triển khai runtime ADMIN-FULL-001:** `tp_admin_delegation` **20.0.2.0.0** đã áp trên `18069` (`CHG-20261118-012`), chuẩn bị deploy PC server; chi tiết tại [ADMIN_FULL_001_ACCEPTANCE.md](demo/ADMIN_FULL_001_ACCEPTANCE.md).
 
 ## DEC-053 — Người được cấp admin có toàn quyền như admin hiện tại (18/11/2026)
 
