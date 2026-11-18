@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-016 — AUTH-SESSION-001: prompt một phiên đăng nhập cho mỗi tài khoản
+
+- Ngày18/11/2026. Yêu cầu trực tiếp: máy mới đăng nhập thì phiên máy cũ hết hiệu lực, báo tài khoản đăng nhập ở nơi khác, nút Đăng nhập lại và sau xác thực về Trang chủ.
+- Đã đọc native session authenticate/finalize/SID rotation/after-session-login hook, web session routes, custom HR lock/admin revision/identity logout/API error mapping. Prompt yêu cầu server-side winner theo DB/user, atomic login/commit/cache/multiworker, old logout không xóa winner mới, ngăn RPC/file và race request ghi; không khóa theo IP hoặc sửa core.
+- Cùng browser profile nhiều tab được giữ; chỉ xác thực đầy đủ/MFA mới thay, identity recheck/refresh/login sai/API-key cron không thay. Bus/fallback đúng phiên, mã nguyên nhân riêng không nhầm mất mạng/403; cache/response trễ/bfcache và không tự retry mutation. DEC-057 giữ quyền/phân hệ và quy trình giao bản liên tục.
+- Chỉ prompt/status/decision/roadmap/index/workflow, không sửa application/DB hoặc thử đá phiên thật. Kiểm links/content/diff và workflow snapshot Git đúng baseline; không có runtime/security/browser acceptance mới. Giữ checkpoint/diff của phiên khác; commit/push/sync tài liệu không restart. Next: giao Claude prompt để triển khai và kiểm hai context độc lập trong phạm vi an toàn.
+
+
 ## CHG-20261118-015 — ADMIN-FULL-001: hoàn tất deploy/migration PC server và kiểm chứng URL public
 
 - Ngày 18/11/2026 (Asia/Saigon). Hoàn tất triển khai commit `bec79ccb` (`tp_admin_delegation` `20.0.2.0.0`) lên `PC server` (`tp-odoo`) và đồng bộ tài liệu nghiệm thu [ADMIN_FULL_001_ACCEPTANCE.md](demo/ADMIN_FULL_001_ACCEPTANCE.md).

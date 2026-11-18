@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T05:41:43.333234+00:00",
-  "last_change_id": "CHG-20261118-015",
+  "updated_at": "2026-11-18T06:17:36.082632+00:00",
+  "last_change_id": "CHG-20261118-016",
   "code_digest": "036ea8e8b1af07216b1925562ab775a076a9da67e7ea366122c014539fdbc94b",
   "code_file_count": 635,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "c52f3849916526bcd913f6bd1d045c0f7911d0dbd9f547904ef655e201273ddc",
-    "docs/CHANGELOG.md": "9f1b8fd7cd99076c2eee309f890b4f2b62d47fc31d2cc36328c80a6f1d7fc210",
+    "docs/PROJECT_STATUS.md": "b2c0854f5b98c148464a34afceab68fb4edc126c8973a0f9fab46880c505f263",
+    "docs/CHANGELOG.md": "93214eb3cbb3565365fe3b992c0cabe054ce3333c450300e548316cb0f96ee04",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "501d9ad9093d4975360da337892a384db1aa2cd5e57c1ab8fb244be6b5e78051",
-    "docs/DECISIONS.md": "3c11ef74e05125e6b919fa98ef0b61af7ea0051552a260f509bc49d8d7c7619f",
+    "docs/ROADMAP.md": "e07bb9d825d31d6a6138c079d30063b6e97a4f74cebb64fddc2506cc9634b40b",
+    "docs/DECISIONS.md": "650be30814822355c8e1cffb4ffa6cc5c7a20535a910d2a4deae49aa76afc665",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,8 +20,7 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC server backup af001-20261118T122710 + -u tp_admin_delegation 20.0.2.0.0 (uid=43 migrated, exit 0, 0 errors): passed",
-    "PC server non-mutating ORM probe (uid=2/uid=43 parity, 28/28 DEC-054 blocks, 6/6 rollback revoke, uid=34 privacy): passed",
-    "public URL /web/health & /dang-nhap 200 + Playwright 12/12 (desktop & mobile) + snapshot_identical=true: passed"
+    "Docs-only native auth/session/login/logout/lock/admin-token/API callers inspected; source references and full-login/MFA hook traced; prompt uses atomic per-user winner, native SID rotation, correct revoke reason and multiworker/old-logout race safeguards.",
+    "Prompt content/links/fences/diff and exact scoped Git baseline checked; no app/database/session revocation/credential/browser/runtime tests, no fixture on main/server. Foreign work/checkpoint kept."
   ]
 }

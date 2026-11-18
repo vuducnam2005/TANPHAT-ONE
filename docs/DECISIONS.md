@@ -1,5 +1,25 @@
 # TANPHAT ONE — Sổ quyết định
 
+## DEC-057 — Một phiên web hoạt động, đăng nhập mới thay phiên cũ (18/11/2026)
+
+- **Yêu cầu trực tiếp:** mỗi tài khoản chỉ đăng nhập một nơi; đăng nhập nơi
+  mới thì máy đang dùng báo tài khoản được đăng nhập ở nơi khác và có nút
+  Đăng nhập lại; sau xác thực lại vào Trang chủ.
+- **Cách triển khai:** một phiên browser/PWA cho mỗi database/user, nhiều
+  tab cùng cookie không đá nhau. Browser/profile/thiết bị có phiên khác là
+  login mới; không nhận diện phần cứng bằng IP hoặc dùng tên login nối DB.
+- Chỉ thay sau xác thực thành công/MFA hoàn tất, giữ guard HR lock/admin,
+  identity recheck và nguồn admin gốc; login sai/refresh/cron/API integration
+  không thay winner. Áp cả admin gốc và admin được cấp, không tự đổi quyền.
+- Backend thu hồi ngay khi giao dịch mới commit và chặn truy cập cookie cũ;
+  bus báo đúng đời phiên, fallback khi online/focus. Máy offline nhận khi
+  kết nối lại, không hứa báo tức thì; old logout không được xóa phiên mới.
+- [Prompt](prompts/CLAUDE_AUTH_SESSION_001_SINGLE_ACTIVE_LOGIN.md) có race,
+  cache/JSON-RPC/API/file, no-mutation-replay, cutover legacy và rollback.
+  Đây mới là policy/prompt, chưa sửa code/DB hoặc thu hồi phiên người thật.
+  Thực thi giao18069/PCserver theo policy17/11, không bắt18079.
+
+
 ## DEC-056 — Nhập Excel máy tự tạo bảng công, giữ tổng đi muộn nguồn (18/11/2026)
 
 - Người dùng chưa thực thi prompt002; bổ sung vào cùng bản. Kéo-thả/chọn
