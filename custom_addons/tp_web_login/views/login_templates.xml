@@ -7,50 +7,111 @@
         <xpath expr="//t[@t-set='head']" position="inside">
             <t t-if="tp_auth_page" t-call-assets="tp_web_login.assets_login" t-js="false"/>
         </xpath>
-        <xpath expr="//div[hasclass('container')]" position="attributes">
-            <attribute name="t-attf-class">#{'tp-native-login' if tp_auth_page else 'container py-5'}</attribute>
-            <attribute name="class"/>
-        </xpath>
-        <xpath expr="//div[contains(@t-attf-class, 'o_database_list')]" position="before">
-            <aside t-if="tp_auth_page" class="tp-auth-identity">
-                <div class="tp-native-wordmark" aria-label="TANPHAT ONE" t-translation="off">
-                    <span class="tp-auth-logo" aria-hidden="true"><img src="/tp_web_home/static/img/brand/tp_logo_mark.png" alt="" width="32" height="32"/></span>
-                    <strong>TANPHAT ONE</strong>
+        <xpath expr="//div[hasclass('container')]" position="replace">
+            <div t-if="tp_auth_page" class="tp-native-login">
+                <div class="tp-auth-frame">
+                    <aside class="tp-auth-identity">
+                        <div class="tp-native-wordmark" aria-label="TANPHAT ONE — Vững Vàng Hội Nhập" t-translation="off">
+                            <span class="tp-auth-logo" aria-hidden="true">
+                                <img src="/tp_web_home/static/img/brand/tp_logo_mark.png" alt="" width="34" height="34"/>
+                            </span>
+                            <div class="tp-brand-text">
+                                <strong class="tp-brand-name">TANPHAT ONE</strong>
+                                <span class="tp-brand-credit">Vững Vàng Hội Nhập</span>
+                            </div>
+                        </div>
+                        <div class="tp-auth-intro" t-translation="off">
+                            <h2>Hệ thống quản trị<br class="tp-auth-desktop-break"/> điều hành</h2>
+                            <p>Kết nối công việc.<br/>Vững bước cùng Tấn Phát.</p>
+                        </div>
+                        <div class="tp-auth-identity-footer">
+                            <div class="tp-auth-pillars" aria-hidden="true" t-translation="off">
+                                <div class="tp-pillar-step">
+                                    <span class="tp-pillar-node">
+                                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M3.8 8.4l2.7 2.7 5.7-6"/>
+                                        </svg>
+                                    </span>
+                                    <span class="tp-pillar-label">Kế hoạch</span>
+                                </div>
+                                <div class="tp-pillar-line"/>
+                                <div class="tp-pillar-step tp-pillar-step-accent">
+                                    <span class="tp-pillar-node">
+                                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M3.8 8.4l2.7 2.7 5.7-6"/>
+                                        </svg>
+                                    </span>
+                                    <span class="tp-pillar-label">Công việc</span>
+                                </div>
+                                <div class="tp-pillar-line"/>
+                                <div class="tp-pillar-step">
+                                    <span class="tp-pillar-node">
+                                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M3.8 8.4l2.7 2.7 5.7-6"/>
+                                        </svg>
+                                    </span>
+                                    <span class="tp-pillar-label">Báo cáo</span>
+                                </div>
+                            </div>
+                            <p class="tp-auth-copyright" t-translation="off">copyright @by Tadic</p>
+                        </div>
+                    </aside>
+                    <div t-attf-class="tp-auth-panel #{login_card_classes} o_database_list">
+                        <div class="card-body tp-auth-content">
+                            <t t-out="0"/>
+                            <div class="tp-auth-db-footer text-center small mt-4 pt-3 border-top" t-if="not disable_footer and not disable_database_manager">
+                                <a class="tp-auth-db-link" href="/web/database/manager">Quản lý cơ sở dữ liệu</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="tp-auth-intro" t-translation="off">
-                    <h2>Không gian<br class="tp-auth-desktop-break"/> làm việc chung</h2>
-                    <p>Kết nối công việc.<br/>Vững bước cùng Tấn Phát.</p>
+            </div>
+            <div t-else="" class="container py-5">
+                <div t-attf-class="card border-0 mx-auto bg-100 #{login_card_classes} o_database_list" style="max-width: 300px;">
+                    <div class="card-body">
+                        <div class="text-center pb-3 border-bottom mb-4" t-if="not res_company.uses_default_logo">
+                            <img t-attf-src="/web/binary/company_logo{{ '?dbname='+db if db else '' }}" alt="Logo" style="max-height:120px; max-width: 100%; width:auto"/>
+                        </div>
+                        <t t-out="0"/>
+                        <div class="text-center small mt-4 pt-3 border-top" t-if="not disable_footer">
+                            <t t-if="not disable_database_manager">
+                                <a class="border-end pe-2 me-1" href="/web/database/manager">Manage Databases</a>
+                            </t>
+                            <a href="https://www.odoo.com?utm_source=db&amp;utm_medium=auth" target="_blank">Powered by <span>Odoo</span></a>
+                        </div>
+                    </div>
                 </div>
-                <figure class="tp-auth-brand-card" t-translation="off">
-                    <img src="/tp_web_home/static/img/brand/tp_logo_full.png" alt="Logo Tấn Phát — TAN PHAT JOINT STOCK.Co" width="900" height="885"/>
-                </figure>
-                <span class="tp-auth-signature" t-translation="off">Cùng dựng xây, cùng phát triển.</span>
-            </aside>
-        </xpath>
-        <xpath expr="//div[contains(@t-attf-class, 'o_database_list')]" position="attributes">
-            <attribute name="t-att-style">None if tp_auth_page else 'max-width: 300px;'</attribute>
-            <attribute name="style"/>
-            <attribute name="t-attf-class">#{'tp-auth-panel' if tp_auth_page else 'card border-0 mx-auto bg-100'} #{login_card_classes} o_database_list</attribute>
-        </xpath>
-        <xpath expr="//div[hasclass('card-body')]" position="attributes">
-            <attribute name="t-attf-class">card-body #{'tp-auth-content' if tp_auth_page else ''}</attribute>
-            <attribute name="class"/>
-        </xpath>
-        <xpath expr="//div[@t-if='not res_company.uses_default_logo']" position="attributes"><attribute name="t-if">not tp_auth_page and not res_company.uses_default_logo</attribute></xpath>
-        <xpath expr="//a[starts-with(@href, 'https://www.odoo.com')]" position="replace">
-            <span t-if="tp_auth_page" class="tp-auth-footer" t-translation="off">TANPHAT ONE</span>
-            <a t-else="" href="https://www.odoo.com?utm_source=db&amp;utm_medium=auth" target="_blank">Powered by Odoo</a>
+            </div>
         </xpath>
     </template>
+
     <template id="login_form" inherit_id="web.login" name="TANPHAT ONE password form">
         <xpath expr="//h1" position="replace"/>
-        <xpath expr="//form/input[@name='csrf_token']" position="before"><div class="tp-auth-heading" t-translation="off"><h1>Đăng nhập</h1><p>Sử dụng tài khoản được cấp để tiếp tục.</p></div></xpath>
-        <xpath expr="//label[@for='login']" position="replace"><label for="login" class="form-label d-flex justify-content-between" t-translation="off">Tên đăng nhập</label></xpath>
-        <xpath expr="//input[@name='login']" position="attributes"><attribute name="placeholder">Nhập tên đăng nhập</attribute></xpath>
-        <xpath expr="//label[@for='password']" position="replace"><label for="password" class="form-label" t-translation="off">Mật khẩu</label></xpath>
-        <xpath expr="//input[@name='password']" position="attributes"><attribute name="placeholder">Nhập mật khẩu</attribute></xpath>
-        <xpath expr="//button[hasclass('o_show_password')]" position="attributes"><attribute name="aria-label">Hiện mật khẩu</attribute><attribute name="aria-pressed">false</attribute></xpath>
-        <xpath expr="//button[hasclass('btn-primary')]" position="replace"><button type="submit" class="btn btn-primary" t-translation="off">Đăng nhập</button></xpath>
+        <xpath expr="//form/input[@name='csrf_token']" position="before">
+            <div class="tp-auth-heading" t-translation="off">
+                <h1>Đăng nhập</h1>
+                <p>Tiếp tục công việc của bạn.</p>
+            </div>
+        </xpath>
+        <xpath expr="//label[@for='login']" position="replace">
+            <label for="login" class="form-label d-flex justify-content-between" t-translation="off">Tên đăng nhập</label>
+        </xpath>
+        <xpath expr="//input[@name='login']" position="attributes">
+            <attribute name="placeholder">Nhập tên đăng nhập</attribute>
+        </xpath>
+        <xpath expr="//label[@for='password']" position="replace">
+            <label for="password" class="form-label" t-translation="off">Mật khẩu</label>
+        </xpath>
+        <xpath expr="//input[@name='password']" position="attributes">
+            <attribute name="placeholder">Nhập mật khẩu</attribute>
+        </xpath>
+        <xpath expr="//button[hasclass('o_show_password')]" position="attributes">
+            <attribute name="aria-label">Hiện mật khẩu</attribute>
+            <attribute name="aria-pressed">false</attribute>
+        </xpath>
+        <xpath expr="//button[hasclass('btn-primary')]" position="replace">
+            <button type="submit" class="btn btn-primary" t-translation="off">Đăng nhập</button>
+        </xpath>
         <xpath expr="//p[@t-if='error']/t" position="replace">
             <t t-if="str(error) in ('Wrong login/password', 'Sai tên đăng nhập/mật khẩu', 'Sai tên đăng nhập/mật khẩu.')" t-translation="off">Tên đăng nhập hoặc mật khẩu chưa đúng. Vui lòng thử lại.</t><t t-else="" t-out="error"/>
         </xpath>
@@ -61,35 +122,111 @@
             </details>
         </xpath>
     </template>
+
+    <template id="login_oauth" inherit_id="web.login_oauth" name="TANPHAT ONE secondary auth providers" priority="40">
+        <xpath expr="//em" position="replace">
+            <div class="tp-auth-divider" t-translation="off"><span>Hoặc</span></div>
+        </xpath>
+        <xpath expr="//span[@t-out=&quot;p['body']&quot;]" position="replace">
+            <span class="mx-auto" t-out="'Đăng nhập bằng khóa truy cập' if str(p.get('body', '')).strip() == 'Use a Passkey' else p.get('body')"/>
+        </xpath>
+    </template>
+
     <template id="auth_totp_form" inherit_id="auth_totp.auth_totp_form" name="TANPHAT ONE verification code">
-        <xpath expr="//h5" position="replace"><div class="tp-auth-heading" t-translation="off"><h1>Nhập mã xác thực</h1><p>Mở ứng dụng xác thực để xem mã gồm 6 chữ số.</p></div></xpath>
-        <xpath expr="//form[@action='']/div[1]" position="replace"><label for="totp_token" class="form-label" t-translation="off">Mã xác thực</label></xpath>
-        <xpath expr="//input[@name='totp_token']" position="attributes"><attribute name="placeholder">Mã 6 chữ số</attribute><attribute name="aria-label">Mã 6 chữ số</attribute></xpath>
-        <xpath expr="//p[@t-if='error']" position="replace"><p class="alert alert-danger" t-if="error" role="alert"><t t-if="str(error) in ('Invalid authentication code format.', 'Access Denied', 'Invalid authentication code.')" t-translation="off">Chưa xác thực được mã. Vui lòng nhập mã mới nhất trên ứng dụng xác thực; nếu đã thử nhiều lần, chờ ít phút rồi thử lại.</t><t t-else="" t-out="error"/></p></xpath>
-        <xpath expr="//label[@for='switch-remember']" position="replace"><label for="switch-remember" t-translation="off">Không hỏi lại trên thiết bị này</label></xpath>
-        <xpath expr="//button[hasclass('btn-primary')]" position="replace"><button type="submit" class="btn btn-primary" t-translation="off">Xác nhận</button></xpath>
-        <xpath expr="//form[@action='/web/session/logout']/input" position="after"><input type="hidden" name="redirect" value="/web/login"/></xpath>
-        <xpath expr="//form[@action='/web/session/logout']//button" position="replace"><button type="submit" class="btn btn-link btn-sm mb-2" t-translation="off">Hủy và quay lại</button></xpath>
+        <xpath expr="//h5" position="replace">
+            <div class="tp-auth-heading" t-translation="off">
+                <h1>Nhập mã xác thực</h1>
+                <p>Mở ứng dụng xác thực để xem mã gồm 6 chữ số.</p>
+            </div>
+        </xpath>
+        <xpath expr="//form[@action='']/div[1]" position="replace">
+            <label for="totp_token" class="form-label" t-translation="off">Mã xác thực</label>
+        </xpath>
+        <xpath expr="//input[@name='totp_token']" position="attributes">
+            <attribute name="placeholder">Mã 6 chữ số</attribute>
+            <attribute name="aria-label">Mã 6 chữ số</attribute>
+        </xpath>
+        <xpath expr="//p[@t-if='error']" position="replace">
+            <p class="alert alert-danger" t-if="error" role="alert"><t t-if="str(error) in ('Invalid authentication code format.', 'Access Denied', 'Invalid authentication code.', 'Verification failed, please double-check the 6-digit code', 'Verification failed, please use the latest 6-digit code')" t-translation="off">Chưa xác thực được mã. Vui lòng nhập mã mới nhất trên ứng dụng xác thực; nếu đã thử nhiều lần, chờ ít phút rồi thử lại.</t><t t-else="" t-out="error"/></p>
+        </xpath>
+        <xpath expr="//label[@for='switch-remember']" position="replace">
+            <label for="switch-remember" t-translation="off">Không hỏi lại trên thiết bị này</label>
+        </xpath>
+        <xpath expr="//button[hasclass('btn-primary')]" position="replace">
+            <button type="submit" class="btn btn-primary" t-translation="off">Xác nhận</button>
+        </xpath>
+        <xpath expr="//form[@action='/web/session/logout']/input" position="after">
+            <input type="hidden" name="redirect" value="/web/login"/>
+        </xpath>
+        <xpath expr="//form[@action='/web/session/logout']//button" position="replace">
+            <button type="submit" class="btn btn-link btn-sm mb-2" t-translation="off">Hủy và quay lại</button>
+        </xpath>
     </template>
+
     <template id="self_service_links" inherit_id="auth_signup.login" name="TANPHAT ONE native self service labels">
-        <xpath expr="//a[@t-if='signup_enabled']" position="replace"><a t-if="signup_enabled" class="btn btn-link btn-sm mt-2" t-attf-href="/web/signup?{{ keep_query() }}" t-translation="off">Tạo tài khoản</a></xpath>
-        <xpath expr="//a[@t-if='reset_password_enabled']" position="replace"><a t-if="reset_password_enabled" class="btn btn-link btn-sm" t-attf-href="/web/reset_password?{{ keep_query() }}" t-translation="off">Quên mật khẩu?</a></xpath>
+        <xpath expr="//a[@t-if='signup_enabled']" position="replace">
+            <a t-if="signup_enabled" class="btn btn-link btn-sm tp-auth-signup-link" t-attf-href="/web/signup?{{ keep_query() }}" t-translation="off">Tạo tài khoản</a>
+        </xpath>
+        <xpath expr="//a[@t-if='reset_password_enabled']" position="replace">
+            <a t-if="reset_password_enabled" class="btn btn-link btn-sm tp-auth-reset-link" t-attf-href="/web/reset_password?{{ keep_query() }}" t-translation="off">Quên mật khẩu?</a>
+        </xpath>
     </template>
+
     <template id="signup_heading" inherit_id="auth_signup.signup" name="TANPHAT ONE signup">
-        <xpath expr="//form/input[@name='csrf_token']" position="before"><div class="tp-auth-heading" t-translation="off"><h1>Tạo tài khoản</h1><p>Hoàn tất thông tin tài khoản của bạn.</p></div></xpath>
-        <xpath expr="//label[@for='name']" position="replace"><label for="name" class="form-label" t-translation="off">Họ và tên</label></xpath>
-        <xpath expr="//button[@type='submit']" position="replace"><button type="submit" class="btn btn-primary mb-1" t-translation="off">Tạo tài khoản</button></xpath>
-        <xpath expr="//a[@role='button']" position="replace"><a t-attf-href="/web/login?{{ keep_query() }}" class="btn btn-link btn-sm mt-2" t-translation="off">Đã có tài khoản? Đăng nhập</a></xpath>
+        <xpath expr="//form/input[@name='csrf_token']" position="before">
+            <div class="tp-auth-heading" t-translation="off">
+                <h1>Tạo tài khoản</h1>
+                <p>Hoàn tất thông tin tài khoản của bạn.</p>
+            </div>
+        </xpath>
+        <xpath expr="//label[@for='name']" position="replace">
+            <label for="name" class="form-label" t-translation="off">Họ và tên</label>
+        </xpath>
+        <xpath expr="//button[@type='submit']" position="replace">
+            <button type="submit" class="btn btn-primary mb-1" t-translation="off">Tạo tài khoản</button>
+        </xpath>
+        <xpath expr="//a[@role='button']" position="replace">
+            <a t-attf-href="/web/login?{{ keep_query() }}" class="btn btn-link btn-sm tp-auth-signup-link" t-translation="off">Đã có tài khoản? Đăng nhập</a>
+        </xpath>
     </template>
+
     <template id="self_service_password_fields" inherit_id="auth_signup.fields" name="TANPHAT ONE password labels">
-        <xpath expr="//label[@for='password']" position="replace"><label for="password" class="form-label" t-translation="off">Mật khẩu</label></xpath>
-        <xpath expr="//label[@for='confirm_password']" position="replace"><label for="confirm_password" class="form-label" t-translation="off">Nhập lại mật khẩu</label></xpath>
-        <xpath expr="//button[hasclass('o_show_password')]" position="attributes"><attribute name="aria-label">Hiện mật khẩu</attribute><attribute name="aria-pressed">false</attribute></xpath>
+        <xpath expr="//label[@for='password']" position="replace">
+            <label for="password" class="form-label" t-translation="off">Mật khẩu</label>
+        </xpath>
+        <xpath expr="//label[@for='confirm_password']" position="replace">
+            <label for="confirm_password" class="form-label" t-translation="off">Nhập lại mật khẩu</label>
+        </xpath>
+        <xpath expr="//button[hasclass('o_show_password')]" position="attributes">
+            <attribute name="aria-label">Hiện mật khẩu</attribute>
+            <attribute name="aria-pressed">false</attribute>
+        </xpath>
     </template>
+
     <template id="reset_heading" inherit_id="auth_signup.reset_password" name="TANPHAT ONE password reset">
-        <xpath expr="//form/input[@name='csrf_token']" position="before"><div class="tp-auth-heading" t-translation="off"><h1>Đặt lại mật khẩu</h1><p>Nhập tài khoản để nhận hướng dẫn.</p></div></xpath>
-        <xpath expr="//label[@for='login']" position="replace"><label for="login" class="form-label" t-translation="off">Tên đăng nhập</label></xpath>
-        <xpath expr="//button[@type='submit']" position="replace"><button type="submit" class="btn btn-primary" t-translation="off">Đặt lại mật khẩu</button></xpath>
-        <xpath expr="//a[contains(@href, '/web/login') or contains(@t-attf-href, '/web/login')]" position="replace"><a href="/web/login" class="btn btn-link btn-sm" t-translation="off">Quay lại đăng nhập</a></xpath>
+        <xpath expr="//form/input[@name='csrf_token']" position="before">
+            <div class="tp-auth-heading" t-translation="off">
+                <h1>Đặt lại mật khẩu</h1>
+                <p>Nhập tài khoản để nhận hướng dẫn.</p>
+            </div>
+        </xpath>
+        <xpath expr="//label[@for='login']" position="replace">
+            <label for="login" class="form-label" t-translation="off">Tên đăng nhập</label>
+        </xpath>
+        <xpath expr="//input[@name='login']" position="attributes">
+            <attribute name="placeholder">Nhập tên đăng nhập</attribute>
+        </xpath>
+        <xpath expr="//button[@type='submit']" position="replace">
+            <button type="submit" class="btn btn-primary" t-translation="off">Đặt lại mật khẩu</button>
+        </xpath>
+        <xpath expr="//div[@t-if='message']//a[@href='/web/login']" position="replace">
+            <a href="/web/login" class="btn btn-link btn-sm tp-auth-signup-link" role="button" t-translation="off">Quay lại đăng nhập</a>
+        </xpath>
+        <xpath expr="//form//div[hasclass('d-flex')]" position="replace">
+            <div class="text-center mt-2">
+                <a t-if="not token" t-attf-href="/web/login?{{ keep_query() }}" class="btn btn-link btn-sm tp-auth-signup-link" t-translation="off">Quay lại đăng nhập</a>
+                <a t-if="invalid_token" href="/web/login" class="btn btn-link btn-sm tp-auth-signup-link" t-translation="off">Quay lại đăng nhập</a>
+            </div>
+        </xpath>
     </template>
 </odoo>

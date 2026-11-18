@@ -4,12 +4,7 @@ Native authentication UI for `/web/login`, `/web/login/totp`, `/web/signup` and
 `/web/reset_password` (UI-SHELL-AUTH-001). It keeps Odoo authentication, fields, CSRF, captcha, cooldown, passkey and
 trusted-device behavior. The HR lock model extends native active users and session-token revision; no authentication controller or new route is defined.
 
-The two-region desktop layout shows the company logo (BRAND-LOGO-001,
-CHG-20261116-009: mark on a white tile beside `TANPHAT ONE`, full logo card in
-place of the former bridge drawing; images served from
-`/tp_web_home/static/img/brand/`) and Segoe UI/system
-fonts. Mobile prioritizes the single-column form. Remembered users use the
-native public OWL component and storage, with separate accessible remove controls.
+The centered two-region panel layout (`UI-LOGIN-002`, `20.0.1.6.1`) shows a compact 40/60 navy-and-white frame on a light `#F3F7FC` canvas: company mark on a white tile beside `TANPHAT ONE` and **“Vững Vàng Hội Nhập”** directly below, `Hệ thống quản trị điều hành`, a lightweight non-interactive three-step workflow decorative indicator (`Kế hoạch – Công việc – Báo cáo`) with `copyright @by Tadic` left-aligned below, and a clean form panel (`#0073AD` primary action, integrated input styling, Vietnamese Passkey label `Đăng nhập bằng khóa truy cập` / `Hoặc`, and no duplicate product footer or large square logo card). Images are served from `/tp_web_home/static/img/brand/` with Segoe UI/system fonts. Mobile prioritizes the single-column layout while preserving the logo, `TANPHAT ONE`, `Vững Vàng Hội Nhập`, and `copyright @by Tadic`. Remembered users use the native public OWL component and storage, with separate accessible remove controls.
 The dedicated `tp_web_login.assets_login` bundle loads only on the four auth
 routes. Public JS preserves native show-password, adds ARIA state and a retry
 timeout for stalled submits. Reduced motion and keyboard focus are supported.
@@ -31,3 +26,11 @@ HR-AUTH-FOCUS-009 (20.0.1.4.1) adds a native identity form controller: submit
 focuses the enabled password input before RPC so closing a native error restores
 that input. The shared opener hook listens to native UI ownership events.
 Native check_identity, current-password, expiry, server checks and MFA are unchanged.
+
+BRAND-WHITELABEL-002: `tp_branding` adds branded aliases on top of this layout:
+`/dang-nhap` (login), `/dang-nhap/xac-thuc` (TOTP), `/quen-mat-khau` (reset)
+and `/tao-tai-khoan` (signup). The signup/reset policy is unchanged. The form posts
+to `/dang-nhap` and gets the same native CSRF, cooldown, passkey and TOTP checks.
+GET/HEAD on `/web/login…` gets a 302 to the alias; POST is never redirected.
+The UI-LOGIN-002 layout and left-panel copy stay as configured. The page title
+is "Đăng nhập | TANPHAT ONE". This addon does not depend on `tp_branding`.

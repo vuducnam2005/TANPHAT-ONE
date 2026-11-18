@@ -1,7 +1,7 @@
 {
     'name': 'TANPHAT ONE Login',
     'author': 'Tan Phat JSC',
-    'version': '20.0.1.5.0',
+    'version': '20.0.1.6.1',
     'license': 'LGPL-3',
     'depends': ['web', 'auth_totp', 'auth_signup'],
     'assets': {

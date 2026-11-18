@@ -29,8 +29,17 @@ class TestNativeLogin(HttpCase):
     def _document(self, response):
         self.assertEqual(response.status_code, 200)
         document = html.fromstring(response.content)
-        self.assertTrue(document.xpath("//*[contains(@class, 'tp-native-wordmark')]"))
-        self.assertIn('TANPHAT ONE', document.text_content())
+        wordmark = document.xpath("//*[contains(@class, 'tp-native-wordmark')]")
+        self.assertTrue(wordmark)
+        wordmark_text = ' '.join(wordmark[0].text_content().split())
+        self.assertIn('TANPHAT ONE', wordmark_text)
+        self.assertIn('Vững Vàng Hội Nhập', wordmark_text)
+        identity = document.xpath("//aside[contains(@class, 'tp-auth-identity')]")
+        self.assertTrue(identity)
+        identity_text = ' '.join(identity[0].text_content().split())
+        self.assertIn('Hệ thống quản trị điều hành', identity_text)
+        self.assertIn('copyright @by Tadic', identity_text)
+        self.assertFalse(document.xpath("//*[contains(@class, 'tp-auth-brand-card')]"))
         self.assertNotIn('Powered by Odoo', ' '.join(document.text_content().split()))
         self.assertTrue(document.xpath("//input[@name='csrf_token' and @value]"))
         stylesheets = document.xpath("//link[contains(@href, '/web/assets/') and contains(@href, 'tp_web_login')]/@href")
@@ -55,13 +64,18 @@ class TestNativeLogin(HttpCase):
         self.assertTrue(document.xpath("//input[@name='password']"))
         self.assertTrue(document.xpath("//input[@name='redirect']"))
         parameters = self.env['ir.config_parameter'].sudo()
-        self.assertEqual(bool(document.xpath("//a[starts-with(@href, '/web/signup')]")),
+        self.assertEqual(bool(document.xpath("//a[starts-with(@href, '/web/signup') or starts-with(@href, '/tao-tai-khoan')]")),
                          parameters.get_str('auth_signup.invitation_scope', 'b2b') == 'b2c')
-        self.assertEqual(bool(document.xpath("//a[starts-with(@href, '/web/reset_password')]")),
+        self.assertEqual(bool(document.xpath("//a[starts-with(@href, '/web/reset_password') or starts-with(@href, '/quen-mat-khau')]")),
                          parameters.get_bool('auth_signup.reset_password'))
         if self.env['ir.module.module'].search([('name', '=', 'auth_passkey')]).state == 'installed':
             self.assertTrue(document.xpath("//input[@name='webauthn_response']"))
-            self.assertTrue(document.xpath("//*[contains(@class, 'passkey_login_link')]"))
+            passkey_links = document.xpath("//*[contains(@class, 'passkey_login_link')]")
+            self.assertTrue(passkey_links)
+            self.assertIn('Đăng nhập bằng khóa truy cập', ' '.join(passkey_links[0].text_content().split()))
+            divider = document.xpath("//*[contains(@class, 'tp-auth-divider')]")
+            self.assertTrue(divider)
+            self.assertEqual(' '.join(divider[0].text_content().split()), 'Hoặc')
         self.assertEqual(document.xpath("//input[@name='login']/@type"), ['text'])
         self.assertTrue(document.xpath("//label[@for='login' and contains(text(),'Tên đăng nhập')]"))
         self.assertTrue(document.xpath("//button[@aria-label='Hiện mật khẩu']"))
@@ -107,8 +121,8 @@ class TestNativeLogin(HttpCase):
         parameters.set_str('auth_signup.invitation_scope', 'b2c')
         parameters.set_bool('auth_signup.reset_password', True)
         document = self._document(self.url_open('/web/login'))
-        self.assertTrue(document.xpath("//a[starts-with(@href, '/web/signup')]"))
-        self.assertTrue(document.xpath("//a[starts-with(@href, '/web/reset_password')]"))
+        self.assertTrue(document.xpath("//a[starts-with(@href, '/web/signup') or starts-with(@href, '/tao-tai-khoan')]"))
+        self.assertTrue(document.xpath("//a[starts-with(@href, '/web/reset_password') or starts-with(@href, '/quen-mat-khau')]"))
         for route in ('/web/signup', '/web/reset_password'):
             page = self._document(self.url_open(route))
             self.assertTrue(page.xpath("//form[@method='post' and @data-captcha]"))
@@ -127,7 +141,8 @@ class TestNativeLogin(HttpCase):
             'redirect': '/odoo/tp-home',
         }, allow_redirects=False)
         self.assertEqual(response.status_code, 303)
-        self.assertEqual(response.headers['Location'], '/odoo/tp-home')
+        # tp_branding (BRAND-WHITELABEL-002) serves the webclient on /app.
+        self.assertIn(response.headers['Location'], ('/odoo/tp-home', '/app/tp-home'))
         # The core local redirect normalizes external input to this origin.
         external = self.url_open('/web/login', params={'redirect': 'https://example.invalid/escape'},
                                  allow_redirects=False)
@@ -161,7 +176,7 @@ class TestNativeLogin(HttpCase):
         self.assertEqual(document.xpath("//form[@action='']/input[@name='redirect']/@value"), [redirect])
         cancel = document.xpath("//form[@action='/web/session/logout']")[0]
         self.assertEqual(cancel.get('method').upper(), 'POST')
-        self.assertEqual(cancel.xpath("input[@name='redirect']/@value"), ['/web/login'])
+        self.assertIn(cancel.xpath("input[@name='redirect']/@value"), (['/web/login'], ['/dang-nhap']))
         self.assertTrue(cancel.xpath("input[@name='csrf_token' and @value]"))
         bad_csrf = self.url_open('/web/session/logout', method='POST', data={
             'csrf_token': 'not-a-valid-csrf-token', 'redirect': '/web/login',
@@ -171,7 +186,7 @@ class TestNativeLogin(HttpCase):
             'csrf_token': cancel.xpath("input[@name='csrf_token']/@value")[0], 'redirect': '/web/login',
         }, allow_redirects=False)
         self.assertEqual(canceled.status_code, 303)
-        self.assertEqual(canceled.headers['Location'], '/web/login')
+        self.assertIn(canceled.headers['Location'], ('/web/login', '/dang-nhap'))
 
     def test_t10_totp_error_masks_native_server_message(self):
         self._partial_login()
