@@ -91,6 +91,14 @@
                 <h1>Đăng nhập</h1>
                 <p>Tiếp tục công việc của bạn.</p>
             </div>
+            <div t-if="tp_login_notice == 'session_replaced'" class="tp-auth-session-notice" role="status" t-translation="off">
+                <strong>Tài khoản của bạn đang được đăng nhập ở nơi khác.</strong>
+                <span>Phiên làm việc trên thiết bị này đã kết thúc. Vui lòng đăng nhập lại để tiếp tục.</span>
+            </div>
+            <div t-elif="tp_login_notice == 'session_cutover'" class="tp-auth-session-notice" role="status" t-translation="off">
+                <strong>Hệ thống vừa cập nhật phiên đăng nhập.</strong>
+                <span>Vui lòng đăng nhập lại một lần để tiếp tục sử dụng hệ thống.</span>
+            </div>
         </xpath>
         <xpath expr="//label[@for='login']" position="replace">
             <label for="login" class="form-label d-flex justify-content-between" t-translation="off">Tên đăng nhập</label>

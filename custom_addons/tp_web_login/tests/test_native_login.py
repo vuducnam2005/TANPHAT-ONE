@@ -205,3 +205,52 @@ class TestNativeLogin(HttpCase):
         error = self._document(response).xpath("//*[@role='alert']")[0]
         self.assertEqual(error.text_content().strip(), TOTP_ERROR)
         self.assertNotIn('Invalid authentication code format', response.text)
+
+    def test_single_active_session_replaces_old_cookie_and_preserves_winner_on_old_logout(self):
+        actor = new_test_user(
+            self.env, login='auth001.single.session', password=self.password,
+            groups='base.group_user',
+        )
+        # Session A logs in via JSON-RPC
+        res_a = self.url_open('/web/session/authenticate', json={
+            'jsonrpc': '2.0', 'method': 'call', 'id': 10,
+            'params': {'db': get_db_name(), 'login': actor.login, 'password': self.password},
+        })
+        self.assertEqual(res_a.json()['result']['uid'], actor.id)
+        sid_a = self.opener.cookies.get('session_id')
+        self.assertTrue(sid_a)
+
+        # Wrong password from another session does not kick Session A
+        self.opener.cookies.clear()
+        bad_login = self.url_open('/web/session/authenticate', json={
+            'jsonrpc': '2.0', 'method': 'call', 'id': 11,
+            'params': {'db': get_db_name(), 'login': actor.login, 'password': 'wrong-password'},
+        })
+        self.assertIn('error', bad_login.json())
+        self.opener.cookies.set('session_id', sid_a)
+        still_ok = self.url_open('/api/v1/me')
+        self.assertEqual(still_ok.status_code, 200)
+
+        # Session B logs in with a fresh cookie jar -> replaces Session A
+        self.opener.cookies.clear()
+        res_b = self.url_open('/web/session/authenticate', json={
+            'jsonrpc': '2.0', 'method': 'call', 'id': 12,
+            'params': {'db': get_db_name(), 'login': actor.login, 'password': self.password},
+        })
+        self.assertEqual(res_b.json()['result']['uid'], actor.id)
+        sid_b = self.opener.cookies.get('session_id')
+        self.assertNotEqual(sid_a, sid_b)
+
+        # Session A's old cookie is immediately rejected with session_replaced on API & JSON-RPC
+        self.opener.cookies.set('session_id', sid_a)
+        api_a = self.url_open('/api/v1/me')
+        self.assertEqual(api_a.status_code, 401)
+        self.assertEqual(api_a.json()['error']['code'], 'session_replaced')
+        rpc_a = self.url_open('/web/session/check', json={
+            'jsonrpc': '2.0', 'method': 'call', 'id': 13, 'params': {},
+        })
+        self.assertEqual(rpc_a.json()['error']['data']['context']['tp_session_reason'], 'session_replaced')
+
+        # Session B stays active even after A's stale session was terminated
+        self.opener.cookies.set('session_id', sid_b)
+        self.assertEqual(self.url_open('/api/v1/me').status_code, 200)

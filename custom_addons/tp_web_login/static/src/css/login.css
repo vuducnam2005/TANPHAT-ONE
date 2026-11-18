@@ -835,6 +835,25 @@ body:has(.tp-native-login),
     }
 }
 
+.tp-native-login .tp-auth-session-notice {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #FFF8EB;
+    border: 1px solid #F7D794;
+    color: #7C2D12;
+    font-size: 13.5px;
+    line-height: 1.45;
+}
+
+.tp-native-login .tp-auth-session-notice strong {
+    font-weight: 650;
+    color: #9A3412;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .tp-native-login .tp-auth-frame,
     .tp-native-login *,

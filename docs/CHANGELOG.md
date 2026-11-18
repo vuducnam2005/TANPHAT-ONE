@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-022 — AUTH-SESSION-001: mỗi tài khoản một phiên web hoạt động, thông báo thay phiên & Đăng nhập lại về Trang chủ
+
+- Ngày 18/11/2026 (Asia/Saigon). Triển khai [CLAUDE_AUTH_SESSION_001_SINGLE_ACTIVE_LOGIN.md](prompts/CLAUDE_AUTH_SESSION_001_SINGLE_ACTIVE_LOGIN.md) (DEC-057) tại `custom_addons/tp_web_login` `20.0.2.0.0` và `custom_addons/tp_api` `20.0.1.2.0`: bảng `tp_user_active_session` (`active_gen`, `session_nonce` 256-bit), khóa tư vấn `(761157, uid)` chia sẻ cho giao dịch ghi của phiên hiện hành + `precommit` chống ghi trễ và khóa độc quyền khi `_after_session_login` commit winner mới (kể cả `postrollback` khôi phục session và chỉ phát `bus.bus` `tp.auth/session_replaced` đúng đời phiên cũ). Compare-and-clear trên `/web/session/logout` và `destroy` không bao giờ xóa nhầm winner mới; phiên legacy trước nâng cấp trả `session_cutover` tách biệt với `session_replaced`, `unauthenticated` và `403 forbidden`. Màn khóa OWL `TpSessionEndedOverlay` nền sáng `#F3F7FC` làm rỗng `.o_action_manager`/ẩn navbar, đồng bộ đa tab qua `BroadcastChannel`, fallback poll nền 4s (backoff khi lỗi mạng, tạm dừng khi ẩn tab, kiểm ngay khi focus/online/bfcache) và nút **Đăng nhập lại** đưa về `/dang-nhap?redirect=%2Fapp%2Ftp-home` → **Trang chủ TANPHAT ONE**. Giữ nguyên khóa HR (`tp_lock_revision`), quyền Quản trị gốc DEC-053/054, `identitycheck` và stateless Bearer API.
+- Kiểm chứng: `ruff check` `0` lỗi; unit `scripts/tests/test_auth_session_001.py` `6/6` PASS; probe đa kết nối PG `8/8` PASS; Odoo `HttpCase` `TestNativeLogin` `10/10` PASS; Playwright 4-context `24/24` PASS (`latency ~1.18s`, poll fallback `~0.83s`, desktop `1440×900` & mobile `390×844` + `reducedMotion`, `0` lỗi JS, `0` HTTP 5xx). `18069`: backup `.local/auth-session001/backup-as001-20261118T144453`, `-u tp_web_login,tp_api` exit `0` / `0` ERROR, snapshot chỉ đổi `modules`. Đồng bộ Git và deploy `PC server` + kiểm public chỉ đọc không đá phiên đang mở.
+
 ## CHG-20261118-021 — HR-ATTENDANCE-MATRIX-003: bảng công theo file và đối chiếu trước tổng hợp
 
 - Ngày: 18/11/2026; scope điều phối/tài liệu, không sửa ứng dụng hoặc DB.

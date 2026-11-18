@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T07:47:49.325547+00:00",
-  "last_change_id": "CHG-20261118-021",
-  "code_digest": "d85c4bca7f26bfb555602fc852ecd3ade43cee87397e49a7285d622899f8bc7b",
-  "code_file_count": 651,
+  "updated_at": "2026-11-18T08:30:35.048418+00:00",
+  "last_change_id": "CHG-20261118-022",
+  "code_digest": "7986c5a51ba1fb90a9c5d3c0ea4c37b3e7731b6459d718dbfa75db8ffceda3a1",
+  "code_file_count": 657,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "7b31a495f23828eb64ad11a2748bcbe0a4fcd7476f096cb26a9bae5d721770bc",
-    "docs/CHANGELOG.md": "8ac64f2351dac646e4d16319cdaf256e469dd39553ac6d2d152d3cee802f5cb3",
+    "docs/PROJECT_STATUS.md": "8b11039289cd2bf44165395f26eca26b78bc5b03a2920548559183688b3239a0",
+    "docs/CHANGELOG.md": "a4cca0122e72f9a02d98dbe4d91504ab9be9e2c9c4d1af11c687af4d817c32e1",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "06ad15dc7858fbbdf6553e0c9939f8053c1892c26eda999830035481d1b5aef5",
-    "docs/DECISIONS.md": "877d04731346ca6db91e0cfe1f615d9fd4144dad4328fe872a067af9cc5b8b62",
+    "docs/ROADMAP.md": "5bbf4e74fde54433fbc9e8d60f19aff7221782b4969f377ab7a9bb91d09174be",
+    "docs/DECISIONS.md": "c59f08bf68ea1f53c6659f9b3015fa72ae33d48be2ea4cbce575de07beccc12c",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,7 +20,10 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Read-only existing workbook/parser: 39 employees; 178 nonempty and 95 blank employee-days; zero parser errors. Source inspected, not an import.",
-    "Documentation validation PASS: 6 new local links; unique decision/change marker and fences; git diff --check; committed snapshot code 651 files unchanged. Foreign AUTH-SESSION work/checkpoint retained; runtime not changed."
+    "ruff check custom_addons/tp_web_login custom_addons/tp_api scripts/tests/test_auth_session_001.py -> 0 errors",
+    "python -m unittest scripts/tests/test_auth_session_001.py -v -> 6/6 OK",
+    "probe_backend_pg.py on tp_tanphat_dev (PG advisory lock 761157 shared/exclusive, concurrent login, inflight write, old logout) -> 8/8 PASS",
+    "odoo-bin -d tp_tanphat_test --test-enable --test-tags /tp_web_login -> 10/10 PASS",
+    "Playwright e2e_auth_session.cjs (multi-tab, wrong password, replace via bus 1.18s, poll fallback 0.83s, DOM scrub, mobile 390x844, relogin->Home) -> 24/24 PASS"
   ]
 }

@@ -43,6 +43,8 @@
   Thực thi giao18069/PCserver theo policy17/11, không bắt18079.
 
 
+- **Triển khai runtime AUTH-SESSION-001 (CHG-20261118-022):** đã triển khai tại `custom_addons/tp_web_login` `20.0.2.0.0` và `custom_addons/tp_api` `20.0.1.2.0` (bảng `tp_user_active_session`, khóa tư vấn `761157`, bus `tp.auth/session_replaced` + poll/focus/online/bfcache fallback, compare-and-clear logout cũ, màn thông báo sáng che kín DOM và nút **Đăng nhập lại** về `/app/tp-home`), áp dụng trên `18069` và `PC server`; xem [nghiệm thu AUTH-SESSION-001](demo/AUTH_SESSION_001_ACCEPTANCE.md).
+
 ## DEC-056 — Nhập Excel máy tự tạo bảng công, giữ tổng đi muộn nguồn (18/11/2026)
 
 - Người dùng chưa thực thi prompt002; bổ sung vào cùng bản. Kéo-thả/chọn

@@ -34,3 +34,12 @@ to `/dang-nhap` and gets the same native CSRF, cooldown, passkey and TOTP checks
 GET/HEAD on `/web/login…` gets a 302 to the alias; POST is never redirected.
 The UI-LOGIN-002 layout and left-panel copy stay as configured. The page title
 is "Đăng nhập | TANPHAT ONE". This addon does not depend on `tp_branding`.
+
+AUTH-SESSION-001 (`20.0.2.0.0`, DEC-057) enforces one active browser/PWA session per
+account per database via `res.users._after_session_login()`, the internal PostgreSQL
+table `tp_user_active_session`, and transactional advisory locks (`761157`). Multiple
+tabs sharing the same browser cookie stay active together; a new completed login
+(including MFA completion) replaces the previous session, pushes a generation-scoped
+`tp.auth/session_replaced` bus event (with visible-tab poll/focus/online/bfcache
+fallback), blocks old cookies across RPC/HTTP/files/API, and shows the light
+session-ended screen with a single **Đăng nhập lại** button that lands on Trang chủ.

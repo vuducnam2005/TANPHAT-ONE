@@ -1,0 +1,151 @@
+/* AUTH-SESSION-001: Opaque light session-ended screen hiding all workspace content. */
+html.tp-session-ended-active,
+body.tp-session-ended-active {
+    background: #F3F7FC !important;
+    overflow: hidden !important;
+}
+
+body.tp-session-ended-active > *:not(.o-main-components-container),
+body.tp-session-ended-active .o_web_client > *:not(.o-main-components-container),
+body.tp-session-ended-active .o_navbar,
+body.tp-session-ended-active .o_main_navbar,
+body.tp-session-ended-active .o_action_manager {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+body.tp-session-ended-active .o-main-components-container > *:not(:has(.tp-session-ended-screen)):not(.tp-session-ended-screen) {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+.tp-session-ended-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: #F3F7FC;
+    color: #182B49;
+    color-scheme: light;
+}
+
+.tp-session-ended-card {
+    width: 100%;
+    max-width: 440px;
+    background: #FFFFFF;
+    border: 1px solid #DCE6F2;
+    border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(15, 35, 66, 0.08);
+    padding: 32px 28px 28px;
+    text-align: center;
+}
+
+.tp-session-ended-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    padding: 5px 12px 5px 8px;
+    border-radius: 999px;
+    background: #F1F6FC;
+    color: #182B49;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.tp-session-ended-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 16px;
+    border-radius: 14px;
+    background: #FFF6E6;
+    border: 1px solid #FDE2B2;
+    color: #B45309;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tp-session-ended-title {
+    margin: 0 0 10px;
+    font-size: 20px;
+    line-height: 1.38;
+    font-weight: 700;
+    color: #182B49;
+}
+
+.tp-session-ended-desc {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: #4A5E78;
+}
+
+.tp-session-ended-unsaved {
+    margin: 14px 0 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #5B6E86;
+}
+
+.tp-session-ended-actions {
+    margin-top: 24px;
+}
+
+.tp-session-ended-btn {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    background: #0073AD !important;
+    border-color: #0073AD !important;
+    color: #FFFFFF !important;
+    font-size: 15px;
+    font-weight: 600;
+    transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.tp-session-ended-btn:hover:not(:disabled) {
+    background: #005F91 !important;
+    border-color: #005F91 !important;
+    box-shadow: 0 6px 16px rgba(0, 115, 173, 0.2);
+}
+
+.tp-session-ended-btn:focus-visible {
+    outline: 2px solid #0073AD;
+    outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgba(0, 115, 173, 0.2);
+}
+
+@media (max-width: 575.98px) {
+    .tp-session-ended-screen {
+        padding: 16px;
+    }
+
+    .tp-session-ended-card {
+        padding: 26px 20px 22px;
+        border-radius: 14px;
+    }
+
+    .tp-session-ended-title {
+        font-size: 18px;
+    }
+
+    .tp-session-ended-desc {
+        font-size: 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tp-session-ended-btn {
+        transition: none !important;
+    }
+}

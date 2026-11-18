@@ -28,7 +28,12 @@ class IrHttp(models.AbstractModel):
             return super()._handle_error(exception)
         if isinstance(exception, ApiProblem):
             return api_error(exception.code, exception.message, exception.status, exception.details)
-        if isinstance(exception, (SessionExpiredException, AccessDenied)):
+        if isinstance(exception, SessionExpiredException):
+            tp_reason = getattr(exception, 'tp_reason', None)
+            if tp_reason in ('session_replaced', 'session_cutover'):
+                return api_error(tp_reason, str(exception), 401)
+            return api_error('unauthenticated', 'Please sign in to continue.', 401)
+        if isinstance(exception, AccessDenied):
             return api_error('unauthenticated', 'Please sign in to continue.', 401)
         if isinstance(exception, AccessError):
             return api_error('forbidden', 'You do not have permission for this operation.', 403)

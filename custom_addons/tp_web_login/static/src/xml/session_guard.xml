@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_web_login.SessionEndedOverlay">
+        <div t-if="this.guard.state.ended"
+             class="tp-session-ended-screen"
+             role="alertdialog"
+             aria-modal="true"
+             aria-labelledby="tp-session-ended-title"
+             aria-describedby="tp-session-ended-desc"
+             t-on-keydown="this.onKeydown">
+            <div class="tp-session-ended-card">
+                <div class="tp-session-ended-brand" aria-hidden="true">
+                    <img src="/tp_web_home/static/img/brand/tp_logo_mark.png" alt="" width="28" height="28"/>
+                    <span>TANPHAT ONE</span>
+                </div>
+                <div class="tp-session-ended-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3l8 4v5c0 5-3.4 8.8-8 10-4.6-1.2-8-5-8-10V7l8-4z"/>
+                        <path d="M12 8v5"/>
+                        <circle cx="12" cy="16.5" r="0.8" fill="currentColor"/>
+                    </svg>
+                </div>
+                <h1 id="tp-session-ended-title" class="tp-session-ended-title" t-out="this.titleText"/>
+                <p id="tp-session-ended-desc" class="tp-session-ended-desc" t-out="this.detailText"/>
+                <p t-if="this.guard.state.hadUnsavedHint" class="tp-session-ended-unsaved">
+                    Nội dung đang nhập dở chưa lưu sẽ không tự động gửi lại để bảo đảm an toàn dữ liệu.
+                </p>
+                <div class="tp-session-ended-actions">
+                    <button type="button"
+                            class="btn btn-primary tp-session-ended-btn"
+                            t-ref="this.reloginBtnRef"
+                            t-att-disabled="this.guard.state.reloggingIn"
+                            t-on-click="this.onRelogin">
+                        <t t-if="this.guard.state.reloggingIn">Đang chuyển hướng…</t>
+                        <t t-else="">Đăng nhập lại</t>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>
