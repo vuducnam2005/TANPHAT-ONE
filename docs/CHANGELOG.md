@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-015 — ADMIN-FULL-001: hoàn tất deploy/migration PC server và kiểm chứng URL public
+
+- Ngày 18/11/2026 (Asia/Saigon). Hoàn tất triển khai commit `bec79ccb` (`tp_admin_delegation` `20.0.2.0.0`) lên `PC server` (`tp-odoo`) và đồng bộ tài liệu nghiệm thu [ADMIN_FULL_001_ACCEPTANCE.md](demo/ADMIN_FULL_001_ACCEPTANCE.md).
+- Backup `PC server` tại `C:\TANPHAT-backups\admin-full001\af001-20261118T122710` (DB dump `9.580.510`B, filestore `600` mục, source/config, SHA256); chạy `-u tp_admin_delegation` (`exit 0`, `0` ERROR): nâng tự động `uid=43` (`ledger_id=2`) sang `group_full_admin`, seed `group_original_admin` cho `uid=2`, giữ nguyên chức danh/phòng ban HR và toàn bộ dữ liệu nghiệp vụ.
+- Kiểm thực `PC server` & URL public: probe ORM không ghi DB đạt 100% (`uid=43` ngang quyền `uid=2` trên mọi phòng ban gồm cả phòng mình, `28/28` phép thử chặn DEC-054 PASS, `6/6` dry-run thu hồi rollback PASS, `uid=34` nhân viên thường giữ nguyên `mobile_phone` privacy); HTTP `/web/health` & `/dang-nhap` `200`; Playwright URL public `12/12` PASS (`1440×900` & `390×844`, `0` lỗi runtime, `web.base.url` và DB không đổi). Ghi rõ `NOT_RUN`: đăng nhập trình duyệt người thật `uid=43` (chờ người dùng đăng nhập lại làm mới phiên).
+
 ## CHG-20261118-014 — Khôi phục bàn giao admin đồng thời với prompt chấm công
 
 - Trong khi chuẩn bị tài liệu013 trên baseline142535c2, phiên khác commitbec79ccb cho ADMIN-FULL-001/CHG-012. Staging từ snapshotcũ đã vô tình lùi phần012 trong status/changelog/decisions/roadmap. Đã khôi phục nguyên nội dung012 từ commit, giữ toàn bộ013/DEC-056 và prompt mới; không sửa source hoặc dữ liệu.

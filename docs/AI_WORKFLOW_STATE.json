@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T05:28:13.010044+00:00",
-  "last_change_id": "CHG-20261118-014",
+  "updated_at": "2026-11-18T05:41:43.333234+00:00",
+  "last_change_id": "CHG-20261118-015",
   "code_digest": "036ea8e8b1af07216b1925562ab775a076a9da67e7ea366122c014539fdbc94b",
   "code_file_count": 635,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "81f023fe93bbbed3e19fc32dbfbc3f568de0181952e62b32d16d4ce92db8824f",
-    "docs/CHANGELOG.md": "9729428dcf4bfe89033fd2197bac48bc810525616a8f17f7f2cebf50b2b768bb",
+    "docs/PROJECT_STATUS.md": "c52f3849916526bcd913f6bd1d045c0f7911d0dbd9f547904ef655e201273ddc",
+    "docs/CHANGELOG.md": "9f1b8fd7cd99076c2eee309f890b4f2b62d47fc31d2cc36328c80a6f1d7fc210",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "1a2ebf7422abb2a9b212bab24f08cd1f7c857defc2a75604e39d5c1fe152769c",
-    "docs/DECISIONS.md": "bf883b7cd59c19ae08bbe53e5cef370afee485e9c830289b751f7cb21536cc72",
+    "docs/ROADMAP.md": "501d9ad9093d4975360da337892a384db1aa2cd5e57c1ab8fb244be6b5e78051",
+    "docs/DECISIONS.md": "3c11ef74e05125e6b919fa98ef0b61af7ea0051552a260f509bc49d8d7c7619f",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,7 +20,8 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Restored concurrent ADMIN-FULL-001 CHG012 docs verbatim frombec79ccb, retained Excel prompt013/DEC056; source snapshot includes committed admin implementation; application unchanged by this documentation task.",
-    "Read-only workbook/pure-parser evidence from013 retained; content/link/diff validation and HEAD guard; no database/import/grant/runtime tests or restart."
+    "PC server backup af001-20261118T122710 + -u tp_admin_delegation 20.0.2.0.0 (uid=43 migrated, exit 0, 0 errors): passed",
+    "PC server non-mutating ORM probe (uid=2/uid=43 parity, 28/28 DEC-054 blocks, 6/6 rollback revoke, uid=34 privacy): passed",
+    "public URL /web/health & /dang-nhap 200 + Playwright 12/12 (desktop & mobile) + snapshot_identical=true: passed"
   ]
 }

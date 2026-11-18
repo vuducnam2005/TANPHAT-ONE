@@ -60,7 +60,7 @@
   Giữ migration grant đang hiệu lực khi giao Claude thực thi, provenance và
   thu hồi về quyền nghiệp vụ hợp lệ. Lượt chốt này chưa sửa runtime/người thật.
 
-- **Triển khai runtime ADMIN-FULL-001:** `tp_admin_delegation` **20.0.2.0.0** đã áp trên `18069` (`CHG-20261118-012`), chuẩn bị deploy PC server; chi tiết tại [ADMIN_FULL_001_ACCEPTANCE.md](demo/ADMIN_FULL_001_ACCEPTANCE.md).
+- **Triển khai runtime ADMIN-FULL-001:** Đã áp tại `custom_addons/tp_admin_delegation` `20.0.2.0.0` trên cả `18069` và `PC server` (commit ứng dụng `bec79ccb`, `CHG-20261118-012` / `CHG-20261118-015`, backup `18069` `.local/admin-full001/backup-af001-20261118T120130` & `PC server` `C:\TANPHAT-backups\admin-full001\af001-20261118T122710`; đã nâng tự động `uid=43` sang `group_full_admin`, seed `group_original_admin` cho `uid=2`; xem [nghiệm thu](demo/ADMIN_FULL_001_ACCEPTANCE.md)).
 
 ## DEC-053 — Người được cấp admin có toàn quyền như admin hiện tại (18/11/2026)
 
