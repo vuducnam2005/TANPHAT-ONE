@@ -11,6 +11,8 @@
 
     <menuitem id="menu_group_attendance_admin" name="Quản trị chấm công" parent="tp_hr_workspace.menu_hr" sequence="85"
               groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
+    <menuitem id="menu_file_matrix" name="Bảng công theo file &amp; Đối chiếu" parent="menu_group_attendance_admin" action="action_file_matrix" sequence="5"
+              groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
     <menuitem id="menu_import" name="Nhập dữ liệu" parent="menu_group_attendance_admin" action="action_import" sequence="10"
               groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
     <menuitem id="menu_sources" name="Nguồn dữ liệu" parent="menu_group_attendance_admin" action="action_sources" sequence="20"

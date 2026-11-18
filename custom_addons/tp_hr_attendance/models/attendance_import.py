@@ -84,8 +84,25 @@ class AttendanceBatch(models.Model):
     checksum = fields.Char('Mã băm tệp', readonly=True, copy=False)
     same_file_batch_id = fields.Many2one('tp.hr.attendance.batch', 'Tệp đã nhập ở lô', readonly=True, copy=False)
     tz = fields.Char('Múi giờ', default=DEFAULT_TZ, readonly=True)
-    state = fields.Selection([('draft', 'Chọn tệp'), ('preview', 'Xem trước'), ('applied', 'Đã áp dụng'), ('cancelled', 'Đã hủy')],
-                             'Trạng thái', default='draft', readonly=True, required=True, index=True)
+    batch_code = fields.Char('Mã lô', readonly=True, copy=False, index=True)
+    source_namespace = fields.Char('Không gian nguồn', default='excel-machine', readonly=True, copy=False)
+    state = fields.Selection([
+        ('draft', 'Chọn tệp'),
+        ('preview', 'Đã đọc/Lưu nguồn – Chưa áp dụng'),
+        ('partial', 'Đã áp dụng một phần – Còn khác biệt'),
+        ('applied', 'Đã áp dụng vào bảng tổng hợp'),
+        ('cancelled', 'Đã bỏ qua nguồn'),
+    ], 'Trạng thái', default='draft', readonly=True, required=True, index=True)
+    snapshot_version = fields.Integer('Phiên bản snapshot nguồn', default=0, readonly=True, copy=False)
+    snapshot_state = fields.Selection([
+        ('pending', 'Chưa tạo'),
+        ('ready', 'Đầy đủ nguồn'),
+        ('unavailable', 'Thiếu tệp gốc'),
+    ], 'Trạng thái snapshot', default='pending', readonly=True, copy=False)
+    snapshot_note = fields.Char('Ghi chú snapshot', readonly=True, copy=False)
+    cancel_reason = fields.Char('Lý do bỏ qua nguồn', readonly=True, copy=False)
+    cancelled_by = fields.Many2one('res.users', 'Người bỏ qua', readonly=True, copy=False)
+    cancelled_at = fields.Datetime('Thời điểm bỏ qua', readonly=True, copy=False)
     sheet_summary = fields.Json('Tóm tắt trang', readonly=True, copy=False)
     period_from = fields.Date('Từ ngày', readonly=True)
     period_to = fields.Date('Đến ngày', readonly=True)
@@ -119,7 +136,9 @@ class AttendanceBatch(models.Model):
     result = fields.Text('Kết quả', readonly=True)
     summary_html = fields.Html('Theo trang tính', compute='_compute_summary_html', sanitize=False)
 
-    _SYSTEM_FIELDS = {'checksum', 'same_file_batch_id', 'tz', 'state', 'sheet_summary', 'period_from', 'period_to', 'employee_ids',
+    _SYSTEM_FIELDS = {'batch_code', 'source_namespace', 'checksum', 'same_file_batch_id', 'tz', 'state', 'sheet_summary',
+                      'snapshot_version', 'snapshot_state', 'snapshot_note', 'cancel_reason', 'cancelled_by', 'cancelled_at',
+                      'period_from', 'period_to', 'employee_ids',
                       'line_ids', 'attention_line_ids', 'applied_by', 'applied_at', 'result', 'line_count', 'empty_count',
                       'late_ids'} | {f'{s}_count' for s in COUNTED} | {f'late_{s}_count' for s in LATE_COUNTED}
 
@@ -145,6 +164,13 @@ class AttendanceBatch(models.Model):
         for company in self.company_id or self.env.company:
             require(self.env, 'import', company)
 
+    def check_access(self, operation):
+        if not self.env.su:
+            require(self.env, 'import', self.env.company)
+            for company in self.sudo().company_id:
+                require(self.env, 'import', company)
+        return super().check_access(operation)
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -152,7 +178,11 @@ class AttendanceBatch(models.Model):
                 raise AccessError(self.env._('Kết quả nhập chỉ được hệ thống cập nhật.'))
             company = self.env['res.company'].browse(vals.get('company_id')) if vals.get('company_id') else self.env.company
             require(self.env, 'import', company)
-        return super().create(vals_list)
+        records = super().create(vals_list)
+        for batch in records:
+            if not batch.batch_code:
+                internal(batch).write({'batch_code': f'LÔ-{batch.id:05d}'})
+        return records
 
     def write(self, vals):
         if not is_internal(self):
@@ -171,9 +201,9 @@ class AttendanceBatch(models.Model):
 
     def _lock(self):
         self.ensure_one()
+        self.env.cr.execute('SELECT pg_advisory_xact_lock(%s, %s)', [ADVISORY_KEY, self.company_id.id])
         self.env.cr.execute('SELECT id FROM tp_hr_attendance_batch WHERE id=%s FOR UPDATE', [self.id])
         self.invalidate_recordset()
-        self.env.cr.execute('SELECT pg_advisory_xact_lock(%s, %s)', [ADVISORY_KEY, self.company_id.id])
 
     # ------------------------------------------------------------- mapping
     def _tp_mapper(self):
@@ -231,6 +261,15 @@ class AttendanceBatch(models.Model):
                 'to': sheet['period'][1].isoformat() if sheet['period'] else None, 'employees': sheet['employees'],
                 'events': len(sheet['events']), 'empty': sheet['empty_cells'], 'errors': sheet['errors'],
                 'employee_ids': sorted(employees), 'late': sheet.get('late') or {},
+                'absent': sheet.get('absent') or {},
+                'day_columns': [
+                    {
+                        'column': col['column'], 'col_letter': col['col_letter'],
+                        'date': col['date'].isoformat(), 'header_day': col['header_day'],
+                        'header_weekday': col['header_weekday'], 'weekday': col['weekday'],
+                    }
+                    for col in (sheet.get('day_columns') or [])
+                ],
             })
             if sheet['period'] and not sheet['errors']:
                 for person in sheet['people']:
@@ -238,7 +277,8 @@ class AttendanceBatch(models.Model):
                         continue
                     lates.append({
                         'batch_id': self.id, 'sheet_name': sheet['name'], 'sheet_index': sheet['index'], 'row_number': person['row'],
-                        'cell_ref': person['late_cell'], 'machine_code': person['machine_code'], 'source_name': person['name'],
+                        'cell_ref': person['late_cell'], 'machine_code': person['machine_code'],
+                        'raw_source_code': person.get('raw_source_code') or '', 'source_name': person['name'],
                         'date_from': sheet['period'][0], 'date_to': sheet['period'][1],
                         'late_count': person['late_count'] or 0, 'late_minutes': person['late_minutes'] or 0,
                         'raw_count': person['late_raw_count'], 'raw_minutes': person['late_raw_minutes'],
@@ -250,6 +290,7 @@ class AttendanceBatch(models.Model):
                 lines.append({
                     'batch_id': self.id, 'sheet_name': event['sheet'], 'sheet_index': event['sheet_index'], 'row_number': event['row'],
                     'column_index': event['column'], 'cell_ref': event['cell'], 'machine_code': event['machine_code'],
+                    'raw_source_code': event.get('raw_source_code') or '',
                     'source_name': event['name'], 'source_title': event['title'], 'source_group': event['group'],
                     'work_date': event['work_date'], 'raw_in': event['raw_in'], 'raw_out': event['raw_out'],
                     'check_in': check_in, 'check_out': check_out, 'kind': event['kind'], 'state': 'review',
@@ -259,12 +300,15 @@ class AttendanceBatch(models.Model):
         periods = [sheet['period'] for sheet in sheets if sheet['period']]
         checksum = hashlib.sha256(data).hexdigest()
         same = self.sudo().search([('id', '!=', self.id), ('company_id', '=', self.company_id.id), ('checksum', '=', checksum),
-                                   ('state', '=', 'applied')], limit=1)
+                                   ('state', 'in', ('applied', 'partial'))], limit=1)
         internal(self).write({
             'checksum': checksum, 'same_file_batch_id': same.id, 'sheet_summary': summary, 'empty_count': empty,
             'period_from': min(p[0] for p in periods) if periods else False, 'period_to': max(p[1] for p in periods) if periods else False,
             'employee_ids': [(6, 0, sorted(coverage))], 'state': 'preview',
+            'batch_code': self.batch_code or f'LÔ-{self.id:05d}',
         })
+        if hasattr(self, '_tp_build_snapshot'):
+            self._tp_build_snapshot(sheets)
         self._tp_classify()
         self.env['tp.hr.attendance.log']._tp_log(self, 'import_preview', {'file': self.file_name, 'checksum': checksum[:16], 'lines': len(lines),
                                                                          'late': len(lates)})
@@ -280,6 +324,8 @@ class AttendanceBatch(models.Model):
         lines = self.sudo().line_ids.sorted(lambda line: (line.sheet_index, line.row_number, line.column_index))
         decided, groups = {}, defaultdict(list)
         for line in lines:
+            if line.state == 'applied' or line.source_choice == 'keep':
+                continue
             employee, candidate, problem, message = resolve(line.machine_code, line.source_name)
             base = {'employee_id': employee.id or False, 'candidate_employee_id': candidate.id or False}
             if problem:
@@ -304,7 +350,7 @@ class AttendanceBatch(models.Model):
                 issues[issue.employee_id.id, issue.work_date].append(issue)
             # Issues already settled (completed by a later import or by an approved correction) must not reopen on re-import.
             for issue in Line.search([('employee_id', 'in', employee_ids), ('work_date', 'in', work_dates), ('issue_open', '=', False),
-                                      ('state', 'in', ISSUE_STATES), ('batch_id.state', '=', 'applied'), ('batch_id', '!=', self.id)]):
+                                      ('state', 'in', ISSUE_STATES), ('batch_id.state', 'in', ('applied', 'partial')), ('batch_id', '!=', self.id)]):
                 handled[issue.employee_id.id, issue.work_date].add(issue.signature)
             for key, members in groups.items():
                 decisions = self._tp_decide(members, sessions.get(key, []), issues.get(key, []), decided, handled.get(key, set()))
@@ -327,6 +373,8 @@ class AttendanceBatch(models.Model):
         rows = self.sudo().late_ids.sorted(lambda row: (row.sheet_index, row.row_number))
         decided, keyed = {}, defaultdict(list)
         for row in rows:
+            if row.state in ('applied', 'superseded') or row.source_choice == 'keep':
+                continue
             employee, candidate, problem, message = resolve(row.machine_code, row.source_name)
             vals = {'employee_id': employee.id or False, 'candidate_employee_id': candidate.id or False}
             if problem:
@@ -342,7 +390,7 @@ class AttendanceBatch(models.Model):
                 keyed[employee.id, row.date_from, row.date_to].append(row)
         if keyed:
             known = {}
-            for old in Late.search([('company_id', '=', self.company_id.id), ('state', '=', 'applied'), ('batch_id', '!=', self.id),
+            for old in Late.search([('company_id', '=', self.company_id.id), ('state', '=', 'applied'),
                                     ('employee_id', 'in', list({key[0] for key in keyed}))]):
                 known[old.employee_id.id, old.date_from, old.date_to] = (old.late_count, old.late_minutes)
             for key, members in keyed.items():
@@ -426,11 +474,12 @@ class AttendanceBatch(models.Model):
         self._lock()
         if self.state == 'applied':
             return True
-        if self.state != 'preview':
+        if self.state not in ('preview', 'partial'):
             raise UserError(self.env._('Hãy xem trước tệp trước khi áp dụng.'))
         self._tp_classify()
         Session = internal(self.env['tp.hr.attendance.session'])
         Line = self.env['tp.hr.attendance.line'].sudo()
+        Late = self.env['tp.hr.attendance.late'].sudo()
         _resolve, codes = self._tp_mapper()
         keys, new_codes = set(), {}
         lines = self.sudo().line_ids
@@ -438,6 +487,7 @@ class AttendanceBatch(models.Model):
             session = Session.create({
                 'employee_id': line.employee_id.id, 'company_id': self.company_id.id, 'work_date': line.work_date,
                 'check_in': line.check_in, 'check_out': line.check_out, 'source': 'import', 'batch_id': self.id, 'line_id': line.id,
+                'source_batch_ids': [(4, self.id)], 'source_line_ids': [(4, line.id)],
             })
             completed = Line.search([('employee_id', '=', line.employee_id.id), ('work_date', '=', line.work_date),
                                      ('issue_open', '=', True), ('batch_id', '!=', self.id)])
@@ -447,6 +497,15 @@ class AttendanceBatch(models.Model):
             keys.add((line.employee_id.id, line.work_date))
             if line.machine_code not in codes:
                 new_codes[line.machine_code] = line.employee_id.id
+        # Identical hours in a second file attach provenance to the single canonical session without double-counting.
+        for line in lines.filtered(lambda line: line.state == 'duplicate' and line.kind == 'pair' and line.employee_id):
+            matched = Session.search([
+                ('employee_id', '=', line.employee_id.id), ('work_date', '=', line.work_date),
+                ('check_in', '=', line.check_in), ('check_out', '=', line.check_out),
+            ], limit=1)
+            if matched:
+                matched.write({'source_batch_ids': [(4, self.id)], 'source_line_ids': [(4, line.id)]})
+                internal(line).write({'session_id': matched.id})
         for line in lines.filtered(lambda line: line.state in ISSUE_STATES and line.employee_id):
             internal(line).write({'issue_open': True})
             keys.add((line.employee_id.id, line.work_date))
@@ -457,7 +516,15 @@ class AttendanceBatch(models.Model):
                 for code, employee_id in new_codes.items()])
         self.env['tp.hr.attendance.day']._tp_refresh(self.company_id, keys)
         late_rows = self.sudo().late_ids.filtered(lambda row: row.state == 'valid')
-        internal(late_rows).write({'state': 'applied'})
+        internal(late_rows).write({'state': 'applied', 'source_batch_ids': [(4, self.id)]})
+        for dup_late in self.sudo().late_ids.filtered(lambda row: row.state == 'duplicate' and row.employee_id):
+            canonical = Late.search([
+                ('company_id', '=', self.company_id.id), ('employee_id', '=', dup_late.employee_id.id),
+                ('date_from', '=', dup_late.date_from), ('date_to', '=', dup_late.date_to), ('state', '=', 'applied'),
+            ], limit=1)
+            if canonical and (canonical.late_count, canonical.late_minutes) == (dup_late.late_count, dup_late.late_minutes):
+                internal(canonical).write({'source_batch_ids': [(4, self.id)]})
+                internal(dup_late).write({'canonical_late_id': canonical.id})
         late_counts = {state: 0 for state in LATE_COUNTED}
         for row in self.sudo().late_ids:
             if row.state in late_counts:
@@ -467,20 +534,42 @@ class AttendanceBatch(models.Model):
         for line in lines:
             counts[line.state] += 1
         summary = {key: value for key, value in counts.items() if value}
-        internal(self).write(dict({f'{state}_count': value for state, value in counts.items()}, state='applied',
+        unresolved = self._tp_unresolved_conflict_count()
+        final_state = 'partial' if unresolved else 'applied'
+        internal(self).write(dict({f'{state}_count': value for state, value in counts.items()}, state=final_state,
                                   applied_by=self.env.user.id, applied_at=fields.Datetime.now(), result=str(summary)))
-        self.env['tp.hr.attendance.log']._tp_log(self, 'import_apply', dict(summary, days=len(keys), late=len(late_rows)))
+        self.env['tp.hr.attendance.log']._tp_log(self, 'import_apply', dict(summary, state=final_state, days=len(keys), late=len(late_rows)))
         return True
 
-    def action_cancel(self):
+    def _tp_unresolved_conflict_count(self):
+        self.ensure_one()
+        batch = self.sudo()
+        line_conflicts = len(batch.line_ids.filtered(lambda row: row.state == 'conflict' and not row.resolved_by_resolution_id))
+        late_conflicts = len(batch.late_ids.filtered(lambda r: r.state == 'conflict' and not r.resolved_by_resolution_id))
+        deferred = 0
+        if 'tp.hr.attendance.resolution' in self.env:
+            Res = self.env['tp.hr.attendance.resolution'].sudo()
+            deferred = Res.search_count([
+                '|', ('batch_a_id', '=', batch.id), ('batch_b_id', '=', batch.id),
+                ('is_latest', '=', True), ('decision', '=', 'defer'),
+            ])
+        return line_conflicts + late_conflicts + deferred
+
+    def action_cancel(self, reason=''):
         self.ensure_one()
         self._tp_require()
         self._lock()
         if self.state != 'preview':
-            raise UserError(self.env._('Chỉ hủy được lô đang xem trước.'))
-        internal(self).write({'state': 'cancelled'})
+            raise UserError(self.env._('Chỉ bỏ qua được lô nguồn chưa áp dụng vào bảng tổng hợp.'))
+        clean_reason = (reason or '').strip()[:240]
+        internal(self).write({
+            'state': 'cancelled',
+            'cancel_reason': clean_reason or False,
+            'cancelled_by': self.env.user.id,
+            'cancelled_at': fields.Datetime.now(),
+        })
         internal(self.sudo().late_ids.filtered(lambda row: row.state != 'applied')).write({'state': 'cancelled'})
-        self.env['tp.hr.attendance.log']._tp_log(self, 'import_cancel', {})
+        self.env['tp.hr.attendance.log']._tp_log(self, 'import_cancel', {'reason': clean_reason})
         return True
 
     def action_open_lines(self):
@@ -555,7 +644,8 @@ class AttendanceBatch(models.Model):
         attention = batch.line_ids.filtered(lambda line: line.state not in ('valid', 'applied', 'duplicate'))
         late_attention = batch.late_ids.filtered(lambda row: row.state not in ('valid', 'applied', 'duplicate', 'preview'))
         return {
-            'batch_id': batch.id, 'name': batch.name, 'file_name': batch.file_name or '', 'state': batch.state,
+            'batch_id': batch.id, 'batch_code': batch.batch_code or f'LÔ-{batch.id:05d}',
+            'name': batch.name, 'file_name': batch.file_name or '', 'state': batch.state,
             'period': {'from': fields.Date.to_string(batch.period_from), 'to': fields.Date.to_string(batch.period_to),
                        'label': short_range(batch.period_from, batch.period_to) if batch.period_from and batch.period_to else ''},
             'sheets': sheets, 'matched': len(batch.employee_ids), 'people': sum(sheet['employees'] for sheet in sheets),
@@ -563,6 +653,7 @@ class AttendanceBatch(models.Model):
             'late': {state: batch[f'late_{state}_count'] for state in LATE_COUNTED}, 'late_total': len(batch.late_ids),
             'labels': line_states, 'late_labels': late_states,
             'same_file': batch.same_file_batch_id.name or '',
+            'same_file_code': batch.same_file_batch_id.batch_code or '',
             'attention': [{'sheet': line.sheet_name, 'cell': line.cell_ref, 'code': line.machine_code or '', 'name': line.source_name or '',
                            'date': fields.Date.to_string(line.work_date), 'state': line.state, 'state_label': line_states.get(line.state, ''),
                            'message': line.message or ''} for line in attention[:PREVIEW_ATTENTION]],
@@ -572,13 +663,15 @@ class AttendanceBatch(models.Model):
                                for row in late_attention[:PREVIEW_ATTENTION]],
             'late_attention_total': len(late_attention),
             'can_apply': batch.state == 'preview',
+            'uploaded_at': fields.Datetime.to_string(batch.create_date) if batch.create_date else '',
+            'uploaded_by': batch.create_uid.name or '',
             'applied_at': fields.Datetime.to_string(batch.applied_at) if batch.applied_at else '',
         }
 
     @api.model
     def _tp_coverage(self, company, start, end):
         """``[(from, to, {employee ids})]`` per applied sheet: the file listed these people for these days."""
-        batches = self.sudo().search([('company_id', '=', company.id), ('state', '=', 'applied'),
+        batches = self.sudo().search([('company_id', '=', company.id), ('state', 'in', ('applied', 'partial')),
                                       ('period_from', '<=', end), ('period_to', '>=', start)])
         result = []
         for batch in batches:
@@ -602,6 +695,7 @@ class AttendanceLine(models.Model):
     column_index = fields.Integer(readonly=True)
     cell_ref = fields.Char('Ô', readonly=True)
     machine_code = fields.Char('Mã máy', readonly=True, index=True)
+    raw_source_code = fields.Char('Mã NV trong tệp', readonly=True, index=True)
     source_name = fields.Char('Tên trong tệp', readonly=True)
     source_title = fields.Char('Chức vụ trong tệp', readonly=True)
     source_group = fields.Char('Nhóm trong tệp', readonly=True)
@@ -620,7 +714,9 @@ class AttendanceLine(models.Model):
     day_id = fields.Many2one('tp.hr.attendance.day', 'Ngày công tổng hợp', readonly=True, index=True, ondelete='set null')
     issue_open = fields.Boolean('Đang chờ xử lý', readonly=True, index=True)
     resolved_by_line_id = fields.Many2one('tp.hr.attendance.line', 'Được hoàn thiện bởi', readonly=True)
+    resolved_by_resolution_id = fields.Many2one('tp.hr.attendance.resolution', 'Quyết định đối chiếu', readonly=True, ondelete='set null')
     resolution = fields.Char('Cách xử lý', readonly=True)
+    source_choice = fields.Selection([('selected', 'Chọn nguồn'), ('keep', 'Giữ dữ liệu hiện tại')], readonly=True)
 
     @api.model_create_multi
     def create(self, vals_list):

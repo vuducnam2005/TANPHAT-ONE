@@ -1,8 +1,9 @@
 # TANPHAT ONE — Chấm công (`tp_hr_attendance`)
 
-Version `20.0.2.0.0` · HR-ATTENDANCE-SIMPLE-002 (DEC-055/056, `CHG-20261118-019`).
-Hướng dẫn: [HR_ATTENDANCE_SIMPLE_002_USER_GUIDE.md](../../docs/demo/HR_ATTENDANCE_SIMPLE_002_USER_GUIDE.md) ·
-nghiệm thu: [HR_ATTENDANCE_SIMPLE_002_ACCEPTANCE.md](../../docs/demo/HR_ATTENDANCE_SIMPLE_002_ACCEPTANCE.md) ·
+Version `20.0.3.0.0` · HR-ATTENDANCE-MATRIX-003 (DEC-058), kế thừa HR-ATTENDANCE-SIMPLE-002 (DEC-055/056, `CHG-20261118-019`).
+Hướng dẫn Matrix & Đối chiếu: [HR_ATTENDANCE_MATRIX_003_USER_GUIDE.md](../../docs/demo/HR_ATTENDANCE_MATRIX_003_USER_GUIDE.md) ·
+nghiệm thu Matrix: [HR_ATTENDANCE_MATRIX_003_ACCEPTANCE.md](../../docs/demo/HR_ATTENDANCE_MATRIX_003_ACCEPTANCE.md) ·
+hướng dẫn 002: [HR_ATTENDANCE_SIMPLE_002_USER_GUIDE.md](../../docs/demo/HR_ATTENDANCE_SIMPLE_002_USER_GUIDE.md) ·
 policy: [HR_ATTENDANCE_001_POLICY.md](../../docs/security/HR_ATTENDANCE_001_POLICY.md) (§10).
 Lịch sử HR-ATTENDANCE-001 (S1–S4, `20.0.1.2.0`): [acceptance 001](../../docs/demo/HR_ATTENDANCE_001_ACCEPTANCE.md).
 
@@ -13,10 +14,12 @@ Module nhỏ cùng DB, dùng hồ sơ `hr.employee`, tài khoản và phòng ban
 
 | Model | Vai trò | Ghi |
 | --- | --- | --- |
-| `tp.hr.attendance.session` | Phiên vào-ra (UTC) | Chỉ server (import/đính chính) |
+| `tp.hr.attendance.session` | Phiên vào-ra (UTC) kèm `source_batch_ids` / `source_line_ids` | Chỉ server (import/đối chiếu/đính chính) |
 | `tp.hr.attendance.day` | Ngày công: giờ vào/ra, tình trạng dữ liệu/kỳ; RPC tổng quan/bảng công | Chỉ server |
-| `tp.hr.attendance.batch` / `.line` | Lô nhập Excel: xem trước → nhập, staging từng ô nguồn | HR manager / người được phân công nhập |
-| `tp.hr.attendance.late` | **Tổng đi muộn của máy** (Lần/Phút) theo nhân viên + kỳ nguồn + lô | Chỉ server; một bản `applied` mỗi người/kỳ |
+| `tp.hr.attendance.batch` / `.line` | Lô nhập Excel (`LÔ-xxxxx`, `partial` khi còn xung đột mở): xem trước → ma trận → đối chiếu/nhập | HR manager / người được phân công nhập |
+| `tp.hr.attendance.snapshot.person` / `.cell` | Snapshot bất biến nguyên gốc từ Excel (tách `raw_source_code`, `raw_machine_code`, `source_group`, `absent_raw`, 2 dòng Vào/Ra) | Chỉ server; khóa sửa/xóa trực tiếp |
+| `tp.hr.attendance.resolution` | Nhật ký quyết định đối chiếu A/B (`keep_current`/`use_a`/`use_b`/`defer`, snapshot trước/sau, version, lý do) | Chỉ server; khóa sửa/xóa |
+| `tp.hr.attendance.late` | **Tổng đi muộn của máy** (Lần/Phút) theo nhân viên + kỳ nguồn + lô (`superseded` giữ lịch sử khi thay nguồn) | Chỉ server; một bản `applied` mỗi người/kỳ |
 | `tp.hr.attendance.source` / `.source.code` / `.event` | Nền API máy: nguồn, mã trên máy theo namespace, sự kiện thô bất biến | Chưa kết nối máy thật |
 | `tp.hr.attendance.code` | Mã máy Excel (cột ID) → hồ sơ | HR manager |
 | `tp.hr.attendance.rule` / `.assignment` / `.period` / `.correction` / `.log` | Quy tắc công, phân công, kỳ chốt, phiếu điều chỉnh, nhật ký (giữ từ 001) | Như 001 |
@@ -83,8 +86,8 @@ Trang Nguồn dữ liệu hiện *API: Chưa cấu hình* và checklist 9 thông
 
 ## Kiểm thử
 
-Test thuần (không ORM): `test_logic`, `test_parser_late`, phần không-DB của `test_parser`. Test ORM:
-`test_upload`, `test_access`, `test_correction`, `test_import`, `test_directory_privacy` — chỉ chạy trên DB
+Test thuần (không ORM): `test_logic`, `test_parser`, `test_parser_late`, `test_matrix_pure`. Test ORM:
+`test_upload`, `test_access`, `test_correction`, `test_import`, `test_directory_privacy`, `test_matrix_compare` — chỉ chạy trên DB
 test riêng, không chạy trên DB đang dùng:
 
 ```bash

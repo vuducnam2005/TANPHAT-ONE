@@ -55,9 +55,18 @@ class AttendanceSession(models.Model):
     day_id = fields.Many2one('tp.hr.attendance.day', 'Ngày công tổng hợp', index=True, ondelete='set null')
     batch_id = fields.Many2one('tp.hr.attendance.batch', 'Lô nhập', groups=PROCESSOR_GROUPS, ondelete='restrict')
     line_id = fields.Many2one('tp.hr.attendance.line', 'Dòng nguồn', groups=PROCESSOR_GROUPS, ondelete='restrict')
+    source_batch_ids = fields.Many2many(
+        'tp.hr.attendance.batch', 'tp_hr_att_session_batch_rel', 'session_id', 'batch_id',
+        string='Các lô nguồn chứng minh', groups=PROCESSOR_GROUPS, readonly=True,
+    )
+    source_line_ids = fields.Many2many(
+        'tp.hr.attendance.line', 'tp_hr_att_session_line_rel', 'session_id', 'line_id',
+        string='Các dòng nguồn chứng minh', groups=PROCESSOR_GROUPS, readonly=True,
+    )
     correction_id = fields.Many2one('tp.hr.attendance.correction', 'Từ đề nghị', groups=PROCESSOR_GROUPS, readonly=True, ondelete='set null')
     superseded_by_id = fields.Many2one('tp.hr.attendance.correction', 'Được thay bởi đề nghị', groups=PROCESSOR_GROUPS, readonly=True,
                                        ondelete='set null')
+    superseded_reason = fields.Char('Lý do thay nguồn', groups=PROCESSOR_GROUPS, readonly=True)
 
     _punch_unique = models.UniqueIndex('(employee_id, check_in, check_out)', 'Phiên vào-ra này đã được ghi nhận.')
     _order_valid = models.Constraint('CHECK(check_out > check_in)', 'Giờ ra phải sau giờ vào.')
@@ -346,11 +355,14 @@ class AttendanceDay(models.Model):
     def _tp_updated(self, company):
         """``({'to', 'at'} | None, applied batches)``: how far the imported source reaches and when it last changed."""
         applied = self.env['tp.hr.attendance.batch'].sudo().search(
-            [('company_id', '=', company.id), ('state', '=', 'applied')], order='applied_at desc')
+            [('company_id', '=', company.id), ('state', 'in', ('applied', 'partial'))], order='applied_at desc')
         if not applied:
             return None, applied
-        covered_to = max(applied.mapped('period_to'))
-        stamp = fields.Datetime.context_timestamp(self.with_context(tz=self.env.user.tz or DEFAULT_TZ), applied[0].applied_at)
+        periods = [d for d in applied.mapped('period_to') if d]
+        if not periods:
+            return None, applied
+        covered_to = max(periods)
+        stamp = fields.Datetime.context_timestamp(self.with_context(tz=self.env.user.tz or DEFAULT_TZ), applied[0].applied_at or applied[0].create_date)
         return {'to': covered_to.strftime('%d/%m/%Y'), 'at': stamp.strftime('%d/%m/%Y %H:%M')}, applied
 
     @api.model

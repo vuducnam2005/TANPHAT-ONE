@@ -328,3 +328,10 @@ S4 đã deploy PC server từ `cc2bfcb6`: 37/37 tệp checksum, public 40 dashbo
 
 - HR-T01/action_employees/hr.employee/employee_list: bỏ cột sáu chấm, kéo trên hàng; eligibility SearchModel/domain/sort/pager/count/export giữ nguyên. Lọc phòng vẫn kéo; lọc nhân viên hoặc sort khác khóa và hướng dẫn hiện hành. Readonly không có draggable row hoặc API reorder.
 - Browser native regression+VM PASS cả vùng thả, click/checkbox, failure; ORM thực rollback PASS lên/xuống/SQL đọc lại/crossdepartment/viewer, fresh-cursor snapshot giữ. Full authenticated renderer/HOOT/race/persist sau commit chưa chạy; xem [acceptance](../demo/HR_EMPLOYEE_ORDER_ACCEPTANCE.md). Không thêm bảng/filter engine.
+
+## HR-ATTENDANCE-MATRIX-003 — CHG-20261118-029
+
+| Vị trí | Tiêu chí / phạm vi (`DEC-044` & `DEC-058`) | Kiểm thực và còn thiếu |
+| --- | --- | --- |
+| Bảng dữ liệu theo file / `menu_file_matrix` / `tp_hr_attendance.file_matrix` / `tp_matrix_data` | Chỉ `can('import')` trong `env.company`; bộ lọc lô/file, sheet, khoảng ngày trong kỳ, đơn vị nguồn (thu/mở không đếm nhầm nhân viên), tìm tên/mã Excel/mã HR/ID máy, tình trạng đối chiếu; `Áp dụng`/`Xóa bộ lọc`/chip; phân trang `10/20/50/100` theo nhân viên giữ cặp `Vào/Ra`; xuất Excel đúng bộ lọc giữ nhãn *Đi muộn* nguyên kỳ; cột phụ tùy chọn & mobile toggle | Pure `26/26` + shell ORM rollback `18069` (`total=39`, `p1=20`, `p2=19`, subrange `3` ngày, export `92×14`, chặn `uid=34` `5/5`) + CSS/JS HTTP bundle PASS; browser đã đăng nhập admin/importer `NOT_RUN` |
+| Đối chiếu nguồn A/B / `tp_hr_attendance.compare` / `tp_compare_batches` | Chỉ `can('import')` cùng công ty; chọn Lô/Sheet A & B (hoặc hệ thống), toggle `Chỉ xem sai khác`, nhóm 5 trạng thái (`same`/`only_a`/`only_b`/`diff`/`unready`), đơn vị nguồn, ngày công, tìm nhân viên/mã; phân trang `10/20/50/100`; xuất đối chiếu 2 sheet; xử lý `keep_current`/`use_a`/`use_b`/`defer` qua `tp_resolve_compare_batch` + CAS lock | Shell ORM rollback `18069` (`LÔ-00005` vs `LÔ-00002`: `40` dòng gồm `1` `name_conflict`, `42 same`, `113 only_a`, `22 diff`, export 2 sheet `181×12`) + bundle JS/CSS PASS; test ghi `test_matrix_compare.py` (`18079`) & browser admin `NOT_RUN` |

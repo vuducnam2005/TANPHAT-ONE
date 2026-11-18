@@ -19,8 +19,7 @@
 - Cùng addon/PostgreSQL/employee IDs, giữ ACL/period locks/corrections và
   chống apply trùng/ghi đồng thời tại backend. Không tạo DB cho từng file.
 - [Prompt003](prompts/CLAUDE_HR_ATTENDANCE_MATRIX_003_FILE_COMPARISON.md)
-  kế thừa SIMPLE002 đã giao; mới tài liệu, chưa triển khai hoặc import lại.
-  Khi Claude thực thi: giao18069/PCserver theo policy17/11, không bắt18079.
+  kế thừa SIMPLE002 (`20.0.2.0.0`) đã giao; **đã triển khai tại `tp_hr_attendance` `20.0.3.0.0` và áp lên `18069` (`CHG-20261118-029`)**, giữ nguyên toàn bộ dữ liệu hiệu lực và bảo vệ kỳ chốt/`correction`; chờ deploy `PC server` và người dùng nghiệm thu trực quan/nghiệp vụ.
 
 
 ## DEC-057 — Một phiên web hoạt động, đăng nhập mới thay phiên cũ (18/11/2026)

@@ -5,6 +5,7 @@ from .attendance_common import HR_MANAGER, can
 
 # menu xmlid -> capability. HR manager always sees review/periods (read-only oversight); actions still check assignments.
 GATED = {
+    'tp_hr_attendance.menu_file_matrix': 'import',
     'tp_hr_attendance.menu_import': 'import',
     'tp_hr_attendance.menu_sources': 'import',
     'tp_hr_attendance.menu_review': 'review',

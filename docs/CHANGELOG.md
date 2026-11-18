@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-029 — Triển khai Bảng dữ liệu theo file & Đối chiếu A/B (HR-ATTENDANCE-MATRIX-003)
+
+- Ngày 18/11/2026 Asia/Saigon; `tp_hr_attendance` `20.0.2.0.0 → 20.0.3.0.0` (`DEC-058`, `DEC-044`), kế thừa `SIMPLE-002` không chạy lại prompt cũ.
+- Backend: parser v2 đọc đủ 39/nhiều nhân viên (gồm blank/unmapped), tách `raw_source_code`/`raw_machine_code`/`source_title`/`source_group`/`absent_raw`; model bất biến `tp.hr.attendance.snapshot.person` / `.cell`, `tp.hr.attendance.resolution`, trạng thái lô `partial`, provenance M2M `source_batch_ids` / `source_line_ids`, `superseded` trên `late`, migration `20.0.3.0.0/post-migrate.py` idempotent, guard quyền/attachment & CAS lock; RPC `tp_upload_files`, `tp_discard_batch`, `tp_matrix_data`, `tp_export_matrix`, `tp_compare_batches`, `tp_apply_compare_valid`, `tp_resolve_compare`, `tp_resolve_compare_batch`, `tp_export_compare`.
+- Frontend native OWL/SCSS: đa tệp `upload.js/xml`, màn `FileMatrix` (`matrix.js/xml/scss`, 2 dòng `Vào/Ra`, header 2 tầng, nhóm đơn vị nguồn thu/mở, cột phụ, bộ lọc `DEC-044`, phân trang `10/20/50/100`, mobile toggle + reduced motion) và `AttendanceCompare` (`compare.js/xml`, chọn A/B & sheet, 5 nhóm đối chiếu, xử lý từng ô/kỳ Đi muộn kèm lý do bắt buộc).
+- Kiểm thực local `18069`: `ruff` `0`, AST `32/32`, XML `16/16`, JS `10/10`, pure tests `26/26 PASS` + tệp thực `39` người/`7` ngày/`273` ô/`178` sự kiện/`95` trống; backup `.local/hr-attendance-matrix003/backup-ham003-20261118-163916` (`15.600` restore, `1.027` filestore); upgrade `0` ERROR (`post-migrate.py` `8.055s`, giữ `299` phiên/`365` ngày/`39` người); ORM rollback + SQL read-only kiểm matrix/compare/export/ACL (`uid=34` `5/5`, `uid=5` `6/6`); HTTP `web.assets_backend` (`1.592.872` CSS / `8.413.738` JS) và Playwright ẩn danh `0` lỗi console/5xx. `NOT_RUN`: login admin/importer trình duyệt & suite DB ghi `test_matrix_compare.py` (`18079`). Next: push và deploy `PC server`.
+
 ## CHG-20261118-028 — Sửa asset public vẫn chứa tay nắm và logic kéo cũ
 
 - Ngày18/11/2026 Asia/Saigon.

@@ -6,7 +6,7 @@
 
 | ID | Công việc | Trạng thái | Đầu vào/phụ thuộc | Điều kiện hoàn tất |
 | --- | --- | --- | --- | --- |
-| HR-ATTENDANCE-MATRIX-003 | Bảng công đầy đủ theo file, tải nhiều file và đối chiếu trước tổng hợp | PROMPT_READY_NOT_IMPLEMENTED CHG-20261118-021 | DEC-058; [prompt003](prompts/CLAUDE_HR_ATTENDANCE_MATRIX_003_FILE_COMPARISON.md); SIMPLE002 đã giao | Matrix đủ người/blank/ngày/Vào–Ra, filter/pager; source bất biến, A/B chọn khác biệt, cùng giờ không đếm đôi, tổng muộn đúng kỳ, ACL/locks/corrections/race/sharedDB; chưa runtime |
+| HR-ATTENDANCE-MATRIX-003 | Bảng công đầy đủ theo file, tải nhiều file và đối chiếu trước tổng hợp | LOCAL_APPLIED_PC_RELEASE_PENDING CHG-20261118-029 | DEC-058; `tp_hr_attendance` `20.0.3.0.0`; [acceptance](demo/HR_ATTENDANCE_MATRIX_003_ACCEPTANCE.md) / [guide](demo/HR_ATTENDANCE_MATRIX_003_USER_GUIDE.md) | 18069 upgrade/migration `0` lỗi (`26/26` pure + ORM rollback + ACL `uid=34` + live bundle + anon smoke PASS); chờ deploy `PC server`; login admin & DB-write `18079` `NOT_RUN` |
 
 | HR-EMPLOYEE-ORDER | Thứ tự nhân viên dùng chung, kéo cả hàng trong phòng | MAIN_AND_PC_SERVER_ASSETS_VERIFIED CHG-20261118-028 | [acceptance](demo/HR_EMPLOYEE_ORDER_ACCEPTANCE.md) / [runbook](../ops/runbooks/HR_EMPLOYEE_ORDER_DEPLOY_AND_ROLLBACK.md) | HR20.0.1.13.1; native regression, ORM thật rollback PASS; full browser persist/race chưa chạy |
 

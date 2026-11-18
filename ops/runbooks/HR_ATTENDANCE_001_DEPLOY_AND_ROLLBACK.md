@@ -31,3 +31,11 @@ trước-sau; public: Tổng quan/Bảng chấm công/Nguồn dữ liệu mở �
 **Không** nhập Excel thật trên server khi deploy; HR tự nhập qua nút *Nhập Excel máy chấm công* (xem trước
 rồi mới ghi). Hoàn nguyên code: khôi phục `source-config.tar.gz` của đúng backup rồi `-u tp_hr_attendance`;
 4 bảng mới để lại, bản cũ không đọc tới (chưa diễn tập). Hoàn nguyên đầy đủ dùng dump + filestore cùng backup.
+
+## MATRIX-003 `20.0.3.0.0` (`CHG-20261118-028`)
+
+Release theo quy trình `git archive <SHA> custom_addons/tp_hr_attendance`, label `ham003`, nâng cấp `20.0.2.0.0 → 20.0.3.0.0`.
+- Backup đầy đủ DB (`pg_dump` + `pg_restore -l`), filestore, source/config và `SHA256SUMS` trước khi dừng container và giải nén.
+- `-u tp_hr_attendance` chạy migration idempotent `migrations/20.0.3.0.0/post-migrate.py` (`_tp_migrate_matrix_003`): tạo 3 bảng `tp_hr_attendance_snapshot_person`, `tp_hr_attendance_snapshot_cell`, `tp_hr_attendance_resolution`, cấp `batch_code` (`LÔ-xxxxx`) và dựng snapshot từ `file_data` đính kèm, gắn provenance đa lô cho các session/late hiện có mà **không** nhập lại công, không tạo/sửa `hr.employee`, giữ nguyên 100% số liệu hiệu lực, kỳ chốt và điều chỉnh đã duyệt.
+- Không nhập Excel giả/thật để test trên DB chính/server; sau deploy kiểm version, bảng snapshot, counts `session`/`day`/`late`/`employee`/`users`/`web.base.url`, HTTP assets `web.assets_backend`, `/web/health`, và URL public `https://hybrid-send-ready-ballot.trycloudflare.com`.
+- Hoàn nguyên: dừng `tp-odoo`, khôi phục `source-config` từ backup đúng môi trường rồi `-u tp_hr_attendance` (hoặc khôi phục đầy đủ dump + filestore cùng backup trong khung bảo trì).

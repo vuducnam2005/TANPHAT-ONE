@@ -6,11 +6,12 @@
         <field name="model">tp.hr.attendance.batch</field>
         <field name="arch" type="xml">
             <list string="Nhập dữ liệu công" js_class="tp_hr_table" limit="20" import="0" export_xlsx="0">
+                <field name="batch_code" string="Mã lô"/>
                 <field name="name"/>
                 <field name="file_name"/>
                 <field name="period_from"/>
                 <field name="period_to"/>
-                <field name="state" widget="badge" decoration-info="state == 'preview'" decoration-success="state == 'applied'" decoration-muted="state == 'cancelled'"/>
+                <field name="state" widget="badge" decoration-info="state == 'preview'" decoration-warning="state == 'partial'" decoration-success="state == 'applied'" decoration-muted="state == 'cancelled'"/>
                 <field name="applied_count" string="Đã ghi nhận"/>
                 <field name="duplicate_count" string="Trùng"/>
                 <field name="conflict_count" string="Xung đột"/>
@@ -30,7 +31,7 @@
         <field name="model">tp.hr.attendance.batch</field>
         <field name="arch" type="xml">
             <search>
-                <field name="name" string="Lô / tệp" filter_domain="['|', ('name', 'ilike', self), ('file_name', 'ilike', self)]"/>
+                <field name="name" string="Mã lô / tên / tệp" filter_domain="['|', '|', ('batch_code', 'ilike', self), ('name', 'ilike', self), ('file_name', 'ilike', self)]"/>
                 <field name="state"/>
                 <field name="period_from"/>
                 <field name="applied_by"/>
@@ -47,11 +48,13 @@
             <form string="Lô nhập dữ liệu công" class="o_tp_att_batch_form" duplicate="0">
                 <header>
                     <button name="action_preview" type="object" string="Đọc tệp và xem trước" class="btn-primary" invisible="state != 'draft'"/>
-                    <button name="action_apply" type="object" string="Áp dụng dòng hợp lệ" class="btn-primary" invisible="state != 'preview'"
+                    <button name="action_open_matrix" type="object" string="Xem bảng ma trận theo file" class="btn-primary" invisible="state == 'draft'"/>
+                    <button name="action_open_compare" type="object" string="Đối chiếu với file khác" class="btn-secondary" invisible="state == 'draft'"/>
+                    <button name="action_apply" type="object" string="Áp dụng dòng hợp lệ" class="btn-secondary" invisible="state != 'preview'"
                             confirm="Chỉ các dòng Hợp lệ được ghi nhận. Dòng thiếu giờ, cần kiểm tra hoặc xung đột được giữ lại để xử lý; dòng trùng bị bỏ qua. Tiếp tục?"/>
-                    <button name="action_cancel" type="object" string="Hủy lô" invisible="state != 'preview'"/>
+                    <button name="action_cancel" type="object" string="Bỏ qua nguồn" invisible="state != 'preview'"/>
                     <button name="action_open_lines" type="object" string="Xem và lọc tất cả dòng" invisible="state == 'draft'"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,preview,applied"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,preview,partial,applied"/>
                 </header>
                 <sheet>
                     <div class="alert alert-info" role="status" invisible="state != 'draft'">
@@ -219,5 +222,11 @@
         <field name="view_id" ref="line_list"/>
         <field name="search_view_id" ref="line_search"/>
         <field name="context">{'tp_filter_profile': 'import_lines'}</field>
+    </record>
+
+    <record id="action_file_matrix" model="ir.actions.client">
+        <field name="name">Bảng dữ liệu theo file</field>
+        <field name="tag">tp_hr_attendance.file_matrix</field>
+        <field name="path">bang-cong-theo-file</field>
     </record>
 </odoo>

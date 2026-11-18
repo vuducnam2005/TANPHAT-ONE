@@ -44,3 +44,12 @@ rule_att_source_code_company,Attendance device codes company,tp.hr.attendance.so
 access_att_event_manager,Attendance device events HR manager,tp.hr.attendance.event,hr.group_hr_manager,r,
 access_att_event_officer,Attendance device events officer,tp.hr.attendance.event,tp_hr_attendance.group_attendance_officer,r,
 rule_att_event_company,Attendance device events company,tp.hr.attendance.event,,crud,"[('company_id', 'in', company_ids)]"
+access_att_snap_person_manager,Attendance snapshot person HR manager,tp.hr.attendance.snapshot.person,hr.group_hr_manager,r,
+access_att_snap_person_officer,Attendance snapshot person officer,tp.hr.attendance.snapshot.person,tp_hr_attendance.group_attendance_officer,r,
+rule_att_snap_person_company,Attendance snapshot person company,tp.hr.attendance.snapshot.person,,crud,"[('company_id', 'in', company_ids)]"
+access_att_snap_cell_manager,Attendance snapshot cell HR manager,tp.hr.attendance.snapshot.cell,hr.group_hr_manager,r,
+access_att_snap_cell_officer,Attendance snapshot cell officer,tp.hr.attendance.snapshot.cell,tp_hr_attendance.group_attendance_officer,r,
+rule_att_snap_cell_company,Attendance snapshot cell company,tp.hr.attendance.snapshot.cell,,crud,"[('company_id', 'in', company_ids)]"
+access_att_resolution_manager,Attendance compare resolution HR manager,tp.hr.attendance.resolution,hr.group_hr_manager,r,
+access_att_resolution_officer,Attendance compare resolution officer,tp.hr.attendance.resolution,tp_hr_attendance.group_attendance_officer,r,
+rule_att_resolution_company,Attendance compare resolution company,tp.hr.attendance.resolution,,crud,"[('company_id', 'in', company_ids)]"

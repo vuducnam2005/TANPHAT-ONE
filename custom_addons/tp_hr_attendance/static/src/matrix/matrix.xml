@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="tp_hr_attendance.FileMatrix">
+<div class="o_tp_att o_tp_att_matrix_screen" aria-label="Bảng dữ liệu theo file" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
+    <t t-if="this.state.viewMode === 'compare' and this.CompareComponent">
+        <t t-component="this.CompareComponent"
+            batches="this.data?.batches || []"
+            initialA="this.state.compareBatchAId"
+            initialB="this.state.compareBatchBId"
+            onBack="(bid) => this.backToMatrix(bid)"
+            onUpload="() => this.openUploadMore()"/>
+    </t>
+    <t t-else="">
+        <header class="o_tp_att_header">
+            <div class="o_tp_att_title_group">
+                <button type="button" class="btn btn-light btn-sm o_tp_att_back_btn" t-on-click="this.goBack">
+                    <i class="oi me-1" data-icon="arrow_back" aria-hidden="true"/>Quay lại Bảng chấm công
+                </button>
+                <div>
+                    <h1>Bảng dữ liệu theo file</h1>
+                    <p class="o_tp_att_subtitle">
+                        Ảnh chụp nguyên gốc từ tệp Excel máy chấm công (giờ tham chiếu <strong t-out="(this.data?.reference_hours || '08:30-17:00').replace('-', '–')"/>; không tự điền giờ thiếu, không sửa hồ sơ HR)
+                    </p>
+                </div>
+            </div>
+            <div class="o_tp_att_actions">
+                <button type="button" class="btn btn-outline-primary" t-on-click="this.openUploadMore">
+                    <i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Tải thêm file
+                </button>
+                <button t-if="(this.data?.batches?.length || 0) &gt;= 1" type="button" class="btn btn-outline-primary" t-on-click="this.openCompare">
+                    <i class="oi me-1" data-icon="compare_arrows" aria-hidden="true"/>Đối chiếu
+                </button>
+                <button t-if="this.batch" type="button" class="btn btn-outline-secondary" t-on-click="this.exportMatrix">
+                    <i class="oi me-1" data-icon="download" aria-hidden="true"/>Xuất Excel
+                </button>
+                <button t-if="this.batch?.can_discard" type="button" class="btn btn-outline-danger" t-on-click="this.openDiscardConfirm">
+                    Bỏ qua nguồn
+                </button>
+                <button t-if="this.batch?.can_apply" type="button" class="btn btn-primary" t-on-click="this.openApplyConfirm">
+                    <i class="oi me-1" data-icon="check" aria-hidden="true"/>Áp dụng toàn bộ lô
+                </button>
+            </div>
+        </header>
+
+        <div t-if="this.state.uploadNotice" class="alert alert-warning d-flex justify-content-between align-items-start gap-2" role="alert">
+            <div><strong>Một số tệp trong lần tải vừa rồi bị từ chối:</strong> <t t-out="this.state.uploadNotice"/> (các tệp hợp lệ vẫn được lưu nguồn đầy đủ).</div>
+            <button type="button" class="btn-close" aria-label="Đóng thông báo" t-on-click="() => this.state.uploadNotice = ''"/>
+        </div>
+
+        <div t-if="this.state.error" class="alert alert-danger" role="alert">
+            <t t-out="this.state.error"/>
+            <button type="button" class="btn btn-link p-0 ms-2" t-on-click="this.load">Thử lại</button>
+        </div>
+
+        <p t-if="this.state.loading and !this.data" role="status" class="o_tp_att_loading">Đang tải bảng dữ liệu nguồn…</p>
+
+        <t t-elif="this.data and !this.data.has_batches">
+            <section class="o_tp_att_panel text-center py-5">
+                <h2>Chưa có tệp Excel nguồn nào được lưu</h2>
+                <p class="o_tp_att_muted mt-2 mb-3">Tải một hoặc nhiều tệp .xlsx xuất từ máy chấm công để xem ngay bảng ma trận đầy đủ và đối chiếu trước khi tổng hợp.</p>
+                <button type="button" class="btn btn-primary" t-on-click="this.openUploadMore">
+                    <i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Chọn tệp Excel máy chấm công
+                </button>
+            </section>
+        </t>
+
+        <t t-elif="this.batch">
+            <!-- Quick pills when multiple files were just uploaded in this session -->
+            <div t-if="this.uploadedBatches.length &gt; 1" class="o_tp_att_recent_uploads" role="region" aria-label="Các tệp vừa tải lên">
+                <span class="o_tp_att_muted fw-semibold">Tệp vừa tải (<t t-out="this.uploadedBatches.length"/>):</span>
+                <button t-foreach="this.uploadedBatches" t-as="ub" t-key="ub.id" type="button"
+                    class="o_tp_att_upload_pill" t-att-class="{'active': ub.id === this.batch.id}"
+                    t-on-click="() => this.selectBatch(ub.id)">
+                    <strong t-out="ub.batch_code"/> · <span t-out="ub.file_name || ub.name"/>
+                    <small t-if="ub.period_label">(<t t-out="ub.period_label"/>)</small>
+                </button>
+            </div>
+
+            <!-- Selected source file panel -->
+            <section class="o_tp_att_file_panel" aria-label="Thông tin tệp nguồn đang xem">
+                <div class="o_tp_att_file_panel_top">
+                    <label class="o_tp_att_field o_tp_att_file_picker">
+                        <span>Tệp / Lô nguồn đang xem</span>
+                        <select t-on-change="this.onBatchSelect" aria-label="Chọn tệp nguồn">
+                            <option t-foreach="this.data.batches" t-as="b" t-key="b.id" t-att-value="b.id"
+                                t-att-selected="b.id === this.batch.id" t-out="b.selector_label + ' · [' + b.state_label + ']'"/>
+                        </select>
+                    </label>
+
+                    <label t-if="this.batch.sheets.length &gt; 1" class="o_tp_att_field">
+                        <span>Trang tính (Sheet)</span>
+                        <select t-on-change="(ev) => this.selectSheet(ev.target.value)" aria-label="Chọn trang tính">
+                            <option t-foreach="this.batch.sheets" t-as="sh" t-key="sh.index" t-att-value="sh.index"
+                                t-att-selected="sh.index === this.sheet.index"
+                                t-out="sh.name + (sh.period_label ? ' (' + sh.period_label + ')' : '') + ' · ' + sh.employees + ' người'"/>
+                        </select>
+                    </label>
+
+                    <label class="o_tp_att_check_inline">
+                        <input type="checkbox" t-att-checked="this.state.includeCancelled" t-on-change="this.toggleIncludeCancelled"/>
+                        <span>Hiện cả lô đã bỏ qua</span>
+                    </label>
+                </div>
+
+                <div class="o_tp_att_file_meta">
+                    <span class="o_tp_att_badge o_tp_att_state_pill" t-att-class="this.stateBadgeTone" t-out="this.batch.state_label"/>
+                    <span>Mã lô: <strong t-out="this.batch.batch_code"/></span>
+                    <span t-if="this.sheet.period_full">Kỳ nguồn: <strong t-out="this.sheet.period_full"/></span>
+                    <span>Trang: <strong t-out="this.sheet.name"/></span>
+                    <span t-if="this.batch.uploaded_at">Tải lúc <t t-out="this.batch.uploaded_at"/><t t-if="this.batch.uploaded_by"> bởi <t t-out="this.batch.uploaded_by"/></t></span>
+                    <span t-if="this.batch.applied_at">Áp dụng lúc <t t-out="this.batch.applied_at"/><t t-if="this.batch.applied_by"> bởi <t t-out="this.batch.applied_by"/></t></span>
+                    <span t-if="this.batch.same_file_code" class="o_tp_att_badge o_muted" t-att-title="'Cùng mã băm SHA-256 với ' + this.batch.same_file_code">
+                        Trùng nội dung tệp với <t t-out="this.batch.same_file_code"/>
+                    </span>
+                </div>
+
+                <div class="o_tp_att_mini_stats" aria-label="Tóm tắt phạm vi đang lọc">
+                    <span><strong t-out="this.data.summary.employees"/> / <t t-out="this.sheet.total_in_sheet"/> nhân viên</span>
+                    <span class="o_ok_text">Khớp HR: <strong t-out="this.data.summary.mapped"/></span>
+                    <span t-if="this.data.summary.unmapped" class="o_warn_text">Chưa map / khác tên: <strong t-out="this.data.summary.unmapped"/></span>
+                    <span t-if="this.data.summary.all_empty">Toàn ô trống: <strong t-out="this.data.summary.all_empty"/></span>
+                    <span t-if="this.data.summary.valid" class="o_ok_text">Ô mới: <strong t-out="this.data.summary.valid"/></span>
+                    <span t-if="this.data.summary.applied" class="o_ok_text">Ô đã áp: <strong t-out="this.data.summary.applied"/></span>
+                    <span t-if="this.data.summary.duplicate">Ô trùng: <strong t-out="this.data.summary.duplicate"/></span>
+                    <span t-if="this.data.summary.conflict" class="o_danger_text">Ô khác giờ: <strong t-out="this.data.summary.conflict"/></span>
+                    <span t-if="this.data.summary.missing" class="o_warn_text">Ô thiếu giờ: <strong t-out="this.data.summary.missing"/></span>
+                    <span t-if="this.data.summary.review" class="o_warn_text">Ô cần kiểm tra: <strong t-out="this.data.summary.review"/></span>
+                </div>
+            </section>
+
+            <!-- Sheet format/snapshot warnings if any -->
+            <div t-if="this.batch.snapshot_state === 'unavailable'" class="alert alert-warning" role="alert">
+                <strong t-out="this.batch.snapshot_note"/>
+            </div>
+            <div t-foreach="this.sheet.errors" t-as="err" t-key="err_index" class="alert alert-warning" role="alert" t-out="err"/>
+
+            <!-- DEC-044 Content-specific Filter Bar -->
+            <div class="o_tp_att_mobile_bar d-md-none">
+                <button type="button" class="btn btn-outline-secondary" t-on-click="() => this.state.mobileFilterOpen = !this.state.mobileFilterOpen"
+                    t-att-aria-expanded="this.state.mobileFilterOpen ? 'true' : 'false'">
+                    <i class="oi me-1" data-icon="filter_list" aria-hidden="true"/>
+                    Bộ lọc <t t-if="this.activeFilterCount">(<t t-out="this.activeFilterCount"/>)</t>
+                </button>
+                <div class="o_tp_att_segment" role="group" aria-label="Cách xem trên điện thoại">
+                    <button type="button" t-att-class="{'active': this.state.mobileView === 'cards'}" t-on-click="() => this.state.mobileView = 'cards'">Thẻ người</button>
+                    <button type="button" t-att-class="{'active': this.state.mobileView === 'table'}" t-on-click="() => this.state.mobileView = 'table'">Bảng ngang</button>
+                </div>
+            </div>
+
+            <section class="o_tp_att_toolbar o_tp_att_matrix_filters" t-att-class="{'o_mobile_closed': !this.state.mobileFilterOpen}"
+                aria-label="Bộ lọc bảng dữ liệu theo file" t-on-keydown="this.onFilterKeydown">
+                <label class="o_tp_att_field o_tp_att_search">
+                    <span>Tìm nhân viên / Mã / ID máy</span>
+                    <input type="search" placeholder="Tên, mã TP0xx, ID máy, mã HR…"
+                        t-att-value="this.state.draftSearch"
+                        t-on-input="(ev) => this.state.draftSearch = ev.target.value"
+                        aria-label="Tìm tên nhân viên, mã Excel, ID máy hoặc mã HR"/>
+                </label>
+
+                <label class="o_tp_att_field">
+                    <span>Đơn vị trong tệp (nguồn Excel)</span>
+                    <select t-on-change="(ev) => this.state.draftGroup = ev.target.value" aria-label="Lọc đơn vị nguồn trong tệp">
+                        <option value="" t-att-selected="!this.state.draftGroup">Tất cả đơn vị nguồn</option>
+                        <option t-foreach="this.data.group_options" t-as="grp" t-key="grp.key" t-att-value="grp.key"
+                            t-att-selected="grp.key === this.state.draftGroup" t-out="grp.label + ' (' + grp.count + ')'"/>
+                    </select>
+                </label>
+
+                <label class="o_tp_att_field">
+                    <span>Tình trạng đối chiếu</span>
+                    <select t-on-change="(ev) => this.state.draftStatus = ev.target.value" aria-label="Lọc tình trạng đối chiếu">
+                        <option value="" t-att-selected="!this.state.draftStatus">Tất cả tình trạng</option>
+                        <option t-foreach="this.data.status_options" t-as="opt" t-key="opt.key" t-att-value="opt.key"
+                            t-att-selected="opt.key === this.state.draftStatus" t-out="opt.label"/>
+                    </select>
+                </label>
+
+                <label class="o_tp_att_field">
+                    <span>Từ ngày (trong kỳ)</span>
+                    <input type="date" t-att-min="this.sheet.from" t-att-max="this.sheet.to"
+                        t-att-value="this.state.draftFrom"
+                        t-on-change="(ev) => this.state.draftFrom = ev.target.value"
+                        aria-label="Lọc từ ngày trong kỳ"/>
+                </label>
+
+                <label class="o_tp_att_field">
+                    <span>Đến ngày (trong kỳ)</span>
+                    <input type="date" t-att-min="this.sheet.from" t-att-max="this.sheet.to"
+                        t-att-value="this.state.draftTo"
+                        t-on-change="(ev) => this.state.draftTo = ev.target.value"
+                        aria-label="Lọc đến ngày trong kỳ"/>
+                </label>
+
+                <div class="o_tp_att_filter_btns">
+                    <button type="button" class="btn btn-primary" t-on-click="this.applyFilters">
+                        Áp dụng<t t-if="this.hasPendingFilterDiff"> *</t>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary"
+                        t-att-disabled="!this.activeFilterCount and !this.hasPendingFilterDiff"
+                        t-on-click="this.clearFilters">Xóa bộ lọc</button>
+
+                    <div class="o_tp_att_col_dropdown">
+                        <button type="button" class="btn btn-light"
+                            t-att-aria-expanded="this.state.colMenuOpen ? 'true' : 'false'"
+                            t-on-click="() => this.state.colMenuOpen = !this.state.colMenuOpen">
+                            Tùy chọn cột
+                        </button>
+                        <div t-if="this.state.colMenuOpen" class="o_tp_att_col_menu" role="menu" aria-label="Ẩn hiện cột phụ">
+                            <label><input type="checkbox" t-att-checked="this.state.cols.machineId" t-on-change="() => this.toggleCol('machineId')"/> ID máy chấm công</label>
+                            <label><input type="checkbox" t-att-checked="this.state.cols.title" t-on-change="() => this.toggleCol('title')"/> Chức vụ (nguồn tệp)</label>
+                            <label><input type="checkbox" t-att-checked="this.state.cols.hrCode" t-on-change="() => this.toggleCol('hrCode')"/> Mã HR hiện tại (TP100xx)</label>
+                            <label t-if="this.sheet.has_absent"><input type="checkbox" t-att-checked="this.state.cols.absent" t-on-change="() => this.toggleCol('absent')"/> Vắng mặt (Theo Excel máy)</label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Active filter chips & sub-range late warning -->
+            <div t-if="this.data.chips.length or this.data.is_sub_range" class="o_tp_att_active_chips" role="region" aria-label="Điều kiện đang lọc">
+                <t t-if="this.data.chips.length">
+                    <span class="o_tp_att_muted fw-semibold">Đang lọc:</span>
+                    <span t-foreach="this.data.chips" t-as="chip" t-key="chip.key" class="o_tp_att_filter_chip">
+                        <t t-out="chip.label"/>
+                        <button type="button" t-att-aria-label="'Gỡ điều kiện ' + chip.label" t-on-click="() => this.removeChip(chip.key)">×</button>
+                    </span>
+                </t>
+                <span t-if="this.data.is_sub_range and this.sheet.has_late" class="o_tp_att_late_hint">
+                    Lưu ý: Cột Đi muộn (Lần/Phút) giữ nguyên tổng cả kỳ nguồn <strong t-out="this.sheet.period_label"/> theo Excel máy, không chia theo ngày đang lọc.
+                </span>
+            </div>
+
+            <!-- Mobile Cards Mode (<=767px when mobileView === 'cards') -->
+            <div t-att-class="this.state.mobileView === 'cards' ? 'o_tp_att_mobile_cards d-md-none' : 'd-none'" aria-label="Danh sách nhân viên theo tệp trên điện thoại">
+                <p t-if="!this.data.rows.length" class="o_tp_att_empty_box">Không có nhân viên nào khớp điều kiện lọc.</p>
+                <article t-foreach="this.data.rows" t-as="person" t-key="person.snapshot_person_id" class="o_tp_att_mcard"
+                    tabindex="0" t-on-click="() => this.openPersonDetail(person)"
+                    t-on-keydown="(ev) => ev.key === 'Enter' and this.openPersonDetail(person)">
+                    <div class="o_tp_att_mcard_head">
+                        <div>
+                            <strong><t t-out="person.stt"/>. <t t-out="person.source_name"/></strong>
+                            <small class="d-block o_tp_att_muted">
+                                Mã Excel: <strong t-out="person.raw_source_code || '—'"/>
+                                · ID máy: <t t-out="person.raw_machine_code || '—'"/>
+                                · <t t-out="person.group_label"/>
+                            </small>
+                        </div>
+                        <span class="o_tp_att_badge" t-att-class="person.mapping_state === 'mapped' ? 'o_ok' : 'o_warn'" t-out="person.mapping_label"/>
+                    </div>
+                    <div class="o_tp_att_mcard_meta">
+                        <span t-if="this.sheet.has_late">
+                            Đi muộn kỳ <t t-out="this.sheet.period_label"/>:
+                            <strong t-if="person.late.count !== null"><t t-out="person.late.count"/> lần · <t t-out="person.late.minutes"/> phút</strong>
+                            <span t-else="">—</span>
+                        </span>
+                        <span class="o_tp_att_link_hint">Chạm để xem giờ Vào/Ra từng ngày →</span>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Full Matrix Table (Desktop always visible; Mobile visible when mobileView === 'table') -->
+            <div t-att-class="this.state.mobileView === 'cards' ? 'd-none d-md-block' : ''">
+                <p class="o_tp_att_scroll_hint d-md-none" t-if="this.state.mobileView === 'table'">
+                    Vuốt ngang bên trong khung bảng để xem tất cả <t t-out="this.data.day_columns.length"/> cột ngày →
+                </p>
+                <div class="o_tp_att_matrix_wrap" role="region" aria-label="Bảng công ma trận Vào Ra theo ngày" tabindex="0">
+                    <table class="o_tp_att_matrix_table">
+                        <thead>
+                            <tr class="o_head_tier1">
+                                <th scope="col" rowspan="2" class="o_sticky_col o_col_stt">STT</th>
+                                <th scope="col" rowspan="2" class="o_sticky_col o_col_code">Mã NV<small>Excel</small></th>
+                                <th scope="col" rowspan="2" class="o_sticky_col o_col_name">Tên nhân viên<small>Nguồn tệp</small></th>
+                                <th scope="col" rowspan="2" class="o_sticky_col o_col_io">Vào / Ra</th>
+                                <th t-if="this.state.cols.hrCode" scope="col" rowspan="2" class="o_col_opt">Mã HR<small>Hiện tại</small></th>
+                                <th t-if="this.state.cols.machineId" scope="col" rowspan="2" class="o_col_opt">ID máy</th>
+                                <th t-if="this.state.cols.title" scope="col" rowspan="2" class="o_col_opt">Chức vụ<small>Nguồn tệp</small></th>
+                                <th t-foreach="this.data.day_columns" t-as="dcol" t-key="dcol.column" scope="col"
+                                    class="o_col_day" t-att-class="{'o_weekend': dcol.weekend}"
+                                    t-att-title="'Cột ' + dcol.col_letter + ' · Ngày ' + this.formatDate(dcol.date)"
+                                    t-out="dcol.day_month"/>
+                                <th t-if="this.sheet.has_late" scope="colgroup" colspan="2" class="o_col_late_group"
+                                    t-att-title="'Tổng Đi muộn cả kỳ nguồn ' + this.sheet.period_full + ' theo Excel máy'">
+                                    Đi muộn<small>Kỳ <t t-out="this.sheet.period_label"/></small>
+                                </th>
+                                <th t-if="this.state.cols.absent and this.sheet.has_absent" scope="col" rowspan="2" class="o_col_absent"
+                                    title="Số nguồn cả kỳ theo Excel máy, không dùng làm KPI Nghỉ đã xác nhận">
+                                    Vắng mặt<small>Theo Excel</small>
+                                </th>
+                            </tr>
+                            <tr class="o_head_tier2">
+                                <th t-foreach="this.data.day_columns" t-as="dcol" t-key="'w' + dcol.column" scope="col"
+                                    class="o_col_day_sub" t-att-class="{'o_weekend': dcol.weekend}" t-out="dcol.weekday"/>
+                                <t t-if="this.sheet.has_late">
+                                    <th scope="col" class="o_col_late_sub">Lần</th>
+                                    <th scope="col" class="o_col_late_sub">Phút</th>
+                                </t>
+                            </tr>
+                        </thead>
+
+                        <tbody t-if="!this.data.rows.length">
+                            <tr>
+                                <td t-att-colspan="this.totalMatrixCols" class="o_tp_att_empty">
+                                    Không có nhân viên nào khớp bộ lọc đang chọn. Bấm <strong>Xóa bộ lọc</strong> để xem toàn bộ nhân viên trong tệp.
+                                </td>
+                            </tr>
+                        </tbody>
+
+                        <t t-foreach="this.data.groups" t-as="group" t-key="group.key">
+                            <tbody class="o_group_band_body">
+                                <tr class="o_tp_att_group_band">
+                                    <td t-att-colspan="this.totalMatrixCols">
+                                        <button type="button" class="o_tp_att_group_toggle"
+                                            t-att-aria-expanded="this.state.collapsedGroups[group.key] ? 'false' : 'true'"
+                                            t-on-click="() => this.toggleGroup(group.key)">
+                                            <span class="o_chevron" t-out="this.state.collapsedGroups[group.key] ? '▸' : '▾'"/>
+                                            <strong t-out="group.label"/>
+                                            <span class="o_tp_att_group_count"><t t-out="group.people.length"/> nhân viên (trang này)</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <t t-if="!this.state.collapsedGroups[group.key]">
+                                <tbody t-foreach="group.people" t-as="person" t-key="person.snapshot_person_id" class="o_person_pair">
+                                    <!-- Row 1: Vào -->
+                                    <tr class="o_person_row o_person_vao" t-att-class="{'o_unmapped_person': person.mapping_state !== 'mapped', 'o_empty_person': person.all_empty}">
+                                        <td rowspan="2" class="o_sticky_col o_col_stt o_num" t-out="person.stt"/>
+                                        <td rowspan="2" class="o_sticky_col o_col_code">
+                                            <span class="o_code_raw" t-out="person.raw_source_code || '—'"/>
+                                        </td>
+                                        <th scope="row" rowspan="2" class="o_sticky_col o_col_name">
+                                            <button type="button" class="o_person_name_btn" t-on-click="() => this.openPersonDetail(person)">
+                                                <span class="o_tp_att_name" t-out="person.source_name"/>
+                                            </button>
+                                            <div class="o_person_badges">
+                                                <span t-if="person.mapping_state !== 'mapped'" class="o_tp_att_mini_tag o_tag_warn"
+                                                    t-att-title="person.mapping_message" t-out="person.mapping_label"/>
+                                                <span t-elif="person.hr_code and !this.state.cols.hrCode" class="o_tp_att_mini_tag o_tag_muted"
+                                                    t-att-title="'Khớp hồ sơ HR: ' + person.hr_name + ' (' + person.hr_department + ')'">
+                                                    HR: <t t-out="person.hr_code"/>
+                                                </span>
+                                                <span t-if="person.all_empty" class="o_tp_att_mini_tag o_tag_muted" title="Không có mốc giờ nào trong khoảng ngày đang xem">
+                                                    Trống cả kỳ
+                                                </span>
+                                            </div>
+                                        </th>
+                                        <td class="o_sticky_col o_col_io o_io_vao">Vào</td>
+                                        <td t-if="this.state.cols.hrCode" rowspan="2" class="o_col_opt">
+                                            <span t-out="person.hr_code || '—'"/>
+                                        </td>
+                                        <td t-if="this.state.cols.machineId" rowspan="2" class="o_col_opt o_num" t-out="person.raw_machine_code || '—'"/>
+                                        <td t-if="this.state.cols.title" rowspan="2" class="o_col_opt" t-out="person.source_title || '—'"/>
+
+                                        <td t-foreach="person.cells" t-as="cell" t-key="'in-' + cell.column"
+                                            class="o_matrix_cell o_cell_vao"
+                                            t-att-class="(this.data.day_columns[cell_index]?.weekend ? 'o_weekend ' : '') + this.cellTone(cell.status)"
+                                            t-att-title="this.cellTooltip(person, cell)">
+                                            <span t-if="cell.raw_in" class="o_time" t-out="cell.raw_in"/>
+                                            <span t-if="cell.badge and cell.status !== 'applied'" class="o_cell_tag" t-out="cell.badge"/>
+                                        </td>
+
+                                        <t t-if="this.sheet.has_late">
+                                            <td rowspan="2" class="o_matrix_late o_num"
+                                                t-att-class="this.cellTone(person.late.status)"
+                                                t-att-title="person.late.message || ('Ô ' + person.late.cell_ref + ' · Kỳ ' + this.sheet.period_label)">
+                                                <strong t-if="person.late.count !== null" t-out="person.late.count"/>
+                                                <span t-elif="person.late.raw_count" class="text-danger" t-out="person.late.raw_count"/>
+                                                <span t-else="" class="o_tp_att_muted">—</span>
+                                            </td>
+                                            <td rowspan="2" class="o_matrix_late o_num"
+                                                t-att-class="this.cellTone(person.late.status)"
+                                                t-att-title="person.late.message || ('Ô ' + person.late.cell_ref + ' · Kỳ ' + this.sheet.period_label)">
+                                                <strong t-if="person.late.minutes !== null" t-out="person.late.minutes"/>
+                                                <span t-elif="person.late.raw_minutes" class="text-danger" t-out="person.late.raw_minutes"/>
+                                                <span t-else="" class="o_tp_att_muted">—</span>
+                                                <span t-if="person.late.status === 'conflict'" class="o_cell_tag d-block">Khác tổng</span>
+                                            </td>
+                                        </t>
+
+                                        <td t-if="this.state.cols.absent and this.sheet.has_absent" rowspan="2" class="o_matrix_absent o_num"
+                                            title="Số vắng mặt nguồn cả kỳ theo Excel máy (không dùng làm KPI Nghỉ đã xác nhận)">
+                                            <span t-out="person.absent.raw !== '' ? person.absent.raw : '—'"/>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Row 2: Ra -->
+                                    <tr class="o_person_row o_person_ra" t-att-class="{'o_unmapped_person': person.mapping_state !== 'mapped', 'o_empty_person': person.all_empty}">
+                                        <td class="o_sticky_col o_col_io o_io_ra">Ra</td>
+                                        <td t-foreach="person.cells" t-as="cell" t-key="'out-' + cell.column"
+                                            class="o_matrix_cell o_cell_ra"
+                                            t-att-class="(this.data.day_columns[cell_index]?.weekend ? 'o_weekend ' : '') + this.cellTone(cell.status)"
+                                            t-att-title="this.cellTooltip(person, cell)">
+                                            <span t-if="cell.raw_out" class="o_time" t-out="cell.raw_out"/>
+                                            <span t-elif="cell.kind === 'missing_out'" class="o_cell_missing_hint">Thiếu Ra</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </t>
+                        </t>
+                    </table>
+                </div>
+            </div>
+
+            <AttPager data="this.data" unit="'nhân viên'" onPage="(p) => this.setPage(p)" onSize="(s) => this.setSize(s)"/>
+        </t>
+    </t>
+</div>
+</t>
+
+<t t-name="tp_hr_attendance.MatrixConfirmDialog">
+    <Dialog title="this.props.title" size="'md'" contentClass="'o_tp_att_dialog'">
+        <div t-if="this.state.error" class="alert alert-danger" role="alert" t-out="this.state.error"/>
+        <t t-if="this.props.mode === 'apply'">
+            <p>
+                Áp dụng các dòng hợp lệ của lô <strong t-out="this.props.batch.batch_code"/> (<t t-out="this.props.batch.file_name || this.props.batch.name"/>) vào bảng chấm công tổng hợp?
+            </p>
+            <p class="alert alert-info">Thao tác áp dụng toàn bộ lô, gồm mọi trang tính và nhân viên; bộ lọc đang xem chỉ giới hạn bảng hiển thị. Số bên dưới là phạm vi đang lọc, không phải toàn bộ lô.</p>
+            <ul class="small">
+                <li>Ô mới hợp lệ sẽ ghi nhận: <strong t-out="this.props.summary.valid || 0"/></li>
+                <li>Ô trùng giờ đã có (chỉ liên kết thêm nguồn, không nhân đôi): <strong t-out="this.props.summary.duplicate || 0"/></li>
+                <li t-if="this.props.summary.conflict">
+                    Ô khác giờ (<strong t-out="this.props.summary.conflict"/>): <strong>không tự ghi đè</strong>; sẽ giữ nguyên để đối chiếu chọn nguồn ở mục <em>Đối chiếu</em>.
+                </li>
+                <li t-if="this.props.summary.unmapped">
+                    Nhân viên chưa map HR (<strong t-out="this.props.summary.unmapped"/>): giữ nguyên ở nguồn, không tạo hồ sơ HR mới.
+                </li>
+            </ul>
+        </t>
+        <t t-else="">
+            <p>
+                Đánh dấu <strong>Bỏ qua nguồn</strong> cho lô <strong t-out="this.props.batch.batch_code"/> (<t t-out="this.props.batch.file_name"/>)?
+                Snapshot nguồn vẫn giữ để tra cứu lịch sử, không ghi vào bảng công tổng hợp.
+            </p>
+            <label class="o_tp_att_field w-100 mt-2">
+                <span>Lý do bỏ qua (tùy chọn)</span>
+                <input type="text" class="form-control" placeholder="Ví dụ: Tải nhầm bản nháp xuất dở…"
+                    t-att-value="this.state.reason" t-on-input="(ev) => this.state.reason = ev.target.value"/>
+            </label>
+        </t>
+        <t t-set-slot="footer">
+            <button type="button" t-att-class="this.props.mode === 'apply' ? 'btn btn-primary' : 'btn btn-danger'"
+                t-att-disabled="this.state.busy" t-on-click="this.confirm">
+                <t t-if="this.state.busy">Đang xử lý…</t>
+                <t t-elif="this.props.mode === 'apply'">Xác nhận áp dụng</t>
+                <t t-else="">Xác nhận bỏ qua nguồn</t>
+            </button>
+            <button type="button" class="btn btn-outline-secondary" t-att-disabled="this.state.busy" t-on-click="() => this.props.close()">Hủy</button>
+        </t>
+    </Dialog>
+</t>
+
+<t t-name="tp_hr_attendance.MatrixPersonDialog">
+    <Dialog title="this.props.person.source_name + ' · ' + (this.props.batch?.batch_code || '')" size="'lg'" contentClass="'o_tp_att_dialog'">
+        <div class="o_tp_att_person">
+            <div class="o_tp_att_file_meta mb-2">
+                <span>Mã NV (Excel): <strong t-out="this.props.person.raw_source_code || '—'"/></span>
+                <span>ID máy: <strong t-out="this.props.person.raw_machine_code || '—'"/></span>
+                <span>Đơn vị (nguồn): <strong t-out="this.props.person.group_label"/></span>
+                <span class="o_tp_att_badge" t-att-class="this.props.person.mapping_state === 'mapped' ? 'o_ok' : 'o_warn'" t-out="this.props.person.mapping_label"/>
+                <span t-if="this.props.person.hr_code">Mã HR: <strong t-out="this.props.person.hr_code"/></span>
+            </div>
+            <div t-if="this.props.sheet?.has_late" class="o_tp_att_late_metrics">
+                <div><span>Số lần đi muộn (kỳ nguồn)</span><strong t-out="this.props.person.late.count !== null ? this.props.person.late.count : '—'"/></div>
+                <div><span>Tổng phút muộn (kỳ nguồn)</span><strong t-out="this.props.person.late.minutes !== null ? this.props.person.late.minutes : '—'"/></div>
+            </div>
+            <div class="o_tp_att_table_wrap">
+                <table class="o_tp_att_table">
+                    <thead><tr><th>Ngày</th><th>Thứ</th><th>Ô Excel</th><th>Giờ Vào</th><th>Giờ Ra</th><th>Trạng thái</th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="this.props.person.cells" t-as="cell" t-key="cell.column">
+                            <td t-out="this.props.formatDate(cell.date)"/>
+                            <td t-out="this.props.dayColumns[cell_index]?.weekday || ''"/>
+                            <td t-out="cell.cell_ref || '—'"/>
+                            <td><strong t-out="cell.raw_in || '—'"/></td>
+                            <td><strong t-out="cell.raw_out || '—'"/></td>
+                            <td><span t-out="cell.status_label"/><small t-if="cell.message" class="d-block o_tp_att_muted" t-out="cell.message"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <t t-set-slot="footer">
+            <button type="button" class="btn btn-outline-secondary" t-on-click="() => this.props.close()">Đóng</button>
+        </t>
+    </Dialog>
+</t>
+
+</templates>

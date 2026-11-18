@@ -207,10 +207,12 @@ class AttendanceSource(models.Model):
         for batch in Batch.search([('company_id', '=', company.id), ('state', '!=', 'draft')], order='id desc', limit=20):
             if batch.state == 'applied':
                 result = f'Ghi {batch.applied_count} ngày · {batch.late_applied_count} tổng muộn'
+            elif batch.state == 'partial':
+                result = f'Áp một phần ({batch.applied_count} ngày) · Còn khác biệt chờ chọn nguồn'
             elif batch.state == 'preview':
-                result = 'Đang xem trước, chưa ghi'
+                result = 'Đã đọc/Lưu nguồn – Chưa áp dụng'
             else:
-                result = 'Đã hủy, không ghi'
+                result = 'Đã bỏ qua nguồn, không ghi'
             history.append({
                 'id': batch.id, 'file': batch.file_name or batch.name or '', 'user': (batch.applied_by or batch.create_uid).name or '',
                 'at': stamp(batch.applied_at or batch.create_date), 'period': (

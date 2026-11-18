@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T09:58:41.159737+00:00",
-  "last_change_id": "CHG-20261118-028",
-  "code_digest": "dd869cf4bf3f8c17a2227254187353eda71c27d1f1c81f8caf0eb5f47151cb1a",
-  "code_file_count": 663,
+  "updated_at": "2026-11-18T10:08:04.412774+00:00",
+  "last_change_id": "CHG-20261118-029",
+  "code_digest": "a1706c50d24cc749d9d101675a6c4a203792ad9a435939e1caf61b301a19e94d",
+  "code_file_count": 673,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "f8b6b809a63cccca87ebf4c0eda4f5224791c0e8a850f426c61f6f0195b0d8a4",
-    "docs/CHANGELOG.md": "ece7c5a5fabbdc79c56af0d03ab51028d17c3798fde726fdacfcfa8e8ffa9c1e",
+    "docs/PROJECT_STATUS.md": "b7cd36a64df7587857202cf7c057ac4849a465c3f270cc3c19f94fcab9241d3b",
+    "docs/CHANGELOG.md": "aa37462d9db9c2d8b6c7b69001a4024c97152fc049fedb4f76aa1e0c5b4eeeeb",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "6ce61d02b391e3a2c820f7ab35641b06f9f04b2f68e9d4dc0ac322dcac1ab93f",
-    "docs/DECISIONS.md": "b750fcf212ff425e3f8b0c0763b7dfb428fd0773769d2ddd2519cb5c66f4bee4",
+    "docs/ROADMAP.md": "e2cc1a4cc52bbdca3c218bc65e652db674c9493001d655cf71e05901c6e251a2",
+    "docs/DECISIONS.md": "5bfbd8d6766a90f3896b6ca4612a564f85d8dc19bfe2d8c734cf5e3f1a0ab625",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,9 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Actual served public before f3195e5 contains oldhandle/logic; after c7831b0 and CSSe08d09c PASS8/8",
-    "Local served JS/CSS PASS8/8; checker rejects actual saved obsoletepublicJS; RuffPASS",
-    "Backedupsource+mtime, touch3exactassets retainsSHA256, restarted onlytp-odoo; no application/business/security changes",
-    "ForeigncheckpointWIP preserved; authenticated visual/persist/HOOT/raceNOT_RUN"
+    "ruff 0; AST 32/32; XML 16/16; JS 10/10; pure 26/26 PASS + real xlsx 39/7/273/178/95; 18069 -u tp_hr_attendance 20.0.3.0.0 exit 0/0 ERROR; ORM rollback matrix+compare+export+ACL uid=34 PASS; HTTP bundle + anon Playwright PASS"
   ]
 }

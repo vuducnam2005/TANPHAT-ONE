@@ -16,7 +16,8 @@ LATE_STATES = [
     ('preview', 'Đang xem trước'), ('valid', 'Hợp lệ, sẽ ghi nhận'), ('duplicate', 'Trùng, bỏ qua'),
     ('conflict', 'Khác tổng đã nhập cùng kỳ'), ('unmapped', 'Chưa đối chiếu được nhân viên'),
     ('name_conflict', 'Mã máy khớp nhưng tên khác'), ('missing', 'Chưa có số liệu'), ('review', 'Cần kiểm tra'),
-    ('locked', 'Kỳ đã chốt'), ('applied', 'Đã ghi nhận'), ('cancelled', 'Lô đã hủy'),
+    ('locked', 'Kỳ đã chốt'), ('applied', 'Đã ghi nhận (đang hiệu lực)'),
+    ('superseded', 'Đã thay thế bởi nguồn khác'), ('cancelled', 'Lô đã hủy'),
 ]
 PROCESSOR_GROUPS = f'{HR_MANAGER},{OFFICER}'
 
@@ -34,6 +35,7 @@ class AttendanceLate(models.Model):
     row_number = fields.Integer('Dòng', readonly=True)
     cell_ref = fields.Char('Ô nguồn', readonly=True)
     machine_code = fields.Char('Mã máy', readonly=True, index=True)
+    raw_source_code = fields.Char('Mã NV trong tệp', readonly=True, index=True)
     source_name = fields.Char('Tên trong tệp', readonly=True)
     employee_id = fields.Many2one('hr.employee', 'Nhân viên', readonly=True, index=True)
     candidate_employee_id = fields.Many2one('hr.employee', 'Hồ sơ gợi ý', readonly=True)
@@ -46,6 +48,18 @@ class AttendanceLate(models.Model):
     source_state = fields.Selection(LATE_SOURCE_STATES, 'Số trong tệp', required=True, readonly=True)
     state = fields.Selection(LATE_STATES, 'Kết quả', required=True, readonly=True, default='preview', index=True)
     message = fields.Char('Giải thích', readonly=True)
+    source_batch_ids = fields.Many2many(
+        'tp.hr.attendance.batch', 'tp_hr_att_late_batch_rel', 'late_id', 'batch_id',
+        string='Các lô nguồn chứng minh', readonly=True,
+    )
+    canonical_late_id = fields.Many2one('tp.hr.attendance.late', 'Bản đang hiệu lực', readonly=True, ondelete='set null')
+    superseded_by_id = fields.Many2one('tp.hr.attendance.late', 'Được thay thế bởi', readonly=True, ondelete='set null')
+    superseded_by_user_id = fields.Many2one('res.users', 'Người chọn thay thế', readonly=True)
+    superseded_at = fields.Datetime('Thời điểm thay thế', readonly=True)
+    supersede_reason = fields.Char('Lý do thay thế', readonly=True)
+    resolved_by_resolution_id = fields.Many2one('tp.hr.attendance.resolution', 'Quyết định đối chiếu', readonly=True, ondelete='set null')
+    version = fields.Integer('Phiên bản', default=1, readonly=True)
+    source_choice = fields.Selection([('selected', 'Chọn nguồn'), ('keep', 'Giữ dữ liệu hiện tại')], readonly=True)
 
     _applied_unique = models.UniqueIndex('(company_id, employee_id, date_from, date_to) WHERE state = \'applied\'',
                                          'Mỗi nhân viên chỉ có một tổng đi muộn đã ghi nhận cho mỗi kỳ nguồn.')

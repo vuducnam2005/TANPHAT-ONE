@@ -1,98 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 <t t-name="tp_hr_attendance.UploadDialog">
-    <Dialog title="'Nhập Excel máy chấm công'" size="'lg'" contentClass="'o_tp_att_upload'">
+    <Dialog title="'Tải tệp Excel máy chấm công'" size="'lg'" contentClass="'o_tp_att_upload'">
         <div t-if="this.state.error" class="alert alert-danger" role="alert" t-out="this.state.error"/>
 
-        <t t-if="this.state.step === 'pick' or this.state.step === 'reading'">
-            <label class="o_tp_att_drop" t-att-class="{'o_drag': this.state.drag, 'o_busy': this.state.step === 'reading'}"
-                t-on-dragover="this.onDragOver" t-on-dragleave="this.onDragLeave" t-on-drop="this.onDrop">
-                <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="visually-hidden"
-                    t-on-change="this.onPick" t-att-disabled="this.state.step === 'reading'" aria-describedby="tp_att_drop_help"/>
-                <i class="oi o_tp_att_drop_icon" data-icon="upload_file" aria-hidden="true"/>
-                <strong t-if="this.state.step === 'reading'">Đang đọc <t t-out="this.state.fileName"/>…</strong>
-                <strong t-else="">Kéo thả tệp .xlsx vào đây hoặc bấm để chọn tệp</strong>
-                <small id="tp_att_drop_help">Tệp xuất trực tiếp từ máy chấm công (Từ ngày … Đến ngày …, hai dòng Vào/Ra mỗi người).
-                    Hệ thống tự nhận kỳ, nhân viên và nhóm Đi muộn Lần/Phút; chưa ghi gì cho tới khi bấm Nhập dữ liệu.</small>
-            </label>
-        </t>
+        <label class="o_tp_att_drop" t-att-class="{'o_drag': this.state.drag, 'o_busy': this.busy}"
+            t-on-dragover="this.onDragOver" t-on-dragleave="this.onDragLeave" t-on-drop="this.onDrop">
+            <input type="file" multiple="multiple" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                class="visually-hidden" t-on-change="this.onPick" t-att-disabled="this.busy" aria-describedby="tp_att_drop_help"/>
+            <i class="oi o_tp_att_drop_icon" data-icon="upload_file" aria-hidden="true"/>
+            <strong t-if="this.busy">Đang đọc <t t-out="this.state.items.length"/> tệp Excel và tạo bảng ma trận nguồn…</strong>
+            <strong t-else="">Kéo thả một hoặc nhiều tệp .xlsx vào đây, hoặc bấm để chọn tệp</strong>
+            <small id="tp_att_drop_help">
+                Hỗ trợ chọn nhiều tệp cùng lúc (1–3 tuần, 28–31 ngày, nhiều trang tính). Mỗi tệp được cấp mã lô riêng, giữ nguyên
+                mã nhân viên Excel, hai dòng Vào/Ra, nhóm đơn vị và tổng Đi muộn Lần/Phút để xem bảng đầy đủ và đối chiếu trước khi áp dụng.
+            </small>
+        </label>
 
-        <t t-elif="this.data">
-            <div class="o_tp_att_upload_head">
-                <div>
-                    <strong t-out="this.data.file_name"/>
-                    <p t-if="this.data.period.label">Kỳ trong tệp: <strong t-out="this.formatDate(this.data.period.from)"/> – <strong t-out="this.formatDate(this.data.period.to)"/>
-                        (<t t-out="this.days"/> ngày)</p>
-                    <p t-else="" class="text-warning">Chưa xác định được kỳ ngày trong tệp.</p>
+        <div t-if="this.state.items.length" class="o_tp_att_upload_list mt-3" role="status" aria-label="Tiến trình đọc từng tệp">
+            <div t-foreach="this.state.items" t-as="item" t-key="item.key" class="o_tp_att_upload_item"
+                t-att-class="!item.done ? 'o_reading' : (item.ok ? 'o_ok' : 'o_err')">
+                <div class="o_tp_att_upload_item_main">
+                    <strong t-out="item.file_name"/>
+                    <span t-if="!item.done" class="o_tp_att_badge o_info">Đang đọc…</span>
+                    <span t-elif="item.ok" class="o_tp_att_badge o_ok">
+                        <t t-out="item.batch_code"/> · Đã lưu nguồn (<t t-out="item.people_count"/> người)
+                    </span>
+                    <span t-else="" class="o_tp_att_badge o_danger">Không đọc được</span>
                 </div>
-                <span class="o_tp_att_badge" t-att-class="this.state.step === 'done' ? 'o_ok' : 'o_info'"
-                    t-out="this.state.step === 'done' ? 'Đã nhập vào hệ thống' : 'Xem trước – chưa ghi'"/>
+                <p t-if="item.error" class="o_tp_att_upload_item_err mb-0" t-out="item.error"/>
             </div>
-            <div t-if="this.data.same_file" class="alert alert-info" role="status">Tệp giống hệt tệp đã nhập ở lô <strong t-out="this.data.same_file"/>; các dòng đã có hiện là Trùng và không ghi lại.</div>
-            <div t-foreach="this.sheetErrors" t-as="sheet" t-key="sheet.name" class="alert alert-warning" role="alert">
-                Trang <strong t-out="sheet.name"/>: <t t-out="sheet.errors.join('; ')"/>
-            </div>
-
-            <div class="o_tp_att_upload_people">
-                <div><strong t-out="this.data.people"/><span>Nhân viên trong tệp</span></div>
-                <div><strong t-out="this.data.matched"/><span>Đã khớp hồ sơ HR</span></div>
-                <div><strong t-out="this.data.line_count"/><span>Ngày-người có giờ</span></div>
-                <div><strong t-out="this.data.empty"/><span>Ô trống (không ghi nhận)</span></div>
-            </div>
-
-            <h3>Giờ vào/ra theo ngày</h3>
-            <div class="o_tp_att_upload_tiles">
-                <div t-foreach="this.lineTiles" t-as="tile" t-key="tile.key" class="o_tp_att_tile" t-att-class="'o_' + tile.tone">
-                    <strong t-out="tile.value"/><span t-out="tile.label"/>
-                </div>
-            </div>
-
-            <h3>Tổng đi muộn theo Excel máy <small>(Lần/Phút cả kỳ, giữ nguyên số máy)</small></h3>
-            <p t-if="!this.data.late_total" class="o_tp_att_muted">Không có tổng đi muộn đọc được: giờ vẫn nhập được, số muộn hiển thị Chưa có số liệu.</p>
-            <div t-else="" class="o_tp_att_upload_tiles">
-                <div t-foreach="this.lateTiles" t-as="tile" t-key="tile.key" class="o_tp_att_tile"><strong t-out="tile.value"/><span t-out="tile.label"/></div>
-            </div>
-            <p t-foreach="this.lateNotes" t-as="sheet" t-key="sheet.name" class="o_tp_att_muted">Trang <t t-out="sheet.name"/>: <t t-out="sheet.late_message"/></p>
-
-            <details t-if="this.data.attention_total or this.data.late_attention_total" class="o_tp_att_upload_details">
-                <summary>Dòng cần HR xem (<t t-out="this.data.attention_total + this.data.late_attention_total"/>)</summary>
-                <div class="o_tp_att_table_wrap">
-                    <table class="table table-sm">
-                        <thead><tr><th>Ô</th><th>ID máy</th><th>Tên trong tệp</th><th>Ngày</th><th>Tình trạng</th><th>Ghi chú</th></tr></thead>
-                        <tbody>
-                            <tr t-foreach="this.data.attention" t-as="line" t-key="'l' + line_index">
-                                <td t-out="line.cell"/><td t-out="line.code"/><td t-out="line.name"/><td t-out="this.formatDate(line.date)"/>
-                                <td t-out="line.state_label"/><td t-out="line.message"/>
-                            </tr>
-                            <tr t-foreach="this.data.late_attention" t-as="line" t-key="'t' + line_index">
-                                <td t-out="line.cell"/><td t-out="line.code"/><td t-out="line.name"/><td>Tổng kỳ</td>
-                                <td t-out="line.state_label"/><td t-out="line.message"/>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <p t-if="this.data.attention_total > this.data.attention.length" class="o_tp_att_muted">Chỉ hiện <t t-out="this.data.attention.length"/> dòng đầu; xem đủ trong Quản trị chấm công › Nhập dữ liệu công.</p>
-            </details>
-            <p t-if="this.state.step !== 'done' and !this.writable" class="alert alert-secondary">Không có dòng mới để ghi: nhập lại tệp này không thay đổi dữ liệu đã có.</p>
-            <p t-if="this.state.step === 'done'" class="alert alert-success" role="status">Đã ghi vào hệ thống. Bảng chấm công, Tổng quan và Công của tôi đọc cùng dữ liệu này.</p>
-        </t>
+        </div>
 
         <t t-set-slot="footer">
-            <t t-if="this.state.step === 'preview' or this.state.step === 'applying'">
-                <button class="btn btn-primary" t-att-disabled="this.busy or !this.writable" t-on-click="this.apply">
-                    <t t-if="this.state.step === 'applying'">Đang nhập…</t><t t-else="">Nhập dữ liệu</t>
-                </button>
-                <button class="btn btn-outline-secondary" t-att-disabled="this.busy" t-on-click="this.another">Chọn tệp khác</button>
-                <button class="btn btn-link" t-att-disabled="this.busy" t-on-click="this.close">Hủy</button>
-            </t>
-            <t t-elif="this.state.step === 'done'">
-                <button t-if="this.data.period.from" class="btn btn-primary" t-on-click="this.openPeriod">Xem bảng kỳ vừa nhập</button>
-                <button class="btn btn-outline-secondary" t-on-click="this.another">Nhập tệp khác</button>
-                <button class="btn btn-link" t-on-click="this.close">Đóng</button>
-            </t>
-            <t t-else="">
-                <button class="btn btn-outline-secondary" t-att-disabled="this.busy" t-on-click="this.close">Đóng</button>
-            </t>
+            <button t-if="this.state.step === 'result'" type="button" class="btn btn-primary" t-on-click="this.pickAgain">Chọn lại tệp .xlsx</button>
+            <button type="button" class="btn btn-outline-secondary" t-att-disabled="this.busy" t-on-click="this.close">Đóng</button>
         </t>
     </Dialog>
 </t>

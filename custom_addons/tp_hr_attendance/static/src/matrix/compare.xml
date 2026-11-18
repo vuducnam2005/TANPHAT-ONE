@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="tp_hr_attendance.Compare">
+<div class="o_tp_att o_tp_att_compare_screen" aria-label="Đối chiếu hai tệp Excel trước khi tổng hợp" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
+    <header class="o_tp_att_header">
+        <div class="o_tp_att_title_group">
+            <button type="button" class="btn btn-light btn-sm o_tp_att_back_btn" t-on-click="() => this.props.onBack(this.state.batchAId)">
+                <i class="oi me-1" data-icon="arrow_back" aria-hidden="true"/>Quay lại Bảng theo file
+            </button>
+            <div>
+                <h1>Đối chiếu &amp; Chọn nguồn trước khi tổng hợp</h1>
+                <p class="o_tp_att_subtitle">
+                    Khớp đúng theo công ty + nhân viên HR + ngày công; giữ nguyên giờ thực tế từng nguồn, không tự ghép Giờ Vào của A với Giờ Ra của B.
+                </p>
+            </div>
+        </div>
+        <div class="o_tp_att_actions">
+            <button type="button" class="btn btn-outline-primary" t-on-click="() => this.props.onUpload()">
+                <i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Tải thêm file
+            </button>
+            <button t-if="this.data?.has_batches" type="button" class="btn btn-outline-secondary" t-on-click="this.exportCompare">
+                <i class="oi me-1" data-icon="download" aria-hidden="true"/>Xuất đối chiếu
+            </button>
+            <button t-if="this.data?.can_apply_valid" type="button" class="btn btn-primary" t-on-click="this.openApplyValidModal">
+                <i class="oi me-1" data-icon="check" aria-hidden="true"/>Áp dụng phần giống &amp; mới hợp lệ
+            </button>
+        </div>
+    </header>
+
+    <div t-if="this.state.error" class="alert alert-danger" role="alert">
+        <t t-out="this.state.error"/>
+        <button type="button" class="btn btn-link p-0 ms-2" t-on-click="this.load">Thử lại</button>
+    </div>
+
+    <p t-if="this.state.loading and !this.data" role="status" class="o_tp_att_loading">Đang dựng bảng đối chiếu A/B…</p>
+
+    <t t-elif="this.data and !this.data.has_batches">
+        <section class="o_tp_att_panel text-center py-5">
+            <h2>Chưa có tệp Excel nào sẵn sàng để đối chiếu</h2>
+            <p class="o_tp_att_muted mt-2 mb-3">Tải lên một hoặc nhiều tệp Excel từ máy chấm công để đối chiếu trước khi đưa vào bảng công tổng hợp.</p>
+            <button type="button" class="btn btn-primary" t-on-click="() => this.props.onUpload()">
+                <i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Tải tệp Excel
+            </button>
+        </section>
+    </t>
+
+    <t t-elif="this.data and this.data.has_batches">
+        <!-- Side A vs Side B file & sheet selector -->
+        <section class="o_tp_att_panel o_tp_att_compare_pickers" aria-label="Chọn hai nguồn để đối chiếu">
+            <div class="o_tp_att_compare_sides">
+                <div class="o_tp_att_compare_side o_side_a">
+                    <div class="o_tp_att_compare_side_head">
+                        <span class="o_tp_att_badge o_info">Nguồn A</span>
+                        <span t-if="this.data.sheet_a?.period_full" class="o_tp_att_muted" t-out="this.data.sheet_a.period_full"/>
+                    </div>
+                    <div class="o_tp_att_compare_side_fields">
+                        <label class="o_tp_att_field">
+                            <span>Tệp / Lô A</span>
+                            <select t-on-change="this.onChangeBatchA" aria-label="Chọn tệp A">
+                                <option t-foreach="this.batches" t-as="b" t-key="b.id" t-att-value="b.id"
+                                    t-att-selected="b.id === this.state.batchAId" t-out="b.selector_label + ' · [' + b.state_label + ']'"/>
+                            </select>
+                        </label>
+                        <label t-if="(this.batchAObj?.sheets?.length || 0) &gt; 1" class="o_tp_att_field">
+                            <span>Trang A</span>
+                            <select t-on-change="this.onChangeSheetA" aria-label="Chọn trang tính A">
+                                <option t-foreach="this.batchAObj.sheets" t-as="sh" t-key="sh.index" t-att-value="sh.index"
+                                    t-att-selected="sh.index === this.state.sheetAIndex" t-out="sh.name + (sh.period_label ? ' (' + sh.period_label + ')' : '')"/>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="o_tp_att_compare_swap">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" title="Đảo vị trí nguồn A và B"
+                        t-att-disabled="!this.state.batchBId" t-on-click="this.swapSides">
+                        <i class="oi" data-icon="swap_horiz" aria-hidden="true"/> Đảo A ↔ B
+                    </button>
+                </div>
+
+                <div class="o_tp_att_compare_side o_side_b">
+                    <div class="o_tp_att_compare_side_head">
+                        <span class="o_tp_att_badge o_warn">Nguồn B</span>
+                        <span t-if="this.data.sheet_b?.period_full" class="o_tp_att_muted" t-out="this.data.sheet_b.period_full"/>
+                        <span t-elif="!this.state.batchBId" class="o_tp_att_muted">So trực tiếp với dữ liệu hiệu lực trong hệ thống</span>
+                    </div>
+                    <div class="o_tp_att_compare_side_fields">
+                        <label class="o_tp_att_field">
+                            <span>Tệp / Lô B</span>
+                            <select t-on-change="this.onChangeBatchB" aria-label="Chọn tệp B">
+                                <option value="0" t-att-selected="this.state.batchBId === 0">(Chỉ so với dữ liệu hiện tại của hệ thống)</option>
+                                <option t-foreach="this.batches" t-as="b" t-key="b.id" t-att-value="b.id"
+                                    t-att-selected="b.id === this.state.batchBId" t-out="b.selector_label + ' · [' + b.state_label + ']'"/>
+                            </select>
+                        </label>
+                        <label t-if="(this.batchBObj?.sheets?.length || 0) &gt; 1" class="o_tp_att_field">
+                            <span>Trang B</span>
+                            <select t-on-change="this.onChangeSheetB" aria-label="Chọn trang tính B">
+                                <option t-foreach="this.batchBObj.sheets" t-as="sh" t-key="sh.index" t-att-value="sh.index"
+                                    t-att-selected="sh.index === this.state.sheetBIndex" t-out="sh.name + (sh.period_label ? ' (' + sh.period_label + ')' : '')"/>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div t-if="this.isSameTarget" class="alert alert-info mb-0 mt-2 py-2" role="status">
+                Đang chọn cùng tệp và cùng trang tính ở cả A và B. Chọn tệp khác hoặc trang tính khác ở ô Nguồn B để phát hiện sai khác.
+            </div>
+            <div t-elif="this.state.batchBId and !this.data.same_period" class="alert alert-warning mb-0 mt-2 py-2" role="status">
+                <strong>Hai nguồn có kỳ ngày khác nhau:</strong>
+                ngày nằm ngoài kỳ của một tệp được đánh dấu rõ là <em>Ngoài phạm vi tệp</em> (không nhầm với ô trống trong kỳ),
+                và tổng <em>Đi muộn</em> được giữ tách riêng theo đúng kỳ gốc (không cộng chồng tuần–tháng).
+            </div>
+        </section>
+
+        <!-- Clickable summary cards by comparison group -->
+        <section class="o_tp_att_compare_cards_summary" aria-label="Tóm tắt các nhóm đối chiếu toàn phạm vi">
+            <button t-foreach="this.data.compare_groups" t-as="grp" t-key="grp.key" type="button"
+                class="o_tp_att_compare_stat"
+                t-att-class="{
+                    'active': this.state.group === grp.key,
+                    'o_stat_diff': grp.key === 'diff',
+                    'o_stat_only_a': grp.key === 'only_a',
+                    'o_stat_only_b': grp.key === 'only_b',
+                    'o_stat_same': grp.key === 'same',
+                    'o_stat_unready': grp.key === 'unready',
+                }"
+                t-on-click="() => this.toggleGroupCard(grp.key)">
+                <span class="o_stat_label" t-out="grp.label"/>
+                <strong class="o_stat_value"><t t-out="grp.cells"/> ô ngày</strong>
+                <small t-if="grp.lates" class="o_stat_sub"><t t-out="grp.lates"/> kỳ muộn</small>
+            </button>
+        </section>
+
+        <!-- DEC-044 filter toolbar -->
+        <section class="o_tp_att_panel o_tp_att_filters" aria-label="Bộ lọc bảng đối chiếu">
+            <div class="o_tp_att_filter_row">
+                <label class="o_tp_att_check_inline">
+                    <input type="checkbox" t-att-checked="this.state.draftOnlyDiff" t-on-change="this.toggleOnlyDiff"/>
+                    <span>Chỉ xem sai khác &amp; cần xử lý</span>
+                </label>
+                <label class="o_tp_att_field">
+                    <span>Nhóm đối chiếu</span>
+                    <select t-model="this.state.draftGroup" aria-label="Lọc theo nhóm đối chiếu">
+                        <option value="">Tất cả nhóm</option>
+                        <option t-foreach="this.data.compare_groups" t-as="grp" t-key="grp.key" t-att-value="grp.key"
+                            t-out="grp.label + ' (' + grp.cells + ')'"/>
+                    </select>
+                </label>
+                <label class="o_tp_att_field">
+                    <span>Đơn vị nguồn</span>
+                    <select t-model="this.state.draftSourceGroup" aria-label="Lọc theo đơn vị nguồn">
+                        <option value="">Tất cả đơn vị (<t t-out="this.data.total_all_people"/> người)</option>
+                        <option t-foreach="this.data.group_options" t-as="ug" t-key="ug.key" t-att-value="ug.key" t-out="ug.label"/>
+                    </select>
+                </label>
+                <label class="o_tp_att_field">
+                    <span>Ngày công</span>
+                    <input type="date" t-model="this.state.draftWorkDate" aria-label="Lọc theo ngày công"/>
+                </label>
+                <label class="o_tp_att_field o_tp_att_search_field">
+                    <span>Tìm nhân viên / Mã NV / ID máy</span>
+                    <input type="search" t-model="this.state.draftSearch" t-on-keydown="this.onSearchKeydown"
+                        placeholder="Tên, TP0xx, TP100xx, ID máy..."/>
+                </label>
+                <div class="o_tp_att_filter_btns">
+                    <button type="button" class="btn btn-primary btn-sm" t-on-click="this.applyFilters">Áp dụng</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="this.clearFilters">Xóa bộ lọc</button>
+                </div>
+            </div>
+
+            <div class="o_tp_att_filter_bottom">
+                <div t-if="this.chips.length" class="o_tp_att_chips" aria-label="Bộ lọc đang áp dụng">
+                    <button t-foreach="this.chips" t-as="ch" t-key="ch.key" type="button" class="o_tp_att_chip"
+                        t-on-click="() => this.removeChip(ch.key)">
+                        <t t-out="ch.label"/> <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="o_tp_att_view_switch" role="group" aria-label="Chế độ xem trên màn hình nhỏ">
+                    <button type="button" class="btn btn-sm"
+                        t-att-class="this.state.mobileView === 'cards' ? 'btn-primary' : 'btn-outline-secondary'"
+                        t-on-click="() => this.state.mobileView = 'cards'">Thẻ chi tiết</button>
+                    <button type="button" class="btn btn-sm"
+                        t-att-class="this.state.mobileView === 'table' ? 'btn-primary' : 'btn-outline-secondary'"
+                        t-on-click="() => this.state.mobileView = 'table'">Bảng đầy đủ</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Staged choices action bar -->
+        <section t-if="this.pendingList.length" class="o_tp_att_resolve_bar" aria-label="Lưu các quyết định xử lý sai khác">
+            <div class="o_tp_att_resolve_summary">
+                <strong>Đã chọn <t t-out="this.pendingList.length"/> mục chờ xác nhận</strong>
+                <small t-if="this.pendingNeedsReason" class="o_danger_text d-block">
+                    Có lựa chọn thay đổi dữ liệu đã áp dụng — bắt buộc nhập lý do / căn cứ.
+                </small>
+            </div>
+            <label class="o_tp_att_field o_tp_att_reason_input">
+                <span>Lý do / Căn cứ <t t-if="this.pendingNeedsReason">(bắt buộc)</t></span>
+                <input type="text" t-model="this.state.resolveReason"
+                    placeholder="Ví dụ: File B bổ sung giờ ra thực tế do nhân viên quên chấm..."/>
+            </label>
+            <div class="o_tp_att_resolve_btns">
+                <button type="button" class="btn btn-primary btn-sm" t-att-disabled="this.state.savingDecisions"
+                    t-on-click="this.savePendingChoices">
+                    <t t-if="this.state.savingDecisions">Đang lưu…</t>
+                    <t t-else="">Xác nhận &amp; Lưu (<t t-out="this.pendingList.length"/>)</t>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" t-att-disabled="this.state.savingDecisions"
+                    t-on-click="this.resetChoices">Hủy lựa chọn nháp</button>
+            </div>
+            <div t-if="this.state.resolveError" class="alert alert-danger w-100 mb-0 mt-2 py-2" role="alert" t-out="this.state.resolveError"/>
+        </section>
+
+        <p t-if="!this.data.rows.length" class="o_tp_att_empty">
+            Không có nhân viên hoặc ngày nào khớp với bộ lọc đối chiếu hiện tại.
+        </p>
+
+        <t t-else="">
+            <!-- Desktop full aligned table + toggleable mobile table -->
+            <div class="o_tp_att_compare_table_wrap" t-att-class="{'o_mobile_table_on': this.state.mobileView === 'table'}">
+                <table class="o_tp_att_matrix_table o_tp_att_compare_table">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="o_sticky_col o_cmp_col_person">Nhân viên / Mã nguồn</th>
+                            <th t-foreach="this.data.visible_dates" t-as="col" t-key="col.date" scope="col"
+                                class="o_cmp_col_day" t-att-class="{'o_weekend': col.weekend}">
+                                <div t-out="col.day_month"/>
+                                <small t-out="col.weekday"/>
+                            </th>
+                            <th scope="col" class="o_cmp_col_late">Tổng đi muộn đúng kỳ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="this.data.rows" t-as="row" t-key="row.row_key"
+                            t-att-class="{'o_unmapped_person': row.mapping_state !== 'mapped'}">
+                            <th scope="row" class="o_sticky_col o_cmp_col_person">
+                                <div class="o_cmp_person_name" t-out="row.display_name"/>
+                                <div class="o_cmp_person_meta">
+                                    <span t-if="row.hr_code" class="o_tp_att_mini_tag" t-out="'HR: ' + row.hr_code"/>
+                                    <span t-if="row.raw_code_a" class="o_tp_att_mini_tag o_tag_muted" t-out="'A: ' + row.raw_code_a"/>
+                                    <span t-if="row.raw_code_b" class="o_tp_att_mini_tag o_tag_muted" t-out="'B: ' + row.raw_code_b"/>
+                                    <span t-if="row.machine_code" class="o_tp_att_mini_tag o_tag_muted" t-out="'ID: ' + row.machine_code"/>
+                                </div>
+                                <div class="o_cmp_person_status">
+                                    <span class="o_tp_att_mini_tag" t-att-class="row.mapping_state === 'mapped' ? '' : 'o_tag_warn'" t-out="row.mapping_label"/>
+                                    <span t-if="row.hr_department" class="o_tp_att_muted" t-out="row.hr_department"/>
+                                </div>
+                            </th>
+
+                            <td t-foreach="row.days" t-as="d" t-key="d.date"
+                                class="o_cmp_cell" t-att-class="{
+                                    'o_weekend': d.weekend,
+                                    'o_cmp_dim': !d.matches_filter,
+                                    'o_cmp_diff': d.group === 'diff',
+                                    'o_cmp_only': d.group === 'only_a' || d.group === 'only_b',
+                                    'o_cmp_same': d.group === 'same',
+                                    'o_cmp_unready': d.group === 'unready',
+                                }">
+                                <div class="o_cmp_cell_head">
+                                    <span class="o_tp_att_badge" t-att-class="this.groupBadgeClass(d.group)" t-out="d.group_label"/>
+                                    <span t-if="d.canonical?.locked or d.canonical?.has_approved_correction" class="o_tp_att_mini_tag o_tag_warn"
+                                        t-out="d.canonical.locked ? 'Đã chốt' : 'Có điều chỉnh'"/>
+                                </div>
+                                <div class="o_cmp_lines">
+                                    <div><span class="o_side_tag o_tag_a">A</span> <strong t-out="this.formatCellTime(d.a_scope, d.a_cell)"/></div>
+                                    <div t-if="this.state.batchBId"><span class="o_side_tag o_tag_b">B</span> <strong t-out="this.formatCellTime(d.b_scope, d.b_cell)"/></div>
+                                    <div>
+                                        <span class="o_side_tag o_tag_now">HT</span>
+                                        <span t-out="this.formatCanonicalTime(d.canonical)"/>
+                                        <small t-if="d.canonical?.provenance?.length" class="o_tp_att_muted ms-1"
+                                            t-out="'(' + d.canonical.provenance.join(', ') + ')'"/>
+                                    </div>
+                                </div>
+                                <div t-if="d.latest_resolution" class="o_cmp_res_note">
+                                    <t t-out="d.latest_resolution.decision_label"/> · <t t-out="d.latest_resolution.actor"/>
+                                </div>
+                                <div t-if="d.blocked_reason" class="o_cmp_blocked" t-out="d.blocked_reason"/>
+                                <div t-elif="row.mapping_state === 'mapped' and d.group !== 'blank'" class="o_cmp_btn_group" role="group" aria-label="Chọn nguồn cho ngày">
+                                    <button type="button" class="o_cmp_pick_btn" t-att-disabled="!d.can_use_a"
+                                        t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'use_a'}"
+                                        t-on-click="() => this.pickDayDecision(row, d, 'use_a')">A</button>
+                                    <button t-if="this.state.batchBId" type="button" class="o_cmp_pick_btn" t-att-disabled="!d.can_use_b"
+                                        t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'use_b'}"
+                                        t-on-click="() => this.pickDayDecision(row, d, 'use_b')">B</button>
+                                    <button type="button" class="o_cmp_pick_btn"
+                                        t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'keep_current'}"
+                                        t-on-click="() => this.pickDayDecision(row, d, 'keep_current')">Giữ</button>
+                                    <button type="button" class="o_cmp_pick_btn"
+                                        t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'defer'}"
+                                        t-on-click="() => this.pickDayDecision(row, d, 'defer')">Sau</button>
+                                </div>
+                            </td>
+
+                            <td class="o_cmp_col_late">
+                                <div t-if="!row.late_items.length" class="o_tp_att_muted">Không có bảng muộn khớp bộ lọc</div>
+                                <div t-foreach="row.late_items" t-as="li" t-key="li.date_from + ':' + li.date_to + ':' + li_index" class="o_cmp_late_box">
+                                    <div class="o_cmp_late_head">
+                                        <small class="fw-semibold" t-out="li.period_label"/>
+                                        <span class="o_tp_att_badge" t-att-class="this.groupBadgeClass(li.group)" t-out="li.group_label"/>
+                                    </div>
+                                    <div class="o_cmp_lines">
+                                        <div t-if="li.a_late"><span class="o_side_tag o_tag_a">A</span> <t t-out="this.formatLateBox(li.a_late)"/></div>
+                                        <div t-if="li.b_late"><span class="o_side_tag o_tag_b">B</span> <t t-out="this.formatLateBox(li.b_late)"/></div>
+                                        <div t-if="li.canonical_late?.exists">
+                                            <span class="o_side_tag o_tag_now">HT</span>
+                                            <t t-out="li.canonical_late.count"/> lần · <t t-out="li.canonical_late.minutes"/>p
+                                        </div>
+                                    </div>
+                                    <small t-if="li.reason" class="d-block o_tp_att_muted mt-1" t-out="li.reason"/>
+                                    <div t-if="li.blocked_reason" class="o_cmp_blocked" t-out="li.blocked_reason"/>
+                                    <div t-elif="row.mapping_state === 'mapped' and (li.can_use_a or li.can_use_b)" class="o_cmp_btn_group" role="group" aria-label="Chọn tổng Đi muộn">
+                                        <button type="button" class="o_cmp_pick_btn" t-att-disabled="!li.can_use_a"
+                                            t-att-class="{'active': this.selectedLateDecision(row.employee_id, li.date_from, li.date_to) === 'use_a'}"
+                                            t-on-click="() => this.pickLateDecision(row, li, 'use_a')">A</button>
+                                        <button t-if="this.state.batchBId" type="button" class="o_cmp_pick_btn" t-att-disabled="!li.can_use_b"
+                                            t-att-class="{'active': this.selectedLateDecision(row.employee_id, li.date_from, li.date_to) === 'use_b'}"
+                                            t-on-click="() => this.pickLateDecision(row, li, 'use_b')">B</button>
+                                        <button type="button" class="o_cmp_pick_btn"
+                                            t-att-class="{'active': this.selectedLateDecision(row.employee_id, li.date_from, li.date_to) === 'keep_current'}"
+                                            t-on-click="() => this.pickLateDecision(row, li, 'keep_current')">Giữ</button>
+                                        <button type="button" class="o_cmp_pick_btn"
+                                            t-att-class="{'active': this.selectedLateDecision(row.employee_id, li.date_from, li.date_to) === 'defer'}"
+                                            t-on-click="() => this.pickLateDecision(row, li, 'defer')">Sau</button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile stacked comparison cards -->
+            <div class="o_tp_att_compare_cards" t-att-class="{'o_mobile_cards_off': this.state.mobileView === 'table'}">
+                <article t-foreach="this.data.rows" t-as="row" t-key="'card-' + row.row_key" class="o_tp_att_mcard">
+                    <div class="o_tp_att_mcard_head">
+                        <div>
+                            <strong t-out="row.display_name"/>
+                            <small class="d-block o_tp_att_muted">
+                                <t t-if="row.hr_code">HR: <t t-out="row.hr_code"/> · </t>
+                                <t t-if="row.raw_code_a">A: <t t-out="row.raw_code_a"/> </t>
+                                <t t-if="row.raw_code_b">B: <t t-out="row.raw_code_b"/></t>
+                            </small>
+                        </div>
+                        <span class="o_tp_att_badge" t-att-class="row.mapping_state === 'mapped' ? 'o_ok' : 'o_warn'" t-out="row.mapping_label"/>
+                    </div>
+                    <div class="o_cmp_mcard_days">
+                        <div t-foreach="row.days.filter((x) => x.group !== 'blank')" t-as="d" t-key="'mc-' + d.date" class="o_cmp_mcard_day">
+                            <div class="o_cmp_cell_head">
+                                <strong><t t-out="d.weekday"/> <t t-out="d.day_month"/></strong>
+                                <span class="o_tp_att_badge" t-att-class="this.groupBadgeClass(d.group)" t-out="d.group_label"/>
+                            </div>
+                            <div class="o_cmp_lines">
+                                <div><span class="o_side_tag o_tag_a">A</span> <t t-out="this.formatCellTime(d.a_scope, d.a_cell)"/></div>
+                                <div t-if="this.state.batchBId"><span class="o_side_tag o_tag_b">B</span> <t t-out="this.formatCellTime(d.b_scope, d.b_cell)"/></div>
+                                <div><span class="o_side_tag o_tag_now">HT</span> <t t-out="this.formatCanonicalTime(d.canonical)"/></div>
+                            </div>
+                            <div t-if="d.blocked_reason" class="o_cmp_blocked" t-out="d.blocked_reason"/>
+                            <div t-elif="row.mapping_state === 'mapped'" class="o_cmp_btn_group mt-1">
+                                <button type="button" class="o_cmp_pick_btn" t-att-disabled="!d.can_use_a"
+                                    t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'use_a'}"
+                                    t-on-click="() => this.pickDayDecision(row, d, 'use_a')">A</button>
+                                <button t-if="this.state.batchBId" type="button" class="o_cmp_pick_btn" t-att-disabled="!d.can_use_b"
+                                    t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'use_b'}"
+                                    t-on-click="() => this.pickDayDecision(row, d, 'use_b')">B</button>
+                                <button type="button" class="o_cmp_pick_btn"
+                                    t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'keep_current'}"
+                                    t-on-click="() => this.pickDayDecision(row, d, 'keep_current')">Giữ</button>
+                                <button type="button" class="o_cmp_pick_btn"
+                                    t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'defer'}"
+                                    t-on-click="() => this.pickDayDecision(row, d, 'defer')">Sau</button>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <AttPager data="this.data" unit="'nhân viên'" onPage="(p) => this.setPage(p)" onSize="(s) => this.setSize(s)"/>
+        </t>
+    </t>
+</div>
+</t>
+
+<t t-name="tp_hr_attendance.CompareConfirmDialog">
+    <Dialog title="this.props.title" size="'md'">
+        <div class="o_tp_att_dialog_body">
+            <ul class="mb-2 ps-3">
+                <li t-foreach="this.props.summaryLines" t-as="line" t-key="line_index" class="mb-1" t-out="line"/>
+            </ul>
+            <div t-if="this.state.error" class="alert alert-danger mt-2 mb-0" role="alert" t-out="this.state.error"/>
+        </div>
+        <t t-set-slot="footer">
+            <button type="button" class="btn btn-outline-secondary" t-att-disabled="this.state.busy" t-on-click="() => this.props.close()">Hủy</button>
+            <button type="button" class="btn btn-primary" t-att-disabled="this.state.busy" t-on-click="this.confirm">
+                <t t-if="this.state.busy">Đang xử lý…</t>
+                <t t-else="" t-out="this.props.confirmLabel"/>
+            </button>
+        </t>
+    </Dialog>
+</t>
+
+</templates>

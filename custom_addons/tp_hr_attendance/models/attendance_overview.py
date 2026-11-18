@@ -214,7 +214,7 @@ class AttendanceDayOverview(models.Model):
         late = {(row.date_from.isoformat(), row.date_to.isoformat()) for row in self.env['tp.hr.attendance.late'].sudo().search_fetch(
             [('company_id', '=', company.id), ('state', '=', 'applied')], ['date_from', 'date_to'])}
         for batch in self.env['tp.hr.attendance.batch'].sudo().search(
-                [('company_id', '=', company.id), ('state', '=', 'applied')], order='period_to desc, id desc'):
+                [('company_id', '=', company.id), ('state', 'in', ('applied', 'partial'))], order='period_to desc, id desc'):
             for sheet in batch.sheet_summary or []:
                 if sheet.get('from') and sheet.get('to') and not sheet.get('errors'):
                     key = (sheet['from'], sheet['to'])
