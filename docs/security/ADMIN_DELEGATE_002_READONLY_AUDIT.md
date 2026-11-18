@@ -96,3 +96,30 @@ Giao [prompt ADMIN-DELEGATE-002](../prompts/CLAUDE_ADMIN_DELEGATE_002_COMPLETE_S
 phòng mình/quyền gốc và thu hồi. Prompt không tự chỉ định thêm người nhận quyền;
 không sửa grant người thật hiện có để thử. Phiên này chỉ giao tài liệu, không
 khẳng định các gap đã được sửa hoặc đã nghiệm thu.
+
+## 5. Lỗi giao diện HR được xác nhận sau ADMIN-DELEGATE-002 S1–S4
+
+CHG-20261118-006, 18/11/2026. Ảnh người dùng báo `UncaughtPromiseError`:
+`hr.employee.mobile_phone field is undefined` khi mở danh sách nhân viên.
+Probe `get_views` bằng actor ủy quyền thực trên PCserver, READ ONLY và rollback:
+list1918/form1920 vẫn có field node `mobile_phone`, nhưng metadata fields của
+`hr.employee` không có trường này; search1919 không có node đó. Admin chính có
+metadata do có nhóm HR. Các ID chỉ là evidence tại môi trường, không hardcode.
+Không so field bảng con trong form với metadata model cha để tìm mismatch.
+
+Source [delegated views](../../custom_addons/tp_admin_delegation/views/hr_profile.xml)
+chứa mobile_phone ở list/form. [Privacy attendance](../../custom_addons/tp_hr_attendance/models/directory_privacy.py)
+giới hạn trường này cho hr.group_hr_user; actor được ủy quyền không thuộc nhóm đó.
+[Adapter](../../custom_addons/tp_admin_delegation/models/hr_profile.py) chọn safe view
+nhưng view chưa tương thích privacy mới. Vì vậy get_view trả được arch không
+chứng minh ListArchParser có đủ metadata để render. Trường có trong model/DB;
+không giải quyết bằng thêm cột, xóa cache hoặc restart.
+
+Cần sửa view/whitelist/groups, rà cả wizard metadata chứa mobile_phone và
+backend read/write allowlist; không bỏ field privacy hoặc cấp nhóm HR toàn cục.
+Kiểm list/detail/search và field metadata bằng quyền delegate trên public sau
+sửa; giữ phòng mình/baseline/thu hồi và nhân viên thường. Đây là blocker UI mới,
+không phải lỗi đã sửa. Chưa chỉnh application hoặc quyền người thật trong lượt này.
+Evidence ignored `.local/admin-delegate-hr-view-20261118/`. Chưa chạy browser
+actor thật hoặc mutation. Ghi nhận này bổ sung giới hạn của kết quả S1–S4,
+không thay kết quả đọc backend thành browser PASS.

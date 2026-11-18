@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-17T22:13:15.177465+00:00",
-  "last_change_id": "CHG-20261118-005",
-  "code_digest": "a6a6476bc6ae586d0506e1861ca6c149b0619a8381ddee079dcef3dc4bf32883",
-  "code_file_count": 648,
+  "updated_at": "2026-11-18T01:56:22.001299+00:00",
+  "last_change_id": "CHG-20261118-006",
+  "code_digest": "6533eca81203d424467aef233215a6b4beaecb64f5d1b7a48710e47d32d7841d",
+  "code_file_count": 631,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "cd1ba1fa0eca3b3c5e15abae0cf3595defbfa8a0a33d651ead4c0e819fccc267",
-    "docs/CHANGELOG.md": "c13c698946bc2549b12e012582ffc32eae17801ab9de1753bf42b20539c8a349",
+    "docs/PROJECT_STATUS.md": "c64a99c4b2c43309cc5702eb3c350db7b4422977cb0ebaba98d7341c9939cdc7",
+    "docs/CHANGELOG.md": "c46ec8211e386f211aa15c1a8072e414ff922ab31ef4b495a8c384944c411800",
     "AGENTS.md": "ac7c7a6ce9929b1cc7f2f3752b5006bd91e9ca570228c9aed8a5210b2798cc5c",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "6da8a7e8a28b0a02f89a696bf063ac0868913f97fc224fb3b9ac32f7626a2313",
-    "docs/DECISIONS.md": "f20dea44c828ab3d3454dce658f876f15c5349761a6df14b2e352d8c0ad5a4f2",
+    "docs/ROADMAP.md": "90c68a1a9ec1effc397ca283ca346727fddfe973b8f23fcffaaa4899bad51572",
+    "docs/DECISIONS.md": "d54aa39544bd4d20190aeabd4c7aefe2734e9a11d3593ce1a122171aafbaea7e",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,6 +20,7 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "ADMIN-DELEGATE-002 S1-S4 (CHG-20261118-002..005): Ruff/AST/XML/CSV on changed tp_admin_delegation/tp_hr_workspace/tp_equipment files; pure no-DB projection filter 17 cases PASS; main 18069 per-slice backup + -u tp_admin_delegation exit0/0ERROR + fingerprint + read-only probes; PC server per-slice preflight/backup/-u exit0/0ERROR/checksum/snapshot + read-only probes with ledger delegate; public smoke health/login. NOT_RUN: 10 new/updated Odoo tests (no 18079/clone/fixture), real writes/races/revocation, browser delegate session."
+    "Confirmed live get_views mobile_phone missing metadata on delegated list/form under READ ONLY/rollback; source traces and user screenshot agree.",
+    "Docs only; source unchanged; scoped snapshot excludes foreign work; no mutation/browser-actor/fixture tests or application fix."
   ]
 }

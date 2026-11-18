@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-006 — ADMIN-DELEGATE-002: xác nhận lỗi mobile_phone ở HR native view
+
+- Ngày18/11/2026. Người dùng báo UncaughtPromiseError/ListArchParser: hr.employee.mobile_phone undefined trên public bằng tài khoản ủy quyền.
+- Probe PCserver get_views(list/form/search), with_user và READ ONLY/rollback: delegate không có hr.group_hr_user; list1918/form1920 chứa mobile_phone nhưng field metadata thiếu, search1919 không có mismatch này. Admin chính có metadata. Không lấy field của bảng con để kết luận form admin có lỗi.
+- Nguyên nhân: delegated safe view gọi mobile_phone trong khi tp_hr_attendance.directory_privacy giới hạn field bằng nhóm HR. Cần scope/whitelist/group đúng, giữ bảo vệ thông tin cá nhân, không cấp HR toàn cục hoặc thêm cộtDB. Restart không sửa được source mismatch.
+- Chỉ ghi nhận blocker/status/audit, chưa sửa ứng dụng, chưa grant/revoke hoặc thay dữ liệu. Evidence riêng ignored.local; không đưa danh tính/secret vàoGit. Docs-only snapshot seal, source không đổi; không fixture/test18079/browser actor hoặc code đã sửa. Commit/push/sync đúng tài liệu, không restart runtime.
+
 ## CHG-20261118-005 — ADMIN-DELEGATE-002 S4: KH-KD — tình trạng/ghi chú/lịch sử dự án và giá gói thầu ngoài phòng qua command gốc
 
 - Ngày 18/11/2026. `tp_admin_delegation` 20.0.1.4.0. Chẩn đoán từ source: adapter 001 đã cho delegate capability KD `prepare` và capability hợp đồng/financial.read trên dự án ngoài phòng (metadata, đối tác, tạo gói thầu, WBS tạo/sửa/giao việc, workflow hợp đồng chạy thật). Riêng cổng `_kd_money_read` còn đòi phân công dự án, nên nút Tình trạng/Ghi chú bị ẩn, `_kd_apply` từ chối status/note/bid/amount, lịch sử dự án và giá gói thầu không đọc được: có capability nhưng backend chặn.
