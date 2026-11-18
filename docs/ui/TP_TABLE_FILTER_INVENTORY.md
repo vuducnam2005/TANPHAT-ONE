@@ -317,3 +317,9 @@ S4 đã deploy PC server từ `cc2bfcb6`: 37/37 tệp checksum, public 40 dashbo
 | Nhập dữ liệu / `action_import` / `tp.hr.attendance.batch` list/search | Tìm Lô/tệp, trạng thái, kỳ từ, người áp dụng; filter `Có xung đột`, `Có dòng chưa đối chiếu`; native pager | Main list PASS; filter nhiều lô NOT_RUN riêng |
 | Nguồn dữ liệu chấm công / `action_sources` / `tp_sources_overview` | Thẻ Excel/API (trạng thái thật, mốc dữ liệu), checklist 9 mục, lịch sử nhập gần nhất; không bảng lọc riêng (N/A) | 18069 + public PASS: API `Chưa cấu hình`, không ghi realtime/đã tích hợp |
 | Công của tôi / `action_mine` / `tp_mine` | Owner luôn từ session; tháng; xuất file của tôi | Load PASS admin; trình duyệt nhân viên thường NOT_RUN |
+
+## HR-EMPLOYEE-ORDER — CHG-20261118-023
+
+- `HR-T01`/`action_employees`/`hr.employee`/`employee_list`: thứ tự tùy chỉnh `sequence,id` trong department grouping hiện hành; SearchModel, domain/count/export/pager giữ. Sort cột hoặc filter nhân viên khóa kéo kèm hướng dẫn; filter chỉ department/company/active cho kéo. Không thêm filter engine.
+- `directory_employee_list`/`hr.employee.public` chỉ xem cùng sequence,id, không tay nắm. Bảng quan hệ/missing/pending/archive không bật kéo; không thêm bảng mới. Backend kiểm toàn phòng có quyền và anchor IDs, không ghi cả trang đè toàn phòng.
+- Đã kiểm: Python12/12, VM eligibility/filter/pagination/readonly/failure và native sortable browser mock up/down/cross/outside,3 compiled templates; ORM READ ONLY combined views/defaults trên18069. FullHOOT/real multi-page drag ghiDB chưa chạy (không fixturemain); xem [acceptance](../demo/HR_EMPLOYEE_ORDER_ACCEPTANCE.md). Role review kỹ thuật, business acceptance người dùng riêng.

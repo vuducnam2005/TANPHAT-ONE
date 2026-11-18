@@ -5,6 +5,7 @@ import json
 from odoo import Command, api, fields, models
 from odoo.exceptions import AccessError, UserError
 
+from .employee_order import _TP_REORDER
 from .hr_role import _ACCESS_LABELS, _ROLE_PREVIEW
 
 _TRANSFER = object()
@@ -58,6 +59,8 @@ class TransferVersion(models.Model):
     _inherit = 'hr.version'
 
     def write(self, vals):
+        if set(vals) & {'department_id', 'company_id', 'active', 'employee_id', 'date_version'}:
+            self.env['hr.employee']._tp_lock_employee_order(self.sudo().company_id.ids)
         if self.env.context.get('_tp_transfer') is not _TRANSFER:
             for version in self:
                 if 'employee_id' in vals and vals['employee_id'] != version.employee_id.id:
@@ -82,12 +85,16 @@ class TransferVersion(models.Model):
         return super().write(vals)
 
     def unlink(self):
+        self.env['hr.employee']._tp_lock_employee_order(self.sudo().company_id.ids)
         if any(v.employee_id.user_id for v in self):
             raise AccessError(self.env._('Giữ lịch sử công tác của danh tính đã cấp tài khoản; không xóa phiên bản.'))
         return super().unlink()
 
     @api.model_create_multi
     def create(self, vals_list):
+        self.env['hr.employee']._tp_lock_employee_order([
+            vals.get('company_id') or self.env.company.id for vals in vals_list
+        ])
         if self.env.context.get('_tp_transfer') is not _TRANSFER:
             for vals in vals_list:
                 employee = self.env['hr.employee'].browse(vals.get('employee_id')).exists()
@@ -267,7 +274,7 @@ class TransferWizard(models.TransientModel):
         if self.change_kind != 'transfer':
             return super().action_apply()
         employee = self._transfer_validate()
-        self.env.cr.execute('SELECT pg_advisory_xact_lock(761101, %s)', [employee.company_id.id])
+        employee._tp_lock_employee_order([employee.company_id.id])
         self.env.cr.execute('SELECT id FROM hr_employee WHERE id=%s FOR UPDATE', [employee.id])
         self.env.cr.execute('SELECT id FROM resource_resource WHERE id=%s FOR UPDATE', [employee.resource_id.id])
         if employee.user_id:
@@ -313,6 +320,12 @@ class TransferWizard(models.TransientModel):
             else:
                 employee.create_version({'date_version': today, **values})
             employee._compute_current_version_id()
+            next_seq = self.env['hr.employee']._tp_next_department_sequence(
+                employee.company_id.id,
+                self.target_department_id.id,
+                active=bool(employee.active),
+            )
+            employee.with_context(_tp_employee_reorder=_TP_REORDER).sudo().write({'sequence': next_seq})
             user = employee.user_id
             if user:
                 scoped = self.env.ref('tp_kd_workspace.group_scoped_staff')

@@ -406,6 +406,10 @@ class ProtectedEmployee(models.Model):
     def _tp_assert_not_original_admin_employee(self, vals=None):
         if _is_trusted_original_or_cli(self.env):
             return
+        if vals and set(vals) == {'sequence'}:
+            from odoo.addons.tp_hr_workspace.models.employee_order import is_trusted_employee_reorder
+            if is_trusted_employee_reorder(self.env, vals):
+                return
         for emp in self.sudo().with_context(active_test=False):
             if emp.user_id and _is_protected_original_target(emp.user_id):
                 raise AccessError(self.env._('Hồ sơ gắn với Quản trị gốc chỉ do Quản trị gốc thay đổi.'))

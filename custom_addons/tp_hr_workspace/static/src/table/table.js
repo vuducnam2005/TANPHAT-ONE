@@ -1,14 +1,35 @@
-import { Component, useProps, proxy } from "@odoo/owl";
+import { Component, onWillUnmount, proxy, useProps } from "@odoo/owl";
+import { browser } from "@web/core/browser/browser";
+import { formatDateTime } from "@web/core/l10n/dates";
 import { registry } from "@web/core/registry";
+import { useBus, useService } from "@web/core/utils/hooks";
+import { useSortable } from "@web/core/utils/sortable_owl";
+import { RelationalModel } from "@web/model/relational_model/relational_model";
+import { render } from "@web/owl2/utils";
+import { session } from "@web/session";
+import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { ListController } from "@web/views/list/list_controller";
 import { ListRenderer } from "@web/views/list/list_renderer";
-import { RelationalModel } from "@web/model/relational_model/relational_model";
 import { listView } from "@web/views/list/list_view";
-import { standardFieldProps } from "@web/views/fields/standard_field_props";
-import { useService } from "@web/core/utils/hooks";
-import { formatDateTime } from "@web/core/l10n/dates";
-import { render } from "@web/owl2/utils";
-import { PAGE_SIZE_OPTIONS, tablePageKey, readPageSize, writePageSize } from "../prefs";
+import { TpTableFilterBar } from "@tp_web_home/search/table_filter_bar";
+import { PAGE_SIZE_OPTIONS, readPageSize, tablePageKey, writePageSize } from "../prefs";
+import {
+    REORDER_LOCK_GUIDANCE,
+    REORDER_SUCCESS_TOAST,
+    analyzeEmployeeReorderState,
+    isDepartmentCompleteDomain,
+} from "./employee_reorder_rules";
+import "./filter_profiles";
+
+const HANDLE_COLUMN_SPEC = Object.freeze({
+    id: "tp_hr_drag_handle",
+    type: "tp_hr_handle",
+    name: "__tp_hr_handle",
+    hasLabel: false,
+    optional: false,
+    attrs: { width: "36px" },
+    options: {},
+});
 
 export class HrListModel extends RelationalModel {
     _getNextConfig(currentConfig, params) {
@@ -31,21 +52,25 @@ export class HrTableTools extends Component {
     static template = "tp_hr_workspace.TableTools";
     props = useProps();
     pageSizes = PAGE_SIZE_OPTIONS;
-    state = proxy({busy:false, error:""});
+    state = proxy({ busy: false, error: "" });
     async changeSize(ev) {
         const controller = this.props.controller;
         const limit = Number(ev.target.value);
-        if (this.state.busy || controller.editedRecord || !PAGE_SIZE_OPTIONS.includes(limit)) return;
+        if (this.state.busy || controller.editedRecord || !PAGE_SIZE_OPTIONS.includes(limit)) {
+            return;
+        }
         this.state.busy = true;
         this.state.error = "";
         try {
-            await controller.model.root.load({limit, offset: 0});
+            await controller.model.root.load({ limit, offset: 0 });
             writePageSize(controller.hrPageKey, limit);
             render(controller);
         } catch {
             this.state.error = "Không tải được trang. Hãy chọn lại số dòng để thử lại.";
             ev.target.value = String(controller.model.root.limit);
-        } finally { this.state.busy = false; }
+        } finally {
+            this.state.busy = false;
+        }
     }
 }
 
@@ -53,51 +78,463 @@ export class HrListRenderer extends ListRenderer {
     static template = "tp_hr_workspace.ListRenderer";
     static recordRowTemplate = "tp_hr_workspace.RecordRow";
     static groupRowTemplate = "tp_hr_workspace.GroupRow";
-    get getEmptyRowIds() { return []; }
+
+    setup() {
+        super.setup();
+        this.tpReorderBusy = false;
+        this._tpSuppressClickUntil = 0;
+        this._tpCleanupDragPointer = null;
+
+        let activeSourceGroup = null;
+        let isPointerInValidZone = true;
+
+        const clearDragZoneMarkers = () => {
+            const table = this.tableRef();
+            if (table) {
+                table.classList.remove("o_tp_hr_dragging", "o_tp_hr_drop_invalid");
+                for (const tb of table.querySelectorAll("tbody.is-drop-forbidden, tbody.is-drag-source")) {
+                    tb.classList.remove("is-drop-forbidden", "is-drag-source");
+                }
+            }
+            browser.document?.body?.classList.remove("o_tp_hr_drop_forbidden_cursor");
+        };
+
+        const cleanupPointerTracking = () => {
+            if (this._tpCleanupDragPointer) {
+                this._tpCleanupDragPointer();
+                this._tpCleanupDragPointer = null;
+            }
+            clearDragZoneMarkers();
+            activeSourceGroup = null;
+            isPointerInValidZone = true;
+        };
+
+        onWillUnmount(cleanupPointerTracking);
+
+        this.tpDragState = useSortable({
+            enable: () => this.canDragEmployeesNow && !this.tpReorderBusy,
+            ref: this.rootRef,
+            elements: ".o_tp_hr_draggable_row",
+            groups: "tbody.o_tp_hr_dept_tbody",
+            connectGroups: false,
+            handle: ".o_tp_hr_drag_handle",
+            cursor: "grabbing",
+            placeholderClasses: ["d-table-row", "o_tp_hr_drop_placeholder"],
+            followingElementClasses: ["o_tp_hr_drag_preview"],
+            onWillStartDrag: () => {
+                if (this.props.list.editedRecord) {
+                    this.props.list.leaveEditMode();
+                }
+            },
+            onDragStart: (params) => {
+                this._tpSuppressClickUntil = Date.now() + 600;
+                this.sortStart(params);
+                activeSourceGroup = params.group || params.element?.closest("tbody.o_tp_hr_dept_tbody");
+                isPointerInValidZone = true;
+
+                const table = this.tableRef();
+                if (table) {
+                    table.classList.add("o_tp_hr_dragging");
+                }
+                if (activeSourceGroup) {
+                    activeSourceGroup.classList.add("is-drag-source");
+                }
+
+                const onPointerMove = (ev) => {
+                    if (!activeSourceGroup) {
+                        return;
+                    }
+                    const hitEls = browser.document?.elementsFromPoint?.(ev.clientX, ev.clientY) || [];
+                    // Native dragging disables pointer events on ancestors, so hit testing
+                    // may return only a row/cell and omit its tbody.
+                    const hoveredTbody = hitEls
+                        .map((el) => el.closest?.("tbody.o_tp_hr_dept_tbody"))
+                        .find(Boolean);
+                    const insideTable = hitEls.some((el) => el === this.tableRef());
+
+                    for (const tb of this.tableRef()?.querySelectorAll("tbody.is-drop-forbidden") || []) {
+                        if (tb !== hoveredTbody) {
+                            tb.classList.remove("is-drop-forbidden");
+                        }
+                    }
+
+                    if (hoveredTbody && hoveredTbody !== activeSourceGroup) {
+                        isPointerInValidZone = false;
+                        hoveredTbody.classList.add("is-drop-forbidden");
+                        this.tableRef()?.classList.add("o_tp_hr_drop_invalid");
+                        browser.document?.body?.classList.add("o_tp_hr_drop_forbidden_cursor");
+                    } else if (!hoveredTbody) {
+                        const rect = activeSourceGroup.getBoundingClientRect();
+                        const nearSource =
+                            insideTable &&
+                            ev.clientX >= rect.left &&
+                            ev.clientX <= rect.right &&
+                            ev.clientY >= rect.top &&
+                            ev.clientY <= rect.bottom;
+                        isPointerInValidZone = nearSource;
+                        this.tableRef()?.classList.toggle("o_tp_hr_drop_invalid", !nearSource);
+                        browser.document?.body?.classList.toggle("o_tp_hr_drop_forbidden_cursor", !nearSource);
+                    } else {
+                        isPointerInValidZone = hoveredTbody === activeSourceGroup;
+                        this.tableRef()?.classList.toggle("o_tp_hr_drop_invalid", !isPointerInValidZone);
+                        browser.document?.body?.classList.toggle(
+                            "o_tp_hr_drop_forbidden_cursor",
+                            !isPointerInValidZone
+                        );
+                    }
+                };
+
+                browser.addEventListener("pointermove", onPointerMove, { capture: true });
+                this._tpCleanupDragPointer = () => {
+                    browser.removeEventListener("pointermove", onPointerMove, { capture: true });
+                };
+            },
+            onDragEnd: (params) => {
+                this._tpSuppressClickUntil = Date.now() + 350;
+                this.sortStop(params);
+                // Delay cleanup by one microtask so onDrop reads isPointerInValidZone first.
+                Promise.resolve().then(cleanupPointerTracking);
+            },
+            onDrop: async ({ element, group, previous, next, parent }) => {
+                this._tpSuppressClickUntil = Date.now() + 450;
+                const validZone = isPointerInValidZone;
+                if (!validZone || !group || (parent && parent !== group)) {
+                    return;
+                }
+                await this.onEmployeeDropInDepartment({ element, group, previous, next });
+            },
+        });
+    }
+
+    get getEmptyRowIds() {
+        return [];
+    }
+
+    get employeeReorderState() {
+        const list = this.props.list;
+        return analyzeEmployeeReorderState({
+            resModel: list.resModel,
+            isGrouped: list.isGrouped,
+            groupBy: list.groupBy,
+            orderBy: list.orderBy,
+            domain: list.domain,
+            context: list.context,
+            displayName: this.env.config?.displayName,
+            canReorderSession: Boolean(session.tp_hr_can_reorder),
+            readonly: Boolean(this.props.readonly),
+            canEditView: this.props.activeActions?.edit,
+        });
+    }
+
+    get showEmployeeReorderHandle() {
+        return this.employeeReorderState.showHandleColumn;
+    }
+
+    get canDragEmployeesNow() {
+        return this.employeeReorderState.canDrag;
+    }
+
+    get reorderLockGuidance() {
+        return REORDER_LOCK_GUIDANCE;
+    }
+
+    get isDeptGroupedEmployeeList() {
+        const list = this.props.list;
+        return (
+            list.resModel === "hr.employee" &&
+            list.isGrouped &&
+            list.groupBy?.length === 1 &&
+            list.groupBy[0] === "department_id"
+        );
+    }
+
+    hrGroupDeptId(group) {
+        const raw =
+            group?.record?.resId ||
+            (Array.isArray(group?.value) ? group.value[0] : group?.value);
+        return typeof raw === "number" && raw > 0 ? raw : 0;
+    }
+
     getActiveColumns() {
         const columns = super.getActiveColumns();
-        return this.props.list.resModel === "hr.employee" && this.props.list.groupBy?.includes("department_id")
-            ? columns.filter(column => column.name !== "department_id") : columns;
+        const filtered =
+            this.props.list.resModel === "hr.employee" &&
+            this.props.list.groupBy?.includes("department_id")
+                ? columns.filter((column) => column.name !== "department_id")
+                : columns;
+        if (this.showEmployeeReorderHandle) {
+            return [HANDLE_COLUMN_SPEC, ...filtered];
+        }
+        return filtered;
     }
+
+    getRowClass(record) {
+        const base = super.getRowClass(record);
+        if (this.canDragEmployeesNow) {
+            return `${base} o_tp_hr_draggable_row`.trim();
+        }
+        return base;
+    }
+
+    onHandleClick(ev) {
+        ev?.stopPropagation?.();
+        ev?.preventDefault?.();
+    }
+
+    _shouldSuppressAfterDrag(ev) {
+        if (
+            this.tpDragState?.dragging ||
+            Date.now() < this._tpSuppressClickUntil ||
+            ev?.target?.closest?.(".o_tp_hr_drag_handle_cell")
+        ) {
+            ev?.stopPropagation?.();
+            ev?.preventDefault?.();
+            return true;
+        }
+        return false;
+    }
+
+    onClickCapture(record, ev) {
+        if (this._shouldSuppressAfterDrag(ev)) {
+            return;
+        }
+        return super.onClickCapture(record, ev);
+    }
+
+    async onCellClicked(record, column, ev, newWindow) {
+        if (this._shouldSuppressAfterDrag(ev)) {
+            return;
+        }
+        return super.onCellClicked(record, column, ev, newWindow);
+    }
+
+    toggleRecordSelection(record, ev) {
+        if (this.tpDragState?.dragging || Date.now() < this._tpSuppressClickUntil) {
+            return;
+        }
+        return super.toggleRecordSelection(record, ev);
+    }
+
+    async onEmployeeDropInDepartment({ element, group, previous, next }) {
+        if (this.tpReorderBusy || !this.canDragEmployeesNow) {
+            return;
+        }
+        const employeeId = Number(element?.dataset?.resId || 0);
+        const deptId = Number(group?.dataset?.deptId || 0);
+        if (!employeeId) {
+            return;
+        }
+
+        let prevRow = previous;
+        while (prevRow && (!prevRow.classList?.contains("o_data_row") || prevRow === element)) {
+            prevRow = prevRow.previousElementSibling;
+        }
+        let nextRow = next;
+        while (nextRow && (!nextRow.classList?.contains("o_data_row") || nextRow === element)) {
+            nextRow = nextRow.nextElementSibling;
+        }
+
+        const afterId = prevRow ? Number(prevRow.dataset.resId || 0) || null : null;
+        const beforeId = nextRow ? Number(nextRow.dataset.resId || 0) || null : null;
+        if (!afterId && !beforeId) {
+            return;
+        }
+
+        this.tpReorderBusy = true;
+        try {
+            await this.orm.call("hr.employee", "tp_reorder_in_department", [
+                employeeId,
+                deptId || false,
+                beforeId,
+                afterId,
+            ]);
+            await this.props.list.model.root.load();
+            render(this);
+            this.notificationService.add(REORDER_SUCCESS_TOAST, { type: "success" });
+        } catch (err) {
+            try {
+                await this.props.list.model.root.load();
+                render(this);
+            } catch {
+                // ignore secondary reload error
+            }
+            const msg =
+                err?.data?.message ||
+                err?.message ||
+                "Không thể cập nhật thứ tự nhân viên. Đã khôi phục vị trí cũ.";
+            this.notificationService.add(msg, { type: "danger" });
+        } finally {
+            this.tpReorderBusy = false;
+        }
+    }
+
     getGroupText(group) {
         return `${group.count} ${this.props.list.resModel === "hr.employee" ? "thành viên" : "bản ghi"}`;
     }
+
     hrGroupLabel(group) {
-        return this.props.list.resModel === "hr.employee" && group.groupByField.name === "department_id" && !group.value
-            ? "Chưa khai báo phòng ban" : group.displayName;
+        return this.props.list.resModel === "hr.employee" &&
+            group.groupByField.name === "department_id" &&
+            !group.value
+            ? "Chưa khai báo phòng ban"
+            : group.displayName;
     }
 }
 
 const TABLE_CONTENT = {
-    "hr.employee": ["Danh sách nhân viên", "Thông tin công việc, liên hệ và tài khoản trong phạm vi được xem.", "Thêm nhân viên", "Chưa có nhân viên"],
-    "hr.department": ["Phòng ban và đơn vị", "Cơ cấu tổ chức, người quản lý và nhân viên đang sử dụng hồ sơ.", "Thêm phòng ban", "Chưa có phòng ban"],
-    "hr.job": ["Chức vụ", "Vị trí nhân sự và phòng ban áp dụng. Chức vụ không tự cấp quyền hệ thống.", "Thêm chức vụ", "Chưa có chức vụ"],
-    "hr.work.location": ["Nơi làm việc", "Quản lý địa điểm để phân công nơi làm việc cho nhân viên.", "Thêm nơi làm việc", "Chưa có nơi làm việc"],
-    "hr.employee.category": ["Nhãn nhân viên", "Phân loại hồ sơ bằng nhãn; nhãn không thay đổi phòng ban hoặc quyền.", "Thêm nhãn nhân viên", "Chưa có nhãn nhân viên"],
-    "tp.hr.import.batch": ["Nhập và đối chiếu", "Chọn tệp, xem trước và đối chiếu trước khi áp dụng vào hồ sơ.", "Tạo lô nhập", "Chưa có lô nhập"],
-    "hr.employee.public": ["Danh bạ nhân viên", "Chỉ xem: thông tin công việc của đồng nghiệp. Hợp đồng, lương và thông tin riêng tư không hiển thị.", "", "Chưa có nhân viên"],
-    "tp.hr.import.line": ["Đối chiếu từng dòng", "Rà soát ánh xạ và xử lý xung đột trước khi áp dụng lô nhập.", "", "Không có dòng đối chiếu"],
+    "hr.employee": [
+        "Danh sách nhân viên",
+        "Thông tin công việc, liên hệ và tài khoản trong phạm vi được xem.",
+        "Thêm nhân viên",
+        "Chưa có nhân viên",
+    ],
+    "hr.department": [
+        "Phòng ban và đơn vị",
+        "Cơ cấu tổ chức, người quản lý và nhân viên đang sử dụng hồ sơ.",
+        "Thêm phòng ban",
+        "Chưa có phòng ban",
+    ],
+    "hr.job": [
+        "Chức vụ",
+        "Vị trí nhân sự và phòng ban áp dụng. Chức vụ không tự cấp quyền hệ thống.",
+        "Thêm chức vụ",
+        "Chưa có chức vụ",
+    ],
+    "hr.work.location": [
+        "Nơi làm việc",
+        "Quản lý địa điểm để phân công nơi làm việc cho nhân viên.",
+        "Thêm nơi làm việc",
+        "Chưa có nơi làm việc",
+    ],
+    "hr.employee.category": [
+        "Nhãn nhân viên",
+        "Phân loại hồ sơ bằng nhãn; nhãn không thay đổi phòng ban hoặc quyền.",
+        "Thêm nhãn nhân viên",
+        "Chưa có nhãn nhân viên",
+    ],
+    "tp.hr.import.batch": [
+        "Nhập và đối chiếu",
+        "Chọn tệp, xem trước và đối chiếu trước khi áp dụng vào hồ sơ.",
+        "Tạo lô nhập",
+        "Chưa có lô nhập",
+    ],
+    "hr.employee.public": [
+        "Danh bạ nhân viên",
+        "Chỉ xem: thông tin công việc của đồng nghiệp. Hợp đồng, lương và thông tin riêng tư không hiển thị.",
+        "",
+        "Chưa có nhân viên",
+    ],
+    "tp.hr.import.line": [
+        "Đối chiếu từng dòng",
+        "Rà soát ánh xạ và xử lý xung đột trước khi áp dụng lô nhập.",
+        "",
+        "Không có dòng đối chiếu",
+    ],
 };
-
-import { TpTableFilterBar } from "@tp_web_home/search/table_filter_bar";
-import "./filter_profiles";
 
 export class HrListController extends ListController {
     static template = "tp_hr_workspace.ListView";
-    static components = {...ListController.components, HrTableTools, TpTableFilterBar};
-    get className() { return `${super.className || ""} o_tp_hr_table${this.props.resModel === "hr.employee" ? " o_tp_hr_employee_list" : ""}`; }
-    get hrContent() { return TABLE_CONTENT[this.props.resModel] || [this.env.config.displayName || "Danh sách HR", "Quản lý danh mục nhân sự trong phạm vi được xem.", "Thêm mới", "Chưa có dữ liệu"]; }
-    get hrHasFilters() { return Boolean(this.env.searchModel?.facets.length); }
-    get hrMissing() { return Boolean(this.props.context?.tp_hr_missing); }
-    clearHrFilters() { this.env.searchModel.clearQuery(); }
-    get hrPageKey() { return tablePageKey(this.props.resModel, this.env.config.actionId, this.env.config.viewId); }
+    static components = { ...ListController.components, HrTableTools, TpTableFilterBar };
+
+    setup() {
+        super.setup();
+        if (this.env.searchModel) {
+            useBus(this.env.searchModel, "update", () => render(this));
+        }
+    }
+
+    get className() {
+        return `${super.className || ""} o_tp_hr_table${this.props.resModel === "hr.employee" ? " o_tp_hr_employee_list" : ""}`;
+    }
+
+    get hrContent() {
+        return (
+            TABLE_CONTENT[this.props.resModel] || [
+                this.env.config.displayName || "Danh sách HR",
+                "Quản lý danh mục nhân sự trong phạm vi được xem.",
+                "Thêm mới",
+                "Chưa có dữ liệu",
+            ]
+        );
+    }
+
+    get hrHasFilters() {
+        return Boolean(this.env.searchModel?.facets.length);
+    }
+
+    get hrMissing() {
+        return Boolean(this.props.context?.tp_hr_missing);
+    }
+
+    get hrReorderGuidanceText() {
+        return REORDER_LOCK_GUIDANCE;
+    }
+
+    get showEmployeeReorderLockBanner() {
+        if (!this.model?.isReady?.()) {
+            return false;
+        }
+        const root = this.model.root;
+        return analyzeEmployeeReorderState({
+            resModel: this.props.resModel,
+            isGrouped: root.isGrouped,
+            groupBy: root.groupBy,
+            orderBy: root.orderBy,
+            domain: root.domain,
+            context: root.context || this.props.context,
+            displayName: this.env.config?.displayName,
+            canReorderSession: Boolean(session.tp_hr_can_reorder),
+            readonly: false,
+            canEditView: this.activeActions?.edit,
+        }).showLockBanner;
+    }
+
+    async resetToEmployeeCustomOrder() {
+        const sm = this.env.searchModel;
+        if (sm) {
+            for (const facet of [...(sm.facets || [])]) {
+                // Keep department-only filter facets; remove any employee-hiding or sub-group facets.
+                let isDeptOnlyFacet = false;
+                if (facet.type === "field") {
+                    const searchItems = sm.getSearchItems(
+                        (item) => item.groupId === facet.groupId && item.fieldName === "department_id"
+                    );
+                    isDeptOnlyFacet = searchItems.length > 0;
+                }
+                if (!isDeptOnlyFacet) {
+                    sm.deactivateGroup(facet.groupId);
+                }
+            }
+        }
+        const root = this.model.root;
+        if (!isDepartmentCompleteDomain(root.domain)) {
+            await this.env.services.action.doAction("tp_hr_workspace.action_employees");
+            return;
+        }
+        await root.load({
+            orderBy: [
+                { name: "sequence", asc: true },
+                { name: "id", asc: true },
+            ],
+        });
+        render(this);
+    }
+
+    clearHrFilters() {
+        this.env.searchModel.clearQuery();
+    }
+
+    get hrPageKey() {
+        return tablePageKey(this.props.resModel, this.env.config.actionId, this.env.config.viewId);
+    }
+
     get modelParams() {
         const params = super.modelParams;
         if (params.config) {
             params.config.openGroupsByDefault = true;
         }
         const limit = readPageSize(this.hrPageKey);
-        return this.props.state?.modelState ? params : {...params, limit, groupsLimit: limit};
+        return this.props.state?.modelState ? params : { ...params, limit, groupsLimit: limit };
     }
 }
 
@@ -112,37 +549,73 @@ registry.category("views").add("tp_hr_table", {
 export class HrIdentityCell extends Component {
     static template = "tp_hr_workspace.IdentityCell";
     props = useProps(standardFieldProps);
-    get isEmployee() { return this.props.record.resModel === "hr.employee"; }
+    get isEmployee() {
+        return this.props.record.resModel === "hr.employee";
+    }
 }
-registry.category("fields").add("tp_hr_identity", {component: HrIdentityCell, supportedTypes: ["char"]});
+registry.category("fields").add("tp_hr_identity", {
+    component: HrIdentityCell,
+    supportedTypes: ["char"],
+});
 
 export class HrActiveCell extends Component {
     static template = "tp_hr_workspace.ActiveCell";
     props = useProps(standardFieldProps);
 }
-registry.category("fields").add("tp_hr_active", {component: HrActiveCell, supportedTypes: ["boolean"]});
+registry.category("fields").add("tp_hr_active", {
+    component: HrActiveCell,
+    supportedTypes: ["boolean"],
+});
 
 export class HrEmploymentCell extends Component {
     static template = "tp_hr_workspace.EmploymentCell";
     props = useProps(standardFieldProps);
-    get value() { return this.props.record.data[this.props.name] || ""; }
-    get label() { return {short_term:"Ngắn hạn", long_term:"Dài hạn", outsourced:"Thuê khoán"}[this.value] || "Chưa khai báo"; }
-    change(ev) { return this.props.record.update({[this.props.name]: ev.target.value || false}); }
+    get value() {
+        return this.props.record.data[this.props.name] || "";
+    }
+    get label() {
+        return (
+            { short_term: "Ngắn hạn", long_term: "Dài hạn", outsourced: "Thuê khoán" }[this.value] ||
+            "Chưa khai báo"
+        );
+    }
+    change(ev) {
+        return this.props.record.update({ [this.props.name]: ev.target.value || false });
+    }
 }
-registry.category("fields").add("tp_hr_employment", {component: HrEmploymentCell, supportedTypes: ["selection"]});
+registry.category("fields").add("tp_hr_employment", {
+    component: HrEmploymentCell,
+    supportedTypes: ["selection"],
+});
 
 export class HrCountCell extends Component {
     static template = "tp_hr_workspace.CountCell";
     props = useProps(standardFieldProps);
-    setup() { this.orm = useService("orm"); this.action = useService("action"); }
-    async open() { const action = await this.orm.call(this.props.record.resModel, "action_tp_employees", [[this.props.record.resId]]); return this.action.doAction(action); }
+    setup() {
+        this.orm = useService("orm");
+        this.action = useService("action");
+    }
+    async open() {
+        const action = await this.orm.call(this.props.record.resModel, "action_tp_employees", [
+            [this.props.record.resId],
+        ]);
+        return this.action.doAction(action);
+    }
 }
-registry.category("fields").add("tp_hr_count", {component: HrCountCell, supportedTypes: ["integer"]});
+registry.category("fields").add("tp_hr_count", {
+    component: HrCountCell,
+    supportedTypes: ["integer"],
+});
 
 export class HrDateTimeCell extends Component {
     static template = "tp_hr_workspace.DateTimeCell";
     props = useProps(standardFieldProps);
-    get value() { const value = this.props.record.data[this.props.name]; return value ? formatDateTime(value, {format: "dd/MM/yyyy HH:mm:ss"}) : ""; }
+    get value() {
+        const value = this.props.record.data[this.props.name];
+        return value ? formatDateTime(value, { format: "dd/MM/yyyy HH:mm:ss" }) : "";
+    }
 }
-registry.category("fields").add("tp_hr_datetime", {component: HrDateTimeCell, supportedTypes: ["datetime"]});
-
+registry.category("fields").add("tp_hr_datetime", {
+    component: HrDateTimeCell,
+    supportedTypes: ["datetime"],
+});

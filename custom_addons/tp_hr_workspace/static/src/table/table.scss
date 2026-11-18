@@ -81,3 +81,19 @@
     order: 20;
     margin-top: 4px;
 }
+
+.o_tp_hr_employee_list {
+    .o_tp_hr_drag_handle_cell { width: 36px; padding: 4px; text-align: center; }
+    .o_tp_hr_drag_handle {
+        border: 0; background: transparent; color: #607087; padding: 6px;
+        font-size: 24px; line-height: 1; cursor: grab; touch-action: none;
+        &:disabled { opacity: .35; cursor: not-allowed; }
+    }
+    .o_tp_hr_drop_placeholder { visibility: visible !important; background: #e6f2ff; box-shadow: inset 0 3px #2563eb; }
+    .o_tp_hr_drag_preview { opacity: .85; box-shadow: 0 4px 14px #18315333; td { background: #eff6ff; } }
+    .is-drag-source .o_data_row td { background-color: #f5faff; }
+    .is-drop-forbidden .o_data_row td { background-color: #fff1f2; }
+    .o_tp_hr_drop_invalid .o_tp_hr_drop_placeholder { visibility: hidden !important; }
+    .o_tp_hr_reorder_guidance { padding: 8px 16px; background: #eff6ff; }
+}
+body.o_tp_hr_drop_forbidden_cursor, body.o_tp_hr_drop_forbidden_cursor * { cursor: not-allowed !important; }

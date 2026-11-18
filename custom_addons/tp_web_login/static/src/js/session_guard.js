@@ -161,6 +161,11 @@ export const tpSessionGuardService = {
                     // BroadcastChannel may be closed
                 }
             }
+            // Dispose the entire old webclient, including service caches, pending
+            // callbacks and workspace timers. A standalone document owns re-login.
+            // Its public route validates the server tombstone, never a client reason.
+            browser.document.documentElement.style.visibility = "hidden";
+            browser.location.replace("/tp/session-ended");
         };
 
         const checkSessionNow = async () => {
@@ -322,8 +327,16 @@ export const tpSessionGuardService = {
                 return;
             }
             if (ev?.persisted) {
-                checkSessionNow();
+                // A bfcache restore must pass backend authentication before any
+                // private DOM becomes visible or a suspended callback resumes.
+                browser.location.reload();
             }
+        };
+
+        const onPageHide = () => {
+            // This style is saved in bfcache with the document. It intentionally
+            // remains hidden on restore until the authenticated reload completes.
+            browser.document.documentElement.style.visibility = "hidden";
         };
 
         if (uid) {
@@ -332,6 +345,7 @@ export const tpSessionGuardService = {
             browser.addEventListener("focus", onWindowFocus);
             browser.addEventListener("online", onWindowOnline);
             browser.addEventListener("pageshow", onPageShow);
+            browser.addEventListener("pagehide", onPageHide);
             browser.document?.addEventListener("visibilitychange", onVisibilityChange);
 
             if (sessionTag && typeof BroadcastChannel !== "undefined") {
@@ -410,6 +424,7 @@ export const tpSessionGuardService = {
                 browser.removeEventListener("focus", onWindowFocus);
                 browser.removeEventListener("online", onWindowOnline);
                 browser.removeEventListener("pageshow", onPageShow);
+                browser.removeEventListener("pagehide", onPageHide);
                 browser.document?.removeEventListener("visibilitychange", onVisibilityChange);
                 if (busRef && typeof busRef.removeEventListener === "function") {
                     busRef.removeEventListener("BUS:DISCONNECT", onBusDisconnect);

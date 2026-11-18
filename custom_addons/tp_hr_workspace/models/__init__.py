@@ -1,6 +1,7 @@
 from . import (
     department_transfer,
     employee_delete,
+    employee_order,
     employment_contract,
     hr_account_wizard,
     hr_history,

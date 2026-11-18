@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T08:30:35.048418+00:00",
-  "last_change_id": "CHG-20261118-022",
-  "code_digest": "7986c5a51ba1fb90a9c5d3c0ea4c37b3e7731b6459d718dbfa75db8ffceda3a1",
-  "code_file_count": 657,
+  "updated_at": "2026-11-18T09:02:55.207812+00:00",
+  "last_change_id": "CHG-20261118-023",
+  "code_digest": "0ea7f569996761994ae81ac53bd256b63eaff97f1a13e6ad740d8f298bef6876",
+  "code_file_count": 662,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "8b11039289cd2bf44165395f26eca26b78bc5b03a2920548559183688b3239a0",
-    "docs/CHANGELOG.md": "a4cca0122e72f9a02d98dbe4d91504ab9be9e2c9c4d1af11c687af4d817c32e1",
+    "docs/PROJECT_STATUS.md": "1edc04afbe5c180261d2a78c6c89b6a0c9f754e23e04323904e716d7201f5d5b",
+    "docs/CHANGELOG.md": "5b498e9e2d242f86f88fc203e4ee74e02bebd1c50b9fc6068afd5a02651c88db",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "5bbf4e74fde54433fbc9e8d60f19aff7221782b4969f377ab7a9bb91d09174be",
+    "docs/ROADMAP.md": "d37700cb8692589c8812fa7ce3b60bcb6ffe0e8f8b42557818129b4ba1219451",
     "docs/DECISIONS.md": "c59f08bf68ea1f53c6659f9b3015fa72ae33d48be2ea4cbce575de07beccc12c",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
@@ -20,10 +20,11 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "ruff check custom_addons/tp_web_login custom_addons/tp_api scripts/tests/test_auth_session_001.py -> 0 errors",
-    "python -m unittest scripts/tests/test_auth_session_001.py -v -> 6/6 OK",
-    "probe_backend_pg.py on tp_tanphat_dev (PG advisory lock 761157 shared/exclusive, concurrent login, inflight write, old logout) -> 8/8 PASS",
-    "odoo-bin -d tp_tanphat_test --test-enable --test-tags /tp_web_login -> 10/10 PASS",
-    "Playwright e2e_auth_session.cjs (multi-tab, wrong password, replace via bus 1.18s, poll fallback 0.83s, DOM scrub, mobile 390x844, relogin->Home) -> 24/24 PASS"
+    "HR backend pure+mock action unittest:12/12 PASS; AUTH unittest:8/8 PASS",
+    "node scripts/tests/test_hr_employee_order.cjs and test_auth_session_frontend.cjs:PASS",
+    "Native template browser compile3 + actual sortable mock pointer up/down/crossdept/outside:PASS",
+    "Ruff/Python compile/XML parse/JS syntax/SCSS compile:PASS",
+    "18069 backup+upgrade3addons exit0/0ERROR; snapshot only modules; READ ONLY ORM16/16",
+    "Full real loginA/B, HOOT, write/race ORM NOT_RUN; original foreign checkpoint retained"
   ]
 }

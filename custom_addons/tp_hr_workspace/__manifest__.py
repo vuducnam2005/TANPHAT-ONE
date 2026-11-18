@@ -1,6 +1,6 @@
 {
     "name": "TANPHAT ONE — TP HR",
-    "version": "20.0.1.12.0",
+    "version": "20.0.1.13.0",
     "license": "LGPL-3",
     "author": "Tan Phat JSC",
     "depends": ["tp_organization", "hr_skills", "hr_timesheet", "tp_web_home", "tp_web_login", "tp_kd_workspace", "calendar"],
@@ -26,6 +26,7 @@
             "tp_hr_workspace/static/src/sidebar/readonly_badge.xml",
             "tp_hr_workspace/static/src/sidebar/readonly_badge.scss",
             "tp_hr_workspace/static/src/table/filter_profiles.js",
+            "tp_hr_workspace/static/src/table/employee_reorder_rules.js",
             "tp_hr_workspace/static/src/table/table.js",
             "tp_hr_workspace/static/src/table/table.xml",
             "tp_hr_workspace/static/src/table/table.scss",
@@ -54,6 +55,7 @@
         ],
         "web.assets_unit_tests": ["tp_hr_workspace/static/tests/**/*.test.js"],
     },
+    "post_init_hook": "post_init_hook",
     "installable": True,
     "application": True,
 }

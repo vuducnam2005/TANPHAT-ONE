@@ -8,8 +8,12 @@ from odoo.http import request
 from odoo.addons.auth_signup.controllers.main import AuthSignupHome
 from odoo.addons.auth_totp.controllers.home import Home as TotpHome
 from odoo.addons.tp_web_login.models.session_guard import (
+    SESSION_CUTOVER_DETAIL,
     SESSION_CUTOVER_REASON,
+    SESSION_CUTOVER_TITLE,
+    SESSION_REPLACED_DETAIL,
     SESSION_REPLACED_REASON,
+    SESSION_REPLACED_TITLE,
     compare_and_clear_winner_in_cr,
 )
 from odoo.addons.web.controllers.session import Session as WebSession
@@ -38,6 +42,24 @@ def _clear_current_session_winner_if_matching() -> None:
 
 
 class TpLoginSessionController(WebSession):
+
+    @http.route('/tp/session-ended', type='http', auth='public', methods=['GET'], sitemap=False)
+    def session_ended(self):
+        """A new document disposes all private webclient state and pending callbacks."""
+        relogin_url = request.env['ir.http']._tp_relogin_url(request.env)
+        if request.session.uid:
+            return request.redirect('/app/tp-home' if relogin_url.startswith('/dang-nhap') else '/odoo/tp-home')
+        reason = request.session.get('tp_ended_reason')
+        if reason not in (SESSION_REPLACED_REASON, SESSION_CUTOVER_REASON):
+            return request.redirect(relogin_url)
+        cutover = reason == SESSION_CUTOVER_REASON
+        response = request.render('tp_web_login.session_ended_page', {
+            'title': SESSION_CUTOVER_TITLE if cutover else SESSION_REPLACED_TITLE,
+            'detail': SESSION_CUTOVER_DETAIL if cutover else SESSION_REPLACED_DETAIL,
+            'relogin_url': relogin_url,
+        })
+        response.headers['Cache-Control'] = 'no-store, private'
+        return response
 
     @http.route()
     def destroy(self):

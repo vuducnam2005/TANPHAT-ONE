@@ -3,7 +3,8 @@
         <field name="name">tp.hr.employee.delegated.list</field><field name="model">hr.employee</field>
         <field name="priority">200</field>
         <field name="arch" type="xml"><list string="Danh sách nhân viên" js_class="tp_hr_table" limit="20" groups_limit="20" expand="1"
-                create="false" edit="false" delete="false" import="false" export_xlsx="false" default_order="tp_employee_code">
+                create="false" edit="false" delete="false" import="false" export_xlsx="false" default_order="sequence, id">
+            <field name="sequence" column_invisible="True"/>
             <field name="department_id" string="Phòng ban"/><field name="tp_employee_code" string="Mã nhân viên"/>
             <field name="name" string="Họ và tên"/><field name="job_id" string="Chức vụ" optional="hide"/>
             <field name="job_title" string="Chức danh mô tả" optional="show"/><field name="work_email" optional="show"/>

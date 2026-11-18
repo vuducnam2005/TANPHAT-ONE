@@ -1,5 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <template id="session_ended_page" name="TANPHAT ONE session ended">
+        &lt;!DOCTYPE html&gt;
+        <html lang="vi">
+            <head>
+                <meta charset="utf-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1"/>
+                <meta http-equiv="Cache-Control" content="no-store"/>
+                <title>Đăng nhập lại — TANPHAT ONE</title>
+                <style>
+                    * { box-sizing: border-box; }
+                    body { margin: 0; min-height: 100vh; min-height: 100dvh; display: grid;
+                        place-items: center; padding: 24px; background: #f3f7fc;
+                        color: #17324d; font: 16px/1.6 system-ui, sans-serif; }
+                    main { width: 100%; max-width: 520px; padding: 36px; border: 1px solid #dbe5f0;
+                        border-radius: 20px; background: white; text-align: center; }
+                    .icon { color: #a66c14; font-size: 36px; }
+                    h1 { font-size: 24px; line-height: 1.4; }
+                    p { color: #52677b; }
+                    a { display: inline-block; padding: 12px 24px; border-radius: 10px;
+                        background: #155c96; color: white; text-decoration: none; font-weight: 600; }
+                    a:focus-visible { outline: 3px solid #a66c14; outline-offset: 4px; }
+                    @media (max-width: 480px) { main { padding: 24px; } h1 { font-size: 21px; } }
+                </style>
+            </head>
+            <body>
+                <main aria-labelledby="session-title">
+                    <div class="icon" aria-hidden="true">⚠</div>
+                    <h1 id="session-title" t-out="title"/>
+                    <p t-out="detail"/>
+                    <p>Dữ liệu chưa lưu có thể bị mất.</p>
+                    <a t-att-href="relogin_url" autofocus="autofocus">Đăng nhập lại</a>
+                </main>
+            </body>
+        </html>
+    </template>
     <template id="login_layout" inherit_id="web.login_layout" name="TANPHAT ONE authentication shell">
         <xpath expr="//t[@t-set='head']" position="before">
             <t t-set="tp_auth_page" t-value="request.httprequest.path in ('/web/login', '/web/login/totp', '/web/signup', '/web/reset_password')"/>

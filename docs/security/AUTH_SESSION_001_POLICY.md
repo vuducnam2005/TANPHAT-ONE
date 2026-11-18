@@ -16,10 +16,13 @@ Ngày áp dụng: 18/11/2026 (Asia/Saigon). Quyết định: [DEC-057](../DECISI
 - **Khóa giao dịch PostgreSQL (`AUTH_SESSION_LOCK_NS = 761157`):**
   - Đăng nhập hoàn tất và đăng xuất của winner dùng khóa độc quyền `pg_advisory_xact_lock(761157, uid)`. Hai lần đăng nhập đồng thời trên nhiều worker được tuần tự hóa chặt chẽ, chỉ để lại đúng một winner sau commit.
   - Các yêu cầu ghi (`not env.cr.readonly`) từ phiên trình duyệt giữ khóa chia sẻ `pg_advisory_xact_lock_shared(761157, uid)` (không chặn các tab cùng phiên) và kiểm tra lại trong `cr.precommit`, bảo đảm thao tác ghi từ phiên cũ không thể commit sau thời điểm phiên mới đã thay thế.
+  - Bản `20.0.2.0.1` đọc winner bằng cursor primary mới **sau khi lấy khóa**, kể cả kiểm precommit; không dùng snapshot `REPEATABLE READ` cũ của request. Route chỉ đọc cũng kiểm trên primary mới. Login khóa dòng winner bằng `FOR UPDATE`; snapshot cạnh tranh cũ dùng retry giao dịch native.
   - Nếu giao dịch đăng nhập mới bị rollback, callback `cr.postrollback` khôi phục trạng thái session trên bộ nhớ và thông báo `bus.bus` (gắn với `cr.precommit`/`cr.postcommit`) tự động hủy, giữ nguyên phiên đang dùng.
   - Đăng xuất sử dụng **compare-and-clear** (`WHERE user_id=%s AND session_gen=%s AND session_nonce=%s`): phiên cũ gọi `/web/session/logout` không bao giờ xóa nhầm winner của phiên mới.
 
 ## 3. Cutover phiên cũ và phương án Rollback
+
+- Khi nhận nguyên nhân kết thúc phiên, webclient ẩn và điều hướng ngay sang `/tp/session-ended`. Route xác minh tombstone server, trả trang thông báo độc lập `no-store`, một nút Đăng nhập lại về Trang chủ; document cũ và callback/cache/polling được bỏ. `pagehide` ẩn trang trước bfcache, `pageshow.persisted` tải lại qua xác thực backend trước hiển thị.
 
 - **Cutover sau nâng cấp:** các phiên trình duyệt tạo trước thời điểm triển khai chưa có `tp_session_nonce` sẽ được yêu cầu đăng nhập lại đúng một lần với mã nguyên nhân riêng `session_cutover` (*“Hệ thống vừa cập nhật phiên đăng nhập”*), không báo nhầm thành *“đăng nhập ở nơi khác”* và không tự nâng phiên cũ thành winner.
 - **Rollback khẩn cấp (nếu cần):**

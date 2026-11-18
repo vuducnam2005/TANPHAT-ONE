@@ -124,7 +124,7 @@ class HrWorkspace(models.AbstractModel):
     @api.model
     def _build_xlsx(self, filters=None):
         employees, domain, status = self._population(filters)
-        records = employees.search(domain, order='tp_employee_code, id')
+        records = employees.search(domain, order='department_id, sequence, id')
         overview = self.get_overview(filters)
         stream = io.BytesIO()
         # Runtime exporter follows the existing Odoo dependency; all text is written literally.

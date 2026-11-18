@@ -13,6 +13,7 @@ from odoo.http.session import (
     logout,
     session_store,
 )
+from odoo.modules.registry import Registry
 from odoo.tools import config, consteq, hmac
 from odoo.tools.misc import submap
 
@@ -87,6 +88,7 @@ def verify_session_winner_in_cr(
     *,
     acquire_shared_lock: bool = False,
     allow_test_synthetic: bool = False,
+    winner_cursor_factory=None,
 ) -> None:
     """Verify against PostgreSQL that (sess_uid, sess_gen, sess_nonce) is the live winner for uid."""
     if not sess_nonce or not sess_gen or sess_uid != uid:
@@ -105,11 +107,16 @@ def verify_session_winner_in_cr(
     if acquire_shared_lock and not getattr(cr, 'readonly', False):
         cr.execute('SELECT pg_advisory_xact_lock_shared(%s, %s)', [AUTH_SESSION_LOCK_NS, int(uid)])
 
-    cr.execute(
-        'SELECT session_gen, session_nonce FROM tp_user_active_session WHERE user_id = %s',
-        [int(uid)],
-    )
-    row = cr.fetchone()
+    # Odoo uses REPEATABLE READ: an advisory lock does not refresh the request
+    # snapshot. Read the winner on a fresh primary cursor AFTER taking the lock.
+    # The request's shared lock remains held until its business transaction ends,
+    # so a new login cannot commit between this check and the business commit.
+    with winner_cursor_factory() if winner_cursor_factory else contextlib.nullcontext(cr) as winner_cr:
+        winner_cr.execute(
+            'SELECT session_gen, session_nonce FROM tp_user_active_session WHERE user_id = %s',
+            [int(uid)],
+        )
+        row = winner_cr.fetchone()
     if not row:
         raise TpSessionCutoverException()
 
@@ -176,11 +183,16 @@ class ResUsersSingleSession(models.Model):
         for lock_uid in lock_uids:
             self.env.cr.execute('SELECT pg_advisory_xact_lock(%s, %s)', [AUTH_SESSION_LOCK_NS, lock_uid])
 
+        # A successful native login may switch users in an existing cookie. The
+        # final-login hook now owns both exclusive locks and the winner update;
+        # do not revalidate the deliberately retired identity before this commit.
+        self.env.cr.precommit.data.pop('tp_auth_precommit_winner', None)
+
         if isinstance(prev_sess_uid, int) and prev_sess_uid > 0 and prev_sess_uid != uid:
             compare_and_clear_winner_in_cr(self.env.cr, prev_sess_uid, prev_sess_gen, prev_sess_nonce)
 
         self.env.cr.execute(
-            'SELECT session_gen, session_nonce FROM tp_user_active_session WHERE user_id = %s',
+            'SELECT session_gen, session_nonce FROM tp_user_active_session WHERE user_id = %s FOR UPDATE',
             [uid],
         )
         row = self.env.cr.fetchone()
@@ -294,6 +306,7 @@ class IrHttpSingleSession(models.AbstractModel):
             session.get('tp_session_nonce'),
             acquire_shared_lock=acquire_shared_lock,
             allow_test_synthetic=allow_synth,
+            winner_cursor_factory=Registry(env.cr.dbname).cursor if not allow_synth else None,
         )
         if (
             not allow_synth
@@ -310,7 +323,10 @@ class IrHttpSingleSession(models.AbstractModel):
 
             @env.cr.precommit.add
             def _verify_winner_before_commit():
-                b_uid, b_sess_uid, b_gen, b_nonce = env.cr.precommit.data.pop('tp_auth_precommit_winner')
+                bound_session = env.cr.precommit.data.pop('tp_auth_precommit_winner', None)
+                if bound_session is None:
+                    return
+                b_uid, b_sess_uid, b_gen, b_nonce = bound_session
                 verify_session_winner_in_cr(
                     env.cr,
                     b_uid,
@@ -319,6 +335,7 @@ class IrHttpSingleSession(models.AbstractModel):
                     b_nonce,
                     acquire_shared_lock=True,
                     allow_test_synthetic=False,
+                    winner_cursor_factory=Registry(env.cr.dbname).cursor,
                 )
 
     @classmethod

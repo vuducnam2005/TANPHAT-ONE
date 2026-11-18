@@ -4,6 +4,7 @@ from __future__ import annotations
 import pathlib
 import sys
 import unittest
+from contextlib import contextmanager
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -67,6 +68,43 @@ class FakeCursor:
 
 
 class TestAuthSession001(unittest.TestCase):
+
+    def test_repeatable_read_snapshot_cannot_authorize_revoked_request(self):
+        """Request snapshot predates B's commit: fresh winner must reject A."""
+        request_cr = FakeCursor()
+        request_cr.rows[7] = (3, "old-a")
+        primary_cr = FakeCursor()
+        primary_cr.rows[7] = (4, "new-b")
+
+        @contextmanager
+        def fresh_primary_cursor():
+            # Serialize against login before opening the independent snapshot.
+            self.assertEqual(request_cr.locks, [("shared", AUTH_SESSION_LOCK_NS, 7)])
+            yield primary_cr
+
+        with self.assertRaises(TpSessionReplacedException):
+            verify_session_winner_in_cr(
+                request_cr, 7, 7, 3, "old-a", acquire_shared_lock=True,
+                winner_cursor_factory=fresh_primary_cursor,
+            )
+        self.assertEqual(request_cr.rows[7], (3, "old-a"))
+
+    def test_readonly_route_checks_fresh_primary_instead_of_stale_replica(self):
+        request_cr = FakeCursor(readonly=True)
+        request_cr.rows[7] = (3, "old-a")
+        primary_cr = FakeCursor()
+        primary_cr.rows[7] = (4, "new-b")
+
+        @contextmanager
+        def fresh_primary_cursor():
+            yield primary_cr
+
+        with self.assertRaises(TpSessionReplacedException):
+            verify_session_winner_in_cr(
+                request_cr, 7, 7, 3, "old-a", acquire_shared_lock=True,
+                winner_cursor_factory=fresh_primary_cursor,
+            )
+        self.assertEqual(request_cr.locks, [])
 
     def test_mandatory_vietnamese_copy_and_exception_context(self):
         exc_rep = TpSessionReplacedException()
