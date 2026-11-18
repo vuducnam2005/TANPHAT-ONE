@@ -39,7 +39,7 @@ Các kết quả dưới đây giữ để truy vết, **không được tính l
 | AS-06 | Bus/fallback; hủy đời webclient cũ, không render response trễ hoặc lộ DOM bfcache; desktop/mobile | Frontend harness PASS: hide/scrub trước hard navigation đúng một lần, bfcache hidden đến reload; local QWeb render PASS | **PARTIAL**; browser trang mới, response trễ thực, offline/focus/PWA/bfcache và đo bus/fallback bản mới **NOT_RUN**; độ trễ lịch sử không phải đo mới |
 | AS-07 | Tách replaced/cutover với mạng/quyền/hết hạn, không replay mutation | Unit8/8 và source giữ mã lỗi; trang độc lập không có payload mutation | **PARTIAL**; network/403/browser integration bản mới **NOT_RUN** |
 | AS-08 | Giữ HR lock, admin DEC-053/054, identity recheck và stateless API integration | Snapshot local giữ dữ liệu/quyền; probe16/16 gồm guard người chỉ xem; lịch sử HttpCase bản cũ | **PARTIAL**; thực auth/khóa/MFA/API key bản mới **NOT_RUN** |
-| AS-09 | Backup, upgrade18069/PC server, smoke public, bảo toàn nghiệp vụ |18069 exit0/0ERROR, snapshot chỉ modules; backup và probe16/16 tại mục1 | **LOCAL_APPLIED_PC_PENDING** |
+| AS-09 | Backup, upgrade18069/PC server, smoke public, bảo toàn nghiệp vụ |18069 exit0/0ERROR, snapshot chỉ modules; backup và probe16/16 tại mục1 | **APPLIED — 18069 + PC server**, xem CHG-024 |
 | AS-10 | Người dùng kiểm hai thiết bị thật, xác nhận trực quan/độ trễ/về Trang chủ | Chưa thực hiện; không suy từ unit hoặc smoke | **NOT_RUN — CHỜ NGƯỜI DÙNG** |
 
 ## Giao bản PC server — CHG-20261118-024
@@ -50,3 +50,5 @@ Các kết quả dưới đây giữ để truy vết, **không được tính l
 - Playwright anonymous + HTTP + trang hết phiên render từ QWeb19/19 PASS: loginlocal/public desktop1440×900/mobile390×844, không tràn, API401, đúng copy/nút/hrefHome;0lỗiJS. Trang hết phiên dùng HTML do ORM render và browser route mock để kiểm hình thức, không gọi là A/B loginE2E.
 - Preflight phát hiện inventoryserver là prefix cũ chính xác của tài liệu đã commit; chỉ thiếu các mục chấm công đã commit. Đã đối chiếu rồi đồng bộ bản Git đầy đủ, không mất nội dung riêng. Source sidebar lệch có sẵn được giữ, không thuộc gói. Không restarttunnel, không dùng18079 hoặc tạo actor/đổi phòng người thật.
 - Các ca NOT_RUN nêu trên vẫn giữ: đầy đủA/B thật/MFA/multiworker/race/HOOT/ghi reorder rồi reload ởDB đang dùng. Nghiệm thu trực quan và nghiệp vụ người dùng riêng. Bản sửa đã giao; người dùng tự kiểm hai thiết bị và thao tác thứ tự thực tế vào thời điểm phù hợp.
+
+Kiểm assets sau deploy (CHG-20261118-025): native `web.assets_backend` biên dịch trong READ ONLY **561 CSS / 1.786 JS / 75 khối XML**, không lỗi CSS, không lưu asset attachment. Đây là kiểm biên dịch bundle thực; full browser login/HOOT và các ca NOT_RUN vẫn giữ.

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T09:13:10.640157+00:00",
-  "last_change_id": "CHG-20261118-024",
+  "updated_at": "2026-11-18T09:16:26.970555+00:00",
+  "last_change_id": "CHG-20261118-025",
   "code_digest": "0ea7f569996761994ae81ac53bd256b63eaff97f1a13e6ad740d8f298bef6876",
   "code_file_count": 662,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "4bfd0d7cff253c12bf4753bf0bb7c4b095f783dda8d4d2fa8bcc3011e2fad5e1",
-    "docs/CHANGELOG.md": "bf26b2665ea3f547bae0f74dd147256219e25cb46ce40e5598ab78af5416ec40",
+    "docs/PROJECT_STATUS.md": "02a0d83d1f58eef50305342a83c59fa85c54d6bcc6ce71df8ad4c0466a4ceada",
+    "docs/CHANGELOG.md": "4bbddb3df3cbe609a8f2ae9db05c5a90ca3036961f1d1ee2324ebe98fe4a8d3a",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,9 +20,7 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC cfc1af70 deployed37/37checksum; upgrade3addons exit0/0ERROR; backup verified",
-    "READ ONLY ORM local16/server20 PASS; business snapshot only moduleversions differ",
-    "AnonymousHTTP+browser+server-rendered QWeb visual19/19PASS; true loginA/B/race/HOOT/realreorder NOT_RUN",
-    "Preserved root foreignWIP/checkpoint; docs-only delivery no restart"
+    "PC native backend asset in-memory readonly compile CSS561/JS1786/XML75 PASS; no attachment writes",
+    "Docs only; fixed stale pending labels; real A/B/race/HOOT/write tests remain NOT_RUN"
   ]
 }

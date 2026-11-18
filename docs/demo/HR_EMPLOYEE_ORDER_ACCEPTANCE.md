@@ -6,7 +6,7 @@ Nguồn: [DEC-044/053/054](../DECISIONS.md), [quy chuẩn bộ lọc](../ui/TP_T
 
 ## Trạng thái bàn giao
 
-**Đã áp dụng local18069 và kiểm kỹ thuật có giới hạn; PC server đang chờ triển khai. Chưa nghiệm thu trực quan/nghiệp vụ hoặc cho phép pilot bởi người dùng.** Kết quả mock không chứng minh thao tác kéo thật đã lưu PostgreSQL.
+**Đã áp dụng 18069 và PC server, kiểm kỹ thuật có giới hạn. Chưa nghiệm thu trực quan/nghiệp vụ hoặc cho phép pilot bởi người dùng.** Kết quả mock không chứng minh thao tác kéo thật đã lưu PostgreSQL.
 
 - Backend unit thuần và action thật qua mock ORM: **12/12 PASS**. Bao gồm actor chỉ đọc, quyền đọc/ghi toàn bộ hồ sơ ảnh hưởng, anchor khác phòng/công ty hoặc đã thay đổi/lưu trữ, ID không hợp lệ, token RPC giả, phân trang và chỉ ghi `sequence`.
 - Node VM harness: **PASS**. Browser biên dịch **3 template native** và chạy sortable thật trên DOM dựng riêng, pointer kéo lên/xuống/cross-department/ngoài bảng với RPC mock: **PASS**. Evidence ignored: `.local/hr-employee-order/native-drag-result.json`. Đây chưa phải renderer đầy đủ trên danh sách Odoo thật, chưa xác nhận persist/reload dữ liệu thật.
@@ -30,7 +30,7 @@ Nguồn: [DEC-044/053/054](../DECISIONS.md), [quy chuẩn bộ lọc](../ui/TP_T
 
 ## Giới hạn và cổng còn mở
 
-Không chạy18079; không tạo actor/dữ liệu giả, không thử ghi/reorder/chuyển phòng thật trên main/server. Các test hành vi ghi chỉ dùng mock; migration schema/sequence khởi tạo là thay đổi runtime đã áp local trong nâng cấp được ủy quyền. Chưa chạy race thật, full renderer/persist/reload, HOOT và nghiệm thu trực quan/nghiệp vụ người dùng. Kết quả triển khai PC server, commit và URL public sẽ được phiên chính bổ sung sau khi thực hiện; không gắn nhãn PASS trước bằng chứng.
+Không chạy18079; không tạo actor/dữ liệu giả, không thử ghi/reorder/chuyển phòng thật trên main/server. Các test hành vi ghi chỉ dùng mock; migration schema/sequence khởi tạo là thay đổi runtime đã áp local trong nâng cấp được ủy quyền. Chưa chạy race thật, full renderer/persist/reload, HOOT và nghiệm thu trực quan/nghiệp vụ người dùng. PC server đã triển khai và kiểm chứng như mục CHG-024 dưới đây; không dùng smoke/mock thay nghiệm thu ghi nghiệp vụ.
 
 ## Giao bản PC server — CHG-20261118-024
 
@@ -40,3 +40,5 @@ Không chạy18079; không tạo actor/dữ liệu giả, không thử ghi/reord
 - Playwright anonymous + HTTP + trang hết phiên render từ QWeb19/19 PASS: loginlocal/public desktop1440×900/mobile390×844, không tràn, API401, đúng copy/nút/hrefHome;0lỗiJS. Trang hết phiên dùng HTML do ORM render và browser route mock để kiểm hình thức, không gọi là A/B loginE2E.
 - Preflight phát hiện inventoryserver là prefix cũ chính xác của tài liệu đã commit; chỉ thiếu các mục chấm công đã commit. Đã đối chiếu rồi đồng bộ bản Git đầy đủ, không mất nội dung riêng. Source sidebar lệch có sẵn được giữ, không thuộc gói. Không restarttunnel, không dùng18079 hoặc tạo actor/đổi phòng người thật.
 - Các ca NOT_RUN nêu trên vẫn giữ: đầy đủA/B thật/MFA/multiworker/race/HOOT/ghi reorder rồi reload ởDB đang dùng. Nghiệm thu trực quan và nghiệp vụ người dùng riêng. Bản sửa đã giao; người dùng tự kiểm hai thiết bị và thao tác thứ tự thực tế vào thời điểm phù hợp.
+
+Kiểm assets sau deploy (CHG-20261118-025): native `web.assets_backend` biên dịch trong READ ONLY **561 CSS / 1.786 JS / 75 khối XML**, không lỗi CSS, không lưu asset attachment. Đây là kiểm biên dịch bundle thực; full browser login/HOOT và các ca NOT_RUN vẫn giữ.

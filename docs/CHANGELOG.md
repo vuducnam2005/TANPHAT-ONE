@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-025 — Xác nhận assets native sau giao bản và sửa nhãn PC pending cũ
+
+- Ngày18/11/2026 Asia/Saigon. Kiểm trong ORM READ ONLY trên PC server: `web.assets_backend` giải manifest thực và biên dịch 561 CSS, 1.786 JS (6.445.107 ký tự đầu ra), 75 khối XML; `css_errors=[]`. Dùng `preprocess_css`, base `WebAsset._fetch_content`, JS `minify` và `xml`; không gọi lưu bundle/attachment hoặc tạo dữ liệu. Đây là kiểm biên dịch, không thay thế thực thi module/browser đầy đủ.
+- Sửa hai nhãn PC pending còn sót trong acceptance HR/AUTH, giữ nguyên phần NOT_RUN thực A/B/MFA/race/fullHOOT/ghi reorder. Không đổi application/DB/quyền/runtime; code chạy vẫn `cfc1af70`, gói docs trước `2f75f68d` đã đồng bộ 7/7 checksum không restart.
+- Kiểm liên kết hiện có, scoped diff và workflow snapshot sạch; giữ foreign WIP/checkpoint. Commit/push và đồng bộ riêng tài liệu lên PC server. Next: nghiệm thu người dùng như CHG-024; không tự mở batch khác.
+
 ## CHG-20261118-024 — Giao PC server và kiểm public HR-EMPLOYEE-ORDER / AUTH-SESSION-001
 
 - Ngày18/11/2026 Asia/Saigon. Code `cfc1af70` pushorigin/main và deploy37/37checksum. Upgrade đúng3addon exit0/0ERROR; không restarttunnel. Bản chạy18069/PC: HR20.0.1.13.0/admin20.0.2.0.1/auth20.0.2.0.1; API20.0.1.2.0.
