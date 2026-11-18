@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-033 — Đưa Bảng công theo file ra menu Chấm công/nút thao tác và khớp bố cục mẫu Excel
+
+- Di chuyển `menu_file_matrix` (*Bảng công theo file (Vào/Ra)*) ra trực tiếp dưới menu **Chấm công** (`sequence=25`, giữ nguyên gating `can('import')`), thêm nút mở nhanh **Bảng công theo file (Vào/Ra)** / **Đối chiếu A/B** trên `board.xml/js` và `dashboard.xml/js`.
+- Cập nhật `matrix.js/xml/scss` (`STORE_KEY` `matrix.v2`): mặc định bật `ID`, `Chức vụ`, `Vắng mặt (Vắng)`, sắp đúng thứ tự cột và màu header/nhóm cyan `#ccf7f7`/cuối tuần `#e4e7ff` theo mẫu bảng Excel; ghim sticky `STT | Mã nhân viên | Tên nhân viên` không đè `ID`/`Chức vụ`/`Vào/Ra`.
+- Kiểm thực: `ruff 0`, XML/JS OK, pure `26/26 PASS`, `18069` upgrade `exit 0/0 ERROR`, menu ACL (`uid=2=True`/`uid=34=False`), HTTP CSS `35a7749`/JS `69b87c9` `200 OK`.
+
 ## CHG-20261118-032 — Giao PC server & xác minh asset public bản thả mượt HR-EMPLOYEE-ORDER
 
 - Ngày 18/11/2026 Asia/Saigon; biên bản giao commit `006ff458` (TP HR `20.0.1.13.2`, CHG-20261118-031), không sửa code ứng dụng.

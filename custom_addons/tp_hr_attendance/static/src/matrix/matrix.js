@@ -9,7 +9,7 @@ import { AttendanceCompare } from "./compare";
 import { AttPager } from "../parts";
 import { openAttendanceUpload } from "../upload/upload";
 
-const STORE_KEY = "tp_hr_attendance.matrix";
+const STORE_KEY = "tp_hr_attendance.matrix.v2";
 
 /**
  * Confirmation dialog for applying valid/identical lines of a source batch or discarding an unapplied batch.
@@ -94,12 +94,12 @@ export class AttendanceFileMatrix extends Component {
             status: "",
             page: 1,
             pageSize: [10, 20, 50, 100].includes(saved.pageSize) ? saved.pageSize : 20,
-            // Optional columns & UI toggles
+            // Optional columns & UI toggles (default ID, Chức vụ, Vắng mặt ON to match machine attendance sheet)
             cols: {
-                machineId: Boolean(initialCols.machineId),
-                title: Boolean(initialCols.title),
+                machineId: initialCols.machineId !== undefined ? Boolean(initialCols.machineId) : true,
+                title: initialCols.title !== undefined ? Boolean(initialCols.title) : true,
                 hrCode: Boolean(initialCols.hrCode),
-                absent: Boolean(initialCols.absent),
+                absent: initialCols.absent !== undefined ? Boolean(initialCols.absent) : true,
             },
             colMenuOpen: false,
             mobileFilterOpen: false,

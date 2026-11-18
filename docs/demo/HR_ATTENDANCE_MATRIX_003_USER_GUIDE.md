@@ -4,7 +4,7 @@ Phạm vi: `tp_hr_attendance` `20.0.3.0.0` (`DEC-058`), dành cho nhân sự / c
 
 ## 1. Tải nhiều file Excel và giữ riêng từng nguồn
 
-1. Vào **Chấm công → Tổng quan** hoặc **Bảng chấm công** rồi bấm **Nhập Excel máy chấm công**, hoặc mở thẳng **Quản trị chấm công → Bảng dữ liệu theo file**.
+1. Vào **Chấm công → Bảng công theo file (Vào/Ra)** (hoặc bấm trực tiếp nút **Bảng công theo file (Vào/Ra)** / **Đối chiếu A/B** / **Nhập Excel máy chấm công** ngay trên **Tổng quan chấm công** và **Bảng chấm công**).
 2. Kéo-thả hoặc chọn cùng lúc nhiều tệp `.xlsx` xuất từ máy chấm công. Mỗi tệp được phân tích độc lập: tệp lỗi sẽ báo lý do ngay và không làm mất các tệp hợp lệ còn lại.
 3. Mỗi tệp hợp lệ được cấp mã lô riêng (`LÔ-xxxxx`), lưu checksum SHA-256, tên file gốc, kỳ nguồn, từng sheet, người tải và thời điểm ở trạng thái **Đã đọc / Lưu nguồn – Chưa áp dụng vào bảng tổng hợp** (`preview`).
 4. Hệ thống tự chuyển sang màn **Bảng dữ liệu theo file** rộng toàn trang; bạn có thể đóng/mở lại bất kỳ lúc nào để xem các lô đã lưu theo quyền công ty. Với lô `preview` chưa áp dụng, có thể bấm **Bỏ qua nguồn** (bắt buộc nhập lý do để lưu lịch sử kiểm toán).

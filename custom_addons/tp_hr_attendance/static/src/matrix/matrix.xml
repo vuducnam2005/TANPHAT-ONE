@@ -268,24 +268,24 @@
                         <thead>
                             <tr class="o_head_tier1">
                                 <th scope="col" rowspan="2" class="o_sticky_col o_col_stt">STT</th>
-                                <th scope="col" rowspan="2" class="o_sticky_col o_col_code">Mã NV<small>Excel</small></th>
-                                <th scope="col" rowspan="2" class="o_sticky_col o_col_name">Tên nhân viên<small>Nguồn tệp</small></th>
-                                <th scope="col" rowspan="2" class="o_sticky_col o_col_io">Vào / Ra</th>
-                                <th t-if="this.state.cols.hrCode" scope="col" rowspan="2" class="o_col_opt">Mã HR<small>Hiện tại</small></th>
-                                <th t-if="this.state.cols.machineId" scope="col" rowspan="2" class="o_col_opt">ID máy</th>
-                                <th t-if="this.state.cols.title" scope="col" rowspan="2" class="o_col_opt">Chức vụ<small>Nguồn tệp</small></th>
+                                <th scope="col" rowspan="2" class="o_sticky_col o_col_code" title="Mã nhân viên trong tệp Excel nguồn (tách biệt Mã HR)">Mã nhân viên</th>
+                                <th scope="col" rowspan="2" class="o_sticky_col o_col_name">Tên nhân viên</th>
+                                <th t-if="this.state.cols.machineId" scope="col" rowspan="2" class="o_col_opt o_col_machine">ID</th>
+                                <th t-if="this.state.cols.title" scope="col" rowspan="2" class="o_col_opt o_col_title">Chức vụ</th>
+                                <th scope="col" rowspan="2" class="o_col_io" aria-label="Vào / Ra">Vào/Ra</th>
                                 <th t-foreach="this.data.day_columns" t-as="dcol" t-key="dcol.column" scope="col"
                                     class="o_col_day" t-att-class="{'o_weekend': dcol.weekend}"
                                     t-att-title="'Cột ' + dcol.col_letter + ' · Ngày ' + this.formatDate(dcol.date)"
                                     t-out="dcol.day_month"/>
                                 <th t-if="this.sheet.has_late" scope="colgroup" colspan="2" class="o_col_late_group"
                                     t-att-title="'Tổng Đi muộn cả kỳ nguồn ' + this.sheet.period_full + ' theo Excel máy'">
-                                    Đi muộn<small>Kỳ <t t-out="this.sheet.period_label"/></small>
+                                    Đi muộn
                                 </th>
-                                <th t-if="this.state.cols.absent and this.sheet.has_absent" scope="col" rowspan="2" class="o_col_absent"
+                                <th t-if="this.state.cols.absent and this.sheet.has_absent" scope="col" rowspan="1" class="o_col_absent"
                                     title="Số nguồn cả kỳ theo Excel máy, không dùng làm KPI Nghỉ đã xác nhận">
-                                    Vắng mặt<small>Theo Excel</small>
+                                    Vắng mặt
                                 </th>
+                                <th t-if="this.state.cols.hrCode" scope="col" rowspan="2" class="o_col_opt">Mã HR<small>Hiện tại</small></th>
                             </tr>
                             <tr class="o_head_tier2">
                                 <th t-foreach="this.data.day_columns" t-as="dcol" t-key="'w' + dcol.column" scope="col"
@@ -294,6 +294,10 @@
                                     <th scope="col" class="o_col_late_sub">Lần</th>
                                     <th scope="col" class="o_col_late_sub">Phút</th>
                                 </t>
+                                <th t-if="this.state.cols.absent and this.sheet.has_absent" scope="col" class="o_col_absent_sub"
+                                    title="Số ngày vắng theo Excel nguồn cả kỳ">
+                                    Vắng
+                                </th>
                             </tr>
                         </thead>
 
@@ -343,12 +347,9 @@
                                                 </span>
                                             </div>
                                         </th>
-                                        <td class="o_sticky_col o_col_io o_io_vao">Vào</td>
-                                        <td t-if="this.state.cols.hrCode" rowspan="2" class="o_col_opt">
-                                            <span t-out="person.hr_code || '—'"/>
-                                        </td>
-                                        <td t-if="this.state.cols.machineId" rowspan="2" class="o_col_opt o_num" t-out="person.raw_machine_code || '—'"/>
-                                        <td t-if="this.state.cols.title" rowspan="2" class="o_col_opt" t-out="person.source_title || '—'"/>
+                                        <td t-if="this.state.cols.machineId" rowspan="2" class="o_col_opt o_col_machine o_num" t-out="person.raw_machine_code || '—'"/>
+                                        <td t-if="this.state.cols.title" rowspan="2" class="o_col_opt o_col_title" t-out="person.source_title || '—'"/>
+                                        <td class="o_col_io o_io_vao">Vào</td>
 
                                         <td t-foreach="person.cells" t-as="cell" t-key="'in-' + cell.column"
                                             class="o_matrix_cell o_cell_vao"
@@ -380,11 +381,14 @@
                                             title="Số vắng mặt nguồn cả kỳ theo Excel máy (không dùng làm KPI Nghỉ đã xác nhận)">
                                             <span t-out="person.absent.raw !== '' ? person.absent.raw : '—'"/>
                                         </td>
+                                        <td t-if="this.state.cols.hrCode" rowspan="2" class="o_col_opt">
+                                            <span t-out="person.hr_code || '—'"/>
+                                        </td>
                                     </tr>
 
                                     <!-- Row 2: Ra -->
                                     <tr class="o_person_row o_person_ra" t-att-class="{'o_unmapped_person': person.mapping_state !== 'mapped', 'o_empty_person': person.all_empty}">
-                                        <td class="o_sticky_col o_col_io o_io_ra">Ra</td>
+                                        <td class="o_col_io o_io_ra">Ra</td>
                                         <td t-foreach="person.cells" t-as="cell" t-key="'out-' + cell.column"
                                             class="o_matrix_cell o_cell_ra"
                                             t-att-class="(this.data.day_columns[cell_index]?.weekend ? 'o_weekend ' : '') + this.cellTone(cell.status)"

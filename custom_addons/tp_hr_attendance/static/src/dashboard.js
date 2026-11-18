@@ -188,6 +188,14 @@ export class AttendanceDashboard extends Component {
     openSources() {
         return this.action.doAction("tp_hr_attendance.action_sources");
     }
+    openFileMatrix(mode = "matrix") {
+        return this.action.doAction({
+            type: "ir.actions.client",
+            tag: "tp_hr_attendance.file_matrix",
+            name: "Bảng dữ liệu theo file",
+            params: { mode },
+        });
+    }
     openUpload() {
         openAttendanceUpload(this.env, { onApplied: () => this.load(), onOpenPeriod: (period) => this.openBoard(period) });
     }

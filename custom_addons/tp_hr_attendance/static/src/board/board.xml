@@ -8,6 +8,12 @@
             <p class="o_tp_att_subtitle" t-out="this.title"/>
         </div>
         <div class="o_tp_att_actions">
+            <button t-if="this.data?.can_import" type="button" class="btn btn-outline-primary" t-on-click="() => this.openFileMatrix()">
+                <i class="oi me-1" data-icon="grid_on" aria-hidden="true"/>Bảng công theo file (Vào/Ra)
+            </button>
+            <button t-if="this.data?.can_import" type="button" class="btn btn-outline-secondary" t-on-click="() => this.openFileMatrix('compare')">
+                <i class="oi me-1" data-icon="compare_arrows" aria-hidden="true"/>Đối chiếu A/B
+            </button>
             <button t-if="this.data?.can_export" type="button" class="btn btn-outline-primary" t-on-click="this.exportSheet"><i class="oi me-1" data-icon="download" aria-hidden="true"/>Xuất Excel</button>
             <button t-if="this.data?.can_import" type="button" class="btn btn-primary" t-on-click="this.openUpload"><i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Nhập Excel máy chấm công</button>
         </div>

@@ -191,6 +191,14 @@ export class AttendanceBoard extends Component {
     openSources() {
         return this.action.doAction("tp_hr_attendance.action_sources");
     }
+    openFileMatrix(mode = "matrix") {
+        return this.action.doAction({
+            type: "ir.actions.client",
+            tag: "tp_hr_attendance.file_matrix",
+            name: "Bảng dữ liệu theo file",
+            params: { mode },
+        });
+    }
     async exportSheet() {
         try {
             downloadBase64(await this.orm.call("tp.hr.attendance.day", "tp_export_sheet", [this.params()]));

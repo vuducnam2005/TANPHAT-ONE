@@ -9,6 +9,7 @@
         </div>
         <div class="o_tp_att_actions">
             <button type="button" class="btn btn-outline-primary" t-on-click="() => this.openBoard()"><i class="oi me-1" data-icon="table" aria-hidden="true"/>Bảng chấm công</button>
+            <button t-if="this.data?.can_import" type="button" class="btn btn-outline-primary" t-on-click="() => this.openFileMatrix()"><i class="oi me-1" data-icon="grid_on" aria-hidden="true"/>Bảng công theo file (Vào/Ra)</button>
             <button t-if="this.data?.can_import" type="button" class="btn btn-primary" t-on-click="this.openUpload"><i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Nhập Excel máy chấm công</button>
         </div>
     </header>
