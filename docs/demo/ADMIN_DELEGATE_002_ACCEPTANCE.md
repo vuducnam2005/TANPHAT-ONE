@@ -350,3 +350,10 @@ Cập nhật sau mỗi slice đã áp.
 - Chưa kiểm: 10 ca Odoo mới/sửa (cần môi trường test được phép, không
   18079/clone/fixture trên main/server), ghi thật/race/thu hồi trên dữ liệu thật,
   browser phiên delegate desktop/mobile, nhiều worker.
+- **Bản vá HR-DELEGATE-FIX-001 (`tp_admin_delegation` 20.0.1.4.1, 18/11/2026):**
+  xử lý lỗi `ListArchParser: "hr.employee"."mobile_phone" field is undefined`
+  trên danh sách/chi tiết nhân viên của tài khoản ủy quyền không thuộc
+  `hr.group_hr_user`, đồng thời khóa `mobile_phone` ở wizard ngoài phòng,
+  guard `ProtectedEmployee` và drill-down Tổng quan HR mà vẫn giữ `work_phone`
+  và tự cập nhật hồ sơ cá nhân. Xem bảng nghiệm thu chi tiết tại
+  [HR_DELEGATE_FIX_001_ACCEPTANCE.md](HR_DELEGATE_FIX_001_ACCEPTANCE.md).

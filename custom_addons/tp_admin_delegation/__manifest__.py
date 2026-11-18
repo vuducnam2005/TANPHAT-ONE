@@ -1,6 +1,6 @@
 {
     'name': 'TANPHAT ONE — Quản trị được ủy quyền',
-    'version': '20.0.1.4.0',
+    'version': '20.0.1.4.1',
     'license': 'LGPL-3',
     'author': 'Tan Phat JSC',
     'depends': ['tp_hr_workspace', 'tp_equipment', 'tp_reporting'],
@@ -14,7 +14,10 @@
         'views/reporting_navigation.xml',
     ],
     'assets': {
-        'web.assets_backend': ['tp_admin_delegation/static/src/my_profile.xml'],
+        'web.assets_backend': [
+            'tp_admin_delegation/static/src/my_profile.xml',
+            'tp_admin_delegation/static/src/hr_overview_patch.js',
+        ],
     },
     'installable': True,
 }

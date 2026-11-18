@@ -6,11 +6,12 @@ from odoo.fields import Domain
 DELEGATED_LABEL = ('Quản trị được ủy quyền: chỉ hồ sơ của phòng khác trong công ty đang xem. '
                    'Phòng của bạn giữ quyền nghiệp vụ như cũ.')
 # Business metadata already shown by the overview, drill-down and XLSX. Private
-# identity, address, bank, contract, salary and document fields stay closed.
+# identity, personal/mobile contact, address, bank, contract, salary and document fields stay closed.
 PROJECTION_FIELDS = frozenset({
     'id', 'active', 'department_id', 'job_id', 'user_id', 'tp_employee_code', 'tp_source_title',
-    'tp_employment_kind', 'tp_account_status', 'work_email', 'work_phone', 'mobile_phone',
+    'tp_employment_kind', 'tp_account_status', 'work_email', 'work_phone',
 })
+MISSING_WORK_CONTACT_DOMAIN = [('work_email', '=', False), ('work_phone', '=', False)]
 OPERATORS = frozenset({'=', '!=', 'in', 'not in'})
 
 
@@ -80,7 +81,13 @@ class DelegatedHrWorkspace(models.AbstractModel):
     def get_overview(self, filters=None):
         result = super().get_overview(filters)
         if self._tp_delegated_hr():
+            employees, domain, _status = self._population(filters)
             own = self.env.user._tp_delegation_scope(self.env.company)[0]
             result['catalog_departments'] = [row for row in result['catalog_departments'] if row['id'] not in own.ids]
-            result.update(can_create=False, delegated_scope=DELEGATED_LABEL)
+            result.update(
+                can_create=False,
+                delegated_scope=DELEGATED_LABEL,
+                missing_contact=employees.search_count(domain + MISSING_WORK_CONTACT_DOMAIN),
+                missing_contact_domain=MISSING_WORK_CONTACT_DOMAIN,
+            )
         return result

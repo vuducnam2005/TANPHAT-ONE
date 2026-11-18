@@ -53,19 +53,39 @@ class ScopedHrProfile(models.TransientModel):
     name = fields.Char(required=True, string='Họ và tên')
     work_email = fields.Char(string='Email công việc')
     work_phone = fields.Char(string='Điện thoại công ty')
-    mobile_phone = fields.Char(string='Di động')
+    mobile_phone = fields.Char(string='Di động', groups='hr.group_hr_user')
     job_title = fields.Char(string='Chức danh mô tả')
     reason = fields.Text(string='Lý do')
 
     @api.model
+    def _allowed_profile_fields(self):
+        employee_model = self.env['hr.employee'].sudo(False)
+        wizard_model = self.sudo(False)
+        return tuple(
+            key for key in PROFILE_FIELDS
+            if key in employee_model._fields
+            and employee_model._has_field_access(employee_model._fields[key], 'read')
+            and employee_model._has_field_access(employee_model._fields[key], 'write')
+            and wizard_model._has_field_access(wizard_model._fields[key], 'read')
+            and wizard_model._has_field_access(wizard_model._fields[key], 'write')
+        )
+
+    @api.model
     def _employee_digest(self, employee):
         employee = employee.with_context(version_id=False)
-        values = {key: employee[key] for key in PROFILE_FIELDS}
+        values = {key: employee[key] for key in self._allowed_profile_fields()}
         values.update(company=employee.company_id.id, department=employee._get_version().department_id.id,
                       user=employee.user_id.id, version=employee.current_version_id.id,
                       employee_write=employee.write_date, version_write=employee._get_version().write_date,
                       resource_write=employee.resource_id.write_date)
         return hashlib.sha256(json.dumps(values, sort_keys=True, default=str).encode()).hexdigest()
+
+    @api.model
+    def default_get(self, fields_list):
+        restricted = set(PROFILE_FIELDS) - set(self._allowed_profile_fields())
+        if any(f'default_{key}' in self.env.context for key in restricted):
+            raise AccessError(self.env._('Không có quyền ghi trường nhân sự bị giới hạn.'))
+        return super().default_get([key for key in fields_list if key not in restricted])
 
     @api.depends('company_id')
     @api.depends_context('uid', 'allowed_company_ids')
@@ -80,13 +100,19 @@ class ScopedHrProfile(models.TransientModel):
     def create(self, vals_list):
         if not self.env.user._tp_has_admin_delegation():
             raise AccessError(self.env._('Chức năng này cần quyền quản trị được ủy quyền còn hiệu lực.'))
+        allowed = self._allowed_profile_fields()
+        restricted = set(PROFILE_FIELDS) - set(allowed)
+        if any(f'default_{key}' in self.env.context for key in restricted):
+            raise AccessError(self.env._('Không có quyền ghi trường nhân sự bị giới hạn.'))
         for vals in vals_list:
+            if set(vals) & restricted:
+                raise AccessError(self.env._('Không có quyền ghi trường nhân sự bị giới hạn.'))
             employee = self.env['hr.employee'].browse(vals.get('employee_id')).exists()
             if employee:
                 employee._tp_delegated_account_check(existing=bool(employee.sudo().user_id))
                 employee.check_access('read')
                 source = employee.sudo().with_context(version_id=False)
-                vals.update({key: source[key] for key in PROFILE_FIELDS})
+                vals.update({key: source[key] for key in allowed})
                 vals.update(company_id=source.company_id.id, department_id=source._get_version().department_id.id,
                             expected_write_date=source.write_date,
                             expected_version_date=source._get_version().write_date,
@@ -98,6 +124,9 @@ class ScopedHrProfile(models.TransientModel):
         return super().create(vals_list)
 
     def write(self, vals):
+        restricted = set(PROFILE_FIELDS) - set(self._allowed_profile_fields())
+        if set(vals) & restricted:
+            raise AccessError(self.env._('Không có quyền ghi trường nhân sự bị giới hạn.'))
         if set(vals) & {'employee_id', 'company_id', 'expected_write_date', 'expected_version_date', 'expected_resource_date', 'expected_digest', 'operation'}:
             raise AccessError(self.env._('Hồ sơ, công ty và thao tác được chốt khi mở cửa sổ.'))
         if 'department_id' in vals and any(wizard.operation != 'create' for wizard in self):
@@ -126,30 +155,35 @@ class ScopedHrProfile(models.TransientModel):
                 raise UserError(self.env._('Hồ sơ vừa được cập nhật. Hãy mở lại cửa sổ để đối chiếu.'))
             if employee.company_id != self.company_id or employee._get_version().department_id != self.department_id:
                 raise AccessError(self.env._('Phạm vi hồ sơ đã thay đổi.'))
+        allowed = self._allowed_profile_fields()
         values = {}
-        for key in PROFILE_FIELDS:
+        for key in allowed:
             value = (self[key] or '').strip()
             if len(value) > 254:
                 raise UserError(self.env._('Thông tin hồ sơ tối đa 254 ký tự mỗi trường.'))
             values[key] = value or False
+        clean_ctx = {
+            'lang': self.env.lang, 'tz': self.env.user.tz,
+            'allowed_company_ids': [self.company_id.id],
+            '_tp_delegated_profile': _PROFILE,
+        }
         with self.env.cr.savepoint():
             if self.operation == 'create':
                 employee = self.env['hr.employee'].sudo().with_context({
-                    'lang': self.env.lang, 'tz': self.env.user.tz,
-                    'allowed_company_ids': [self.company_id.id],
-                    '_tp_delegated_profile': _PROFILE, '_tp_delegated_profile_create': _PROFILE_CREATE,
+                    **clean_ctx, '_tp_delegated_profile_create': _PROFILE_CREATE,
                 }).create({
                     **values, 'company_id': self.company_id.id, 'department_id': self.department_id.id,
                 })
             elif self.operation == 'edit':
-                employee.with_context(_tp_delegated_profile=_PROFILE).write(values)
+                employee.with_context(clean_ctx).write(values)
             elif self.operation == 'archive':
                 if employee.user_id:
                     raise AccessError(self.env._('Chỉ lưu trữ qua ủy quyền khi hồ sơ chưa có tài khoản.'))
-                employee.with_context(_tp_delegated_profile=_PROFILE).write({'active': False})
+                employee.with_context(clean_ctx).write({'active': False})
             else:
                 raise AccessError(self.env._('Thao tác hồ sơ không hợp lệ.'))
-            employee.message_post(body=self.env._('Quản trị được ủy quyền %(operation)s hồ sơ. Lý do: %(reason)s',
-                                                 operation=dict(self._fields['operation'].selection)[self.operation],
-                                                 reason=self.reason.strip()))
+            employee.with_context(clean_ctx).message_post(
+                body=self.env._('Quản trị được ủy quyền %(operation)s hồ sơ. Lý do: %(reason)s',
+                                operation=dict(self._fields['operation'].selection)[self.operation],
+                                reason=self.reason.strip()))
         return {'type': 'ir.actions.act_window_close'}

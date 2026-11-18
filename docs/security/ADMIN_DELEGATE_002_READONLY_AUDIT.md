@@ -123,3 +123,13 @@ không phải lỗi đã sửa. Chưa chỉnh application hoặc quyền ngườ
 Evidence ignored `.local/admin-delegate-hr-view-20261118/`. Chưa chạy browser
 actor thật hoặc mutation. Ghi nhận này bổ sung giới hạn của kết quả S1–S4,
 không thay kết quả đọc backend thành browser PASS.
+
+**Cập nhật thực thi HR-DELEGATE-FIX-001 (`tp_admin_delegation` 20.0.1.4.1, 18/11/2026):**
+đã gỡ `mobile_phone` khỏi `delegated_employee_list`/`delegated_employee_form`,
+giữ `work_phone` ở list/form/search, gắn `groups="hr.group_hr_user"` và
+`_allowed_profile_fields()` cho wizard `tp.hr.delegated.profile.wizard` (chặn đọc/ghi
+qua RPC và `default_mobile_phone`, không ghi đè `False` làm mất `mobile_phone` hiện có),
+bổ sung guard field-group ở `ProtectedEmployee` cho hồ sơ người khác và bỏ
+`mobile_phone` khỏi `PROJECTION_FIELDS` / `missing_contact` của Tổng quan HR ủy quyền.
+Chi tiết nghiệm thu và bằng chứng runtime tại
+[HR_DELEGATE_FIX_001_ACCEPTANCE.md](../demo/HR_DELEGATE_FIX_001_ACCEPTANCE.md).

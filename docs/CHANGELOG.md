@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-007 — HR-DELEGATE-FIX-001: sửa lỗi mobile_phone trên safe view HR và khóa đường wizard/drill-down của tài khoản ủy quyền
+
+- Ngày 18/11/2026 (Asia/Saigon). `tp_admin_delegation` `20.0.1.4.0 → 20.0.1.4.1`. Xử lý lỗi `UncaughtPromiseError: "hr.employee"."mobile_phone" field is undefined` (`ListArchParser`) của tài khoản quản trị được ủy quyền không thuộc `hr.group_hr_user`.
+- `views/hr_profile.xml`: bỏ `<field name="mobile_phone"/>` khỏi `delegated_employee_list` và `delegated_employee_form`, giữ `work_phone` ở list/form/search, đặt `export_xlsx="false"` trên list nhất quán với guard `export_data`, và gắn `groups="hr.group_hr_user"` trên `<field name="mobile_phone"/>` trong `delegated_hr_profile_form`.
+- `models/hr_profile.py` & `models/guards.py`: gắn `groups='hr.group_hr_user'` lên `ScopedHrProfile.mobile_phone`; bổ sung `_allowed_profile_fields()` kiểm `_has_field_access` trên cả `hr.employee` và wizard; chặn truyền trường hạn chế qua `create`/`write` hoặc `default_*` context (`AccessError`); khi sửa hồ sơ ngoài phòng chỉ ghi `_allowed_profile_fields()` với context sạch để không gửi `False` làm mất `mobile_phone` sẵn có; `ProtectedEmployee` chặn ghi trường thiếu field-group trên hồ sơ người khác kể cả qua `sudo()`, giữ nguyên cập nhật hồ sơ cá nhân (`tp_save_my_profile`).
+- `models/hr_overview.py` & `static/src/hr_overview_patch.js`: bỏ `mobile_phone` khỏi `PROJECTION_FIELDS` (chặn dò qua RPC `action_employees`), tính `missing_contact` và `missing_contact_domain` của Tổng quan HR ủy quyền theo `work_email` + `work_phone`; admin/HR giữ nguyên view và trường `mobile_phone`.
+- Kiểm thực local `18069`: Ruff, AST (20 tệp), XML (6 tệp), `node --check`, `unit_guard_check.py` 24/24 PASS; backup `.local/admin-delegate002/backup-hdf001-20261118T100532` (dump 9.934.770B, filestore 998 mục, SHA256); `-u tp_admin_delegation` exit 0 / 0 ERROR, 26 bảng giữ nguyên fingerprint; probe ORM chỉ đọc (`SET TRANSACTION READ ONLY` + rollback) và Playwright `18069` 13/13 PASS (desktop `1440×900` & mobile `390×844`, 0 lỗi JS/OWL/5xx). Chuẩn bị push và deploy PC server.
+
 ## CHG-20261118-006 — ADMIN-DELEGATE-002: xác nhận lỗi mobile_phone ở HR native view
 
 - Ngày18/11/2026. Người dùng báo UncaughtPromiseError/ListArchParser: hr.employee.mobile_phone undefined trên public bằng tài khoản ủy quyền.

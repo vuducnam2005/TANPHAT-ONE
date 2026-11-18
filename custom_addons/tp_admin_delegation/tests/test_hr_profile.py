@@ -36,10 +36,20 @@ class TestDelegatedHrProfile(DelegationCase):
             fields = etree.fromstring(view['arch']).xpath('//field/@name')
             self.assertFalse(set(fields) - set(visible))
             self.assertNotIn('tp_employment_kind', fields)
+            self.assertNotIn('mobile_phone', fields)
+            self.assertIn('work_phone', fields)
         self.assertNotIn('private_email', visible)
         self.assertNotIn('wage', visible)
         self.assertIn('job_title', visible)
+        self.assertIn('work_phone', visible)
         self.assertIn('tp_account_status', visible)
+        wizard_views = self.env['tp.hr.delegated.profile.wizard'].with_user(self.users[0]).get_views([(False, 'form')])
+        wizard_visible = wizard_views['models']['tp.hr.delegated.profile.wizard']['fields']
+        wizard_fields = etree.fromstring(wizard_views['views']['form']['arch']).xpath('//field/@name')
+        self.assertFalse(set(wizard_fields) - set(wizard_visible))
+        self.assertNotIn('mobile_phone', wizard_fields)
+        self.assertNotIn('mobile_phone', wizard_visible)
+        self.assertIn('work_phone', wizard_fields)
         safe_fields = etree.fromstring(result['views']['form']['arch']).xpath('//field/@name')
         read = self.employees[1].with_user(self.users[0]).read(list(set(safe_fields)))
         self.assertEqual(read[0]['name'], self.employees[1].name)
@@ -60,17 +70,32 @@ class TestDelegatedHrProfile(DelegationCase):
                                  default_work_contact_id=self.admin.partner_id.id)
         create.action_apply()
         employee = self.env['hr.employee'].search([('name', '=', 'Synthetic outside hire')])
+        employee.mobile_phone = '0912345678'
         self.assertEqual(employee.department_id, self.departments[1])
         self.assertFalse(employee.user_id)
         self.assertNotEqual(employee.work_contact_id, self.admin.partner_id)
         groups = self.users[0].group_ids
+        Wizard = self.env['tp.hr.delegated.profile.wizard'].with_user(self.users[0])
+        with self.assertRaises(AccessError):
+            Wizard.create({'employee_id': employee.id, 'operation': 'edit', 'mobile_phone': '000000000'})
+        with self.assertRaises(AccessError):
+            Wizard.with_context(default_mobile_phone='000000000').create({
+                'operation': 'create', 'name': 'Synthetic blocked mobile', 'department_id': self.departments[1].id,
+            })
         edit = self.wizard(employee_id=employee.id, operation='edit')
-        edit.write({'name': 'Synthetic renamed hire', 'job_title': 'Updated description', 'mobile_phone': '000000000'})
+        with self.assertRaises(AccessError):
+            edit.read(['mobile_phone'])
+        with self.assertRaises(AccessError):
+            edit.write({'mobile_phone': '000000000'})
+        edit.write({'name': 'Synthetic renamed hire', 'job_title': 'Updated description', 'work_phone': '02439998888'})
         edit.action_apply()
         self.assertEqual(employee.name, 'Synthetic renamed hire')
         self.assertEqual(employee.job_title, 'Updated description')
-        self.assertEqual(employee.mobile_phone, '000000000')
+        self.assertEqual(employee.work_phone, '02439998888')
+        self.assertEqual(employee.mobile_phone, '0912345678')
         self.assertEqual(self.users[0].group_ids, groups)
+        own_saved = self.env['res.users'].with_user(self.users[0]).tp_save_my_profile({'mobile_phone': '0988777666'})
+        self.assertEqual(own_saved['values']['mobile_phone'], '0988777666')
         archive = self.wizard(employee_id=employee.id, operation='archive')
         archive.action_apply()
         self.assertFalse(employee.active)
@@ -133,9 +158,14 @@ class TestDelegatedHrProfile(DelegationCase):
         self.assertIn(self.employees[1], listed)
         self.assertNotIn(self.employees[0], listed)
         # HR-only or private fields are never accepted as a delegated drill-down.
-        for extra in ([('private_email', '!=', False)], [('department_id.name', '=', 'x')], 'bad'):
+        for extra in ([('private_email', '!=', False)], [('mobile_phone', '!=', False)],
+                      [('department_id.name', '=', 'x')], 'bad'):
             with self.assertRaises(UserError):
                 workspace.action_employees({}, extra)
+        self.assertEqual(data['missing_contact_domain'], [('work_email', '=', False), ('work_phone', '=', False)])
+        contact_action = workspace.action_employees({}, data['missing_contact_domain'])
+        self.assertEqual(self.env['hr.employee'].with_user(self.users[0]).search_count(contact_action['domain']),
+                         data['missing_contact'])
         # A filter on the actor's own department cannot widen the counted rows.
         self.assertEqual(workspace.get_overview({'department_id': own.id})['total'], 0)
         self.assertTrue(workspace._build_xlsx({}))

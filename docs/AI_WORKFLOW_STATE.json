@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T01:56:22.001299+00:00",
-  "last_change_id": "CHG-20261118-006",
-  "code_digest": "6533eca81203d424467aef233215a6b4beaecb64f5d1b7a48710e47d32d7841d",
-  "code_file_count": 631,
+  "updated_at": "2026-11-18T03:22:57.724813+00:00",
+  "last_change_id": "CHG-20261118-007",
+  "code_digest": "3355f87f8f988688e516162dd1f9960165bcfdc11f352220ac51d5a7ebcdad1b",
+  "code_file_count": 632,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "c64a99c4b2c43309cc5702eb3c350db7b4422977cb0ebaba98d7341c9939cdc7",
-    "docs/CHANGELOG.md": "c46ec8211e386f211aa15c1a8072e414ff922ab31ef4b495a8c384944c411800",
+    "docs/PROJECT_STATUS.md": "15bed012ab45b2ee9de3dc4589d4cee249776718a78b4a1637174fd430e20d26",
+    "docs/CHANGELOG.md": "79834b7084be140bd9140061fff387579f7a22783a682d77702c3de2ba303612",
     "AGENTS.md": "ac7c7a6ce9929b1cc7f2f3752b5006bd91e9ca570228c9aed8a5210b2798cc5c",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "90c68a1a9ec1effc397ca283ca346727fddfe973b8f23fcffaaa4899bad51572",
+    "docs/ROADMAP.md": "6345de8c0336ba30781ba5c64feff61e5ca203dbcfa746ef7dae0c2c137d90ee",
     "docs/DECISIONS.md": "d54aa39544bd4d20190aeabd4c7aefe2734e9a11d3593ce1a122171aafbaea7e",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
@@ -20,7 +20,8 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Confirmed live get_views mobile_phone missing metadata on delegated list/form under READ ONLY/rollback; source traces and user screenshot agree.",
-    "Docs only; source unchanged; scoped snapshot excludes foreign work; no mutation/browser-actor/fixture tests or application fix."
+    "Ruff, Python AST (20 files), XML parse (6 files), node --check hr_overview_patch.js, git diff --check: PASS.",
+    "Pure no-DB unit_guard_check.py (projection whitelist, wizard allowed fields/digest/non-overwrite, XML safe views): 24/24 PASS.",
+    "Local main 18069: backup-hdf001-20261118T100532 verified, -u tp_admin_delegation -> 20.0.1.4.1 exit 0 / 0 ERROR, 26-table fingerprint unchanged, read-only ORM probe PASS, Playwright desktop+mobile 13/13 PASS; Odoo test suite NOT_RUN on live DB per DEC-051."
   ]
 }

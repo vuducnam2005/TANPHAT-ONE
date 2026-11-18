@@ -121,6 +121,13 @@ class ProtectedEmployee(models.Model):
         own = self.sudo().filtered(lambda employee: employee.user_id.id == self.env.uid)
         if own and set(vals) - _SELF_FIELDS:
             raise AccessError(self.env._('Hồ sơ của mình chỉ được sửa thông tin cá nhân trong danh sách cho phép.'))
+        other = self.sudo() - own
+        if other:
+            caller = self.sudo(False)
+            for key in vals:
+                field = caller._fields.get(key)
+                if field and not caller._has_field_access(field, 'write'):
+                    raise AccessError(self.env._('Không có quyền ghi trường nhân sự bị giới hạn.'))
         if set(vals) & _JOB_METADATA and self.env.context.get('_tp_delegated_profile') is not _PROFILE:
             # A job label does not grant a business role. Preserve existing HR
             # write permission, including callers which entered through sudo.
@@ -129,10 +136,18 @@ class ProtectedEmployee(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         if delegate_actor(self.env, lock=True):
+            caller = self.sudo(False)
+            for key, field in caller._fields.items():
+                if f'default_{key}' in self.env.context and not caller._has_field_access(field, 'write'):
+                    raise AccessError(self.env._('Không có quyền ghi trường nhân sự bị giới hạn.'))
             identity = {'user_id', 'resource_id', 'version_id', 'current_version_id', 'version_ids',
                         'work_contact_id', 'tp_source_code', 'tp_source_snapshot', 'tp_import_batch_id'}
             defaults = self.default_get([name for name in identity | {'company_id', 'department_id'} if name in self._fields])
             for vals in vals_list:
+                for key in vals:
+                    field = caller._fields.get(key)
+                    if field and not caller._has_field_access(field, 'write'):
+                        raise AccessError(self.env._('Không có quyền ghi trường nhân sự bị giới hạn.'))
                 effective = defaults | vals
                 if any(effective.get(name) for name in identity):
                     raise AccessError(self.env._('Không tạo hoặc sao chép danh tính/phiên bản qua dữ liệu lồng.'))
