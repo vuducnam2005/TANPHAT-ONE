@@ -47,3 +47,4 @@ Release theo quy trình `git archive <SHA> custom_addons/tp_hr_attendance` (gi�
 - Trước khi giao: backup DB + filestore + nguồn như các bản trước; kiểm `SELECT snapshot_state, snapshot_version, count(*) FROM tp_hr_attendance_batch GROUP BY 1,2` và số lô có snapshot nhưng chưa `ready`.
 - Sau khi giao: health 200, log không ERROR, URL public mở được. Lô nào có snapshot mà còn `pending` sẽ tự về `ready` ở lần mở ma trận, đối chiếu hoặc xuất đầu tiên; không cần sửa DB tay.
 - Hoàn nguyên: khôi phục `models/attendance_matrix.py` từ `source-config.tar.gz` của backup rồi khởi động lại `tp-odoo`. Cờ `ready` đã ghi là đúng với dữ liệu nên giữ nguyên.
+- Đã giao PC server (CHG-20261118-037): backup `C:\TANPHAT-backups\snapshot-ready036\snapshot-ready036-20261118T200015`, restart lúc 13:00:20 UTC, health/public OK, 0 ERROR sau khởi động, cờ lô `ready/2` ×4. Script `.local/snapshot-ready036/deploy-server036.ps1`.

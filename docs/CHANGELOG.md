@@ -1,5 +1,21 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-037 — Giao PC server bản sửa cờ snapshot chấm công (CHG-20261118-036)
+
+- Ngày 18/11/2026 Asia/Saigon. Giao code commit `74047fbc` lên PC server, chỉ 2 tệp `custom_addons/tp_hr_attendance/models/attendance_matrix.py` và `tests/test_matrix_compare.py`, label `snapshot-ready036`. Script và bằng chứng: `.local/snapshot-ready036/` (`deploy036.py`, `deploy-server036.ps1`, `drift036.py`, `deploy-output.txt`).
+- Trước khi giao, kiểm chỉ đọc: 2 tệp code trên PC khớp bản gốc `55e01926`. Chấm công `20.0.3.0.0`, 4 lô đều `ready/2`, 0 lô có snapshot mà chưa `ready`, nên bản sửa chỉ mang tính phòng ngừa trên server. Không có container bảo trì nào khác đang chạy.
+- Backup `C:\TANPHAT-backups\snapshot-ready036\snapshot-ready036-20261118T200015`: `pg_dump` trực tuyến `tp_tanphat_dev.dump` `10.091.620`B, `restore-list.txt` `15.787` mục, `source-config.tar.gz` chứa 2 tệp bị thay, `before.json`, manifest, `SHA256SUMS.json`. Filestore không bị chạm nên không sao lưu.
+- Giao: giải nén tar giữ `mtime` theo commit, kiểm checksum, rồi `docker restart tp-odoo` lúc 13:00:20 UTC. Không `-u`, vì không đổi schema hay version.
+- Kiểm sau khi giao:
+  - Health `200`; `/web/login` trong máy `200`.
+  - Public `https://hybrid-send-ready-ballot.trycloudflare.com/web/health` `200`; `/web/login` chuyển `/dang-nhap` rồi `200`.
+  - Token `SNAPSHOT_FIRST_PARSER_VERSION` có trong container.
+  - Log sau khi khởi động 0 ERROR. Một dòng `bus.websocket: connection already closed` đúng lúc tắt tiến trình cũ.
+  - Version mọi module `tp_*` và các số đếm (lô 4, dòng 945, snapshot 195/1.365, phiên 355, ngày công 456, nhân viên 39, user 32, base URL) trước và sau khớp nhau. Cờ lô `ready/2` ×4.
+- Docs trong checkout PC (`CHANGELOG`, `PROJECT_STATUS`, `AI_WORKFLOW_STATE.json`, runbook) vốn đã lệch Git trước lần giao này. Không ghi đè docs; bản chuẩn nằm trong Git.
+- `NOT_RUN`: thao tác UI đăng nhập thật, probe ORM trên DB server (đã probe có rollback ở local ở CHG-20261118-036), test ORM `18079`.
+- Hoàn nguyên: khôi phục `source-config.tar.gz` của backup trên rồi `docker restart tp-odoo`.
+
 ## CHG-20261118-036 — HR-ATTENDANCE: snapshot đã có thì đánh dấu lô `ready`
 
 - Ngày 18/11/2026 Asia/Saigon. Đóng mục còn mở của CHG-20261118-035. Chỉ sửa `custom_addons/tp_hr_attendance/models/attendance_matrix.py` và thêm test; không đổi schema, quyền, giao diện hay version module (`20.0.3.0.0`).

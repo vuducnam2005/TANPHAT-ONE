@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T12:57:34.036643+00:00",
-  "last_change_id": "CHG-20261118-036",
+  "updated_at": "2026-11-18T13:02:55.016419+00:00",
+  "last_change_id": "CHG-20261118-037",
   "code_digest": "d34859cfcd94e0f31d18be5a008d39ba88c8188de196ce2702f5c951495eccf2",
   "code_file_count": 673,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "375e8949d734cdb88ab3920753787747b105c2b9a7292c49471945e346d9afb4",
-    "docs/CHANGELOG.md": "288d5104f5847a8624fa3a1c565022b9764373dbaf8c8e1fea74baa4535b96db",
+    "docs/PROJECT_STATUS.md": "831cbee4ad9e91817ee5facd818e87fa5de315d456914ce26b5bc6a8ea0bb1e1",
+    "docs/CHANGELOG.md": "1a163830a2d2f41315420fc9c911da9b29ad0589becf9accf71fc498e41e5518",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,8 +20,8 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "pure DB-free tests test_logic/test_parser/test_parser_late/test_matrix_pure 26/26 PASS; ORM test module imports (4 tests discovered); ruff clean; git diff --check clean",
-    "rollback ORM probe on local tp_tanphat_dev (candidate HEAD 55e01926 + fix): batches 1,2 reset pending/0 -> tp_matrix_data/tp_compare_batches heal to ready/2, snapshot rows unchanged, second read does not write (ctid), DB unchanged after rollback",
-    "NOT_RUN: new ORM test on tp_tanphat_test/18079, authenticated UI, HOOT; local 18069 not reloaded (other session process); PC deploy pending"
+    "PC deploy 74047fbc (2 tp_hr_attendance files, restart only): pre-drift OK, backup C:\\TANPHAT-backups\\snapshot-ready036\\snapshot-ready036-20261118T200015 (dump 10091620B / 15787 entries, source-config, SHA256SUMS)",
+    "health 200, local /web/login 200, public https://hybrid-send-ready-ballot.trycloudflare.com/web/health 200 and /web/login -> /dang-nhap 200; 0 ERROR after start; module versions and attendance/HR counts unchanged; batch flags ready/2 x4, 0 stuck",
+    "NOT_RUN: authenticated UI, ORM probe on server DB, 18079; PC docs checkout pre-existing drift left untouched"
   ]
 }
