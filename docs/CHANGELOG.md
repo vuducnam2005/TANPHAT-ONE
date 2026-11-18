@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-010 — ADMIN-FULL-001: chỉ admin gốc được cấp/thu quyền admin
+
+- Ngày18/11/2026. Bổ sung trực tiếp từ người dùng: admin được cấp quản trị mọi phòng như đã chốt nhưng không cấp người khác làm admin; chỉ admin gốc quản lý quyền admin. DEC-054 thay đúng phần cấp quyền của DEC-053/CHG-009, không đưa lại giới hạn phòng mình.
+- Sửa prompt hiện hành tại cùng path: ngoại lệ cấp/thu ở backend, nhận diện admin gốc riêng, chặn nhóm trực tiếp/ngụ ý/nested/import/API/sudo, bảo vệ nguồn/credential admin gốc và đường code/security có thể tự cấp admin. Giữ nghiệp vụ/phòng/HR/thiết bị/báo cáo, migration grant đã có khi giao thực thi; quyền role nghiệp vụ thường không được kéo theo admin.
+- Cập nhật AGENTS/status/DECISIONS/roadmap/index cùng scope. Chỉ prompt/policy, không application, grant/DB hoặc dịch vụ. Không claim test quyền mới hoặc triển khai. Kiểm nội dung nhất quán/link/diff và source unchanged; seal snapshotGit, foreignsource/docs giữ; commit/push/sync tài liệu không restart.
+- Subagent review không khởi tạo do modelruntime; không gọi review độc lập. Next: giao Claude bản prompt đã cập nhật; không dùng đoạn009 cho phép admin thứ hai cấp tiếp.
+
 ## CHG-20261118-009 — ADMIN-FULL-001: chốt admin thứ hai toàn hệ thống và prompt thay mô hình giới hạn
 
 - Ngày18/11/2026. Yêu cầu trực tiếp mới: người được cấp admin có toàn quyền như admin hiện tại, không ràng buộc phòng ban, kể cả phòng mình. DEC-053 thay phần xung đột DEC-050, giữ vai trò nhân viên là dữ liệu riêng và workflow/admin native. Không tự thiết kế cấp Owner/Admin chức năng khác nhau.

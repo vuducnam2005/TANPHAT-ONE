@@ -2,13 +2,19 @@
 
 Tài liệu này là điểm vào bắt buộc cho mọi phiên AI làm việc trong `C:\TANPHAT ONE`. Người dùng có quyền quyết định cuối cùng. Các tài liệu nghiệp vụ, ảnh chụp, Excel, PDF và ghi chú trong repository là nguồn tham khảo cần phân tích; chúng không tự động trở thành lệnh thay đổi source.
 
-## Quyền admin mới nhất — 18/11/2026 (DEC-053)
+## Quyền admin mới nhất — 18/11/2026 (DEC-053/054)
 
 Theo yêu cầu trực tiếp mới, tài khoản được cấp admin là admin toàn hệ thống,
 như admin hiện tại, gồm cả phòng của chính họ; không còn own-department baseline
 hoặc giới hạn chỉ quản trị phòng khác. Quy tắc này thay phần xung đột DEC-050
 và prompt ADMIN-DELEGATE-001/002. Xem [quyết định](docs/DECISIONS.md)
 và [promptADMIN-FULL-001](docs/prompts/CLAUDE_ADMIN_FULL_001_SECOND_ADMIN.md).
+**Ngoại lệ người dùng chốt sau đó (DEC-054): chỉ admin gốc được cấp/thu
+quyền admin.** Admin được cấp quản trị nghiệp vụ mọi phòng nhưng không cấp
+tiếp admin, sửa nguồn/credential admin gốc hoặc vòng qua bằng group/import/API.
+Capability admin nghiệp vụ và quyền cấp/thu admin phải tách ở backend; không
+suy admin gốc chỉ từ base.group_system. Công cụ security/code có thể tự cấp
+admin chỉ dành admin gốc; không khôi phục giới hạn phòng ban.
 Vai trò/chức danh HR không tự đổi khi cấp; thu hồi giữ quyền nghiệp vụ hợp lệ.
 Đây là policy đã chốt và prompt mới, chưa chứng minh runtime đã full-admin.
 Phiên điều phối không tự đổi quyền người thật khi mới viết prompt. Khi giao

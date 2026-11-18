@@ -1,5 +1,23 @@
 # TANPHAT ONE — Sổ quyết định
 
+## DEC-054 — Chỉ admin gốc được cấp hoặc thu hồi admin (18/11/2026)
+
+- **Bổ sung trực tiếp:** admin được cấp không có quyền phân người khác làm
+  admin; chỉ admin thật/admin gốc được thực hiện. Đây là ngoại lệ mới của
+  DEC-053; không khôi phục ranh giới phòng ban DEC-050.
+- Admin được cấp vẫn toàn quyền quản trị nghiệp vụ mọi phòng, kể cả phòng
+  mình. Quản lý tài khoản thường/vai trò nghiệp vụ không được làm phát sinh
+  admin trực tiếp hoặc gián tiếp. Chỉ admin gốc cấp/thu admin và sửa nguồn
+  xác định admin gốc; admin được cấp không tự cấp, cấp tiếp hoặc thu admin khác.
+- Bắt buộc kiểm actor admin gốc ở backend, không chỉ ẩn nút hoặc xét nhóm
+  system chung. Chặn ledger/group/implied/nested/import/API/sudo và việc
+  chiếm credential/source admin gốc. Công cụ sửa security/chạy code/cài module
+  có thể vòng qua ngoại lệ này dành admin gốc; nghiệp vụ không bị hạn chế phòng.
+- [Prompt ADMIN-FULL-001](prompts/CLAUDE_ADMIN_FULL_001_SECOND_ADMIN.md) đã sửa
+  tại cùng file; đoạn cũ cho admin thứ hai cấp tiếp không còn hiệu lực.
+  Giữ migration grant đang hiệu lực khi giao Claude thực thi, provenance và
+  thu hồi về quyền nghiệp vụ hợp lệ. Lượt chốt này chưa sửa runtime/người thật.
+
 ## DEC-053 — Người được cấp admin có toàn quyền như admin hiện tại (18/11/2026)
 
 - **Yêu cầu trực tiếp mới:** tài khoản được cấp quyền admin là admin thứ hai,
@@ -7,8 +25,9 @@
   họ, phòng khác, dữ liệu chung và chức năng quản trị mà admin hiện tại có.
 - **Thay DEC-050 ở phần xung đột:** bỏ own-department baseline và chỉ-other-
   department khi user đã là full admin; không giữ nhãn delegate nhưng quyền
-  thực chỉ đọc/adapter hạn chế. Admin mới quản lý tài khoản/phân quyền như
-  admin hiện tại; không tự đặt thêm cấp Owner với chức năng khác nhau.
+  thực chỉ đọc/adapter hạn chế. **Ngoại lệ theo bổ sung DEC-054:** admin được
+  cấp không cấp/thu quyền admin; chỉ admin gốc quản lý thẩm quyền đó. Các
+  nghiệp vụ và phòng ban còn lại vẫn theo DEC-053.
 - Chức danh/phòng nhân viên không tự đổi khi cấp admin. Thu hồi bỏ quyền admin
   được quản lý và giữ quyền nghiệp vụ hợp lệ. Workflow/validation mà admin
   hiện tại cũng phải tuân thủ và bảo vệ user hệ thống/admin cuối vẫn giữ.

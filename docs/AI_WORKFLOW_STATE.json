@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T04:19:39.301694+00:00",
-  "last_change_id": "CHG-20261118-009",
+  "updated_at": "2026-11-18T04:27:50.167476+00:00",
+  "last_change_id": "CHG-20261118-010",
   "code_digest": "3355f87f8f988688e516162dd1f9960165bcfdc11f352220ac51d5a7ebcdad1b",
   "code_file_count": 632,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "8b4cb031321d44ce7980109843908e8afdfa7d5c94e064ba694d7fee00bc91ff",
-    "docs/CHANGELOG.md": "2d651e891149dfb8039f58392ba64db63d44096a2f1a96bc8248fc7d96c155fb",
-    "AGENTS.md": "519bdcd170059ba6a6a4c4657bedc0325c735d221596fc9257dc8d18473494e9",
+    "docs/PROJECT_STATUS.md": "aa2d643ba86646237898846a7c5b7cb66ee4e4138591a7f48df61b6924b29d0e",
+    "docs/CHANGELOG.md": "60178681af6ac4a31d9efe8b2d11cae627aa6b7fb1379e7cb2aed67c1a046e3f",
+    "AGENTS.md": "cdf0205ee60ffccaf805adc2857509a157a84ca2234544c81e02db031b3ee528",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "af07e08a6c62a0d969c10e8f2c2b6756756ff9883ca9f27620c46f12c543b953",
-    "docs/DECISIONS.md": "2dd57eb02f86e0b3c816714a5ce45a4e0990b925902af234324ec9a6cab0cf72",
+    "docs/ROADMAP.md": "ea381d5c6ca3ca5f9f2681964186344bf7361a4728678975bf6e44dc9a0e983d",
+    "docs/DECISIONS.md": "33ad0bc6df729c32a26b03c4208d42984c13d998c7714a218917d680bff9b1c2",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,7 +20,7 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Prompt/policy-only: traced current native admin detection, ledger and revoke guards; latest HR fix preserved; application source unchanged.",
-    "No live grants/migration/DB/browser tests; isolated Git docs snapshot excludes foreign changes; deployment policy unchanged."
+    "Docs-only clarification of user rule: only original admin may grant/revoke admin; full business management across all departments remains.",
+    "Prompt consistency/source unchanged; no runtime/migration/grant tests or application changes. Review subagent unavailable; not an independent audit."
   ]
 }

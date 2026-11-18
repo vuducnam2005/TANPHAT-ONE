@@ -1,7 +1,7 @@
 # ADMIN-FULL-001 — Admin toàn hệ thống, bỏ giới hạn phòng ban
 
 Làm việc trong `C:\TANPHAT ONE`. Prompt triển khai theo yêu cầu trực tiếp
-18/11/2026, DEC-053. **Thay mô hình ủy quyền giới hạn bằng admin toàn hệ thống.**
+18/11/2026, DEC-053/054. **Admin được cấp quản trị mọi phòng; chỉ admin gốc cấp/thu admin.**
 
 ## 1. Yêu cầu mới có ưu tiên
 
@@ -12,16 +12,19 @@ toàn quyền như admin hiện tại, không bị giới hạn bởi phòng ban
   họ; cùng chức năng, dữ liệu, field, menu và thao tác như admin hiện tại.
 - Vai trò/chức danh HR vẫn là dữ liệu riêng, không tự đổi thành Trưởng phòng
   khi cấp admin. Tuy nhiên, **không dùng vai trò nhân viên cũ để chặn admin**.
-- Admin được cấp có quyền quản lý người dùng/phân quyền và công cụ quản trị
-  như admin hiện tại. Không giữ cơ chế chỉ admin gốc mới quản trị còn admin thứ
-  hai phải đi qua adapter hạn chế. Mọi tài khoản admin có cùng năng lực quản trị
-  ứng dụng; không tự thiết kế thêm cấp Owner và Admin có quyền khác nhau.
-- Admin hiện tại có thể cấp/thu quyền admin; thu hồi xong người đó trở về
-  quyền nghiệp vụ hợp lệ, không còn đặc quyền admin từ lần cấp này.
+- Admin được cấp quản trị người dùng và nghiệp vụ trên mọi phòng, kể cả phòng
+  mình. **Ngoại lệ duy nhất về thẩm quyền admin: chỉ admin gốc cấp/thu quyền
+  admin; admin được cấp không được cấp admin cho ai, kể cả bản thân hoặc cấp
+  gián tiếp qua người/nhóm khác.** Quản lý vai trò nghiệp vụ thông thường vẫn
+  theo quyền admin ứng dụng, không được làm phát sinh quyền admin.
+- Chỉ admin gốc được cấp/thu admin và sửa nguồn xác định admin gốc. Thu hồi
+  xong người nhận trở về quyền nghiệp vụ hợp lệ, không còn đặc quyền đã cấp.
+- Các đường sửa chính sách/nhóm quản trị hoặc chạy code có thể vòng qua ngoại
+  lệ này phải dành admin gốc; không mở chúng chỉ để giao diện giống admin.
 - Yêu cầu này thay quy tắc DEC-050 và prompt001/002: phòng mình giữ baseline,
-  chỉ mở phòng khác, nguồn mixed/stock bị hạn chế vì delegation, không cấp
-  nhóm admin, không được cấp tiếp admin. Không áp những yêu cầu cũ này cho
-  người đã là full admin. Nhân viên thường vẫn theo quyền cũ.
+  chỉ mở phòng khác và nguồn mixed/stock bị hạn chế vì delegation. Riêng
+  cấm cấp tiếp admin được người dùng xác nhận lại tại DEC-054; phải giữ ở
+  backend. Nhân viên thường vẫn theo quyền cũ.
 
 Đây là admin **ứng dụng như tài khoản admin hiện tại**, không biến thành UID1,
 không cấp quyền máy chủ/SSH/PostgreSQL, không bỏ đăng nhập hoặc dùng sudo cho
@@ -57,10 +60,16 @@ hoặc ID phòng ban. Không triển khai lại bản cũ làm mất bản vá H
   là điểm phải rà, không mặc định riêng nhóm này đã đủ mọi phân hệ/field.
 - Có thể dùng một group vai trò full-admin để gom các nhóm cần thiết; không
   chép toàn bộ nhóm cá nhân/phân công của user admin vào từng người một cách mù.
-  Giữ nguồn gốc quyền được thêm để thu hồi chính xác.
+  Giữ nguồn gốc quyền được thêm để thu hồi chính xác. Không cấp nhóm system
+  theo cách vô tình mở quản lý nhóm, security hoặc native cấp admin.
+- Tách capability quản trị nghiệp vụ toàn hệ thống khỏi capability cấp/thu
+  admin. `_tp_is_main_admin` chỉ kiểm `base.group_system` hiện tại không đủ
+  xác định admin gốc; nguồn admin gốc phải được kiểm chứng, được bảo vệ và
+  không tự tạo/cấp từ luồng admin thứ hai. Không hardcode login/tên/UID suy đoán.
 - Rà `_tp_is_main_admin`, `_tp_has_admin_delegation`, `delegate_actor`,
   `deny_authority`, guard target/wizard và capability/menu. Full admin phải đi
-  đường quyền admin thực, không tiếp tục bị phân loại delegate giới hạn.
+  đường quyền admin nghiệp vụ đầy đủ, không tiếp tục bị giới hạn phòng ban;
+  nhưng cấp/thu admin phải kiểm riêng đúng actor admin gốc.
 - Phải đọc ledger độc lập khi quản lý grant/revoke: hiện helper có thể trả
   false ngay khi user có nhóm system. Không để vừa cấp full-admin thì mất
   khả năng nhận diện và thu hồi chính grant đó.
@@ -71,11 +80,15 @@ hoặc ID phòng ban. Không triển khai lại bản cũ làm mất bản vá H
 
 So sánh admin hiện tại và admin được cấp trên cùng company/data:
 
-1. Trang chủ, mọi workspace/menu đã triển khai, Cài đặt và Ứng dụng nếu admin
-   hiện tại có quyền. Cùng bố cục chung, khác tên/avatar của từng tài khoản.
+1. Trang chủ và mọi workspace/menu nghiệp vụ đã triển khai, cùng bố cục
+   chung, khác tên/avatar của từng tài khoản. Cài đặt nghiệp vụ mở theo quyền;
+   chức năng quản trị quyền/security, cài module/chạy code tùy ý có thể cấp
+   admin phải chỉ dành admin gốc, không mở bằng native group không kiểm soát.
 2. HR: tổng quan, danh sách, chi tiết, liên hệ/trường riêng/hợp đồng/tài liệu,
-   quản lý tài khoản, khóa/mở/reset, phòng ban/chức vụ/phân quyền và thao tác
-   xóa đã được admin hiện tại cho phép. Bỏ trạng thái Chỉ xem do vai trò cũ.
+   quản lý tài khoản thường, khóa/mở/reset, phòng ban/chức vụ/vai trò nghiệp
+   vụ và thao tác xóa đã được admin hiện tại cho phép. Bỏ trạng thái Chỉ xem
+   do vai trò cũ. Tài khoản/credential admin gốc và quyền admin được bảo vệ
+   theo mục 5; không đổi email reset/group/identity để chiếm admin gốc.
 3. KH-KD/CRM/dự án/WBS/đấu thầu/hợp đồng và các nghiệp vụ hiện có: không loại
    hồ sơ cùng phòng, khác owner hoặc mixed chỉ vì người đó được cấp admin.
 4. Kho: toàn bộ thiết bị, tồn kho, người dùng, gán/đổi/trả, đề xuất và lịch sử
@@ -107,7 +120,10 @@ quy tắc cũ không thay quyền người thật khi chưa chỉ định.
   chuyển portal thành internal hoặc tự mở khóa user đang bị khóa.
 - Giữ tên/avatar/mật khẩu, hồ sơ nhân viên, chức danh, phòng ban và dữ liệu.
   Cấp admin không tự sửa roster, grant tài chính hoặc assignment cá nhân.
-- Cấp/thu có xác thực admin đang thao tác, lý do và nhật ký. Thu hồi chỉ bỏ
+- Cấp/thu phải xác thực **admin gốc đang thao tác**, lý do và nhật ký, kiểm
+  lại actor/quyền ngay trong transaction trước ghi ledger/nhóm. Không nhận
+  cờ owner/is_admin từ client hoặc caller `.sudo()` làm thẩm quyền admin gốc.
+- Thu hồi chỉ bỏ
   quyền admin được quản lý, xử lý cả implied groups/quyền còn sót; không restore
   toàn bộ group snapshot cũ đè thay đổi nghiệp vụ hợp lệ trong thời gian đó.
 - Nếu còn nguồn cấp admin khác khiến quyền hiệu lực chưa mất, phải phát hiện
@@ -115,8 +131,27 @@ quy tắc cũ không thay quyền người thật khi chưa chỉ định.
 - Invalidate access/menu/field/view/session cache đúng cơ chế Odoo20: phiên và
   tab mở sẵn không tiếp tục chạy request mới bằng đặc quyền đã thu hồi.
 - Giữ bảo vệ native cho user hệ thống và chặn làm mất admin hoạt động cuối
-  cùng, gồm cập nhật nhóm/khóa/archive/xóa đồng thời. Không đặt thêm ranh giới
-  phòng mình hoặc thứ bậc quyền bí mật giữa hai admin.
+  cùng, gồm cập nhật nhóm/khóa/archive/xóa đồng thời. Ngoại lệ admin gốc và
+  admin được cấp phải hiện rõ, không khôi phục ranh giới phòng mình.
+
+### Bảo vệ ngoại lệ cấp admin ở backend
+
+- Admin được cấp không tạo/cập nhật/xóa ledger hoặc wizard cấp/thu admin;
+  không sửa protected group/implied group, memberships hoặc quyền user để
+  biến mình/người khác thành admin hay admin gốc.
+- Kiểm cả `res.users`, `res.groups`, lệnh quan hệ lồng, copy/default/context,
+  HR role wizard, import, API/RPC và các action dùng sudo. Chặn cấp quyền kỹ
+  thuật tương đương admin dù không ghi vào ledger ứng dụng.
+- Không cho thay nguồn admin gốc, mật khẩu/API key/MFA/reset email/partner
+  hoặc khóa/xóa/hạ admin gốc để chiếm quyền. Self-service đổi mật khẩu của
+  chính mình theo native được giữ, không trở thành đường quản lý admin gốc.
+- Security ACL, server action Python, cấu hình cho chạy code/import module
+  hoặc đường admin kỹ thuật có thể sửa guard phải dành admin gốc. Chặn đường
+  vòng này là thực thi ngoại lệ cấp admin, không hạn chế nghiệp vụ phòng ban.
+- Ẩn nút Cấp/Thu admin cho admin được cấp; kiểm server vẫn bắt buộc khi gọi
+  trực tiếp. Nhãn nêu rõ Quản trị viên (không được cấp quyền admin).
+- Log người/thời gian/đích/lý do cấp/thu; không lưu mật khẩu hoặc secret.
+
 
 ## 6. Kiểm chứng trước bàn giao
 
@@ -126,8 +161,12 @@ Lập bảng actor trước/cấp/thu và capability thực. Tối thiểu:
   mình, phòng khác và dữ liệu chung**. Không còn domain department cũ.
 - HR list/detail/search không có field thiếu metadata; mobile_phone/private
   fields theo quyền HR admin thực, giữ bản vá metadata ở nhóm người thường.
-- Full admin quản lý user/quyền như admin hiện tại; không còn guard delegate
-  vô tình chặn thao tác này. Không thay chức vụ thực của ai chỉ để smoke.
+- Admin được cấp quản lý tài khoản thường/vai trò nghiệp vụ trên mọi phòng,
+  nhưng không thấy nút và không gọi được cấp/thu admin. Admin gốc vẫn cấp/thu
+  được, không chặn nhầm bởi guard mới. Không thay chức vụ thật để smoke.
+- Ca âm bắt buộc: direct RPC/ledger, `res.users` group write, `res.groups`
+  membership/implied group, HR wizard/import/context/sudo; không cấp được admin
+  hoặc sửa nguồn/credential admin gốc. Chặn cả tạo tài khoản mới có admin group.
 - Thu hồi loại bỏ đặc quyền; group/vai trò nghiệp vụ hợp lệ còn đúng, phiên cũ
   bị kiểm lại. Cấp lại/migration chạy lại không nhân đôi grant hoặc làm mất quyền.
 - Nhân viên thường không nhận quyền admin, không được đọc thêm private/file.
@@ -140,7 +179,8 @@ Không seed fixture/CRUD phá dữ liệu trên main/server. Chỉ migration ng�
 có grant là thay quyền thật được giao; không thu/cấp thử để quay video hoặc test.
 Ca ghi/race/browser/thu hồi chưa chạy được phải ghi NOT_RUN, không gọi PASS từ
 get_view hoặc has_access cấp model. Viết test hồi quy có ý nghĩa cho cấp/thu/
-implied-group và chặn mất admin cuối; không tự chạy suite fixture trên DB chính.
+implied-group, ngoại lệ chỉ-admin-gốc và chặn mất admin cuối; không tự chạy
+suite fixture trên DB chính.
 
 ## 7. Triển khai và bàn giao ngay
 
@@ -154,7 +194,7 @@ Kiểm lại topology trước dùng; giữ tunnel/filestore/domain. Public:
 `https://hybrid-send-ready-ballot.trycloudflare.com`.
 
 Không chép working tree chứa code dở/foreign diff. Cập nhật AGENTS nếu cần,
-DEC-053/status/coverage/guide/acceptance/roadmap và luồng cấp quyền để mọi AI
+DEC-053/054/status/coverage/guide/acceptance/roadmap và luồng cấp quyền để mọi AI
 khác không tiếp tục xây giới hạn DEC-050 đã thay. Hướng dẫn cách cấp/thu và
 người dùng đăng nhập lại; báo commitSHA/version/backup/grant đã chuyển/kiểm
 thực/phần chưa kiểm. Không tuyên bố đã chuyển người thật nếu mới chỉ code.
