@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-024 — Giao PC server và kiểm public HR-EMPLOYEE-ORDER / AUTH-SESSION-001
+
+- Ngày18/11/2026 Asia/Saigon. Code `cfc1af70` pushorigin/main và deploy37/37checksum. Upgrade đúng3addon exit0/0ERROR; không restarttunnel. Bản chạy18069/PC: HR20.0.1.13.0/admin20.0.2.0.1/auth20.0.2.0.1; API20.0.1.2.0.
+- Serverbackup `C:/TANPHAT-backups/auth-hr-finish/auth-hr023-20261118T160600`: dump9.703.292B, filestore29.880.555B/609entry, source-config2.124.283B, restore15.598, SHA256. Snapshot chỉmodules đổi, giữ39nhânviên/32user/55thiếtbị/456ngàycông/roster/groups/implied/ledger/baseURL; không giả datasetlocal bằngserver.
+- ORMREADONLYserver20/20PASS; local16/16PASS. AnonymousHTTP/browser+QWeb-render19/19PASS desktop/mobile0JSerror; đây là smoke+visualmock không đăngnhậpA/B. UnitHR12/AUTH8/frontend2/native3template+mouse-sortablemockPASS trướcdeploy. [HR acceptance](demo/HR_EMPLOYEE_ORDER_ACCEPTANCE.md)/[AUTH acceptance](demo/AUTH_SESSION_001_ACCEPTANCE.md) ghi rõNOT_RUN thựcA/B/MFA/multiworker/race/HOOT/realreorderpersist, không can thiệp userđanglàmviệc.
+- Driftinventoryserver đã xác minh là prefixcũ của baselineGit, chỉthiếu các mụcattendance đãcommit; đồngbộ bảnđãcommit, không mấtphầnnộidungriêng. Sidebardrift cósẵn giữ, khôngdeployattendance/reporting/brandingWIP. Checkpointgốc giữ, cleanworkflowseal023/024 chỉhash đúnggói; bàn giao source/root docs cậpnhật khôngfinishforeignbatch.
+- Đây là docs-only xácnhận kếtquả, không cầnrestart/upgrade tiếp. Next: người dùng nghiệmthu2thiếtbị/HRorder thực tế; phầnchưa kiểm giữnhưacceptance.
+
 ## CHG-20261118-023 — Hoàn tất HR-EMPLOYEE-ORDER và sửa cạnh tranh AUTH-SESSION-001
 
 - Ngày18/11/2026 Asia/Saigon. Người dùng giao trực tiếp tiếp tục phần Anti dở, triển khai cả hai hạng mục, áp18069/commit/push/PCserver, không bắt18079.
