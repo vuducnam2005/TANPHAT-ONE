@@ -1,5 +1,28 @@
 # TANPHAT ONE — Sổ quyết định
 
+## DEC-058 — Bảng công theo từng file, đối chiếu trước tổng hợp (18/11/2026)
+
+- **Người dùng đã chọn:** giữ riêng file và đối chiếu trước khi tổng hợp.
+  File trùng ngày không ghi đè hoặc cộng dồn tự động. Mỗi lần tải có mã lô,
+  tên/checksum/kỳ/sheet/người/thời điểm; cùng tên/kỳ không là cùng nội dung.
+- Tải file thấy bảng công ma trận đầy đủ, hai dòng Vào/Ra theo người, ngày/
+  thứ, phòng/nhóm nguồn, tổng muộn theo Excel; có bộ lọc và phân trang theo
+  nhân viên, gồm cả chưa map hoặc toàn ô trống. Xem file là xem snapshot nguồn,
+  khác dữ liệu công đã được áp dụng; raw không thay theo HR hiện tại.
+- Chọn A/B để đối chiếu theo nhân viên đã xác định/ngày/phiên. Giờ giống chỉ
+  một bản công hiệu lực kèm cả nguồn; giờ khác cần người có quyền chọn A/B,
+  giữ dữ liệu hiện tại hoặc để sau, có lý do/lịch sử khi thay bản đã áp dụng.
+  Blank trong kỳ khác ngoài phạm vi; không tự ghép Vào và Ra từ hai file.
+- Tổng muộn giữ nguyên số Excel đúng cả kỳ theo DEC-056; không chia ngày,
+  không cộng tuần chồng tháng. Chưa có tổng đúng phạm vi thì ghi chưa đủ
+  dữ liệu. Giờ08:30–17:00 là tham chiếu; không tự suy nghỉ hoặc tạo giờ thiếu.
+- Cùng addon/PostgreSQL/employee IDs, giữ ACL/period locks/corrections và
+  chống apply trùng/ghi đồng thời tại backend. Không tạo DB cho từng file.
+- [Prompt003](prompts/CLAUDE_HR_ATTENDANCE_MATRIX_003_FILE_COMPARISON.md)
+  kế thừa SIMPLE002 đã giao; mới tài liệu, chưa triển khai hoặc import lại.
+  Khi Claude thực thi: giao18069/PCserver theo policy17/11, không bắt18079.
+
+
 ## DEC-057 — Một phiên web hoạt động, đăng nhập mới thay phiên cũ (18/11/2026)
 
 - **Yêu cầu trực tiếp:** mỗi tài khoản chỉ đăng nhập một nơi; đăng nhập nơi

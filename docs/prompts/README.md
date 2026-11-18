@@ -12,6 +12,10 @@ Thư mục này quản lý các prompt giao việc cho các phiên AI thực thi
 
 ## 1. Prompt đang hiệu lực trong thư mục source
 
+**Yêu cầu mới18/11 — MATRIX003:** dùng prompt003 để hoàn thiện xem bảng theo file và đối chiếu trước tổng hợp. SIMPLE002 đã giao20.0.2.0.0/CHG-019; không chạy lại002. Các trạng thái PROMPT_READY của002 bên dưới là mốc lịch sử chưa cập nhật runtime, xem [bàn giao mới](../demo/HR_ATTENDANCE_SIMPLE_002_ACCEPTANCE.md).
+
+
+
 **Cập nhậtExcel CHG-20261118-013:** người dùng chưa chạy bản cũ; giao cùng HR-ATTENDANCE-SIMPLE-002 đã hợp nhất tải Excel máy→tự tạo bảng,08:30–17:00 và giữ tổng Đi muộn/Lần/Phút nguyên nguồn đúng kỳ.
 
 **Chấm công từ18/11/2026:** dùng HR-ATTENDANCE-SIMPLE-002 cho UI gọn và API-ready; giữ nguồn Excel/backend hiện có, không chạy lại prompt001 để mở lại scope phức tạp.
@@ -24,6 +28,8 @@ EQUIP-UI-001/002 bên dưới giữ để tra cứu lịch sử, không giao ch�
 
 | Tệp prompt | Nhiệm vụ | Mô tả | Trạng thái | Tài liệu đặc tả / Kế hoạch |
 | --- | --- | --- | --- | --- |
+| [`CLAUDE_HR_ATTENDANCE_MATRIX_003_FILE_COMPARISON.md`](CLAUDE_HR_ATTENDANCE_MATRIX_003_FILE_COMPARISON.md) | **HR-ATTENDANCE-MATRIX-003** | Bảng công ma trận theo file; nhiều file độc lập, đối chiếu A/B trước tổng hợp | `PROMPT_READY_NOT_IMPLEMENTED` CHG-20261118-021 | DEC-058; source đủ người/blank, filter/pager; giữ giờ/tổng Excel đúng kỳ, không đếm đôi, quyền/correction/kỳ chốt; kế thừa SIMPLE002 đã giao |
+
 | [`CLAUDE_AUTH_SESSION_001_SINGLE_ACTIVE_LOGIN.md`](CLAUDE_AUTH_SESSION_001_SINGLE_ACTIVE_LOGIN.md) | **AUTH-SESSION-001** | Một phiên/tài khoản; login mới thay cũ, thông báo và Đăng nhập lại về Trang chủ | `PROMPT_READY_NOT_IMPLEMENTED` CHG-20261118-016 | DEC-057; native auth/MFA/winner/backend/bus/fallback; giữ HR lock/admin/quyền, chưa thu hồi phiên thật |
 | [`CLAUDE_HR_ATTENDANCE_SIMPLE_002_DASHBOARD_AND_API_READY.md`](CLAUDE_HR_ATTENDANCE_SIMPLE_002_DASHBOARD_AND_API_READY.md) | **HR-ATTENDANCE-SIMPLE-002** | Upload Excel máy tự lập bảng gọn; giữ tổngmuộn theo kỳ, Ngày/Tuần/Tháng và API-ready | `PROMPT_READY_NOT_IMPLEMENTED` CHG-20261118-011/013 | DEC-055/056;08:30–17:00, nguồnLần/Phút không tựtính/khôngchiangày/cộngchồng; sharedHR/DB, rollout18069/PCserver |
 | [`CLAUDE_ADMIN_FULL_001_SECOND_ADMIN.md`](CLAUDE_ADMIN_FULL_001_SECOND_ADMIN.md) | **ADMIN-FULL-001** | Người được cấp admin có toàn quyền như admin hiện tại, kể cả phòng mình; chỉ admin gốc cấp/thu admin; chuyển grant hiện hiệu lực và thu hồi đúng | `POLICY_CONFIRMED_PROMPT_READY_NOT_IMPLEMENTED` CHG-20261118-009/010 | DEC-053/054 thay giới hạn DEC-050; giữ native/workflow/quyền người thường; push/deploy18069/PCserver, không bắt18079; lượt viết prompt chưa migration |

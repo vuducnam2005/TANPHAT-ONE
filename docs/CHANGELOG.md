@@ -1,5 +1,15 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-021 — HR-ATTENDANCE-MATRIX-003: bảng công theo file và đối chiếu trước tổng hợp
+
+- Ngày: 18/11/2026; scope điều phối/tài liệu, không sửa ứng dụng hoặc DB.
+- Người dùng yêu cầu tải Excel thấy bảng đầy đủ có bộ lọc; đã chọn giữ riêng file và đối chiếu trước tổng hợp. DEC-058 ghi rõ file cùng kỳ/tên vẫn có nguồn riêng, giờ trùng nhận một lần, khác biệt do người có quyền chọn.
+- Tạo [prompt003](prompts/CLAUDE_HR_ATTENDANCE_MATRIX_003_FILE_COMPARISON.md): multi-file, snapshot nguồn bất biến đủ người/ô trống, matrix hai dòng Vào/Ra, header ngày/thứ, source grouping, sticky/scroll/mobile, bộ lọc theo bảng và pager10/20/50/100 nhân viên. Compare A/B, outside-period khác blank, provenance/mapping/late totals đúng kỳ, backend ACL/version/transaction/locked-period/correction. Giữ SIMPLE00220.0.2.0.0/sharedHR/database/API-ready; không viết importer hay DB riêng.
+- Kiểm thực: đọc openpyxl/parser thuần file riêng sheet Report, kỳ09–15/11/2026,39 người,178 ngày-người có giờ/95 trống/0 lỗi; đọc source upload/batch/parser/late để xác định thiếu matrix và files[0]. Đây không là import hoặc kiểm matrix runtime. Kiểm nội dung/link mới, diff whitespace và workflow trên snapshot Git sạch đúng baseline; không finish checkpoint của batch khác. Workbook/ảnh/giờ cá nhân không đưa vào Git.
+- Tài liệu: status/changelog/roadmap/DEC-058/index/prompt/workflow; commit/push và đồng bộ chính các tài liệu đã commit lên PCserver theo policy. Không upgrade/restart hoặc đổi quyền/session/dữ liệu công. Chưa có matrix/compare hoạt động để kiểm browser/ORM; phần đó giao Claude.
+- Next action: thực hiện prompt003 theo từng phần dùng được; acceptance trước code, không fixture trên main/server, commit/push/deploy18069/PCserver, không bắt18079.
+
+
 ## CHG-20261118-019 — HR-ATTENDANCE-SIMPLE-002: tải Excel máy → xem trước → nhập, tổng muộn theo kỳ, bảng công tối giản, tổng quan và nền API-ready
 
 - Ngày 18/11/2026 (Asia/Saigon). Thực thi prompt SIMPLE-002 (DEC-055/056) trong `custom_addons/tp_hr_attendance` `20.0.2.0.0`, commit code `2b531056`: upload Excel máy chấm công với xem trước tự động và nhập một lần (`tp_upload_preview`/`tp_upload_apply`/`tp_upload_cancel`, nhận kỳ 1–3 tuần/tháng, header ngày động, mã máy qua mapping HR, dedupe/xung đột/khóa kỳ); model `tp.hr.attendance.late` lưu nguyên số lần/phút đi muộn của Excel theo kỳ nguồn; Bảng chấm công tối giản Ngày/Tuần/Tháng và xuất file kỳ nguồn; Tổng quan hôm nay/tuần/tháng với `Xem ngày có dữ liệu gần nhất`; trang `Nguồn dữ liệu chấm công` và nền API-ready (`tp.hr.attendance.source`, `source.code`, `event`, `tp_ingest`) với adapter live tắt. Giờ `08:30–17:00` chỉ là tham chiếu hiển thị. Kèm README, acceptance, hướng dẫn, policy §10, runbook phần SIMPLE-002.
