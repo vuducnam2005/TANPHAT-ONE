@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T12:07:15.732354+00:00",
-  "last_change_id": "CHG-20261118-031",
+  "updated_at": "2026-11-18T12:14:47.951201+00:00",
+  "last_change_id": "CHG-20261118-032",
   "code_digest": "8d8eba4ea7edb25e443095544555497c62651bdb5930e040de698995d54d3a60",
   "code_file_count": 673,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "366c6fe612be542c780284bd6284a8835be4d5078ac9c298d076349a566d8731",
-    "docs/CHANGELOG.md": "65dc8e97788398092b9cded95d20a9fe0e14b5d3c1be13c9f3f17c1edef950aa",
+    "docs/PROJECT_STATUS.md": "6e3a088daf27100a4c3adc14f8f326b1253998b34474cbf016dfffe8faa56ad9",
+    "docs/CHANGELOG.md": "d1bacb3e672920707623497eea0be87068a5702b2cb9c439353849637a4fb569",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,8 +20,8 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "VM test_hr_employee_order.cjs PASS; browser harness real Owl/sortable/templates PASS incl. per-frame drop regression (neighbours <=1.5px, glide 86->70.5 in 36 frames, 0 page errors)",
-    "served-asset checker updated (settleDroppedRow/onPatched/releaseRect/.o_tp_hr_row_settling, no _tpAnimationFrame); git diff --check clean",
-    "NOT_RUN: authenticated live persist on used DB, HOOT, 18079; local 18069 not applied (DB damaged by earlier session, recovery separate); PC deploy pending"
+    "PC server 006ff458: 11/11 SHA256; -u tp_hr_workspace 20.0.1.13.2 exit 0/0 ERROR; attendance 20.0.3.0.0 cols 3/3; data/ACL snapshot identical; health 200; backup C:\\TANPHAT-backups\\hr-smooth031\\hr-smooth031-20261118T190928",
+    "public served assets 12/12 PASS (JS d89896c, CSS b3fca4b); served JS node --check OK, no transpile error stub",
+    "NOT_RUN: authenticated drag/persist on used DB, HOOT, 18079; local 18069 not applied pending attendance recovery"
   ]
 }

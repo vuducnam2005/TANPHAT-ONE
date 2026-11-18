@@ -66,3 +66,10 @@ Nếu checksum source đúng nhưng UI còncũ: lưu evidenceURL/bytes/hash nộ
 ```
 
 Kết quả xử lý028: public JSf3195e5→c7831b0, CSS41f50d0→e08d09c; thực tải8/8PASS khôngtaynắm/hit-testcũ. Backupmetadata/source3file tại `.local/hr-order-asset/source-before-20261118T095446Z` trênPC; sourcehashb9c3040c giữ nguyên. Người dùng tải lại trang để nhận URLmới; nghiệm thu visual/persist qua session thật riêng.
+
+## Giao bản thả mượt — CHG-20261118-031 / CHG-20261118-032
+
+- Commit `006ff458` đã push `origin/main`; PC server nhận 11/11 checksum, chỉ `-u tp_hr_workspace` exit 0/0 ERROR, HR `20.0.1.13.2`, chấm công giữ `20.0.3.0.0`. Backup `C:\TANPHAT-backups\hr-smooth031\hr-smooth031-20261118T190928`. Snapshot nhân sự/sequence/user/nhóm/thiết bị/ngày công/base URL trùng trước/sau.
+- Asset public 12/12 PASS (JS `d89896c`, CSS `b3fca4b`), JS phục vụ qua `node --check`.
+- Bài học: kiểm drift có thể gặp docs PC cũ hơn baseline khi phiên trước không đồng bộ docs. Chỉ đặt lại baseline khi đã chứng minh tệp PC đúng một commit đã biết (ở đây `f27f1044`); code phải khớp chính xác commit gốc.
+- Local 18069 chưa áp: DB local đang ở `tp_hr_attendance` `20.0.2.0.0` thiếu cột sau sự cố 17:14; phục hồi chấm công trước, rồi mới áp candidate dựng từ HEAD.

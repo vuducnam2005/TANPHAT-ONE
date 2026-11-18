@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-032 — Giao PC server & xác minh asset public bản thả mượt HR-EMPLOYEE-ORDER
+
+- Ngày 18/11/2026 Asia/Saigon; biên bản giao commit `006ff458` (TP HR `20.0.1.13.2`, CHG-20261118-031), không sửa code ứng dụng.
+- Gói `hr-smooth031`: 11 tệp từ `git diff f42d9e03 006ff458`, mtime theo thời gian commit (cổng 028). Kiểm drift trước khi dừng dịch vụ: 8/8 tệp code/test/hướng dẫn trên PC khớp `f42d9e03`; `CHANGELOG`, `PROJECT_STATUS`, `AI_WORKFLOW_STATE` trên PC còn bản `f27f1044` vì docs CHG-029/030 chưa đồng bộ. Lần chạy đầu dừng ở bước kiểm drift, chưa thay đổi gì; đặt baseline đúng `f27f1044` cho 3 tệp đó, gói đưa docs PC lên HEAD.
+- Backup `PC server`: `C:\TANPHAT-backups\hr-smooth031\hr-smooth031-20261118T190928` (`tp_tanphat_dev.dump` `10.083.496`B / `15.787` mục restore, `filestore.tar.gz` `36.208.699`B / `623` mục, `source-config.tar.gz` `2.165.505`B, `SHA256SUMS.json`). Giải nén 11/11 khớp SHA-256.
+- Upgrade `-u tp_hr_workspace` (`exit 0`, `0` ERROR): chỉ `tp_hr_workspace` `20.0.1.13.1 → 20.0.1.13.2`; `tp_hr_attendance` giữ `20.0.3.0.0` (cột `batch_code`/`snapshot_state`/`snapshot_version` đủ 3/3, log không xóa field chấm công). Snapshot trước/sau trùng: 39 nhân viên, hash `sequence`, roster, 32 user, 108 liên kết nhóm, implied, 55 thiết bị, 1 đề xuất, ledger 5, 456 ngày công, `web.base.url`; health `200`.
+- Public `https://hybrid-send-ready-ballot.trycloudflare.com`: `test_hr_employee_order_served_assets.py` 12/12 PASS trên bundle mới JS `/web/assets/d89896c/web.assets_web.min.js` (`8.439.029`B, SHA-256 `2bf670d2…`) và CSS `/web/assets/b3fca4b/web.assets_web.min.css` (`1.593.002`B, SHA-256 `82dee0c8…`); `node --check` JS phục vụ đạt, không có stub lỗi transpile. Không restart tunnel.
+- `NOT_RUN`: đăng nhập thật, kéo và lưu thứ tự trên DB đang dùng (người dùng tải lại trang và thử trực tiếp), HOOT, `18079`. Local `18069` chưa áp vì DB local đang lệch schema chấm công từ phiên trước (CHG-20261118-031); cần phục hồi riêng trước khi áp.
+
 ## CHG-20261118-031 — HR-EMPLOYEE-ORDER: thả là sắp xếp ngay, hàng trượt mượt vào chỗ
 
 - Ngày 18/11/2026 Asia/Saigon. Phản hồi người dùng: kéo thả chưa mượt, thả ra bị khựng một lúc rồi mới sắp xếp. TP HR `20.0.1.13.1 → 20.0.1.13.2`, chỉ frontend `static/src/table/table.js` và `table.scss`; backend, quyền, phòng ban, bộ lọc, sắp xếp cột, phân trang giữ nguyên.
