@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T13:09:39.283627+00:00",
-  "last_change_id": "CHG-20261118-038",
+  "updated_at": "2026-11-18T13:16:03.121421+00:00",
+  "last_change_id": "CHG-20261118-039",
   "code_digest": "d34859cfcd94e0f31d18be5a008d39ba88c8188de196ce2702f5c951495eccf2",
   "code_file_count": 673,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "8b4ac003852a6c657c72ae2b6ce6e2950734dfc05bfc0cae2d4d01b73f03cdd0",
-    "docs/CHANGELOG.md": "fb2858a30df879a28a8989f0d718f4ce38bf77e58ae5eb4935b415006d838a03",
+    "docs/PROJECT_STATUS.md": "1518af83731ee2c43cd89c6f459c6dfe4d67f53c037940ce8cb1d45868e792d4",
+    "docs/CHANGELOG.md": "959cc22e35d399c461ef7ad672062490a61ad8b805ca3724e21d1bf8d78b3202",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,7 +20,7 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Native authenticated Chromium 18069: 12/12 viewport-mode cases PASS; wheel bottom/top, document bounds, label containment and navbar/sidebar stable; zero JS errors.",
-    "Before/after screenshots and DOM metrics captured privately; node --check PASS. CSS only, no module/version/schema upgrade or attendance writes. Foreign checkpoint and source WIP retained."
+    "18069: 12/12 authenticated viewport/mode wheel cases PASS + three other attendance screens; node syntax PASS; no JS errors.",
+    "PC source CSS checksum/mtime/backup verified; only tp-odoo restart, no upgrade or business writes. Public health and 2 login viewports PASS; actual CSS asset has both rules. Authenticated public scroll and real Safari/iOS NOT_RUN."
   ]
 }

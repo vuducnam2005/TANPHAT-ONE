@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-039 — HR-ATTENDANCE-SCROLL: giao18069/PCserver và kiểm CSS thực public
+
+- Ngày18/11/2026 Asia/Saigon. App `2b287001` đã push; PC chỉ thay `attendance.scss` cóSHA256 `027e32977c5389d648974b3d2f2fbb8bf5bff9760b374d2aba2c4d231f11dde2`, giữmtimeGit khác0, so khớp sourcecũ trước ghi và backupCSS/config/metadata tại `/workspace/.local/attendance-scroll038/source-before-20261118T131024Z`. Restarttp-odoo, khôngupgrade module/DB hoặc restarttunnel. Rollback: khôi phụcCSS+mtime từbackup vàrestartservice.
+- Local12/12authenticatedviewport-modecasesPASS,0JSerror; đọc thêm3mànBảng/Công của tôi/Nguồnkhông tràn. Publichealth200,login1440/390PASS,0JSerror. CSSpublic thực `/web/assets/912111f/web.assets_web.min.css`,1.593.357B,SHA256 `a600d87da00867db5ec2ab1ab7d8c885e09b719933876d60394f50b886cf0703` chứa cả2rule; CSSlocal `b6dc736` cùng2rule. Public lần đầu compilecold bịtimeout1lần, lần sau tải200đạt, không báo lần timeout làPASS.
+- ProbeSQLreadonlyserver: chấm công20.0.3.0.0,39nhân viên/32users/4lô/355phiên/456ngày; taskkhônggửiactionghinghiệpvụ. PublicauthenticatedscrollNOT_RUN: credentialkiểmcósẵnkhôngthiếtlậpsession,khôngloginadminhoặcđổipassword/quyềnđểtest;mobilelàChromiumemulation,chưaiOS/Safarithật. Không nâng kết luận asset/login thành authenticatedE2E.
+- Checkpoint/WIP khác giữ; workflow snapshotcommitđúngscope. Bàn giao tài liệu/testnguồnvàpushđúngscope; đồng bộsource/docs đãcommit khôngrestartthêm. Next: người dùngCtrl+F5trangTổngquanchấmcông đểnhậnCSSmới.
+
+
 ## CHG-20261118-038 — HR-ATTENDANCE-SCROLL: sửa cuộn lộ trắng ở Tổng quan chấm công
 
 - Ngày18/11/2026 Asia/Saigon; người dùng yêu cầu trực tiếp kiểm tra và fix, thực thi giới hạn lỗi này thay vai trò chỉ viết prompt.

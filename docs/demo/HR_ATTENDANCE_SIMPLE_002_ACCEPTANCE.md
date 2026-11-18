@@ -175,3 +175,16 @@ session riêng private đã có, không tự đăng nhập hoặc ghi dữ liệ
 Ảnh/số đo riêng: `.local/attendance-scroll037/local-after/results.json`.
 PCserver: chờ giao CSS đã push và kiểm asset thực. Chưa kiểm iOS/Safari thật;
 mobile trên là Chromiumemulation, không là nghiệm thu hình thức của người dùng.
+
+### Giao PC server — CHG-20261118-039
+
+- Đã push/apply `2b287001`; CSSpublic thực `912111f`,1.593.357B,
+  SHA256 `a600d87da00867db5ec2ab1ab7d8c885e09b719933876d60394f50b886cf0703`.
+  Hai rulepositionrelative/overscrollcontain đều có; publichealth200 và
+  login1440/390PASS,0JSerror. Không upgrade hoặc đổi schema/moduleversion.
+- Backupsource/config/metadata: `/workspace/.local/attendance-scroll038/source-before-20261118T131024Z`.
+  Chỉ restarttp-odoo; giữtunnel. Localcóthêm3mànkhácđượcđọckiểm khôngtràn.
+- PublicauthenticatedscrollNOT_RUN: credentialkiểmcósẵnkhôngthiếtlậpsession;
+  khôngthửadmin/đổipassword/quyềnđểtest. Không coiCSSserved/login làE2E.
+- Sau deploy người dùngCtrl+F5đểnhậnassetURLmới. Test/iOS/Safarithật và
+  nghiệmthuhìnhthứccủangườidùng chưa chạy.
