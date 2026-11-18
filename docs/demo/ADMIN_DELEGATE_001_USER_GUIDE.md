@@ -1,52 +1,39 @@
-# Quản trị được ủy quyền — hướng dẫn sử dụng
+# Quản trị viên toàn hệ thống (ADMIN-FULL-001) — Hướng dẫn cấp, thu hồi và sử dụng
 
-Ngày 17/11/2026, CHG-20261117-004. Đọc cùng
-[phạm vi chức năng](../security/ADMIN_DELEGATE_001_COVERAGE.md) và
-[kết quả kiểm chứng](ADMIN_DELEGATE_001_ACCEPTANCE.md).
+Cập nhật: 18/11/2026 (`tp_admin_delegation` **20.0.2.0.0**).
+Đọc cùng [chính sách bảo mật](../security/ADMIN_DELEGATE_001_POLICY.md), [bản đồ phân quyền](../security/ADMIN_DELEGATE_001_COVERAGE.md) và [nghiệm thu ADMIN-FULL-001](ADMIN_FULL_001_ACCEPTANCE.md).
 
-## Cấp và thu hồi
+## 1. Ai được cấp và thu hồi quyền Quản trị viên? (DEC-054)
 
-Quản trị chính mở **TP HR → Nhân viên → Danh sách nhân viên → hồ sơ → Tài khoản và phân quyền**.
-Phần **Quyền quản trị** tách riêng với chức vụ, vai trò nghiệp vụ và trạng thái
-tài khoản. Nhân viên cần có tài khoản nội bộ riêng đang mở trước khi cấp.
+- **Chỉ Quản trị gốc (`admin` / nhóm `tp_admin_delegation.group_original_admin`)** mới thấy nút và có quyền thực hiện **Cấp quyền quản trị viên** hoặc **Thu hồi quyền quản trị viên**.
+- Tài khoản **Quản trị viên toàn hệ thống được cấp** có toàn quyền quản trị nghiệp vụ trên mọi phòng ban nhưng **không được cấp hoặc thu hồi quyền quản trị viên** cho bất kỳ ai (kể cả qua sửa nhóm quyền, import CSV/Excel hay API).
 
-1. Chọn **Cấp quyền quản trị**. Đọc các phòng nghiệp vụ được bảo vệ trong bản
-   xem trước. Nếu chưa xác định được phòng, hệ thống không mở thêm nghiệp vụ.
-2. Nhập lý do và xác thực lại bằng hộp xác thực native khi hệ thống yêu cầu.
-3. Xác nhận. Badge đổi thành **Quản trị được ủy quyền**. Chức vụ, nhóm, quyền
-   tiền, phân công và các quyền nghiệp vụ không đổi.
-4. Thu hồi tại cùng vị trí bằng **Thu hồi quyền quản trị**, nhập lý do và xác
-   thực. Lịch sử cấp/thu được giữ; tài khoản vẫn mở và dùng quyền nghiệp vụ gốc.
+## 2. Cách Cấp quyền Quản trị viên toàn hệ thống
 
-Không có tài khoản thật nào được tự chọn để cấp trong lần triển khai này.
-Người được ủy quyền không có nút cấp tiếp hoặc tự bổ nhiệm. Khóa tài khoản và
-thu hồi ủy quyền là hai thao tác riêng.
+1. Đăng nhập bằng tài khoản **Quản trị gốc**.
+2. Mở **Nhân sự (TP HR) → Danh sách nhân viên → chọn hồ sơ nhân viên → tab Tài khoản và phân quyền**.
+   *(Lưu ý: nhân viên cần được tạo tài khoản nội bộ đang mở trước khi cấp quyền quản trị).*
+3. Tại mục **Quyền quản trị hệ thống**, bấm **Cấp quyền quản trị viên**.
+4. Kiểm tra phần **Xem trước phạm vi áp dụng**, nhập **Lý do** và xác nhận danh tính (mật khẩu tài khoản Quản trị gốc đang đăng nhập) khi hộp thoại bảo mật yêu cầu.
+5. Sau khi xác nhận:
+   - Nhãn quyền đổi sang **`Quản trị viên (toàn hệ thống)`**.
+   - Chức vụ và phòng ban ghi trong hồ sơ nhân sự của người đó **được giữ nguyên**.
+   - Người nhận cần **đăng nhập lại** (hoặc tải lại phiên sau khi hệ thống tự yêu cầu đăng nhập lại) để nhận đầy đủ giao diện, menu, Cài đặt, Ứng dụng và quyền Quản trị viên toàn hệ thống.
 
-## Phạm vi thực tế
+## 3. Cách Thu hồi quyền Quản trị viên
 
-Home dùng cùng bố cục hiện hành và capability backend. Các mục chưa triển khai
-vẫn ghi **Đang phát triển**. Không có quyền Cài đặt, module, security rules hoặc
-server action từ ủy quyền. Mở link trực tiếp vẫn kiểm quyền ở server.
+1. Đăng nhập bằng tài khoản **Quản trị gốc**.
+2. Mở **Nhân sự (TP HR) → Danh sách nhân viên → chọn hồ sơ đang là Quản trị viên → tab Tài khoản và phân quyền**.
+3. Bấm **Thu hồi quyền quản trị viên**, nhập **Lý do** và xác thực lại danh tính.
+4. Sau khi xác nhận:
+   - Nhóm `Quản trị viên toàn hệ thống` và toàn bộ quyền quản trị kế thừa được gỡ sạch.
+   - Các nhóm, vai trò và phân công nghiệp vụ hợp lệ của người đó **được giữ nguyên 100%** (tài khoản vẫn mở để làm việc theo đúng vai trò nhân viên/trưởng phòng hiện có).
+   - Mọi phiên đăng nhập và tab trình duyệt đang mở của tài khoản bị thu hồi lập tức hết hiệu lực session quản trị và được kiểm tra lại quyền ngay ở thao tác kế tiếp.
+   - Nếu tài khoản còn bất kỳ nguồn nhóm quản trị trực tiếp nào khác, hệ thống sẽ báo rõ để xử lý trước và **không bao giờ báo thu hồi thành công giả**.
 
-Phòng mình gồm mọi trách nhiệm nghiệp vụ đang hiệu lực: nhân sự, trưởng phòng,
-phân công dự án, grant, CRM và phân quyền Báo cáo. Dữ liệu giao thoa, chưa rõ
-phòng hoặc ngoài công ty được phép giữ quyền nghiệp vụ gốc. Chuyển nguồn hồ sơ,
-chuyển phòng và quản trị phân quyền dùng quy trình của Quản trị chính.
+## 4. Hướng dẫn đăng nhập lại cho tài khoản đã được nâng quyền sẵn
 
-Ví dụ nhân viên KH-KD có một dự án được giao và một dự án cùng phòng chưa được
-giao: sau cấp, chỉ dự án được giao vẫn đọc/sửa theo quyền gốc; dự án còn lại và
-tiền chưa được cấp vẫn bị chặn. Dự án có nguồn rõ ở phòng khác được mở theo
-chức năng đã rà soát, gồm workflow hợp đồng native. Sau thu hồi, quyền thêm
-biến mất ở request tiếp theo, kể cả tab đang mở; quyền dự án KH-KD gốc còn nguyên.
-
-Các chức năng chưa mở được liệt kê trong coverage: không coi badge quản trị là
-quyền superuser hoặc đã triển khai mọi chức năng nhân sự, Báo cáo và Kho.
-Dữ liệu đã tải xuống trước thu hồi không thể bị xóa khỏi máy người nhận.
-
-## Tệp và hình ảnh
-
-Ảnh và tài liệu riêng dùng quyền hồ sơ nguồn. Không cần và không được bật
-`public` để sửa lỗi tải. Nếu gặp ảnh trống hoặc file lỗi, ghi môi trường, mã hồ
-sơ, thời điểm và loại tệp; người vận hành đối chiếu filestore/checksum theo
-[runbook media](../../ops/runbooks/DEPLOY_MEDIA_001_DEPLOY_AND_ROLLBACK.md).
-Word/Excel tải ở định dạng gốc; không gửi hồ sơ nội bộ sang viewer bên ngoài.
+- Với tài khoản đã có grant hiệu lực từ trước và vừa được nâng cấp tự động lên **Quản trị viên toàn hệ thống** khi triển khai `20.0.2.0.0`:
+  1. Mở đường dẫn hệ thống (ví dụ `https://hybrid-send-ready-ballot.trycloudflare.com/dang-nhap`), bấm `Ctrl + F5` nếu đang mở tab cũ.
+  2. Đăng nhập lại bằng tên đăng nhập và mật khẩu hiện có của chính mình (mật khẩu không thay đổi).
+  3. Kiểm tra Trang chủ, Nhân sự (gồm cả phòng của chính mình), KH-KD, Dự án, Kho thiết bị, Báo cáo, Chấm công, Cài đặt và Ứng dụng.

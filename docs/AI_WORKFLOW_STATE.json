@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T04:45:26.887552+00:00",
-  "last_change_id": "CHG-20261118-011",
-  "code_digest": "3355f87f8f988688e516162dd1f9960165bcfdc11f352220ac51d5a7ebcdad1b",
-  "code_file_count": 632,
+  "updated_at": "2026-11-18T05:20:08.396189+00:00",
+  "last_change_id": "CHG-20261118-012",
+  "code_digest": "036ea8e8b1af07216b1925562ab775a076a9da67e7ea366122c014539fdbc94b",
+  "code_file_count": 635,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "7efc62725135cf856744430d03868dd6959aee46d3c50fba48d306b41a92c8de",
-    "docs/CHANGELOG.md": "9122581ac8f414d3cad1d4c224406f70df0860f89850c4250f4b91c3ab22b8a6",
-    "AGENTS.md": "cdf0205ee60ffccaf805adc2857509a157a84ca2234544c81e02db031b3ee528",
+    "docs/PROJECT_STATUS.md": "56a12e4b13fa5945d501c8da18e7a01042e8a05a41dc528f60774865f3a92230",
+    "docs/CHANGELOG.md": "696d12257a1aab581458e8ab30063756c14f99001a42bc495e7a2df41bf7836c",
+    "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "00445676a2331f370e9ad263d0f941c65d30e0ae40ac60b5e06ff67f07446cf0",
-    "docs/DECISIONS.md": "2cca623bc3bbd53db3012cbeda73779d7c9cb3473ab9343ccad83038f052bd25",
+    "docs/ROADMAP.md": "36ff096c035d2bcfc5135a6db1c47b85991a38ac0bed8f03c4c381134881d9fb",
+    "docs/DECISIONS.md": "3e1cb606d884fd7838590382fe483ba9137a01608422a5b37e790eef9c36aa0e",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,7 +20,8 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Prompt/policy only: source sessions/day/import/metrics/mapping/menu reviewed; standalone-punch limitation and source freshness identified; application source unchanged.",
-    "No runtime/Excel/API migrations, grants, fixtures or browser checks; API details unknown, live connector explicitly pending. Scoped Git docs snapshot excludes foreign changes."
+    "ruff check custom_addons/tp_admin_delegation: 0 errors",
+    "static AST(21)/XML(8)/CSV(2)/JS + unit_admin_full_check 34/34: passed",
+    "local 18069 backup + -u tp_admin_delegation 20.0.2.0.0 + read-only ORM probe + Playwright 12/12: passed"
   ]
 }

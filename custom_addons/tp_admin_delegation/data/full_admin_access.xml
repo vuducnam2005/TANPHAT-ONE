@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- DEC-053 req 3: Keep an employee's existing KH-KD staff group intact when granting
+         Full System Admin (so revocation restores their exact business role), while ensuring
+         the old group_scoped_staff restriction never blocks an active system administrator. -->
+    <record id="tp_kd_workspace.staff_crm_scope" model="ir.access">
+        <field name="domain">[('kd_accessible', '=', True)] if (user.has_group('tp_kd_workspace.group_scoped_staff') and not user.has_group('base.group_system')) else []</field>
+    </record>
+    <record id="tp_kd_workspace.staff_crm_report" model="ir.access">
+        <field name="domain">[(0, '=', 1)] if (user.has_group('tp_kd_workspace.group_scoped_staff') and not user.has_group('base.group_system')) else []</field>
+    </record>
+    <record id="tp_kd_workspace.staff_crm_attachment" model="ir.access">
+        <field name="domain">[('kd_crm_accessible', '=', True)] if (user.has_group('tp_kd_workspace.group_scoped_staff') and not user.has_group('base.group_system')) else []</field>
+    </record>
+    <record id="tp_kd_workspace.staff_crm_message" model="ir.access">
+        <field name="domain">[('kd_crm_accessible', '=', True)] if (user.has_group('tp_kd_workspace.group_scoped_staff') and not user.has_group('base.group_system')) else []</field>
+    </record>
+    <record id="tp_kd_workspace.scoped_staff_project" model="ir.access">
+        <field name="domain">[('tp_managed', '=', True), ('company_id', 'in', company_ids), ('tp_scope_access', '=', True)] if (user.has_group('tp_kd_workspace.group_scoped_staff') and not user.has_group('base.group_system')) else []</field>
+    </record>
+    <record id="tp_kd_workspace.scoped_staff_task" model="ir.access">
+        <field name="domain">[('project_id', 'access', 'read'), ('project_id', '!=', False)] if (user.has_group('tp_kd_workspace.group_scoped_staff') and not user.has_group('base.group_system')) else []</field>
+    </record>
+</odoo>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- DEC-054: Verified source of Original Administrator authority.
+             Never implied by base.group_system or group_full_admin. -->
+        <record id="group_original_admin" model="res.groups">
+            <field name="name">Quản trị gốc (cấp/thu quyền quản trị)</field>
+            <field name="comment">Chỉ Quản trị gốc được cấp hoặc thu hồi quyền quản trị viên toàn hệ thống và thay đổi cấu hình bảo mật cốt lõi (DEC-054).</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user_regular'))]"/>
+            <field name="user_ids" eval="[(4, ref('base.user_admin'))]"/>
+        </record>
+    </data>
+
+    <data>
+        <!-- DEC-053/054: Managed Full System Administrator role group.
+             Grants full system and application administration across all departments
+             (including the recipient's own department) with clean provenance for revocation. -->
+        <record id="group_full_admin" model="res.groups">
+            <field name="name">Quản trị viên toàn hệ thống (được cấp)</field>
+            <field name="comment">Quản trị toàn bộ phòng ban và ứng dụng như Quản trị hiện tại; không được cấp hoặc thu hồi quyền quản trị viên (DEC-053/054).</field>
+            <field name="implied_ids" eval="[
+                (4, ref('base.group_system')),
+                (4, ref('tp_core.group_manager')),
+                (4, ref('hr.group_hr_manager')),
+                (4, ref('project.group_project_manager')),
+                (4, ref('sales_team.group_sale_manager')),
+                (4, ref('hr_timesheet.group_timesheet_manager')),
+                (4, ref('maintenance.group_equipment_manager')),
+            ]"/>
+        </record>
+    </data>
+</odoo>

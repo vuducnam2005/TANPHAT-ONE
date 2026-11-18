@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-012 — ADMIN-FULL-001: triển khai Quản trị viên toàn hệ thống và ngoại lệ chỉ Admin gốc cấp quyền trên 18069
+
+- Ngày 18/11/2026 (Asia/Saigon). Nâng cấp `tp_admin_delegation` `20.0.1.4.1 → 20.0.2.0.0` theo DEC-053 và DEC-054.
+- `security/admin_full_security.xml`, `security/ir.access.csv` & `models/delegation.py`: thêm nhóm nguồn `group_original_admin` (chỉ Quản trị gốc cấp/thu quyền quản trị) và nhóm vai trò `group_full_admin` (toàn quyền hệ thống và nghiệp vụ mọi phòng ban kể cả phòng mình như admin hiện tại); đọc ledger trực tiếp qua SQL (`_tp_has_live_admin_grant`) độc lập với `base.group_system`; bổ sung migration idempotent `_migrate_admin_full_001()` (`post_init_hook` & `migrations/20.0.2.0.0/post-migrate.py`); thêm `tp_admin_scope_revision` vào `_get_session_token_fields()` để kiểm lại phiên/tab mở sẵn; chặn báo thu hồi thành công khi vẫn còn quyền admin từ nguồn khác.
+- `models/guards.py`, `models/business_scope.py`, `models/hr_accounts.py`, `data/full_admin_access.xml` & `views/`: thực thi ngoại lệ DEC-054 ở backend (chặn non-Original-Admin cấp/thu admin, thêm/gỡ nhóm admin trực tiếp hoặc kế thừa trên `res.users`/`res.groups`, sửa/khóa/reset Admin gốc hoặc Admin khác, sửa ACL/server action/cron/cài-gỡ-import module/XMLID/view/tham số bảo mật; chặn làm mất Admin gốc hoạt động cuối cùng); bỏ giới hạn `group_scoped_staff` khi giữ `base.group_system`; giữ nguyên bảo vệ `mobile_phone` (`HR-DELEGATE-FIX-001`) ở nhân viên thường.
+- Kiểm thực `18069`: Ruff, AST (21 tệp), XML (8 tệp), CSV (2 tệp), JS, `unit_admin_full_check.py` 34/34 PASS; backup `.local/admin-full001/backup-af001-20261118T120130` (dump `9.935.007`B, filestore `1.000` mục, SHA256); `-u tp_admin_delegation` exit `0` / `0` ERROR; probe ORM chỉ đọc và Playwright `18069` `12/12` PASS (desktop `1440×900` & mobile `390×844`, `0` lỗi JS/OWL/RPC/5xx). Chuẩn bị push và deploy PC server.
+
 ## CHG-20261118-011 — HR-ATTENDANCE-SIMPLE-002: prompt chấm công gọn và chuẩn bị API máy
 
 - Ngày18/11/2026. Yêu cầu trực tiếp: dashboard tổng nhân viên/nghỉ hôm nay/đã về; xem ngày, tuần, tháng; giữ dataExcel đã import và chuẩn bị API máy lênweb sau. DEC-055 ghi scope đơn giản, không mở payroll/GPS/datalake hoặc connector hãng chưa có thông số.

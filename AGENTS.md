@@ -16,10 +16,12 @@ Capability admin nghiệp vụ và quyền cấp/thu admin phải tách ở back
 suy admin gốc chỉ từ base.group_system. Công cụ security/code có thể tự cấp
 admin chỉ dành admin gốc; không khôi phục giới hạn phòng ban.
 Vai trò/chức danh HR không tự đổi khi cấp; thu hồi giữ quyền nghiệp vụ hợp lệ.
-Đây là policy đã chốt và prompt mới, chưa chứng minh runtime đã full-admin.
-Phiên điều phối không tự đổi quyền người thật khi mới viết prompt. Khi giao
-Claude chạy ADMIN-FULL-001, migration grant đang hiệu lực thuộc scope được giao;
-không tự chọn thêm người. Nhân viên thường vẫn theo quyền cũ.
+Đã triển khai tại `custom_addons/tp_admin_delegation` **20.0.2.0.0** (`ADMIN-FULL-001`):
+admin gốc xác định qua `tp_admin_delegation.group_original_admin` (không suy riêng từ
+`base.group_system`), admin được cấp nhận nhóm vai trò `tp_admin_delegation.group_full_admin`
+và đã nâng quyền các grant còn hiệu lực theo đúng scope; xem
+[nghiệm thu ADMIN-FULL-001](docs/demo/ADMIN_FULL_001_ACCEPTANCE.md).
+Phiên điều phối vẫn không tự chọn thêm người ngoài chỉ định. Nhân viên thường vẫn theo quyền cũ.
 
 ## Quy tắc người dùng mới nhất — 17/11/2026
 

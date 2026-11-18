@@ -1,4 +1,3 @@
-from unittest.mock import patch
 
 from odoo import Command, fields
 from odoo.exceptions import AccessError, UserError
@@ -12,28 +11,41 @@ class DelegationCase(TransactionCase):
         super().setUpClass()
         cls.company = cls.env.company
         cls.admin = cls.env.ref('base.user_admin')
+        cls.env['tp.admin.delegation']._migrate_admin_full_001()
         cls.departments = cls.env['hr.department'].create([
             {'name': name, 'company_id': cls.company.id}
-            for name in ('Synthetic Delegation KD', 'Synthetic Delegation Design', 'Synthetic Delegation HR')
+            for name in ('Synthetic FullAdmin KD', 'Synthetic FullAdmin Design', 'Synthetic FullAdmin HR')
         ])
         cls.users = cls.env['res.users'].with_context(no_reset_password=True).create([
-            {'name': f'Synthetic Delegation {index}', 'login': f'admin.delegate.synthetic.{index}',
-             'company_id': cls.company.id, 'company_ids': [Command.set(cls.company.ids)],
-             'group_ids': [Command.set([cls.env.ref('base.group_user').id])]}
+            {
+                'name': f'Synthetic Admin Candidate {index}',
+                'login': f'admin.full.synthetic.{index}',
+                'company_id': cls.company.id,
+                'company_ids': [Command.set(cls.company.ids)],
+                'group_ids': [Command.set([cls.env.ref('base.group_user').id])],
+            }
             for index in range(3)
         ])
         cls.employees = cls.env['hr.employee'].create([
-            {'name': user.name, 'company_id': cls.company.id, 'department_id': cls.departments[index].id,
-             'user_id': user.id, 'date_version': fields.Date.today()}
+            {
+                'name': user.name,
+                'company_id': cls.company.id,
+                'department_id': cls.departments[index].id,
+                'job_title': f'Chức danh nhân viên {index}',
+                'user_id': user.id,
+                'date_version': fields.Date.today(),
+            }
             for index, user in enumerate(cls.users)
         ])
 
     def grant(self, user=None, operation='grant'):
         return self.env['tp.admin.delegation'].with_user(self.admin)._change(
-            user or self.users[0], self.company, operation, 'Synthetic reviewed delegation')
+            user or self.users[0], self.company, operation, 'Synthetic reviewed full admin',
+        )
 
     def actor(self, user=None):
-        return (user or self.users[0]).with_user(user or self.users[0])
+        target = user or self.users[0]
+        return target.with_user(target)
 
 
 class TestAdminDelegation(DelegationCase):
@@ -41,223 +53,154 @@ class TestAdminDelegation(DelegationCase):
     def test_open_grant_and_revoke_dialog_without_reason_does_not_grant(self):
         for method in ('action_tp_grant_admin', 'action_tp_revoke_admin'):
             action = getattr(self.employees[0].with_user(self.admin), method)()
-            wizard = self.env[action['res_model']].browse(action['res_id'])
+            wizard = self.env[action['res_model']].with_user(self.admin).browse(action['res_id'])
             self.assertFalse(wizard.reason)
             self.assertEqual(wizard.expected_user_id, self.users[0])
             for reason in (False, '  \n '):
                 wizard.reason = reason
                 with self.assertRaises(UserError):
                     wizard.action_apply.__wrapped__(wizard)
-            self.assertFalse(self.actor()._tp_has_admin_delegation())
+            self.assertFalse(self.actor()._tp_is_granted_admin())
+            self.assertFalse(self.actor().has_group('base.group_system'))
 
-    def test_grant_revoke_preserve_business_groups_and_identity(self):
-        before = [(user.id, user.group_ids.ids, user.company_ids.ids) for user in self.users]
-        self.grant()
-        self.grant(self.users[1])
-        self.assertTrue(self.actor()._tp_has_admin_delegation())
-        self.assertTrue(self.actor(self.users[1])._tp_has_admin_delegation())
-        self.assertFalse(self.actor()._tp_is_main_admin())
-        own_profile = self.env['res.users'].with_user(self.users[0]).tp_get_my_profile()
-        self.assertEqual(own_profile['header']['admin_level'], 'Quản trị được ủy quyền')
-        self.assertEqual(before, [(user.id, user.group_ids.ids, user.company_ids.ids) for user in self.users])
-        self.grant(operation='revoke')
-        self.assertFalse(self.actor()._tp_has_admin_delegation())
-        self.assertEqual(before, [(user.id, user.group_ids.ids, user.company_ids.ids) for user in self.users])
-        ledger = self.env['tp.admin.delegation'].search([('user_id', '=', self.users[0].id)])
-        self.assertEqual(ledger.state, 'revoked')
-        self.assertEqual(ledger.revoked_by_id, self.admin)
-        self.assertTrue(ledger.revoked_at and ledger.grant_reason and ledger.revoke_reason)
+    def test_grant_gives_full_admin_keeps_hr_position_and_revoke_restores_exact_business_groups(self):
+        user = self.users[0]
+        emp = self.employees[0]
+        before_dept = emp.department_id
+        before_title = emp.job_title
+        before_groups = set(user.group_ids.ids)
+        token_before = user._compute_session_token('synthetic-sid-001')
 
-    def test_only_main_admin_can_provision_and_ledger_is_immutable(self):
-        with self.assertRaises(AccessError):
-            self.env['tp.admin.delegation'].with_user(self.users[0])._change(
-                self.users[1], self.company, 'grant', 'Synthetic escalation')
-        with self.assertRaises(AccessError):
-            self.env['tp.admin.delegation'].create({
-                'user_id': self.users[0].id, 'company_id': self.company.id, 'state': 'active',
-                'granted_by_id': self.admin.id, 'granted_at': fields.Datetime.now(), 'grant_reason': 'Fake',
-            })
-        self.grant()
-        ledger = self.env['tp.admin.delegation'].search([('user_id', '=', self.users[0].id)])
-        for operation in (lambda: ledger.write({'state': 'revoked'}), ledger.unlink):
-            with self.assertRaises(AccessError):
-                operation()
-        with self.assertRaises(AccessError):
-            self.grant(self.admin)
-        with self.assertRaises(UserError):
-            self.env['tp.admin.delegation'].with_user(self.admin)._change(self.users[1], self.company, 'grant', ' ')
+        self.grant(user)
+        self.assertTrue(user._tp_is_granted_admin())
+        self.assertTrue(user._tp_is_main_admin())
+        self.assertFalse(user._tp_is_original_admin())
+        self.assertTrue(user.has_group('base.group_system'))
+        self.assertTrue(user.has_group('hr.group_hr_manager'))
+        self.assertTrue(user.has_group('tp_core.group_manager'))
+        self.assertEqual(emp.department_id, before_dept)
+        self.assertEqual(emp.job_title, before_title)
 
-    def test_all_live_departments_and_unknown_source_fail_closed(self):
-        self.grant()
-        actor = self.actor()
-        self.assertFalse(actor._tp_delegated_other_department(self.company, self.departments[0]))
-        self.assertTrue(actor._tp_delegated_other_department(self.company, self.departments[1]))
-        self.assertFalse(actor._tp_delegated_other_department(self.company, self.departments[:2]))
-        alternate = self.env['tp.report.assignment'].create({
-            'name': 'Synthetic alternate business responsibility', 'company_id': self.company.id,
-            'department_id': self.departments[1].id, 'user_id': self.users[0].id,
-            'capability': 'read', 'reason': 'Synthetic multiple departments',
-        })
-        self.assertFalse(actor._tp_delegated_other_department(self.company, self.departments[1]))
-        self.assertEqual(set(actor._tp_delegation_departments().ids), set(self.departments[:2].ids))
-        alternate.department_id = False
-        self.assertFalse(actor._tp_delegated_other_department(self.company, self.departments[2]))
-        self.assertTrue(actor._tp_delegation_domain().is_false())
+        token_granted = user._compute_session_token('synthetic-sid-001')
+        self.assertNotEqual(token_granted, token_before)
 
-    def test_direct_sudo_context_nested_and_version_escalation_denied(self):
-        self.grant()
-        employee = self.employees[0].with_user(self.users[0])
-        user = self.actor()
+        # Legitimate business group added while holding full admin must survive revocation!
+        scoped_staff = self.env.ref('tp_kd_workspace.group_scoped_staff')
+        user.with_user(self.admin).write({'group_ids': [Command.link(scoped_staff.id)]})
+
+        own_profile = self.env['res.users'].with_user(user).tp_get_my_profile()
+        self.assertEqual(own_profile['header']['admin_level'], 'Quản trị viên (toàn hệ thống)')
+
+        self.grant(user, operation='revoke')
+        self.assertFalse(user._tp_is_granted_admin())
+        self.assertFalse(user._tp_is_main_admin())
+        self.assertFalse(user.has_group('base.group_system'))
+        self.assertFalse(user.has_group('base.group_erp_manager'))
+        self.assertFalse(user.has_group('hr.group_hr_manager'))
+        self.assertEqual(set(user.group_ids.ids), before_groups | {scoped_staff.id})
+
+        token_revoked = user._compute_session_token('synthetic-sid-001')
+        self.assertNotEqual(token_revoked, token_granted)
+
+    def test_revoke_refuses_false_success_when_residual_admin_group_exists(self):
+        user = self.users[1]
+        self.grant(user)
+        # Original admin manually attaches base.group_erp_manager directly: revoke must detect and roll back.
+        erp_group = self.env.ref('base.group_erp_manager')
+        user.with_user(self.admin).write({'group_ids': [Command.link(erp_group.id)]})
+        with self.assertRaises(UserError), self.env.cr.savepoint():
+            self.grant(user, operation='revoke')
+        # Ledger remains active because the savepoint rolled back.
+        self.assertTrue(user._tp_has_live_admin_grant())
+        user.with_user(self.admin).write({'group_ids': [Command.unlink(erp_group.id)]})
+        self.grant(user, operation='revoke')
+        self.assertFalse(user._tp_has_live_admin_grant())
+
+    def test_dec054_granted_admin_cannot_provision_admin_or_escalate_via_any_vector(self):
+        self.grant(self.users[0])
+        granted = self.users[0]
+        target = self.users[1]
+        emp_target = self.employees[1].with_user(granted)
+
+        self.assertFalse(emp_target.tp_can_manage_delegation)
+        orig_group = self.env.ref('tp_admin_delegation.group_original_admin')
+        full_group = self.env.ref('tp_admin_delegation.group_full_admin')
+        sys_group = self.env.ref('base.group_system')
+        erp_group = self.env.ref('base.group_erp_manager')
+        user_group = self.env.ref('base.group_user')
+
         attempts = [
-            lambda: user.write({'group_ids': [Command.link(self.env.ref('base.group_system').id)]}),
-            lambda: user.sudo().write({'company_ids': [Command.clear()]}),
-            lambda: employee.sudo().write({'job_title': 'Unauthorized promotion'}),
-            lambda: employee.sudo().write({'resource_id': self.employees[1].resource_id.id}),
-            lambda: employee.sudo().write({'version_ids': [Command.update(employee.sudo().current_version_id.id, {'job_title': 'Nested'})]}),
-            lambda: employee.sudo().current_version_id.write({'date_version': fields.Date.today()}),
-            lambda: employee.sudo().resource_id.write({'user_id': self.users[1].id}),
-            lambda: self.env['tp.project.assignment'].with_user(user).sudo().create({'user_id': self.users[1].id}),
-            lambda: self.env['res.groups'].with_user(user).sudo().create({'name': 'Synthetic illicit group'}),
-            lambda: self.env['hr.employee'].with_user(user).sudo().create({'name': 'Clone', 'resource_id': employee.sudo().resource_id.id}),
-            lambda: employee.with_context(_tp_delegated_account=True)._tp_account_admin(existing=True),
-            lambda: self.env['tp.hr.import.batch'].with_user(user).sudo().create({'name': 'Synthetic import'})._manager(),
+            # 1. Provisioning wizard / ledger / sudo _change
+            emp_target.action_tp_grant_admin,
+            self.employees[0].with_user(granted).action_tp_revoke_admin,
+            lambda: self.env['tp.admin.delegation'].with_user(granted)._change(target, self.company, 'grant', 'Escalation'),
+            lambda: self.env['tp.admin.delegation'].with_user(granted).sudo()._change(target, self.company, 'grant', 'Sudo escalation'),
+            lambda: self.env['tp.admin.delegation.wizard'].with_user(granted).create({'employee_id': target.id, 'operation': 'grant'}),
+            lambda: self.env['tp.admin.delegation'].with_user(granted).sudo().create({
+                'user_id': target.id, 'company_id': self.company.id, 'state': 'active',
+                'granted_by_id': granted.id, 'granted_at': fields.Datetime.now(), 'grant_reason': 'Direct ledger',
+            }),
+            # 2. res.users group_ids, role, self-linking, new user with admin, copy, default_group_ids, import load
+            lambda: target.with_user(granted).write({'group_ids': [Command.link(sys_group.id)]}),
+            lambda: target.with_user(granted).sudo().write({'group_ids': [Command.link(full_group.id)]}),
+            lambda: target.with_user(granted).write({'group_ids': [Command.link(erp_group.id)]}),
+            lambda: granted.with_user(granted).write({'group_ids': [Command.link(orig_group.id)]}),
+            lambda: granted.with_user(granted).write({'group_ids': [Command.link(sys_group.id)]}),
+            lambda: self.env['res.users'].with_user(granted).with_context(no_reset_password=True).create({
+                'name': 'Illicit Admin', 'login': 'illicit.admin.create',
+                'company_id': self.company.id, 'company_ids': [Command.set(self.company.ids)],
+                'group_ids': [Command.set([sys_group.id])],
+            }),
+            lambda: self.env['res.users'].with_user(granted).with_context(
+                no_reset_password=True, default_group_ids=[Command.set([sys_group.id])],
+            ).create({'name': 'Default Admin', 'login': 'default.admin.create'}),
+            lambda: self.admin.with_user(granted).copy({'login': 'copied.original.admin'}),
+            # 3. res.groups membership & implied_ids tampering
+            lambda: sys_group.with_user(granted).write({'user_ids': [Command.link(target.id)]}),
+            lambda: full_group.with_user(granted).sudo().write({'user_ids': [Command.link(target.id)]}),
+            lambda: user_group.with_user(granted).sudo().write({'implied_ids': [Command.link(sys_group.id)]}),
+            lambda: self.env['res.groups'].with_user(granted).create({'name': 'New Group'}),
+            # 4. Original admin & technical escalation vectors
+            lambda: self.admin.with_user(granted).write({'email': 'hijack@example.invalid'}),
+            lambda: self.admin.partner_id.with_user(granted).write({'email': 'hijack@example.invalid'}),
+            lambda: self.admin.with_user(granted)._change_password('Hijacked-2026!'),
+            lambda: self.admin.with_user(granted).action_reset_password(),
+            lambda: self.env['ir.actions.server'].with_user(granted).create({
+                'name': 'Illicit Python', 'model_id': self.env['ir.model']._get_id('res.users'), 'state': 'code', 'code': 'pass',
+            }),
+            lambda: self.env['ir.access'].with_user(granted).create({
+                'name': 'Illicit ACL', 'model_id': self.env['ir.model']._get_id('tp.admin.delegation'), 'operation': 'crud',
+            }),
+            lambda: self.env.ref('base.user_admin').env['ir.model.data'].with_user(granted).search([
+                ('module', '=', 'base'), ('name', '=', 'user_admin'),
+            ]).write({'res_id': granted.id}),
+            lambda: self.env['ir.module.module'].with_user(granted).search([('name', '=', 'tp_admin_delegation')]).button_immediate_uninstall(),
+            lambda: self.env['ir.config_parameter'].with_user(granted).sudo().set_param('database.secret', 'tampered'),
         ]
-        for operation in attempts:
-            with self.assertRaises(AccessError), self.env.cr.savepoint():
-                operation()
+        for attempt in attempts:
+            with self.assertRaises((AccessError, UserError)), self.env.cr.savepoint():
+                attempt()
 
-    def test_native_reauth_required_and_delegate_cannot_grant(self):
-        wizard = self.env['tp.admin.delegation.wizard'].with_user(self.admin).create({
-            'employee_id': self.employees[0].id, 'operation': 'grant', 'reason': 'Synthetic authenticated action'})
-        with self.assertRaises(UserError):
-            wizard.action_apply()
-        self.assertFalse(self.actor()._tp_has_admin_delegation())
-        with self.assertRaises(AccessError):
-            self.employees[0].with_user(self.users[0]).action_tp_grant_admin()
+        # Meanwhile, Granted Admin CAN assign normal business groups to normal employees!
+        proj_user = self.env.ref('project.group_project_user')
+        target.with_user(granted).write({'group_ids': [Command.link(proj_user.id)]})
+        self.assertTrue(target.has_group('project.group_project_user'))
 
-    def test_identity_context_defaults_cannot_bypass_create_guards(self):
-        self.grant()
-        actor_env = self.env(user=self.users[0], su=True)
-        attempts = [
-            lambda: actor_env['hr.version'].with_context(default_employee_id=self.employees[0].id).create({
-                'department_id': self.departments[1].id, 'date_version': fields.Date.add(fields.Date.today(), days=1)}),
-            lambda: actor_env['resource.resource'].with_context(default_user_id=self.users[0].id).create({'name': 'Synthetic identity clone'}),
-            lambda: actor_env['hr.employee'].with_context(default_department_id=self.departments[0].id).create({
-                'name': 'Synthetic own department clone', 'company_id': self.company.id}),
-        ]
-        for key, value in [('user_id', self.users[0].id), ('resource_id', self.employees[0].resource_id.id),
-                           ('current_version_id', self.employees[0].current_version_id.id),
-                           ('work_contact_id', self.admin.partner_id.id)]:
-            attempts.append(lambda key=key, value=value: actor_env['hr.employee'].with_context(**{'default_' + key: value}).create({
-                'name': 'Synthetic identity clone', 'company_id': self.company.id, 'department_id': self.departments[1].id}))
-        for operation in attempts:
-            with self.assertRaises(AccessError), self.env.cr.savepoint():
-                operation()
+    def test_last_original_admin_protection_and_idempotent_migration(self):
+        orig_group = self.env.ref('tp_admin_delegation.group_original_admin')
+        with self.assertRaises(UserError), self.env.cr.savepoint():
+            self.admin.with_user(self.admin).write({'group_ids': [Command.unlink(orig_group.id)]})
 
-    def test_authority_default_subject_receives_scope_fence(self):
-        self.grant()
-        self.env.cr.execute('SELECT tp_admin_scope_revision FROM res_users WHERE id=%s', [self.users[0].id])
-        before = self.env.cr.fetchone()[0]
-        self.env['tp.report.assignment'].with_context(default_user_id=self.users[0].id).create({
-            'name': 'Synthetic default subject responsibility', 'company_id': self.company.id,
-            'department_id': self.departments[1].id, 'capability': 'read', 'reason': 'Synthetic scope fence',
-        })
-        self.env.cr.execute('SELECT tp_admin_scope_revision FROM res_users WHERE id=%s', [self.users[0].id])
-        self.assertGreater(self.env.cr.fetchone()[0], before)
+        # Simulate legacy active row without group_full_admin and run migration twice.
+        full_group = self.env.ref('tp_admin_delegation.group_full_admin')
+        self.grant(self.users[2])
+        self.users[2].with_user(self.admin).write({'group_ids': [Command.unlink(full_group.id)]})
+        self.assertFalse(self.users[2].has_group('base.group_system'))
 
-    def test_reporting_responsibility_protects_department_and_unknown_closes_scope(self):
-        self.grant()
-        assignment = self.env['tp.report.assignment'].create({
-            'name': 'Synthetic report read responsibility', 'user_id': self.users[0].id,
-            'capability': 'read', 'company_id': self.company.id,
-            'department_id': self.departments[1].id, 'reason': 'Synthetic prior business assignment',
-        })
-        self.assertFalse(self.actor()._tp_delegated_other_department(self.company, self.departments[1]))
-        self.assertTrue(self.actor()._tp_delegated_other_department(self.company, self.departments[2]))
-        assignment.department_id = False
-        self.assertFalse(self.actor()._tp_delegated_other_department(self.company, self.departments[2]))
-        with self.assertRaises(AccessError):
-            assignment.with_user(self.users[0]).sudo().write({'department_id': self.departments[2].id})
+        first = self.env['tp.admin.delegation']._migrate_admin_full_001()
+        self.assertIn(self.users[2].id, first['migrated_user_ids'])
+        self.assertTrue(self.users[2].has_group('base.group_system'))
 
-    def test_account_target_scope_and_privileged_identity_protection(self):
-        self.grant()
-        actor = self.users[0]
-        other = self.employees[1].with_user(actor)
-        self.assertEqual(other._tp_delegated_account_check(existing=True).id, other.id)
-        with self.assertRaises(AccessError):
-            self.employees[0].with_user(actor)._tp_delegated_account_check(existing=True)
-        self.grant(self.users[1])
-        with self.assertRaises(AccessError):
-            other._tp_delegated_account_check(existing=True)
-
-    def test_account_reset_lock_scope_rechecked_after_revoke(self):
-        self.grant()
-        actor = self.users[0]
-        target = self.employees[1]
-        wizard = self.env['tp.hr.account.wizard'].with_user(actor).create({
-            'employee_id': target.id, 'expected_user_id': target.user_id.id, 'reason': 'Synthetic account lock'})
-        wizard.action_lock()
-        self.assertFalse(target.user_id.active)
-        wizard.action_unlock()
-        self.assertTrue(target.user_id.active)
-        with patch.object(type(wizard), '_require_recent_identity', return_value=None):
-            self.assertTrue(wizard.action_set_password('Synthetic-Strong-New-2026', 'Synthetic-Strong-New-2026'))
-        self.grant(operation='revoke')
-        with self.assertRaises(AccessError):
-            wizard.action_lock()
-
-    def test_native_navigation_uses_scoped_lists_without_system_tools(self):
-        menus = self.env['ir.ui.menu'].with_user(self.users[0])
-        before = menus.load_menus(False)
-        self.grant()
-        delegated = menus.load_menus(False)
-        expected = {
-            'tp_hr_workspace.menu_hr': 'tp_hr_workspace.action_employees',
-            'tp_kd_workspace.menu_kd': 'tp_kd_workspace.action_projects',
-            'tp_reporting.menu_root': 'tp_reporting.action_personal',
-            'tp_equipment.menu_root': 'tp_equipment.action_equipment',
-        }
-        for menu_xmlid, action_xmlid in expected.items():
-            menu_id = self.env.ref(menu_xmlid).id
-            if menu_xmlid == 'tp_equipment.menu_root' and not self.env['maintenance.equipment'].with_user(self.users[0]).has_access('read'):
-                self.assertNotIn(menu_id, delegated['root']['children'])
-                continue
-            self.assertIn(menu_id, delegated['root']['children'])
-            self.assertEqual(delegated[menu_id]['action_id'], self.env.ref(action_xmlid).id)
-        for xmlid in ('base.menu_administration', 'base.menu_management'):
-            menu_id = self.env.ref(xmlid).id
-            self.assertEqual(menu_id in delegated, menu_id in before)
-        self.grant(operation='revoke')
-        self.assertEqual(menus.load_menus(False), before)
-
-    def test_team_and_department_source_changes_fence_scope_and_deny_delegate(self):
-        team = self.env['crm.team'].create({
-            'name': 'Synthetic source team', 'company_id': self.company.id,
-            'kd_department_id': self.departments[1].id,
-            'user_id': self.users[1].id,
-        })
-        self.env['crm.team.member'].create({'crm_team_id': team.id, 'user_id': self.users[0].id})
-        self.grant()
-        self.grant(self.users[1])
-        self.assertFalse(self.actor()._tp_delegated_other_department(self.company, self.departments[1]))
-        self.assertFalse(self.actor(self.users[1])._tp_delegated_other_department(self.company, self.departments[1]))
-        self.env.cr.execute('SELECT tp_admin_scope_revision FROM res_users WHERE id=%s', [self.users[0].id])
-        before = self.env.cr.fetchone()[0]
-        team.write({'kd_department_id': self.departments[2].id})
-        self.env.cr.execute('SELECT tp_admin_scope_revision FROM res_users WHERE id=%s', [self.users[0].id])
-        after_team = self.env.cr.fetchone()[0]
-        self.assertGreater(after_team, before)
-        self.assertFalse(self.actor()._tp_delegated_other_department(self.company, self.departments[2]))
-        self.assertFalse(self.actor(self.users[1])._tp_delegated_other_department(self.company, self.departments[2]))
-        self.departments[2].write({'active': False})
-        self.env.cr.execute('SELECT tp_admin_scope_revision FROM res_users WHERE id=%s', [self.users[0].id])
-        self.assertGreater(self.env.cr.fetchone()[0], after_team)
-        attempts = [
-            lambda: team.with_user(self.users[0]).sudo().write({'kd_department_id': self.departments[1].id}),
-            lambda: team.with_user(self.users[0]).sudo().write({'member_ids': [Command.clear()]}),
-            lambda: team.with_user(self.users[0]).sudo().unlink(),
-            lambda: self.departments[2].with_user(self.users[0]).sudo().write({'active': True}),
-        ]
-        for operation in attempts:
-            with self.assertRaises(AccessError), self.env.cr.savepoint():
-                operation()
+        second = self.env['tp.admin.delegation']._migrate_admin_full_001()
+        self.assertEqual(second['migrated_user_ids'], [])
+        self.assertIn(self.users[2].id, second['already_full_user_ids'])

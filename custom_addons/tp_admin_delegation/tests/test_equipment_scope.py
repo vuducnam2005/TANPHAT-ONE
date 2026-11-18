@@ -1,266 +1,78 @@
-import base64
-import uuid
-
 from odoo import Command, fields
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import AccessError
 from odoo.tests import TransactionCase, tagged
-
-from odoo.addons.tp_admin_delegation.models.equipment_scope import _free_stock_ids
 
 
 @tagged('post_install', '-at_install')
-class TestEquipmentDelegation(TransactionCase):
+class TestFullAdminEquipmentScope(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.company = cls.env.company
         cls.main = cls.env.ref('base.user_admin')
+        cls.env['tp.admin.delegation']._migrate_admin_full_001()
         cls.departments = cls.env['hr.department'].create([
             {'name': name, 'company_id': cls.company.id}
-            for name in ('Synthetic Equipment Own', 'Synthetic Equipment Other')
+            for name in ('Synthetic Equip Own', 'Synthetic Equip Other')
         ])
         cls.user = cls.env['res.users'].with_context(no_reset_password=True).create({
-            'name': 'Synthetic equipment delegate', 'login': 'synthetic.equipment.delegate',
-            'company_id': cls.company.id, 'company_ids': [Command.set(cls.company.ids)],
-            # Delegation preserves the existing export permission.
-            'group_ids': [Command.set([cls.env.ref(xmlid).id for xmlid in (
-                'base.group_user', 'base.group_allow_export')])],
+            'name': 'Synthetic Equipment Full Admin',
+            'login': 'synthetic.equipment.fulladmin',
+            'company_id': cls.company.id,
+            'company_ids': [Command.set(cls.company.ids)],
+            'group_ids': [Command.set([cls.env.ref('base.group_user').id])],
         })
         cls.employee = cls.env['hr.employee'].create({
-            'name': cls.user.name, 'company_id': cls.company.id, 'department_id': cls.departments[0].id,
-            'user_id': cls.user.id, 'date_version': fields.Date.today(),
+            'name': cls.user.name,
+            'company_id': cls.company.id,
+            'department_id': cls.departments[0].id,
+            'user_id': cls.user.id,
+            'date_version': fields.Date.today(),
         })
         cls.other_employee = cls.env['hr.employee'].create({
-            'name': 'Synthetic equipment holder', 'company_id': cls.company.id,
-            'department_id': cls.departments[1].id, 'date_version': fields.Date.today(),
+            'name': 'Synthetic Other Holder',
+            'company_id': cls.company.id,
+            'department_id': cls.departments[1].id,
+            'date_version': fields.Date.today(),
         })
-        cls.category = cls.env['maintenance.equipment.category'].create({'name': 'Synthetic equipment category'})
+        cls.category = cls.env['maintenance.equipment.category'].create({'name': 'Synthetic Category'})
         cls.equipment = cls.env['maintenance.equipment'].create([
-            {'name': name, 'company_id': cls.company.id, 'category_id': cls.category.id,
-             'tp_custody': 'employee', 'tp_employee_id': employee.id, 'tp_technical_state': 'good'}
-            for name, employee in [('Synthetic own device', cls.employee), ('Synthetic other device', cls.other_employee)]
+            {
+                'name': name,
+                'company_id': cls.company.id,
+                'category_id': cls.category.id,
+                'tp_custody': 'employee',
+                'tp_employee_id': emp.id,
+                'tp_technical_state': 'good',
+            }
+            for name, emp in [('Own Dept Machine', cls.employee), ('Other Dept Machine', cls.other_employee)]
         ])
         cls.equipment.action_tp_register()
         cls.stock = cls.env['maintenance.equipment'].create({
-            'name': 'Synthetic stock', 'company_id': cls.company.id, 'category_id': cls.category.id,
+            'name': 'Shared Stock Machine',
+            'company_id': cls.company.id,
+            'category_id': cls.category.id,
         })
+        cls.stock.action_tp_register()
 
     def grant(self, operation='grant'):
         self.env['tp.admin.delegation'].with_user(self.main)._change(
-            self.user, self.company, operation, 'Synthetic equipment authority')
+            self.user, self.company, operation, 'Synthetic equipment full admin',
+        )
 
-    def test_read_count_export_and_revoke_preserve_own_scope(self):
-        own, other = self.equipment.with_user(self.user)
-        with self.assertRaises(AccessError):
-            other.read(['name'])
-        self.grant()
-        model = self.env['maintenance.equipment'].with_user(self.user)
-        domain = [('id', 'in', (self.equipment | self.stock).ids)]
-        self.assertEqual(model.search(domain), other)
-        self.assertEqual(model.search_count(domain), 1)
-        self.assertEqual(other.export_data(['name'])['datas'], [[other.name]])
-        for record in own | self.stock.with_user(self.user):
-            with self.assertRaises(AccessError):
-                record.read(['name'])
-        self.grant('revoke')
-        with self.assertRaises(AccessError):
-            other.read(['name'])
-
-    def test_dashboard_summary_and_outside_proposal_share_scope(self):
-        proposals = self.env['tp.equipment.proposal'].with_user(self.main).create([
-            {'title': 'Synthetic outside need', 'company_id': self.company.id,
-             'requester_employee_id': self.other_employee.id, 'requester_department_id': self.departments[1].id},
-            {'title': 'Synthetic own need', 'company_id': self.company.id,
-             'requester_employee_id': self.employee.id, 'requester_department_id': self.departments[0].id},
-        ])
-        dashboard = self.env['tp.equipment.dashboard'].with_user(self.user)
-        with self.assertRaises(AccessError):
-            dashboard.get_dashboard()
-        self.grant()
-        data = dashboard.get_dashboard()
-        # Held outside machines plus free company stock (picker rows); never the own device.
-        free = self.env['maintenance.equipment'].browse(_free_stock_ids(self.env(user=self.user)))
-        self.assertEqual(data['scope_meta']['all_records'], 1 + len(free.filtered('tp_code')))
-        self.assertNotIn(self.departments[0].id, [row['id'] for row in data['options']['departments']])
-        self.assertNotIn('pending_import', [row['key'] for row in data['quality']])
-        with self.assertRaises(AccessError):
-            dashboard.open_ui_detail('pending_import')
-        self.assertTrue(data['delegated_scope'])
-        self.assertTrue(self.env['maintenance.equipment'].with_user(self.user).tp_main_summary())
-        model = self.env['tp.equipment.proposal'].with_user(self.user)
-        self.assertEqual(model.search([('id', 'in', proposals.ids)]), proposals[0])
-        with self.assertRaises(AccessError):
-            proposals[1].with_user(self.user).read(['title'])
-        with self.assertRaises(AccessError):
-            proposals[0].with_user(self.user).write({'title': 'Synthetic change'})
-        with self.assertRaises(AccessError):
-            model.create({'title': 'Synthetic delegated create', 'company_id': self.company.id})
-        self.grant('revoke')
-        with self.assertRaises(AccessError):
-            dashboard.get_dashboard()
-
-    def test_metadata_sudo_parent_and_bulk_cannot_change_own_or_stock(self):
-        self.grant()
-        own, other = self.equipment.with_user(self.user)
-        other.write({'tp_brand': 'Synthetic brand'})
-        self.assertEqual(other.tp_brand, 'Synthetic brand')
-        with self.assertRaises((AccessError, UserError)):
-            other.write({'tp_employee_id': self.employee.id})
-        with self.assertRaises(AccessError):
-            own.sudo().write({'tp_brand': 'Escalated'})
-        with self.assertRaises(AccessError):
-            (own | other).write({'tp_brand': 'Mixed bulk'})
-        self.assertEqual(other.tp_brand, 'Synthetic brand')
-        child = self.env['maintenance.equipment'].create({
-            'name': 'Synthetic mixed source', 'company_id': self.company.id,
-            'tp_custody': 'employee', 'tp_employee_id': self.other_employee.id, 'tp_parent_id': own.id,
-        })
-        with self.assertRaises(AccessError):
-            child.with_user(self.user).read(['name'])
-
-    def test_repair_workflow_child_scope_and_private_stream(self):
-        self.grant()
-        other = self.equipment[1].with_user(self.user)
-        meter = self.env['tp.equipment.meter'].with_user(self.user).create({
-            'equipment_id': other.id, 'value': 10,
-        })
-        with self.assertRaises(AccessError):
-            meter.write({'equipment_id': self.equipment[0].id})
-        request = self.env['maintenance.request'].with_user(self.user).create({
-            'name': 'Synthetic repair', 'company_id': self.company.id, 'equipment_id': other.id,
-        })
-        self.assertFalse(request.employee_id)
-        with self.assertRaises(AccessError):
-            request.write({'employee_id': self.employee.id})
-        request.action_tp_start()
-        request.write({'tp_result': 'fixed', 'tp_state_after': 'good'})
-        request.action_tp_done()
-        self.assertEqual(request.tp_state, 'done')
-        self.assertTrue(other.message_ids)
-        with self.assertRaises(AccessError):
-            self.equipment[0].with_user(self.user).sudo().message_post(body='Own source')
-        with self.assertRaises(AccessError), self.env.cr.savepoint():
-            self.env['mail.message'].with_user(self.user).with_context(_tp_equipment_post=True).create({
-                'model': 'maintenance.equipment', 'res_id': other.id, 'body': 'Forged direct log',
-            })
-        attachment = self.env['ir.attachment'].create({
-            'name': 'synthetic-private.txt', 'res_model': 'maintenance.equipment', 'res_id': other.id,
-            'datas': base64.b64encode(b'synthetic private equipment'),
-        })
-        self.assertEqual(attachment.with_user(self.user).read(['name'])[0]['name'], 'synthetic-private.txt')
-        found = self.env['ir.binary'].with_user(self.user)._find_record(res_id=attachment.id)
-        self.assertEqual(found.id, attachment.id)
-        self.grant('revoke')
-        with self.assertRaises(AccessError):
-            self.env['ir.binary'].with_user(self.user)._find_record(res_id=attachment.id)
-
-    def test_holder_transfer_closes_previously_read_equipment_scope(self):
-        self.grant()
-        other = self.equipment[1].with_user(self.user)
-        self.assertTrue(other.has_access('write'))
-        self.assertEqual(other.tp_employee_id.department_id, self.departments[1])
-        transfer = self.env['tp.hr.role.wizard'].with_user(self.main).create({
-            'employee_id': self.other_employee.id, 'change_kind': 'transfer',
-            'target_department_id': self.departments[0].id, 'target_role': 'staff',
-            'reason': 'Synthetic equipment holder transfer', 'acknowledge_handover': True,
-        })
-        transfer.action_preview()
-        transfer.action_apply()
-        with self.assertRaises(AccessError):
-            other.write({'tp_brand': 'After holder transfer'})
-        with self.assertRaises(AccessError):
-            self.env['tp.equipment.meter'].with_user(self.user).create({'equipment_id': other.id, 'value': 20})
-        self.assertFalse(self.equipment[1].tp_brand)
-
-    # ------------------------------------------------------------------ slice 3: company stock handover
-    def free_machine(self, name):
-        machine = self.env['maintenance.equipment'].create({
-            'name': name, 'company_id': self.company.id, 'category_id': self.category.id,
-            'tp_technical_state': 'good',
-        })
-        machine.action_tp_register()
-        return machine
-
-    def payload(self, mode, employee, machines=(), old=None, new=None, key=None, reason=False):
-        involved = list(machines) + [machine for machine in (old, new) if machine]
-        return {
-            'mode': mode, 'request_key': key or uuid.uuid4().hex, 'employee_id': employee.id if employee else False,
-            'equipment_ids': [machine.id for machine in machines],
-            'old_equipment_id': old.id if old else False, 'new_equipment_id': new.id if new else False,
-            'reason': reason, 'confirm_unverified': True,
-            'expected_versions': {str(machine.id): machine.tp_version for machine in involved},
-        }
-
-    def test_free_stock_is_a_read_only_picker(self):
-        free = self.free_machine('Synthetic free stock')
-        attachment = self.env['ir.attachment'].create({
-            'name': 'synthetic-stock.txt', 'res_model': 'maintenance.equipment', 'res_id': free.id,
-            'datas': base64.b64encode(b'synthetic stock file'),
-        })
-        picker = free.with_user(self.user)
-        with self.assertRaises(AccessError):
-            picker.read(['name'])
-        self.grant()
-        self.assertEqual(picker.read(['name'])[0]['name'], free.name)
-        self.assertFalse(picker.has_access('write'))
-        with self.assertRaises(AccessError):
-            picker.write({'tp_brand': 'Stock edit'})
-        with self.assertRaises(AccessError):
-            attachment.with_user(self.user).read(['name'])
-        with self.assertRaises(AccessError):
-            picker.message_post(body='Stock chatter')
-        with self.assertRaises(AccessError):
-            picker.action_tp_print_labels()
-        with self.assertRaises(AccessError):
-            picker.action_tp_quick_swap()
-        self.assertEqual(picker.action_tp_quick_assign()['context']['default_mode'], 'assign')
-        self.assertNotIn(self.stock, self.env['maintenance.equipment'].with_user(self.user).search(
-            [('id', '=', self.stock.id)]))
-        self.grant('revoke')
-        with self.assertRaises(AccessError):
-            picker.read(['name'])
-
-    def test_delegated_assign_swap_return_only_outside(self):
-        first, second = self.free_machine('Synthetic free A'), self.free_machine('Synthetic free B')
+    def test_full_admin_manages_all_equipment_including_own_department_and_stock(self):
         model = self.env['maintenance.equipment'].with_user(self.user)
         with self.assertRaises(AccessError):
-            model.tp_quick_action(self.payload('assign', self.other_employee, [first]))
-        self.grant()
-        # Own department recipient and own held machine keep the baseline.
-        with self.assertRaises(AccessError):
-            model.tp_quick_action(self.payload('assign', self.employee, [first]))
-        with self.assertRaises(AccessError):
-            model.tp_quick_action(self.payload('return', self.employee, [self.equipment[0]], reason='other'))
-        self.assertEqual((first.tp_custody, self.equipment[0].tp_employee_id), ('stock', self.employee))
-        # Stale version changes nothing.
-        stale = self.payload('assign', self.other_employee, [first])
-        stale['expected_versions'][str(first.id)] -= 1
-        with self.assertRaises(UserError):
-            model.tp_quick_action(stale)
-        self.assertEqual(first.tp_custody, 'stock')
-        request = self.payload('assign', self.other_employee, [first])
-        result = model.tp_quick_action(request)
-        self.assertEqual((first.tp_custody, first.tp_employee_id), ('employee', self.other_employee))
-        moves = self.env['tp.equipment.move'].browse(result['move_ids'])
-        self.assertEqual(moves.create_uid | moves.done_by_id, self.user)
-        self.assertEqual(model.tp_quick_action(request)['move_ids'], result['move_ids'])
-        # A machine already taken is never assigned twice.
-        with self.assertRaises(UserError):
-            model.tp_quick_action(self.payload('assign', self.other_employee, [first]))
-        # A failed swap leaves both machines; a valid one returns A and assigns B together.
-        with self.assertRaises((AccessError, UserError)):
-            model.tp_quick_action(self.payload('swap', self.other_employee, old=first, new=self.equipment[0]))
-        self.assertEqual((first.tp_employee_id, self.equipment[0].tp_employee_id), (self.other_employee, self.employee))
-        model.tp_quick_action(self.payload('swap', self.other_employee, old=first, new=second))
-        self.assertEqual((first.tp_custody, first.tp_employee_id), ('stock', self.env['hr.employee']))
-        self.assertEqual(second.tp_employee_id, self.other_employee)
-        popup = self.env['tp.equipment.quick.action'].with_user(self.user).with_context(
-            default_mode='return', default_employee_id=self.other_employee.id,
-            default_return_equipment_ids=[second.id]).create({'reason': 'other'})
-        popup.action_confirm()
-        self.assertEqual((second.tp_custody, second.tp_employee_id), ('stock', self.env['hr.employee']))
+            self.equipment[0].with_user(self.user).read(['name'])
+
+        self.grant('grant')
+        all_target = self.equipment | self.stock
+        self.assertEqual(set(model.search([('id', 'in', all_target.ids)]).ids), set(all_target.ids))
+        for rec in all_target:
+            self.assertTrue(rec.with_user(self.user).has_access('write'))
+        dash = self.env['tp.equipment.dashboard'].with_user(self.user).get_dashboard()
+        self.assertFalse(dash.get('delegated_scope'))
+
         self.grant('revoke')
         with self.assertRaises(AccessError):
-            model.tp_quick_action(self.payload('assign', self.other_employee, [first]))
-        with self.assertRaises(AccessError):
-            popup.read(['mode'])
+            self.equipment[0].with_user(self.user).read(['name'])

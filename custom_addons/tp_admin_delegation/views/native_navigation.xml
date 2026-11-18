@@ -5,20 +5,22 @@
         <field name="inherit_id" ref="tp_hr_workspace.employee_form"/>
         <field name="priority">115</field>
         <field name="arch" type="xml">
-            <xpath expr="//page[@name='page_account']" position="inside"><field name="tp_can_manage_account" invisible="1"/></xpath>
+            <xpath expr="//page[@name='page_account']" position="inside">
+                <field name="tp_can_manage_account" invisible="1"/>
+            </xpath>
             <xpath expr="//button[@name='action_open_account_dialog']" position="attributes">
-                <attribute name="groups"/>
-                <attribute name="invisible">not tp_can_manage_account</attribute>
+                <attribute name="groups">base.group_system</attribute>
+                <attribute name="invisible">not tp_can_manage_account and not user_id</attribute>
             </xpath>
             <xpath expr="//div[hasclass('o_tp_hr_account_empty')]/button[@name='action_open_account_dialog']" position="attributes">
-                <attribute name="groups"/>
+                <attribute name="groups">base.group_system</attribute>
                 <attribute name="invisible">not tp_can_manage_account</attribute>
             </xpath>
-            <xpath expr="//page[@name='page_account']//div[hasclass('o_tp_hr_account_actions')]" position="after">
-                <div class="d-flex flex-wrap gap-2" groups="!base.group_system" invisible="not user_id or not tp_can_manage_account">
-                    <button name="action_open_account_dialog" type="object" string="Khóa / mở tài khoản" class="btn btn-outline-secondary"/>
-                    <button name="action_reset_user_password" type="object" string="Đặt lại mật khẩu" class="btn btn-outline-secondary"/>
-                </div>
+            <xpath expr="//page[@name='page_account']//div[hasclass('o_tp_hr_account_actions')]/button[@name='action_open_account_dialog']" position="attributes">
+                <attribute name="invisible">not tp_can_manage_account</attribute>
+            </xpath>
+            <xpath expr="//page[@name='page_account']//div[hasclass('o_tp_hr_account_actions')]/button[@name='action_reset_user_password']" position="attributes">
+                <attribute name="invisible">not tp_can_manage_account</attribute>
             </xpath>
         </field>
     </record>
@@ -27,8 +29,14 @@
         <field name="model">tp.hr.account.wizard</field>
         <field name="inherit_id" ref="tp_hr_workspace.view_tp_hr_account_wizard_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//button[@name='action_prepare_credentials']" position="attributes"><attribute name="groups"/><attribute name="invisible">not is_admin</attribute></xpath>
-            <xpath expr="//div[@groups='base.group_system']" position="attributes"><attribute name="groups"/><attribute name="invisible">not is_linked or not is_admin</attribute></xpath>
+            <xpath expr="//button[@name='action_prepare_credentials']" position="attributes">
+                <attribute name="groups">base.group_system</attribute>
+                <attribute name="invisible">not is_admin</attribute>
+            </xpath>
+            <xpath expr="//div[@groups='base.group_system']" position="attributes">
+                <attribute name="groups">base.group_system</attribute>
+                <attribute name="invisible">not is_linked or not is_admin</attribute>
+            </xpath>
         </field>
     </record>
 </odoo>
