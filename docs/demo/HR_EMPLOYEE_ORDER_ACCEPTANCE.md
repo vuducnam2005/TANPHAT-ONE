@@ -6,7 +6,7 @@ Nguồn: [DEC-044/053/054](../DECISIONS.md), [quy chuẩn bộ lọc](../ui/TP_T
 
 ## Bản sửa hiện hành — CHG-20261118-026
 
-HR `20.0.1.13.1` đã áp18069; PC server chờ gói này được push/deploy. Người dùng yêu cầu bỏ sáu chấm, kéo trực tiếp từ hàng. Click thường vẫn mở hồ sơ; checkbox/nút/link/input không khởi động kéo. Sort/filter và backend quyền/company/department/anchors giữ như gói trước.
+HR `20.0.1.13.1` đã áp18069 và PCserver, code b9c3040c/checksum15/15/upgrade0ERROR; xem giao bản027 cuối tài liệu. Người dùng yêu cầu bỏ sáu chấm, kéo trực tiếp từ hàng. Click thường vẫn mở hồ sơ; checkbox/nút/link/input không khởi động kéo. Sort/filter và backend quyền/company/department/anchors giữ như gói trước.
 
 Lỗi đã tái hiện: native draggable bật `body.pe-none`; khi thả trên placeholder, `elementsFromPoint` không có table hoặc dòng nguồn, khiến nhánh cũ bỏ RPC âm thầm và hàng về cũ. Bản sửa dùng tọa độ cuối của pointerup trong bounds phòng nguồn, cùng kiểm group/parent native. Server log60phút không có reorder xác nhận lần kéo trước chưa tới backend.
 
@@ -61,3 +61,11 @@ Không chạy18079; không tạo actor/dữ liệu giả, không thử ghi/reord
 - Các ca NOT_RUN nêu trên vẫn giữ: đầy đủA/B thật/MFA/multiworker/race/HOOT/ghi reorder rồi reload ởDB đang dùng. Nghiệm thu trực quan và nghiệp vụ người dùng riêng. Bản sửa đã giao; người dùng tự kiểm hai thiết bị và thao tác thứ tự thực tế vào thời điểm phù hợp.
 
 Kiểm assets sau deploy (CHG-20261118-025): native `web.assets_backend` biên dịch trong READ ONLY **561 CSS / 1.786 JS / 75 khối XML**, không lỗi CSS, không lưu asset attachment. Đây là kiểm biên dịch bundle thực; full browser login/HOOT và các ca NOT_RUN vẫn giữ.
+
+## Giao bản sửa kéo cả hàng — CHG-20261118-027
+
+- Application commit `b9c3040cee006af788c85b0059daf08f4c7661db` đã push `origin/main`; PC server nhận đúng15/15checksum. Runtime18069/PCserver: HR20.0.1.13.1, chỉ upgradeHR exit0/0ERROR. AUTH/admin không đổi.
+- Backup local `.local/hr-order-row/backup-20261118T163542`: dump10.049.127B, filestore294.237.435B/1.027file, source-config321.909B, restore15.600mục; SHA256. PC `C:/TANPHAT-backups/hr-order-row/hr-row026-20261118T164222`: dump9.707.147B, filestore32.133.010B/614archiveentry, source-config2.158.233B, restore15.600mục; SHA256. Snapshot từng môi trường chỉ versionHR đổi; sequence, roster, user/group/ledger/equipment/days/baseURL giữ. Không so datasetlocal vớiserver.
+- Native browser regression/VM/backend12/12 và realORM7checks trong rollback PASS. READONLY probe local/server6/6; candidate normalized7/7khớpcommit. Local assets561CSS/1786JS/75XML (6.443.819JSbyte); server561/1786/75 (6.443.990JSbyte), css_errors=[]; biên dịch trong bộ nhớ không lưu attachment. AnonymousHTTP/login local/public desktop1440/mobile390:11/11PASS,0JSerror. Public `https://hybrid-send-ready-ballot.trycloudflare.com`; không restarttunnel.
+- Khởi động18069 bằng phiên tiến trình Odoo duy trì sau khi helper background kết thúc; listener và smoke cuối đạt. Runtimeconfig `.local/hr-order-row/candidate-20261118T163523/runtime.conf`; giữ cùng DB/filestore. Gói source cô lập không nạp WIP attendance/reporting/sidebar/branding; checkpoint gốc giữ, workflow026/027 kiểm trong snapshot sạch đúng scope.
+- Full authenticated browser/HOOT/persist qua transaction commit/máy khác/race chưa chạy. Không fixture/login/đổi phòng hoặc lưu reorder thử trên DB đang dùng; realORM thử luôn rollback và freshcursor xác nhận nguyên trạng. Nghiệm thu người dùng riêng. Đây là tài liệu xác nhận giao bản, đồng bộ source không restart/upgrade tiếp.
