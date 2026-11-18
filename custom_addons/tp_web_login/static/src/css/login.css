@@ -63,8 +63,8 @@ body:has(.tp-native-login),
 }
 
 .tp-native-login .tp-native-wordmark,
-.tp-native-login .tp-auth-intro,
-.tp-native-login .tp-auth-identity-footer {
+.tp-native-login .tp-auth-main,
+.tp-native-login .tp-auth-copyright {
     position: relative;
     z-index: 1;
 }
@@ -120,13 +120,19 @@ body:has(.tp-native-login),
     color: #E6F1FC;
 }
 
+.tp-native-login .tp-auth-main {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
 .tp-native-login .tp-auth-intro h2 {
     font-size: clamp(28px, 2.7vw, 36px);
     line-height: 1.18;
     letter-spacing: -0.025em;
     font-weight: 700;
     color: #fff;
-    margin: 0 0 14px;
+    margin: 0;
 }
 
 .tp-native-login .tp-auth-intro p {
@@ -183,12 +189,6 @@ body:has(.tp-native-login),
     white-space: nowrap;
 }
 
-.tp-native-login .tp-auth-identity-footer {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-
 .tp-native-login .tp-auth-copyright {
     margin: 0;
     font-size: 12.5px;
@@ -196,6 +196,24 @@ body:has(.tp-native-login),
     font-weight: 400;
     color: #9EB8D4;
     text-align: left;
+}
+
+.tp-native-login .tp-auth-copyright-link,
+.tp-native-login .tp-auth-copyright-link:visited {
+    color: #E2EEFA !important;
+    font-weight: 600;
+    letter-spacing: 0.015em;
+    text-decoration: underline;
+    text-decoration-color: rgba(94, 234, 212, 0.72);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+    transition: color 160ms ease, text-decoration-color 160ms ease;
+}
+
+.tp-native-login .tp-auth-copyright-link:hover,
+.tp-native-login .tp-auth-copyright-link:focus-visible {
+    color: #5EEAD4 !important;
+    text-decoration-color: #5EEAD4;
 }
 
 .tp-native-login .tp-pillar-line {
@@ -700,8 +718,11 @@ body:has(.tp-native-login),
         margin: 0;
     }
 
+    .tp-native-login .tp-auth-main {
+        gap: 0;
+    }
+
     .tp-native-login .tp-auth-desktop-break,
-    .tp-native-login .tp-auth-intro p,
     .tp-native-login .tp-auth-pillars {
         display: none;
     }

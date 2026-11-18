@@ -20,11 +20,10 @@
                                 <span class="tp-brand-credit">Vững Vàng Hội Nhập</span>
                             </div>
                         </div>
-                        <div class="tp-auth-intro" t-translation="off">
-                            <h2>Hệ thống quản trị<br class="tp-auth-desktop-break"/> điều hành</h2>
-                            <p>Kết nối công việc.<br/>Vững bước cùng Tấn Phát.</p>
-                        </div>
-                        <div class="tp-auth-identity-footer">
+                        <div class="tp-auth-main">
+                            <div class="tp-auth-intro" t-translation="off">
+                                <h2>Hệ thống quản trị<br class="tp-auth-desktop-break"/> điều hành</h2>
+                            </div>
                             <div class="tp-auth-pillars" aria-hidden="true" t-translation="off">
                                 <div class="tp-pillar-step">
                                     <span class="tp-pillar-node">
@@ -53,8 +52,8 @@
                                     <span class="tp-pillar-label">Báo cáo</span>
                                 </div>
                             </div>
-                            <p class="tp-auth-copyright" t-translation="off">copyright @by Tadic</p>
                         </div>
+                        <p class="tp-auth-copyright" t-translation="off">copyright @<a class="tp-auth-copyright-link" href="https://tanphatjsc.com/" target="_blank" rel="noopener noreferrer">by Tadic</a></p>
                     </aside>
                     <div t-attf-class="tp-auth-panel #{login_card_classes} o_database_list">
                         <div class="card-body tp-auth-content">
