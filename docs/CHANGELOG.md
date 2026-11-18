@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-008 — HR-DELEGATE-FIX-001: hoàn tất deploy PC server, kiểm thực quyền delegate thực và URL public
+
+- Ngày 18/11/2026 (Asia/Saigon). Commit ứng dụng `edb717f9` (`tp_admin_delegation` `20.0.1.4.1`) đã push `origin/main` và triển khai lên PC server (`tp-odoo`).
+- PC server: preflight `14/14` tệp khớp baseline; backup `C:/TANPHAT-backups/admin-delegate002/s5-hdf001-20261118T102705` (dump `9.572.310`B, filestore `29.820.900`B / `597` mục, `restore-list` `15.437` dòng, `source-config` `3.059.439`B, SHA256); `-u tp_admin_delegation` exit `0` / `0` ERROR; snapshot nghiệp vụ, `ledger 1/1` và `web.base.url` giữ nguyên tuyệt đối trước/sau nâng cấp và sau kiểm trình duyệt.
+- Kiểm thực bằng quyền delegate thực trên PC server (`SET TRANSACTION READ ONLY` + `with_user`, rollback): `hr.employee` (`list` 1918, `form` 1920, `search` 1919), `tp.hr.delegated.profile.wizard`, `tp.hr.account.wizard` và `hr.employee.public` đều có `missing_field_nodes=[]` theo đúng model cha/bảng con; không còn `mobile_phone` trong XML/metadata của delegate, giữ `work_phone`; `web_search_read` trả `35` hồ sơ ngoài phòng (`0` phòng mình), `web_read_group` (`department_id`/`job_id`/`tp_account_status`/`active`) và `web_read` chi tiết đạt; chặn `read`/`search`/`export_data` trên `mobile_phone` và `default_mobile_phone` giả; Tổng quan HR `missing_contact` khớp số dòng drill-down (`work_email` + `work_phone`), chặn drill-down `mobile_phone`, XLSX không lộ điện thoại/thông tin riêng; `tp_get_my_profile` cá nhân vẫn giữ `mobile_phone` của chính mình; Admin chính và nhân viên thường giữ nguyên hành vi.
+- Kiểm trình duyệt: Playwright (`admin`, desktop `1440×900` & mobile `390×844`) đạt `13/13` trên `18069` và `13/13` trên `https://hybrid-send-ready-ballot.trycloudflare.com`, `/web/health` và `/dang-nhap` `HTTP 200`, log runtime `0` ERROR. Giới hạn ghi rõ: trình duyệt bằng phiên đăng nhập của actor delegate thật `NOT_RUN` (không có mật khẩu/cookie phiên, không reset mật khẩu hoặc tạo tài khoản giả); suite Odoo `test_hr_profile.py` `NOT_RUN` trên DB đang dùng theo DEC-051.
+
 ## CHG-20261118-007 — HR-DELEGATE-FIX-001: sửa lỗi mobile_phone trên safe view HR và khóa đường wizard/drill-down của tài khoản ủy quyền
 
 - Ngày 18/11/2026 (Asia/Saigon). `tp_admin_delegation` `20.0.1.4.0 → 20.0.1.4.1`. Xử lý lỗi `UncaughtPromiseError: "hr.employee"."mobile_phone" field is undefined` (`ListArchParser`) của tài khoản quản trị được ủy quyền không thuộc `hr.group_hr_user`.
