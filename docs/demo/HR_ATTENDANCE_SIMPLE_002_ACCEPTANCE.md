@@ -146,5 +146,5 @@ DB đang dùng).
 | F02 | PASS (E) | Admin nhập qua RPC kiểm `can(import)` |
 | F03 | PASS (E) | Chấm công: 3 mục; Quản trị chấm công: 4 mục; Cấu hình HR: 4 mục |
 | F04 | PASS | Không cấp/thu admin |
-| F05 | PASS 18069 | `.local/hr-attendance-simple002/backup-has002-20261118T133410`; PC server ghi ở CHANGELOG |
+| F05 | PASS 18069 + PC server | 18069: `.local/hr-attendance-simple002/backup-has002-20261118T133410`. PC server: `C:\TANPHAT-backups\hr-attendance-simple002\has002-20261118T141006` (dump `9.587.361`B + restore-list `15.438` mục, filestore `29.827.466`B, source-config `1.845.934`B, SHA256SUMS); `-u` exit 0 / 0 ERROR; public Playwright chỉ đọc `19/19` PASS; server chưa nhập file 09–15/11 |
 | F06 | PASS (E, R) | Như D/C ở trên; dữ liệu Excel cũ không hiện là thời gian thực |

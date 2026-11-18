@@ -306,3 +306,14 @@ Main50/public52browser-health PASS (40dashboard+10/12directory),20avatar thật,
 giữN/A/gapởacceptance,khônggánngười thật đểtest.
 
 S4 đã deploy PC server từ `cc2bfcb6`: 37/37 tệp checksum, public 40 dashboard +12 danh bạ/health đạt, 0JS/5xx. Phiên browser nhân viên/own CSV download và kỳ đã chốt có dữ liệu chưa kiểm; không dùng kết quả admin thay role đó.
+
+## HR-ATTENDANCE-SIMPLE-002 — CHG-20261118-019
+
+| Vị trí | Tiêu chí / phạm vi | Kiểm thực và còn thiếu |
+| --- | --- | --- |
+| Tổng quan chấm công / `action_dashboard` / `tp_overview` | Ngày/Tuần/Tháng, ‹ ›, chọn ngày/tháng, `Hôm nay`, `Xem ngày có dữ liệu gần nhất`; phòng ban + tên/mã (gõ 300ms); KPI/donut/cột → danh sách chi tiết cùng bộ lọc; trang 10/20/50/100; nhớ chế độ/phòng/cỡ trang, ngày luôn bắt đầu hôm nay | 18069 Playwright `33/33` + public `19/19` chỉ đọc PASS (donut = tổng nhân viên, tuần 7 cột, tháng 30 cột, 390px không tràn). Phạm vi non-admin NOT_RUN |
+| Bảng chấm công / `action_board` / `tp_sheet` | Ngày/Tuần/Tháng; phòng ban, tên/mã, trạng thái ngày (chế độ Ngày), `Xóa lọc`; trang 10/20/50/100; tổng muộn theo kỳ nguồn phủ khoảng xem; xuất file kỳ nguồn | 18069 PASS (E); scope non-admin và chặn xuất của người chỉ đọc qua ORM NOT_RUN (đã có guard) |
+| Hộp `Nhập Excel máy chấm công` (upload) | Một file, xem trước tự động; danh sách dòng cần xử lý theo loại (trùng/xung đột/thiếu ra/chưa đối chiếu/khóa) có trang; nút Nhập khóa khi đã nhập | Nhập thật 18069 qua UI PASS; không chạy trên PC server (HR nhập) |
+| Nhập dữ liệu / `action_import` / `tp.hr.attendance.batch` list/search | Tìm Lô/tệp, trạng thái, kỳ từ, người áp dụng; filter `Có xung đột`, `Có dòng chưa đối chiếu`; native pager | Main list PASS; filter nhiều lô NOT_RUN riêng |
+| Nguồn dữ liệu chấm công / `action_sources` / `tp_sources_overview` | Thẻ Excel/API (trạng thái thật, mốc dữ liệu), checklist 9 mục, lịch sử nhập gần nhất; không bảng lọc riêng (N/A) | 18069 + public PASS: API `Chưa cấu hình`, không ghi realtime/đã tích hợp |
+| Công của tôi / `action_mine` / `tp_mine` | Owner luôn từ session; tháng; xuất file của tôi | Load PASS admin; trình duyệt nhân viên thường NOT_RUN |

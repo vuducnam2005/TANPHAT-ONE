@@ -39,6 +39,9 @@
   hiện giờ có thật, không tạo giờra hoặc suy nghỉ từ ôtrống.
 - Bổ sung DEC-055; dashboard/ngày-tuần-tháng/API-ready/privacy/quyền admin
   DEC-053/054 giữ nguyên. Mới prompt/tài liệu, chưa application hoặc import.
+- **Đã triển khai CHG-20261118-019:** `tp_hr_attendance` 20.0.2.0.0 (code
+  `2b531056`) chạy 18069 và PC server; tổng muộn lưu theo kỳ nguồn, không
+  chia/cộng chồng. Server chưa nhập file 09–15/11, HR nhập qua UI.
 
 
 ## DEC-055 — Chấm công gọn theo ngày/tuần/tháng, API máy chuẩn bị sau Excel (18/11/2026)
@@ -61,6 +64,9 @@
 - DEC-053/054 về admin vẫn giữ; không tự cấp quyền trong task chấm công.
   Mới viết prompt/policy, chưa triển khai hoặc nhập lại dữ liệu. Thực thi giao
   từng phần lên18069/PCserver theo policy17/11, không bắt18079/clone/fixturemain.
+- **Đã triển khai CHG-20261118-019:** dashboard Ngày/Tuần/Tháng, nghỉ chỉ
+  khi có nguồn xác nhận, `Đã ghi nhận ra` thay cho suy `Đã về`; nền
+  source/event/`tp_ingest` sẵn sàng, API `Chưa cấu hình`, adapter live tắt.
 
 ## DEC-054 — Chỉ admin gốc được cấp hoặc thu hồi admin (18/11/2026)
 

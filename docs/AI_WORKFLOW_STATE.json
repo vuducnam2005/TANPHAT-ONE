@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T06:47:16.599728+00:00",
-  "last_change_id": "CHG-20261118-018",
-  "code_digest": "1510bb6be006efab75e674e3e671ab17abf3bcbd8753372bfdc07436f9a23df6",
-  "code_file_count": 635,
+  "updated_at": "2026-11-18T07:23:20.900596+00:00",
+  "last_change_id": "CHG-20261118-019",
+  "code_digest": "d85c4bca7f26bfb555602fc852ecd3ade43cee87397e49a7285d622899f8bc7b",
+  "code_file_count": 651,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "20e696cf906ad46093e2feee4174482963dc0fa1aae29f7bb7f53f60acd505e7",
-    "docs/CHANGELOG.md": "b9a3004f5bb6a6d724024dbbd0fd4a4b447bcc981cddd8607883cafd012633e7",
+    "docs/PROJECT_STATUS.md": "7f782f49dd0cd3a09c246078fa43456c1c7eace8825c0d60c89e9913d35327c0",
+    "docs/CHANGELOG.md": "fdae5b737cfc0cc7bcd12b1114e274d1b14bebbdea945489958b74092f50e4a5",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "e07bb9d825d31d6a6138c079d30063b6e97a4f74cebb64fddc2506cc9634b40b",
-    "docs/DECISIONS.md": "650be30814822355c8e1cffb4ffa6cc5c7a20535a910d2a4deae49aa76afc665",
+    "docs/ROADMAP.md": "645568311d9d16e412f1d741d7826639595d4d38933aae2fdbed524462408015",
+    "docs/DECISIONS.md": "5ebaf89da5cd2d40761fa82f5ffe102c438dc0fad7e574a3dd58188657da51e9",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,6 +20,8 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "XML/AST/CSS/Ruff PASS; PC server -u tp_web_login 20.0.1.6.2 exit 0; Playwright 8/8 viewports + by Tadic link PASS on https://hybrid-send-ready-ballot.trycloudflare.com/dang-nhap; TestNativeLogin 18079 & local 18069 NOT_RUN"
+    "18069: pure tests 22 PASS (odoo-bin shell, rollback); -u tp_hr_attendance 20.0.2.0.0 0 ERROR; real Excel import via UI (117 new/42 dup/2 conflict/16 missing_out/1 name_conflict, late 90 lan/6418 phut); Playwright 33/33 PASS",
+    "PC server: drift 58/58; backup C:\\TANPHAT-backups\\hr-attendance-simple002\\has002-20261118T141006; -u tp_hr_attendance exit 0 / 0 ERROR; before/after snapshot unchanged; public Playwright read-only 19/19 PASS on https://hybrid-send-ready-ballot.trycloudflare.com; runtime log 0 ERROR",
+    "NOT_RUN: ORM TransactionCase suites (no test DB, no 18079/clone/fixture), employee browser F01/C07/C08 scope, closed period B06, A06/A07/B03-rename, rollback rehearsal; no real API/realtime"
   ]
 }
