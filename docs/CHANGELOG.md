@@ -1,5 +1,18 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-036 — HR-ATTENDANCE: snapshot đã có thì đánh dấu lô `ready`
+
+- Ngày 18/11/2026 Asia/Saigon. Đóng mục còn mở của CHG-20261118-035. Chỉ sửa `custom_addons/tp_hr_attendance/models/attendance_matrix.py` và thêm test; không đổi schema, quyền, giao diện hay version module (`20.0.3.0.0`).
+- Lỗi: `_tp_build_snapshot` thấy lô đã có `tp.hr.attendance.snapshot.person` thì `return True` ngay, không cập nhật `snapshot_state/snapshot_version`. Sau sự cố 17:14, cột cờ bị tạo lại với mặc định `pending/0`; backfill `_tp_migrate_matrix_003` gặp snapshot cũ nên thoát sớm, lô kẹt `pending`. `tp_matrix_data`, `tp_export_matrix` và `_tp_build_compare_context` thấy `pending` lại gọi dựng snapshot, mỗi lần đều lấy `pg_advisory_xact_lock` theo công ty và `FOR UPDATE` lô, nên các thao tác chỉ đọc bị tuần tự hóa mãi.
+- Sửa: dòng snapshot là bất biến và đầy đủ, nên khi đã có mà cờ chưa `ready` hoặc version `0` thì ghi `snapshot_state=ready`, `snapshot_version` giữ giá trị cũ hoặc `SNAPSHOT_FIRST_PARSER_VERSION = 2` (parser MATRIX-003 đầu tiên lưu snapshot), `snapshot_note=False`. Không đọc lại tệp Excel, không dựng lại, không nhân đôi dòng. Lô đã `ready` không bị ghi.
+- Test ORM mới `test_existing_snapshot_with_lost_flags_is_marked_ready_without_rebuild` (`test_matrix_compare.py`): tải tệp tổng hợp, đặt lại cờ `pending/0`, gọi dựng snapshot và `tp_matrix_data`, kiểm `ready/2`, số dòng người/ô giữ nguyên, lô `ready` không còn bị `write` (mock).
+- Kiểm:
+  - Test thuần không DB `test_logic`/`test_parser`/`test_parser_late`/`test_matrix_pure` `26/26` PASS. Module test ORM import được và phát hiện 4 test.
+  - `ruff check custom_addons/tp_hr_attendance` sạch; `git diff --check` sạch.
+  - Probe `odoo-bin shell` có rollback trên `tp_tanphat_dev`, chạy candidate `HEAD 55e01926` + bản sửa (`.local/snapshot-ready036/`). Đặt lô 1 và 2 về `pending/0` trong transaction. `tp_matrix_data` lô 1 (39 người) và `tp_compare_batches` 2↔1 (20 dòng) đưa cả hai về `ready/2`, ghi chú rỗng, số dòng snapshot không đổi. Đọc lần hai không ghi lô (`ctid` không đổi). Sau rollback cờ 7 lô như trước.
+- `NOT_RUN`: test ORM trên `tp_tanphat_test`/`18079`, UI đăng nhập thật, HOOT. Local 18069 vẫn chạy tiến trình của phiên khác, chưa nạp bản này; các lô local đều đã `ready` từ CHG-20261118-035.
+- Next: push, giao PC server: backup, chép tệp, khởi động lại `tp-odoo`, không `-u`. Sau đó kiểm cờ lô, health, URL public.
+
 ## CHG-20261118-035 — Phục hồi DB local 18069 sau sự cố hạ `tp_hr_attendance` lúc 17:14
 
 - Ngày 18/11/2026 Asia/Saigon; chỉ sửa dữ liệu DB local `tp_tanphat_dev`, không sửa code ứng dụng, không đụng PC server (vẫn `20.0.3.0.0`).

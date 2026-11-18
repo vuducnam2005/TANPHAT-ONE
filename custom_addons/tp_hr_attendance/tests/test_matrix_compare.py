@@ -1,12 +1,17 @@
 """ORM integration tests for HR-ATTENDANCE-MATRIX-003 (DEC-058): upload, matrix, A/B compare & security."""
 import base64
 from datetime import date
+from unittest.mock import patch
 
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import tagged
 
 from .common import AttendanceCase, report
 from .test_matrix_pure import _build_matrix_xlsx
+from odoo.addons.tp_hr_attendance.models.attendance_matrix import (
+    SNAPSHOT_FIRST_PARSER_VERSION,
+)
+from odoo.addons.tp_hr_attendance.models.attendance_parser import PARSER_VERSION
 
 MONDAY = date(2026, 11, 9)
 SUNDAY = date(2026, 11, 15)
@@ -199,3 +204,37 @@ class TestMatrixAndCompare(AttendanceCase):
         Batch.sudo()._tp_migrate_matrix_003()
         Batch.sudo()._tp_migrate_matrix_003()
         self.assertEqual(self.env['tp.hr.attendance.snapshot.person'].sudo().search_count([('batch_id', '=', bid)]), 1)
+
+    def test_existing_snapshot_with_lost_flags_is_marked_ready_without_rebuild(self):
+        # Batch flags can be reset (columns dropped by a module downgrade and recreated) while the immutable snapshot
+        # rows survive. Rebuilding must not duplicate rows and must not leave the batch 'pending' (re-locking forever).
+        Batch = self.env_for(self.manager)['tp.hr.attendance.batch']
+        raw = _build_matrix_xlsx([{
+            'title': 'Lost flags', 'start': MONDAY, 'end': MONDAY,
+            'rows': [{'stt': 1, 'code': '9901', 'name': 'Synthetic Người Một', 'times': [('08:15', '17:00')], 'late': (0, 0)}],
+        }])
+        bid = Batch.tp_upload_files([{'filename': 'lost_flags.xlsx', 'content_b64': self._b64(raw)}])['created'][0]['id']
+        batch = self.env['tp.hr.attendance.batch'].sudo().browse(bid)
+        Person = self.env['tp.hr.attendance.snapshot.person'].sudo()
+        Cell = self.env['tp.hr.attendance.snapshot.cell'].sudo()
+        people = Person.search_count([('batch_id', '=', bid)])
+        cells = Cell.search_count([('batch_id', '=', bid)])
+        self.assertEqual((batch.snapshot_state, batch.snapshot_version), ('ready', PARSER_VERSION))
+        self.assertTrue(people and cells)
+
+        batch.write({'snapshot_state': 'pending', 'snapshot_version': 0})
+        self.assertTrue(batch._tp_build_snapshot())
+        batch.invalidate_recordset()
+        self.assertEqual((batch.snapshot_state, batch.snapshot_version, batch.snapshot_note),
+                         ('ready', SNAPSHOT_FIRST_PARSER_VERSION, False))
+        self.assertEqual(Person.search_count([('batch_id', '=', bid)]), people)
+        self.assertEqual(Cell.search_count([('batch_id', '=', bid)]), cells)
+
+        # The matrix read path heals a pending batch the same way, then a ready batch is never written again
+        batch.write({'snapshot_state': 'pending', 'snapshot_version': 0})
+        self.assertEqual(Batch.tp_matrix_data({'batch_id': bid})['batch']['snapshot_state'], 'ready')
+        with patch.object(type(batch), 'write', autospec=True) as write_mock:
+            self.assertTrue(batch._tp_build_snapshot())
+            Batch.tp_matrix_data({'batch_id': bid})
+        write_mock.assert_not_called()
+        self.assertEqual(Person.search_count([('batch_id', '=', bid)]), people)

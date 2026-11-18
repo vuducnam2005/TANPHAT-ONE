@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T12:43:06.432109+00:00",
-  "last_change_id": "CHG-20261118-035",
-  "code_digest": "53f50db50ca1ca45c6d3839c2fbc60328ce176d055bfc9b884497c47eef9d779",
+  "updated_at": "2026-11-18T12:57:34.036643+00:00",
+  "last_change_id": "CHG-20261118-036",
+  "code_digest": "d34859cfcd94e0f31d18be5a008d39ba88c8188de196ce2702f5c951495eccf2",
   "code_file_count": 673,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "e79c5692ae890b44e8e855ce9c00f199c4b0589f475995a8bd99d6de0309c227",
-    "docs/CHANGELOG.md": "7bade733ad121afa606df366bd1aae0a7b88ae174cd776a76754559251968cb8",
+    "docs/PROJECT_STATUS.md": "375e8949d734cdb88ab3920753787747b105c2b9a7292c49471945e346d9afb4",
+    "docs/CHANGELOG.md": "288d5104f5847a8624fa3a1c565022b9764373dbaf8c8e1fea74baa4535b96db",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,8 +20,8 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "compare vs 17:14 dump: 24 attendance tables/rels match; xmlid 739, fields 456, selection 104, models 19, ir.access 54; restored 7 batches 2/ready + 16 ir.model.constraint FK; backup .local/attendance-repair033/backup-20261118T193700",
-    "18069 health 200, 0 ERROR; served assets 12/12 (JS eea54cd, CSS de3e8d2); ORM probe (rollback) tp_matrix_data/tp_compare_batches OK, reads do not write batches",
-    "NOT_RUN: authenticated UI, HOOT, 18079; PC server untouched (attendance 20.0.3.0.0)"
+    "pure DB-free tests test_logic/test_parser/test_parser_late/test_matrix_pure 26/26 PASS; ORM test module imports (4 tests discovered); ruff clean; git diff --check clean",
+    "rollback ORM probe on local tp_tanphat_dev (candidate HEAD 55e01926 + fix): batches 1,2 reset pending/0 -> tp_matrix_data/tp_compare_batches heal to ready/2, snapshot rows unchanged, second read does not write (ctid), DB unchanged after rollback",
+    "NOT_RUN: new ORM test on tp_tanphat_test/18079, authenticated UI, HOOT; local 18069 not reloaded (other session process); PC deploy pending"
   ]
 }

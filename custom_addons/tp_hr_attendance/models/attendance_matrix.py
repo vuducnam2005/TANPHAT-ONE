@@ -41,6 +41,8 @@ from .attendance_parser import (
 )
 
 MATRIX_PAGE_SIZES = (10, 20, 50, 100)
+# Parser version that first persisted snapshot rows (MATRIX-003). Used when existing rows have lost their version flag.
+SNAPSHOT_FIRST_PARSER_VERSION = 2
 MAX_FILES_UPLOAD = 20
 EMPTY_GROUP_KEY = '__EMPTY__'
 
@@ -238,6 +240,15 @@ class AttendanceBatchMatrix(models.Model):
         Person = internal(self.env['tp.hr.attendance.snapshot.person'])
         Cell = internal(self.env['tp.hr.attendance.snapshot.cell'])
         if Person.search_count([('batch_id', '=', self.id)], limit=1):
+            # Stored rows are immutable and complete; only the batch flags can be missing (e.g. the columns were
+            # dropped by a module downgrade and recreated empty). Mark the existing snapshot ready instead of
+            # leaving the batch 'pending' forever, which would re-lock the batch on every matrix/compare/export read.
+            if self.snapshot_state != 'ready' or not self.snapshot_version:
+                internal(self).write({
+                    'snapshot_state': 'ready',
+                    'snapshot_version': self.snapshot_version or SNAPSHOT_FIRST_PARSER_VERSION,
+                    'snapshot_note': False,
+                })
             return True
         if sheets is None:
             raw = _binary_bytes(self.with_context(bin_size=False).sudo().file_data)

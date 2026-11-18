@@ -40,3 +40,10 @@ Release theo quy trình `git archive <SHA> custom_addons/tp_hr_attendance` (gi�
 - `-u tp_hr_attendance` chạy migration idempotent `migrations/20.0.3.0.0/post-migrate.py` (`_tp_migrate_matrix_003`): tạo 3 bảng `tp_hr_attendance_snapshot_person`, `tp_hr_attendance_snapshot_cell`, `tp_hr_attendance_resolution`, cấp `batch_code` (`LÔ-xxxxx`) và dựng snapshot từ `file_data` đính kèm, gắn provenance đa lô cho các session/late hiện có mà **không** nhập lại công, không tạo/sửa `hr.employee`, giữ nguyên 100% số liệu hiệu lực, kỳ chốt và điều chỉnh đã duyệt.
 - Không nhập Excel giả/thật để test trên DB chính/server; sau deploy kiểm version, bảng snapshot, counts `session`/`day`/`late`/`employee`/`users`/`web.base.url`, tải trực tiếp HTTP assets `web.assets_backend` qua `https://hybrid-send-ready-ballot.trycloudflare.com`, `/web/health`, và Playwright ẩn danh `0` lỗi console/5xx.
 - Hoàn nguyên: dừng `tp-odoo`, khôi phục `source-config` từ backup đúng môi trường rồi `-u tp_hr_attendance` (hoặc khôi phục đầy đủ dump + filestore cùng backup trong khung bảo trì).
+
+### Sửa cờ snapshot `CHG-20261118-036` (không đổi version)
+
+- Chỉ đổi Python `models/attendance_matrix.py` (và test). Không đổi schema hay version `20.0.3.0.0`, nên giao bằng cách chép tệp vào checkout và khởi động lại `tp-odoo`; không cần `-u tp_hr_attendance`.
+- Trước khi giao: backup DB + filestore + nguồn như các bản trước; kiểm `SELECT snapshot_state, snapshot_version, count(*) FROM tp_hr_attendance_batch GROUP BY 1,2` và số lô có snapshot nhưng chưa `ready`.
+- Sau khi giao: health 200, log không ERROR, URL public mở được. Lô nào có snapshot mà còn `pending` sẽ tự về `ready` ở lần mở ma trận, đối chiếu hoặc xuất đầu tiên; không cần sửa DB tay.
+- Hoàn nguyên: khôi phục `models/attendance_matrix.py` từ `source-config.tar.gz` của backup rồi khởi động lại `tp-odoo`. Cờ `ready` đã ghi là đúng với dữ liệu nên giữ nguyên.
