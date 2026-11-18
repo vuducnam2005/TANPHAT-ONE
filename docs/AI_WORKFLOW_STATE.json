@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T12:39:08.808964+00:00",
-  "last_change_id": "CHG-20261118-034",
+  "updated_at": "2026-11-18T12:43:06.432109+00:00",
+  "last_change_id": "CHG-20261118-035",
   "code_digest": "53f50db50ca1ca45c6d3839c2fbc60328ce176d055bfc9b884497c47eef9d779",
   "code_file_count": 673,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "e8fec5680b0be815f8c88e70ca890ab0069d20d0ff9bb1cecdab29eee459ca22",
-    "docs/CHANGELOG.md": "9f52580f62e5e2e50ae90d7e723a3bd494e56e518bfbe38e2dfd9b3152324aeb",
+    "docs/PROJECT_STATUS.md": "e79c5692ae890b44e8e855ce9c00f199c4b0589f475995a8bd99d6de0309c227",
+    "docs/CHANGELOG.md": "7bade733ad121afa606df366bd1aae0a7b88ae174cd776a76754559251968cb8",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,8 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC server c48ac9a9: 62/62 SHA256; -u exit 0/0 ERROR; SERVER_MENU_OK id=437 admin=True uid=34=False; public CSS 988ded0/JS 2d59368 200 OK; anon Playwright 0 err"
+    "compare vs 17:14 dump: 24 attendance tables/rels match; xmlid 739, fields 456, selection 104, models 19, ir.access 54; restored 7 batches 2/ready + 16 ir.model.constraint FK; backup .local/attendance-repair033/backup-20261118T193700",
+    "18069 health 200, 0 ERROR; served assets 12/12 (JS eea54cd, CSS de3e8d2); ORM probe (rollback) tp_matrix_data/tp_compare_batches OK, reads do not write batches",
+    "NOT_RUN: authenticated UI, HOOT, 18079; PC server untouched (attendance 20.0.3.0.0)"
   ]
 }

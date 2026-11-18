@@ -1,5 +1,27 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-035 — Phục hồi DB local 18069 sau sự cố hạ `tp_hr_attendance` lúc 17:14
+
+- Ngày 18/11/2026 Asia/Saigon; chỉ sửa dữ liệu DB local `tp_tanphat_dev`, không sửa code ứng dụng, không đụng PC server (vẫn `20.0.3.0.0`).
+- Bối cảnh: lúc 17:14, candidate cũ của phiên HR-EMPLOYEE-ORDER (CHG-20261118-031) chạy `-u tp_hr_workspace`, kéo module phụ thuộc `tp_hr_attendance` xuống `20.0.2.0.0`. Odoo xóa 106 field, 3 model metadata, 9 quyền, menu/action ma trận và các cột lô/dòng/đi muộn/phiên; bảng snapshot vẫn còn. Lúc 19:18, phiên CHG-20261118-033 chạy `-u tp_hr_attendance` lên `20.0.3.0.0` (có post-migrate), tạo lại cột và metadata.
+- Đối chiếu chỉ đọc với dump `.local/hr-order-smooth/backup-20261118T171409` (`pg_restore --data-only`, so từng id/cột theo định dạng COPY): 24 bảng chấm công/quan hệ khớp (lô 7, dòng 1.206, phiên 299, đi muộn 195, snapshot người 312/ô 1.755, ngày công 365, quan hệ 268/38/330/363). Metadata cũng khớp: xmlid 739, field 456, selection 104, model 19, `ir.access` 54 (so theo nội dung), menu 434. Không có ghi nghiệp vụ nào sau sự cố cần gộp.
+- Phần còn mất, đã khôi phục trong một transaction khi 18069 dừng:
+  - 7 lô `snapshot_version/snapshot_state` `0/pending → 2/ready`, đúng giá trị trong dump. Backfill gặp snapshot đã có nên thoát sớm, không đặt `ready`; khi còn `pending`, mỗi lần mở ma trận/đối chiếu đều khóa lô.
+  - Chèn lại 16 `ir.model.constraint` FK của resolution/snapshot, giống `_reflect_constraint`. FK thật vẫn còn trong PostgreSQL; Odoo không phản chiếu lại FK đã tồn tại.
+  - Không chạy upgrade module.
+- Backup `.local/attendance-repair033/backup-20261118T193700`: `tp_tanphat_dev.dump` `10.455.355`B / `15.787` mục restore, cấu hình runtime cũ, `SHA256SUMS.json`. Filestore không bị sửa nên không sao lưu.
+- Cố ý không khôi phục:
+  - 9 `mail.message` "Access created" (id 2018–2026), gắn với `ir.access` cũ đã bị xóa; các bản ghi quyền tạo lại đã có 9 thông báo tương đương.
+  - `write_date` của 7 lô giữ mốc backfill 12:18 UTC.
+- Runtime: trong lúc sửa, một agent khác đồng bộ `.local/hr-attendance-matrix003/candidate` lên `c48ac9a9` và khởi động lại 18069 (PID 20704) trước tiến trình của phiên này. Nội dung trùng với `.local/attendance-repair033/candidate-20261118T193700` (diff rỗng), nên giữ nguyên tiến trình đó, không tranh cổng.
+- Kiểm sau khi sửa:
+  - So sánh lại chỉ còn khác `write_date` của lô và 9 thông báo nêu trên; `ir.model.constraint` 134/134.
+  - Health `200`; log 18069 `0` ERROR.
+  - `test_hr_employee_order_served_assets.py` trên 18069: 12/12 (JS `eea54cd`, CSS `de3e8d2`).
+  - Probe ORM uid 2, rollback: `tp_matrix_data` lô 1 `ready`, 39 người; `tp_compare_batches` 2↔1 trả payload; thao tác đọc không ghi lô.
+  - Snapshot nhân sự, sequence, user, nhóm, implied, thiết bị, ngày công, base URL không đổi.
+- `NOT_RUN`: thao tác UI với đăng nhập thật, HOOT, `18079`. Còn mở: sửa `_tp_build_snapshot` để đặt `ready` khi snapshot đã có.
+
 ## CHG-20261118-034 — Đồng bộ giao bản PC server & kiểm asset public CHG-20261118-033
 
 - Deploy `c48ac9a9` (`62/62` checksum, `0` `mtime=0`) lên `PC server` sau backup `C:\TANPHAT-backups\hr-attendance-matrix003\ham003-20261118T193137` (`dump` `10.091.595`B/`15.787` restore); `-u tp_hr_attendance` `exit 0/0 ERROR`.

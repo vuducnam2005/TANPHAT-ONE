@@ -73,3 +73,10 @@ Kết quả xử lý028: public JSf3195e5→c7831b0, CSS41f50d0→e08d09c; thự
 - Asset public 12/12 PASS (JS `d89896c`, CSS `b3fca4b`), JS phục vụ qua `node --check`.
 - Bài học: kiểm drift có thể gặp docs PC cũ hơn baseline khi phiên trước không đồng bộ docs. Chỉ đặt lại baseline khi đã chứng minh tệp PC đúng một commit đã biết (ở đây `f27f1044`); code phải khớp chính xác commit gốc.
 - Local 18069 chưa áp: DB local đang ở `tp_hr_attendance` `20.0.2.0.0` thiếu cột sau sự cố 17:14; phục hồi chấm công trước, rồi mới áp candidate dựng từ HEAD.
+
+## Phục hồi local 18069 sau sự cố 17:14 — CHG-20261118-035
+
+- Nguyên nhân: candidate dựng từ commit cũ cộng `-u tp_hr_workspace` đã kéo module phụ thuộc `tp_hr_attendance` xuống bản cũ, và Odoo xóa field/cột/metadata. Luôn dựng candidate từ HEAD hiện tại và kiểm version mọi module phụ thuộc trước khi `-u`.
+- Cách phục hồi đã dùng: `-u tp_hr_attendance` bằng code đúng (tạo lại cột/metadata, chạy post-migrate). Sau đó đối chiếu chỉ đọc từng bảng với dump trước sự cố và chỉ trả lại giá trị thực sự mất; ở đây là 7 lô snapshot `2/ready` và 16 phản chiếu FK. Script và bằng chứng nằm ở `.local/attendance-repair033/` (`compare*.py`, `repair.py`, `orm_probe.py`).
+- Không restore cả DB, vì sẽ mất các thay đổi hợp lệ sau 17:14. Backup trước khi sửa: `.local/attendance-repair033/backup-20261118T193700`.
+- Local 18069 đã chạy code HEAD `c48ac9a9`: HR `20.0.1.13.2` (thả mượt) và chấm công `20.0.3.0.0`; asset 12/12.
