@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-017 — tp_web_login: cập nhật nội dung panel trái trang đăng nhập và dòng copyright
+
+- Ngày 18/11/2026 (Asia/Saigon). Theo yêu cầu trực tiếp: trong `custom_addons/tp_web_login` (`20.0.1.6.1`, commit code `dac9e6c4`), đổi dòng dưới `TANPHAT ONE` sang `Vững Vàng Hội Nhập`, đổi tiêu đề lớn sang `Hệ thống quản trị điều hành` (2 dòng cân đối trên desktop, 1 dòng trên mobile), và thêm `copyright @by Tadic` (`12.5px`/`12px`, `#9EB8D4`) bên dưới hàng `Kế hoạch – Công việc – Báo cáo`, căn trái thẳng hàng mục `Kế hoạch` trong `.tp-auth-identity-footer`. Cập nhật `tests/test_native_login.py` và `README.md`; giữ nguyên logo, màu nền, bố cục, `tp_branding` và toàn bộ chức năng đăng nhập.
+- Kiểm & triển khai `PC server`: XML/AST/CSS/Ruff/`git diff --check` PASS; backup `C:\TANPHAT-backups\ui-login-copy\20261118T133257` (`tp_tanphat_dev.dump` `9.589.335`B, `tp_web_login-pre.tar.gz` `19.828`B); `-u tp_web_login` exit `0` / `0` ERROR; HTTP `200`; Playwright URL public `https://hybrid-send-ready-ballot.trycloudflare.com/dang-nhap` đạt `8/8` viewport desktop/mobile/zoom200 (`0` tràn ngang, `0` lỗi runtime, toggle mật khẩu đạt) và kiểm ảnh chụp trực tiếp. `NOT_RUN`: Odoo `TestNativeLogin` trên `18079` và local `18069` (đang tắt).
+
 ## CHG-20261118-016 — AUTH-SESSION-001: prompt một phiên đăng nhập cho mỗi tài khoản
 
 - Ngày18/11/2026. Yêu cầu trực tiếp: máy mới đăng nhập thì phiên máy cũ hết hiệu lực, báo tài khoản đăng nhập ở nơi khác, nút Đăng nhập lại và sau xác thực về Trang chủ.
