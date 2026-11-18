@@ -148,3 +148,30 @@ DB đang dùng).
 | F04 | PASS | Không cấp/thu admin |
 | F05 | PASS 18069 + PC server | 18069: `.local/hr-attendance-simple002/backup-has002-20261118T133410`. PC server: `C:\TANPHAT-backups\hr-attendance-simple002\has002-20261118T141006` (dump `9.587.361`B + restore-list `15.438` mục, filestore `29.827.466`B, source-config `1.845.934`B, SHA256SUMS); `-u` exit 0 / 0 ERROR; public Playwright chỉ đọc `19/19` PASS; server chưa nhập file 09–15/11 |
 | F06 | PASS (E, R) | Như D/C ở trên; dữ liệu Excel cũ không hiện là thời gian thực |
+
+## HR-ATTENDANCE-SCROLL — CHG-20261118-038
+
+Yêu cầu18/11: cuộn Tổng quan không được kéo toàn webclient và lộ khoảng trắng.
+Trước sửa: desktop1440×900 document1503px, cuộn tiếp ở đáy windowY603;
+mobile390×844 document5536px, windowY4400. `.visually-hidden` absolute và
+theadẩn mobile lấy body làm containing block ngoài scrollport.
+
+Sửa tối thiểu: `.o_tp_att { position: relative }`, scroll chaining chứa trong
+màn độc lập; nhúng Công của tôi vẫn để parent điều phối. Giữ label/aria,
+không chặn cuộn bằng bodyoverflowhidden hoặc wheelpreventDefault.
+
+| Kiểm | Kết quả18069 |
+| --- | --- |
+| 1440×900,1366×768,390×844,375×667; Ngày/Tuần/Tháng | 12/12PASS |
+| Wheel đến đáy, cuộn tiếp, rồi về đầu | Contentcuộn được, documentY0 |
+| Navbar/sidebar | Giữ vị trí trước/sau |
+| Documentheight/width | Không vượt viewport |
+| Labeltrợ năng | Offsetparent nằm trong scrollport |
+| JavaScript errors | 0 |
+
+Regression: `scripts/tests/test_hr_attendance_scroll.cjs`; dùng
+`TP_SCROLL_STORAGE_STATE`, `TP_SCROLL_BASE_URL`, `TP_SCROLL_OUTPUT` trỏ
+session riêng private đã có, không tự đăng nhập hoặc ghi dữ liệu công.
+Ảnh/số đo riêng: `.local/attendance-scroll037/local-after/results.json`.
+PCserver: chờ giao CSS đã push và kiểm asset thực. Chưa kiểm iOS/Safari thật;
+mobile trên là Chromiumemulation, không là nghiệm thu hình thức của người dùng.

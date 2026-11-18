@@ -11,6 +11,8 @@
 }
 .o_tp_att {
     color-scheme: light; --bs-body-color: #17324d; --bs-body-bg: #fff;
+    // Keep absolute accessibility labels inside this scrollport, not the document body.
+    position: relative;
     height: 100%; overflow: auto; min-width: 0; padding: 20px 24px 32px; background: var(--att-bg);
     animation: o_tp_att_fade 200ms ease-out;
 
@@ -24,6 +26,7 @@
     .btn { min-height: 44px; }
     .btn-sm { min-height: 32px; }
 }
+.o_tp_att:not(.o_tp_att_embedded) { overscroll-behavior-y: contain; }
 .o_tp_att, .o_tp_att_dialog, .o_tp_att_upload {
     button, select, input, a, .o_tp_att_click > * {
         transition: background-color var(--att-motion) ease, border-color var(--att-motion) ease, box-shadow var(--att-motion) ease,

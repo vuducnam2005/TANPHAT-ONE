@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T13:02:55.016419+00:00",
-  "last_change_id": "CHG-20261118-037",
+  "updated_at": "2026-11-18T13:09:39.283627+00:00",
+  "last_change_id": "CHG-20261118-038",
   "code_digest": "d34859cfcd94e0f31d18be5a008d39ba88c8188de196ce2702f5c951495eccf2",
   "code_file_count": 673,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "831cbee4ad9e91817ee5facd818e87fa5de315d456914ce26b5bc6a8ea0bb1e1",
-    "docs/CHANGELOG.md": "1a163830a2d2f41315420fc9c911da9b29ad0589becf9accf71fc498e41e5518",
+    "docs/PROJECT_STATUS.md": "8b4ac003852a6c657c72ae2b6ce6e2950734dfc05bfc0cae2d4d01b73f03cdd0",
+    "docs/CHANGELOG.md": "fb2858a30df879a28a8989f0d718f4ce38bf77e58ae5eb4935b415006d838a03",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,8 +20,7 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC deploy 74047fbc (2 tp_hr_attendance files, restart only): pre-drift OK, backup C:\\TANPHAT-backups\\snapshot-ready036\\snapshot-ready036-20261118T200015 (dump 10091620B / 15787 entries, source-config, SHA256SUMS)",
-    "health 200, local /web/login 200, public https://hybrid-send-ready-ballot.trycloudflare.com/web/health 200 and /web/login -> /dang-nhap 200; 0 ERROR after start; module versions and attendance/HR counts unchanged; batch flags ready/2 x4, 0 stuck",
-    "NOT_RUN: authenticated UI, ORM probe on server DB, 18079; PC docs checkout pre-existing drift left untouched"
+    "Native authenticated Chromium 18069: 12/12 viewport-mode cases PASS; wheel bottom/top, document bounds, label containment and navbar/sidebar stable; zero JS errors.",
+    "Before/after screenshots and DOM metrics captured privately; node --check PASS. CSS only, no module/version/schema upgrade or attendance writes. Foreign checkpoint and source WIP retained."
   ]
 }

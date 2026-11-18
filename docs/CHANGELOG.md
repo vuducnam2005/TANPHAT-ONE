@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-038 — HR-ATTENDANCE-SCROLL: sửa cuộn lộ trắng ở Tổng quan chấm công
+
+- Ngày18/11/2026 Asia/Saigon; người dùng yêu cầu trực tiếp kiểm tra và fix, thực thi giới hạn lỗi này thay vai trò chỉ viết prompt.
+- Tái hiện authenticated18069: kéo hết nội dung rồi cuộn tiếp làm documentY603 desktop và4400 mobile; document cao1503/5536 vượt viewport900/844. Nhãn `.visually-hidden` absolute trỏ offsetParent vềbody vì scrollport không positioned; mobilethead absolute cùng lỗi. Không do thiếu dữ liệu hoặc server lỗi.
+- Sửa stylesheet chung chấm công: positionrelative giữ nhãn trong scrollport và overscroll-behavior-y:contain cho màn độc lập; giữ Công của tôi nhúng theo parent, không bodyoverflowhidden/globalCSS/core/layoutsidebar. Không đổi model/ACL/session/moduleversion/schema, không cần-u.
+- Thêm regression browser dùng state riêng qua biến môi trường, không chứa cookie/password trongGit và không tự login/ghi công; kiểm 4viewport(1440/1366/390/375) × Ngày/Tuần/Tháng, rootheight/width, hiddenlabelcontainingblock, wheelđếnđáy/lênđầu và navbar/sidebar cố định. 1806912/12PASS,0JSerror. Bằng chứng private `.local/attendance-scroll037` gồm trước/sau và số đo; không đưa nhân viên/screenshot vàoGit.
+- Local runtime dùng candidate của batchMATRIX003: chỉ thay đúng CSS sau đối chiếuSHA256 và backup, restart cùng config18069 để sinhasset; không đổi candidatekhác hoặc hạ addon. Giữ checkpoint/code/docs WIP khác; workflow được ghi trên committedsnapshot đúngscope. Next: push và deploy CSS lênPCserver, backup tệp/metadata, giữmtime mới và kiểmCSS thựcpublic; không upgradeDB hoặc restarttunnel.
+
+
 ## CHG-20261118-037 — Giao PC server bản sửa cờ snapshot chấm công (CHG-20261118-036)
 
 - Ngày 18/11/2026 Asia/Saigon. Giao code commit `74047fbc` lên PC server, chỉ 2 tệp `custom_addons/tp_hr_attendance/models/attendance_matrix.py` và `tests/test_matrix_compare.py`, label `snapshot-ready036`. Script và bằng chứng: `.local/snapshot-ready036/` (`deploy036.py`, `deploy-server036.ps1`, `drift036.py`, `deploy-output.txt`).
