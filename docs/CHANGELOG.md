@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-011 — HR-ATTENDANCE-SIMPLE-002: prompt chấm công gọn và chuẩn bị API máy
+
+- Ngày18/11/2026. Yêu cầu trực tiếp: dashboard tổng nhân viên/nghỉ hôm nay/đã về; xem ngày, tuần, tháng; giữ dataExcel đã import và chuẩn bị API máy lênweb sau. DEC-055 ghi scope đơn giản, không mở payroll/GPS/datalake hoặc connector hãng chưa có thông số.
+- Tạo CLAUDE_HR_ATTENDANCE_SIMPLE_002_DASHBOARD_AND_API_READY.md: lightHRlayout/KPI/chart/table/filter, menu thường gọn; nghỉ có căn cứ khác no_punch/no_source, trạng thái theo latestevent/không đếm OUTtrưa là nghỉ cảngày, nguồn cũ không realtime, người distinct khác ngày-người. Model session hiện check_in/out bắt buộc được chỉ rõ; raw/staging punch chỉ thêm tối thiểu khi cần, preserveExcel và ngày tổng hợp.
+- ĐiểmAPI: normalizedevent/source/mapping/timezone/direction/cursor/retry/dedupe/lateevent, sharedingestion/rollup, config/chưakếtnối và credentialbackend; chưa mở publicwrite hoặc livepolling, không giảđã nối. Nhân viên thường vẫnchỉđọc, adminpolicy053/054 giữ; advancedbackend/action/history khôngxóa đểđơn giảnUI.
+- Chỉ tài liệu/status/decision/roadmap/indexprompt; không app/data/quyền. Kiểm source và caller hiệncó, tính nhấtquán/ngàynguồn/links/diff và snapshotGit, applicationkhôngđổi; chưa testdashboard/API vìchưa triểnkhai. Giao docs đúngscope/push/sync khôngrestart; nextClaude làmSIMPLE002, cầnAPIhãng/mã/ca/network/auth vềsau đểnốithật.
+
 ## CHG-20261118-010 — ADMIN-FULL-001: chỉ admin gốc được cấp/thu quyền admin
 
 - Ngày18/11/2026. Bổ sung trực tiếp từ người dùng: admin được cấp quản trị mọi phòng như đã chốt nhưng không cấp người khác làm admin; chỉ admin gốc quản lý quyền admin. DEC-054 thay đúng phần cấp quyền của DEC-053/CHG-009, không đưa lại giới hạn phòng mình.

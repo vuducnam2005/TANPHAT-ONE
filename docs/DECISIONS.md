@@ -1,5 +1,26 @@
 # TANPHAT ONE — Sổ quyết định
 
+## DEC-055 — Chấm công gọn theo ngày/tuần/tháng, API máy chuẩn bị sau Excel (18/11/2026)
+
+- **Yêu cầu trực tiếp:** một dashboard tổng nhân viên, người nghỉ hôm nay và
+  người đã về, quản lý theo ngày/tuần/tháng; dữ liệu Excel đã import được giữ.
+  Chuẩn bị điểm tích hợp API máy để dữ liệu về web trực tiếp về sau.
+- [Prompt SIMPLE002](prompts/CLAUDE_HR_ATTENDANCE_SIMPLE_002_DASHBOARD_AND_API_READY.md)
+  tái sử dụng addon/day/session/mapping HR và cùng DB. UI gọn, sáng, chart rõ,
+  filter/list/drilldown cùng nguồn. Các chức năng nâng cao đã có chỉ chuyển
+  khỏi menu thường nếu cần, không xóa bảng/data/workflow/lịch sử.
+- Định nghĩa trong prompt là hướng triển khai dựa nguồn: nghỉ phải có xác nhận,
+  không chấm/nguồn cũ không là nghỉ; latestOUT/IN lại và lịch đủ căn cứ mới xác
+  định Đã về, nếu chưa đủ chỉ Đã ghi nhận ra. Phải hiển thị ngày/mốc nguồn và
+  không dùng ngày Excel cũ như hôm nay/realtime; người khác đơn vị ngày-người.
+- Model session hiện bắt cảIN/OUT nên API-ready phải nhận được punch đơn;
+  contract/normalizer/adapter chung là phạm vi chuẩn bị. Chưa có hãng/API/auth/
+  chiều sự kiện/lịch ca/network: liveconnector mặc định tắt, không publicwrite
+  hoặc giả kết nối. Không làm data lake, payroll, sinh trắc hoặc nghỉ phép phức tạp.
+- DEC-053/054 về admin vẫn giữ; không tự cấp quyền trong task chấm công.
+  Mới viết prompt/policy, chưa triển khai hoặc nhập lại dữ liệu. Thực thi giao
+  từng phần lên18069/PCserver theo policy17/11, không bắt18079/clone/fixturemain.
+
 ## DEC-054 — Chỉ admin gốc được cấp hoặc thu hồi admin (18/11/2026)
 
 - **Bổ sung trực tiếp:** admin được cấp không có quyền phân người khác làm
