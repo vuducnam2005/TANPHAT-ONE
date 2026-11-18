@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T09:47:49.759357+00:00",
-  "last_change_id": "CHG-20261118-027",
-  "code_digest": "e05eebeb6dbb4b6d1bf9cd2ae108a54ac3b00ab4586b584c1076f4693b0d8aa8",
-  "code_file_count": 662,
+  "updated_at": "2026-11-18T09:58:41.159737+00:00",
+  "last_change_id": "CHG-20261118-028",
+  "code_digest": "dd869cf4bf3f8c17a2227254187353eda71c27d1f1c81f8caf0eb5f47151cb1a",
+  "code_file_count": 663,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "20eb7cbbbb63e7e78c5e46b80399abb80abc06b9fd6d7768e5735d59b7a73e90",
-    "docs/CHANGELOG.md": "1a97be715ce99ea1ff5fa6c0dda630ef0a25941c9612a017a67738afe12fbe2c",
+    "docs/PROJECT_STATUS.md": "f8b6b809a63cccca87ebf4c0eda4f5224791c0e8a850f426c61f6f0195b0d8a4",
+    "docs/CHANGELOG.md": "ece7c5a5fabbdc79c56af0d03ab51028d17c3798fde726fdacfcfa8e8ffa9c1e",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "afc986476ddb94fbf2e2ec682cc11de4779fddf08982920a862bcead8921836e",
+    "docs/ROADMAP.md": "6ce61d02b391e3a2c820f7ab35641b06f9f04b2f68e9d4dc0ac322dcac1ab93f",
     "docs/DECISIONS.md": "b750fcf212ff425e3f8b0c0763b7dfb428fd0773769d2ddd2519cb5c66f4bee4",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
@@ -20,9 +20,9 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC b9c3040c deployed15/15checksum;HR-only upgrade0ERROR;backups verified",
-    "Business snapshots only HRversion differ;ORMrollback7+native regression+VM/backend12PASS",
-    "Readonly local/server6/6;serverassets561/1786/75PASS;HTTP/browser11/11;full authenticated persist/HOOT/race NOT_RUN",
-    "ForeignWIP/checkpoint preserved;docs-only completion no runtime restart"
+    "Actual served public before f3195e5 contains oldhandle/logic; after c7831b0 and CSSe08d09c PASS8/8",
+    "Local served JS/CSS PASS8/8; checker rejects actual saved obsoletepublicJS; RuffPASS",
+    "Backedupsource+mtime, touch3exactassets retainsSHA256, restarted onlytp-odoo; no application/business/security changes",
+    "ForeigncheckpointWIP preserved; authenticated visual/persist/HOOT/raceNOT_RUN"
   ]
 }

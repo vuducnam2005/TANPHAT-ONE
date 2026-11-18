@@ -27,6 +27,11 @@ tài liệu đã hoàn chỉnh. Chia phần lớn thành hạng mục nhỏ dùn
 6. Kiểm public: đăng nhập/session, màn/action vừa đổi, dữ liệu/ảnh/tệp liên
    quan, lỗi server và quyền truy cập. Không tạo người giả/cấp quyền người
    thật/CRUD phá dữ liệu để smoke. Lỗi do release thì sửa ngay hoặc rollback.
+   Với asset native, kiểm nội dung JS/CSS do URL bundle mới thực sự phục vụ;
+   Odoo tính phiên bản theo đường dẫn và mtime, không theo hash nội dung.
+   Gói tar phải giữ mtime commit/file mới cho static asset; không để mặc định0
+   hoặc dùng lại mtime cũ cho nội dung mới. Restart/upgrade đơn thuần không
+   bảo đảm vô hiệu hóa bundle cũ. Xem [ca HR](../../ops/runbooks/HR_EMPLOYEE_ORDER_DEPLOY_AND_ROLLBACK.md).
 7. Bàn giao commitSHA, push thành công/thất bại, source SHA/checksum đã deploy,
    môi trường/version/publicURL, backup, kiểm thực và phần chưa kiểm. Lỗi
    mạng/SSH/Git credentials thì báo đúng bước lỗi, không nói đã deploy.

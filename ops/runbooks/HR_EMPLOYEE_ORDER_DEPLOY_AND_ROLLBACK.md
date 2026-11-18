@@ -25,7 +25,7 @@ PC server: checkout `C:/Projects/TANPHAT-ONE`, container `tp-odoo`, network `tan
 3. Triển khai chính các file đã commit, kiểm checksum sau chép. Dừng worker ứng dụng theo cách vận hành hiện có để không có hai runtime phục vụ cùng DB trong lúc upgrade. Giữ PostgreSQL và tunnel theo cấu hình đang dùng.
 4. Chạy Odoo bằng executable/config/database của chính môi trường; bản sửa kéo cả dòng chỉ nâng `-u tp_hr_workspace --stop-after-init`. Gói AUTH/HR ban đầu từng nâng ba addon. Không `-u all`, không seed actor/password và không chạy suite sinh fixture trên DB đang dùng. Kiểm exit code và log; lỗi upgrade thì chưa mở phục vụ.
 5. Khởi động đúng runtime đã giao, kiểm phiên bản ba addon và health. Đối chiếu snapshot: nhân sự/phòng/chức vụ/mã/tài khoản/nhóm quyền, dữ liệu thiết bị/chấm công và `web.base.url`. Migration thứ tự có thể đổi `sequence` theo thiết kế nhưng phải giữ thứ tự hiển thị hiện có và trường nghiệp vụ khác.
-6. Kiểm assets/XML/OWL và URL public bằng đọc không phá dữ liệu. Dùng browser mock cho kéo thả/lỗi/RPC âm; không tự tạo fixture hoặc đổi thứ tự nhân viên thật để smoke. Với đăng nhập mới thay phiên cũ, không đăng nhập tài khoản thật chỉ để kiểm rồi đá phiên người dùng. Chỉ kiểm bằng actor/phương thức đã được người dùng cho phép rõ ràng.
+6. Kiểm assets/XML/OWL và URL public bằng đọc không phá dữ liệu. Với HR kéo cả hàng, chạy `python scripts/tests/test_hr_employee_order_served_assets.py --base-url <URL>` ở local và public; kiểm JS/CSS thực được `/web/bundle/web.assets_web` tham chiếu. Biên dịch source trong bộ nhớ, version addon và checksum source chưa chứng minh browser nhận đúng bundle. Dùng browser mock cho kéo thả/lỗi/RPC âm; không tự tạo fixture hoặc đổi thứ tự nhân viên thật để smoke. Với đăng nhập mới thay phiên cũ, không đăng nhập tài khoản thật chỉ để kiểm rồi đá phiên người dùng. Chỉ kiểm bằng actor/phương thức đã được người dùng cho phép rõ ràng.
 7. Ghi commit, checksum, version runtime, backup, lệnh/kết quả thực chạy và phần `NOT_RUN` trong bàn giao; tách technical acceptance, business acceptance và pilot authorization. Lỗi thì sửa gói hoặc thực hiện rollback đã đánh giá bên dưới.
 
 ## Rollback
@@ -51,3 +51,16 @@ Kiểm ORM thực cho bản sửa được thực hiện trong giao dịch luôn
 - Native browser regression/VM/backend12/12 và realORM7checks trong rollback PASS. READONLY probe local/server6/6; candidate normalized7/7khớpcommit. Local assets561CSS/1786JS/75XML (6.443.819JSbyte); server561/1786/75 (6.443.990JSbyte), css_errors=[]; biên dịch trong bộ nhớ không lưu attachment. AnonymousHTTP/login local/public desktop1440/mobile390:11/11PASS,0JSerror. Public `https://hybrid-send-ready-ballot.trycloudflare.com`; không restarttunnel.
 - Khởi động18069 bằng phiên tiến trình Odoo duy trì sau khi helper background kết thúc; listener và smoke cuối đạt. Runtimeconfig `.local/hr-order-row/candidate-20261118T163523/runtime.conf`; giữ cùng DB/filestore. Gói source cô lập không nạp WIP attendance/reporting/sidebar/branding; checkpoint gốc giữ, workflow026/027 kiểm trong snapshot sạch đúng scope.
 - Full authenticated browser/HOOT/persist qua transaction commit/máy khác/race chưa chạy. Không fixture/login/đổi phòng hoặc lưu reorder thử trên DB đang dùng; realORM thử luôn rollback và freshcursor xác nhận nguyên trạng. Nghiệm thu người dùng riêng. Đây là tài liệu xác nhận giao bản, đồng bộ source không restart/upgrade tiếp.
+
+## Cổng asset thực — từ CHG-20261118-028
+
+Odoo version bundle theo URL+mtime. Gói tar static phải đặt `TarInfo.mtime` theo thời gian commit/file; không để mặc định0, không bảo toàn mtimecũ khi nội dung đổi. Với helperpack hiện tại dùng timestamp từ `git log -1 --format=%ct <target> -- <path>`. Không sửa core Odoo hoặc thêm cachebuster cho URLimmutablecũ.
+
+Nếu checksum source đúng nhưng UI còncũ: lưu evidenceURL/bytes/hash nội dung thực, đối chiếu mtimefile và generatedattachment; backupsource+metadata, cập nhậtmtime đúngasset đãdeploy rồi restartworker để xóa cacheRAM. Không xóa hàng loạt ir.attachment/filestore. Tải lại `/web/bundle/web.assets_web`, JS/CSS ở URLmới và chạy checker trên cả local/public. HTTP200, versionaddon và in-memorycompile chưa đủ.
+
+```powershell
+.\.venv\Scripts\python.exe scripts/tests/test_hr_employee_order_served_assets.py --base-url http://127.0.0.1:18069 --output .local/hr-order-asset/local-served-check.json
+.\.venv\Scripts\python.exe scripts/tests/test_hr_employee_order_served_assets.py --base-url https://hybrid-send-ready-ballot.trycloudflare.com --output .local/hr-order-asset/public-served-check.json
+```
+
+Kết quả xử lý028: public JSf3195e5→c7831b0, CSS41f50d0→e08d09c; thực tải8/8PASS khôngtaynắm/hit-testcũ. Backupmetadata/source3file tại `.local/hr-order-asset/source-before-20261118T095446Z` trênPC; sourcehashb9c3040c giữ nguyên. Người dùng tải lại trang để nhận URLmới; nghiệm thu visual/persist qua session thật riêng.

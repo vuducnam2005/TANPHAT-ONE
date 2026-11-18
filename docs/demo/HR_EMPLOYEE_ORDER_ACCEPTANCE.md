@@ -4,7 +4,15 @@ Cập nhật 18/11/2026 (Asia/Saigon). Phiên bản: `tp_hr_workspace` **20.0.1.
 
 Nguồn: [DEC-044/053/054](../DECISIONS.md), [quy chuẩn bộ lọc](../ui/TP_TABLE_FILTER_STANDARD.md), [inventory HR-T01](../ui/TP_TABLE_FILTER_INVENTORY.md), [hướng dẫn sử dụng](HR_EMPLOYEE_ORDER_USER_GUIDE.md), [policy giao bản](../operations/TP_CONTINUOUS_DELIVERY_POLICY.md).
 
-## Bản sửa hiện hành — CHG-20261118-026
+## Sửa bundle public còn bản cũ — CHG-20261118-028
+
+- Phản hồi ảnh người dùng sau027 còn sáu chấm là đúng. Kiểm027 chỉ checksum source/compile trong bộ nhớ và trang login, không kiểm bundle mà webclient thực tải. Public `/web/bundle/web.assets_web` còn tham chiếu JS `f3195e5` SHA256 `70795505f0829c24bf72e00e935258c8faee96deca89cac44e5e21617b1311f1`, có `tp_hr_handle`, `o_tp_hr_drag_handle`, `isPointerInValidZone`, thiếu `lastPointer`; header CloudflareDYNAMIC, nên là generated asset server cũ, không chỉ browsercache.
+- Packer `.local/auth-session001/package_slice.py` dùng TarInfo mặc địnhmtime0 cho cả gói trước/sau. Odoo native checksum asset dựa URL+mtime, JS gộp cả XML; restart/upgrade vẫn dùng generated attachment1445/1443 tạo09:24Z dù source026 đúng. Đã sửa packerignored đặtmtime theo Git commit gần nhất của từng file; ghi cổng kiểm trong policy/runbook để workflow tái lập được.
+- Backup source+metadata trước sửa tại PC `/workspace/.local/hr-order-asset/source-before-20261118T095446Z` (host `C:/Projects/TANPHAT-ONE/.local/hr-order-asset/source-before-20261118T095446Z`); backupDB/filestore/source môi trường gần nhất vẫn `C:/TANPHAT-backups/hr-order-row/hr-row026-20261118T164222`. Chỉ cập nhậtmtime3file table.js/xml/scss, trước0 sau1794995686; SHA256 nội dung giữ khớp b9c3040c. Restarttp-odoo, khôngtunnel/upgrade/CRUDnghiệpvụ/xóa asset thủ công.
+- Public sinh và phục vụ JS mới `/web/assets/c7831b0/web.assets_web.min.js` (8.351.729B, SHA256 `0bd1dc5ada62edb4aad6251b1444635a5493c0ce4d14e76c59f70f53716b89ae`) và CSS `/web/assets/e08d09c/web.assets_web.min.css` (1.580.966B, SHA256 `6d5168a812cf4d60c9820b5aebeae57e5f68e026d3c08d6ce1babac1b382f373`). Tracked `scripts/tests/test_hr_employee_order_served_assets.py`8/8PASS local vàpublic: modulethật, khônghandle/hit-testcũ, cópointerup/bounds/whole-row ignore/cursor. Checker còn được kiểm với JSpubliccũ đãlưu và từchốiđúng; RuffPASS.
+- Local trước/sau đã phục vụ JS4840c2b mới đúng; không cầnrestart/upgrade local. Các502 tạm trong lúc restart đã kết thúc khi bundle public thực tảiPASS. Application vẫnb9c3040c/HR20.0.1.13.1; chỉ toolkit/docs mớicommit/push/sync, khôngrestart thêm. Full authenticated visual/browserpersist/HOOT/race vẫnchưa chạy; không dùng servedtoken checks làm chứng minh kéoDBE2E. Người dùng tải lại trang để nhận URL mới.
+
+## Bản sửa source — CHG-20261118-026
 
 HR `20.0.1.13.1` đã áp18069 và PCserver, code b9c3040c/checksum15/15/upgrade0ERROR; xem giao bản027 cuối tài liệu. Người dùng yêu cầu bỏ sáu chấm, kéo trực tiếp từ hàng. Click thường vẫn mở hồ sơ; checkbox/nút/link/input không khởi động kéo. Sort/filter và backend quyền/company/department/anchors giữ như gói trước.
 
