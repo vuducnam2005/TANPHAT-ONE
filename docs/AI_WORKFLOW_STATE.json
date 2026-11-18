@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T10:32:10.090438+00:00",
-  "last_change_id": "CHG-20261118-030",
-  "code_digest": "a1706c50d24cc749d9d101675a6c4a203792ad9a435939e1caf61b301a19e94d",
+  "updated_at": "2026-11-18T12:07:15.732354+00:00",
+  "last_change_id": "CHG-20261118-031",
+  "code_digest": "8d8eba4ea7edb25e443095544555497c62651bdb5930e040de698995d54d3a60",
   "code_file_count": 673,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "d8bab3b54a83245b33ca654ecd4dadbb34f16d6683800af12c9e8d6f9ebf9039",
-    "docs/CHANGELOG.md": "f0289f273b48d611cb36472223538d7c4e5acdca2558bb35b7c1dd0cee73e788",
+    "docs/PROJECT_STATUS.md": "366c6fe612be542c780284bd6284a8835be4d5078ac9c298d076349a566d8731",
+    "docs/CHANGELOG.md": "65dc8e97788398092b9cded95d20a9fe0e14b5d3c1be13c9f3f17c1edef950aa",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,8 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC server b7765bd1: 62/62 SHA256; -u tp_hr_attendance 20.0.3.0.0 exit 0/0 ERROR; 195 snap_person/1365 cells; ORM+ACL uid=34 5/5 PASS; public CSS 9931cc6/JS 2116504 200 OK; anon Playwright 0 err"
+    "VM test_hr_employee_order.cjs PASS; browser harness real Owl/sortable/templates PASS incl. per-frame drop regression (neighbours <=1.5px, glide 86->70.5 in 36 frames, 0 page errors)",
+    "served-asset checker updated (settleDroppedRow/onPatched/releaseRect/.o_tp_hr_row_settling, no _tpAnimationFrame); git diff --check clean",
+    "NOT_RUN: authenticated live persist on used DB, HOOT, 18079; local 18069 not applied (DB damaged by earlier session, recovery separate); PC deploy pending"
   ]
 }

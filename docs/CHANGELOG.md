@@ -1,5 +1,15 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-031 — HR-EMPLOYEE-ORDER: thả là sắp xếp ngay, hàng trượt mượt vào chỗ
+
+- Ngày 18/11/2026 Asia/Saigon. Phản hồi người dùng: kéo thả chưa mượt, thả ra bị khựng một lúc rồi mới sắp xếp. TP HR `20.0.1.13.1 → 20.0.1.13.2`, chỉ frontend `static/src/table/table.js` và `table.scss`; backend, quyền, phòng ban, bộ lọc, sắp xếp cột, phân trang giữ nguyên.
+- Nguyên nhân khựng: bản đang chạy chờ RPC `tp_reorder_in_department` và tải lại danh sách rồi mới vẽ thứ tự mới. Kế thừa WIP lạc quan chưa commit (đổi `Group.list.records` native ngay, lưu nền, đồng bộ `ordered_ids`/`sequence` bằng `_applyValues`, chỉ tải lại nhóm khi trang đổi thành viên, lỗi thì khôi phục và báo lỗi, chặn kéo khi đang lưu).
+- Sửa lỗi còn lại của WIP: FLIP chạy trong `requestAnimationFrame` trước lần patch của Owl nên đo vị trí cũ, làm hàng bên nhảy một hàng rồi trượt về và hàng thả bị giật. Nay đo và chạy hiệu ứng trong `onPatched` sau khi DOM đã mang thứ tự mới (khớp ô thả theo anchor trước/sau, bỏ sau 1s). Hàng thả trượt từ vị trí nhả chuột vào chỗ 220ms (`.o_tp_hr_row_settling`), hàng bên nhường chỗ 180ms cùng easing. Animation trên ô để giữ hitbox hàng, hủy khi unmount, tắt khi `prefers-reduced-motion`.
+- Kiểm: `node scripts/tests/test_hr_employee_order.cjs` PASS; `node scripts/tests/test_hr_employee_order_browser.cjs` (Owl, sortable và template thật, RPC giả) PASS kèm hồi quy mới đo từng frame vẽ sau khi nhả: hàng bên lệch không quá 1.5px, hàng thả bắt đầu tại vị trí nhả (±2px), trượt đơn điệu 86→70.5px qua 36 frame, không còn lớp settling, 0 lỗi trang. Checker asset phục vụ thêm token `settleDroppedRow`/`onPatched`/`releaseRect` và CSS `.o_tp_hr_row_settling`, đồng thời cấm `_tpAnimationFrame` cũ. `git diff --check` sạch.
+- `NOT_RUN`: đăng nhập thật và ghi thứ tự trên DB đang dùng, HOOT, suite DB `18079`. Checker asset trên `127.0.0.1:18069` FAIL đúng dự kiến vì 18069 đang phục vụ candidate `.local/hr-attendance-matrix003/candidate`, không phải bản này.
+- Cảnh báo môi trường local 18069 (không do commit này): lần áp HR `20.0.1.13.2` lúc 17:14 của phiên `hr-order-smooth` dựng candidate từ `f27f1044` nên `-u tp_hr_workspace` kéo theo `tp_hr_attendance` (phụ thuộc HR) xuống `20.0.2.0.0` trên `tp_tanphat_dev` local: xóa 106 field metadata, mất các cột như `batch_code`, `snapshot_state`, `raw_source_code`, `source_choice`; số dòng lô/dòng/snapshot giữ. Runtime 18069 hiện chạy code `20.0.3.0.0` trên schema `20.0.2.0.0`. Backup ngay trước: `.local/hr-order-smooth/backup-20261118T171409`. Phiên này không sửa DB local; cần phục hồi riêng. PC server đã ở `20.0.3.0.0` (CHG-030), không bị ảnh hưởng.
+- Next: push, deploy PC server chỉ `-u tp_hr_workspace` với backup riêng, kiểm JS/CSS phục vụ thực trên URL public.
+
 ## CHG-20261118-030 — Giao PC server & xác minh asset public HR-ATTENDANCE-MATRIX-003
 
 - Ngày 18/11/2026 Asia/Saigon; đồng bộ tài liệu sau giao bản commit code `b7765bd1` (`tp_hr_attendance` `20.0.3.0.0`), không sửa code ứng dụng và không restart/upgrade thêm.

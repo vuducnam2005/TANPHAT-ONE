@@ -7,7 +7,7 @@ const context = {
     Component: class {}, RelationalModel: class {}, ListController: class {},
     ListRenderer: class { setup() {} }, listView: {}, TpTableFilterBar: class {},
     registry: { category: () => ({ add() {} }) }, render() {}, session: {},
-    onWillUnmount() {}, useSortable: (options) => { context.sortable = options; return {}; },
+    onWillUnmount() {}, onPatched() {}, useSortable: (options) => { context.sortable = options; return {}; },
 };
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(base + 'employee_reorder_rules.js', 'utf8').replace(/export /g, '') +
@@ -37,21 +37,92 @@ const row = id => ({dataset: {resId: String(id)}, classList: {contains: () => tr
 (async () => {
     const renderer = Object.create(context.Renderer.prototype);
     Object.defineProperty(renderer, 'canDragEmployeesNow', {value: true});
+    renderer.tableRef = () => ({querySelectorAll: () => []});
+    context.browser = {};
     let loads = 0;
     const calls = [], notices = [];
-    renderer.props = {list: {model: {root: {load: async () => {loads++;}}}}};
+    const groupRecords = [7, 8, 9].map(resId => ({resId, data: {}, _applyValues(values) {Object.assign(this.data, values);}}));
+    renderer.props = {list: {groups: [{value: 4, list: {records: groupRecords}}], model: {root: {load: async () => {loads++;}}}}};
     renderer.orm = {call: async (...args) => calls.push(args)};
     renderer.notificationService = {add: (...args) => notices.push(args)};
     // Middle-page anchors preserve unseen employees; never send a visible-page list.
     await renderer.onEmployeeDropInDepartment({element: row(8), group: {dataset: {deptId: '4'}}, previous: row(7), next: row(9)});
     assert.deepEqual(Array.from(calls[0][2]), [8, 4, 9, 7]);
     assert.equal(notices[0][0], 'Đã cập nhật thứ tự nhân viên');
-    assert.equal(loads, 1);
+    assert.equal(loads, 0);
     renderer.orm.call = async () => {throw new Error('Denied');};
     await renderer.onEmployeeDropInDepartment({element: row(8), group: {dataset: {deptId: '4'}}, next: row(9)});
-    assert.equal(loads, 2);
+    assert.equal(loads, 1);
     assert.equal(notices[1][1].type, 'danger');
     assert.equal(renderer.tpReorderBusy, false);
+    let resolveDeferred;
+    renderer.orm.call = (...args) => {calls.push(args); return new Promise(resolve => {resolveDeferred = resolve;});};
+    const optimistic = renderer.onEmployeeDropInDepartment({element: row(9), group: {dataset: {deptId: '4'}}, next: row(7)});
+    assert.deepEqual(Array.from(groupRecords, record => record.resId), [9, 7, 8]);
+    assert.equal(renderer.tpReorderBusy, true);
+    const callCount = calls.length;
+    await renderer.onEmployeeDropInDepartment({element: row(8), group: {dataset: {deptId: '4'}}, next: row(7)});
+    assert.equal(calls.length, callCount);
+    resolveDeferred({ok: true, ordered_ids: [9, 7, 8]});
+    await optimistic;
+    assert.deepEqual(Array.from(groupRecords, record => record.data.sequence), [10, 20, 30]);
+    assert.equal(loads, 1, 'Successful save must not reload whole root');
+    assert.equal(renderer.tpReorderBusy, false);
+    function edgeRenderer() {
+        const subject = Object.create(context.Renderer.prototype);
+        Object.defineProperty(subject, 'canDragEmployeesNow', {value: true});
+        const records = [7, 8, 9].map(resId => ({resId, data: {}, _applyValues(values) {Object.assign(this.data, values);}}));
+        const department = {records, offset: 0, load: async () => {throw Error('Reload failed');}};
+        subject.props = {list: {groups: [{value: 4, list: department}], model: {root: {load: async () => {throw Error('Reload failed');}}}}};
+        subject.tableRef = () => ({querySelectorAll: () => []});
+        subject.notices = [];
+        subject.notificationService = {add: (...args) => subject.notices.push(args)};
+        return {subject, records};
+    }
+    const dropArgs = {element: row(9), group: {dataset: {deptId: '4'}}, next: row(7)};
+    const changedPage = edgeRenderer();
+    changedPage.subject.orm = {call: async () => ({ok: true, ordered_ids: [99, 7, 8]})};
+    await changedPage.subject.onEmployeeDropInDepartment(dropArgs);
+    assert.deepEqual(Array.from(changedPage.records, r => r.resId), [9, 7, 8]);
+    assert.equal(changedPage.subject.notices[0][1].type, 'warning');
+    const failedReload = edgeRenderer();
+    failedReload.subject.orm = {call: async () => {throw Error('Save rejected');}};
+    await failedReload.subject.onEmployeeDropInDepartment(dropArgs);
+    assert.deepEqual(Array.from(failedReload.records, r => r.resId), [7, 8, 9]);
+    assert.equal(failedReload.subject.notices[0][1].type, 'danger');
+    for (const disappear of ['navigation', 'unmount']) {
+        const pending = edgeRenderer();
+        let finish;
+        pending.subject.orm = {call: () => new Promise(resolve => {finish = resolve;})};
+        let renders = 0;
+        context.render = () => {renders++;};
+        const saving = pending.subject.onEmployeeDropInDepartment(dropArgs);
+        assert.equal(renders, 1);
+        if (disappear === 'navigation') pending.subject.props.list = {groups: []};
+        else pending.subject._tpUnmounted = true;
+        finish({ok: true, ordered_ids: [9, 7, 8]});
+        await saving;
+        assert.equal(renders, 1);
+        assert.equal(pending.subject.notices.length, 0);
+    }
+    for (const disappear of ['navigation', 'unmount']) {
+        const pending = edgeRenderer();
+        let finishReload;
+        pending.subject.props.list.groups[0].list.load = () => new Promise(resolve => {finishReload = resolve;});
+        pending.subject.orm = {call: async () => ({ok: true, ordered_ids: [99, 7, 8]})};
+        let renders = 0;
+        context.render = () => {renders++;};
+        const saving = pending.subject.onEmployeeDropInDepartment(dropArgs);
+        await new Promise(setImmediate);
+        assert.equal(typeof finishReload, 'function');
+        if (disappear === 'navigation') pending.subject.props.list = {groups: []};
+        else pending.subject._tpUnmounted = true;
+        finishReload();
+        await saving;
+        assert.equal(renders, 1);
+        assert.equal(pending.subject.notices.length, 0);
+    }
+    context.render = () => {};
     let suppressed = 0;
     renderer._tpSuppressClickUntil = Date.now() + 500;
     assert.equal(renderer._shouldSuppressAfterDrag({preventDefault() {suppressed++;}, stopPropagation() {suppressed++;}}), true);
@@ -82,7 +153,7 @@ const row = id => ({dataset: {resId: String(id)}, classList: {contains: () => tr
     context.browser = {addEventListener: (name, fn) => {listeners[name] = fn;}, removeEventListener() {}};
     const classes = {add() {}, remove() {}, toggle() {}};
     const group = {value: 4, dataset: {deptId: '4'}, classList: classes, getBoundingClientRect: () => ({left: 0, right: 500, top: 100, bottom: 400})};
-    dragRenderer.tableRef = () => ({classList: classes});
+    dragRenderer.tableRef = () => ({classList: classes, querySelectorAll: () => []});
     dragRenderer.sortStart = () => {};
     context.sortable.onDragStart({group});
     listeners.pointerup({clientX: 200, clientY: 200});

@@ -1,4 +1,4 @@
-import { Component, onWillUnmount, proxy, useProps } from "@odoo/owl";
+import { Component, onPatched, onWillUnmount, proxy, useProps } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
 import { formatDateTime } from "@web/core/l10n/dates";
 import { registry } from "@web/core/registry";
@@ -20,6 +20,12 @@ import {
     isDepartmentCompleteDomain,
 } from "./employee_reorder_rules";
 import "./filter_profiles";
+
+// Shared motion so neighbours making room and the dropped row settling feel like one gesture.
+const ROW_MOTION_EASING = "cubic-bezier(0.2, 0, 0, 1)";
+const ROW_SHIFT_MS = 180;
+const ROW_SETTLE_MS = 220;
+const DROP_SETTLE_MAX_WAIT_MS = 1000;
 
 export class HrListModel extends RelationalModel {
     _getNextConfig(currentConfig, params) {
@@ -74,9 +80,24 @@ export class HrListRenderer extends ListRenderer {
         this.tpReorderBusy = false;
         this._tpSuppressClickUntil = 0;
         this._tpCleanupDragPointer = null;
+        this._tpRowAnimations = new Map();
+        this._tpDropSettle = null;
+        this._tpUnmounted = false;
+        // The optimistic reorder is only in the DOM once Owl has patched; animating earlier
+        // measures the old row order and makes neighbours jump a full row on release.
+        onPatched(() => this.settleDroppedRow());
+        onWillUnmount(() => {
+            this._tpUnmounted = true;
+            this._tpDropSettle = null;
+            for (const animation of this._tpRowAnimations.values()) {
+                animation.cancel();
+            }
+            this._tpRowAnimations.clear();
+        });
 
         let activeSourceGroup = null;
         let lastPointer = null;
+        let neighborPositions = new Map();
         const isInsideSource = () => {
             if (!activeSourceGroup || !lastPointer) {
                 return false;
@@ -122,6 +143,7 @@ export class HrListRenderer extends ListRenderer {
             followingElementClasses: ["o_tp_hr_drag_preview"],
             onDragStart: (params) => {
                 this._tpSuppressClickUntil = Date.now() + 600;
+                this._tpDropSettle = null;
                 this.sortStart(params);
                 activeSourceGroup = params.group || params.element?.closest("tbody.o_tp_hr_dept_tbody");
                 lastPointer = null;
@@ -133,6 +155,7 @@ export class HrListRenderer extends ListRenderer {
                 if (activeSourceGroup) {
                     activeSourceGroup.classList.add("is-drag-source");
                 }
+                neighborPositions = this.employeeRowPositions();
 
                 const onPointerMove = (ev) => {
                     if (!activeSourceGroup) {
@@ -151,6 +174,10 @@ export class HrListRenderer extends ListRenderer {
                     browser.removeEventListener("pointerup", onPointerMove, { capture: true });
                 };
             },
+            onElementEnter: () => {
+                this.animateEmployeeRows(neighborPositions);
+                neighborPositions = this.employeeRowPositions();
+            },
             onDragEnd: (params) => {
                 this._tpSuppressClickUntil = Date.now() + 350;
                 this.sortStop(params);
@@ -163,7 +190,9 @@ export class HrListRenderer extends ListRenderer {
                 if (!validZone || !group || (parent && parent !== group)) {
                     return;
                 }
-                await this.onEmployeeDropInDepartment({ element, group, previous, next });
+                // Read where the row floats under the pointer before sortable cleanup snaps it back.
+                const releaseRect = element?.getBoundingClientRect?.();
+                await this.onEmployeeDropInDepartment({ element, group, previous, next, releaseRect });
             },
         });
     }
@@ -260,7 +289,109 @@ export class HrListRenderer extends ListRenderer {
         return super.toggleRecordSelection(record, ev);
     }
 
-    async onEmployeeDropInDepartment({ element, group, previous, next }) {
+    employeeRowPositions() {
+        return new Map(
+            [...(this.tableRef()?.querySelectorAll(".o_data_row:not(.o_dragged):not(.o_tp_hr_drop_placeholder)") || [])]
+                .map((row) => [row.dataset.resId, row.offsetTop])
+        );
+    }
+
+    get prefersReducedMotion() {
+        return Boolean(browser.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+    }
+
+    /**
+     * Animates the cells, not the row: the row's native pointer hitbox stays where the
+     * layout put it, so sortable keeps receiving the right pointerenter targets.
+     * Returns the started animations.
+     */
+    animateRowCells(row, keyframesFor, duration) {
+        const animations = [];
+        for (const cell of row.children) {
+            const keyframes = keyframesFor(cell);
+            this._tpRowAnimations.get(cell)?.cancel();
+            const animation = cell.animate?.(keyframes, { duration, easing: ROW_MOTION_EASING });
+            if (!animation) {
+                continue;
+            }
+            animations.push(animation);
+            this._tpRowAnimations.set(cell, animation);
+            const clear = () => {
+                if (this._tpRowAnimations.get(cell) === animation) {
+                    this._tpRowAnimations.delete(cell);
+                }
+            };
+            animation.finished.then(clear, clear);
+        }
+        return animations;
+    }
+
+    animateEmployeeRows(positions) {
+        if (this._tpUnmounted || this.prefersReducedMotion) {
+            return;
+        }
+        for (const row of this.tableRef()?.querySelectorAll(".o_data_row:not(.o_dragged):not(.o_tp_hr_drop_placeholder)") || []) {
+            const previousTop = positions.get(row.dataset.resId);
+            const delta = previousTop === undefined ? 0 : previousTop - row.offsetTop;
+            if (delta) {
+                this.animateRowCells(row, (cell) => {
+                    // Continue from where an interrupted shift currently shows the cell.
+                    const transform = browser.getComputedStyle(cell).transform;
+                    const visualDelta = transform === "none" ? 0 : new browser.DOMMatrixReadOnly(transform).m42;
+                    return [{ transform: `translateY(${delta + visualDelta}px)` }, { transform: "translateY(0)" }];
+                }, ROW_SHIFT_MS);
+            }
+        }
+    }
+
+    /**
+     * Called after each patch: once the optimistic order is in the DOM, glide the dropped
+     * row from where the pointer released it into its slot instead of snapping there.
+     */
+    settleDroppedRow() {
+        const settle = this._tpDropSettle;
+        if (!settle) {
+            return;
+        }
+        if (this._tpUnmounted || Date.now() - settle.at > DROP_SETTLE_MAX_WAIT_MS) {
+            this._tpDropSettle = null;
+            return;
+        }
+        const row = this.tableRef()?.querySelector(`.o_data_row[data-res-id="${settle.employeeId}"]`);
+        const sibling = (direction) => {
+            let el = row?.[direction];
+            while (el && !el.classList?.contains("o_data_row")) {
+                el = el[direction];
+            }
+            return Number(el?.dataset?.resId || 0) || null;
+        };
+        const inDroppedSlot = settle.beforeId
+            ? sibling("nextElementSibling") === settle.beforeId
+            : sibling("previousElementSibling") === settle.afterId;
+        if (!row || !inDroppedSlot) {
+            // An unrelated patch ran first; wait for the one carrying the reorder.
+            return;
+        }
+        this._tpDropSettle = null;
+        if (this.prefersReducedMotion) {
+            return;
+        }
+        const rect = row.getBoundingClientRect();
+        const dx = settle.releaseRect.left - rect.left;
+        const dy = settle.releaseRect.top - rect.top;
+        if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
+            return;
+        }
+        row.classList.add("o_tp_hr_row_settling");
+        const animations = this.animateRowCells(row, () => [
+            { transform: `translate(${dx}px, ${dy}px)`, opacity: 0.85 },
+            { transform: "translate(0, 0)", opacity: 1 },
+        ], ROW_SETTLE_MS);
+        const done = () => row.classList.remove("o_tp_hr_row_settling");
+        Promise.all(animations.map((animation) => animation.finished)).then(done, done);
+    }
+
+    async onEmployeeDropInDepartment({ element, group, previous, next, releaseRect }) {
         if (this.tpReorderBusy || !this.canDragEmployeesNow) {
             return;
         }
@@ -285,23 +416,86 @@ export class HrListRenderer extends ListRenderer {
             return;
         }
 
+        const departmentList = this.props.list.groups
+            ?.find((item) => this.hrGroupDeptId(item) === deptId)?.list;
+        const records = departmentList?.records;
+        const movedIndex = records?.findIndex((record) => record.resId === employeeId) ?? -1;
+        if (movedIndex < 0) {
+            return;
+        }
+        const originalRecords = [...records];
+        const rootList = this.props.list;
+        const isCurrentDepartment = () => !this._tpUnmounted && this.props.list.groups
+            ?.some((item) => item.list === departmentList);
+        const isCurrentList = () => isCurrentDepartment() && departmentList.records === records;
+        const [moved] = records.splice(movedIndex, 1);
+        const anchorIndex = records.findIndex((record) => record.resId === (beforeId || afterId));
+        if (anchorIndex < 0) {
+            records.splice(0, records.length, ...originalRecords);
+            return;
+        }
+        records.splice(anchorIndex + (beforeId ? 0 : 1), 0, moved);
+
+        // Neighbours already sit where the placeholder left them; only the dropped row
+        // still has to travel, which onPatched does right after Owl applies this render.
+        this._tpDropSettle = releaseRect
+            ? { employeeId, beforeId, afterId, releaseRect, at: Date.now() }
+            : null;
         this.tpReorderBusy = true;
+        render(this);
+        let saved = false;
         try {
-            await this.orm.call("hr.employee", "tp_reorder_in_department", [
+            const result = await this.orm.call("hr.employee", "tp_reorder_in_department", [
                 employeeId,
                 deptId || false,
                 beforeId,
                 afterId,
             ]);
-            await this.props.list.model.root.load();
+            saved = true;
+            if (!isCurrentList()) {
+                return;
+            }
+            if (Array.isArray(result?.ordered_ids)) {
+                const rank = new Map(result.ordered_ids.map((id, index) => [id, index]));
+                const pageIds = result.ordered_ids.slice(departmentList.offset || 0,
+                    (departmentList.offset || 0) + originalRecords.length);
+                if (pageIds.length === records.length && pageIds.every((id) => records.some((record) => record.resId === id))) {
+                    records.sort((left, right) => rank.get(left.resId) - rank.get(right.resId));
+                    for (const record of records) {
+                        record._applyValues({ sequence: (rank.get(record.resId) + 1) * 10 });
+                    }
+                } else {
+                    // Concurrent changes can move another employee onto this page.
+                    await departmentList.load();
+                }
+            }
+            if (!isCurrentDepartment()) {
+                return;
+            }
             render(this);
             this.notificationService.add(REORDER_SUCCESS_TOAST, { type: "success" });
         } catch (err) {
+            if (saved) {
+                if (isCurrentDepartment()) {
+                    this.notificationService.add("Đã lưu thứ tự nhưng chưa tải lại được danh sách. Hãy tải lại trang.", { type: "warning" });
+                }
+                return;
+            }
+            if (!isCurrentList()) {
+                return;
+            }
+            records.splice(0, records.length, ...originalRecords);
+            render(this);
             try {
-                await this.props.list.model.root.load();
-                render(this);
+                await rootList.model.root.load();
+                if (!this._tpUnmounted && this.props.list === rootList) {
+                    render(this);
+                }
             } catch {
                 // ignore secondary reload error
+            }
+            if (this._tpUnmounted || this.props.list !== rootList) {
+                return;
             }
             const msg =
                 err?.data?.message ||

@@ -8,9 +8,11 @@ Chỉ giao slice đã commit, theo danh sách file và checksum do phiên điề
 
 | Addon | Phiên bản đích |
 | --- | --- |
-| `tp_hr_workspace` | `20.0.1.13.1` |
+| `tp_hr_workspace` | `20.0.1.13.2` |
 | `tp_admin_delegation` | `20.0.2.0.1` |
 | `tp_web_login` | `20.0.2.0.1` |
+
+Bản thả mượt `20.0.1.13.2` (CHG-20261118-031) chỉ nâng `tp_hr_workspace`. **Candidate phải dựng từ HEAD hiện hành:** `tp_hr_attendance` phụ thuộc `tp_hr_workspace`, nên `-u tp_hr_workspace` cũng nâng chấm công bằng code trong candidate; candidate cũ sẽ hạ cấp chấm công và xóa cột (sự cố local 18069 lúc 17:14 ngày 18/11/2026). Kiểm version mọi addon phụ thuộc trong candidate trước khi upgrade.
 
 Bản sửa kéo cả dòng `20.0.1.13.1` chỉ nâng `tp_hr_workspace`; AUTH/admin giữ phiên bản đã giao, không chạy lại migration của chúng. Không đóng gói toàn bộ working tree đang có WIP của hạng mục khác; giữ nguyên những thay đổi đó. Ghi commit SHA, đường dẫn file, SHA256 của gói và phiên bản thực chạy vào biên bản giao bản. Không đưa credential, dump hoặc filestore vào Git.
 

@@ -68,10 +68,21 @@ def main():
                 and 'ignore:' in module and '.o_list_record_selector' in module
             )
             checks['js_no_old_hit_test'] = 'isPointerInValidZone' not in module
+            checks['js_optimistic_employee_order'] = all(
+                token in module for token in ('originalRecords', 'departmentList', 'records.splice', 'ordered_ids')
+            )
+            checks['js_reorder_animation'] = all(
+                token in module for token in ('animateEmployeeRows', 'prefers-reduced-motion', 'ROW_SHIFT_MS')
+            )
+            # Drop glide runs after Owl's patch (onPatched), not in a pre-patch animation frame.
+            checks['js_drop_settle_after_patch'] = all(
+                token in module for token in ('settleDroppedRow', 'onPatched', 'releaseRect', 'o_tp_hr_row_settling')
+            ) and '_tpAnimationFrame' not in module
         else:
             checks['css_whole_row_cursor'] = bool(re.search(
                 r'\.o_tp_hr_draggable_row\s*>\s*\.o_data_cell\s*\{[^}]*cursor:\s*grab\s*;', text,
             ))
+            checks['css_drop_settle'] = '.o_tp_hr_row_settling' in text
     checks['js_and_css_fetched'] = {asset['kind'] for asset in assets} == {'js', 'css'}
     report = {'bundle_url': bundle_url, 'passed': all(checks.values()), 'checks': checks, 'assets': assets}
     if args.output:
