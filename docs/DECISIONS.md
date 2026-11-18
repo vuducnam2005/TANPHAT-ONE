@@ -1,5 +1,27 @@
 # TANPHAT ONE — Sổ quyết định
 
+## DEC-053 — Người được cấp admin có toàn quyền như admin hiện tại (18/11/2026)
+
+- **Yêu cầu trực tiếp mới:** tài khoản được cấp quyền admin là admin thứ hai,
+  toàn quyền như admin thật, không ràng buộc phòng ban. Áp cả phòng của chính
+  họ, phòng khác, dữ liệu chung và chức năng quản trị mà admin hiện tại có.
+- **Thay DEC-050 ở phần xung đột:** bỏ own-department baseline và chỉ-other-
+  department khi user đã là full admin; không giữ nhãn delegate nhưng quyền
+  thực chỉ đọc/adapter hạn chế. Admin mới quản lý tài khoản/phân quyền như
+  admin hiện tại; không tự đặt thêm cấp Owner với chức năng khác nhau.
+- Chức danh/phòng nhân viên không tự đổi khi cấp admin. Thu hồi bỏ quyền admin
+  được quản lý và giữ quyền nghiệp vụ hợp lệ. Workflow/validation mà admin
+  hiện tại cũng phải tuân thủ và bảo vệ user hệ thống/admin cuối vẫn giữ.
+  Không phải cấp UID1/SSH/PostgreSQL hay bỏ quyền riêng tư của nhân viên thường.
+- Người dùng giao viết [prompt triển khai](prompts/CLAUDE_ADMIN_FULL_001_SECOND_ADMIN.md).
+  Khi giao Claude thực thi, chuyển các grant hiện đang hiệu lực sang mô hình
+  full admin theo yêu cầu này; không tạo thêm người hoặc tự chọn user mới.
+  Native groups/quyền phải có nguồn gốc để thu hồi đúng, không restore snapshot
+  nhóm cũ đè thay đổi vai trò hợp lệ trong lúc là admin.
+- **Trạng thái:** chính sách đã được người dùng chốt; lượt này mới tài liệu,
+  chưa đổi application, nhóm người thật, grant hoặc dữ liệu. Policy17/11 tiếp
+  tục áp: push/deploy từng phần hoàn tất, không bắt18079; backup/kiểm/rollback.
+
 ## DEC-048 — Báo cáo toàn công ty dùng chung dữ liệu và luồng tổng hợp (16/11/2026)
 
 **Bổ sung trực tiếp CHG-20261116-006:** người dùng yêu cầu viết prompt triển khai

@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-009 — ADMIN-FULL-001: chốt admin thứ hai toàn hệ thống và prompt thay mô hình giới hạn
+
+- Ngày18/11/2026. Yêu cầu trực tiếp mới: người được cấp admin có toàn quyền như admin hiện tại, không ràng buộc phòng ban, kể cả phòng mình. DEC-053 thay phần xung đột DEC-050, giữ vai trò nhân viên là dữ liệu riêng và workflow/admin native. Không tự thiết kế cấp Owner/Admin chức năng khác nhau.
+- Tạo prompt CLAUDE_ADMIN_FULL_001_SECOND_ADMIN.md: chung quyền admin thực/native groups/capability, HR/KH-KD/Kho/Báo cáo/settings/apps; xử lý helper từng trả false khi user có system; migration các grant đang hiệu lực khi thực thi, không tự chọn thêm user; provenance quyền/implied groups, thu hồi phiên cũ và giữ quyền nghiệp vụ cập nhật hợp lệ.
+- Cập nhật AGENTS/status/decisions/roadmap/index prompt để phiên khác không xây tiếp scope phòng mình cũ. Lượt này chỉ tài liệu, không grant/migration/source ứng dụng hoặc DB. Giữ bản sửa HR20.0.1.4.1 đã giao008.
+- Kiểm source/caller và policy; Markdown links/diff/unchanged app và workflow trên snapshotGit đúng batch. Không test runtime/quyền mới/browser vì chưa triển khai; không fixture18079/main/server. Foreign source/docs giữ riêng; commit/push/sync đúng tài liệu, không restartOdoo. Next: giao Claude promptADMIN-FULL-001 theo DEC-053 và policy rollout17/11.
+
 ## CHG-20261118-008 — HR-DELEGATE-FIX-001: hoàn tất deploy PC server, kiểm thực quyền delegate thực và URL public
 
 - Ngày 18/11/2026 (Asia/Saigon). Commit ứng dụng `edb717f9` (`tp_admin_delegation` `20.0.1.4.1`) đã push `origin/main` và triển khai lên PC server (`tp-odoo`).

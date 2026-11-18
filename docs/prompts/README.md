@@ -12,11 +12,15 @@ Thư mục này quản lý các prompt giao việc cho các phiên AI thực thi
 
 ## 1. Prompt đang hiệu lực trong thư mục source
 
+**Quyền admin từ18/11/2026:** dùng ADMIN-FULL-001 theo DEC-053. Các prompt
+ADMIN-DELEGATE-001/002 giữ lịch sử; không áp lại giới hạn phòng mình cũ.
+
 **Kho thiết bị:** dùng EQUIP-SIMPLE-003 cho yêu cầu UI/thao tác hiện hành.
 EQUIP-UI-001/002 bên dưới giữ để tra cứu lịch sử, không giao chạy lại giao diện cũ.
 
 | Tệp prompt | Nhiệm vụ | Mô tả | Trạng thái | Tài liệu đặc tả / Kế hoạch |
 | --- | --- | --- | --- | --- |
+| [`CLAUDE_ADMIN_FULL_001_SECOND_ADMIN.md`](CLAUDE_ADMIN_FULL_001_SECOND_ADMIN.md) | **ADMIN-FULL-001** | Người được cấp admin có toàn quyền như admin hiện tại, kể cả phòng mình; chuyển grant hiện hiệu lực và thu hồi đúng | `POLICY_CONFIRMED_PROMPT_READY_NOT_IMPLEMENTED` CHG-20261118-009 | DEC-053 thay giới hạn DEC-050; giữ native/workflow/quyền người thường; push/deploy18069/PCserver, không bắt18079; lượt viết prompt chưa migration |
 | [`CLAUDE_ADMIN_DELEGATE_002_COMPLETE_SCOPED_ADMIN.md`](CLAUDE_ADMIN_DELEGATE_002_COMPLETE_SCOPED_ADMIN.md) | **ADMIN-DELEGATE-002** | Hoàn thiện quản trị ngoài phòng, giữ baseline tại phòng mình; HR/Kho dashboard, CRUD theo nguồn và Reporting admin baseline | `AUDITED_PARTIAL_PROMPT_READY` CHG-20261118-001 | Server có1delegation hiệu lực; [audit chỉ đọc](../security/ADMIN_DELEGATE_002_READONLY_AUDIT.md); push/deploy18069/PCserver từng slice, không bắt18079, không tự grant/revoke người thật |
 | [`CLAUDE_ADMIN_DELEGATE_001_AND_PUBLIC_FILES.md`](CLAUDE_ADMIN_DELEGATE_001_AND_PUBLIC_FILES.md) | **ADMIN-DELEGATE-001 / DEPLOY-MEDIA-001** | Lịch sử triển khai delegation/media; không chạy lại để hoàn thiện quyền | `APPLIED_WITH_GAPS; CONTINUE_002` | [Acceptance001](../demo/ADMIN_DELEGATE_001_ACCEPTANCE.md); bản runtime20.0.1.0.1, server đã có1grant hiệu lực tại audit17/11; dùng prompt002 cho sửa tiếp, policy17/11 thay yêu cầu test18079 cũ |
 | [`CLAUDE_CORP_REPORT_001_FULL_MODULE.md`](CLAUDE_CORP_REPORT_001_FULL_MODULE.md) | **CORP-REPORT-001** | Full quý→tháng→tuần và báo cáo ngược; dashboard sáng/chart lớn, UI/filter/detail/mobile mọi tab, nguồn/quyền/version, chỉ đạo và Excel/Word/PDF | `FULL_MODULE_PROMPT_READY_NOT_IMPLEMENTED` CHG-20261116-006 | [Thiết kế](../architecture/TP_COMPANY_REPORTING_001_DESIGN.md), DEC-048; R0–R5 trên18079, cấu hình lịch/role test, không grant/nhập thật/main/commit/push. Đối chiếu baseline workflow FAIL trước code; không finish hộ source chưa kiểm |

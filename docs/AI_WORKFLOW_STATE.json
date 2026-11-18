@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T03:39:32.884649+00:00",
-  "last_change_id": "CHG-20261118-008",
+  "updated_at": "2026-11-18T04:19:39.301694+00:00",
+  "last_change_id": "CHG-20261118-009",
   "code_digest": "3355f87f8f988688e516162dd1f9960165bcfdc11f352220ac51d5a7ebcdad1b",
   "code_file_count": 632,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "f1ce1cda18c1f5cb3ebbbdf106d2eb3531ec0e6b129bab78237c8b3b03c2a4b8",
-    "docs/CHANGELOG.md": "4f607b84ebddbd9eec3f9f33fa6fea18e5e212da8feb01a1fab02d6a64f5b378",
-    "AGENTS.md": "ac7c7a6ce9929b1cc7f2f3752b5006bd91e9ca570228c9aed8a5210b2798cc5c",
+    "docs/PROJECT_STATUS.md": "8b4cb031321d44ce7980109843908e8afdfa7d5c94e064ba694d7fee00bc91ff",
+    "docs/CHANGELOG.md": "2d651e891149dfb8039f58392ba64db63d44096a2f1a96bc8248fc7d96c155fb",
+    "AGENTS.md": "519bdcd170059ba6a6a4c4657bedc0325c735d221596fc9257dc8d18473494e9",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "308d9f8e952594268fffba6473e07f5d5b8220bac45be23ecde73b5f2c824240",
-    "docs/DECISIONS.md": "d54aa39544bd4d20190aeabd4c7aefe2734e9a11d3593ce1a122171aafbaea7e",
+    "docs/ROADMAP.md": "af07e08a6c62a0d969c10e8f2c2b6756756ff9883ca9f27620c46f12c543b953",
+    "docs/DECISIONS.md": "2dd57eb02f86e0b3c816714a5ce45a4e0990b925902af234324ec9a6cab0cf72",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,8 +20,7 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC server deploy edb717f9 (tp_admin_delegation 20.0.1.4.1): preflight 14/14, backup s5-hdf001-20261118T102705 verified, -u exit 0 / 0 ERROR, DB/ledger/base_url snapshot unchanged.",
-    "PC server read-only ORM probe with live ledger delegate (1/1), admin and normal user: 0 missing_field_nodes across hr.employee/wizard/public views (parent+child models), web_search_read 35 rows (0 own dept), web_read_group/web_read/overview/XLSX/self-profile/privacy guards PASS.",
-    "Playwright browser verification (admin, desktop 1440x900 + mobile 390x844): main 18069 13/13 PASS, public trycloudflare URL 13/13 PASS, 0 JS/OWL/5xx/runtime log errors; browser with real delegate actor credentials NOT_RUN."
+    "Prompt/policy-only: traced current native admin detection, ledger and revoke guards; latest HR fix preserved; application source unchanged.",
+    "No live grants/migration/DB/browser tests; isolated Git docs snapshot excludes foreign changes; deployment policy unchanged."
   ]
 }
