@@ -323,3 +323,8 @@ S4 đã deploy PC server từ `cc2bfcb6`: 37/37 tệp checksum, public 40 dashbo
 - `HR-T01`/`action_employees`/`hr.employee`/`employee_list`: thứ tự tùy chỉnh `sequence,id` trong department grouping hiện hành; SearchModel, domain/count/export/pager giữ. Sort cột hoặc filter nhân viên khóa kéo kèm hướng dẫn; filter chỉ department/company/active cho kéo. Không thêm filter engine.
 - `directory_employee_list`/`hr.employee.public` chỉ xem cùng sequence,id, không tay nắm. Bảng quan hệ/missing/pending/archive không bật kéo; không thêm bảng mới. Backend kiểm toàn phòng có quyền và anchor IDs, không ghi cả trang đè toàn phòng.
 - Đã kiểm: Python12/12, VM eligibility/filter/pagination/readonly/failure và native sortable browser mock up/down/cross/outside,3 compiled templates; ORM READ ONLY combined views/defaults trên18069. FullHOOT/real multi-page drag ghiDB chưa chạy (không fixturemain); xem [acceptance](../demo/HR_EMPLOYEE_ORDER_ACCEPTANCE.md). Role review kỹ thuật, business acceptance người dùng riêng.
+
+## HR-EMPLOYEE-ORDER — CHG-20261118-026
+
+- HR-T01/action_employees/hr.employee/employee_list: bỏ cột sáu chấm, kéo trên hàng; eligibility SearchModel/domain/sort/pager/count/export giữ nguyên. Lọc phòng vẫn kéo; lọc nhân viên hoặc sort khác khóa và hướng dẫn hiện hành. Readonly không có draggable row hoặc API reorder.
+- Browser native regression+VM PASS cả vùng thả, click/checkbox, failure; ORM thực rollback PASS lên/xuống/SQL đọc lại/crossdepartment/viewer, fresh-cursor snapshot giữ. Full authenticated renderer/HOOT/race/persist sau commit chưa chạy; xem [acceptance](../demo/HR_EMPLOYEE_ORDER_ACCEPTANCE.md). Không thêm bảng/filter engine.

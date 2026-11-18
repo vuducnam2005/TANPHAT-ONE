@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T09:16:26.970555+00:00",
-  "last_change_id": "CHG-20261118-025",
-  "code_digest": "0ea7f569996761994ae81ac53bd256b63eaff97f1a13e6ad740d8f298bef6876",
+  "updated_at": "2026-11-18T09:40:41.242150+00:00",
+  "last_change_id": "CHG-20261118-026",
+  "code_digest": "e05eebeb6dbb4b6d1bf9cd2ae108a54ac3b00ab4586b584c1076f4693b0d8aa8",
   "code_file_count": 662,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "02a0d83d1f58eef50305342a83c59fa85c54d6bcc6ce71df8ad4c0466a4ceada",
-    "docs/CHANGELOG.md": "4bbddb3df3cbe609a8f2ae9db05c5a90ca3036961f1d1ee2324ebe98fe4a8d3a",
+    "docs/PROJECT_STATUS.md": "6ec8307f9f48c03b20299fd3117df50dd24ef15a813acf1c987bc73b2eb1b116",
+    "docs/CHANGELOG.md": "9fe5203a8f77d4fa255847b96bd5aa166bd88003e684989a79ddbfcd4a1fb3c1",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "1c8b81f6062b24b35d7759c6b1c57cce424aec3d822ff0739a6de64f8ea1ab58",
+    "docs/ROADMAP.md": "a4a1c668e3381dace52fcf94f0d8ac5aef5533cad7bafd4f9c2722924934104f",
     "docs/DECISIONS.md": "b750fcf212ff425e3f8b0c0763b7dfb428fd0773769d2ddd2519cb5c66f4bee4",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
@@ -20,7 +20,9 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC native backend asset in-memory readonly compile CSS561/JS1786/XML75 PASS; no attachment writes",
-    "Docs only; fixed stale pending labels; real A/B/race/HOOT/write tests remain NOT_RUN"
+    "Backend12/12 and VM PASS; native browser3templates+old bug placeholder+up/down/cross/outside/failure/click/checkbox PASS",
+    "Real ORM rollback action up/down/SQL reread/crossdept/viewer PASS; fresh cursor snapshot unchanged",
+    "Local18069 backup+HR-only upgrade exit0/0ERROR; business snapshots unchanged",
+    "Independent frontend/native lifecycle review: no must-fix; full authenticated persist/HOOT/race NOT_RUN; foreign checkpoint preserved"
   ]
 }

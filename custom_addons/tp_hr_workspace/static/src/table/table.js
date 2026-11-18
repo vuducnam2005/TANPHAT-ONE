@@ -21,16 +21,6 @@ import {
 } from "./employee_reorder_rules";
 import "./filter_profiles";
 
-const HANDLE_COLUMN_SPEC = Object.freeze({
-    id: "tp_hr_drag_handle",
-    type: "tp_hr_handle",
-    name: "__tp_hr_handle",
-    hasLabel: false,
-    optional: false,
-    attrs: { width: "36px" },
-    options: {},
-});
-
 export class HrListModel extends RelationalModel {
     _getNextConfig(currentConfig, params) {
         const nextConfig = super._getNextConfig(currentConfig, params);
@@ -86,7 +76,15 @@ export class HrListRenderer extends ListRenderer {
         this._tpCleanupDragPointer = null;
 
         let activeSourceGroup = null;
-        let isPointerInValidZone = true;
+        let lastPointer = null;
+        const isInsideSource = () => {
+            if (!activeSourceGroup || !lastPointer) {
+                return false;
+            }
+            const rect = activeSourceGroup.getBoundingClientRect();
+            return lastPointer.clientX >= rect.left && lastPointer.clientX <= rect.right &&
+                lastPointer.clientY >= rect.top && lastPointer.clientY <= rect.bottom;
+        };
 
         const clearDragZoneMarkers = () => {
             const table = this.tableRef();
@@ -106,7 +104,7 @@ export class HrListRenderer extends ListRenderer {
             }
             clearDragZoneMarkers();
             activeSourceGroup = null;
-            isPointerInValidZone = true;
+            lastPointer = null;
         };
 
         onWillUnmount(cleanupPointerTracking);
@@ -117,20 +115,16 @@ export class HrListRenderer extends ListRenderer {
             elements: ".o_tp_hr_draggable_row",
             groups: "tbody.o_tp_hr_dept_tbody",
             connectGroups: false,
-            handle: ".o_tp_hr_drag_handle",
+            ignore: ".o_list_record_selector, button, a, input, select, textarea, label, [role=button], [contenteditable=true]",
+            preventDrag: () => Boolean(this.props.list.editedRecord),
             cursor: "grabbing",
             placeholderClasses: ["d-table-row", "o_tp_hr_drop_placeholder"],
             followingElementClasses: ["o_tp_hr_drag_preview"],
-            onWillStartDrag: () => {
-                if (this.props.list.editedRecord) {
-                    this.props.list.leaveEditMode();
-                }
-            },
             onDragStart: (params) => {
                 this._tpSuppressClickUntil = Date.now() + 600;
                 this.sortStart(params);
                 activeSourceGroup = params.group || params.element?.closest("tbody.o_tp_hr_dept_tbody");
-                isPointerInValidZone = true;
+                lastPointer = null;
 
                 const table = this.tableRef();
                 if (table) {
@@ -144,60 +138,28 @@ export class HrListRenderer extends ListRenderer {
                     if (!activeSourceGroup) {
                         return;
                     }
-                    const hitEls = browser.document?.elementsFromPoint?.(ev.clientX, ev.clientY) || [];
-                    // Native dragging disables pointer events on ancestors, so hit testing
-                    // may return only a row/cell and omit its tbody.
-                    const hoveredTbody = hitEls
-                        .map((el) => el.closest?.("tbody.o_tp_hr_dept_tbody"))
-                        .find(Boolean);
-                    const insideTable = hitEls.some((el) => el === this.tableRef());
-
-                    for (const tb of this.tableRef()?.querySelectorAll("tbody.is-drop-forbidden") || []) {
-                        if (tb !== hoveredTbody) {
-                            tb.classList.remove("is-drop-forbidden");
-                        }
-                    }
-
-                    if (hoveredTbody && hoveredTbody !== activeSourceGroup) {
-                        isPointerInValidZone = false;
-                        hoveredTbody.classList.add("is-drop-forbidden");
-                        this.tableRef()?.classList.add("o_tp_hr_drop_invalid");
-                        browser.document?.body?.classList.add("o_tp_hr_drop_forbidden_cursor");
-                    } else if (!hoveredTbody) {
-                        const rect = activeSourceGroup.getBoundingClientRect();
-                        const nearSource =
-                            insideTable &&
-                            ev.clientX >= rect.left &&
-                            ev.clientX <= rect.right &&
-                            ev.clientY >= rect.top &&
-                            ev.clientY <= rect.bottom;
-                        isPointerInValidZone = nearSource;
-                        this.tableRef()?.classList.toggle("o_tp_hr_drop_invalid", !nearSource);
-                        browser.document?.body?.classList.toggle("o_tp_hr_drop_forbidden_cursor", !nearSource);
-                    } else {
-                        isPointerInValidZone = hoveredTbody === activeSourceGroup;
-                        this.tableRef()?.classList.toggle("o_tp_hr_drop_invalid", !isPointerInValidZone);
-                        browser.document?.body?.classList.toggle(
-                            "o_tp_hr_drop_forbidden_cursor",
-                            !isPointerInValidZone
-                        );
-                    }
+                    lastPointer = { clientX: ev.clientX, clientY: ev.clientY };
+                    const valid = isInsideSource();
+                    table?.classList.toggle("o_tp_hr_drop_invalid", !valid);
+                    browser.document?.body?.classList.toggle("o_tp_hr_drop_forbidden_cursor", !valid);
                 };
 
                 browser.addEventListener("pointermove", onPointerMove, { capture: true });
+                browser.addEventListener("pointerup", onPointerMove, { capture: true });
                 this._tpCleanupDragPointer = () => {
                     browser.removeEventListener("pointermove", onPointerMove, { capture: true });
+                    browser.removeEventListener("pointerup", onPointerMove, { capture: true });
                 };
             },
             onDragEnd: (params) => {
                 this._tpSuppressClickUntil = Date.now() + 350;
                 this.sortStop(params);
-                // Delay cleanup by one microtask so onDrop reads isPointerInValidZone first.
+                // Delay cleanup by one microtask until the sortable drop callback has read the final pointer position.
                 Promise.resolve().then(cleanupPointerTracking);
             },
             onDrop: async ({ element, group, previous, next, parent }) => {
                 this._tpSuppressClickUntil = Date.now() + 450;
-                const validZone = isPointerInValidZone;
+                const validZone = isInsideSource();
                 if (!validZone || !group || (parent && parent !== group)) {
                     return;
                 }
@@ -226,16 +188,8 @@ export class HrListRenderer extends ListRenderer {
         });
     }
 
-    get showEmployeeReorderHandle() {
-        return this.employeeReorderState.showHandleColumn;
-    }
-
     get canDragEmployeesNow() {
         return this.employeeReorderState.canDrag;
-    }
-
-    get reorderLockGuidance() {
-        return REORDER_LOCK_GUIDANCE;
     }
 
     get isDeptGroupedEmployeeList() {
@@ -262,9 +216,6 @@ export class HrListRenderer extends ListRenderer {
             this.props.list.groupBy?.includes("department_id")
                 ? columns.filter((column) => column.name !== "department_id")
                 : columns;
-        if (this.showEmployeeReorderHandle) {
-            return [HANDLE_COLUMN_SPEC, ...filtered];
-        }
         return filtered;
     }
 
@@ -276,16 +227,10 @@ export class HrListRenderer extends ListRenderer {
         return base;
     }
 
-    onHandleClick(ev) {
-        ev?.stopPropagation?.();
-        ev?.preventDefault?.();
-    }
-
     _shouldSuppressAfterDrag(ev) {
         if (
             this.tpDragState?.dragging ||
-            Date.now() < this._tpSuppressClickUntil ||
-            ev?.target?.closest?.(".o_tp_hr_drag_handle_cell")
+            Date.now() < this._tpSuppressClickUntil
         ) {
             ev?.stopPropagation?.();
             ev?.preventDefault?.();

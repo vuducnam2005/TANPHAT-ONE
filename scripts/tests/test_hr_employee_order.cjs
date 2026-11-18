@@ -53,16 +53,49 @@ const row = id => ({dataset: {resId: String(id)}, classList: {contains: () => tr
     assert.equal(notices[1][1].type, 'danger');
     assert.equal(renderer.tpReorderBusy, false);
     let suppressed = 0;
-    assert.equal(renderer._shouldSuppressAfterDrag({target: {closest: () => true}, preventDefault() {suppressed++;}, stopPropagation() {suppressed++;}}), true);
+    renderer._tpSuppressClickUntil = Date.now() + 500;
+    assert.equal(renderer._shouldSuppressAfterDrag({preventDefault() {suppressed++;}, stopPropagation() {suppressed++;}}), true);
     assert.equal(suppressed, 2);
+    const baseCalls = {capture: 0, cell: 0, selection: 0};
+    Object.assign(context.ListRenderer.prototype, {
+        onClickCapture() {baseCalls.capture++;},
+        onCellClicked() {baseCalls.cell++;},
+        toggleRecordSelection() {baseCalls.selection++;},
+    });
+    renderer._tpSuppressClickUntil = 0;
+    renderer.tpDragState = {dragging: false};
+    const clickEvent = {preventDefault() {}, stopPropagation() {}};
+    renderer.onClickCapture({}, clickEvent);
+    await renderer.onCellClicked({}, {}, clickEvent);
+    renderer.toggleRecordSelection({}, clickEvent);
+    assert.deepEqual(baseCalls, {capture: 1, cell: 1, selection: 1});
+    renderer.tpDragState.dragging = true;
+    renderer.onClickCapture({}, clickEvent);
+    await renderer.onCellClicked({}, {}, clickEvent);
+    renderer.toggleRecordSelection({}, clickEvent);
+    assert.deepEqual(baseCalls, {capture: 1, cell: 1, selection: 1});
     const dragRenderer = Object.create(context.Renderer.prototype);
     dragRenderer.setup();
     let drops = 0;
     dragRenderer.onEmployeeDropInDepartment = async () => {drops++;};
-    const group = {dataset: {deptId: '4'}};
+    const listeners = {};
+    context.browser = {addEventListener: (name, fn) => {listeners[name] = fn;}, removeEventListener() {}};
+    const classes = {add() {}, remove() {}, toggle() {}};
+    const group = {value: 4, dataset: {deptId: '4'}, classList: classes, getBoundingClientRect: () => ({left: 0, right: 500, top: 100, bottom: 400})};
+    dragRenderer.tableRef = () => ({classList: classes});
+    dragRenderer.sortStart = () => {};
+    context.sortable.onDragStart({group});
+    listeners.pointerup({clientX: 200, clientY: 200});
     await context.sortable.onDrop({element: row(8), group, parent: {dataset: {deptId: '5'}}});
     assert.equal(drops, 0);
     await context.sortable.onDrop({element: row(8), group, parent: group});
     assert.equal(drops, 1);
+    listeners.pointerup({clientX: 200, clientY: 500});
+    await context.sortable.onDrop({element: row(8), group, parent: group});
+    assert.equal(drops, 1);
+    assert.equal(dragRenderer.hrGroupDeptId({value: 26}), 26);
+    assert.equal(dragRenderer.hrGroupDeptId({value: false}), 0);
+    assert.equal(context.sortable.handle, undefined);
+    assert.match(context.sortable.ignore, /button/);
     console.log('PASS HR employee order: eligibility, filters, viewer, anchors, success/failure, click guard');
 })().catch(err => {console.error(err); process.exitCode = 1;});

@@ -8,13 +8,13 @@ Chỉ giao slice đã commit, theo danh sách file và checksum do phiên điề
 
 | Addon | Phiên bản đích |
 | --- | --- |
-| `tp_hr_workspace` | `20.0.1.13.0` |
+| `tp_hr_workspace` | `20.0.1.13.1` |
 | `tp_admin_delegation` | `20.0.2.0.1` |
 | `tp_web_login` | `20.0.2.0.1` |
 
-Không đóng gói toàn bộ working tree đang có WIP của hạng mục khác; giữ nguyên những thay đổi đó. Ghi commit SHA, đường dẫn file, SHA256 của gói và phiên bản thực chạy vào biên bản giao bản. Không đưa credential, dump hoặc filestore vào Git.
+Bản sửa kéo cả dòng `20.0.1.13.1` chỉ nâng `tp_hr_workspace`; AUTH/admin giữ phiên bản đã giao, không chạy lại migration của chúng. Không đóng gói toàn bộ working tree đang có WIP của hạng mục khác; giữ nguyên những thay đổi đó. Ghi commit SHA, đường dẫn file, SHA256 của gói và phiên bản thực chạy vào biên bản giao bản. Không đưa credential, dump hoặc filestore vào Git.
 
-Local hiện chạy nguồn cô lập tại `.local/auth-hr-finish/candidate-20261118T155325/custom_addons`, qua `runtime.conf`, cùng database của `18069`. Đây là staging source, không phải database test riêng: không chạy fixture hoặc thử ghi giả tại đây. Trước khi chuyển nguồn, đối chiếu gói đã commit và checksum; không trỏ runtime về toàn bộ source WIP. Không bắt buộc qua `18079`, không tạo/xóa database test.
+Local hiện chạy nguồn cô lập tại `.local/hr-order-row/candidate-20261118T163523/custom_addons`, qua `runtime.conf`, cùng database của `18069`. Đây là staging source, không phải database test riêng: không chạy fixture hoặc thử ghi giả tại đây. Trước khi chuyển nguồn, đối chiếu gói đã commit và checksum; không trỏ runtime về toàn bộ source WIP. Không bắt buộc qua `18079`, không tạo/xóa database test.
 
 PC server: checkout `C:/Projects/TANPHAT-ONE`, container `tp-odoo`, network `tanphat-one_default`. Dùng cấu hình, database và volume thực tế đã kiểm chứng trên môi trường đó; không tự suy đường dẫn host/container từ cấu hình local. Giữ tunnel đang chạy, không restart tunnel.
 
@@ -23,7 +23,7 @@ PC server: checkout `C:/Projects/TANPHAT-ONE`, container `tp-odoo`, network `tan
 1. Kiểm nguồn/version đang chạy, health và snapshot chỉ đọc dữ liệu/quyền cần bảo toàn. Đối chiếu gói đúng scope; bảo toàn source WIP và cấu hình hiện có.
 2. **Từng môi trường phải có backup riêng trước upgrade:** database, filestore cùng database, source/config đang chạy. Ghi thời gian, vị trí, SHA256, kiểm danh mục dump/archive đọc được và phương án phục hồi; giữ secret ngoài Git. Không dùng backup local thay backup server.
 3. Triển khai chính các file đã commit, kiểm checksum sau chép. Dừng worker ứng dụng theo cách vận hành hiện có để không có hai runtime phục vụ cùng DB trong lúc upgrade. Giữ PostgreSQL và tunnel theo cấu hình đang dùng.
-4. Chạy Odoo bằng executable/config/database của chính môi trường, chỉ nâng ba addon: `-u tp_hr_workspace,tp_admin_delegation,tp_web_login --stop-after-init`. Không `-u all`, không seed actor/password và không chạy suite sinh fixture trên DB đang dùng. Kiểm exit code và log; lỗi upgrade thì chưa mở phục vụ.
+4. Chạy Odoo bằng executable/config/database của chính môi trường; bản sửa kéo cả dòng chỉ nâng `-u tp_hr_workspace --stop-after-init`. Gói AUTH/HR ban đầu từng nâng ba addon. Không `-u all`, không seed actor/password và không chạy suite sinh fixture trên DB đang dùng. Kiểm exit code và log; lỗi upgrade thì chưa mở phục vụ.
 5. Khởi động đúng runtime đã giao, kiểm phiên bản ba addon và health. Đối chiếu snapshot: nhân sự/phòng/chức vụ/mã/tài khoản/nhóm quyền, dữ liệu thiết bị/chấm công và `web.base.url`. Migration thứ tự có thể đổi `sequence` theo thiết kế nhưng phải giữ thứ tự hiển thị hiện có và trường nghiệp vụ khác.
 6. Kiểm assets/XML/OWL và URL public bằng đọc không phá dữ liệu. Dùng browser mock cho kéo thả/lỗi/RPC âm; không tự tạo fixture hoặc đổi thứ tự nhân viên thật để smoke. Với đăng nhập mới thay phiên cũ, không đăng nhập tài khoản thật chỉ để kiểm rồi đá phiên người dùng. Chỉ kiểm bằng actor/phương thức đã được người dùng cho phép rõ ràng.
 7. Ghi commit, checksum, version runtime, backup, lệnh/kết quả thực chạy và phần `NOT_RUN` trong bàn giao; tách technical acceptance, business acceptance và pilot authorization. Lỗi thì sửa gói hoặc thực hiện rollback đã đánh giá bên dưới.
@@ -42,4 +42,4 @@ PC server: checkout `C:/Projects/TANPHAT-ONE`, container `tp-odoo`, network `tan
 - [AUTH policy](../../docs/security/AUTH_SESSION_001_POLICY.md), [AUTH acceptance](../../docs/demo/AUTH_SESSION_001_ACCEPTANCE.md), [AUTH user guide](../../docs/demo/AUTH_SESSION_001_USER_GUIDE.md).
 - [Continuous delivery](../../docs/operations/TP_CONTINUOUS_DELIVERY_POLICY.md).
 
-Nếu acceptance lịch sử còn ghi upgrade hai addon hoặc ca ghi trên dữ liệu thật, dùng scope ba addon và giới hạn kiểm an toàn của gói bàn giao hiện tại; sửa trạng thái evidence theo kết quả thực tế, không suy PASS từ kế hoạch.
+Kiểm ORM thực cho bản sửa được thực hiện trong giao dịch luôn rollback sau backup; đối chiếu bằng cursor mới để xác nhận không giữ thay đổi. Không commit thao tác thử hoặc đăng nhập tài khoản đang dùng chỉ để kiểm. Dùng scope addon và kết quả thực của gói bàn giao mới nhất; không suy PASS từ kế hoạch hoặc kết quả lịch sử.

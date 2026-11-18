@@ -1,8 +1,27 @@
 # HR-EMPLOYEE-ORDER — Kiểm kỹ thuật và nghiệm thu
 
-Cập nhật 18/11/2026 (Asia/Saigon). Phiên bản: `tp_hr_workspace` **20.0.1.13.0**, `tp_admin_delegation` **20.0.2.0.1**.
+Cập nhật 18/11/2026 (Asia/Saigon). Phiên bản: `tp_hr_workspace` **20.0.1.13.1**, `tp_admin_delegation` **20.0.2.0.1**.
 
 Nguồn: [DEC-044/053/054](../DECISIONS.md), [quy chuẩn bộ lọc](../ui/TP_TABLE_FILTER_STANDARD.md), [inventory HR-T01](../ui/TP_TABLE_FILTER_INVENTORY.md), [hướng dẫn sử dụng](HR_EMPLOYEE_ORDER_USER_GUIDE.md), [policy giao bản](../operations/TP_CONTINUOUS_DELIVERY_POLICY.md).
+
+## Bản sửa hiện hành — CHG-20261118-026
+
+HR `20.0.1.13.1` đã áp18069; PC server chờ gói này được push/deploy. Người dùng yêu cầu bỏ sáu chấm, kéo trực tiếp từ hàng. Click thường vẫn mở hồ sơ; checkbox/nút/link/input không khởi động kéo. Sort/filter và backend quyền/company/department/anchors giữ như gói trước.
+
+Lỗi đã tái hiện: native draggable bật `body.pe-none`; khi thả trên placeholder, `elementsFromPoint` không có table hoặc dòng nguồn, khiến nhánh cũ bỏ RPC âm thầm và hàng về cũ. Bản sửa dùng tọa độ cuối của pointerup trong bounds phòng nguồn, cùng kiểm group/parent native. Server log60phút không có reorder xác nhận lần kéo trước chưa tới backend.
+
+| Kiểm đã chạy | Kết quả và giới hạn |
+| --- | --- |
+| Browser native, tracked script `scripts/tests/test_hr_employee_order_browser.cjs` | PASS3template không có handle, native sortable và sortStart/sortStop thật, tái hiện pe-none+placeholder, kéo lên/xuống đúng RPC/anchors, khác phòng/ngoài bảng khôngRPC, save lỗi reload, nút/checkbox không kéo,0pageerror. Lifecycle/model/RPC vẫn mock |
+| Node VM + backend thuần/action mock | PASS click thường delegates, drag chặn mở hồ sơ/checkbox, sort/filter/pagination/viewer và lỗi lưu; backend12/12 |
+| ORM thật sau backup, luôn rollback | PASS action lên/xuống, flush/invalidate/SQL đọc lại, sequence dense, anchor khác phòng và viewer bị chặn; fresh READ ONLY cursor xác nhận SHA256 employee/version/company/users/group-rel không đổi |
+|18069| HR20.0.1.13.1, upgrade chỉ HR exit0/0ERROR; backup `.local/hr-order-row/backup-20261118T163542`, restore15.600mục, filestore1.027file; snapshot chỉ moduleversion đổi |
+
+Chưa chạy full HOOT (4ca source), full authenticated renderer/persist sau commit bằng browser, đăng nhập lại/máy khác hoặc PostgreSQL race. Không lấy browser mock hay rollback transaction làm bằng chứng persist qua giao dịch commit. Không tạo fixture/login/đổi phòng người thật, không18079. Nghiệm thu người dùng riêng.
+
+## Gói ban đầu và evidence lịch sử
+
+Các kết quả20.0.1.13.0 dưới đây là lịch sử trước phản hồi lỗi và bản sửa026; phần kiểm mới dùng bảng trên.
 
 ## Trạng thái bàn giao
 

@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-026 — Sửa kéo nhân viên quay về cũ và kéo cả hàng
+
+- Ngày18/11/2026 Asia/Saigon; yêu cầu trực tiếp từ ảnh và phản hồi người dùng thay yêu cầu sáu chấm ban đầu. HR20.0.1.13.1; không mở lại AUTH/admin.
+- Root cause được tái hiện bằng native pointer engine: body.pe-none làm elementsFromPoint thiếu table/source row khi thả trên placeholder. Nhánh cũ tự bỏ save trước RPC (log PC server60phút không có reorder). Dùng vị trí pointerup cuối trong bounds tbody nguồn, giữ native group/parent và backend kiểm phòng/công ty/quyền. Bỏ cả cột/button sáu chấm; kéo từ cell, ignore checkbox/nút/link/input; đang edit không kéo. Click thường đi qua handler gốc, drag không mở hồ sơ/chọn checkbox.
+- Kiểm thực: backend12/12; node VM; tracked browser `scripts/tests/test_hr_employee_order_browser.cjs` biên dịch3 template, dùng native draggable/sortable và sortStart/sortStop, xác nhận đúng lỗi hit-test cũ, kéo lên/xuống đúng anchors, khác phòng/ngoài bảng khôngRPC, lỗi save reload, nút/checkbox/movement/click guard;0pageerror. Browser còn mock RPC/lifecycle/model, không gọi E2E persist. HOOT source4case NOT_RUN do yêu cầu login.
+- ORM thật local sau backup: originaladmin su=False, action lên/xuống, flush/invalidate và SQL đọc lại, dense sequence, anchor khác phòng bị chặn, existing viewer bị chặn. Luôn rollback; cursor mới so SHA256 toàn bảng employee/version/company/user/group-rel giữ nguyên. Không commit reorder thử, tạo actor/dữ liệu, đổi phòng, login đá phiên hoặc dùng18079. Race/multiworker và browser với session người thật chưa chạy.
+- Local backup `.local/hr-order-row/backup-20261118T163542` DB/filestore/source-config+SHA256, restore15.600 mục/filestore1.027file; candidate `.local/hr-order-row/candidate-20261118T163523`, cùng DB18069. Upgrade chỉ tp_hr_workspace exit0/0ERROR; snapshot chỉ version HR đổi, sequence/roster/quyền giữ nguyên. WIP/sidebar/branding/attendance/reporting và checkpoint gốc giữ, clean workflow snapshot đúng scope.
+- [Acceptance](demo/HR_EMPLOYEE_ORDER_ACCEPTANCE.md), [guide](demo/HR_EMPLOYEE_ORDER_USER_GUIDE.md), [runbook](../ops/runbooks/HR_EMPLOYEE_ORDER_DEPLOY_AND_ROLLBACK.md), inventoryHR-T01 cập nhật. PCserver pending tại commit này; next push/deploy đúng commit, backup riêng server, kiểm assets và public rồi ghi kết quả.
+
 ## CHG-20261118-025 — Xác nhận assets native sau giao bản và sửa nhãn PC pending cũ
 
 - Ngày18/11/2026 Asia/Saigon. Kiểm trong ORM READ ONLY trên PC server: `web.assets_backend` giải manifest thực và biên dịch 561 CSS, 1.786 JS (6.445.107 ký tự đầu ra), 75 khối XML; `css_errors=[]`. Dùng `preprocess_css`, base `WebAsset._fetch_content`, JS `minify` và `xml`; không gọi lưu bundle/attachment hoặc tạo dữ liệu. Đây là kiểm biên dịch, không thay thế thực thi module/browser đầy đủ.

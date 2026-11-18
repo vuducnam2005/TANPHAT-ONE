@@ -29,10 +29,7 @@
 </t>
 <t t-name="tp_hr_workspace.EmployeeReorderRow" t-inherit="tp_hr_workspace.RecordRow" t-inherit-mode="extension">
  <xpath expr="//tr" position="attributes"><attribute name="t-att-data-res-id">record.resId</attribute></xpath>
- <xpath expr="//t[@t-if=&quot;column.type === 'field'&quot;]" position="before">
-  <t t-if="column.type === 'tp_hr_handle'"><td class="o_tp_hr_drag_handle_cell" t-on-click.stop.prevent="this.onHandleClick"><button type="button" class="o_tp_hr_drag_handle" t-att-disabled="!this.canDragEmployeesNow or this.tpReorderBusy" t-att-title="this.canDragEmployeesNow ? 'Kéo để sắp xếp trong phòng ban' : this.reorderLockGuidance" aria-label="Kéo để sắp xếp nhân viên"><span aria-hidden="true">⠿</span></button></td></t>
- </xpath>
- <xpath expr="//t[@t-if=&quot;column.type === 'field'&quot;]" position="attributes"><attribute name="t-if"/><attribute name="t-elif">column.type === 'field'</attribute></xpath>
+
 </t>
 <t t-name="tp_hr_workspace.EmployeeReorderGuidance" t-inherit="tp_hr_workspace.ListView" t-inherit-mode="extension">
  <xpath expr="//t[@t-component='this.props.Renderer']" position="before"><div t-if="this.showEmployeeReorderLockBanner" class="o_tp_hr_reorder_guidance" role="note"><button type="button" class="btn btn-link" t-on-click="this.resetToEmployeeCustomOrder" t-out="this.hrReorderGuidanceText"/></div></xpath>
