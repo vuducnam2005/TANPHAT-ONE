@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-034 — Đồng bộ giao bản PC server & kiểm asset public CHG-20261118-033
+
+- Deploy `c48ac9a9` (`62/62` checksum, `0` `mtime=0`) lên `PC server` sau backup `C:\TANPHAT-backups\hr-attendance-matrix003\ham003-20261118T193137` (`dump` `10.091.595`B/`15.787` restore); `-u tp_hr_attendance` `exit 0/0 ERROR`.
+- Kiểm `SERVER_MENU_OK` (`id=437` dưới Chấm công, `admin=True`, `uid=34=False`); thực tải public CSS `988ded0` (`1.593.271`B) & JS `2d59368` (`8.438.086`B) `200 OK` (có `#ccf7f7`, `#e4e7ff`, `openFileMatrix`, `matrix.v2`, `onPatched`); Playwright ẩn danh public `0` lỗi console/5xx. Tài liệu đồng bộ sau giao bản.
+
 ## CHG-20261118-033 — Đưa Bảng công theo file ra menu Chấm công/nút thao tác và khớp bố cục mẫu Excel
 
 - Di chuyển `menu_file_matrix` (*Bảng công theo file (Vào/Ra)*) ra trực tiếp dưới menu **Chấm công** (`sequence=25`, giữ nguyên gating `can('import')`), thêm nút mở nhanh **Bảng công theo file (Vào/Ra)** / **Đối chiếu A/B** trên `board.xml/js` và `dashboard.xml/js`.

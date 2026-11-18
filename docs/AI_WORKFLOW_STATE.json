@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T12:25:35.020369+00:00",
-  "last_change_id": "CHG-20261118-033",
+  "updated_at": "2026-11-18T12:39:08.808964+00:00",
+  "last_change_id": "CHG-20261118-034",
   "code_digest": "53f50db50ca1ca45c6d3839c2fbc60328ce176d055bfc9b884497c47eef9d779",
   "code_file_count": 673,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "4def96ffc5ff730d9b33fb69643713bf0ac024c59e36422c329ed2358b953fe9",
-    "docs/CHANGELOG.md": "6d35427d7e5c3aa2d1cd02886c8f6ef4d6ba65825d1310bef182abad0e401dd6",
+    "docs/PROJECT_STATUS.md": "e8fec5680b0be815f8c88e70ca890ab0069d20d0ff9bb1cecdab29eee459ca22",
+    "docs/CHANGELOG.md": "9f52580f62e5e2e50ae90d7e723a3bd494e56e518bfbe38e2dfd9b3152324aeb",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "ruff 0; XML/JS OK; pure 26/26 PASS; 18069 -u exit 0/0 ERROR; menu_file_matrix uid=2=True/uid=34=False; HTTP CSS 35a7749/JS 69b87c9 200 OK"
+    "PC server c48ac9a9: 62/62 SHA256; -u exit 0/0 ERROR; SERVER_MENU_OK id=437 admin=True uid=34=False; public CSS 988ded0/JS 2d59368 200 OK; anon Playwright 0 err"
   ]
 }
