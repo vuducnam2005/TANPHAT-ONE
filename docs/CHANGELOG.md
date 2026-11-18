@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-018 — tp_web_login: bỏ slogan phụ, dịch cụm bước lên trên và thêm link by Tadic
+
+- Ngày 18/11/2026 (Asia/Saigon). Theo yêu cầu bổ sung trực tiếp: trong `custom_addons/tp_web_login` (`20.0.1.6.2`, commit code `86f75df7`), bỏ dòng “Kết nối công việc. Vững bước cùng Tấn Phát.”; gom tiêu đề `Hệ thống quản trị điều hành` và hàng `Kế hoạch – Công việc – Báo cáo` vào `.tp-auth-main` để cụm bước dịch lên trên ngay dưới tiêu đề; giữ `copyright @by Tadic` ở cuối panel trái với `by Tadic` là liên kết `https://tanphatjsc.com/` (`target="_blank" rel="noopener noreferrer"`), màu `#E2EEFA`, gạch chân mảnh màu teal, hover `#5EEAD4`. Cập nhật `tests/test_native_login.py` và `README.md`.
+- Kiểm & triển khai `PC server`: XML/AST/CSS/Ruff/`git diff --check` PASS; backup `C:\TANPHAT-backups\ui-login-copy\20261118T134311` (`tp_tanphat_dev.dump` `9.581.246`B, `tp_web_login-pre.tar.gz` `20.423`B); `-u tp_web_login` exit `0` / `0` ERROR; HTTP `200`; Playwright URL public `https://hybrid-send-ready-ballot.trycloudflare.com/dang-nhap` đạt `8/8` viewport desktop/mobile/zoom200 (`0` tràn ngang, `0` lỗi runtime, link `by Tadic` đúng `href`/`target`/`rel`/màu/gạch chân) và kiểm ảnh chụp trực tiếp. `NOT_RUN`: Odoo `TestNativeLogin` trên `18079` và local `18069` (đang tắt).
+
 ## CHG-20261118-017 — tp_web_login: cập nhật nội dung panel trái trang đăng nhập và dòng copyright
 
 - Ngày 18/11/2026 (Asia/Saigon). Theo yêu cầu trực tiếp: trong `custom_addons/tp_web_login` (`20.0.1.6.1`, commit code `dac9e6c4`), đổi dòng dưới `TANPHAT ONE` sang `Vững Vàng Hội Nhập`, đổi tiêu đề lớn sang `Hệ thống quản trị điều hành` (2 dòng cân đối trên desktop, 1 dòng trên mobile), và thêm `copyright @by Tadic` (`12.5px`/`12px`, `#9EB8D4`) bên dưới hàng `Kế hoạch – Công việc – Báo cáo`, căn trái thẳng hàng mục `Kế hoạch` trong `.tp-auth-identity-footer`. Cập nhật `tests/test_native_login.py` và `README.md`; giữ nguyên logo, màu nền, bố cục, `tp_branding` và toàn bộ chức năng đăng nhập.

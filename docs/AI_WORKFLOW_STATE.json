@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T06:37:45.513988+00:00",
-  "last_change_id": "CHG-20261118-017",
-  "code_digest": "3e555eedad2570b38eb6564f7a6d2e17122190ad88009ba235c76130b1327623",
+  "updated_at": "2026-11-18T06:47:16.599728+00:00",
+  "last_change_id": "CHG-20261118-018",
+  "code_digest": "1510bb6be006efab75e674e3e671ab17abf3bcbd8753372bfdc07436f9a23df6",
   "code_file_count": 635,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "6a634dad1036bffb3561d09c66e0821ebaf04e449c4dcbdefd21fd4dc85fc83a",
-    "docs/CHANGELOG.md": "20b3fefa4bae9b2a88f469ab0f09e14648b159a4f4b29e820e061057c2b03559",
+    "docs/PROJECT_STATUS.md": "20e696cf906ad46093e2feee4174482963dc0fa1aae29f7bb7f53f60acd505e7",
+    "docs/CHANGELOG.md": "b9a3004f5bb6a6d724024dbbd0fd4a4b447bcc981cddd8607883cafd012633e7",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "XML/AST/CSS/Ruff PASS; PC server -u tp_web_login 20.0.1.6.1 exit 0; Playwright 8/8 viewports PASS on https://hybrid-send-ready-ballot.trycloudflare.com/dang-nhap; TestNativeLogin 18079 & local 18069 NOT_RUN"
+    "XML/AST/CSS/Ruff PASS; PC server -u tp_web_login 20.0.1.6.2 exit 0; Playwright 8/8 viewports + by Tadic link PASS on https://hybrid-send-ready-ballot.trycloudflare.com/dang-nhap; TestNativeLogin 18079 & local 18069 NOT_RUN"
   ]
 }
