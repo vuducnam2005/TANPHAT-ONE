@@ -13,14 +13,17 @@ from odoo.addons.tp_organization.models.hr_employee import _ROSTER_WRITE
 WEEKDAY = ('T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN')
 
 
-def report(people, start, days, sheets=('Tuần 1',)):
+def report(people, start, days, sheets=('Tuần 1',), late=False, late_groups=1, late_labels=('Lần', 'Phút')):
     """Build an .xlsx like the machine export: period line, STT/Mã/Tên/ID header, Vào/Ra row pairs.
 
-    ``people`` = [{'code': '9001', 'name': 'Synthetic A', 'times': [('07:37', '17:05'), (None, None)]}].
+    ``people`` = [{'code': '9001', 'name': 'Synthetic A', 'times': [('07:37', '17:05'), (None, None)],
+    'late': (2, 15)}]. With ``late`` a merged "Đi muộn" group (Lần / Phút below) follows the day columns,
+    like the machine file; ``late_groups`` > 1 repeats it (ambiguous layout).
     """
     book = Workbook()
     book.remove(book.active)
     end = start + timedelta(days=days - 1)
+    late_column = 7 + days
     for title in sheets:
         sheet = book.create_sheet(title)
         sheet['A1'] = 'BÁO CÁO CHẤM CÔNG (synthetic)'
@@ -32,6 +35,13 @@ def report(people, start, days, sheets=('Tuần 1',)):
             day = start + timedelta(days=offset)
             sheet.cell(6, 7 + offset, day.day)
             sheet.cell(7, 7 + offset, WEEKDAY[day.weekday()])
+        if late:
+            for group in range(late_groups):
+                column = late_column + 2 * group
+                sheet.cell(6, column, 'Đi muộn')
+                sheet.merge_cells(start_row=6, start_column=column, end_row=6, end_column=column + 1)
+                for shift, label in enumerate(late_labels):
+                    sheet.cell(7, column + shift, label)
         sheet.cell(8, 1, 'PHÒNG SYNTHETIC')
         row = 9
         for index, person in enumerate(people, 1):
@@ -47,6 +57,12 @@ def report(people, start, days, sheets=('Tuần 1',)):
                     sheet.cell(row, 7 + offset, clock_in)
                 if clock_out:
                     sheet.cell(row + 1, 7 + offset, clock_out)
+            if late and person.get('late'):
+                count, minutes = person['late']
+                if count is not None:
+                    sheet.cell(row, late_column, count)
+                if minutes is not None:
+                    sheet.cell(row, late_column + 1, minutes)
             row += 2
     buffer = BytesIO()
     book.save(buffer)

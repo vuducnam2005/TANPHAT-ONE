@@ -1,7 +1,9 @@
 """Reader for the machine attendance report: one Vào row and one Ra row per employee, one column per day.
 
-Pure functions (no ORM) so the format rules stay unit-testable. Summary columns of the machine report
-(late, absent, totals, notes) are never read; only the identity cells, the period header and day cells.
+Pure functions (no ORM) so the format rules stay unit-testable. Of the summary columns only the
+"Đi muộn" group (Lần / Phút) is read, found by its two-level header and merged cells, never by a fixed
+column letter; the machine's period total is kept as given and never recomputed from clock times.
+Absent, early leave, totals, overtime and notes are ignored.
 """
 import re
 import unicodedata
@@ -19,6 +21,12 @@ PERIOD_RE = re.compile(r'(\d{1,2})/(\d{1,2})/(\d{4})\D+?(\d{1,2})/(\d{1,2})/(\d{
 CODE_RE = re.compile(r'^[A-Za-zĐđ]{1,6}$')
 WEEKDAYS = {'t2': 0, 't3': 1, 't4': 2, 't5': 3, 't6': 4, 't7': 5, 'cn': 6}
 HEADERS = {'stt': 'stt', 'ma nhan vien': 'source_code', 'ten nhan vien': 'name', 'id': 'machine_code', 'chuc vu': 'title'}
+LATE_HEADERS = ('di muon', 'di tre')
+LATE_COUNT = ('lan', 'so lan')
+LATE_MINUTES = ('phut', 'so phut')
+# Late states per person: ok, empty (no number), invalid (not a non-negative integer, or only one side),
+# inconsistent (0 times with minutes or the reverse: kept as the source gave it, flagged for HR).
+LATE_STATES = ('ok', 'empty', 'invalid', 'inconsistent')
 # Event kinds. Only "pair" becomes a session; every other kind waits in staging for a person to check.
 KINDS = ('pair', 'missing_out', 'missing_in', 'reversed', 'code', 'merged', 'multi', 'invalid')
 
@@ -132,17 +140,152 @@ def _code(value):
     return str(int(text)) if text.isdigit() and int(text) > 0 else ''
 
 
+def read_late_number(value):
+    """``(int or None, raw)``: a machine total must be a whole number >= 0; anything else is not guessed."""
+    if value is None:
+        return None, ''
+    if isinstance(value, bool):
+        return False, str(value)
+    if isinstance(value, (int, float)):
+        if float(value).is_integer() and value >= 0:
+            return int(value), str(int(value))
+        return False, str(value)
+    raw = str(value).strip()
+    if not raw:
+        return None, ''
+    if raw.isdigit():
+        return int(raw), raw
+    return False, raw[:32]
+
+
+def late_state(count, minutes):
+    """Classify a Lần / Phút pair read by :func:`read_late_number` (``None`` = empty, ``False`` = invalid)."""
+    if count is None and minutes is None:
+        return 'empty'
+    if count is False or minutes is False or count is None or minutes is None:
+        return 'invalid'
+    if (count == 0) != (minutes == 0):
+        return 'inconsistent'
+    return 'ok'
+
+
+def _merged_span(sheet, row, column):
+    for merged in sheet.merged_cells.ranges:
+        if merged.min_row <= row <= merged.max_row and merged.min_col <= column <= merged.max_col:
+            return merged.min_row, merged.max_row, merged.min_col, merged.max_col
+    return row, row, column, column
+
+
+def find_late_columns(sheet, header_row, skip=()):
+    """Locate the "Đi muộn" group under the header: ``{'state', 'count', 'minutes', 'ref', 'message'}``.
+
+    The group label sits on the header row (or the row below when the header is shifted) and its
+    Lần / Phút sub-labels on the next row inside the group's merged span (or the two cells below).
+    """
+    found = []
+    for row in (header_row, header_row + 1):
+        for column in range(1, sheet.max_column + 1):
+            if column in skip:
+                continue
+            if fold(sheet.cell(row, column).value) in LATE_HEADERS:
+                found.append((row, column))
+    if not found:
+        return {'state': 'no_column', 'count': None, 'minutes': None, 'ref': '',
+                'message': 'Không có cột Đi muộn; số đi muộn: Chưa có số liệu.'}
+    if len(found) > 1:
+        refs = ', '.join(f'{column_letter(column)}{row}' for row, column in found)
+        return {'state': 'ambiguous', 'count': None, 'minutes': None, 'ref': refs,
+                'message': f'Có nhiều nhóm Đi muộn ({refs}); không tự chọn.'}
+    row, column = found[0]
+    _top, bottom, first, last = _merged_span(sheet, row, column)
+    if last == first:
+        last = min(sheet.max_column, first + 1)
+    count = minutes = None
+    for sub in range(first, last + 1):
+        label = fold(sheet.cell(bottom + 1, sub).value)
+        if label in LATE_COUNT and count is None:
+            count = sub
+        elif label in LATE_MINUTES and minutes is None:
+            minutes = sub
+    ref = f'{column_letter(first)}{row}:{column_letter(last)}{bottom + 1}'
+    if not count or not minutes:
+        return {'state': 'partial', 'count': None, 'minutes': None, 'ref': ref,
+                'message': f'Nhóm Đi muộn ({ref}) thiếu cột Lần hoặc Phút; số đi muộn: Chưa có số liệu.'}
+    return {'state': 'ok', 'count': count, 'minutes': minutes, 'ref': ref, 'label_row': bottom + 1, 'message': ''}
+
+
+def map_day_columns(sheet, header_row, span, skip=()):
+    """``({column: date}, [errors])`` for the numeric day headers, read left to right.
+
+    A day number matches the next date of the period with that day (and the weekday label below it
+    when present). When the same number could still mean two dates the cell is reported, not guessed.
+    """
+    columns = []
+    for column in range(1, sheet.max_column + 1):
+        if column in skip:
+            continue
+        number = _day_number(sheet.cell(header_row, column).value)
+        if number is not None:
+            columns.append((column, number, fold(sheet.cell(header_row + 1, column).value)))
+    dates, errors = {}, []
+    if len(columns) == len(span) and all(number == day.day for (_c, number, _l), day in zip(columns, span, strict=True)):
+        for (column, _number, label), day in zip(columns, span, strict=True):
+            if label in WEEKDAYS and WEEKDAYS[label] != day.weekday():
+                errors.append(f'Thứ của ngày {day:%d/%m/%Y} ({label.upper()}, ô {column_letter(column)}{header_row + 1}) không khớp lịch.')
+            else:
+                dates[column] = day
+        return dates, errors
+    floor = None
+    for column, number, label in columns:
+        cell = f'{column_letter(column)}{header_row}'
+        candidates = [day for day in span if day.day == number and (floor is None or day > floor)]
+        if label in WEEKDAYS:
+            matching = [day for day in candidates if day.weekday() == WEEKDAYS[label]]
+            if candidates and not matching:
+                errors.append(f'Thứ của ngày {number} ({label.upper()}, ô {column_letter(column)}{header_row + 1}) không khớp lịch.')
+                continue
+            candidates = matching
+        if not candidates:
+            errors.append(f'Cột ngày {number} (ô {cell}) không thuộc kỳ {span[0]:%d/%m/%Y}–{span[-1]:%d/%m/%Y}.')
+            continue
+        if len(candidates) > 1:
+            choices = ' hoặc '.join(f'{day:%d/%m/%Y}' for day in candidates)
+            errors.append(f'Ô {cell}: ngày {number} có thể là {choices}; header chưa đủ để xác định, cần xem lại.')
+            continue
+        dates[column] = floor = candidates[0]
+    return dates, errors
+
+
+def _person_late(sheet, row_number, out_row, late):
+    """Read Lần / Phút on the Vào row (vertical merges keep the value there), else on the Ra row."""
+    values = {}
+    for key in ('count', 'minutes'):
+        column = late[key]
+        number, raw = read_late_number(sheet.cell(row_number, column).value)
+        if number is None and out_row:
+            number, raw = read_late_number(sheet.cell(out_row, column).value)
+        values[key] = (number, raw)
+    (count, raw_count), (minutes, raw_minutes) = values['count'], values['minutes']
+    state = late_state(count, minutes)
+    return {
+        'late_state': state, 'late_count': count if state in ('ok', 'inconsistent') else None,
+        'late_minutes': minutes if state in ('ok', 'inconsistent') else None,
+        'late_raw_count': raw_count, 'late_raw_minutes': raw_minutes,
+        'late_cell': f"{column_letter(late['count'])}{row_number}:{column_letter(late['minutes'])}{row_number}",
+    }
+
+
 def parse_sheet(sheet, sheet_index):
     """Return ``{'name', 'period', 'events', 'errors', 'employees', 'empty_cells'}`` for one sheet."""
     result = {'name': sheet.title, 'index': sheet_index, 'period': None, 'events': [], 'errors': [], 'employees': 0,
-              'people': [], 'empty_cells': 0}
+              'people': [], 'empty_cells': 0, 'late': {'state': 'no_column', 'ref': '', 'message': ''}}
     if sheet.max_row > MAX_ROWS:
         result['errors'].append(f'Trang có hơn {MAX_ROWS} dòng.')
         return result
     header_row, columns = None, {}
     for row_number, row in enumerate(sheet.iter_rows(min_row=1, max_row=min(sheet.max_row, 40), values_only=True), 1):
         folded = [fold(value) for value in row]
-        if folded and folded[0] == 'stt' and 'id' in folded:
+        if 'stt' in folded and 'id' in folded:
             header_row = row_number
             columns = {HEADERS[name]: index + 1 for index, name in enumerate(folded) if name in HEADERS}
             break
@@ -154,21 +297,14 @@ def parse_sheet(sheet, sheet_index):
         result['errors'].append('Không đọc được kỳ "Từ ngày … Đến ngày …" phía trên tiêu đề.')
         return result
     result['period'] = period
-    dates = {}
     span = [period[0] + timedelta(days=offset) for offset in range((period[1] - period[0]).days + 1)]
-    for column in range(1, sheet.max_column + 1):
-        number = _day_number(sheet.cell(header_row, column).value)
-        if number is None or column in columns.values():
-            continue
-        matches = [day for day in span if day.day == number]
-        if len(matches) != 1:
-            result['errors'].append(f'Cột ngày {number} ({column_letter(column)}) không thuộc kỳ {period[0]:%d/%m/%Y}–{period[1]:%d/%m/%Y}.')
-            continue
-        label = fold(sheet.cell(header_row + 1, column).value)
-        if label in WEEKDAYS and WEEKDAYS[label] != matches[0].weekday():
-            result['errors'].append(f'Thứ của ngày {matches[0]:%d/%m/%Y} ({label.upper()}) không khớp lịch.')
-            continue
-        dates[column] = matches[0]
+    late = find_late_columns(sheet, header_row, skip=set(columns.values()))
+    skip = set(columns.values()) | ({late['count'], late['minutes']} if late['state'] == 'ok' else set())
+    dates, errors = map_day_columns(sheet, header_row, span, skip=skip)
+    result['errors'].extend(errors)
+    result['late'] = {key: late[key] for key in ('state', 'ref', 'message')}
+    if late['state'] == 'ok':
+        result['late'].update(count_col=column_letter(late['count']), minutes_col=column_letter(late['minutes']))
     if result['errors']:
         return result
     if not dates:
@@ -188,9 +324,10 @@ def parse_sheet(sheet, sheet_index):
     vertical = {(merged.min_row, merged.min_col) for merged in sheet.merged_cells.ranges
                 if merged.max_row > merged.min_row and merged.min_col in dates}
     group = ''
+    first_column = columns.get('stt') or min(columns.values())
     for row_number in range(header_row + 2, sheet.max_row + 1):
         label = fold(sheet.cell(row_number, label_column).value)
-        first = sheet.cell(row_number, 1).value
+        first = sheet.cell(row_number, first_column).value
         if label != 'vao':
             if label != 'ra' and isinstance(first, str) and first.strip() and not _code(sheet.cell(row_number, columns['machine_code']).value):
                 group = first.strip()
@@ -199,7 +336,11 @@ def parse_sheet(sheet, sheet_index):
         identity = {key: sheet.cell(row_number, index).value for key, index in columns.items()}
         machine_code = _code(identity.get('machine_code')) or _code(identity.get('source_code'))
         result['employees'] += 1
-        result['people'].append({'row': row_number, 'machine_code': machine_code, 'name': str(identity.get('name') or '').strip()})
+        person = {'row': row_number, 'machine_code': machine_code, 'name': str(identity.get('name') or '').strip(),
+                  'source_code': _code(identity.get('source_code')), 'group': group}
+        if late['state'] == 'ok':
+            person.update(_person_late(sheet, row_number, out_row, late))
+        result['people'].append(person)
         base = {
             'sheet': sheet.title, 'sheet_index': sheet_index, 'row': row_number, 'machine_code': machine_code,
             'source_code': _code(identity.get('source_code')), 'name': str(identity.get('name') or '').strip(),

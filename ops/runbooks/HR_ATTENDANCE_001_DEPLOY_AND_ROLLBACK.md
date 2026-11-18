@@ -17,3 +17,17 @@ Kiểm sau áp: proxy export employee bị chặn với non-HR, field metadata/�
 liên hệ riêng bị từ chối, work-phone/avatar/self-profile vẫn hoạt động; source công
 và roster không đổi. Không coi ca resume trống hoặc bộ test không DB là bằng chứng
 tải certificate với hồ sơ thật; không tạo chứng từ giả trênmain để lấp ca này.
+
+## SIMPLE-002 `20.0.2.0.0` (`CHG-20261118-019`)
+
+Release cùng quy trình trên, label `has002`, script/manifest private trong `.local/hr-attendance-simple002/`.
+Khác S4: release **xóa** 3 file `board.scss`/`dashboard.scss`/`mine.scss` (manifest liệt kê asset tường minh,
+xóa để source khớp commit) và thêm `data/`, model `late/logic/overview/source`, `upload/`, `sources.*`.
+`-u tp_hr_attendance` tạo bảng `tp_hr_attendance_late/_source/_source_code/_event` và tham số
+`tp_hr_attendance.reference_hours` (`noupdate`); không migration dữ liệu cũ, không đụng session/day/
+correction/period. Kiểm sau áp: version, đếm session/day/late/event/source/batch, roster/user/nhóm/base URL
+trước-sau; public: Tổng quan/Bảng chấm công/Nguồn dữ liệu mở được, API *Chưa cấu hình*, 0 lỗi console/5xx.
+
+**Không** nhập Excel thật trên server khi deploy; HR tự nhập qua nút *Nhập Excel máy chấm công* (xem trước
+rồi mới ghi). Hoàn nguyên code: khôi phục `source-config.tar.gz` của đúng backup rồi `-u tp_hr_attendance`;
+4 bảng mới để lại, bản cũ không đọc tới (chưa diễn tập). Hoàn nguyên đầy đủ dùng dump + filestore cùng backup.

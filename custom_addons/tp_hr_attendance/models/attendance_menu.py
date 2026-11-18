@@ -6,6 +6,7 @@ from .attendance_common import HR_MANAGER, can
 # menu xmlid -> capability. HR manager always sees review/periods (read-only oversight); actions still check assignments.
 GATED = {
     'tp_hr_attendance.menu_import': 'import',
+    'tp_hr_attendance.menu_sources': 'import',
     'tp_hr_attendance.menu_review': 'review',
     'tp_hr_attendance.menu_periods': 'lock',
 }
@@ -33,4 +34,10 @@ class IrUiMenuAttendance(models.Model):
                     ('company_id', 'in', companies.ids)]))
             if not allowed:
                 ids.discard(menu.id)
-        return ids
+        # The admin folder disappears when gating left it without a visible entry.
+        folder = self.env.ref('tp_hr_attendance.menu_group_attendance_admin', raise_if_not_found=False)
+        if folder and folder.id in ids:
+            children = self.sudo().with_context(active_test=True).search([('parent_id', '=', folder.id)]).ids
+            if not ids & set(children):
+                ids.discard(folder.id)
+        return frozenset(ids)

@@ -1,14 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- HR-ATTENDANCE-001 menus inside TP HR; processing items follow assignments, config stays with HR manager. -->
+<!-- HR-ATTENDANCE-SIMPLE-002 menus: the everyday group keeps three screens; processing and data sources sit in
+     "Quản trị chấm công" and follow real capabilities (GATED in models/attendance_menu.py). Actions and paths are kept. -->
 <odoo>
     <menuitem id="menu_group_attendance" name="Chấm công" parent="tp_hr_workspace.menu_hr" sequence="15" groups="base.group_user"/>
-    <menuitem id="menu_dashboard" name="Tổng quan công" parent="menu_group_attendance" action="action_dashboard" sequence="10" groups="base.group_user"/>
-    <menuitem id="menu_board" name="Bảng công" parent="menu_group_attendance" action="action_board" sequence="20" groups="base.group_user"/>
+    <menuitem id="menu_dashboard" name="Tổng quan chấm công" parent="menu_group_attendance" action="action_dashboard" sequence="10" groups="base.group_user"/>
+    <menuitem id="menu_board" name="Bảng chấm công" parent="menu_group_attendance" action="action_board" sequence="20" groups="base.group_user"/>
     <menuitem id="menu_mine" name="Công của tôi" parent="menu_group_attendance" action="action_mine" sequence="30" groups="base.group_user"/>
-    <menuitem id="menu_my_requests" name="Yêu cầu của tôi" parent="menu_group_attendance" action="action_my_requests" sequence="40" groups="base.group_user"/>
-    <menuitem id="menu_review" name="Xử lý điều chỉnh" parent="menu_group_attendance" action="action_review" sequence="50" groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
-    <menuitem id="menu_periods" name="Chốt kỳ" parent="menu_group_attendance" action="action_periods" sequence="60" groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
-    <menuitem id="menu_import" name="Nhập dữ liệu" parent="menu_group_attendance" action="action_import" sequence="70"
+    <!-- Reachable from "Công của tôi"; hidden from the menu to keep three everyday entries. -->
+    <menuitem id="menu_my_requests" name="Yêu cầu của tôi" parent="menu_group_attendance" action="action_my_requests" sequence="40" groups="base.group_user" active="False"/>
+
+    <menuitem id="menu_group_attendance_admin" name="Quản trị chấm công" parent="tp_hr_workspace.menu_hr" sequence="85"
+              groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
+    <menuitem id="menu_import" name="Nhập dữ liệu" parent="menu_group_attendance_admin" action="action_import" sequence="10"
+              groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
+    <menuitem id="menu_sources" name="Nguồn dữ liệu" parent="menu_group_attendance_admin" action="action_sources" sequence="20"
+              groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
+    <menuitem id="menu_review" name="Xử lý điều chỉnh" parent="menu_group_attendance_admin" action="action_review" sequence="30"
+              groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
+    <menuitem id="menu_periods" name="Chốt kỳ" parent="menu_group_attendance_admin" action="action_periods" sequence="40"
               groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
 
     <menuitem id="menu_rules" name="Quy tắc công" parent="tp_hr_workspace.menu_group_config" action="action_rules" sequence="50" groups="hr.group_hr_manager"/>

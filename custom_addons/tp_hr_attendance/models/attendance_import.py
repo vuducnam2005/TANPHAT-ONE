@@ -1,4 +1,8 @@
-"""Preview → apply import of the machine attendance report; duplicates and conflicts never overwrite."""
+"""Preview → apply import of the machine attendance report; duplicates and conflicts never overwrite.
+
+HR-ATTENDANCE-SIMPLE-002 adds the drag-and-drop upload RPCs on top of the same batch flow and stores the
+machine "Đi muộn" totals of each source period (``tp.hr.attendance.late``) next to the day punches.
+"""
 import hashlib
 from collections import defaultdict
 
@@ -17,6 +21,7 @@ from .attendance_common import (
     local_to_utc,
     require,
 )
+from .attendance_logic import dates_between, short_range
 from .attendance_parser import AttendanceFormatError, parse_attendance
 
 ADVISORY_KEY = 761120
@@ -37,6 +42,14 @@ KIND_MESSAGES = {
 }
 ISSUE_STATES = ('missing', 'review', 'conflict')
 COUNTED = ('valid', 'duplicate', 'conflict', 'unmapped', 'name_conflict', 'missing', 'review', 'locked', 'applied')
+LATE_COUNTED = ('valid', 'duplicate', 'conflict', 'unmapped', 'name_conflict', 'missing', 'review', 'locked', 'applied')
+LATE_MESSAGES = {
+    'empty': 'Ô Đi muộn trống: Chưa có số liệu, không coi là 0.',
+    'invalid': 'Số đi muộn không phải số nguyên không âm (hoặc thiếu Lần/Phút): Chưa có số liệu.',
+    'inconsistent': 'Lần và Phút không khớp nhau (một bên 0); giữ số nguồn, cần HR xem lại.',
+}
+PREVIEW_ATTENTION = 60
+UPLOAD_MAX_B64 = 20 * 1024 * 1024  # ≈ 15 MB of .xlsx once base64-encoded
 
 
 def signature(employee_id, work_date, kind, check_in=None, check_out=None, raw_in='', raw_out=''):
@@ -91,13 +104,24 @@ class AttendanceBatch(models.Model):
     locked_count = fields.Integer('Kỳ đã chốt', readonly=True)
     applied_count = fields.Integer('Đã ghi nhận', readonly=True)
     empty_count = fields.Integer('Ô trống', readonly=True)
+    late_ids = fields.One2many('tp.hr.attendance.late', 'batch_id', 'Tổng đi muộn theo kỳ', readonly=True)
+    late_valid_count = fields.Integer('Tổng muộn hợp lệ', readonly=True)
+    late_duplicate_count = fields.Integer('Tổng muộn trùng', readonly=True)
+    late_conflict_count = fields.Integer('Tổng muộn xung đột', readonly=True)
+    late_unmapped_count = fields.Integer('Tổng muộn chưa đối chiếu', readonly=True)
+    late_name_conflict_count = fields.Integer('Tổng muộn tên khác hồ sơ', readonly=True)
+    late_missing_count = fields.Integer('Tổng muộn chưa có số liệu', readonly=True)
+    late_review_count = fields.Integer('Tổng muộn cần kiểm tra', readonly=True)
+    late_locked_count = fields.Integer('Tổng muộn kỳ đã chốt', readonly=True)
+    late_applied_count = fields.Integer('Tổng muộn đã ghi nhận', readonly=True)
     applied_by = fields.Many2one('res.users', 'Người áp dụng', readonly=True)
     applied_at = fields.Datetime('Thời điểm áp dụng', readonly=True)
     result = fields.Text('Kết quả', readonly=True)
     summary_html = fields.Html('Theo trang tính', compute='_compute_summary_html', sanitize=False)
 
     _SYSTEM_FIELDS = {'checksum', 'same_file_batch_id', 'tz', 'state', 'sheet_summary', 'period_from', 'period_to', 'employee_ids',
-                      'line_ids', 'attention_line_ids', 'applied_by', 'applied_at', 'result', 'line_count', 'empty_count'} | {f'{s}_count' for s in COUNTED}
+                      'line_ids', 'attention_line_ids', 'applied_by', 'applied_at', 'result', 'line_count', 'empty_count',
+                      'late_ids'} | {f'{s}_count' for s in COUNTED} | {f'late_{s}_count' for s in LATE_COUNTED}
 
     @api.depends('sheet_summary')
     def _compute_summary_html(self):
@@ -193,7 +217,7 @@ class AttendanceBatch(models.Model):
             raise UserError(str(exc)) from exc
         resolve, _codes = self._tp_mapper()
         tz = self.tz or DEFAULT_TZ
-        lines, summary, coverage, empty = [], [], set(), 0
+        lines, lates, summary, coverage, empty = [], [], [], set(), 0
         for sheet in sheets:
             employees = set()
             for person in sheet['people']:
@@ -206,8 +230,20 @@ class AttendanceBatch(models.Model):
                 'name': sheet['name'], 'from': sheet['period'][0].isoformat() if sheet['period'] else None,
                 'to': sheet['period'][1].isoformat() if sheet['period'] else None, 'employees': sheet['employees'],
                 'events': len(sheet['events']), 'empty': sheet['empty_cells'], 'errors': sheet['errors'],
-                'employee_ids': sorted(employees),
+                'employee_ids': sorted(employees), 'late': sheet.get('late') or {},
             })
+            if sheet['period'] and not sheet['errors']:
+                for person in sheet['people']:
+                    if 'late_state' not in person:
+                        continue
+                    lates.append({
+                        'batch_id': self.id, 'sheet_name': sheet['name'], 'sheet_index': sheet['index'], 'row_number': person['row'],
+                        'cell_ref': person['late_cell'], 'machine_code': person['machine_code'], 'source_name': person['name'],
+                        'date_from': sheet['period'][0], 'date_to': sheet['period'][1],
+                        'late_count': person['late_count'] or 0, 'late_minutes': person['late_minutes'] or 0,
+                        'raw_count': person['late_raw_count'], 'raw_minutes': person['late_raw_minutes'],
+                        'source_state': person['late_state'], 'state': 'preview',
+                    })
             for event in sheet['events']:
                 check_in = local_to_utc(event['work_date'], event['clock_in'], tz) if event['clock_in'] else False
                 check_out = local_to_utc(event['work_date'], event['clock_out'], tz) if event['clock_out'] else False
@@ -219,6 +255,7 @@ class AttendanceBatch(models.Model):
                     'check_in': check_in, 'check_out': check_out, 'kind': event['kind'], 'state': 'review',
                 })
         internal(self.env['tp.hr.attendance.line']).create(lines)
+        internal(self.env['tp.hr.attendance.late']).create(lates)
         periods = [sheet['period'] for sheet in sheets if sheet['period']]
         checksum = hashlib.sha256(data).hexdigest()
         same = self.sudo().search([('id', '!=', self.id), ('company_id', '=', self.company_id.id), ('checksum', '=', checksum),
@@ -229,7 +266,8 @@ class AttendanceBatch(models.Model):
             'employee_ids': [(6, 0, sorted(coverage))], 'state': 'preview',
         })
         self._tp_classify()
-        self.env['tp.hr.attendance.log']._tp_log(self, 'import_preview', {'file': self.file_name, 'checksum': checksum[:16], 'lines': len(lines)})
+        self.env['tp.hr.attendance.log']._tp_log(self, 'import_preview', {'file': self.file_name, 'checksum': checksum[:16], 'lines': len(lines),
+                                                                         'late': len(lates)})
         return True
 
     def _tp_classify(self):
@@ -278,6 +316,58 @@ class AttendanceBatch(models.Model):
         for line in lines:
             counts[line.state] += 1
         internal(self).write(dict({f'{state}_count': value for state, value in counts.items()}, line_count=len(lines)))
+        self._tp_classify_late(resolve, ranges)
+
+    def _tp_classify_late(self, resolve, ranges):
+        """Machine late totals: same employee + same source period already applied → duplicate when equal,
+        conflict when different (never last-write-wins). Missing/invalid numbers stay "Chưa có số liệu"."""
+        _ = self.env._
+        Late = self.env['tp.hr.attendance.late'].sudo()
+        Period = self.env['tp.hr.attendance.period']
+        rows = self.sudo().late_ids.sorted(lambda row: (row.sheet_index, row.row_number))
+        decided, keyed = {}, defaultdict(list)
+        for row in rows:
+            employee, candidate, problem, message = resolve(row.machine_code, row.source_name)
+            vals = {'employee_id': employee.id or False, 'candidate_employee_id': candidate.id or False}
+            if problem:
+                decided[row] = dict(vals, state=problem, message=message)
+            elif row.source_state in ('empty', 'invalid'):
+                decided[row] = dict(vals, state='missing', message=_(LATE_MESSAGES[row.source_state]))
+            elif row.source_state == 'inconsistent':
+                decided[row] = dict(vals, state='review', message=_(LATE_MESSAGES['inconsistent']))
+            elif any(Period._tp_is_locked(self.company_id.id, day, ranges) for day in dates_between(row.date_from, row.date_to)):
+                decided[row] = dict(vals, state='locked', message=_('Kỳ công đã chốt; tổng đi muộn không ghi đè.'))
+            else:
+                decided[row] = vals
+                keyed[employee.id, row.date_from, row.date_to].append(row)
+        if keyed:
+            known = {}
+            for old in Late.search([('company_id', '=', self.company_id.id), ('state', '=', 'applied'), ('batch_id', '!=', self.id),
+                                    ('employee_id', 'in', list({key[0] for key in keyed}))]):
+                known[old.employee_id.id, old.date_from, old.date_to] = (old.late_count, old.late_minutes)
+            for key, members in keyed.items():
+                values = {(row.late_count, row.late_minutes) for row in members}
+                label = short_range(key[1], key[2])
+                if key in known:
+                    same = values == {known[key]}
+                    for row in members:
+                        decided[row].update(state='duplicate' if same else 'conflict', message=_(
+                            'Tổng kỳ %(period)s đã nhập với cùng số.', period=label) if same else _(
+                            'Tổng kỳ %(period)s đã nhập với số khác; không ghi đè, HR cần đối chiếu.', period=label))
+                elif len(values) > 1:
+                    for row in members:
+                        decided[row].update(state='conflict', message=_('Các trang trong tệp có tổng kỳ %(period)s khác nhau.', period=label))
+                else:
+                    for index, row in enumerate(members):
+                        decided[row].update(state='duplicate' if index else 'valid',
+                                            message=_('Trùng trang khác trong cùng tệp.') if index else '')
+        for row, vals in decided.items():
+            internal(row).write(vals)
+        counts = {state: 0 for state in LATE_COUNTED}
+        for row in rows:
+            if row.state in counts:
+                counts[row.state] += 1
+        internal(self).write({f'late_{state}_count': value for state, value in counts.items()})
 
     def _tp_decide(self, members, sessions, issues, decided, handled=frozenset()):
         _ = self.env._
@@ -366,13 +456,20 @@ class AttendanceBatch(models.Model):
                  'note': self.env._('Tự đối chiếu mã nguồn và họ tên khi nhập lô %(batch)s.', batch=self.name)}
                 for code, employee_id in new_codes.items()])
         self.env['tp.hr.attendance.day']._tp_refresh(self.company_id, keys)
+        late_rows = self.sudo().late_ids.filtered(lambda row: row.state == 'valid')
+        internal(late_rows).write({'state': 'applied'})
+        late_counts = {state: 0 for state in LATE_COUNTED}
+        for row in self.sudo().late_ids:
+            if row.state in late_counts:
+                late_counts[row.state] += 1
+        internal(self).write({f'late_{state}_count': value for state, value in late_counts.items()})
         counts = {state: 0 for state in COUNTED}
         for line in lines:
             counts[line.state] += 1
         summary = {key: value for key, value in counts.items() if value}
         internal(self).write(dict({f'{state}_count': value for state, value in counts.items()}, state='applied',
                                   applied_by=self.env.user.id, applied_at=fields.Datetime.now(), result=str(summary)))
-        self.env['tp.hr.attendance.log']._tp_log(self, 'import_apply', dict(summary, days=len(keys)))
+        self.env['tp.hr.attendance.log']._tp_log(self, 'import_apply', dict(summary, days=len(keys), late=len(late_rows)))
         return True
 
     def action_cancel(self):
@@ -382,6 +479,7 @@ class AttendanceBatch(models.Model):
         if self.state != 'preview':
             raise UserError(self.env._('Chỉ hủy được lô đang xem trước.'))
         internal(self).write({'state': 'cancelled'})
+        internal(self.sudo().late_ids.filtered(lambda row: row.state != 'applied')).write({'state': 'cancelled'})
         self.env['tp.hr.attendance.log']._tp_log(self, 'import_cancel', {})
         return True
 
@@ -392,6 +490,90 @@ class AttendanceBatch(models.Model):
         action['context'] = {'tp_filter_profile': 'import_lines'}
         action['display_name'] = self.env._('Dòng nhập — %(batch)s', batch=self.name)
         return action
+
+    # ----------------------------------------------------- drag-and-drop upload
+    @api.model
+    def tp_upload_preview(self, params=None):
+        """Create a batch from an uploaded .xlsx and read it at once; returns what the dialog shows.
+
+        Same guards as the form flow: ``create`` and ``action_preview`` require the import capability; a
+        format error raises and the whole request (batch included) is rolled back.
+        """
+        params = dict(params or {})
+        file_name = str(params.get('file_name') or '').strip()[:200]
+        data = params.get('data') or ''
+        if not file_name.lower().endswith('.xlsx'):
+            raise UserError(self.env._('Chỉ nhận tệp .xlsx xuất từ máy chấm công.'))
+        if not data or not isinstance(data, str):
+            raise UserError(self.env._('Chưa chọn tệp Excel.'))
+        if len(data) > UPLOAD_MAX_B64:
+            raise UserError(self.env._('Tệp quá lớn (tối đa 15 MB).'))
+        company = self.env.company
+        require(self.env, 'import', company)
+        batch = self.create({'name': self.env._('Excel máy · %(file)s', file=file_name), 'file_name': file_name,
+                             'file_data': data, 'company_id': company.id})
+        batch.action_preview()
+        return batch._tp_preview_payload()
+
+    @api.model
+    def _tp_upload_batch(self, batch_id):
+        batch = self.browse(int(batch_id or 0)).exists()
+        if not batch:
+            raise UserError(self.env._('Không tìm thấy lô nhập.'))
+        batch.check_access('read')
+        batch._tp_require()
+        return batch
+
+    @api.model
+    def tp_upload_apply(self, batch_id):
+        batch = self._tp_upload_batch(batch_id)
+        batch.action_apply()
+        return batch._tp_preview_payload()
+
+    @api.model
+    def tp_upload_cancel(self, batch_id):
+        batch = self._tp_upload_batch(batch_id)
+        if batch.state == 'preview':
+            batch.action_cancel()
+        return {'batch_id': batch.id, 'state': batch.state}
+
+    def _tp_preview_payload(self):
+        self.ensure_one()
+        batch = self.sudo()
+        line_states = dict(LINE_STATES)
+        late_states = dict(self.env['tp.hr.attendance.late']._fields['state'].selection)
+        sheets = []
+        for sheet in batch.sheet_summary or []:
+            late = sheet.get('late') or {}
+            sheets.append({
+                'name': sheet.get('name'), 'from': sheet.get('from'), 'to': sheet.get('to'),
+                'label': short_range(fields.Date.from_string(sheet['from']), fields.Date.from_string(sheet['to'])) if sheet.get('from') and sheet.get('to') else '',
+                'employees': sheet.get('employees') or 0, 'matched': len(sheet.get('employee_ids') or []), 'events': sheet.get('events') or 0,
+                'empty': sheet.get('empty') or 0, 'errors': sheet.get('errors') or [], 'late_state': late.get('state') or 'no_column',
+                'late_ref': late.get('ref') or '', 'late_message': late.get('message') or '',
+            })
+        attention = batch.line_ids.filtered(lambda line: line.state not in ('valid', 'applied', 'duplicate'))
+        late_attention = batch.late_ids.filtered(lambda row: row.state not in ('valid', 'applied', 'duplicate', 'preview'))
+        return {
+            'batch_id': batch.id, 'name': batch.name, 'file_name': batch.file_name or '', 'state': batch.state,
+            'period': {'from': fields.Date.to_string(batch.period_from), 'to': fields.Date.to_string(batch.period_to),
+                       'label': short_range(batch.period_from, batch.period_to) if batch.period_from and batch.period_to else ''},
+            'sheets': sheets, 'matched': len(batch.employee_ids), 'people': sum(sheet['employees'] for sheet in sheets),
+            'counts': {state: batch[f'{state}_count'] for state in COUNTED}, 'line_count': batch.line_count, 'empty': batch.empty_count,
+            'late': {state: batch[f'late_{state}_count'] for state in LATE_COUNTED}, 'late_total': len(batch.late_ids),
+            'labels': line_states, 'late_labels': late_states,
+            'same_file': batch.same_file_batch_id.name or '',
+            'attention': [{'sheet': line.sheet_name, 'cell': line.cell_ref, 'code': line.machine_code or '', 'name': line.source_name or '',
+                           'date': fields.Date.to_string(line.work_date), 'state': line.state, 'state_label': line_states.get(line.state, ''),
+                           'message': line.message or ''} for line in attention[:PREVIEW_ATTENTION]],
+            'attention_total': len(attention),
+            'late_attention': [{'sheet': row.sheet_name, 'cell': row.cell_ref, 'code': row.machine_code or '', 'name': row.source_name or '',
+                                'state': row.state, 'state_label': late_states.get(row.state, ''), 'message': row.message or ''}
+                               for row in late_attention[:PREVIEW_ATTENTION]],
+            'late_attention_total': len(late_attention),
+            'can_apply': batch.state == 'preview',
+            'applied_at': fields.Datetime.to_string(batch.applied_at) if batch.applied_at else '',
+        }
 
     @api.model
     def _tp_coverage(self, company, start, end):

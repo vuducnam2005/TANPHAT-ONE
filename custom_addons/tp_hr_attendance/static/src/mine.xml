@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 <t t-name="tp_hr_attendance.MyProfile" t-inherit="tp_hr_workspace.MyProfile" t-inherit-mode="extension">
     <xpath expr="//div[hasclass('tab-content')]" position="inside">
@@ -5,72 +6,46 @@
     </xpath>
 </t>
 <t t-name="tp_hr_attendance.Mine">
-<section class="o_tp_att_mine" t-att-class="{'o_tp_att_embedded': this.props.embedded}" aria-label="Công của tôi">
-    <div t-if="this.state.error" class="alert alert-danger" role="alert"><t t-out="this.state.error"/><button class="btn btn-link" t-on-click="this.load">Thử lại</button></div>
-    <p t-elif="this.state.loading and !this.data" role="status">Đang tải công cá nhân…</p>
-    <div t-elif="this.data and !this.data.has_employee" class="alert alert-info" t-out="this.data.message"/>
-    <t t-elif="this.data?.has_employee">
-        <header class="o_tp_att_mine_header">
-            <div><h1>Công của tôi</h1><p><t t-out="this.data.employee.name"/> · <t t-out="this.data.employee.code"/> · <t t-out="this.data.employee.department"/></p></div>
-            <button class="btn btn-outline-primary" t-on-click="this.openRequests">Yêu cầu của tôi</button>
-        </header>
-        <div class="o_tp_att_mine_toolbar">
-            <button class="btn btn-outline-primary" t-att-disabled="this.state.loading" t-on-click="this.exportOwn">Xuất CSV công của tôi</button>
-            <button class="btn btn-outline-primary" t-on-click="() => this.state.view = this.state.view === 'calendar' ? 'days' : 'calendar'" t-out="this.state.view === 'calendar' ? 'Xem theo ngày' : 'Xem lịch tháng'"/>
-            <button class="btn btn-light" t-on-click="() => this.step(-1)" aria-label="Tháng trước">‹</button>
-            <input type="month" t-att-value="this.state.month" t-on-change="this.onMonth" aria-label="Tháng công của tôi"/>
-            <button class="btn btn-light" t-on-click="() => this.step(1)" aria-label="Tháng sau">›</button>
-            <span t-if="this.data.updated" class="o_tp_att_updated">Dữ liệu cập nhật đến <strong t-out="this.data.updated.to"/> · <t t-out="this.data.updated.at"/></span>
-            <span t-else="">Chưa có dữ liệu nguồn</span>
-        </div>
-        <div class="o_tp_att_mine_totals">
-            <div><strong t-out="this.formatHours(this.data.totals.hours)"/><span>Giờ ghi nhận</span></div>
-            <div><strong t-out="this.data.totals.units === null ? 'Chưa xác nhận' : this.data.totals.units"/><span>Công theo quy tắc</span></div>
-            <div><strong t-out="this.data.totals.missing + this.data.totals.review"/><span>Ngày cần kiểm tra</span></div>
-            <div><strong t-out="this.data.totals.pending"/><span>Đề nghị chờ duyệt</span></div>
-        </div>
-        <p t-if="!this.data.has_rule" class="alert alert-info">Chưa có quy tắc công đã xác nhận. Giờ ghi nhận không tự quy thành công hoặc tiền lương.</p>
-        <p t-if="!this.data.has_reviewer" class="alert alert-warning">Chưa phân công người duyệt. Bạn có thể lưu đề nghị nháp; HR cần cấu hình người xử lý trước khi gửi duyệt.</p>
-        <p t-foreach="this.data.locked_periods" t-as="period" t-key="period.name" class="alert alert-secondary">Kỳ đã chốt: <t t-out="period.name"/> (<t t-out="this.formatDate(period.from)"/>–<t t-out="this.formatDate(period.to)"/>). Điều chỉnh cần được duyệt đính chính.</p>
-        <div class="o_tp_att_mine_grid">
-            <div class="o_tp_att_calendar" aria-label="Lịch công tháng" t-if="this.state.view === 'calendar'">
-                <span t-foreach="['T2','T3','T4','T5','T6','T7','CN']" t-as="day" t-key="day" class="o_tp_att_weekday" t-out="day"/>
-                <div t-foreach="this.blanks" t-as="blank" t-key="blank"/>
-                <button t-foreach="this.data.rows" t-as="row" t-key="row.date" class="o_tp_att_calendar_day" t-att-class="{'active': this.state.selected === row.date, 'future': row.future}"
-                    t-att-aria-label="this.formatDate(row.date) + ': ' + row.label" t-att-aria-pressed="this.state.selected === row.date ? 'true' : 'false'" t-on-click="() => this.state.selected = row.date">
-                    <strong t-out="row.day"/><span t-att-class="'o_tp_att_badge o_tp_att_s_' + row.state" t-out="row.label"/><small t-out="row.in_time ? row.in_time + '–' + (row.out_time || '…') : '—'"/>
-                </button>
+<section class="o_tp_att o_tp_att_mine" t-att-class="{'o_tp_att_embedded': this.props.embedded}" aria-label="Công của tôi" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
+    <div t-if="this.state.error" class="alert alert-danger" role="alert"><t t-out="this.state.error"/> <button class="btn btn-link p-0" t-on-click="this.load">Thử lại</button></div>
+    <p t-elif="!this.data" role="status" class="o_tp_att_loading">Đang tải công cá nhân…</p>
+    <div t-elif="!this.data.has_employee" class="alert alert-info" t-out="this.data.message"/>
+    <t t-else="">
+        <header class="o_tp_att_header">
+            <div>
+                <h1 t-if="!this.props.embedded">Công của tôi</h1>
+                <p class="o_tp_att_subtitle"><t t-out="this.data.employee.name"/> · <t t-out="this.data.employee.code or 'Chưa có mã'"/> · <t t-out="this.data.employee.department or 'Chưa có phòng ban'"/></p>
             </div>
-            <aside class="o_tp_att_day_detail" t-if="this.selected">
-                <h2><t t-out="this.selected.weekday"/>, <t t-out="this.formatDate(this.selected.date)"/></h2>
-                <p><span t-att-class="'o_tp_att_badge o_tp_att_s_' + this.selected.state" t-out="this.selected.label"/></p>
-                <p>Trạng thái kỳ: <strong t-out="this.selected.lock === 'locked' ? 'Đã chốt' : 'Đang mở'"/></p>
-                <p>Giờ ghi nhận: <strong t-out="this.selected.day_id ? this.formatHours(this.selected.hours) : '—'"/></p>
-                <p>Công: <strong t-out="this.selected.units || 'Chưa xác nhận'"/></p>
-                <ul><li t-foreach="this.selected.sessions" t-as="session" t-key="session_index"><t t-out="session.in"/>–<t t-out="session.out"/> · <t t-out="session.source_label"/></li></ul>
-                <div t-foreach="this.selected.requests" t-as="request" t-key="request.id" class="o_tp_att_request">
-                    <button class="btn btn-link p-0" t-on-click="() => this.openExisting(request.id)"><t t-out="request.name"/> · <t t-out="request.state_label"/></button>
-                    <p t-if="request.review_note" t-out="request.review_note"/>
-                </div>
-                <button class="btn btn-primary" t-if="!this.selected.future" t-on-click="() => this.openRequest(this.selected)">Đề nghị điều chỉnh</button>
-            </aside>
+            <div class="o_tp_att_actions">
+                <button type="button" class="btn btn-outline-primary" t-on-click="this.exportOwn"><i class="oi me-1" data-icon="download" aria-hidden="true"/>Xuất Excel</button>
+                <button type="button" class="btn btn-outline-secondary" t-on-click="this.openRequests">Yêu cầu của tôi</button>
+                <button type="button" class="btn btn-light" t-on-click="this.openRequest">Đề nghị điều chỉnh</button>
+            </div>
+        </header>
+        <section class="o_tp_att_toolbar" aria-label="Chọn kỳ">
+            <div class="o_tp_att_segment" role="group" aria-label="Chế độ xem">
+                <button t-foreach="this.modes" t-as="mode" t-key="mode[0]" type="button" t-att-class="{'active': this.state.mode === mode[0]}"
+                    t-att-aria-pressed="this.state.mode === mode[0] ? 'true' : 'false'" t-on-click="() => this.setMode(mode[0])" t-out="mode[1]"/>
+                <button type="button" t-att-class="{'active': this.state.mode === 'range'}" t-att-aria-expanded="this.state.fileMenu ? 'true' : 'false'"
+                    t-on-click="() => this.state.fileMenu = !this.state.fileMenu">Kỳ theo file</button>
+            </div>
+            <div class="o_tp_att_period">
+                <button type="button" class="o_tp_att_icon_btn" t-on-click="() => this.step(-1)" aria-label="Kỳ trước"><i class="oi" data-icon="chevron_backward" aria-hidden="true"/></button>
+                <input t-if="this.state.mode === 'month'" type="month" t-att-value="this.data.start.slice(0, 7)" t-on-change="this.onMonth" aria-label="Chọn tháng"/>
+                <input t-elif="this.state.mode === 'week'" type="date" t-att-value="this.state.date" t-on-change="this.onDate" aria-label="Chọn một ngày trong tuần (T2–CN)"/>
+                <span t-else="" class="o_tp_att_badge o_info" t-out="this.data.period_label"/>
+                <button type="button" class="o_tp_att_icon_btn" t-on-click="() => this.step(1)" aria-label="Kỳ sau"><i class="oi" data-icon="chevron_forward" aria-hidden="true"/></button>
+                <button type="button" class="btn btn-light" t-on-click="this.goToday">Hôm nay</button>
+            </div>
+        </section>
+        <div t-if="this.state.fileMenu" class="o_tp_att_file_menu" role="menu" aria-label="Kỳ theo tệp đã nhập">
+            <p t-if="!this.data.file_periods.length" class="o_tp_att_muted">Chưa có tệp Excel máy nào được nhập.</p>
+            <button t-foreach="this.data.file_periods" t-as="item" t-key="item.from + item.to" type="button" role="menuitem"
+                t-att-class="{'active': this.state.mode === 'range' and this.state.from === item.from and this.state.to === item.to}"
+                t-on-click="() => this.openFilePeriod(item)"><strong t-out="item.label"/></button>
         </div>
-        <div class="o_tp_att_mine_toolbar">
-            <h2>Bảng ngày</h2><label>Tình trạng <select t-on-change="(ev) => { this.state.filter = ev.target.value; this.state.page = 1; }" aria-label="Lọc công cá nhân">
-                <option value="">Tất cả</option><option t-foreach="Object.entries(this.data.labels)" t-as="item" t-key="item[0]" t-att-value="item[0]" t-out="item[1]"/>
-            </select></label>
-            <label>Kỳ <select aria-label="Trạng thái kỳ công cá nhân" t-on-change="(ev) => { this.state.lock = ev.target.value; this.state.page = 1; }"><option value="">Tất cả</option><option value="open">Đang mở</option><option value="locked">Đã chốt</option></select></label>
-            <span><t t-out="this.filteredRows.length"/> ngày</span>
-            <button t-if="this.state.filter or this.state.lock" class="btn btn-link" t-on-click="() => { this.state.filter = ''; this.state.lock = ''; this.state.page = 1; }">Xóa bộ lọc</button>
-        </div>
-        <div class="o_tp_att_mine_cards"><article t-foreach="this.rows" t-as="row" t-key="row.date"><h3><t t-out="row.weekday"/> <t t-out="this.formatDate(row.date)"/></h3><span t-att-class="'o_tp_att_badge o_tp_att_s_' + row.state" t-out="row.label"/><p>Vào <strong t-out="row.in_time || '—'"/> · Ra <strong t-out="row.out_time || '—'"/></p><p>Giờ ghi nhận: <t t-out="row.day_id ? this.formatHours(row.hours) : '—'"/> · Công: <t t-out="row.units || 'Chưa xác nhận'"/></p><button class="btn btn-outline-primary" t-on-click="() => this.state.selected = row.date">Chi tiết ngày</button></article></div>
-        <div class="o_tp_att_table_wrap"><table class="o_tp_att_table"><thead><tr><th>Ngày</th><th>Vào</th><th>Ra</th><th>Giờ ghi nhận</th><th>Công</th><th>Tình trạng</th><th>Kỳ</th></tr></thead>
-            <tbody><tr t-foreach="this.rows" t-as="row" t-key="row.date"><td><button class="btn btn-link p-0" t-on-click="() => this.state.selected = row.date" t-out="this.formatDate(row.date)"/></td>
-                <td t-out="row.in_time || '—'"/><td t-out="row.out_time || '—'"/><td t-out="row.day_id ? this.formatHours(row.hours) : '—'"/><td t-out="row.units || 'Chưa xác nhận'"/>
-                <td><span t-att-class="'o_tp_att_badge o_tp_att_s_' + row.state" t-out="row.label"/></td><td t-out="row.lock === 'locked' ? 'Đã chốt' : 'Đang mở'"/>
-            </tr></tbody></table></div>
-        <p t-if="!this.rows.length" class="alert alert-info">Không có ngày phù hợp bộ lọc.</p>
-        <nav class="o_tp_att_mine_toolbar" aria-label="Phân trang công cá nhân"><label>Số ngày <select t-on-change="(ev) => { this.state.size = +ev.target.value; this.state.page = 1; }"><option t-foreach="[10,20,50,100]" t-as="size" t-key="size" t-att-value="size" t-att-selected="size === this.state.size" t-out="size"/></select></label><button class="btn btn-light" t-att-disabled="this.state.page === 1" t-on-click="() => this.state.page--">Trang trước</button><span><t t-out="this.state.page"/>/<t t-out="this.pages"/> · <t t-out="this.filteredRows.length"/> ngày</span><button class="btn btn-light" t-att-disabled="this.state.page === this.pages" t-on-click="() => this.state.page++">Trang sau</button></nav>
+        <SourceStrip source="this.data.source"/>
+        <PersonDetail data="this.data"/>
     </t>
 </section>
 </t>

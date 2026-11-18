@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="tp_hr_attendance.SourceStrip">
+    <div class="o_tp_att_source" role="status" t-if="this.props.source">
+        <span class="o_tp_att_source_kind" t-att-class="'o_' + this.props.source.kind">
+            <i class="oi" t-att-data-icon="this.props.source.kind === 'none' ? 'cloud_off' : 'description'" aria-hidden="true"/>
+            <t t-out="this.props.source.label"/>
+        </span>
+        <span t-if="this.props.source.data_to">Dữ liệu đến <strong t-out="this.props.source.data_to"/></span>
+        <span t-if="this.props.source.updated_at">Cập nhật <t t-out="this.props.source.updated_at"/></span>
+        <span t-if="this.props.source.file" class="o_tp_att_source_file" t-att-title="this.props.source.file">Tệp: <t t-out="this.props.source.file"/></span>
+        <span>API máy: <t t-out="this.props.source.api"/> · Kết nối trực tiếp: tắt</span>
+        <span t-if="this.props.source.note" class="o_tp_att_muted" t-out="this.props.source.note"/>
+        <button t-if="this.props.onSources" type="button" class="btn btn-link btn-sm" t-on-click="() => this.props.onSources()">Nguồn dữ liệu</button>
+    </div>
+</t>
+
+<t t-name="tp_hr_attendance.Pager">
+    <nav class="o_tp_att_pager" aria-label="Phân trang">
+        <span class="o_tp_att_muted" t-out="this.text"/>
+        <label>
+            <span class="visually-hidden">Số dòng mỗi trang</span>
+            <select t-on-change="(ev) => this.onSize(ev.target.value)" aria-label="Số dòng mỗi trang">
+                <option t-foreach="this.sizes" t-as="size" t-key="size" t-att-value="size" t-att-selected="size === this.props.data.page_size"><t t-out="size"/> / trang</option>
+            </select>
+        </label>
+        <button type="button" class="o_tp_att_icon_btn" t-att-disabled="this.props.data.page &lt;= 1" t-on-click="() => this.props.onPage(this.props.data.page - 1)" aria-label="Trang trước"><i class="oi" data-icon="chevron_backward" aria-hidden="true"/></button>
+        <span><t t-out="this.props.data.page"/> / <t t-out="this.props.data.page_count"/></span>
+        <button type="button" class="o_tp_att_icon_btn" t-att-disabled="this.props.data.page &gt;= this.props.data.page_count" t-on-click="() => this.props.onPage(this.props.data.page + 1)" aria-label="Trang sau"><i class="oi" data-icon="chevron_forward" aria-hidden="true"/></button>
+    </nav>
+</t>
+
+<t t-name="tp_hr_attendance.PeriodTable">
+    <div class="o_tp_att_table_wrap">
+        <table class="o_tp_att_table o_tp_att_period_table">
+            <thead><tr><th scope="col">Nhân viên</th><th scope="col">Phòng ban</th><th scope="col" class="o_num">Số lần đi muộn</th><th scope="col" class="o_num">Tổng phút muộn</th></tr></thead>
+            <tbody>
+                <tr t-if="!this.props.rows.length"><td colspan="4" class="o_tp_att_empty">Không có nhân viên trong phạm vi lọc.</td></tr>
+                <tr t-foreach="this.props.rows" t-as="row" t-key="row.id" class="o_tp_att_click" tabindex="0"
+                    t-on-click="() => this.props.onPerson(row)" t-on-keydown="(ev) => ev.key === 'Enter' and this.props.onPerson(row)">
+                    <th scope="row" data-label="Nhân viên"><span class="o_tp_att_name" t-out="row.name"/><small t-out="row.code or 'Chưa có mã'"/><small t-if="row.archived" class="o_tp_att_muted">Đã nghỉ việc</small></th>
+                    <td data-label="Phòng ban" t-out="row.department or '—'"/>
+                    <t t-if="row.late.state === 'exact'">
+                        <td data-label="Số lần đi muộn" class="o_num"><strong t-out="row.late.count"/></td>
+                        <td data-label="Tổng phút muộn" class="o_num"><strong t-out="row.late.minutes"/></td>
+                    </t>
+                    <td t-else="" colspan="2" data-label="Đi muộn" class="o_tp_att_late_none" t-out="row.late.text"/>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</t>
+
+<t t-name="tp_hr_attendance.PersonDetail">
+    <section class="o_tp_att_person" t-att-aria-label="'Giờ theo ngày của ' + this.props.data.employee.name">
+        <header t-if="!this.props.hideHeader" class="o_tp_att_person_head">
+            <div>
+                <h2 t-out="this.props.data.employee.name"/>
+                <p><t t-out="this.props.data.employee.code or 'Chưa có mã'"/> · <t t-out="this.props.data.employee.department or 'Chưa có phòng ban'"/></p>
+            </div>
+            <span class="o_tp_att_badge o_info">Kỳ <t t-out="this.props.data.period_label"/></span>
+        </header>
+        <div class="o_tp_att_late_metrics">
+            <div><span>Số lần đi muộn</span><strong t-out="this.late.state === 'exact' ? this.late.count : '—'"/></div>
+            <div><span>Tổng phút muộn</span><strong t-out="this.late.state === 'exact' ? this.late.minutes : '—'"/></div>
+            <p t-att-class="this.late.state === 'exact' ? 'o_tp_att_source_note' : 'o_tp_att_muted'" t-out="this.lateNote"/>
+        </div>
+        <div class="o_tp_att_table_wrap">
+            <table class="o_tp_att_table o_tp_att_days">
+                <thead><tr><th scope="col">Thứ/ngày</th><th scope="col">Giờ vào</th><th scope="col">Giờ ra</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="this.props.data.rows" t-as="row" t-key="row.date" t-att-class="{'o_weekend': row.weekend, 'o_future': row.future, 'o_today': row.is_today}">
+                        <th scope="row" data-label="Thứ/ngày"><t t-out="row.day_label"/><small t-if="row.is_today" class="o_tp_att_badge o_info">Hôm nay</small></th>
+                        <td data-label="Giờ vào"><span class="o_time" t-out="row.in or '—'"/><small t-if="this.cellNote(row, 'in')" class="o_tp_att_cell_note" t-att-class="'o_' + row.state" t-out="this.cellNote(row, 'in')"/></td>
+                        <td data-label="Giờ ra"><span class="o_time" t-out="row.out or '—'"/><small t-if="this.cellNote(row, 'out')" class="o_tp_att_cell_note" t-att-class="'o_' + row.state" t-out="this.cellNote(row, 'out')"/></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</t>
+
+<t t-name="tp_hr_attendance.PersonDialog">
+    <Dialog title="'Giờ theo ngày'" size="'lg'" contentClass="'o_tp_att_dialog'">
+        <div t-if="this.state.error" class="alert alert-danger" role="alert" t-out="this.state.error"/>
+        <p t-elif="!this.state.data" role="status">Đang tải…</p>
+        <PersonDetail t-else="" data="this.state.data"/>
+        <t t-set-slot="footer"><button class="btn btn-outline-secondary" t-on-click="() => this.props.close()">Đóng</button></t>
+    </Dialog>
+</t>
+
+<t t-name="tp_hr_attendance.LateDialog">
+    <Dialog title="'Tổng đi muộn kỳ ' + this.props.label" size="'lg'" contentClass="'o_tp_att_dialog'">
+        <div t-if="this.state.error" class="alert alert-danger" role="alert" t-out="this.state.error"/>
+        <p t-elif="!this.state.data" role="status">Đang tải…</p>
+        <t t-else="">
+            <p class="o_tp_att_source_note" t-out="this.state.data.late_source or 'Chưa có tổng đúng kỳ này.'"/>
+            <p class="o_tp_att_muted">Tổng cả kỳ của tệp máy, không chia theo ngày. Bộ lọc ngày trên bảng giữ nguyên.</p>
+            <PeriodTable rows="this.state.data.rows" onPerson="(row) => this.openPerson(row)"/>
+            <AttPager data="this.state.data" unit="'nhân viên'" onPage="(page) => this.setPage(page)" onSize="(size) => this.setSize(size)"/>
+        </t>
+        <t t-set-slot="footer"><button class="btn btn-outline-secondary" t-on-click="() => this.props.close()">Đóng</button></t>
+    </Dialog>
+</t>
+</templates>

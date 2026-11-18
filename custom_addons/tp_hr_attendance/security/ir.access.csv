@@ -32,3 +32,15 @@ rule_att_correction_company,Attendance corrections company,tp.hr.attendance.corr
 access_att_review_wizard_user,Attendance review dialog,tp.hr.attendance.review.wizard,base.group_user,crud,
 access_att_period_wizard_manager,Attendance period dialog HR manager,tp.hr.attendance.period.wizard,hr.group_hr_manager,crud,
 access_att_period_wizard_officer,Attendance period dialog officer,tp.hr.attendance.period.wizard,tp_hr_attendance.group_attendance_officer,crud,
+access_att_late_manager,Attendance machine late totals HR manager,tp.hr.attendance.late,hr.group_hr_manager,r,
+access_att_late_officer,Attendance machine late totals officer,tp.hr.attendance.late,tp_hr_attendance.group_attendance_officer,r,
+rule_att_late_company,Attendance machine late totals company,tp.hr.attendance.late,,crud,"[('company_id', 'in', company_ids)]"
+access_att_source_manager,Attendance device sources HR manager,tp.hr.attendance.source,hr.group_hr_manager,crud,
+access_att_source_officer,Attendance device sources officer,tp.hr.attendance.source,tp_hr_attendance.group_attendance_officer,r,
+rule_att_source_company,Attendance device sources company,tp.hr.attendance.source,,crud,"[('company_id', 'in', company_ids)]"
+access_att_source_code_manager,Attendance device codes HR manager,tp.hr.attendance.source.code,hr.group_hr_manager,crud,
+access_att_source_code_officer,Attendance device codes officer,tp.hr.attendance.source.code,tp_hr_attendance.group_attendance_officer,r,
+rule_att_source_code_company,Attendance device codes company,tp.hr.attendance.source.code,,crud,"[('company_id', 'in', company_ids)]"
+access_att_event_manager,Attendance device events HR manager,tp.hr.attendance.event,hr.group_hr_manager,r,
+access_att_event_officer,Attendance device events officer,tp.hr.attendance.event,tp_hr_attendance.group_attendance_officer,r,
+rule_att_event_company,Attendance device events company,tp.hr.attendance.event,,crud,"[('company_id', 'in', company_ids)]"

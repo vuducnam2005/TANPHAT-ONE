@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="tp_hr_attendance.Sources">
+<div class="o_tp_att o_tp_att_sources" aria-label="Nguồn dữ liệu chấm công" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
+    <header class="o_tp_att_header">
+        <div>
+            <h1>Nguồn dữ liệu chấm công</h1>
+            <p class="o_tp_att_subtitle">Giờ làm tham chiếu <strong t-out="this.referenceHours"/> (chỉ để hiển thị) · Số đi muộn lấy nguyên từ Excel máy theo đúng kỳ</p>
+        </div>
+        <div class="o_tp_att_actions">
+            <button type="button" class="btn btn-outline-secondary" t-on-click="() => this.open('tp_hr_attendance.action_late')">Tổng đi muộn theo kỳ</button>
+            <button type="button" class="btn btn-primary" t-on-click="this.openUpload"><i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Nhập Excel máy chấm công</button>
+        </div>
+    </header>
+
+    <div t-if="this.state.error" class="alert alert-danger" role="alert"><t t-out="this.state.error"/> <button class="btn btn-link p-0" t-on-click="this.load">Thử lại</button></div>
+    <p t-elif="!this.data" role="status" class="o_tp_att_loading">Đang tải nguồn dữ liệu…</p>
+    <t t-else="">
+        <section class="o_tp_att_source_cards" aria-label="Trạng thái nguồn">
+            <article class="o_tp_att_source_card" t-att-class="this.data.excel.in_use ? 'o_ok' : 'o_muted'">
+                <header>
+                    <i class="oi" data-icon="description" aria-hidden="true"/>
+                    <h2>Excel máy chấm công</h2>
+                    <span class="o_tp_att_badge" t-att-class="this.data.excel.in_use ? 'o_ok' : 'o_muted'" t-out="this.data.excel.in_use ? 'Đang dùng' : 'Chưa có tệp đã nhập'"/>
+                </header>
+                <dl>
+                    <div><dt>Lô đã ghi</dt><dd t-out="this.data.excel.batches"/></div>
+                    <div><dt>Dữ liệu đến</dt><dd t-out="this.data.excel.data_to or '—'"/></div>
+                    <div><dt>Cập nhật</dt><dd t-out="this.data.excel.updated_at or '—'"/></div>
+                    <div><dt>Tệp gần nhất</dt><dd class="o_tp_att_source_file" t-att-title="this.data.excel.file" t-out="this.data.excel.file or '—'"/></div>
+                </dl>
+                <p class="o_tp_att_muted" t-out="this.data.excel.note"/>
+            </article>
+            <article class="o_tp_att_source_card o_muted">
+                <header>
+                    <i class="oi" data-icon="cloud_off" aria-hidden="true"/>
+                    <h2>API máy chấm công</h2>
+                    <span class="o_tp_att_badge o_muted" t-out="this.data.api.label"/>
+                </header>
+                <dl>
+                    <div><dt>Kết nối trực tiếp</dt><dd>Tắt</dd></div>
+                    <div><dt>Lịch tự đồng bộ</dt><dd>Không có</dd></div>
+                    <div><dt>Sự kiện thô đã nhận</dt><dd t-out="this.data.api.events"/></div>
+                    <div><dt>Chưa khớp nhân viên</dt><dd t-out="this.data.api.unmapped"/></div>
+                </dl>
+                <p class="o_tp_att_muted">Nền tích hợp đã sẵn (nguồn theo không gian mã, sự kiện thô bất biến, chống trùng bằng dấu vân tay, mốc đọc tiếp)
+                    nhưng chưa nối máy thật: không có địa chỉ công khai nhận dữ liệu, không lưu token, dữ liệu không phải thời gian thực.</p>
+                <ul t-if="this.data.api.sources.length" class="o_tp_att_source_list">
+                    <li t-foreach="this.data.api.sources" t-as="source" t-key="source.id">
+                        <strong t-out="source.name"/> <code t-out="source.namespace"/> · <t t-out="source.state_label"/>
+                        <t t-if="source.vendor"> · <t t-out="source.vendor"/> <t t-out="source.model"/></t>
+                        · <t t-out="source.codes"/> mã nhân viên
+                        <small t-if="source.last_error" class="text-danger d-block" t-out="source.last_error"/>
+                    </li>
+                </ul>
+                <div class="o_tp_att_actions">
+                    <button t-if="this.data.can_configure" type="button" class="btn btn-outline-secondary btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_source_records')">Khai báo nguồn API</button>
+                    <button type="button" class="btn btn-link btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_events')">Sự kiện thô</button>
+                </div>
+            </article>
+        </section>
+
+        <section class="o_tp_att_panel" aria-labelledby="tp_att_checklist">
+            <h2 id="tp_att_checklist">Cần hãng máy cung cấp trước khi kết nối API</h2>
+            <ol class="o_tp_att_checklist">
+                <li t-foreach="this.data.checklist" t-as="item" t-key="item.key" t-out="item.label"/>
+            </ol>
+        </section>
+
+        <section class="o_tp_att_panel" aria-labelledby="tp_att_history">
+            <div class="o_tp_att_drill_head">
+                <h2 id="tp_att_history">Lịch sử nhập</h2>
+                <button type="button" class="btn btn-link btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_import')">Xem tất cả lô nhập</button>
+            </div>
+            <div class="o_tp_att_table_wrap">
+                <table class="o_tp_att_table o_tp_att_history">
+                    <thead><tr><th scope="col">Thời điểm</th><th scope="col">Người nhập</th><th scope="col">Tệp</th><th scope="col">Kỳ</th><th scope="col">Kết quả</th><th scope="col" class="o_num">Cần xem</th></tr></thead>
+                    <tbody>
+                        <tr t-if="!this.data.history.length"><td colspan="6" class="o_tp_att_empty">Chưa có lần nhập nào.</td></tr>
+                        <tr t-foreach="this.data.history" t-as="row" t-key="row.id" class="o_tp_att_click" tabindex="0"
+                            t-on-click="() => this.openBatch(row)" t-on-keydown="(ev) => ev.key === 'Enter' and this.openBatch(row)">
+                            <th scope="row" data-label="Thời điểm" t-out="row.at"/>
+                            <td data-label="Người nhập" t-out="row.user or '—'"/>
+                            <td data-label="Tệp" class="o_tp_att_source_file" t-att-title="row.file" t-out="row.file or '—'"/>
+                            <td data-label="Kỳ" t-out="row.period or '—'"/>
+                            <td data-label="Kết quả"><span class="o_tp_att_badge" t-att-class="row.state === 'applied' ? 'o_ok' : (row.state === 'preview' ? 'o_info' : 'o_muted')" t-out="row.state_label"/> <t t-out="row.result"/></td>
+                            <td data-label="Cần xem" class="o_num" t-out="row.attention or '—'"/>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </t>
+</div>
+</t>
+</templates>

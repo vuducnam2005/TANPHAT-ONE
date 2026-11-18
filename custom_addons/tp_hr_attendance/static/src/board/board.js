@@ -1,150 +1,87 @@
-import { Component, onWillStart, proxy, usePlugin } from "@odoo/owl";
+import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
 import { registry } from "@web/core/registry";
-import { UIPlugin } from "@web/core/ui/ui_plugin";
 import { useService } from "@web/core/utils/hooks";
+import { cellNote, downloadBase64, formatDate, readStore, rpcError, stepPeriod, writeStore } from "../common";
+import { AttPager, LateDialog, PeriodTable, PersonDialog, SourceStrip } from "../parts";
+import { openAttendanceUpload } from "../upload/upload";
 
 /**
- * Shared attendance board (HR-ATTENDANCE-001). Read-only for everybody: data comes from
- * tp.hr.attendance.day.tp_board (record rules apply), cells open the read-only day form.
- * Filter, page and mode survive the breadcrumb round-trip through sessionStorage.
+ * "Bảng chấm công" (HR-ATTENDANCE-SIMPLE-002). Day: Nhân viên · Phòng ban · Thứ/ngày · Giờ vào · Giờ ra.
+ * Week / month / free range / "Kỳ theo file": Nhân viên · Phòng ban · Số lần đi muộn · Tổng phút muộn, only
+ * for an exact machine source period. Data: tp.hr.attendance.day.tp_sheet (record rules apply).
+ * Mode, department and page size survive the breadcrumb round-trip; the date always starts at today.
  */
-export const STATE_ORDER = ["ok", "missing", "review", "no_punch", "no_source", "future"];
-export const PAGE_SIZES = [10, 20, 50, 100];
-const STORE_KEY = "tp_hr_attendance.board";
-const DEFAULTS = { mode: "", month: "", date: "", department: "", search: "", state: "", lock: "", batch: "", page: 1, pageSize: 20 };
-
-export function readStore(key) {
-    try {
-        return JSON.parse(browser.sessionStorage.getItem(key) || "{}") || {};
-    } catch {
-        return {}; // Private window / blocked storage: start from defaults.
-    }
-}
-
-export function writeStore(key, value) {
-    try {
-        browser.sessionStorage.setItem(key, JSON.stringify(value));
-    } catch {
-        // Storage unavailable: the board still works, it just forgets the filters.
-    }
-}
-
-export function shiftMonth(month, delta) {
-    const [year, number] = month.split("-").map(Number);
-    const value = new Date(Date.UTC(year, number - 1 + delta, 1));
-    return `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, "0")}`;
-}
-
-export function shiftDate(iso, delta) {
-    const value = new Date(`${iso}T00:00:00Z`);
-    value.setUTCDate(value.getUTCDate() + delta);
-    return value.toISOString().slice(0, 10);
-}
-
-export function formatDate(iso) {
-    return iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : "";
-}
-
-export function formatHours(value) {
-    if (!value) {
-        return "0:00";
-    }
-    const minutes = Math.round(value * 60);
-    return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}`;
-}
+const STORE_KEY = "tp_hr_attendance.sheet";
+const MODES = [["day", "Ngày"], ["week", "Tuần"], ["month", "Tháng"]];
+const DAY_STATES = [
+    ["", "Tất cả"], ["attention", "Cần kiểm tra / thiếu giờ"], ["out_recorded", "Đã ghi nhận ra"], ["working", "Đang làm"],
+    ["missing", "Thiếu giờ vào/ra"], ["review", "Cần kiểm tra"], ["no_punch", "Chưa chấm công"], ["no_source", "Chưa có dữ liệu"],
+];
 
 export class AttendanceBoard extends Component {
     static template = "tp_hr_attendance.Board";
+    static components = { AttPager, PeriodTable, SourceStrip };
+    props = useProps();
 
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
-        this.ui = usePlugin(UIPlugin);
-        this.storeKey = `${STORE_KEY}:${this.mobile ? "m" : "d"}`;
-        const saved = readStore(this.storeKey);
-        this.state = proxy({ ...DEFAULTS, ...saved, loading: true, error: "", data: null });
-        if (!this.state.mode) {
-            this.state.mode = this.mobile ? "day" : "month";
-        }
+        this.dialog = useService("dialog");
+        const saved = readStore(STORE_KEY);
+        const params = this.props.action?.params || {};
+        const period = params.from && params.to ? { mode: "range", from: params.from, to: params.to } : {};
+        this.state = proxy({
+            mode: ["day", "week", "month"].includes(saved.mode) ? saved.mode : "day", date: "", from: "", to: "",
+            department: saved.department || "", search: "", dayState: "", page: 1, pageSize: saved.pageSize || 20,
+            ...period, fileMenu: false, loading: true, error: "", data: null,
+        });
+        this.modes = MODES;
+        this.dayStates = DAY_STATES;
+        this.cellNote = cellNote;
+        this.formatDate = formatDate;
         this.request = 0;
         this.searchTimer = null;
-        this.formatDate = formatDate;
-        this.formatHours = formatHours;
         onWillStart(() => this.load());
     }
 
-    get mobile() {
-        return this.ui.size() <= 1;
-    }
     get data() {
         return this.state.data;
     }
-    get legend() {
-        const data = this.data;
-        return data ? STATE_ORDER.map((key) => ({ key, label: data.labels[key], count: data.counts[key] || 0 })) : [];
+    /** Follows the loaded data, so a mode switch never renders day rows in the period table (or back). */
+    get isDay() {
+        return (this.data ? this.data.mode : this.state.mode) === "day";
     }
-    get chips() {
+    /** File periods that contain the viewed day (the source of its machine late total). */
+    get dayPeriods() {
         const data = this.data;
-        if (!data) {
+        return data && this.isDay ? data.file_periods.filter((item) => item.has_late && item.from <= data.start && data.start <= item.to) : [];
+    }
+    /** File periods overlapping a non-matching range: offered as exact views instead of a guessed total. */
+    get overlapPeriods() {
+        const data = this.data;
+        if (!data || this.isDay || data.is_file_period) {
             return [];
         }
-        const chips = [];
-        if (this.state.department) {
-            const dept = data.departments.find((row) => String(row.id) === String(this.state.department));
-            chips.push({ key: "department", label: `Phòng: ${dept ? dept.name : this.state.department}` });
-        }
-        if (this.state.search) {
-            chips.push({ key: "search", label: `Tìm: ${this.state.search}` });
-        }
-        if (this.state.state) {
-            chips.push({ key: "state", label: `Tình trạng: ${data.labels[this.state.state] || this.state.state}` });
-        }
-        if (this.state.lock) {
-            chips.push({ key: "lock", label: this.state.lock === "locked" ? "Kỳ đã chốt" : "Kỳ đang mở" });
-        }
-        if (this.state.batch) {
-            const batch = data.batches.find((row) => String(row.id) === String(this.state.batch));
-            chips.push({ key: "batch", label: `Lô: ${batch ? batch.name : this.state.batch}` });
-        }
-        return chips;
+        return data.file_periods.filter((item) => item.from <= data.end && item.to >= data.start).slice(0, 4);
     }
-    get periodLabel() {
+    get title() {
         const data = this.data;
         if (!data) {
             return "";
         }
-        if (data.mode === "day") {
-            const day = data.dates[0];
-            return `${day.weekday}, ${formatDate(day.date)}`;
+        if (this.isDay) {
+            return data.start === data.today ? `Hôm nay · ${data.period_label}` : data.period_label;
         }
-        return `Tháng ${data.month.slice(5, 7)}/${data.month.slice(0, 4)}`;
-    }
-    get rangeText() {
-        const data = this.data;
-        if (!data || !data.total) {
-            return "0 nhân viên";
-        }
-        const first = (data.page - 1) * data.page_size + 1;
-        const last = Math.min(data.total, data.page * data.page_size);
-        return `${first}–${last} / ${data.total} nhân viên`;
+        return data.is_file_period ? `Kỳ theo file ${data.period_label}` : data.period_label;
     }
 
     params() {
         return {
-            mode: this.state.mode, month: this.state.month, date: this.state.date,
+            mode: this.state.mode, date: this.state.date, from: this.state.from, to: this.state.to,
             department_id: Number(this.state.department) || 0, search: this.state.search,
-            state: this.state.state, lock: this.state.lock, batch_id: Number(this.state.batch) || 0,
-            page: this.state.page, page_size: this.state.pageSize,
+            state: this.isDay ? this.state.dayState : "", page: this.state.page, page_size: this.state.pageSize,
         };
-    }
-
-    persist() {
-        const value = {};
-        for (const key of Object.keys(DEFAULTS)) {
-            value[key] = this.state[key];
-        }
-        writeStore(this.storeKey, value);
     }
 
     async load() {
@@ -152,29 +89,19 @@ export class AttendanceBoard extends Component {
         this.state.loading = true;
         this.state.error = "";
         try {
-            const data = await this.orm.call("tp.hr.attendance.day", "tp_board", [this.params()]);
+            const data = await this.orm.call("tp.hr.attendance.day", "tp_sheet", [this.params()]);
             if (request !== this.request) {
                 return;
             }
-            this.state.data = data;
-            this.state.month = data.month;
-            this.state.date = data.mode === "day" ? data.date : this.state.date;
-            this.state.page = data.page;
-            this.state.pageSize = data.page_size;
-            if (this.state.batch && !data.batches.some((row) => String(row.id) === String(this.state.batch))) {
-                this.state.batch = "";
+            Object.assign(this.state, { data, date: data.date, page: data.page, pageSize: data.page_size });
+            if (data.mode === "range") {
+                Object.assign(this.state, { from: data.start, to: data.end });
             }
-            this.persist();
+            writeStore(STORE_KEY, { mode: data.mode === "range" ? "day" : data.mode, department: this.state.department, pageSize: data.page_size });
         } catch (error) {
-            if (request !== this.request) {
-                return;
+            if (request === this.request) {
+                this.state.error = rpcError(error, "Không tải được bảng chấm công. Vui lòng thử lại.");
             }
-            if (/SessionExpired/.test(error.data?.name || error.name || "")) {
-                throw error;
-            }
-            this.state.error = /AccessError/.test(error.data?.name || "")
-                ? "Bạn không có quyền xem bảng công của công ty đang chọn."
-                : error.data?.message || "Không tải được bảng công. Vui lòng thử lại.";
         } finally {
             if (request === this.request) {
                 this.state.loading = false;
@@ -182,108 +109,94 @@ export class AttendanceBoard extends Component {
         }
     }
 
-    setFilter(key, value) {
-        this.state[key] = value;
-        this.state.page = 1;
+    reset(changes) {
+        Object.assign(this.state, { page: 1, fileMenu: false }, changes);
         return this.load();
     }
-    onSelect(ev, key) {
-        return this.setFilter(key, ev.target.value);
+    setMode(mode) {
+        const anchor = this.state.mode === "range" ? this.state.from : this.state.date;
+        return this.reset({ mode, date: anchor || "", dayState: "" });
+    }
+    step(delta) {
+        return this.reset(stepPeriod(this.state.mode, this.data, delta));
+    }
+    goToday() {
+        return this.reset({ mode: this.state.mode === "range" ? "day" : this.state.mode, date: this.data?.today || "" });
+    }
+    onDate(ev) {
+        if (ev.target.value) {
+            return this.reset({ date: ev.target.value });
+        }
+    }
+    onMonth(ev) {
+        if (ev.target.value) {
+            return this.reset({ date: `${ev.target.value}-01` });
+        }
+    }
+    onRange(key, ev) {
+        const value = ev.target.value;
+        if (!value) {
+            return;
+        }
+        const changes = { [key]: value };
+        const from = key === "from" ? value : this.state.from;
+        const to = key === "to" ? value : this.state.to;
+        if (to < from) {
+            changes[key === "from" ? "to" : "from"] = value;
+        }
+        return this.reset(changes);
+    }
+    openFilePeriod(item) {
+        return this.reset({ mode: "range", from: item.from, to: item.to });
+    }
+    onDepartment(ev) {
+        return this.reset({ department: ev.target.value });
+    }
+    onDayState(ev) {
+        return this.reset({ dayState: ev.target.value });
     }
     onSearch(ev) {
         const value = ev.target.value;
         browser.clearTimeout(this.searchTimer);
-        this.searchTimer = browser.setTimeout(() => this.setFilter("search", value.trim()), 300);
-    }
-    removeChip(key) {
-        return this.setFilter(key, "");
+        this.searchTimer = browser.setTimeout(() => this.reset({ search: value.trim() }), 300);
     }
     clearFilters() {
-        Object.assign(this.state, { department: "", search: "", state: "", lock: "", batch: "", page: 1 });
-        return this.load();
-    }
-    toggleState(key) {
-        return this.setFilter("state", this.state.state === key ? "" : key);
-    }
-    setMode(mode) {
-        if (mode === this.state.mode) {
-            return;
-        }
-        this.state.mode = mode;
-        if (mode === "day" && !this.state.date && this.data) {
-            this.state.date = this.data.anchor;
-        }
-        this.state.page = 1;
-        return this.load();
-    }
-    onMonth(ev) {
-        if (ev.target.value) {
-            return this.setFilter("month", ev.target.value);
-        }
-    }
-    onDate(ev) {
-        if (ev.target.value) {
-            return this.setFilter("date", ev.target.value);
-        }
-    }
-    step(delta) {
-        if (this.state.mode === "day") {
-            this.state.date = shiftDate(this.state.date || this.data?.anchor || this.data?.today, delta);
-        } else {
-            this.state.month = shiftMonth(this.state.month || this.data.month, delta);
-        }
-        this.state.page = 1;
-        return this.load();
-    }
-    goToday() {
-        Object.assign(this.state, { month: "", date: "", page: 1 });
-        return this.load();
-    }
-    openDayColumn(day) {
-        this.state.mode = "day";
-        this.state.date = day.date;
-        this.state.page = 1;
-        return this.load();
+        return this.reset({ department: "", search: "", dayState: "" });
     }
     setPage(page) {
         this.state.page = page;
         return this.load();
     }
-    onPageSize(ev) {
-        this.state.pageSize = Number(ev.target.value);
-        this.state.page = 1;
-        return this.load();
+    setSize(size) {
+        return this.reset({ pageSize: size });
     }
-    openCell(cell) {
-        if (!cell.day_id) {
-            return;
-        }
-        this.persist();
-        return this.action.doAction({
-            type: "ir.actions.act_window",
-            name: "Ngày công",
-            res_model: "tp.hr.attendance.day",
-            res_id: cell.day_id,
-            views: [[false, "form"]],
-            target: "current",
+
+    openPerson(row) {
+        const params = this.isDay
+            ? { employee_id: row.id, mode: "day", date: this.data.start }
+            : { employee_id: row.id, mode: "range", from: this.data.start, to: this.data.end };
+        this.dialog.add(PersonDialog, { params });
+    }
+    openLate(item) {
+        this.dialog.add(LateDialog, {
+            label: item.label, params: { from: item.from, to: item.to, department_id: Number(this.state.department) || 0, search: this.state.search },
         });
     }
-    openImport() {
-        this.persist();
-        return this.action.doAction("tp_hr_attendance.action_import");
+    openUpload() {
+        openAttendanceUpload(this.env, {
+            onApplied: () => this.load(),
+            onOpenPeriod: (period) => this.reset({ mode: "range", from: period.from, to: period.to }),
+        });
     }
-    cellTitle(row, cell) {
-        const parts = [`${row.name} · ${formatDate(cell.date)}`, cell.label];
-        if (cell.in_time || cell.out_time) {
-            parts.push(`Vào ${cell.in_time || "—"} · Ra ${cell.out_time || "—"}`);
+    openSources() {
+        return this.action.doAction("tp_hr_attendance.action_sources");
+    }
+    async exportSheet() {
+        try {
+            downloadBase64(await this.orm.call("tp.hr.attendance.day", "tp_export_sheet", [this.params()]));
+        } catch (error) {
+            this.state.error = rpcError(error, "Không xuất được bảng chấm công. Vui lòng thử lại.");
         }
-        if (cell.day_id) {
-            parts.push(`Giờ ghi nhận ${formatHours(cell.hours)} · Công ${cell.units}`);
-        }
-        if (cell.lock === "locked") {
-            parts.push("Kỳ đã chốt");
-        }
-        return parts.join("\n");
     }
 }
 

@@ -119,7 +119,7 @@
     </record>
 
     <record id="action_board" model="ir.actions.client">
-        <field name="name">Bảng công</field>
+        <field name="name">Bảng chấm công</field>
         <field name="tag">tp_hr_attendance.board</field>
         <field name="path">bang-cong</field>
     </record>

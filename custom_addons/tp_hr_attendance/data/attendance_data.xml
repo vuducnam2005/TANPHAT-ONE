@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- HR-ATTENDANCE-SIMPLE-002: fixed reference working hours (display only; late totals always come from the machine file). -->
+<odoo noupdate="1">
+    <record id="param_reference_hours" model="ir.config_parameter">
+        <field name="key">tp_hr_attendance.reference_hours</field>
+        <field name="value">08:30-17:00</field>
+    </record>
+</odoo>

@@ -137,3 +137,19 @@ thể chuyển sang native sau khi được duyệt.
 ## 9. S3 — Phiếu và kỳ chốt
 
 Owner từ session/company, chỉ sửa nháp/trả. Reviewer active đúng company/phòng và khác owner; HR manager chỉ đọc sau gửi, không ngầm có quyền duyệt. Thu hồi assignment bỏ read scope reviewer ngay, người từng xử lý không tự giữ quyền. Minh chứng cấm public/token/reparent, chỉ owner sửa khi nháp/trả. Giải trình/ý kiến ở phiếu riêng, không vào log chung. Duyệt khóa phiếu và công ty, giữ phiên gốc inactive; retry từ chối. Kỳ chốt cần capability lock toàn công ty; đính chính cần review+lock+lý do, tăng version, giữ log. Chốt không xác nhận công/lương; recompute do đổi rule bỏ qua kỳ chốt. Odoo regression mới chưa chạy, không xác nhận race multiworker bằng kiểm source.
+
+## 10. SIMPLE-002 — Tổng đi muộn của máy, tổng quan và nền API (`20.0.2.0.0`)
+
+- §8 vẫn đúng: module **không tự tính** đi muộn, phạt, nghỉ không phép hay lương. Bổ sung: số Lần/Phút
+  **đọc nguyên** từ nhóm cột "Đi muộn" của file máy được lưu ở `tp.hr.attendance.late` theo đúng kỳ của file
+  (một bản `applied` mỗi công ty/nhân viên/kỳ). Không chia cho ngày, không cộng tuần thành tháng, không ghi
+  đè khi cùng kỳ khác số (*Xung đột*). Giờ tham chiếu `08:30–17:00` chỉ hiển thị.
+- Nhập: RPC `tp_upload_preview/apply/cancel` kiểm `can(import)` như luồng 001; xem trước không ghi phiên/
+  ngày/tổng muộn; hủy để lại lô `cancelled`. Mapping chỉ theo mã máy + họ tên; không tạo/sửa hồ sơ.
+- Đọc: `tp_overview/tp_sheet/tp_person/tp_export_sheet` theo phạm vi company và quyền đọc HR hiện có; người
+  chỉ đọc không xuất dữ liệu chung. `tp_mine/tp_export_mine` lấy nhân viên từ session, không nhận id từ client.
+- Nghỉ: không có nguồn nghỉ đã duyệt thì KPI là *Chưa đủ dữ liệu*; ô trống/không chấm công không phải nghỉ.
+- API máy: `tp.hr.attendance.source/.source.code/.event` chỉ ghi qua `tp_ingest` (gọi từ code server, kiểm `can(import)` của công ty nguồn, nguồn phải ở trạng thái *Sẵn sàng nhận*).
+  `live_enabled` khóa bằng constraint; không cron, không HTTP route, không endpoint public ghi công, không lưu
+  token (chỉ tên biến môi trường `credential_ref`). Sự kiện thô bất biến; gắn nhân viên chỉ qua mã của đúng
+  namespace nguồn. Chưa nối máy thật — không được mô tả là đã tích hợp hoặc thời gian thực.

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- HR-ATTENDANCE-SIMPLE-002: machine late totals, API-ready device sources and raw events (HR/admin area only). -->
+<odoo>
+    <record id="late_list" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.late.list</field>
+        <field name="model">tp.hr.attendance.late</field>
+        <field name="arch" type="xml">
+            <list string="Tổng đi muộn theo kỳ" create="0" edit="0" delete="0" import="0" export_xlsx="0" limit="40">
+                <field name="employee_id"/>
+                <field name="machine_code" optional="show"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="late_count"/>
+                <field name="late_minutes"/>
+                <field name="state" widget="badge" decoration-success="state == 'applied'" decoration-muted="state in ('duplicate', 'cancelled', 'preview')" decoration-warning="state in ('review', 'conflict', 'name_conflict', 'unmapped', 'locked')" decoration-danger="state == 'missing'"/>
+                <field name="batch_id" optional="show"/>
+                <field name="cell_ref" optional="hide"/>
+                <field name="message" optional="show"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="late_search" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.late.search</field>
+        <field name="model">tp.hr.attendance.late</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="employee_id"/>
+                <field name="machine_code"/>
+                <field name="batch_id"/>
+                <field name="date_from"/>
+                <filter name="applied" string="Đã ghi nhận" domain="[('state', '=', 'applied')]"/>
+                <filter name="attention" string="Cần xử lý" domain="[('state', 'in', ('conflict', 'missing', 'review', 'unmapped', 'name_conflict'))]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_late" model="ir.actions.act_window">
+        <field name="name">Tổng đi muộn theo kỳ</field>
+        <field name="res_model">tp.hr.attendance.late</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="late_search"/>
+        <field name="context">{'search_default_applied': 1}</field>
+        <field name="help" type="html"><p>Chưa có tổng đi muộn. Số Lần/Phút được lấy nguyên từ nhóm "Đi muộn" của tệp Excel máy khi nhập.</p></field>
+    </record>
+
+    <record id="source_list" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.source.list</field>
+        <field name="model">tp.hr.attendance.source</field>
+        <field name="arch" type="xml">
+            <list string="Nguồn API máy chấm công">
+                <field name="name"/>
+                <field name="namespace"/>
+                <field name="vendor" optional="show"/>
+                <field name="device_model" optional="show"/>
+                <field name="state" widget="badge" decoration-muted="state == 'not_configured'" decoration-info="state == 'ready'" decoration-warning="state == 'paused'"/>
+                <field name="live_enabled" string="Kết nối trực tiếp"/>
+                <field name="last_success_at" optional="show"/>
+                <field name="latest_event_at" optional="show"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="source_form" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.source.form</field>
+        <field name="model">tp.hr.attendance.source</field>
+        <field name="arch" type="xml">
+            <form string="Nguồn API máy chấm công">
+                <header>
+                    <field name="state" widget="statusbar" options="{'clickable': '1'}"/>
+                </header>
+                <sheet>
+                    <div class="alert alert-info" role="status">
+                        Nền tích hợp đã chuẩn bị nhưng <strong>chưa kết nối máy thật</strong>: không có lịch tự chạy, không có địa chỉ công khai
+                        nhận dữ liệu và không lưu token. Chỉ ghi <em>tên biến môi trường</em> chứa thông tin xác thực trên server.
+                    </div>
+                    <div class="oe_title"><h1><field name="name" placeholder="Ví dụ: Máy chấm công văn phòng"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="namespace" placeholder="may-van-phong-1"/>
+                            <field name="kind"/>
+                            <field name="vendor"/>
+                            <field name="device_model"/>
+                            <field name="timezone"/>
+                        </group>
+                        <group>
+                            <field name="credential_ref" placeholder="TP_ATT_DEVICE_TOKEN"/>
+                            <field name="live_enabled"/>
+                            <field name="watermark"/>
+                            <field name="last_success_at"/>
+                            <field name="latest_event_at"/>
+                            <field name="last_error_at"/>
+                            <field name="last_error"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Mã nhân viên trên máy" name="codes">
+                            <field name="code_ids">
+                                <list editable="bottom">
+                                    <field name="external_code"/>
+                                    <field name="employee_id"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Ghi chú" name="note"><field name="note"/></page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_source_records" model="ir.actions.act_window">
+        <field name="name">Nguồn API máy chấm công</field>
+        <field name="res_model">tp.hr.attendance.source</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html"><p>API máy chấm công: Chưa cấu hình. Khai báo nguồn khi đã có đủ thông tin từ hãng máy.</p></field>
+    </record>
+
+    <record id="event_list" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.event.list</field>
+        <field name="model">tp.hr.attendance.event</field>
+        <field name="arch" type="xml">
+            <list string="Sự kiện thô từ API máy" create="0" edit="0" delete="0" import="0" export_xlsx="0" limit="40">
+                <field name="timestamp"/>
+                <field name="local_date"/>
+                <field name="direction"/>
+                <field name="external_code"/>
+                <field name="employee_id"/>
+                <field name="state" widget="badge" decoration-success="state == 'mapped'" decoration-warning="state == 'unmapped'"/>
+                <field name="source_id" optional="show"/>
+                <field name="source_event_id" optional="hide"/>
+                <field name="received_at" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_events" model="ir.actions.act_window">
+        <field name="name">Sự kiện thô từ API máy</field>
+        <field name="res_model">tp.hr.attendance.event</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html"><p>Chưa có sự kiện. Sự kiện chỉ xuất hiện khi một nguồn API được kết nối và gửi dữ liệu.</p></field>
+    </record>
+
+    <record id="action_sources" model="ir.actions.client">
+        <field name="name">Nguồn dữ liệu chấm công</field>
+        <field name="tag">tp_hr_attendance.sources</field>
+        <field name="path">nguon-cham-cong</field>
+    </record>
+</odoo>

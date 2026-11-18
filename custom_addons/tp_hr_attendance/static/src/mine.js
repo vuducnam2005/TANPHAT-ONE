@@ -1,73 +1,109 @@
-import { Component, onWillStart, proxy, useProps, usePlugin } from "@odoo/owl";
-import { UIPlugin } from "@web/core/ui/ui_plugin";
+import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { patch } from "@web/core/utils/patch";
 import { useService } from "@web/core/utils/hooks";
 import { HrListController } from "@tp_hr_workspace/table/table";
 import { TpHrMyProfile } from "@tp_hr_workspace/my_profile/my_profile";
-import { formatDate, formatHours, readStore, shiftMonth, writeStore } from "./board/board";
+import { downloadBase64, readStore, rpcError, stepPeriod, writeStore } from "./common";
+import { PersonDetail, SourceStrip } from "./parts";
+
+/**
+ * "Công của tôi" (HR-ATTENDANCE-SIMPLE-002). The employee always comes from the session user (tp_mine ignores
+ * any client id): header, two machine late metrics for the exact source period, then Thứ/ngày · Giờ vào · Giờ ra.
+ */
+const STORE_KEY = "tp_hr_attendance.mine";
+const MODES = [["week", "Tuần"], ["month", "Tháng"]];
 
 export class MyAttendance extends Component {
     static template = "tp_hr_attendance.Mine";
+    static components = { PersonDetail, SourceStrip };
     props = useProps();
 
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
-        this.ui = usePlugin(UIPlugin);
-        this.state = proxy({ month: readStore("tp_att_mine").month || "", data: null, loading: true, error: "", filter: "", lock: "", selected: "", page: 1, size: 20, view: this.ui.size() <= 1 ? "days" : "calendar" });
-        this.formatDate = formatDate;
-        this.formatHours = formatHours;
+        const saved = readStore(STORE_KEY);
+        this.state = proxy({ mode: MODES.some(([key]) => key === saved.mode) ? saved.mode : "month", date: "", from: "", to: "",
+            fileMenu: false, loading: true, error: "", data: null });
+        this.modes = MODES;
         this.request = 0;
         onWillStart(() => this.load());
     }
-    get data() { return this.state.data; }
-    get filteredRows() { return this.data.rows.filter((row) => (!this.state.filter || row.state === this.state.filter) && (!this.state.lock || row.lock === this.state.lock)); }
-    get pages() { return Math.max(1, Math.ceil(this.filteredRows.length / this.state.size)); }
-    get rows() { return this.filteredRows.slice((this.state.page - 1) * this.state.size, this.state.page * this.state.size); }
-    get selected() { return this.data?.rows.find((row) => row.date === this.state.selected); }
-    get blanks() { return Array.from({ length: this.data.lead }, (_, index) => index); }
+
+    get data() {
+        return this.state.data;
+    }
+
     async load() {
         const request = ++this.request;
         this.state.loading = true;
         this.state.error = "";
         try {
-            const data = await this.orm.call("tp.hr.attendance.day", "tp_my_attendance", [{ month: this.state.month }]);
-            if (request !== this.request) return;
+            const data = await this.orm.call("tp.hr.attendance.day", "tp_mine", [{
+                mode: this.state.mode, date: this.state.date, from: this.state.from, to: this.state.to,
+            }]);
+            if (request !== this.request) {
+                return;
+            }
             this.state.data = data;
             if (data.has_employee) {
-                this.state.month = data.month;
-                this.state.selected = data.rows.find((row) => row.date === this.state.selected)?.date || data.anchor;
-                writeStore("tp_att_mine", { month: data.month });
+                Object.assign(this.state, { date: data.date, from: data.start, to: data.end });
+                writeStore(STORE_KEY, { mode: data.mode === "range" ? "month" : data.mode });
             }
         } catch (error) {
-            if (request !== this.request) return;
-            if (/SessionExpired/.test(error.data?.name || error.name || "")) throw error;
-            this.state.error = error.data?.message || "Không tải được công cá nhân. Vui lòng thử lại.";
-        } finally { if (request === this.request) this.state.loading = false; }
+            if (request === this.request) {
+                this.state.error = rpcError(error, "Không tải được công cá nhân. Vui lòng thử lại.");
+            }
+        } finally {
+            if (request === this.request) {
+                this.state.loading = false;
+            }
+        }
+    }
+    reset(changes) {
+        Object.assign(this.state, { fileMenu: false }, changes);
+        return this.load();
+    }
+    setMode(mode) {
+        return this.reset({ mode, date: this.state.from || this.state.date });
+    }
+    step(delta) {
+        return this.reset(stepPeriod(this.state.mode, this.data, delta));
+    }
+    goToday() {
+        return this.reset({ mode: this.state.mode === "range" ? "month" : this.state.mode, date: this.data?.today || "" });
+    }
+    onDate(ev) {
+        if (ev.target.value) {
+            return this.reset({ date: ev.target.value });
+        }
+    }
+    onMonth(ev) {
+        if (ev.target.value) {
+            return this.reset({ date: `${ev.target.value}-01` });
+        }
+    }
+    openFilePeriod(item) {
+        return this.reset({ mode: "range", from: item.from, to: item.to });
     }
     async exportOwn() {
         try {
-            const file = await this.orm.call("tp.hr.attendance.day", "tp_export_my_attendance", [{month: this.data.month, state: this.state.filter, lock: this.state.lock}]);
-            const url = URL.createObjectURL(new Blob([file.content], {type: "text/csv;charset=utf-8"}));
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = file.filename;
-            link.click();
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            downloadBase64(await this.orm.call("tp.hr.attendance.day", "tp_export_mine", [{
+                mode: this.state.mode, date: this.state.date, from: this.state.from, to: this.state.to,
+            }]));
         } catch (error) {
-            if (/SessionExpired/.test(error.data?.name || error.name || "")) throw error;
-            this.state.error = error.data?.message || "Không xuất được công cá nhân. Vui lòng thử lại.";
+            this.state.error = rpcError(error, "Không xuất được công cá nhân. Vui lòng thử lại.");
         }
     }
-    step(delta) { this.state.month = shiftMonth(this.state.month, delta); return this.load(); }
-    onMonth(ev) { if (ev.target.value) { this.state.month = ev.target.value; return this.load(); } }
-    async openRequest(row) {
-        await this.action.doAction({ type: "ir.actions.act_window", name: "Đề nghị điều chỉnh công", res_model: "tp.hr.attendance.correction",
-            views: [[false, "form"]], target: "new", context: { default_work_date: row.date } }, { onClose: () => this.load() });
+    async openRequest() {
+        await this.action.doAction({
+            type: "ir.actions.act_window", name: "Đề nghị điều chỉnh công", res_model: "tp.hr.attendance.correction",
+            views: [[false, "form"]], target: "new",
+        }, { onClose: () => this.load() });
     }
-    openRequests() { return this.action.doAction("tp_hr_attendance.action_my_requests"); }
-    openExisting(id) { return this.action.doAction({ type: "ir.actions.act_window", res_model: "tp.hr.attendance.correction", res_id: id, views: [[false, "form"]] }); }
+    openRequests() {
+        return this.action.doAction("tp_hr_attendance.action_my_requests");
+    }
 }
 registry.category("actions").add("tp_hr_attendance.mine", MyAttendance);
 
