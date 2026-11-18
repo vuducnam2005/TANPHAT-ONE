@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261118-030 — Giao PC server & xác minh asset public HR-ATTENDANCE-MATRIX-003
+
+- Ngày 18/11/2026 Asia/Saigon; đồng bộ tài liệu sau giao bản commit code `b7765bd1` (`tp_hr_attendance` `20.0.3.0.0`), không sửa code ứng dụng và không restart/upgrade thêm.
+- Backup `PC server`: `C:\TANPHAT-backups\hr-attendance-matrix003\ham003-20261118T171946` (`tp_tanphat_dev.dump` `9.701.510`B / `15.600` mục restore, `filestore.tar.gz` `34.387.973`B, `source-config.tar.gz` `257.100`B, `SHA256SUMS.json`); drift baseline `51/51` khớp; giải nén gói release `62/62` khớp SHA-256 (`0` tệp `mtime=0`).
+- Upgrade `-u tp_hr_attendance` (`exit 0`, `0` ERROR): giữ nguyên `355` phiên active, `456` ngày công, `35` mã máy, `78` bản muộn, `39` nhân viên, `12` user, nhóm quyền & `web.base.url`; migration dựng `195` `snapshot_person` (`1|39`, `2|78`, `3|39`, `4|39`) & `1.365` `snapshot_cell`, `LÔ-00003` gắn `partial`.
+- Kiểm thực trên `PC server`: ORM rollback `SERVER_MATRIX_OK` (lô 4 `39` người/`18` ngày/`5` nhóm), `SERVER_COMPARE_OK` (lô 4 vs 3 = `40` dòng, `175 same`/`271 only_a`/`2 diff`/`4 unready`), `SERVER_EXPORT_OK` (`92×25`), `SERVER_ACL_OK` (`uid=34` `5/5` bị chặn). Thực tải CSS `/web/assets/9931cc6/web.assets_backend.min.css` (`1.592.899`B, SHA-256 `20a69ca1…`) & JS `/web/assets/2116504/web.assets_backend.min.js` (`8.431.465`B, SHA-256 `f535c84e…`) qua `https://hybrid-send-ready-ballot.trycloudflare.com` đạt `200 OK` (có `FileMatrix`, `tp_compare_batches`, `tp_resolve_compare_batch`, `tp_upload_files`, `o_tp_att_compare_screen`, không `tp_hr_handle`); Playwright ẩn danh public `0` lỗi console/5xx. Vẫn giữ `NOT_RUN`: login admin/importer trình duyệt & suite DB ghi `18079`.
+
 ## CHG-20261118-029 — Triển khai Bảng dữ liệu theo file & Đối chiếu A/B (HR-ATTENDANCE-MATRIX-003)
 
 - Ngày 18/11/2026 Asia/Saigon; `tp_hr_attendance` `20.0.2.0.0 → 20.0.3.0.0` (`DEC-058`, `DEC-044`), kế thừa `SIMPLE-002` không chạy lại prompt cũ.

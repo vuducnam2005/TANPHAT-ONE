@@ -32,10 +32,11 @@ trước-sau; public: Tổng quan/Bảng chấm công/Nguồn dữ liệu mở �
 rồi mới ghi). Hoàn nguyên code: khôi phục `source-config.tar.gz` của đúng backup rồi `-u tp_hr_attendance`;
 4 bảng mới để lại, bản cũ không đọc tới (chưa diễn tập). Hoàn nguyên đầy đủ dùng dump + filestore cùng backup.
 
-## MATRIX-003 `20.0.3.0.0` (`CHG-20261118-028`)
+## MATRIX-003 `20.0.3.0.0` (`CHG-20261118-029` / `030`)
 
-Release theo quy trình `git archive <SHA> custom_addons/tp_hr_attendance`, label `ham003`, nâng cấp `20.0.2.0.0 → 20.0.3.0.0`.
-- Backup đầy đủ DB (`pg_dump` + `pg_restore -l`), filestore, source/config và `SHA256SUMS` trước khi dừng container và giải nén.
+Release theo quy trình `git archive <SHA> custom_addons/tp_hr_attendance` (giữ `mtime` theo commit trên mỗi tệp để Odoo tạo lại hash asset), label `ham003`, code commit `b7765bd1`, nâng cấp `20.0.2.0.0 → 20.0.3.0.0`.
+- Backup local `.local/hr-attendance-matrix003/backup-ham003-20261118-163916` (`tp_tanphat_dev.dump` `10.049.947`B, `restore-list.txt` `15.600` mục, `filestore.zip` `294.237.435`B/`1.027` tệp, `SHA256SUMS.txt`).
+- Backup PC server `C:\TANPHAT-backups\hr-attendance-matrix003\ham003-20261118T171946` (`tp_tanphat_dev.dump` `9.701.510`B/`15.600` mục, `filestore.tar.gz` `34.387.973`B, `source-config.tar.gz` `257.100`B, `SHA256SUMS.json`).
 - `-u tp_hr_attendance` chạy migration idempotent `migrations/20.0.3.0.0/post-migrate.py` (`_tp_migrate_matrix_003`): tạo 3 bảng `tp_hr_attendance_snapshot_person`, `tp_hr_attendance_snapshot_cell`, `tp_hr_attendance_resolution`, cấp `batch_code` (`LÔ-xxxxx`) và dựng snapshot từ `file_data` đính kèm, gắn provenance đa lô cho các session/late hiện có mà **không** nhập lại công, không tạo/sửa `hr.employee`, giữ nguyên 100% số liệu hiệu lực, kỳ chốt và điều chỉnh đã duyệt.
-- Không nhập Excel giả/thật để test trên DB chính/server; sau deploy kiểm version, bảng snapshot, counts `session`/`day`/`late`/`employee`/`users`/`web.base.url`, HTTP assets `web.assets_backend`, `/web/health`, và URL public `https://hybrid-send-ready-ballot.trycloudflare.com`.
+- Không nhập Excel giả/thật để test trên DB chính/server; sau deploy kiểm version, bảng snapshot, counts `session`/`day`/`late`/`employee`/`users`/`web.base.url`, tải trực tiếp HTTP assets `web.assets_backend` qua `https://hybrid-send-ready-ballot.trycloudflare.com`, `/web/health`, và Playwright ẩn danh `0` lỗi console/5xx.
 - Hoàn nguyên: dừng `tp-odoo`, khôi phục `source-config` từ backup đúng môi trường rồi `-u tp_hr_attendance` (hoặc khôi phục đầy đủ dump + filestore cùng backup trong khung bảo trì).
