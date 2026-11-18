@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T05:24:38.314522+00:00",
-  "last_change_id": "CHG-20261118-013",
-  "code_digest": "3355f87f8f988688e516162dd1f9960165bcfdc11f352220ac51d5a7ebcdad1b",
-  "code_file_count": 632,
+  "updated_at": "2026-11-18T05:28:13.010044+00:00",
+  "last_change_id": "CHG-20261118-014",
+  "code_digest": "036ea8e8b1af07216b1925562ab775a076a9da67e7ea366122c014539fdbc94b",
+  "code_file_count": 635,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "e02227d8c2d5f4918e702e9c345993800136aaa7745c5bad5c0b266dce0acae1",
-    "docs/CHANGELOG.md": "1af570c78344c51105cab260136300bde4e3ddb73b6f3bcd25c780870156637e",
-    "AGENTS.md": "cdf0205ee60ffccaf805adc2857509a157a84ca2234544c81e02db031b3ee528",
+    "docs/PROJECT_STATUS.md": "81f023fe93bbbed3e19fc32dbfbc3f568de0181952e62b32d16d4ce92db8824f",
+    "docs/CHANGELOG.md": "9729428dcf4bfe89033fd2197bac48bc810525616a8f17f7f2cebf50b2b768bb",
+    "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "4d88c190f36a1d0ef2e8902b740e63957822d1187c38b7447654187ead15bf89",
-    "docs/DECISIONS.md": "63183f07f7a37a7a4a16080bf47536e3c1c3b391fc72f754b7eff333eabd8056",
+    "docs/ROADMAP.md": "1a2ebf7422abb2a9b212bab24f08cd1f7c857defc2a75604e39d5c1fe152769c",
+    "docs/DECISIONS.md": "bf883b7cd59c19ae08bbe53e5cef370afee485e9c830289b751f7cb21536cc72",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,7 +20,7 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Read supplied workbook using bundled Python/openpyxl and pure existing parser only;39 employees,150 pairs,28 missingOUT,95 emptydays,0 parse errors;late source headers/values checked;no DB/app/source-data changes.",
-    "User corrected shift to08:30-17:00 and requests unchanged Excel late totals;prompt keeps period provenance,no inferred daily late,no overlapping totals;scoped Git baseline excludes foreign work."
+    "Restored concurrent ADMIN-FULL-001 CHG012 docs verbatim frombec79ccb, retained Excel prompt013/DEC056; source snapshot includes committed admin implementation; application unchanged by this documentation task.",
+    "Read-only workbook/pure-parser evidence from013 retained; content/link/diff validation and HEAD guard; no database/import/grant/runtime tests or restart."
   ]
 }
