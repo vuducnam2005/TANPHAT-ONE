@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-009 — Prompt đổi tên đăng nhập nhân viên (HR-LOGIN-RENAME-001)
+
+- Ngày 19/11/2026 Asia/Saigon; theo yêu cầu trực tiếp. Phiên chính điều phối tạo [prompt triển khai](prompts/CLAUDE_HR_LOGIN_RENAME_001_EMPLOYEE_LOGIN.md), đăng ký roadmap/index và cập nhật status; chưa sửa application hoặc áp tính năng.
+- Rà luồng account wizard/related/export, guard DEC-054, native UNIQUE(login)/so sánh đúng tên và session token chứa login. Tiếp nhận rõ WIP chưa commit trong hr_account_wizard.py/hr_history.py: không tự chốt chữ thường/case-insensitive từ WIP; yêu cầu bảo vệ mọi đường ghi, duplicate inactive/archive/race, audit atomic, UI inline/reload/Excel/phiên và giữ identity/password/quyền. Claude phải hoàn thiện/kiểm đúng scope rồi commit/push/deploy PCserver theo policy17/11; không thử tài khoản người thật, không bắt18079.
+- Kiểm thực lượt điều phối: đọc source/diff/caller/test, scripts/dev.py status (18069/PG đang nghe), SSH chỉ đọc xác nhận PCserver /workspace/docs và prompt chưa có; kiểm nội dung/link tài liệu và git diff --check. Workflow check FAIL từ baseline do foreignWIP, start RESUME checkpoint18/11; không finish/seal thay batch khác. Không chạy test ORM/HTTP/browser/race/Excel đổi login vì chưa có implementation được bàn giao; không gọi prompt là technical/business acceptance. Chỉ đồng bộ tài liệu, không restart/upgrade runtime.
+
 ## CHG-20261119-008 — Giao Xuất Excel nhân viên lên PC server
 
 - 19/11/2026; app`2c397ffb` (HR20.0.1.14.0) đã push/deploy16/16tệpSHA256; backup `C:/TANPHAT-backups/hr-employee-xlsx001/hr-xlsx006-20261119T120938` gồm dump/restore-list15.787entry, filestore631entry, source/config vàSHA256; upgrade chỉHR exit0/0ERROR. Giữ39employee/32user, roster/employeeSequence/groups/implied/ledger/equipment/480ngày công/baseURL, chỉversionHR đổi.

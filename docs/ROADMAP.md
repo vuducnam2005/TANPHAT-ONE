@@ -6,6 +6,7 @@
 
 | ID | Công việc | Trạng thái | Đầu vào/phụ thuộc | Điều kiện hoàn tất |
 | --- | --- | --- | --- | --- |
+| HR-LOGIN-RENAME-001 | Đổi tên đăng nhập từ Tài khoản nhân viên, giữ danh tính và quyền | PROMPT_READY_WIP_NOT_ACCEPTED CHG-20261119-009 | Yêu cầu19/11; [prompt](prompts/CLAUDE_HR_LOGIN_RENAME_001_EMPLOYEE_LOGIN.md); DEC-054/057; WIP HR chưa bàn giao | Backend mọi đường ghi + unique/race/audit, dialog lỗi tại input, bảo toàn ID/password/quyền, Excel/HTTP/session; Claude tiếp nhận WIP, kiểm rồi giao18069/PCserver; chưa áp tính năng |
 | HR-ATTENDANCE-MATRIX-003 | Bảng công đầy đủ theo file, tải nhiều file và đối chiếu trước tổng hợp | MAIN_AND_PC_SERVER_APPLIED CHG-20261118-031 | DEC-058; `tp_hr_attendance` `20.0.3.0.0` (code `b7765bd1`); [acceptance](demo/HR_ATTENDANCE_MATRIX_003_ACCEPTANCE.md) / [guide](demo/HR_ATTENDANCE_MATRIX_003_USER_GUIDE.md) | 18069 + PC server upgrade `0` lỗi (`195` snapshot people / `1.365` cells); pure `26/26` + ORM rollback + ACL `uid=34` + live public CSS/JS `200 OK` + anon smoke PASS; login admin & DB-write `18079` `NOT_RUN` |
 
 | HR-EMPLOYEE-ORDER | Thứ tự nhân viên dùng chung, kéo cả hàng trong phòng | MAIN_AND_PC_SERVER_ASSETS_VERIFIED CHG-20261118-028 | [acceptance](demo/HR_EMPLOYEE_ORDER_ACCEPTANCE.md) / [runbook](../ops/runbooks/HR_EMPLOYEE_ORDER_DEPLOY_AND_ROLLBACK.md) | HR20.0.1.13.1; native regression, ORM thật rollback PASS; full browser persist/race chưa chạy |
