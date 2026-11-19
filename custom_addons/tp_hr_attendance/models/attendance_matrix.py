@@ -445,7 +445,7 @@ class AttendanceBatchMatrix(models.Model):
             'source_namespace': batch.source_namespace or 'excel-machine',
             'state': batch.state,
             'state_label': BATCH_STATE_LABELS.get(batch.state, batch.state),
-            'can_apply': batch.state == 'preview',
+            'can_apply': False,  # ENTI-ATTENDANCE-002: Excel import closed; history only
             'can_discard': batch.state == 'preview',
             'period_from': fields.Date.to_string(batch.period_from) if batch.period_from else '',
             'period_to': fields.Date.to_string(batch.period_to) if batch.period_to else '',
@@ -468,7 +468,12 @@ class AttendanceBatchMatrix(models.Model):
 
     @api.model
     def tp_upload_files(self, params=None):
-        """Persist each file and update attendance from its newest valid source, atomically per file."""
+        """Former multi-file Excel upload RPC: closed (ENTI-ATTENDANCE-002, attendance comes from ENTI)."""
+        return self._tp_import_closed()
+
+    @api.model
+    def _tp_upload_files(self, params=None):
+        """Persist each file and update attendance from its newest valid source, atomically per file (internal)."""
         params = dict(params or {})
         company = self.env.company
         require(self.env, 'import', company)
@@ -499,13 +504,13 @@ class AttendanceBatchMatrix(models.Model):
                 continue
             try:
                 with self.env.cr.savepoint():
-                    batch = self.create({
+                    batch = self._tp_new_batch({
                         'name': self.env._('Excel máy · %(file)s', file=file_name),
                         'file_name': file_name,
                         'file_data': data,
                         'company_id': company.id,
                     })
-                    batch.action_preview()
+                    batch._tp_read_file()
                     sync = batch._tp_apply_latest_file()
                     info = dict(batch._tp_batch_selector_item(), sync=sync)
                 created_ids.append(info['id'])
@@ -1115,7 +1120,7 @@ class AttendanceBatchMatrix(models.Model):
                 'batch': None,
                 'status_options': [{'key': k, 'label': lbl} for k, lbl in FILTER_STATUS_OPTIONS],
                 'reference_hours': ref_hours,
-                'can_import': True,
+                'can_import': False,  # ENTI-ATTENDANCE-002: Excel file import closed
                 'can_export': True,
             }
 
@@ -1147,7 +1152,7 @@ class AttendanceBatchMatrix(models.Model):
             'group_options': evaluated['group_options'],
             'status_options': [{'key': k, 'label': lbl} for k, lbl in FILTER_STATUS_OPTIONS],
             'reference_hours': ref_hours,
-            'can_import': True,
+            'can_import': False,
             'can_export': True,
             **filtered,
         }

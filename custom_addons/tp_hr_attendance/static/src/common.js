@@ -5,13 +5,16 @@ import { browser } from "@web/core/browser/browser";
  * Dates travel as ISO strings (YYYY-MM-DD); the server decides "today" in Asia/Ho_Chi_Minh.
  */
 export const PAGE_SIZES = [10, 20, 50, 100];
-export const STATE_ORDER = ["out_recorded", "working", "missing", "review", "no_punch", "no_source", "leave"];
-// Blue = total, green = valid presence, orange = missing data, purple = confirmed leave, grey = unknown.
+// Same order as the server (attendance_figures.STATUS_ORDER). "absent" = a finished scheduled working day without
+// any punch; "no_punch" = not punched yet / not decided; "rest" = not a working day by schedule (Sunday).
+export const STATE_ORDER = ["out_recorded", "working", "missing", "review", "absent", "no_punch", "rest", "leave", "no_source"];
+// ENTI-ATTENDANCE-002 palette: blue = complete, teal = still at work, amber = needs a check, red = absent,
+// slate/grey = nothing to show yet, violet = confirmed leave. Every colour is always paired with a text label.
 export const STATE_COLORS = {
-    out_recorded: "#1e8a4c", working: "#3fb37f", missing: "#f79009", review: "#b54708",
-    no_punch: "#667085", no_source: "#c3cad4", leave: "#7a5af8", future: "#eef1f5",
+    out_recorded: "#2563EB", working: "#0D9488", missing: "#D97706", review: "#B45309", absent: "#DC2626",
+    no_punch: "#94A3B8", rest: "#CBD5E1", leave: "#A78BFA", no_source: "#64748B", future: "#EEF1F5",
 };
-export const TOTAL_COLOR = "#1f6fb2";
+export const TOTAL_COLOR = "#2563EB";
 export function attendanceIssue(row) {
     if (row.state === "missing") {
         const label = !row.in && !row.out ? "Thiếu giờ vào và ra" : !row.in ? "Thiếu giờ vào" : !row.out ? "Thiếu giờ ra" : "Thiếu lượt chấm công";
@@ -143,7 +146,7 @@ export function cellNote(row, side) {
     if (row.state === "review") {
         return side === "out" ? "Cần kiểm tra" : "";
     }
-    if (["no_punch", "no_source", "leave"].includes(row.state)) {
+    if (["absent", "no_punch", "rest", "no_source", "leave"].includes(row.state)) {
         return side === "in" ? row.state_label : "";
     }
     return "";
@@ -176,11 +179,17 @@ export function mineStatusInfo(row) {
     if (row.state === "leave") {
         return { key: "leave", label: "Nghỉ đã xác nhận", tone: "leave", icon: "event_available" };
     }
+    if (row.state === "absent") {
+        return { key: "absent", label: "Vắng theo lịch", tone: "danger", icon: "event_busy" };
+    }
     if (row.state === "no_punch") {
         return { key: "no_punch", label: "Chưa chấm công", tone: "muted", icon: "radio_button_unchecked" };
     }
+    if (row.state === "rest") {
+        return { key: "rest", label: row.state_label || "Nghỉ theo lịch", tone: "future", icon: "calendar_today" };
+    }
     if (row.state === "future" || row.future) {
-        return { key: "future", label: "Ngày tương lai", tone: "future", icon: "event" };
+        return { key: "future", label: "Ngày tương lai", tone: "future", icon: "calendar_today" };
     }
     return { key: "no_source", label: row.status_label || "Chưa có dữ liệu", tone: "muted", icon: "help_outline" };
 }

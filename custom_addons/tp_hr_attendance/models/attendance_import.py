@@ -2,6 +2,11 @@
 
 HR-ATTENDANCE-SIMPLE-002 adds the drag-and-drop upload RPCs on top of the same batch flow and stores the
 machine "Đi muộn" totals of each source period (``tp.hr.attendance.late``) next to the day punches.
+
+ENTI-ATTENDANCE-002 closes Excel FILE import: attendance comes from the ENTI API. Every public entry point that
+reads or applies a file (form buttons, upload RPCs, ``create``) raises ``IMPORT_CLOSED``; the batches, lines,
+late totals, snapshots and their relations stay readable and exportable as history. The reading/applying code is
+kept behind private methods (not callable over RPC) so history stays explainable and the tests can seed it.
 """
 import hashlib
 from collections import defaultdict
@@ -25,6 +30,8 @@ from .attendance_logic import dates_between, short_range
 from .attendance_parser import AttendanceFormatError, parse_attendance
 
 ADVISORY_KEY = 761120
+IMPORT_CLOSED = ('Đã ngừng nhập tệp Excel chấm công: dữ liệu công lấy tự động từ ENTI. '
+                 'Lịch sử các lần nhập trước vẫn xem và xuất được.')
 KINDS = [
     ('pair', 'Đủ giờ vào - ra'), ('missing_out', 'Thiếu giờ ra'), ('missing_in', 'Thiếu giờ vào'),
     ('reversed', 'Giờ ra trước giờ vào'), ('code', 'Ký hiệu thay giờ'), ('merged', 'Ô Vào/Ra bị gộp'),
@@ -171,8 +178,14 @@ class AttendanceBatch(models.Model):
                 require(self.env, 'import', company)
         return super().check_access(operation)
 
+    @api.model
+    def _tp_import_closed(self):
+        raise UserError(self.env._(IMPORT_CLOSED))
+
     @api.model_create_multi
     def create(self, vals_list):
+        if not is_internal(self):
+            self._tp_import_closed()
         for vals in vals_list:
             if set(vals) & self._SYSTEM_FIELDS:
                 raise AccessError(self.env._('Kết quả nhập chỉ được hệ thống cập nhật.'))
@@ -235,6 +248,10 @@ class AttendanceBatch(models.Model):
 
     # ------------------------------------------------------------- preview
     def action_preview(self):
+        """Former "Đọc tệp và xem trước" button / RPC: closed (ENTI-ATTENDANCE-002)."""
+        return self._tp_import_closed()
+
+    def _tp_read_file(self):
         self.ensure_one()
         self._tp_require()
         self._lock()
@@ -469,6 +486,10 @@ class AttendanceBatch(models.Model):
 
     # --------------------------------------------------------------- apply
     def action_apply(self):
+        """Former "Áp dụng dòng hợp lệ" button / RPC: closed (ENTI-ATTENDANCE-002)."""
+        return self._tp_import_closed()
+
+    def _tp_apply_file(self):
         self.ensure_one()
         self._tp_require()
         self._lock()
@@ -583,10 +604,21 @@ class AttendanceBatch(models.Model):
     # ----------------------------------------------------- drag-and-drop upload
     @api.model
     def tp_upload_preview(self, params=None):
-        """Create a batch from an uploaded .xlsx and read it at once; returns what the dialog shows.
+        """Former drag-and-drop RPC: closed (ENTI-ATTENDANCE-002)."""
+        return self._tp_import_closed()
 
-        Same guards as the form flow: ``create`` and ``action_preview`` require the import capability; a
-        format error raises and the whole request (batch included) is rolled back.
+    @api.model
+    def _tp_new_batch(self, vals):
+        """Internal batch creation (history seeding/tests): the import capability is still required."""
+        require(self.env, 'import', self.env['res.company'].browse(vals.get('company_id')) or self.env.company)
+        return internal(self).create(vals).with_env(self.env)
+
+    @api.model
+    def _tp_upload_preview(self, params=None):
+        """Create a batch from an uploaded .xlsx and read it at once; returns what the dialog showed.
+
+        Same guards as the former form flow (import capability); a format error raises and the whole request
+        (batch included) is rolled back.
         """
         params = dict(params or {})
         file_name = str(params.get('file_name') or '').strip()[:200]
@@ -599,9 +631,9 @@ class AttendanceBatch(models.Model):
             raise UserError(self.env._('Tệp quá lớn (tối đa 15 MB).'))
         company = self.env.company
         require(self.env, 'import', company)
-        batch = self.create({'name': self.env._('Excel máy · %(file)s', file=file_name), 'file_name': file_name,
-                             'file_data': data, 'company_id': company.id})
-        batch.action_preview()
+        batch = self._tp_new_batch({'name': self.env._('Excel máy · %(file)s', file=file_name), 'file_name': file_name,
+                                    'file_data': data, 'company_id': company.id})
+        batch._tp_read_file()
         return batch._tp_preview_payload()
 
     @api.model
@@ -615,6 +647,11 @@ class AttendanceBatch(models.Model):
 
     @api.model
     def tp_upload_apply(self, batch_id):
+        """Former RPC that applied an uploaded file: closed (ENTI-ATTENDANCE-002)."""
+        return self._tp_import_closed()
+
+    @api.model
+    def _tp_upload_apply(self, batch_id):
         batch = self._tp_upload_batch(batch_id)
         batch._tp_apply_latest_file()
         return batch._tp_preview_payload()

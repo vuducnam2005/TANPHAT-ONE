@@ -249,10 +249,10 @@ class AttendanceDay(models.Model):
         for employee_id, work_date in sorted(keys, key=lambda key: (key[1], key[0])):
             employee = employees.browse(employee_id)
             day = Day.search([('employee_id', '=', employee_id), ('work_date', '=', work_date)])
-            if day and day.source_kind == 'enti':
-                # ENTI is higher priority than Excel import; do not overwrite ENTI day with Excel
-                continue
             sessions = Session.search([('employee_id', '=', employee_id), ('work_date', '=', work_date)], order='check_in')
+            if day and day.source_kind == 'enti' and not any(session.source == 'correction' for session in sessions):
+                # ENTI wins over an Excel import; only an approved correction may replace an ENTI day.
+                continue
             issues = Line.search([('employee_id', '=', employee_id), ('work_date', '=', work_date), ('issue_open', '=', True)])
             if not sessions and not issues:
                 if day:
@@ -274,11 +274,12 @@ class AttendanceDay(models.Model):
         now = fields.Datetime.now()
         ranges = self.env['tp.hr.attendance.period']._tp_locked_ranges(self.company_id.ids)
         for day in internal(self):
-            if day.source_kind == 'enti':
+            sessions = day.session_ids.sorted('check_in')
+            corrected = any(session.source == 'correction' for session in sessions)
+            if day.source_kind == 'enti' and not corrected:
                 continue
             if not allow_locked and self.env['tp.hr.attendance.period']._tp_is_locked(day.company_id.id, day.work_date, ranges):
                 continue
-            sessions = day.session_ids.sorted('check_in')
             issues = day.sudo().issue_ids
             if any(issue.kind not in ('missing_in', 'missing_out') or issue.state == 'conflict' for issue in issues):
                 data_state = 'review'
@@ -303,6 +304,8 @@ class AttendanceDay(models.Model):
                 'recorded_hours': round(sum(sessions.mapped('worked_hours')), 2), 'scheduled_hours': scheduled,
                 'units': units or 0.0, 'units_state': units_state, 'rule_id': rule.id, 'data_state': data_state,
             }
+            if corrected:
+                vals['source_kind'] = 'correction'
             changed = {key: value for key, value in vals.items()
                        if (day[key].id if isinstance(day[key], models.BaseModel) else day[key]) != value
                        and not (isinstance(value, bool) and not value and not day[key])}

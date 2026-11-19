@@ -5,14 +5,14 @@ mapped records into the canonical day summary and sessions per business rules:
 1) Approved corrections win over ENTI.
 2) ENTI wins over Excel.
 3) Incomplete days (in-only, out-only) update day status without creating invalid sessions.
+ENTI-ATTENDANCE-002: a record is rewritten only when ENTI values changed (``raw_hash``) and the canonical day
+is written only when its values differ, so an unchanged poll never bumps versions or wakes browsers.
 """
-import json
 import logging
 from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
 
 from odoo import api, fields, models
-from odoo.exceptions import AccessError
 
 from .attendance_common import DEFAULT_TZ, internal
 
@@ -58,7 +58,7 @@ def _parse_time_str(time_val, work_date, tz_name=DEFAULT_TZ):
             second = int(parts[2]) if len(parts) > 2 else 0
             clock_str = f"{hour:02d}:{minute:02d}"
             local_dt = datetime.combine(work_date, datetime.min.time()).replace(
-                hour=hour, minute=minute, second=second, tzinfo=zone
+                hour=hour, minute=minute, second=second, tzinfo=zone,
             )
             utc_dt = local_dt.astimezone(UTC).replace(tzinfo=None)
             return clock_str, utc_dt
@@ -121,6 +121,10 @@ class AttendanceEntiDay(models.Model):
     )
     raw_json = fields.Text("Dữ liệu thô JSON")
     received_at = fields.Datetime("Thời điểm nhận", default=fields.Datetime.now)
+    raw_hash = fields.Char("Dấu dữ liệu ENTI", readonly=True,
+                           help="Dấu của các giá trị ENTI đã lưu; lượt đồng bộ chỉ ghi lại khi dấu thay đổi.")
+    changed_at = fields.Datetime("Thay đổi lần cuối", readonly=True, index=True,
+                                 help="Lúc Odoo phát hiện giá trị ENTI của ngày này thay đổi.")
 
     _day_unique = models.Constraint(
         "UNIQUE(source_id, key_nv, work_date)",
@@ -134,9 +138,13 @@ class AttendanceEntiDay(models.Model):
             ("source_id", "=", mapping.source_id.id),
             ("key_nv", "=", mapping.key_nv),
         ])
+        changed = self.browse()
         for day in days:
-            day.sudo().write({"employee_id": mapping.employee_id.id})
-            day._tp_project_to_canonical()
+            if day.employee_id != mapping.employee_id:
+                day.sudo().write({"employee_id": mapping.employee_id.id})
+            if day._tp_project_to_canonical():
+                changed |= day
+        return changed
 
     def _tp_project_to_canonical(self):
         """Project this ENTI day record into canonical tp.hr.attendance.day and session.
@@ -148,11 +156,13 @@ class AttendanceEntiDay(models.Model):
            If both in and out valid -> create/update active session, data_state = 'ok'.
            If only in or only out -> data_state = 'missing', NO invalid session created.
         4. Disable any old Excel sessions for this employee & day (no double counting).
+
+        Returns True when the canonical day or its session actually changed.
         """
         self.ensure_one()
         if not self.employee_id:
-            self.state = "pending_map"
-            return
+            self._tp_set_state("pending_map")
+            return False
 
         company = self.company_id
         employee = self.employee_id
@@ -168,31 +178,20 @@ class AttendanceEntiDay(models.Model):
         ], limit=1)
 
         if approved_corr:
-            self.write({"state": "superseded_correction"})
-            _logger.info(
-                "ENTI sync preserved approved correction for %s on %s",
-                employee.name,
-                work_date,
-            )
-            return
+            self._tp_set_state("superseded_correction")
+            return False
 
         # Check rule 2: Locked period protection
         Period = self.env["tp.hr.attendance.period"].sudo()
         locked_ranges = Period._tp_locked_ranges([company.id])
         if Period._tp_is_locked(company.id, work_date, locked_ranges):
-            self.write({"state": "locked_period"})
-            _logger.info(
-                "ENTI sync preserved locked period for %s on %s",
-                employee.name,
-                work_date,
-            )
-            return
+            self._tp_set_state("locked_period")
+            return False
 
         Day = internal(self.env["tp.hr.attendance.day"].sudo())
         Session = internal(self.env["tp.hr.attendance.session"].sudo())
-        now = fields.Datetime.now()
+        changed = False
 
-        # Find or create Day summary
         day = Day.search([
             ("employee_id", "=", employee.id),
             ("work_date", "=", work_date),
@@ -202,7 +201,7 @@ class AttendanceEntiDay(models.Model):
         has_out = bool(self.check_out_dt and self.ra_cuoi)
         full_pair = has_in and has_out and (self.check_out_dt > self.check_in_dt)
 
-        # Deactivate any existing Excel sessions for this employee & day so they never conflict
+        # Active non-correction sessions of the day (Excel or ENTI); they never stay active beside ENTI.
         old_sessions = Session.search([
             ("employee_id", "=", employee.id),
             ("work_date", "=", work_date),
@@ -210,44 +209,45 @@ class AttendanceEntiDay(models.Model):
         ])
 
         recorded_hours = 0.0
-        active_session = False
+        active_session = Session.browse()
 
         if full_pair:
             delta = self.check_out_dt - self.check_in_dt
             recorded_hours = round(delta.total_seconds() / 3600, 2)
-            # Find existing ENTI session or create new
-            enti_session = old_sessions.filtered(lambda s: s.source == "enti")[:1]
+            # Reuse the day's ENTI session, even one parked inactive while the day was half-punched.
+            enti_session = Session.with_context(active_test=False).search([
+                ("employee_id", "=", employee.id),
+                ("work_date", "=", work_date),
+                ("source", "=", "enti"),
+            ], order="active desc, id", limit=1)
+            session_vals = {"check_in": self.check_in_dt, "check_out": self.check_out_dt, "active": True}
             if enti_session:
-                internal(enti_session).write({
-                    "check_in": self.check_in_dt,
-                    "check_out": self.check_out_dt,
-                    "worked_hours": recorded_hours,
-                    "active": True,
-                })
+                diff = _diff(enti_session, session_vals)
+                if diff:
+                    internal(enti_session).write(diff)
+                    changed = True
                 active_session = enti_session
             else:
-                active_session = Session.create({
-                    "employee_id": employee.id,
-                    "company_id": company.id,
-                    "work_date": work_date,
-                    "check_in": self.check_in_dt,
-                    "check_out": self.check_out_dt,
-                    "worked_hours": recorded_hours,
-                    "source": "enti",
-                    "active": True,
+                active_session = Session.create(dict(
+                    session_vals, employee_id=employee.id, company_id=company.id, work_date=work_date, source="enti",
+                ))
+                changed = True
+            stale = old_sessions - active_session
+            if stale:
+                internal(stale).write({
+                    "active": False,
+                    "superseded_reason": "Thay thế bằng dữ liệu chấm công ENTI",
                 })
-            # Inactivate any non-ENTI sessions
-            internal(old_sessions - active_session).write({
-                "active": False,
-                "superseded_reason": "Thay thế bằng dữ liệu chấm công ENTI",
-            })
+                changed = True
             data_state = "ok"
         else:
             # Half-punch or no punches: DO NOT create a dummy session
-            internal(old_sessions).write({
-                "active": False,
-                "superseded_reason": "Thay thế bằng dữ liệu chấm công ENTI (thiếu giờ)",
-            })
+            if old_sessions:
+                internal(old_sessions).write({
+                    "active": False,
+                    "superseded_reason": "Thay thế bằng dữ liệu chấm công ENTI (thiếu giờ)",
+                })
+                changed = True
             data_state = "missing"
 
         # Calculate standard units based on rules
@@ -278,15 +278,44 @@ class AttendanceEntiDay(models.Model):
             "rule_id": rule.id if rule else False,
             "data_state": data_state,
             "source_kind": "enti",
-            "source_updated_at": now,
         }
 
         if day:
-            internal(day).write(dict(day_vals, version=day.version + 1))
+            diff = _diff(day, day_vals)
+            if diff:
+                internal(day).write(dict(diff, version=day.version + 1, source_updated_at=fields.Datetime.now()))
+                changed = True
         else:
-            day = Day.create(dict(day_vals, version=1))
+            day = Day.create(dict(day_vals, version=1, source_updated_at=fields.Datetime.now()))
+            changed = True
 
-        if active_session:
+        if active_session and active_session.day_id != day:
             internal(active_session).write({"day_id": day.id})
 
-        self.sudo().write({"state": "applied"})
+        self._tp_set_state("applied")
+        return changed
+
+    def _tp_set_state(self, state):
+        if self.state != state:
+            self.sudo().write({"state": state})
+
+
+def _plain(record, name):
+    value = record[name]
+    if isinstance(value, models.BaseModel):
+        return value.id or False
+    return value or False
+
+
+def _diff(record, vals):
+    """Values of ``vals`` that differ from ``record`` (empty values compare equal: "", 0, False, None)."""
+    out = {}
+    for name, value in vals.items():
+        current = _plain(record, name)
+        new = value or False
+        if isinstance(current, float) or isinstance(new, float):
+            if abs(float(current or 0) - float(new or 0)) > 1e-6:
+                out[name] = value
+        elif current != new:
+            out[name] = value
+    return out

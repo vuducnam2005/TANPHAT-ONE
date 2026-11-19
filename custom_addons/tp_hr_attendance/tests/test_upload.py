@@ -1,7 +1,7 @@
 """HR-ATTENDANCE-SIMPLE-002 (ORM): upload → preview → import, machine late totals, sheet / overview / own view,
 export rights and the API staging foundation. Synthetic company, people and hours only."""
 import base64
-from datetime import date, timedelta
+from datetime import date, time, timedelta
 from io import BytesIO
 
 from openpyxl import load_workbook
@@ -35,17 +35,17 @@ class TestAttendanceUpload(AttendanceCase):
         self.both = (self.emp_a + self.emp_b).ids
 
     def import_week(self):
-        preview = self.Batch.tp_upload_preview(payload(self.data))
-        return self.Batch.tp_upload_apply(preview['batch_id'])
+        preview = self.Batch._tp_upload_preview(payload(self.data))
+        return self.Batch._tp_upload_apply(preview['batch_id'])
 
     def test_upload_preview_then_import_keeps_machine_late_totals(self):
         with self.assertRaises(AccessError):
-            self.env_for(self.viewer)['tp.hr.attendance.batch'].tp_upload_preview(payload(self.data))
+            self.env_for(self.viewer)['tp.hr.attendance.batch']._tp_upload_preview(payload(self.data))
         with self.assertRaises(UserError):
-            self.Batch.tp_upload_preview(payload(self.data, 'synthetic.xls'))
+            self.Batch._tp_upload_preview(payload(self.data, 'synthetic.xls'))
         with self.assertRaises(UserError):
-            self.Batch.tp_upload_preview(payload(b'not a workbook'))
-        preview = self.Batch.tp_upload_preview(payload(self.data))
+            self.Batch._tp_upload_preview(payload(b'not a workbook'))
+        preview = self.Batch._tp_upload_preview(payload(self.data))
         self.assertEqual(preview['state'], 'preview')
         self.assertEqual(preview['period'], {'from': '2026-11-09', 'to': '2026-11-15', 'label': '09–15/11'})
         self.assertEqual((preview['matched'], preview['people'], preview['line_count'], preview['empty']), (2, 2, 3, 11))
@@ -56,7 +56,7 @@ class TestAttendanceUpload(AttendanceCase):
         # Nothing is written before "Nhập dữ liệu".
         self.assertFalse(self.Session.search([('employee_id', 'in', self.both)]))
         self.assertFalse(self.Late.search([('employee_id', 'in', self.both), ('state', '=', 'applied')]))
-        applied = self.Batch.tp_upload_apply(preview['batch_id'])
+        applied = self.Batch._tp_upload_apply(preview['batch_id'])
         self.assertEqual((applied['state'], applied['late']['applied'], applied['can_apply']), ('applied', 2, False))
         stored = self.Late.search([('employee_id', '=', self.emp_a.id), ('state', '=', 'applied')])
         self.assertEqual((stored.date_from, stored.date_to, stored.late_count, stored.late_minutes), (MONDAY, SUNDAY, 3, 47))
@@ -64,30 +64,33 @@ class TestAttendanceUpload(AttendanceCase):
 
     def test_reimport_never_doubles_and_changed_totals_are_conflicts(self):
         first = self.import_week()
-        again = self.Batch.tp_upload_preview(payload(self.data, 'synthetic-again.xlsx'))
+        again = self.Batch._tp_upload_preview(payload(self.data, 'synthetic-again.xlsx'))
         self.assertTrue(again['same_file'])
         self.assertEqual(again['counts']['valid'], 0)
         self.assertGreaterEqual(again['counts']['duplicate'], 2)
         self.assertEqual((again['late']['valid'], again['late']['duplicate']), (0, 2))
-        self.Batch.tp_upload_apply(again['batch_id'])
+        self.Batch._tp_upload_apply(again['batch_id'])
         self.assertEqual(self.Late.search_count([('employee_id', 'in', self.both), ('state', '=', 'applied')]), 2)
         self.assertEqual(self.Session.search_count([('employee_id', 'in', self.both)]), 2)
-        # Same period, different machine total: kept as a conflict for HR, never last-write-wins.
+        # Same period, different machine total: the preview flags it for HR; applying the newer file follows the
+        # latest-file policy (test_latest_file) and still keeps exactly one applied total per person and period.
         changed = report([dict(PEOPLE[0], late=(4, 50)), PEOPLE[1]], MONDAY, 7, late=True)
-        conflict = self.Batch.tp_upload_preview(payload(changed, 'synthetic-changed.xlsx'))
+        conflict = self.Batch._tp_upload_preview(payload(changed, 'synthetic-changed.xlsx'))
         self.assertEqual((conflict['late']['conflict'], conflict['late']['duplicate']), (1, 1))
         self.assertEqual([row['code'] for row in conflict['late_attention']], ['9901'])
-        self.Batch.tp_upload_apply(conflict['batch_id'])
+        self.Batch._tp_upload_apply(conflict['batch_id'])
         kept = self.Late.search([('employee_id', '=', self.emp_a.id), ('state', '=', 'applied')])
-        self.assertEqual((kept.late_count, kept.late_minutes, kept.batch_id.id), (3, 47, first['batch_id']))
+        self.assertEqual((kept.late_count, kept.late_minutes, kept.batch_id.id), (4, 50, conflict['batch_id']))
+        self.assertNotEqual(first['batch_id'], conflict['batch_id'])
+        self.assertEqual(self.Late.search_count([('employee_id', 'in', self.both), ('state', '=', 'applied')]), 2)
 
     def test_cancel_writes_nothing(self):
-        preview = self.Batch.tp_upload_preview(payload(self.data))
+        preview = self.Batch._tp_upload_preview(payload(self.data))
         self.assertEqual(self.Batch.tp_upload_cancel(preview['batch_id'])['state'], 'cancelled')
         self.assertFalse(self.Session.search([('employee_id', 'in', self.both)]))
         self.assertFalse(self.Late.search([('employee_id', 'in', self.both), ('state', '=', 'applied')]))
         with self.assertRaises(UserError):
-            self.Batch.tp_upload_apply(preview['batch_id'])
+            self.Batch._tp_upload_apply(preview['batch_id'])
 
     def test_sheet_and_overview_follow_source_periods(self):
         self.import_week()
@@ -109,19 +112,19 @@ class TestAttendanceUpload(AttendanceCase):
         self.assertEqual((cells[self.emp_a.id]['in'], cells[self.emp_a.id]['out']), ('07:37', '17:05'))
         tuesday = {row['id']: row for row in Day.tp_sheet({'mode': 'day', 'date': '2026-11-10'})['rows']}
         self.assertEqual((tuesday[self.emp_a.id]['state'], tuesday[self.emp_a.id]['out']), ('missing', ''))
-        # An empty cell in a file that lists the person is "not recorded", never leave.
-        self.assertEqual(tuesday[self.emp_b.id]['state'], 'no_punch')
-        # Dashboard: one main state per person, donut adds up to the KPI total; a day has no exact late total.
+        # A past working day with no punch at all for a listed person is an absence (ENTI-ATTENDANCE-002 rule), never leave.
+        self.assertEqual(tuesday[self.emp_b.id]['state'], 'absent')
+        # Dashboard: one main state per counted person-day, so the status split adds up to the person-days shown.
         overview = Day.tp_overview({'mode': 'day', 'date': '2026-11-09'})
-        self.assertEqual(sum(item['value'] for item in overview['donut']), overview['kpis']['total'])
+        self.assertEqual(sum(item['value'] for item in overview['statuses']), overview['kpis']['person_days'])
         if not overview['has_leave_source']:
             self.assertIsNone(overview['kpis']['leave'])
-        self.assertIsNone(overview['late'])
-        self.assertEqual(overview['late_hints'], ['09–15/11'])
+        # Late minutes on the dashboard come from ENTI per day; a weekly Excel total is never spread over days or shown as 0.
+        self.assertEqual(overview['kpis']['late']['state'], 'none')
         weekly = Day.tp_overview({'mode': 'week', 'date': '2026-11-11'})
-        self.assertEqual({key: weekly['late'][key] for key in ('people', 'late_people', 'count', 'minutes')},
-                         {'people': 2, 'late_people': 1, 'count': 3, 'minutes': 47})
-        self.assertEqual(len(weekly['daily']), 7)
+        self.assertEqual((weekly['kpis']['late']['state'], weekly['kpis']['late']['text']), ('none', 'Chưa có số liệu đi muộn'))
+        self.assertEqual(len(weekly['trend']), 7)
+        self.assertEqual(sum(item['value'] for item in weekly['statuses']), weekly['kpis']['person_days'])
         with self.assertRaises(UserError):
             Day.tp_sheet({'mode': 'range', 'from': '2026-11-15', 'to': '2026-11-09'})
 
@@ -142,23 +145,38 @@ class TestAttendanceUpload(AttendanceCase):
         self.assertEqual((filtered['summary']['recorded_days'], filtered['late']['count']), (2, 3))
         with self.assertRaises(UserError):
             Mine.tp_mine(dict(WEEK, state='forged_state'))
+        # ENTI-ATTENDANCE-002: every export follows the "Bảng chấm công" template plus the flat "Chi tiết" sheet.
+        sheets = ['Bảng chấm công', 'Chi tiết']
         own = load_workbook(BytesIO(base64.b64decode(Mine.tp_export_mine(WEEK)['data'])))
-        self.assertEqual(own.sheetnames, ['Giờ theo ngày', 'Tổng đi muộn'])
-        self.assertEqual({row[0] for row in own['Giờ theo ngày'].iter_rows(min_row=3, values_only=True)}, {self.emp_a.name})
+        self.assertEqual(own.sheetnames, sheets)
+        self.assertEqual([own['Bảng chấm công'].cell(row, 3).value for row in range(9, own['Bảng chấm công'].max_row + 1)
+                          if own['Bảng chấm công'].cell(row, 5).value == 'Vào'], [self.emp_a.name])
+        self.assertEqual({row[2] for row in own['Chi tiết'].iter_rows(min_row=4, values_only=True) if row[0]}, {self.emp_a.name})
         own_filtered = load_workbook(BytesIO(base64.b64decode(Mine.tp_export_mine(dict(WEEK, state='missing_out', page=1, page_size=10))['data'])))
-        self.assertEqual(own_filtered.sheetnames, ['Giờ theo ngày', 'Tổng đi muộn'])
-        self.assertEqual(list(own_filtered['Giờ theo ngày'].iter_rows(min_row=3, values_only=True)), [
-            (self.emp_a.name, self.emp_a.tp_employee_code, self.dept_a.name, 'T3 10/11/2026', '07:50', '—', 'Thiếu giờ ra'),
-        ])
-        # Read-only users cannot export shared data; HR can, with the late sheet for exact periods only.
+        self.assertEqual(own_filtered.sheetnames, sheets)
+        detail = [row for row in own_filtered['Chi tiết'].iter_rows(min_row=4, values_only=True) if row[0]]
+        self.assertEqual(len(detail), 1)
+        dept, code, name, _job, day, weekday, time_in, time_out = detail[0][:8]
+        self.assertEqual((dept, code, name, day.date(), weekday, time_in, time_out),
+                         (self.dept.name, self.emp_a.tp_employee_code, self.emp_a.name, date(2026, 11, 10), 'T3', time(7, 50), '—'))
+        self.assertIn('giờ ra', detail[0][9])
+        # Read-only users cannot export shared data; HR can. Late totals are numbers only for exact source periods.
         with self.assertRaises(AccessError):
             Mine.tp_export_sheet(WEEK)
         shared = self.env_for(self.manager)['tp.hr.attendance.day'].tp_export_sheet(WEEK)
         book = load_workbook(BytesIO(base64.b64decode(shared['data'])))
-        self.assertEqual(book.sheetnames, ['Giờ theo ngày', 'Tổng đi muộn'])
-        self.assertEqual(sorted(row[4] for row in book['Tổng đi muộn'].iter_rows(min_row=3, values_only=True)), [0, 3])
+        self.assertEqual(book.sheetnames, sheets)
+        grid = book['Bảng chấm công']
+        blocks = [row for row in range(9, grid.max_row + 1) if grid.cell(row, 5).value == 'Vào']
+        self.assertEqual(sorted(grid.cell(row, 6 + 7).value for row in blocks), [0, 3])
         month = self.env_for(self.manager)['tp.hr.attendance.day'].tp_export_sheet({'mode': 'month', 'date': '2026-11-09'})
-        self.assertEqual(load_workbook(BytesIO(base64.b64decode(month['data']))).sheetnames, ['Giờ theo ngày'])
+        month_book = load_workbook(BytesIO(base64.b64decode(month['data'])))
+        self.assertEqual(month_book.sheetnames, sheets)
+        month_grid = month_book['Bảng chấm công']
+        late_col = 6 + 30
+        partial = [month_grid.cell(row, late_col).value for row in range(9, month_grid.max_row + 1)
+                   if month_grid.cell(row, 5).value == 'Vào']
+        self.assertIn('—', partial, 'a month holding only a weekly file never shows a split or zero late total')
 
     def test_api_staging_dedupes_maps_by_namespace_and_stays_offline(self):
         env = self.env_for(self.manager)

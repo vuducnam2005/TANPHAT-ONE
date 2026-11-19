@@ -181,6 +181,18 @@ class AttendanceEntiConfigWizard(models.TransientModel):
             })
 
         res = source.action_sync_enti_now(start_date=self.date_from, end_date=self.date_to)
+        if not res.get("success"):
+            # The error and its log row stay committed; raising here would roll them back.
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": "Đồng bộ ENTI chưa thành công",
+                    "message": f"{res.get('message')} Dữ liệu công đã có được giữ nguyên.",
+                    "type": "danger",
+                    "sticky": True,
+                },
+            }
         msg = (
             f"Đồng bộ ENTI thành công:\n"
             f"• Nhân viên ENTI: {res.get('employees')}\n"

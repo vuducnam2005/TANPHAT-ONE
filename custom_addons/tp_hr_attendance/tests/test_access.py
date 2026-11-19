@@ -130,7 +130,7 @@ class TestAttendanceAccess(AttendanceCase):
         self.assertTrue(can(officer_env, 'import', self.company))
         self.assertIn(menu_import, officer_env['ir.ui.menu']._visible_menu_ids())
         batch = self.batch(self.data, user=self.officer)
-        batch.action_preview()
+        batch._tp_read_file()
         self.assertEqual(batch.duplicate_count, 2)
         review.write({'active': False})
         self.assertNotIn(self.officer, officer_group.user_ids)
@@ -152,10 +152,12 @@ class TestAttendanceAccess(AttendanceCase):
         self.assertNotIn(config, viewer_menus)
         manager_menus = visible(self.manager)
         self.assertNotIn(board, manager_menus)
-        self.assertLessEqual({menu_import, config, self.env.ref('tp_hr_attendance.menu_file_matrix').id}, manager_menus)
+        self.assertLessEqual({menu_import, config}, manager_menus)
+        # ENTI-ATTENDANCE-002: the Excel file matrix menu is gone (history stays under Lịch sử nhập Excel).
+        self.assertFalse(self.env.ref('tp_hr_attendance.menu_file_matrix', raise_if_not_found=False))
 
     def test_rejects_non_excel_and_macro_files(self):
         batch = self.batch(b'not an excel file')
         with self.assertRaisesRegex(UserError, 'xlsx'):
-            batch.action_preview()
+            batch._tp_read_file()
         self.assertEqual(batch.state, 'draft')

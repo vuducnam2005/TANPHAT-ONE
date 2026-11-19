@@ -193,7 +193,8 @@ class AttendanceSource(models.Model):
 
     @api.model
     def tp_sources_overview(self, params=None):
-        """"Nguồn dữ liệu" page (HR/import only): Excel in use, API state, vendor checklist, compact import history."""
+        """"Nguồn dữ liệu" page (HR/import only): ENTI state, ENTI people not yet mapped (with the reason), and the
+        read-only history of the former Excel imports (ENTI-ATTENDANCE-002 closed Excel file import)."""
         company = self.env.company
         require(self.env, 'import', company)
         Batch = self.env['tp.hr.attendance.batch'].sudo()
@@ -237,6 +238,12 @@ class AttendanceSource(models.Model):
         unmapped_count = Mapping.search_count([('company_id', '=', company.id), ('state', '!=', 'mapped')])
         enti_days_count = EntiDay.search_count([('company_id', '=', company.id)])
         enti_latest_day = EntiDay.search([('company_id', '=', company.id)], order='work_date desc', limit=1)
+        mapping_states = dict(Mapping._fields['state'].selection)
+        unmapped_people = [{
+            'id': row.id, 'code': row.ma_nv or '', 'name': row.ten_nv or '', 'department': row.ten_bp or '',
+            'state': row.state, 'state_label': mapping_states.get(row.state, ''), 'reason': row.match_reason or '',
+            'candidate': row.employee_id.name or '',
+        } for row in Mapping.search([('company_id', '=', company.id), ('state', '!=', 'mapped')], order='state desc, ten_nv, id', limit=30)]
 
         api_label = 'Chưa cấu hình'
         if enti_sources:
@@ -251,7 +258,8 @@ class AttendanceSource(models.Model):
         return {
             'excel': {'in_use': bool(applied), 'batches': len(applied), 'file': applied[:1].file_name or '' if applied else '',
                       'updated_at': updated['at'] if updated else '', 'data_to': updated['to'] if updated else '',
-                      'note': 'Mỗi lần nhập là ảnh chụp theo file; dữ liệu không tự cập nhật theo thời gian thực.'},
+                      'note': ('Đã ngừng nhập tệp Excel: dữ liệu công lấy tự động từ ENTI. Các lần nhập trước được giữ '
+                               'làm lịch sử, vẫn xem và xuất được; điều chỉnh đã duyệt và kỳ đã chốt không bị ghi đè.')},
             'api': {'label': api_label, 'live': live_active,
                     'events': Event.search_count([('company_id', '=', company.id)]),
                     'unmapped': Event.search_count([('company_id', '=', company.id), ('state', '=', 'unmapped')]),
@@ -265,6 +273,7 @@ class AttendanceSource(models.Model):
                         'unmapped_count': unmapped_count,
                         'days_count': enti_days_count,
                         'data_to': day(enti_latest_day.work_date) if enti_latest_day else '',
+                        'unmapped_people': unmapped_people,
                     },
                     'sources': [{'id': source.id, 'name': source.name, 'namespace': source.namespace, 'state': source.state,
                                  'state_label': states[source.state], 'vendor': source.vendor or '', 'model': source.device_model or '',

@@ -5,70 +5,89 @@
     <header class="o_tp_att_header">
         <div>
             <h1>Nguồn dữ liệu chấm công</h1>
-            <p class="o_tp_att_subtitle">Giờ làm tham chiếu <strong t-out="this.referenceHours"/> (chỉ để hiển thị) · Số đi muộn lấy nguyên từ Excel máy theo đúng kỳ</p>
+            <p class="o_tp_att_subtitle">Giờ vào/ra và số phút đi muộn lấy tự động từ ENTI · Giờ làm tham chiếu <strong t-out="this.referenceHours"/></p>
         </div>
         <div class="o_tp_att_actions">
             <button type="button" class="btn btn-outline-secondary" t-on-click="() => this.open('tp_hr_attendance.action_late')">Tổng đi muộn theo kỳ</button>
-            <button type="button" class="btn btn-primary" t-on-click="this.openUpload"><i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Nhập Excel máy chấm công</button>
         </div>
     </header>
 
     <div t-if="this.state.error" class="alert alert-danger" role="alert"><t t-out="this.state.error"/> <button class="btn btn-link p-0" t-on-click="this.load">Thử lại</button></div>
-    <p t-elif="!this.data" role="status" class="o_tp_att_loading">Đang tải nguồn dữ liệu…</p>
-    <t t-else="">
+    <div t-if="this.state.notice" class="alert alert-success d-flex justify-content-between align-items-start gap-2" role="status">
+        <span t-out="this.state.notice"/>
+        <button type="button" class="btn-close" aria-label="Đóng thông báo" t-on-click="() => this.state.notice = ''"/>
+    </div>
+    <p t-if="!this.data and !this.state.error" role="status" class="o_tp_att_loading">Đang tải nguồn dữ liệu…</p>
+    <t t-if="this.data">
         <section class="o_tp_att_source_cards" aria-label="Trạng thái nguồn">
-            <article class="o_tp_att_source_card" t-att-class="this.data.excel.in_use ? 'o_ok' : 'o_muted'">
+            <article class="o_tp_att_source_card" t-att-class="this.enti.live ? 'o_ok' : 'o_muted'">
                 <header>
-                    <i class="oi" data-icon="description" aria-hidden="true"/>
-                    <h2>Excel máy chấm công</h2>
-                    <span class="o_tp_att_badge" t-att-class="this.data.excel.in_use ? 'o_ok' : 'o_muted'" t-out="this.data.excel.in_use ? 'Đang dùng' : 'Chưa có tệp đã nhập'"/>
-                </header>
-                <dl>
-                    <div><dt>Lô đã ghi</dt><dd t-out="this.data.excel.batches"/></div>
-                    <div><dt>Dữ liệu đến</dt><dd t-out="this.data.excel.data_to or '—'"/></div>
-                    <div><dt>Cập nhật</dt><dd t-out="this.data.excel.updated_at or '—'"/></div>
-                    <div><dt>Tệp gần nhất</dt><dd class="o_tp_att_source_file" t-att-title="this.data.excel.file" t-out="this.data.excel.file or '—'"/></div>
-                </dl>
-                <p class="o_tp_att_muted" t-out="this.data.excel.note"/>
-            </article>
-            <article class="o_tp_att_source_card" t-att-class="this.data.api.enti &amp;&amp; this.data.api.enti.live ? 'o_ok' : 'o_muted'">
-                <header>
-                    <i class="oi" t-att-data-icon="this.data.api.enti &amp;&amp; this.data.api.enti.live ? 'cloud_done' : 'cloud_off'" aria-hidden="true"/>
+                    <i class="oi" t-att-data-icon="this.enti.live ? 'cloud_done' : 'cloud_off'" aria-hidden="true"/>
                     <h2>API chấm công ENTI (enti.vn)</h2>
-                    <span class="o_tp_att_badge" t-att-class="this.data.api.enti &amp;&amp; this.data.api.enti.live ? 'o_ok' : 'o_muted'" t-out="this.data.api.label"/>
+                    <span class="o_tp_att_badge" t-att-class="this.enti.live ? 'o_ok' : 'o_muted'" t-out="this.data.api.label"/>
                 </header>
                 <dl>
-                    <div><dt>Kết nối trực tiếp</dt><dd t-out="this.data.api.enti &amp;&amp; this.data.api.enti.live ? 'Bật (Tự động)' : 'Tắt'"/></div>
-                    <div><dt>Lịch tự đồng bộ</dt><dd t-out="this.data.api.enti &amp;&amp; this.data.api.enti.live ? '1 phút / lần' : 'Tắt'"/></div>
-                    <div><dt>Đã khớp nhân viên</dt><dd t-out="this.data.api.enti ? this.data.api.enti.mapped_count : 0"/></div>
-                    <div><dt>Chờ đối chiếu</dt><dd t-out="this.data.api.enti ? this.data.api.enti.unmapped_count : 0"/></div>
-                    <div><dt>Ngày công đã lấy</dt><dd t-out="this.data.api.enti ? this.data.api.enti.days_count : 0"/></div>
-                    <div><dt>Dữ liệu đến ngày</dt><dd t-out="(this.data.api.enti &amp;&amp; this.data.api.enti.data_to) || '—'"/></div>
-                    <div><dt>Lần lấy gần nhất</dt><dd t-out="(this.data.api.enti &amp;&amp; this.data.api.enti.last_success_at) || '—'"/></div>
+                    <div><dt>Đồng bộ</dt><dd t-out="this.enti.live ? 'Tự động' : 'Tắt'"/></div>
+                    <div><dt>Đồng bộ thành công lần cuối</dt><dd t-out="this.enti.last_success_at || '—'"/></div>
+                    <div><dt>Dữ liệu đến ngày</dt><dd t-out="this.enti.data_to || '—'"/></div>
+                    <div><dt>Ngày công đã lấy</dt><dd t-out="this.enti.days_count || 0"/></div>
+                    <div><dt>Đã khớp nhân viên</dt><dd t-out="this.enti.mapped_count || 0"/></div>
+                    <div><dt>Chờ đối chiếu</dt><dd t-out="this.enti.unmapped_count || 0"/></div>
                 </dl>
-                <p t-if="this.data.api.enti &amp;&amp; this.data.api.enti.last_error" class="text-danger small mb-2">
-                    Lỗi lần trước: <t t-out="this.data.api.enti.last_error"/>
+                <p t-if="this.enti.last_error" class="text-danger small mb-2">
+                    Lỗi lần trước: <t t-out="this.enti.last_error"/> · Dữ liệu công đã có được giữ nguyên.
                 </p>
-                <p class="o_tp_att_muted">Kết nối trực tiếp với dịch vụ chấm công ENTI qua API backend. Tự động lấy giờ vào/ra, đối chiếu với hồ sơ nhân viên Odoo và cập nhật bảng công chuẩn.</p>
+                <p class="o_tp_att_muted">Máy chủ Odoo tự lấy giờ vào đầu tiên và giờ ra cuối cùng mỗi ngày từ ENTI, đối chiếu với hồ sơ nhân viên rồi cập nhật bảng công; màn hình tự làm mới khi có dữ liệu mới.</p>
                 <div class="o_tp_att_actions">
-                    <button t-if="this.data.can_configure" type="button" class="btn btn-primary btn-sm" t-on-click="this.syncEntiNow" t-att-disabled="this.state.loading"><i class="oi me-1" data-icon="sync" aria-hidden="true"/>Đồng bộ ngay</button>
-                    <button t-if="this.data.can_configure" type="button" class="btn btn-outline-secondary btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_enti_mapping')">Đối chiếu nhân viên</button>
+                    <button t-if="this.data.can_configure" type="button" class="btn btn-primary btn-sm" t-on-click="this.syncEntiNow" t-att-disabled="this.state.syncing">
+                        <i class="oi me-1" data-icon="autorenew" aria-hidden="true"/><t t-out="this.state.syncing ? 'Đang đồng bộ…' : 'Đồng bộ ngay'"/>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_enti_mapping')">Đối chiếu nhân viên</button>
                     <button t-if="this.data.can_configure" type="button" class="btn btn-outline-secondary btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_enti_config')">Cấu hình kết nối</button>
                     <button type="button" class="btn btn-link btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_enti_logs')">Nhật ký đồng bộ</button>
                 </div>
             </article>
+            <article class="o_tp_att_source_card o_muted">
+                <header>
+                    <i class="oi" data-icon="description" aria-hidden="true"/>
+                    <h2>Excel máy chấm công</h2>
+                    <span class="o_tp_att_badge o_muted">Đã ngừng nhập · Lịch sử</span>
+                </header>
+                <dl>
+                    <div><dt>Lô đã ghi</dt><dd t-out="this.data.excel.batches"/></div>
+                    <div><dt>Tệp gần nhất</dt><dd class="o_tp_att_source_file" t-att-title="this.data.excel.file" t-out="this.data.excel.file or '—'"/></div>
+                </dl>
+                <p class="o_tp_att_muted" t-out="this.data.excel.note"/>
+            </article>
         </section>
 
-        <section class="o_tp_att_panel" aria-labelledby="tp_att_checklist">
-            <h2 id="tp_att_checklist">Cần hãng máy cung cấp trước khi kết nối API</h2>
-            <ol class="o_tp_att_checklist">
-                <li t-foreach="this.data.checklist" t-as="item" t-key="item.key" t-out="item.label"/>
-            </ol>
+        <section class="o_tp_att_panel" aria-labelledby="tp_att_unmapped">
+            <div class="o_tp_att_drill_head">
+                <h2 id="tp_att_unmapped">Nhân viên ENTI chưa ghép với hồ sơ Odoo</h2>
+                <button type="button" class="btn btn-link btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_enti_mapping')">Mở đối chiếu nhân viên</button>
+            </div>
+            <p class="o_tp_att_muted">Chỉ ghép khi có căn cứ (mã nhân viên hoặc họ tên trùng khớp đúng một hồ sơ, hoặc nhân sự xác nhận); không tự ghép theo tên gần giống. Giờ của người chưa ghép không vào bảng công.</p>
+            <div class="o_tp_att_table_wrap">
+                <table class="o_tp_att_table o_tp_att_unmapped">
+                    <thead><tr><th scope="col">Mã ENTI</th><th scope="col">Họ tên bên ENTI</th><th scope="col">Bộ phận ENTI</th><th scope="col">Trạng thái</th><th scope="col">Lý do</th></tr></thead>
+                    <tbody>
+                        <tr t-if="!this.unmapped.length"><td colspan="5" class="o_tp_att_empty">Mọi nhân viên ENTI đã được ghép.</td></tr>
+                        <tr t-foreach="this.unmapped" t-as="row" t-key="row.id">
+                            <th scope="row" data-label="Mã ENTI" t-out="row.code or '—'"/>
+                            <td data-label="Họ tên" t-out="row.name"/>
+                            <td data-label="Bộ phận" t-out="row.department or '—'"/>
+                            <td data-label="Trạng thái"><span class="o_tp_att_badge" t-att-class="row.state === 'suggested' ? 'o_info' : 'o_warn'" t-out="row.state_label"/><t t-if="row.candidate"> · <t t-out="row.candidate"/></t></td>
+                            <td data-label="Lý do" t-out="row.reason or '—'"/>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p t-if="this.enti.unmapped_count &gt; this.unmapped.length" class="o_tp_att_muted small mt-2">Đang hiện <t t-out="this.unmapped.length"/> / <t t-out="this.enti.unmapped_count"/> người; xem đủ trong Đối chiếu nhân viên.</p>
         </section>
 
         <section class="o_tp_att_panel" aria-labelledby="tp_att_history">
             <div class="o_tp_att_drill_head">
-                <h2 id="tp_att_history">Lịch sử nhập</h2>
+                <h2 id="tp_att_history">Lịch sử nhập Excel (đã ngừng nhập)</h2>
                 <button type="button" class="btn btn-link btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_import')">Xem tất cả lô nhập</button>
             </div>
             <div class="o_tp_att_table_wrap">

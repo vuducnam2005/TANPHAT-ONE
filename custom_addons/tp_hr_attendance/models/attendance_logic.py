@@ -18,16 +18,21 @@ WEEKDAY_FULL_LABELS = ('Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'T
 DIRECTIONS = ('IN', 'OUT', 'UNKNOWN')
 CODE_MAX = 64
 # One main presence state per person and day (dashboard donut / chips); 'future' is never drawn.
+# ENTI-ATTENDANCE-002: 'absent' = a finished scheduled working day with no punch at all (one punch is never
+# absent); 'rest' = not a working day by schedule; 'off' = outside the person's employment dates.
 PRESENCE = {
-    'working': 'Đang làm (theo mốc nguồn)',
-    'out_recorded': 'Đã ghi nhận ra',
+    'working': 'Đang làm (chưa có giờ ra)',
+    'out_recorded': 'Đủ giờ vào/ra',
     'missing': 'Thiếu giờ vào/ra',
     'review': 'Cần kiểm tra',
+    'absent': 'Vắng theo lịch',
     'no_punch': 'Chưa chấm công',
+    'rest': 'Nghỉ theo lịch',
     'no_source': 'Chưa có dữ liệu',
     'future': 'Chưa đến',
+    'off': 'Ngoài thời gian làm việc',
 }
-PRESENCE_ORDER = ('out_recorded', 'working', 'missing', 'review', 'no_punch', 'no_source')
+PRESENCE_ORDER = ('out_recorded', 'working', 'missing', 'review', 'absent', 'no_punch', 'rest', 'no_source')
 MINE_STATE_FILTERS = (
     '',
     'out_recorded',
@@ -36,7 +41,9 @@ MINE_STATE_FILTERS = (
     'missing_in',
     'missing_out',
     'review',
+    'absent',
     'no_punch',
+    'rest',
     'no_source',
     'leave',
     'future',
@@ -276,8 +283,14 @@ def mine_row_status(state, in_time='', out_time=''):
         return 'Thiếu lượt chấm công'
     if state == 'review':
         return 'Cần kiểm tra'
+    if state == 'absent':
+        return 'Vắng theo lịch'
     if state == 'no_punch':
         return 'Chưa chấm công'
+    if state == 'rest':
+        return 'Nghỉ theo lịch'
+    if state == 'off':
+        return 'Ngoài thời gian làm việc'
     if state == 'no_source':
         return 'Chưa có dữ liệu'
     if state == 'leave':
@@ -330,7 +343,9 @@ def summarize_mine_rows(rows):
         'attention_days': sum(1 for row in rows if row.get('state') in ('missing', 'review')),
         'missing_days': sum(1 for row in rows if row.get('state') == 'missing'),
         'review_days': sum(1 for row in rows if row.get('state') == 'review'),
+        'absent_days': sum(1 for row in rows if row.get('state') == 'absent'),
         'no_punch_days': sum(1 for row in rows if row.get('state') == 'no_punch'),
+        'rest_days': sum(1 for row in rows if row.get('state') == 'rest'),
         'no_source_days': sum(1 for row in rows if row.get('state') == 'no_source'),
         'leave_days': sum(1 for row in rows if row.get('state') == 'leave'),
         'future_days': sum(1 for row in rows if row.get('state') == 'future'),

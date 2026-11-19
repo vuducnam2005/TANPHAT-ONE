@@ -1,5 +1,4 @@
 import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
-import { Dialog } from "@web/core/dialog/dialog";
 import { useService } from "@web/core/utils/hooks";
 import { downloadBase64, formatDate, rpcError } from "../common";
 import { AttPager } from "../parts";
@@ -11,45 +10,10 @@ const SCOPE_SHORT = {
     no_batch_b: "Chưa chọn B",
 };
 
-const DECISION_LABELS = {
-    use_a: "Chọn A",
-    use_b: "Chọn B",
-    keep_current: "Giữ hiện tại",
-    defer: "Xử lý sau",
-};
-
 /**
- * Confirmation dialog for applying valid/non-conflicting comparison entries cleanly.
- */
-export class CompareConfirmDialog extends Component {
-    static template = "tp_hr_attendance.CompareConfirmDialog";
-    static components = { Dialog };
-    props = useProps();
-
-    setup() {
-        this.state = proxy({ busy: false, error: "" });
-    }
-
-    async confirm() {
-        if (this.state.busy) {
-            return;
-        }
-        this.state.busy = true;
-        this.state.error = "";
-        try {
-            await this.props.onConfirm();
-            this.props.close();
-        } catch (error) {
-            this.state.error = rpcError(error, "Không áp dụng được phần hợp lệ. Vui lòng thử lại.");
-            this.state.busy = false;
-        }
-    }
-}
-
-/**
- * Pre-consolidation A/B file comparison & conflict resolution screen (HR-ATTENDANCE-MATRIX-003).
- * Uses tp.hr.attendance.batch RPCs: tp_compare_batches, tp_apply_compare_valid,
- * tp_resolve_compare_batch, and tp_export_compare.
+ * A/B comparison of two stored Excel source files (HR-ATTENDANCE-MATRIX-003). ENTI-ATTENDANCE-002 closed Excel
+ * import, so this screen only reads history (tp_compare_batches, tp_export_compare); the former apply/resolve
+ * RPCs are closed on the server.
  */
 export class AttendanceCompare extends Component {
     static template = "tp_hr_attendance.Compare";
@@ -58,8 +22,6 @@ export class AttendanceCompare extends Component {
 
     setup() {
         this.orm = useService("orm");
-        this.dialog = useService("dialog");
-        this.notification = useService("notification");
 
         const list = this.props.batches || [];
         const initA = Number(this.props.initialA || list[0]?.id || 0);
@@ -87,11 +49,7 @@ export class AttendanceCompare extends Component {
             pageSize: 20,
             mobileView: "cards",
             loading: true,
-            savingDecisions: false,
             error: "",
-            resolveError: "",
-            resolveReason: "",
-            pendingChoices: {},
             data: null,
         });
         this.request = 0;
@@ -129,14 +87,6 @@ export class AttendanceCompare extends Component {
         );
     }
 
-    get pendingList() {
-        return Object.values(this.state.pendingChoices || {});
-    }
-
-    get pendingNeedsReason() {
-        return this.pendingList.some((c) => c.needs_reason);
-    }
-
     get chips() {
         const list = [];
         if (this.state.onlyDiff) {
@@ -163,28 +113,8 @@ export class AttendanceCompare extends Component {
         return formatDate(iso);
     }
 
-    decisionLabel(key) {
-        return DECISION_LABELS[key] || key;
-    }
-
     scopeLabel(scope) {
         return SCOPE_SHORT[scope] || scope || "—";
-    }
-
-    dayChoiceKey(empId, workDate) {
-        return `day:${empId}:${workDate}`;
-    }
-
-    lateChoiceKey(empId, dateFrom, dateTo) {
-        return `late:${empId}:${dateFrom}:${dateTo}`;
-    }
-
-    selectedDayDecision(empId, workDate) {
-        return this.state.pendingChoices[this.dayChoiceKey(empId, workDate)]?.decision || "";
-    }
-
-    selectedLateDecision(empId, dateFrom, dateTo) {
-        return this.state.pendingChoices[this.lateChoiceKey(empId, dateFrom, dateTo)]?.decision || "";
     }
 
     params() {
@@ -232,12 +162,6 @@ export class AttendanceCompare extends Component {
         }
     }
 
-    resetChoices() {
-        this.state.pendingChoices = {};
-        this.state.resolveReason = "";
-        this.state.resolveError = "";
-    }
-
     onChangeBatchA(ev) {
         const id = Number(ev.target.value) || 0;
         if (!id || id === this.state.batchAId) {
@@ -248,13 +172,11 @@ export class AttendanceCompare extends Component {
             sheetAIndex: 0,
             page: 1,
         });
-        this.resetChoices();
         return this.load();
     }
 
     onChangeSheetA(ev) {
         Object.assign(this.state, { sheetAIndex: Number(ev.target.value) || 0, page: 1 });
-        this.resetChoices();
         return this.load();
     }
 
@@ -270,13 +192,11 @@ export class AttendanceCompare extends Component {
             sheetBIndex: same && (bObj?.sheets?.length || 0) > 1 && this.state.sheetAIndex === 0 ? 1 : 0,
             page: 1,
         });
-        this.resetChoices();
         return this.load();
     }
 
     onChangeSheetB(ev) {
         Object.assign(this.state, { sheetBIndex: Number(ev.target.value) || 0, page: 1 });
-        this.resetChoices();
         return this.load();
     }
 
@@ -293,7 +213,6 @@ export class AttendanceCompare extends Component {
             sheetBIndex: aSh,
             page: 1,
         });
-        this.resetChoices();
         return this.load();
     }
 
@@ -376,161 +295,6 @@ export class AttendanceCompare extends Component {
     setSize(size) {
         Object.assign(this.state, { pageSize: size, page: 1 });
         return this.load();
-    }
-
-    pickDayDecision(row, d, decision) {
-        if (!row.employee_id || row.mapping_state !== "mapped") {
-            return;
-        }
-        if (decision === "use_a" && !d.can_use_a) {
-            return;
-        }
-        if (decision === "use_b" && !d.can_use_b) {
-            return;
-        }
-        const key = this.dayChoiceKey(row.employee_id, d.date);
-        const existing = this.state.pendingChoices[key];
-        const next = { ...this.state.pendingChoices };
-        if (existing && existing.decision === decision) {
-            delete next[key];
-            this.state.pendingChoices = next;
-            this.state.resolveError = "";
-            return;
-        }
-        const srcCell = decision === "use_a" ? d.a_cell : decision === "use_b" ? d.b_cell : null;
-        const can = d.canonical || {};
-        const changesCanonical = Boolean(
-            can.exists
-            && srcCell
-            && (srcCell.norm_in !== can.norm_in || srcCell.norm_out !== can.norm_out || srcCell.kind !== can.kind)
-        );
-        next[key] = {
-            key,
-            target_kind: "day",
-            employee_id: row.employee_id,
-            work_date: d.date,
-            decision,
-            expected_digest: d.target_digest,
-            needs_reason: (decision === "use_a" || decision === "use_b") && changesCanonical,
-            label: `${row.display_name} · ${formatDate(d.date)}`,
-        };
-        this.state.pendingChoices = next;
-        this.state.resolveError = "";
-    }
-
-    pickLateDecision(row, li, decision) {
-        if (!row.employee_id || row.mapping_state !== "mapped") {
-            return;
-        }
-        if (decision === "use_a" && !li.can_use_a) {
-            return;
-        }
-        if (decision === "use_b" && !li.can_use_b) {
-            return;
-        }
-        const key = this.lateChoiceKey(row.employee_id, li.date_from, li.date_to);
-        const existing = this.state.pendingChoices[key];
-        const next = { ...this.state.pendingChoices };
-        if (existing && existing.decision === decision) {
-            delete next[key];
-            this.state.pendingChoices = next;
-            this.state.resolveError = "";
-            return;
-        }
-        const srcLate = decision === "use_a" ? li.a_late : decision === "use_b" ? li.b_late : null;
-        const can = li.canonical_late || {};
-        const changesCanonical = Boolean(
-            can.exists
-            && srcLate
-            && (srcLate.count !== can.count || srcLate.minutes !== can.minutes)
-        );
-        next[key] = {
-            key,
-            target_kind: "late",
-            employee_id: row.employee_id,
-            date_from: li.date_from,
-            date_to: li.date_to,
-            decision,
-            expected_digest: li.target_digest,
-            needs_reason: (decision === "use_a" || decision === "use_b") && changesCanonical,
-            label: `${row.display_name} · Đi muộn (${li.period_label})`,
-        };
-        this.state.pendingChoices = next;
-        this.state.resolveError = "";
-    }
-
-    async savePendingChoices() {
-        const list = this.pendingList;
-        if (!list.length || this.state.savingDecisions) {
-            return;
-        }
-        const reason = this.state.resolveReason.trim();
-        if (this.pendingNeedsReason && !reason) {
-            this.state.resolveError = "Cần nhập lý do / căn cứ vì bạn đang thay đổi dữ liệu đã áp dụng.";
-            return;
-        }
-        this.state.savingDecisions = true;
-        this.state.resolveError = "";
-        this.state.error = "";
-        try {
-            const payload = {
-                ...this.params(),
-                reason,
-                items: list.map((c) => ({
-                    target_kind: c.target_kind,
-                    employee_id: c.employee_id,
-                    work_date: c.work_date || "",
-                    date_from: c.date_from || "",
-                    date_to: c.date_to || "",
-                    decision: c.decision,
-                    reason,
-                    expected_digest: c.expected_digest,
-                })),
-            };
-            const result = await this.orm.call("tp.hr.attendance.batch", "tp_resolve_compare_batch", [payload]);
-            this.state.data = result.compare;
-            this.resetChoices();
-            this.notification.add(
-                `Đã lưu ${result.resolved} lựa chọn đối chiếu và ghi nhật ký kiểm toán.`,
-                { type: "success" }
-            );
-        } catch (error) {
-            this.state.resolveError = rpcError(error, "Không lưu được các lựa chọn đối chiếu. Vui lòng thử lại.");
-        } finally {
-            this.state.savingDecisions = false;
-        }
-    }
-
-    openApplyValidModal() {
-        if (!this.data?.can_apply_valid) {
-            return;
-        }
-        const cc = this.data.cell_counts || {};
-        const lc = this.data.late_counts || {};
-        const validCells = (cc.same || 0) + (cc.only_a || 0) + (cc.only_b || 0);
-        const validLates = (lc.same || 0) + (lc.only_a || 0) + (lc.only_b || 0);
-        const diffCells = cc.diff || 0;
-        const unreadyCells = cc.unready || 0;
-
-        this.dialog.add(CompareConfirmDialog, {
-            title: "Áp dụng phần giống nhau & mới hợp lệ",
-            summaryLines: [
-                `Ô ngày sẽ đưa vào tổng hợp: ${validCells} (Giống nhau: ${cc.same || 0}, Chỉ có ở A: ${cc.only_a || 0}, Chỉ có ở B: ${cc.only_b || 0}).`,
-                `Tổng Đi muộn đúng kỳ sẽ ghi: ${validLates}.`,
-                `Không tự ghi đè ${diffCells} ô khác giờ/số liệu, ${unreadyCells} ô chưa đủ căn cứ, các kỳ đã chốt và các ngày đã có điều chỉnh được duyệt.`,
-            ],
-            confirmLabel: "Xác nhận áp dụng phần hợp lệ",
-            onConfirm: async () => {
-                const res = await this.orm.call("tp.hr.attendance.batch", "tp_apply_compare_valid", [this.params()]);
-                this.state.data = res.compare;
-                this.resetChoices();
-                this.notification.add(
-                    `Đã áp dụng ${res.applied_cells} ô ngày và ${res.applied_lates} kỳ Đi muộn hợp lệ`
-                    + (res.skipped_locked ? ` (bỏ qua ${res.skipped_locked} ô đã chốt/điều chỉnh).` : "."),
-                    { type: "success" }
-                );
-            },
-        });
     }
 
     async exportCompare() {

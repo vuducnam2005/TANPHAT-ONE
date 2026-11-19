@@ -6,7 +6,6 @@ from .attendance_common import HR_MANAGER, can, is_correction_admin
 # menu xmlid -> capability. HR manager always sees review/periods (read-only oversight); actions still check rights.
 # "review" = the correction queue: only admins approve (Original + live delegated, CHG-20261119-012); assignments do not open it.
 GATED = {
-    'tp_hr_attendance.menu_file_matrix': 'import',
     'tp_hr_attendance.menu_import': 'import',
     'tp_hr_attendance.menu_sources': 'import',
     'tp_hr_attendance.menu_review': 'review',

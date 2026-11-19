@@ -1,22 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 <t t-name="tp_hr_attendance.Board">
-<AttendanceFileMatrix t-if="this.data?.can_import" action="this.props.action"/>
-<div t-else="" class="o_tp_att o_tp_att_board" aria-label="Bảng chấm công" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
+<div class="o_tp_att o_tp_att_board" aria-label="Bảng chấm công" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
     <header class="o_tp_att_header">
         <div>
             <h1>Bảng chấm công</h1>
             <p class="o_tp_att_subtitle" t-out="this.title"/>
         </div>
         <div class="o_tp_att_actions">
-            <button t-if="this.data?.can_import" type="button" class="btn btn-outline-primary" t-on-click="() => this.openFileMatrix()">
-                <i class="oi me-1" data-icon="grid_on" aria-hidden="true"/>Bảng công theo file (Vào/Ra)
-            </button>
-            <button t-if="this.data?.can_import" type="button" class="btn btn-outline-secondary" t-on-click="() => this.openFileMatrix('compare')">
-                <i class="oi me-1" data-icon="compare_arrows" aria-hidden="true"/>Đối chiếu A/B
-            </button>
             <button t-if="this.data?.can_export" type="button" class="btn btn-outline-primary" t-on-click="this.exportSheet"><i class="oi me-1" data-icon="download" aria-hidden="true"/>Xuất Excel</button>
-            <button t-if="this.data?.can_import" type="button" class="btn btn-primary" t-on-click="this.openUpload"><i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Nhập Excel máy chấm công</button>
         </div>
     </header>
 
@@ -24,8 +16,8 @@
         <div class="o_tp_att_segment" role="group" aria-label="Chế độ xem">
             <button t-foreach="this.modes" t-as="mode" t-key="mode[0]" type="button" t-att-class="{'active': this.state.mode === mode[0]}"
                 t-att-aria-pressed="this.state.mode === mode[0] ? 'true' : 'false'" t-on-click="() => this.setMode(mode[0])" t-out="mode[1]"/>
-            <button type="button" t-att-class="{'active': this.state.mode === 'range'}" t-att-aria-expanded="this.state.fileMenu ? 'true' : 'false'"
-                t-on-click="() => this.state.fileMenu = !this.state.fileMenu">Kỳ theo file</button>
+            <button type="button" t-att-class="{'active': this.state.mode === 'range'}" t-att-aria-pressed="this.state.mode === 'range' ? 'true' : 'false'"
+                t-on-click="this.openRange">Khoảng ngày</button>
         </div>
         <div class="o_tp_att_period">
             <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(-1)" aria-label="Kỳ trước"><i class="oi" data-icon="chevron_backward" aria-hidden="true"/></button>
@@ -55,13 +47,6 @@
         </label>
         <button t-if="this.state.department or this.state.search or this.state.dayState" type="button" class="btn btn-link" t-on-click="this.clearFilters">Xóa lọc</button>
     </section>
-
-    <div t-if="this.state.fileMenu" class="o_tp_att_file_menu" role="menu" aria-label="Kỳ theo tệp đã nhập">
-        <p t-if="!this.data?.file_periods?.length" class="o_tp_att_muted">Chưa có tệp Excel máy nào được nhập.</p>
-        <button t-foreach="this.data?.file_periods or []" t-as="item" t-key="item.from + item.to" type="button" role="menuitem"
-            t-att-class="{'active': this.state.mode === 'range' and this.state.from === item.from and this.state.to === item.to}"
-            t-on-click="() => this.openFilePeriod(item)"><strong t-out="item.label"/><small t-out="item.file"/></button>
-    </div>
 
     <SourceStrip source="this.data?.source" onSources="this.data?.can_import ? (() => this.openSources()) : null"/>
 

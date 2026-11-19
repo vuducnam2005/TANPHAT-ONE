@@ -1,4 +1,5 @@
-/* HR-ATTENDANCE-MATRIX-003 (DEC-058 & DEC-044): Per-file matrix, upload queue & A/B compare styles. */
+/* HR-ATTENDANCE-MATRIX-003 (DEC-058 & DEC-044): per-file matrix and A/B compare styles (read-only history since
+   ENTI-ATTENDANCE-002). Badge colours fall back to the shared --att-* tokens outside the matrix screens. */
 
 .o_tp_att_matrix_screen,
 .o_tp_att_compare_screen {
@@ -16,35 +17,35 @@
 }
 
 .o_ok_text {
-    color: var(--tp-att-ok);
+    color: var(--tp-att-ok, var(--att-ok));
 }
 
 .o_warn_text {
-    color: var(--tp-att-warn);
+    color: var(--tp-att-warn, var(--att-warn));
 }
 
 .o_danger_text {
-    color: var(--tp-att-danger);
+    color: var(--tp-att-danger, var(--att-danger));
 }
 
 .o_tp_att_badge.o_ok {
-    background: var(--tp-att-ok-bg);
-    color: var(--tp-att-ok);
+    background: var(--tp-att-ok-bg, var(--att-ok-bg));
+    color: var(--tp-att-ok, var(--att-ok));
 }
 
 .o_tp_att_badge.o_info {
-    background: var(--tp-att-info-bg);
-    color: var(--tp-att-info);
+    background: var(--tp-att-info-bg, var(--att-soft));
+    color: var(--tp-att-info, var(--att-accent));
 }
 
 .o_tp_att_badge.o_warn {
-    background: var(--tp-att-warn-bg);
-    color: var(--tp-att-warn);
+    background: var(--tp-att-warn-bg, var(--att-warn-bg));
+    color: var(--tp-att-warn, var(--att-warn));
 }
 
 .o_tp_att_badge.o_danger {
-    background: var(--tp-att-danger-bg);
-    color: var(--tp-att-danger);
+    background: var(--tp-att-danger-bg, var(--att-danger-bg));
+    color: var(--tp-att-danger, var(--att-danger));
 }
 
 .o_tp_att_badge.o_muted {
@@ -64,60 +65,14 @@
 }
 
 .o_tp_att_mini_tag.o_tag_warn {
-    background: var(--tp-att-warn-bg);
-    color: var(--tp-att-warn);
+    background: var(--tp-att-warn-bg, var(--att-warn-bg));
+    color: var(--tp-att-warn, var(--att-warn));
 }
 
 .o_tp_att_mini_tag.o_tag_muted {
     background: #f1f5f9;
     color: #475467;
     font-weight: 500;
-}
-
-/* Upload modal list (multi-file .xlsx picker & drag-and-drop) */
-.o_tp_att_upload_list {
-    list-style: none;
-    margin: 12px 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.o_tp_att_upload_item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 8px 10px;
-    border: 1px solid var(--tp-att-border);
-    border-radius: 8px;
-    background: #f8fafc;
-}
-
-/* Matrix top batch bar & filter toolbar */
-.o_tp_att_recent_uploads {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-.o_tp_att_upload_pill {
-    border: 1px solid var(--tp-att-border);
-    background: #ffffff;
-    border-radius: 8px;
-    padding: 5px 10px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.o_tp_att_upload_pill.active,
-.o_tp_att_upload_pill:hover {
-    background: var(--tp-att-info-bg);
-    border-color: var(--tp-att-primary);
 }
 
 .o_tp_att_file_panel {
@@ -399,7 +354,7 @@ tbody.o_person_pair:hover tr.o_person_row th {
 .o_cell_missing_hint {
     font-size: 11px;
     font-weight: 600;
-    color: var(--tp-att-warn);
+    color: var(--tp-att-warn, var(--att-warn));
 }
 
 .o_tone_ok {
@@ -416,11 +371,11 @@ tbody.o_person_pair:hover tr.o_person_row th {
 }
 
 .o_tone_conflict {
-    background-color: var(--tp-att-danger-bg) !important;
+    background-color: var(--tp-att-danger-bg, var(--att-danger-bg)) !important;
 }
 
 .o_tone_warn {
-    background-color: var(--tp-att-warn-bg) !important;
+    background-color: var(--tp-att-warn-bg, var(--att-warn-bg)) !important;
 }
 
 .o_tone_review {
@@ -471,11 +426,11 @@ tbody.o_person_pair:hover tr.o_person_row th {
 }
 
 .o_tp_att_compare_side.o_side_a {
-    border-left: 4px solid var(--tp-att-info);
+    border-left: 4px solid var(--tp-att-info, var(--att-accent));
 }
 
 .o_tp_att_compare_side.o_side_b {
-    border-left: 4px solid var(--tp-att-warn);
+    border-left: 4px solid var(--tp-att-warn, var(--att-warn));
 }
 
 .o_tp_att_compare_side_head {
@@ -537,12 +492,12 @@ tbody.o_person_pair:hover tr.o_person_row th {
 .o_tp_att_compare_stat.active,
 .o_tp_att_compare_stat:hover {
     border-color: var(--tp-att-primary);
-    background: var(--tp-att-info-bg);
+    background: var(--tp-att-info-bg, var(--att-soft));
 }
 
 .o_tp_att_compare_stat.o_stat_diff.active {
-    border-color: var(--tp-att-danger);
-    background: var(--tp-att-danger-bg);
+    border-color: var(--tp-att-danger, var(--att-danger));
+    background: var(--tp-att-danger-bg, var(--att-danger-bg));
 }
 
 .o_tp_att_resolve_bar {
@@ -642,13 +597,13 @@ tbody.o_person_pair:hover tr.o_person_row th {
 }
 
 .o_side_tag.o_tag_a {
-    background: var(--tp-att-info-bg);
-    color: var(--tp-att-info);
+    background: var(--tp-att-info-bg, var(--att-soft));
+    color: var(--tp-att-info, var(--att-accent));
 }
 
 .o_side_tag.o_tag_b {
-    background: var(--tp-att-warn-bg);
-    color: var(--tp-att-warn);
+    background: var(--tp-att-warn-bg, var(--att-warn-bg));
+    color: var(--tp-att-warn, var(--att-warn));
 }
 
 .o_side_tag.o_tag_now {
@@ -660,7 +615,7 @@ tbody.o_person_pair:hover tr.o_person_row th {
 .o_cmp_blocked {
     margin-top: 4px;
     font-size: 11px;
-    color: var(--tp-att-warn);
+    color: var(--tp-att-warn, var(--att-warn));
 }
 
 .o_cmp_btn_group {

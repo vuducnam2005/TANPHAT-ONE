@@ -1,5 +1,4 @@
 import { Component, onMounted, onWillStart, onWillUnmount, proxy, useProps } from "@odoo/owl";
-import { browser } from "@web/core/browser/browser";
 import { registry } from "@web/core/registry";
 import { patch } from "@web/core/utils/patch";
 import { useService } from "@web/core/utils/hooks";
@@ -15,6 +14,7 @@ import {
     stepPeriod,
     writeStore,
 } from "./common";
+import { useAttendanceLive } from "./live";
 import { AttPager, SourceStrip } from "./parts";
 
 /**
@@ -61,11 +61,6 @@ export class MyAttendance extends Component {
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
-        try {
-            this.busService = useService("bus_service");
-        } catch (_) {
-            this.busService = null;
-        }
         const saved = readStore(STORE_KEY);
         const savedMode = MODES.some(([key]) => key === saved.mode) ? saved.mode : "month";
         const savedPageSize = PAGE_SIZES.includes(Number(saved.pageSize)) ? Number(saved.pageSize) : 50;
@@ -80,10 +75,10 @@ export class MyAttendance extends Component {
             appliedWeekday: "",
             page: 1,
             pageSize: savedPageSize,
-            fileMenu: false,
             mobileFiltersOpen: false,
             expandedDate: "",
             loading: true,
+            refreshing: false,
             exporting: false,
             error: "",
             data: null,
@@ -94,54 +89,33 @@ export class MyAttendance extends Component {
         this.mineStatusInfo = mineStatusInfo;
         this.formatHours = formatHours;
         this.request = 0;
-        this.pollTimer = null;
+        // ENTI-ATTENDANCE-002: a punch synced by the server shows here without F5 (bus + visible-tab fallback poll).
+        this.live = useAttendanceLive({
+            refresh: () => (this.state.loading || this.state.exporting ? false : this.load({ silent: true })),
+            relevant: (payload) => {
+                const data = this.data;
+                const dates = payload.dates || [];
+                return Boolean(data?.has_employee) && (!dates.length || dates.some((day) => day >= data.start && day <= data.end));
+            },
+        });
 
         const onKeyDown = (ev) => {
             if (ev.key !== "Escape") {
                 return;
             }
-            if (this.state.fileMenu) {
-                this.state.fileMenu = false;
-                document.querySelector(".o_tp_mine_file_trigger")?.focus();
-            } else if (this.state.mobileFiltersOpen) {
+            if (this.state.mobileFiltersOpen) {
                 this.state.mobileFiltersOpen = false;
                 document.querySelector(".o_tp_mine_filter_toggle")?.focus();
             }
         };
-        const onDocumentClick = (ev) => {
-            if (this.state.fileMenu && !ev.target.closest?.(".o_tp_mine_file_wrap")) {
-                this.state.fileMenu = false;
-            }
-        };
         onMounted(() => {
             document.addEventListener("keydown", onKeyDown);
-            document.addEventListener("click", onDocumentClick);
-            this.pollTimer = browser.setInterval(() => {
-                if (!document.hidden && !this.state.loading) {
-                    this.load();
-                }
-            }, 30000);
         });
         onWillUnmount(() => {
             document.removeEventListener("keydown", onKeyDown);
-            document.removeEventListener("click", onDocumentClick);
-            if (this.pollTimer) {
-                browser.clearInterval(this.pollTimer);
-            }
+            this.request++;
         });
-        onWillStart(async () => {
-            if (this.busService) {
-                try {
-                    this.busService.addChannel("tp_hr_attendance_channel");
-                    this.busService.subscribe("enti_sync_completed", () => {
-                        if (!this.state.loading) {
-                            this.load();
-                        }
-                    });
-                } catch (_) {}
-            }
-            await this.load();
-        });
+        onWillStart(() => this.load());
     }
 
     get data() {
@@ -177,6 +151,14 @@ export class MyAttendance extends Component {
 
     get late() {
         return this.data?.late || { state: "none", count: null, minutes: null, source: "", text: "Chưa có số liệu" };
+    }
+
+    /** "enti": summed day by day from ENTI for exactly the viewed period; "excel": an imported machine period total. */
+    get lateOrigin() {
+        if (this.late.source === "ENTI" || (this.late.state === "exact" && !this.late.source)) {
+            return "enti";
+        }
+        return this.late.state === "exact" ? "excel" : "";
     }
 
     get latePeriodHint() {
@@ -242,7 +224,7 @@ export class MyAttendance extends Component {
         if (this.data.mode === "week") {
             return `Tuần ${this.data.range_display}`;
         }
-        return `Kỳ theo file: ${this.data.range_display}`;
+        return `Khoảng ngày: ${this.data.range_display}`;
     }
 
     get resultSummaryText() {
@@ -273,12 +255,16 @@ export class MyAttendance extends Component {
         return params;
     }
 
-    async load() {
+    /** ``silent``: automatic refresh — no dimming / loading bar, and a failure keeps what is already shown. */
+    async load({ silent = false } = {}) {
         const request = ++this.request;
-        this.state.loading = true;
-        this.state.error = "";
+        this.state[silent ? "refreshing" : "loading"] = true;
+        if (!silent) {
+            this.state.error = "";
+        }
         try {
-            const data = await this.orm.call("tp.hr.attendance.day", "tp_mine", [this.buildQueryParams(true)]);
+            const orm = silent ? this.orm.silent : this.orm;
+            const data = await orm.call("tp.hr.attendance.day", "tp_mine", [this.buildQueryParams(true)]);
             if (request !== this.request) {
                 return;
             }
@@ -296,13 +282,17 @@ export class MyAttendance extends Component {
                     pageSize: this.state.pageSize,
                 });
             }
+            this.state.error = "";
+            this.live.loaded();
         } catch (error) {
-            if (request === this.request) {
+            if (request === this.request && !silent) {
                 this.state.error = rpcError(error, "Không tải được công cá nhân. Vui lòng thử lại.");
             }
         } finally {
             if (request === this.request) {
                 this.state.loading = false;
+                this.state.refreshing = false;
+                this.live.flush();
             }
         }
     }
@@ -311,7 +301,6 @@ export class MyAttendance extends Component {
         Object.assign(
             this.state,
             {
-                fileMenu: false,
                 expandedDate: "",
                 page: 1,
             },
@@ -348,10 +337,6 @@ export class MyAttendance extends Component {
         if (ev.target.value) {
             return this.resetPeriod({ date: `${ev.target.value}-01` });
         }
-    }
-
-    toggleFileMenu() {
-        this.state.fileMenu = !this.state.fileMenu;
     }
 
     openFilePeriod(item) {
@@ -478,6 +463,7 @@ export class MyAttendance extends Component {
             this.state.error = rpcError(error, "Không xuất được công cá nhân. Vui lòng thử lại.");
         } finally {
             this.state.exporting = false;
+            this.live.flush();
         }
     }
 
@@ -519,6 +505,6 @@ patch(TpHrMyProfile, { components: { ...TpHrMyProfile.components, MyAttendance }
 patch(TpHrMyProfile.prototype, {
     setup() {
         super.setup(...arguments);
-        this.tabs = [...this.tabs, { id: "attendance", label: "Công của tôi", icon: "calendar_month" }];
+        this.tabs = [...this.tabs, { id: "attendance", label: "Công của tôi", icon: "calendar_today" }];
     },
 });

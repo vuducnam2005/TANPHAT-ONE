@@ -13,6 +13,8 @@
         <field name="code">model._tp_cron_enti_sync()</field>
         <field name="interval_number">1</field>
         <field name="interval_type">minutes</field>
+        <!-- ENTI-ATTENDANCE-002: each run polls "today" for about a minute; other jobs go first. -->
+        <field name="priority">10</field>
         <field name="active">True</field>
     </record>
 </odoo>

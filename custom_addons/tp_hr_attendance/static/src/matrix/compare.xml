@@ -11,19 +11,13 @@
             <div>
                 <h1>Đối chiếu &amp; Chọn nguồn trước khi tổng hợp</h1>
                 <p class="o_tp_att_subtitle">
-                    Khớp đúng theo công ty + nhân viên HR + ngày công; giữ nguyên giờ thực tế từng nguồn, không tự ghép Giờ Vào của A với Giờ Ra của B.
+                    Chỉ xem lại hai tệp Excel đã nhập trước đây: khớp theo công ty + nhân viên HR + ngày công, giữ nguyên giờ từng nguồn. Đã ngừng nhập Excel nên không áp dụng nguồn từ màn hình này.
                 </p>
             </div>
         </div>
         <div class="o_tp_att_actions">
-            <button type="button" class="btn btn-outline-primary" t-on-click="() => this.props.onUpload()">
-                <i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Tải thêm file
-            </button>
             <button t-if="this.data?.has_batches" type="button" class="btn btn-outline-secondary" t-on-click="this.exportCompare">
                 <i class="oi me-1" data-icon="download" aria-hidden="true"/>Xuất đối chiếu
-            </button>
-            <button t-if="this.data?.can_apply_valid" type="button" class="btn btn-primary" t-on-click="this.openApplyValidModal">
-                <i class="oi me-1" data-icon="check" aria-hidden="true"/>Áp dụng phần giống &amp; mới hợp lệ
             </button>
         </div>
     </header>
@@ -37,11 +31,8 @@
 
     <t t-elif="this.data and !this.data.has_batches">
         <section class="o_tp_att_panel text-center py-5">
-            <h2>Chưa có tệp Excel nào sẵn sàng để đối chiếu</h2>
-            <p class="o_tp_att_muted mt-2 mb-3">Tải lên một hoặc nhiều tệp Excel từ máy chấm công để đối chiếu trước khi đưa vào bảng công tổng hợp.</p>
-            <button type="button" class="btn btn-primary" t-on-click="() => this.props.onUpload()">
-                <i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Tải tệp Excel
-            </button>
+            <h2>Chưa có tệp Excel nào để đối chiếu</h2>
+            <p class="o_tp_att_muted mt-2 mb-0">Đã ngừng nhập tệp Excel chấm công; dữ liệu công lấy tự động từ ENTI.</p>
         </section>
     </t>
 
@@ -190,29 +181,6 @@
         </section>
 
         <!-- Staged choices action bar -->
-        <section t-if="this.pendingList.length" class="o_tp_att_resolve_bar" aria-label="Lưu các quyết định xử lý sai khác">
-            <div class="o_tp_att_resolve_summary">
-                <strong>Đã chọn <t t-out="this.pendingList.length"/> mục chờ xác nhận</strong>
-                <small t-if="this.pendingNeedsReason" class="o_danger_text d-block">
-                    Có lựa chọn thay đổi dữ liệu đã áp dụng — bắt buộc nhập lý do / căn cứ.
-                </small>
-            </div>
-            <label class="o_tp_att_field o_tp_att_reason_input">
-                <span>Lý do / Căn cứ <t t-if="this.pendingNeedsReason">(bắt buộc)</t></span>
-                <input type="text" t-model="this.state.resolveReason"
-                    placeholder="Ví dụ: File B bổ sung giờ ra thực tế do nhân viên quên chấm..."/>
-            </label>
-            <div class="o_tp_att_resolve_btns">
-                <button type="button" class="btn btn-primary btn-sm" t-att-disabled="this.state.savingDecisions"
-                    t-on-click="this.savePendingChoices">
-                    <t t-if="this.state.savingDecisions">Đang lưu…</t>
-                    <t t-else="">Xác nhận &amp; Lưu (<t t-out="this.pendingList.length"/>)</t>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" t-att-disabled="this.state.savingDecisions"
-                    t-on-click="this.resetChoices">Hủy lựa chọn nháp</button>
-            </div>
-            <div t-if="this.state.resolveError" class="alert alert-danger w-100 mb-0 mt-2 py-2" role="alert" t-out="this.state.resolveError"/>
-        </section>
 
         <p t-if="!this.data.rows.length" class="o_tp_att_empty">
             Không có nhân viên hoặc ngày nào khớp với bộ lọc đối chiếu hiện tại.
@@ -278,20 +246,6 @@
                                     <t t-out="d.latest_resolution.decision_label"/> · <t t-out="d.latest_resolution.actor"/>
                                 </div>
                                 <div t-if="d.blocked_reason" class="o_cmp_blocked" t-out="d.blocked_reason"/>
-                                <div t-elif="row.mapping_state === 'mapped' and d.group !== 'blank'" class="o_cmp_btn_group" role="group" aria-label="Chọn nguồn cho ngày">
-                                    <button type="button" class="o_cmp_pick_btn" t-att-disabled="!d.can_use_a"
-                                        t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'use_a'}"
-                                        t-on-click="() => this.pickDayDecision(row, d, 'use_a')">A</button>
-                                    <button t-if="this.state.batchBId" type="button" class="o_cmp_pick_btn" t-att-disabled="!d.can_use_b"
-                                        t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'use_b'}"
-                                        t-on-click="() => this.pickDayDecision(row, d, 'use_b')">B</button>
-                                    <button type="button" class="o_cmp_pick_btn"
-                                        t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'keep_current'}"
-                                        t-on-click="() => this.pickDayDecision(row, d, 'keep_current')">Giữ</button>
-                                    <button type="button" class="o_cmp_pick_btn"
-                                        t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'defer'}"
-                                        t-on-click="() => this.pickDayDecision(row, d, 'defer')">Sau</button>
-                                </div>
                             </td>
 
                             <td class="o_cmp_col_late">
@@ -311,20 +265,6 @@
                                     </div>
                                     <small t-if="li.reason" class="d-block o_tp_att_muted mt-1" t-out="li.reason"/>
                                     <div t-if="li.blocked_reason" class="o_cmp_blocked" t-out="li.blocked_reason"/>
-                                    <div t-elif="row.mapping_state === 'mapped' and (li.can_use_a or li.can_use_b)" class="o_cmp_btn_group" role="group" aria-label="Chọn tổng Đi muộn">
-                                        <button type="button" class="o_cmp_pick_btn" t-att-disabled="!li.can_use_a"
-                                            t-att-class="{'active': this.selectedLateDecision(row.employee_id, li.date_from, li.date_to) === 'use_a'}"
-                                            t-on-click="() => this.pickLateDecision(row, li, 'use_a')">A</button>
-                                        <button t-if="this.state.batchBId" type="button" class="o_cmp_pick_btn" t-att-disabled="!li.can_use_b"
-                                            t-att-class="{'active': this.selectedLateDecision(row.employee_id, li.date_from, li.date_to) === 'use_b'}"
-                                            t-on-click="() => this.pickLateDecision(row, li, 'use_b')">B</button>
-                                        <button type="button" class="o_cmp_pick_btn"
-                                            t-att-class="{'active': this.selectedLateDecision(row.employee_id, li.date_from, li.date_to) === 'keep_current'}"
-                                            t-on-click="() => this.pickLateDecision(row, li, 'keep_current')">Giữ</button>
-                                        <button type="button" class="o_cmp_pick_btn"
-                                            t-att-class="{'active': this.selectedLateDecision(row.employee_id, li.date_from, li.date_to) === 'defer'}"
-                                            t-on-click="() => this.pickLateDecision(row, li, 'defer')">Sau</button>
-                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -358,20 +298,6 @@
                                 <div><span class="o_side_tag o_tag_now">HT</span> <t t-out="this.formatCanonicalTime(d.canonical)"/></div>
                             </div>
                             <div t-if="d.blocked_reason" class="o_cmp_blocked" t-out="d.blocked_reason"/>
-                            <div t-elif="row.mapping_state === 'mapped'" class="o_cmp_btn_group mt-1">
-                                <button type="button" class="o_cmp_pick_btn" t-att-disabled="!d.can_use_a"
-                                    t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'use_a'}"
-                                    t-on-click="() => this.pickDayDecision(row, d, 'use_a')">A</button>
-                                <button t-if="this.state.batchBId" type="button" class="o_cmp_pick_btn" t-att-disabled="!d.can_use_b"
-                                    t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'use_b'}"
-                                    t-on-click="() => this.pickDayDecision(row, d, 'use_b')">B</button>
-                                <button type="button" class="o_cmp_pick_btn"
-                                    t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'keep_current'}"
-                                    t-on-click="() => this.pickDayDecision(row, d, 'keep_current')">Giữ</button>
-                                <button type="button" class="o_cmp_pick_btn"
-                                    t-att-class="{'active': this.selectedDayDecision(row.employee_id, d.date) === 'defer'}"
-                                    t-on-click="() => this.pickDayDecision(row, d, 'defer')">Sau</button>
-                            </div>
                         </div>
                     </div>
                 </article>
@@ -381,24 +307,6 @@
         </t>
     </t>
 </div>
-</t>
-
-<t t-name="tp_hr_attendance.CompareConfirmDialog">
-    <Dialog title="this.props.title" size="'md'">
-        <div class="o_tp_att_dialog_body">
-            <ul class="mb-2 ps-3">
-                <li t-foreach="this.props.summaryLines" t-as="line" t-key="line_index" class="mb-1" t-out="line"/>
-            </ul>
-            <div t-if="this.state.error" class="alert alert-danger mt-2 mb-0" role="alert" t-out="this.state.error"/>
-        </div>
-        <t t-set-slot="footer">
-            <button type="button" class="btn btn-outline-secondary" t-att-disabled="this.state.busy" t-on-click="() => this.props.close()">Hủy</button>
-            <button type="button" class="btn btn-primary" t-att-disabled="this.state.busy" t-on-click="this.confirm">
-                <t t-if="this.state.busy">Đang xử lý…</t>
-                <t t-else="" t-out="this.props.confirmLabel"/>
-            </button>
-        </t>
-    </Dialog>
 </t>
 
 </templates>

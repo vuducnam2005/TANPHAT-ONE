@@ -1,16 +1,16 @@
-import { Component, onMounted, onWillStart, onWillUnmount, proxy, useProps } from "@odoo/owl";
+import { Component, onWillStart, onWillUnmount, proxy, useProps } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { cellNote, downloadBase64, formatDate, readStore, rpcError, stepPeriod, writeStore } from "../common";
+import { useAttendanceLive } from "../live";
 import { AttPager, LateDialog, PeriodTable, PersonDialog, SourceStrip } from "../parts";
-import { openAttendanceUpload } from "../upload/upload";
-import { AttendanceFileMatrix } from "../matrix/matrix";
 
 /**
  * "Bảng chấm công" (HR-ATTENDANCE-SIMPLE-002). Day: Nhân viên · Phòng ban · Thứ/ngày · Giờ vào · Giờ ra.
- * Week / month / free range / "Kỳ theo file": Nhân viên · Phòng ban · Số lần đi muộn · Tổng phút muộn, only
- * for an exact machine source period. Data: tp.hr.attendance.day.tp_sheet (record rules apply).
+ * Week / month / free range ("Khoảng ngày"): Nhân viên · Phòng ban · Số lần đi muộn · Tổng phút muộn (ENTI late
+ * minutes, or an exact historical Excel period). Always canonical data: tp.hr.attendance.day.tp_sheet (record rules
+ * apply); Excel file import is closed (ENTI-ATTENDANCE-002) and old Excel periods stay reachable as history links.
  * Mode, department and page size survive the breadcrumb round-trip; the date always starts at today.
  */
 const STORE_KEY = "tp_hr_attendance.sheet";
@@ -22,25 +22,20 @@ const DAY_STATES = [
 
 export class AttendanceBoard extends Component {
     static template = "tp_hr_attendance.Board";
-    static components = { AttPager, PeriodTable, SourceStrip, AttendanceFileMatrix };
+    static components = { AttPager, PeriodTable, SourceStrip };
     props = useProps();
 
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
         this.dialog = useService("dialog");
-        try {
-            this.busService = useService("bus_service");
-        } catch (_) {
-            this.busService = null;
-        }
         const saved = readStore(STORE_KEY);
         const params = this.props.action?.params || {};
         const period = params.from && params.to ? { mode: "range", from: params.from, to: params.to } : {};
         this.state = proxy({
             mode: ["day", "week", "month"].includes(saved.mode) ? saved.mode : "day", date: "", from: "", to: "",
             department: saved.department || "", search: "", dayState: "", page: 1, pageSize: saved.pageSize || 20,
-            ...period, fileMenu: false, loading: true, error: "", data: null,
+            ...period, loading: true, error: "", data: null,
         });
         this.modes = MODES;
         this.dayStates = DAY_STATES;
@@ -48,34 +43,20 @@ export class AttendanceBoard extends Component {
         this.formatDate = formatDate;
         this.request = 0;
         this.searchTimer = null;
-        this.pollTimer = null;
-
-        onWillStart(async () => {
-            if (this.busService) {
-                try {
-                    this.busService.addChannel("tp_hr_attendance_channel");
-                    this.busService.subscribe("enti_sync_completed", () => {
-                        if (!this.state.loading) {
-                            this.load();
-                        }
-                    });
-                } catch (_) {}
-            }
-            await this.load();
+        // ENTI-ATTENDANCE-002: new punches appear without F5 (server bus notification, visible-tab fallback poll).
+        this.live = useAttendanceLive({
+            refresh: () => (this.state.loading || this.state.exporting ? false : this.load({ silent: true })),
+            relevant: (payload) => {
+                const data = this.data;
+                const dates = payload.dates || [];
+                return Boolean(data) && (!dates.length || dates.some((day) => day >= data.start && day <= data.end));
+            },
         });
 
-        onMounted(() => {
-            this.pollTimer = browser.setInterval(() => {
-                if (!document.hidden && !this.state.loading) {
-                    this.load();
-                }
-            }, 30000);
-        });
-
+        onWillStart(() => this.load());
         onWillUnmount(() => {
-            if (this.pollTimer) {
-                browser.clearInterval(this.pollTimer);
-            }
+            browser.clearTimeout(this.searchTimer);
+            this.request++;
         });
     }
 
@@ -107,7 +88,7 @@ export class AttendanceBoard extends Component {
         if (this.isDay) {
             return data.start === data.today ? `Hôm nay · ${data.period_label}` : data.period_label;
         }
-        return data.is_file_period ? `Kỳ theo file ${data.period_label}` : data.period_label;
+        return data.is_file_period ? `Kỳ nguồn Excel (lịch sử) ${data.period_label}` : data.period_label;
     }
 
     params() {
@@ -118,12 +99,16 @@ export class AttendanceBoard extends Component {
         };
     }
 
-    async load() {
+    /** ``silent``: automatic refresh — no loading indicator, and a failure keeps the rows already shown. */
+    async load({ silent = false } = {}) {
         const request = ++this.request;
         this.state.loading = true;
-        this.state.error = "";
+        if (!silent) {
+            this.state.error = "";
+        }
         try {
-            const data = await this.orm.call("tp.hr.attendance.day", "tp_sheet", [this.params()]);
+            const orm = silent ? this.orm.silent : this.orm;
+            const data = await orm.call("tp.hr.attendance.day", "tp_sheet", [this.params()]);
             if (request !== this.request) {
                 return;
             }
@@ -132,19 +117,22 @@ export class AttendanceBoard extends Component {
                 Object.assign(this.state, { from: data.start, to: data.end });
             }
             writeStore(STORE_KEY, { mode: data.mode === "range" ? "day" : data.mode, department: this.state.department, pageSize: data.page_size });
+            this.state.error = "";
+            this.live.loaded();
         } catch (error) {
-            if (request === this.request) {
+            if (request === this.request && !silent) {
                 this.state.error = rpcError(error, "Không tải được bảng chấm công. Vui lòng thử lại.");
             }
         } finally {
             if (request === this.request) {
                 this.state.loading = false;
+                this.live.flush();
             }
         }
     }
 
     reset(changes) {
-        Object.assign(this.state, { page: 1, fileMenu: false }, changes);
+        Object.assign(this.state, { page: 1 }, changes);
         return this.load();
     }
     setMode(mode) {
@@ -180,6 +168,15 @@ export class AttendanceBoard extends Component {
         }
         return this.reset(changes);
     }
+    /** Free date range (ENTI-ATTENDANCE-002 replaced the former "Kỳ theo file" picker); starts from the viewed period. */
+    openRange() {
+        if (this.state.mode === "range") {
+            return;
+        }
+        const from = this.data?.start || this.state.date;
+        return this.reset({ mode: "range", from, to: this.data?.end || from });
+    }
+    /** Historical machine late total of an old Excel period (read-only history). */
     openFilePeriod(item) {
         return this.reset({ mode: "range", from: item.from, to: item.to });
     }
@@ -216,22 +213,8 @@ export class AttendanceBoard extends Component {
             label: item.label, params: { from: item.from, to: item.to, department_id: Number(this.state.department) || 0, search: this.state.search },
         });
     }
-    openUpload() {
-        openAttendanceUpload(this.env, {
-            onApplied: () => this.load(),
-            onOpenPeriod: (period) => this.reset({ mode: "range", from: period.from, to: period.to }),
-        });
-    }
     openSources() {
         return this.action.doAction("tp_hr_attendance.action_sources");
-    }
-    openFileMatrix(mode = "matrix") {
-        return this.action.doAction({
-            type: "ir.actions.client",
-            tag: "tp_hr_attendance.file_matrix",
-            name: "Bảng dữ liệu theo file",
-            params: { mode },
-        });
     }
     async exportSheet() {
         try {

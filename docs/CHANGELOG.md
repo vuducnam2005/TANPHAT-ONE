@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-029 — Công lấy tự động từ ENTI gần thời gian thực; Tổng quan mới; ngừng nhập tệp Excel
+
+- 20/11/2026 Asia/Saigon; nhiệm vụ `ENTI-ATTENDANCE-002`. `tp_hr_attendance` 20.0.3.5.0. [DEC-063](DECISIONS.md), [Nghiệm thu](demo/ENTI_ATTENDANCE_002_ACCEPTANCE.md).
+- Đồng bộ: máy chủ gọi ENTI, cron canonical mỗi phút; 05:00–22:00 đọc hôm nay mỗi 15 giây trong một lượt cron rồi tự hẹn lượt sau, cửa sổ 5 ngày đọc lại 5 phút/lần, lỗi lùi 30/60/120 giây; một lượt có khóa, đủ phân trang, làm mới token, thử lại có giới hạn với mạng/timeout/429/5xx. Chỉ phát bus khi ngày công đổi; lượt không đổi không ghi DB. Lỗi/ENTI trả trống không xóa công; ưu tiên điều chỉnh đã duyệt > ENTI > Excel cũ; kỳ chốt giữ nguyên. Migration chỉ đổi priority cron ENTI 5 → 10.
+- Tổng quan chấm công làm lại: tiêu đề + *Tự động đồng bộ* (giờ thật), bộ lọc giữ khi tự làm mới, 6 KPI, biểu đồ chính 2/3 + 10 nhân viên có giờ vào/ra gần nhất 1/3, xu hướng, bảng cần kiểm tra; Chart.js nạp lười, bấm donut để lọc, mobile một cột. Tách *Chưa có dữ liệu / Thiếu giờ / Chưa chấm công / Nghỉ đã xác nhận / Vắng theo lịch*; vắng không tính Chủ nhật, tương lai, ngoài thời gian làm việc, nghỉ đã duyệt; một lần chấm không phải vắng; phút muộn lấy từ ENTI.
+- Xuất Excel theo mẫu *Bảng chấm công* (Vào/Ra, cột ngày thật, tổng muộn/vắng, sheet Chi tiết) cho tuần/nhiều tuần/tháng. Nguồn dữ liệu liệt kê người ENTI chưa ghép kèm lý do; ghép chỉ khi có căn cứ.
+- Ngừng nhập tệp Excel: gỡ mọi đường nhập trên giao diện, RPC công khai trả “Đã ngừng nhập tệp Excel chấm công…”; giữ lô/snapshot/tổng muộn/điều chỉnh/kỳ chốt làm lịch sử xem và xuất lại; không drop bảng, giữ `openpyxl`.
+- Kiểm: 95 test module — 0 failed, 1 error có sẵn liên module (`test_access` bị guard `tp_admin_delegation` chặn khi đồng bộ nhóm cán bộ chấm công); browser 9/9 PASS ở 1440/768/390/320; giờ ra mới hiện 0,7 giây sau commit không tải lại (ENTI → Odoo → màn hình, không đo máy → ENTI); xuất Excel tuần/01–19/11/tháng khớp backend 0 sai lệch. Chưa áp PC server ở change này.
+
 ## CHG-20261119-028 — Đã áp lỗi thao tác trong màn (FORM-VALIDATION-002) lên PCserver
 
 - 19/11/2026: app `70cf30a8` đã push, backup/upgrade Home 20.0.1.11.0, HR 20.0.1.19.0, KD 20.0.1.10.0 trên PCserver exit0/0ERROR; snapshot dữ liệu/quyền trước/sau giống hệt, chỉ đổi phiên bản 3 module. Backup `C:\TANPHAT-backups\form-validation002\form-validation027-20261119T214803`; dump/filestore/source/config/SHA256.

@@ -1,13 +1,13 @@
-import { Component, onMounted, onWillStart, onWillUnmount, proxy, useProps } from "@odoo/owl";
-import { browser } from "@web/core/browser/browser";
+import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { rpcError } from "./common";
-import { openAttendanceUpload } from "./upload/upload";
+import { useAttendanceLive } from "./live";
 
 /**
- * "Nguồn dữ liệu chấm công" (HR/admin area, ENTI-LIVE-001). Displays both Excel fallback and
- * live ENTI API connector status, employee mapping progress, sync trigger, and import history.
+ * "Nguồn dữ liệu chấm công" (HR/admin area, ENTI-LIVE-001, ENTI-ATTENDANCE-002). ENTI is the only live source:
+ * connector health, last successful sync, mapping progress with the unmapped people and their reasons, and a
+ * manual sync. Excel file import is closed; earlier import batches stay readable as history.
  */
 export class AttendanceSources extends Component {
     static template = "tp_hr_attendance.Sources";
@@ -16,86 +16,75 @@ export class AttendanceSources extends Component {
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
-        this.notification = useService("notification");
-        try {
-            this.busService = useService("bus_service");
-        } catch (_) {
-            this.busService = null;
-        }
-        this.state = proxy({ loading: true, error: "", data: null });
-        this.pollTimer = null;
-
-        onWillStart(async () => {
-            if (this.busService) {
-                try {
-                    this.busService.addChannel("tp_hr_attendance_channel");
-                    this.busService.subscribe("enti_sync_completed", () => this.load());
-                } catch (_) {}
-            }
-            await this.load();
-        });
-
-        onMounted(() => {
-            this.pollTimer = browser.setInterval(() => {
-                if (!document.hidden && !this.state.loading) {
-                    this.load();
-                }
-            }, 30000);
-        });
-
-        onWillUnmount(() => {
-            if (this.pollTimer) {
-                browser.clearInterval(this.pollTimer);
-            }
-        });
+        this.state = proxy({ loading: true, syncing: false, error: "", notice: "", data: null });
+        this.request = 0;
+        // Sync health and the last update time follow the server sync without F5 (bus + visible-tab fallback poll).
+        this.live = useAttendanceLive({ refresh: () => (this.state.loading ? false : this.load({ silent: true })) });
+        onWillStart(() => this.load());
     }
 
     get data() {
         return this.state.data;
     }
+    get enti() {
+        return this.data?.api?.enti || {};
+    }
+    get unmapped() {
+        return this.enti.unmapped_people || [];
+    }
     get referenceHours() {
         return (this.data?.reference_hours || "08:30-17:00").replace("-", "–");
     }
 
-    async load() {
+    async load({ silent = false } = {}) {
+        const request = ++this.request;
         this.state.loading = true;
-        this.state.error = "";
         try {
-            this.state.data = await this.orm.call("tp.hr.attendance.source", "tp_sources_overview", [{}]);
+            const orm = silent ? this.orm.silent : this.orm;
+            const data = await orm.call("tp.hr.attendance.source", "tp_sources_overview", [{}]);
+            if (request === this.request) {
+                this.state.data = data;
+                if (!silent) {
+                    this.state.error = "";
+                }
+                this.live.loaded();
+            }
         } catch (error) {
-            this.state.error = rpcError(error, "Không tải được nguồn dữ liệu chấm công. Vui lòng thử lại.");
+            if (request === this.request && !silent) {
+                this.state.error = rpcError(error, "Không tải được nguồn dữ liệu chấm công. Vui lòng thử lại.");
+            }
         } finally {
-            this.state.loading = false;
+            if (request === this.request) {
+                this.state.loading = false;
+                this.live.flush();
+            }
         }
     }
 
+    /** Manual sync (HR/admin). The result stays on the screen; a failure never removes stored attendance. */
     async syncEntiNow() {
-        this.state.loading = true;
-        this.state.error = "";
+        if (this.state.syncing) {
+            return;
+        }
+        Object.assign(this.state, { syncing: true, error: "", notice: "" });
         try {
             const res = await this.orm.call("tp.hr.attendance.source", "action_sync_enti_quick", []);
-            if (this.notification) {
-                this.notification.add(
-                    `Đồng bộ ENTI thành công: ${res.employees || 0} nhân viên, ${res.days_applied || 0} ngày công.`,
-                    { type: "success" }
-                );
+            if (res && res.success === false) {
+                this.state.error = res.skipped
+                    ? res.message
+                    : `Đồng bộ ENTI chưa thành công: ${res.message || "lỗi không rõ"}. Dữ liệu công đã có được giữ nguyên.`;
+            } else {
+                const unmapped = res?.unmapped ? `, ${res.unmapped} người ENTI chưa ghép` : "";
+                this.state.notice = `Đồng bộ ENTI xong: ${res?.employees || 0} nhân viên${unmapped}, ${res?.days_applied || 0} ngày công cập nhật.`;
             }
-            await this.load();
         } catch (error) {
-            this.state.error = rpcError(error, "Đồng bộ ENTI thất bại. Vui lòng kiểm tra lại cấu hình hoặc kết nối mạng.");
+            this.state.error = rpcError(error, "Đồng bộ ENTI thất bại. Dữ liệu công đã có được giữ nguyên; vui lòng thử lại.");
         } finally {
-            this.state.loading = false;
+            this.state.syncing = false;
         }
+        await this.load({ silent: true });
     }
 
-    openUpload() {
-        openAttendanceUpload(this.env, {
-            onApplied: () => this.load(),
-            onOpenPeriod: (period) => this.action.doAction({
-                type: "ir.actions.client", tag: "tp_hr_attendance.board", name: "Bảng chấm công", params: { from: period.from, to: period.to },
-            }),
-        });
-    }
     openBatch(row) {
         return this.action.doAction({
             type: "ir.actions.act_window", name: "Lô nhập dữ liệu công", res_model: "tp.hr.attendance.batch", res_id: row.id,

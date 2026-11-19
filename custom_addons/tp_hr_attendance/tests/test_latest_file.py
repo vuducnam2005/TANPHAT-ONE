@@ -16,7 +16,7 @@ class TestLatestFile(AttendanceCase):
     def upload(self, times, late=(0, 0), name='source.xlsx', user=None):
         raw = report([{'code': '9901', 'name': 'Synthetic Người Một', 'times': times, 'late': late}],
                      MONDAY, len(times), late=True)
-        result = self.env_for(user or self.manager)['tp.hr.attendance.batch'].tp_upload_files({
+        result = self.env_for(user or self.manager)['tp.hr.attendance.batch']._tp_upload_files({
             'files': [{'file_name': name, 'data': base64.b64encode(raw).decode()}]})
         self.assertEqual(result['error_count'], 0, result)
         return self.env['tp.hr.attendance.batch'].browse(result['created_ids'][0])
@@ -57,7 +57,7 @@ class TestLatestFile(AttendanceCase):
             raw = report([{'code': '9901', 'name': 'Synthetic Người Một', 'times': [(clock, '17:00')]}], MONDAY, 1)
             files.append({'file_name': name, 'data': base64.b64encode(raw).decode()})
         files.insert(1, {'file_name': 'broken.xlsx', 'data': base64.b64encode(b'not a workbook').decode()})
-        result = self.env_for(self.manager)['tp.hr.attendance.batch'].tp_upload_files({'files': files})
+        result = self.env_for(self.manager)['tp.hr.attendance.batch']._tp_upload_files({'files': files})
         self.assertEqual((result['success_count'], result['error_count']), (2, 1))
         self.assertEqual(self.day(self.emp_a, MONDAY).in_time, '08:45')
         self.assertEqual(self.day(self.emp_a, MONDAY).session_count, 1)

@@ -3,10 +3,41 @@ import { Dialog } from "@web/core/dialog/dialog";
 import { useService } from "@web/core/utils/hooks";
 import { PAGE_SIZES, cellNote, formatDate, lateText, pagerText, rpcError } from "./common";
 
-/** Small source strip: Excel / API / mixed, update time, data-to date, connection state (never "realtime"). */
+const HEALTH = {
+    ok: ["Tự động đồng bộ ENTI", "autorenew"],
+    stale: ["Đồng bộ ENTI đang chậm", "schedule"],
+    error: ["Đồng bộ ENTI đang lỗi", "error"],
+};
+
+/**
+ * Small source strip: automatic ENTI sync health, the real time Odoo last received ENTI data, data-to date.
+ * The update time is when Odoo received the data from ENTI — not when the person punched on the machine.
+ */
 export class SourceStrip extends Component {
     static template = "tp_hr_attendance.SourceStrip";
     props = useProps();
+    get tone() {
+        return this.props.source.auto ? this.props.source.health : "off";
+    }
+    get label() {
+        const source = this.props.source;
+        return source.auto && HEALTH[source.health] ? HEALTH[source.health][0] : source.label;
+    }
+    get icon() {
+        const source = this.props.source;
+        if (source.auto && HEALTH[source.health]) {
+            return HEALTH[source.health][1];
+        }
+        return source.kind === "none" ? "cloud_off" : "description";
+    }
+    get title() {
+        const source = this.props.source;
+        if (!source.auto) {
+            return "";
+        }
+        const poll = source.poll_seconds ? `Máy chủ đọc ENTI khoảng ${source.poll_seconds} giây/lần trong giờ làm việc. ` : "";
+        return `${poll}Giờ cập nhật là lúc Odoo nhận dữ liệu từ ENTI, không phải lúc chấm trên máy.`;
+    }
 }
 
 export class AttPager extends Component {
@@ -45,7 +76,7 @@ export class PersonDetail extends Component {
     }
     get lateNote() {
         const late = this.late;
-        return late.state === "exact" ? `Theo Excel máy · kỳ ${late.source}` : late.text;
+        return late.state === "exact" ? late.note || `Theo Excel máy · kỳ ${late.source}` : late.text;
     }
 }
 

@@ -1,156 +1,268 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 <t t-name="tp_hr_attendance.Dashboard">
-<div class="o_tp_att o_tp_att_overview" aria-label="Tổng quan chấm công" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
-    <header class="o_tp_att_header">
-        <div>
+<div class="o_tp_att o_tp_att_ov" aria-label="Tổng quan chấm công" t-att-aria-busy="this.state.loading ? 'true' : 'false'"
+     t-att-class="{'o_tp_att_ov_refreshing': this.state.refreshing}">
+    <header class="o_tp_att_ov_head">
+        <div class="o_tp_att_ov_title">
             <h1>Tổng quan chấm công</h1>
             <p class="o_tp_att_subtitle" t-out="this.heading"/>
         </div>
-        <div class="o_tp_att_actions">
-            <button t-if="this.data?.can_import" type="button" class="btn btn-outline-primary" t-on-click="() => this.openFileMatrix()"><i class="oi me-1" data-icon="grid_on" aria-hidden="true"/>Bảng công theo file (Vào/Ra)</button>
-            <button t-if="this.data?.can_import" type="button" class="btn btn-primary" t-on-click="this.openUpload"><i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Nhập Excel máy chấm công</button>
+        <div class="o_tp_att_ov_meta" t-if="this.data">
+            <span class="o_tp_att_live" t-att-class="'o_' + this.live.tone" t-att-title="this.live.title" role="status">
+                <span class="o_tp_att_live_dot" aria-hidden="true"/>
+                <i class="oi" t-att-data-icon="this.live.icon" aria-hidden="true"/>
+                <t t-out="this.live.label"/>
+            </span>
+            <span class="o_tp_att_ov_updated" t-if="this.data.source.updated_at" t-att-title="this.live.title">
+                Cập nhật <strong t-out="this.data.source.updated_at"/>
+            </span>
+            <button t-if="this.data.can_export" type="button" class="btn btn-primary o_tp_att_ov_export" t-att-disabled="this.state.exporting"
+                    t-on-click="() => this.exportExcel()">
+                <i class="oi me-1" t-att-data-icon="this.state.exporting ? 'hourglass_top' : 'download'" aria-hidden="true"/>
+                <t t-out="this.state.exporting ? 'Đang xuất…' : 'Xuất Excel'"/>
+            </button>
         </div>
     </header>
 
-    <section class="o_tp_att_toolbar" aria-label="Kỳ và bộ lọc">
+    <div t-if="this.state.exportError" class="alert alert-danger o_tp_att_ov_alert" role="alert">
+        <strong>Xuất Excel chưa thành công.</strong> <t t-out="this.state.exportError"/>
+    </div>
+    <div t-if="this.data?.source.health === 'error'" class="alert alert-warning o_tp_att_ov_alert" role="alert">
+        <strong>Đồng bộ ENTI đang lỗi<t t-if="this.data.source.error_at"> (từ <t t-out="this.data.source.error_at"/>)</t>.</strong>
+        Dữ liệu đã có được giữ nguyên.
+        <span t-if="this.data.source.error" class="d-block o_tp_att_muted" t-out="this.data.source.error"/>
+    </div>
+
+    <section class="o_tp_att_ov_filters" aria-label="Kỳ và bộ lọc">
+      <div class="o_tp_att_ov_when">
         <div class="o_tp_att_segment" role="group" aria-label="Chế độ xem">
             <button t-foreach="this.modes" t-as="mode" t-key="mode[0]" type="button" t-att-class="{'active': this.state.mode === mode[0]}"
                 t-att-aria-pressed="this.state.mode === mode[0] ? 'true' : 'false'" t-on-click="() => this.setMode(mode[0])" t-out="mode[1]"/>
         </div>
-        <div class="o_tp_att_period">
+        <div class="o_tp_att_period" t-if="this.state.mode !== 'range'">
             <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(-1)" aria-label="Kỳ trước"><i class="oi" data-icon="chevron_backward" aria-hidden="true"/></button>
             <input t-if="this.state.mode === 'month'" type="month" t-att-value="this.data?.start?.slice(0, 7)" t-on-change="this.onMonth" aria-label="Chọn tháng"/>
-            <input t-else="" type="date" t-att-value="this.state.date" t-on-change="this.onDate" t-att-aria-label="this.state.mode === 'week' ? 'Chọn một ngày trong tuần (T2–CN)' : 'Chọn ngày'"/>
+            <input t-else="" type="date" t-att-value="this.data?.date or this.state.date" t-on-change="this.onDate"
+                   t-att-aria-label="this.state.mode === 'week' ? 'Chọn một ngày trong tuần (T2–CN)' : 'Chọn ngày'"/>
             <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(1)" aria-label="Kỳ sau"><i class="oi" data-icon="chevron_forward" aria-hidden="true"/></button>
             <button type="button" class="btn btn-light" t-on-click="this.goToday">Hôm nay</button>
-            <button t-if="this.showLatest" type="button" class="btn btn-link" t-on-click="this.goLatest">Xem ngày có dữ liệu gần nhất (<t t-out="this.formatDate(this.data.source.latest_date)"/>)</button>
         </div>
+        <div class="o_tp_att_period o_tp_att_ov_range" t-else="">
+            <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(-1)" aria-label="Khoảng trước"><i class="oi" data-icon="chevron_backward" aria-hidden="true"/></button>
+            <input type="date" t-att-value="this.state.from" t-on-change="(ev) => this.onRange('from', ev)" aria-label="Từ ngày"/>
+            <span aria-hidden="true">→</span>
+            <input type="date" t-att-value="this.state.to" t-on-change="(ev) => this.onRange('to', ev)" aria-label="Đến ngày"/>
+            <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(1)" aria-label="Khoảng sau"><i class="oi" data-icon="chevron_forward" aria-hidden="true"/></button>
+        </div>
+      </div>
+      <div class="o_tp_att_ov_which">
         <label class="o_tp_att_field"><span>Phòng ban</span>
             <select t-on-change="this.onDepartment" aria-label="Lọc phòng ban">
                 <option value="" t-att-selected="!this.state.department">Tất cả phòng ban</option>
                 <option t-foreach="this.data?.departments or []" t-as="dept" t-key="dept.id" t-att-value="dept.id" t-att-selected="('' + dept.id) === ('' + this.state.department)" t-out="dept.name"/>
             </select>
         </label>
+        <label class="o_tp_att_field o_tp_att_ov_search"><span>Nhân viên</span>
+            <input type="search" t-att-value="this.state.search" t-on-input="this.onSearch" placeholder="Tên hoặc mã NV" aria-label="Tìm theo tên hoặc mã nhân viên" autocomplete="off"/>
+        </label>
+        <label class="o_tp_att_field"><span>Tình trạng</span>
+            <select t-on-change="this.onStatus" aria-label="Lọc tình trạng của bảng">
+                <option t-foreach="this.statusOptions" t-as="option" t-key="option[0]" t-att-value="option[0]" t-att-selected="option[0] === this.state.status" t-out="option[1]"/>
+            </select>
+        </label>
+        <button type="button" class="btn btn-outline-secondary o_tp_att_ov_reset" t-att-disabled="!this.hasFilters" t-on-click="() => this.clearFilters()">
+            <i class="oi me-1" data-icon="refresh" aria-hidden="true"/>Đặt lại
+        </button>
+      </div>
     </section>
 
-    <SourceStrip source="this.data?.source" onSources="this.data?.can_import ? (() => this.openSources()) : null"/>
-
-    <div t-if="this.state.error" class="alert alert-danger" role="alert"><t t-out="this.state.error"/> <button class="btn btn-link p-0" t-on-click="this.load">Thử lại</button></div>
+    <div t-if="this.state.error" class="alert alert-danger" role="alert"><t t-out="this.state.error"/> <button class="btn btn-link p-0" t-on-click="() => this.load()">Thử lại</button></div>
     <p t-elif="!this.data" role="status" class="o_tp_att_loading">Đang tải tổng quan…</p>
     <t t-else="">
         <p t-if="this.data.future" class="alert alert-secondary">Kỳ này chưa đến; chưa có dữ liệu chấm công.</p>
 
-        <section class="o_tp_att_kpis" aria-label="Chỉ số chính">
-            <button type="button" class="o_tp_att_kpi o_total" t-att-class="{'active': this.data.drill === 'all' and !this.data.drill_date}" t-on-click="() => this.drillTo('all')">
-                <span>Tổng nhân viên</span><strong t-out="this.data.kpis.total"/>
-                <small>Hồ sơ HR đang làm trong phạm vi lọc</small>
+        <section class="o_tp_att_ov_kpis" aria-label="Chỉ số chính">
+            <button type="button" class="o_tp_att_ov_kpi o_main" t-att-class="{'o_fresh': this.isFresh('kpi:people'), 'active': this.state.status === 'all'}" t-on-click="() => this.setStatus('all')">
+                <span class="o_label"><i class="oi" data-icon="groups" aria-hidden="true"/>Tổng nhân viên</span>
+                <strong t-out="this.kpis.people"/>
+                <small t-if="this.data.mode === 'day'">Hồ sơ HR đang làm, theo bộ lọc</small>
+                <small t-else=""><t t-out="this.kpis.person_days"/> nhân viên-ngày đã qua trong kỳ</small>
             </button>
-            <button type="button" class="o_tp_att_kpi o_leave" t-att-disabled="this.data.kpis.leave === null" t-att-class="{'active': this.data.drill === 'leave'}" t-on-click="() => this.drillTo('leave')">
-                <span><t t-if="this.isDay">Nghỉ đã xác nhận</t><t t-else="">Người có ngày nghỉ xác nhận</t></span>
-                <strong t-if="this.data.kpis.leave !== null" t-out="this.data.kpis.leave"/>
-                <strong t-else="" class="o_tp_att_kpi_na">Chưa đủ dữ liệu</strong>
-                <small t-if="this.data.kpis.leave === null">Chưa có nguồn nghỉ đã duyệt; ô trống không tính là nghỉ</small>
-                <small t-else="">Theo đơn nghỉ đã duyệt</small>
+            <div class="o_tp_att_ov_kpi o_in" t-att-class="{'o_fresh': this.isFresh('kpi:has_in')}">
+                <span class="o_label"><i class="oi" data-icon="login" aria-hidden="true"/>Có giờ vào</span>
+                <strong t-out="this.kpis.has_in"/>
+                <small><t t-out="this.unit"/> · <t t-out="this.percent(this.kpis.has_in, this.kpis.person_days)"/>%</small>
+                <span class="o_tp_att_ov_meter" aria-hidden="true"><span t-att-style="'width:' + this.percent(this.kpis.has_in, this.kpis.person_days) + '%'"/></span>
+            </div>
+            <div class="o_tp_att_ov_kpi o_out" t-att-class="{'o_fresh': this.isFresh('kpi:has_out')}">
+                <span class="o_label"><i class="oi" data-icon="logout" aria-hidden="true"/>Có giờ ra</span>
+                <strong t-out="this.kpis.has_out"/>
+                <small><t t-out="this.unit"/> · <t t-out="this.percent(this.kpis.has_out, this.kpis.person_days)"/>%</small>
+                <span class="o_tp_att_ov_meter" aria-hidden="true"><span t-att-style="'width:' + this.percent(this.kpis.has_out, this.kpis.person_days) + '%'"/></span>
+            </div>
+            <button type="button" class="o_tp_att_ov_kpi o_warn" t-att-class="{'o_fresh': this.isFresh('kpi:attention'), 'active': this.state.status === 'attention'}" t-on-click="() => this.setStatus('attention')">
+                <span class="o_label"><i class="oi" data-icon="warning" aria-hidden="true"/>Thiếu giờ / cần kiểm tra</span>
+                <strong t-out="this.kpis.attention"/>
+                <small>Thiếu vào/ra <t t-out="this.kpis.missing"/> · cần đối chiếu <t t-out="this.kpis.review"/></small>
             </button>
-            <button type="button" class="o_tp_att_kpi o_out" t-att-class="{'active': this.data.drill === 'out_recorded'}" t-on-click="() => this.drillTo('out_recorded')">
-                <span t-out="this.data.kpis.out_label"/><strong t-out="this.data.kpis.out"/>
-                <small t-out="this.data.kpis.out_note"/>
+            <button type="button" class="o_tp_att_ov_kpi o_late" t-att-class="{'o_fresh': this.isFresh('kpi:late'), 'active': this.state.status === 'late'}" t-on-click="() => this.setStatus('late')">
+                <span class="o_label"><i class="oi" data-icon="timer" aria-hidden="true"/>Đi muộn</span>
+                <t t-if="this.kpis.late.state === 'none'">
+                    <strong class="o_tp_att_kpi_na">Chưa có số liệu</strong>
+                    <small>ENTI chưa trả số phút muộn cho phạm vi này</small>
+                </t>
+                <t t-else="">
+                    <strong><t t-out="this.kpis.late.people"/> <span class="o_unit">người</span></strong>
+                    <small><t t-out="this.kpis.late.count"/> lần · <t t-out="this.kpis.late.minutes"/> phút<t t-if="this.kpis.late.state === 'partial'"> (đã biết)</t></small>
+                    <small t-if="this.kpis.late.state === 'partial'" class="o_tp_att_ov_note" t-out="this.kpis.late.text"/>
+                </t>
+            </button>
+            <button type="button" class="o_tp_att_ov_kpi o_absent" t-att-class="{'o_fresh': this.isFresh('kpi:absent'), 'active': this.state.status === 'absent'}"
+                    t-att-title="this.kpis.absent.note" t-on-click="() => this.setStatus('absent')">
+                <span class="o_label"><i class="oi" data-icon="person_off" aria-hidden="true"/>Vắng theo lịch</span>
+                <strong><t t-out="this.kpis.absent.value"/> <span class="o_unit">ngày</span></strong>
+                <small t-if="this.kpis.absent.rule">Ngày làm đã qua, không có lượt chấm</small>
+                <small t-else="">Theo lịch tạm T2–T7 · chưa tách buổi</small>
+                <small t-if="this.kpis.absent.unknown" class="o_tp_att_ov_note"><t t-out="this.kpis.absent.unknown"/> ngày chưa có nguồn · không tính vắng</small>
             </button>
         </section>
 
-        <div class="o_tp_att_chips" role="group" aria-label="Lọc nhanh">
-            <button t-foreach="this.data.chips" t-as="chip" t-key="chip.key" type="button" class="o_tp_att_chip" t-att-class="{'active': this.data.drill === chip.key}"
-                t-att-title="chip.detail or chip.label" t-on-click="() => this.drillTo(chip.key)">
-                <i class="o_tp_att_dot" t-att-style="'background:' + (chip.key === 'attention' ? this.colors.missing : this.colors[chip.key])" aria-hidden="true"/>
-                <t t-out="chip.label"/> <strong t-out="chip.value"/>
-            </button>
-            <span t-if="this.data.late" class="o_tp_att_chip o_static" t-att-title="'Tổng cả kỳ ' + this.data.late.label + ' từ tệp máy, không chia theo ngày'">
-                Đi muộn kỳ <t t-out="this.data.late.label"/>: <strong t-out="this.data.late.count"/> lần · <strong t-out="this.data.late.minutes"/> phút
-                <small>(<t t-out="this.data.late.late_people"/>/<t t-out="this.data.late.people"/> người · <t t-out="this.data.late.source"/>)</small>
-            </span>
-            <span t-elif="this.data.late_hints.length" class="o_tp_att_chip o_static o_muted">Số đi muộn có ở tổng kỳ <t t-out="this.data.late_hints.join(', ')"/></span>
-        </div>
-
-        <section class="o_tp_att_chart" aria-label="Biểu đồ trạng thái">
-            <t t-if="this.isDay">
-                <div t-if="this.donut.length" class="o_tp_att_donut_wrap">
-                    <svg class="o_tp_att_donut" viewBox="0 0 200 200" role="img" t-att-aria-label="'Phân bố trạng thái ' + this.data.kpis.total + ' nhân viên'">
-                        <circle cx="100" cy="100" r="70" fill="none" stroke="#eef1f5" stroke-width="26"/>
-                        <circle t-foreach="this.donut" t-as="arc" t-key="arc.key" cx="100" cy="100" r="70" fill="none" stroke-width="26"
-                            t-att-stroke="arc.color" t-att-stroke-dasharray="arc.dash" t-att-stroke-dashoffset="arc.offset" transform="rotate(-90 100 100)"
-                            class="o_tp_att_arc" t-att-class="{'active': this.data.drill === arc.key}" t-on-click="() => this.drillTo(arc.key)">
-                            <title><t t-out="arc.label"/>: <t t-out="arc.value"/> người (<t t-out="arc.percent"/>%)</title>
-                        </circle>
-                        <text x="100" y="98" text-anchor="middle" class="o_tp_att_donut_total" t-att-fill="this.totalColor" t-out="this.data.kpis.total"/>
-                        <text x="100" y="120" text-anchor="middle" class="o_tp_att_donut_caption">nhân viên</text>
-                    </svg>
-                    <ul class="o_tp_att_legend">
-                        <li t-foreach="this.donut" t-as="arc" t-key="arc.key">
-                            <button type="button" t-att-class="{'active': this.data.drill === arc.key}" t-on-click="() => this.drillTo(arc.key)">
-                                <i class="o_tp_att_dot" t-att-style="'background:' + arc.color" aria-hidden="true"/>
-                                <span t-out="arc.label"/><strong t-out="arc.value"/><small><t t-out="arc.percent"/>%</small>
+        <div class="o_tp_att_ov_grid">
+            <section class="o_tp_att_ov_card o_tp_att_ov_status" aria-labelledby="o_tp_att_ov_status_title">
+                <header class="o_tp_att_ov_card_head">
+                    <div>
+                        <h2 id="o_tp_att_ov_status_title">Tình trạng chấm công</h2>
+                        <p class="o_tp_att_muted">Mỗi <t t-out="this.data.mode === 'day' ? 'người' : 'nhân viên-ngày'"/> có đúng một tình trạng · bấm để lọc bảng</p>
+                    </div>
+                    <span class="o_tp_att_ov_chip" t-out="this.data.period_label"/>
+                </header>
+                <div t-if="!this.drawnTotal" class="o_tp_att_ov_empty">Chưa có ngày nào đã qua trong phạm vi lọc.</div>
+                <div t-else="" class="o_tp_att_ov_donut_row">
+                    <div class="o_tp_att_ov_donut">
+                        <canvas t-ref="this.donut.ref" role="img" t-att-aria-label="'Biểu đồ tình trạng chấm công, tổng ' + this.drawnTotal + ' ' + this.unit"/>
+                        <div class="o_tp_att_ov_donut_center" aria-hidden="true">
+                            <strong t-out="this.drawnTotal"/>
+                            <span t-out="this.unit"/>
+                        </div>
+                    </div>
+                    <ul class="o_tp_att_ov_legend" aria-label="Chú giải tình trạng">
+                        <li t-foreach="this.legend" t-as="item" t-key="item.key">
+                            <button type="button" t-att-class="{'active': this.state.status === item.key, 'o_zero': !item.value}" t-att-aria-pressed="this.state.status === item.key ? 'true' : 'false'"
+                                    t-on-click="() => this.setStatus(item.key)">
+                                <span class="o_swatch" t-att-style="'background:' + item.color" aria-hidden="true"/>
+                                <span class="o_name" t-out="item.label"/>
+                                <strong t-out="item.value"/>
+                                <span class="o_pct"><t t-out="item.percent"/>%</span>
                             </button>
                         </li>
                     </ul>
                 </div>
-                <p t-elif="!this.data.future" class="o_tp_att_muted">Chưa có nhân viên trong phạm vi lọc.</p>
-            </t>
-            <t t-else="">
-                <div class="o_tp_att_bars" role="group" aria-label="Trạng thái theo ngày">
-                    <button t-foreach="this.bars" t-as="day" t-key="day.date" type="button" class="o_tp_att_bar"
-                        t-att-class="{'o_future': day.future, 'active': this.data.drill_date === day.date, 'o_today': day.is_today}"
-                        t-att-disabled="day.future" t-att-title="day.title" t-att-aria-label="day.title" t-on-click="() => this.openDay(day)">
-                        <span class="o_tp_att_bar_stack">
-                            <span t-foreach="day.segments" t-as="seg" t-key="seg.key" class="o_tp_att_bar_seg" t-att-style="'height:' + seg.height + '%;background:' + seg.color"/>
-                        </span>
-                        <span class="o_tp_att_bar_label"><t t-out="day.weekday"/><br/><t t-out="day.day"/></span>
-                    </button>
-                </div>
-                <ul class="o_tp_att_legend o_inline">
-                    <li t-foreach="this.legendStates" t-as="item" t-key="item.key">
-                        <button type="button" t-att-class="{'active': this.data.drill === item.key}" t-on-click="() => this.drillTo(item.key)">
-                            <i class="o_tp_att_dot" t-att-style="'background:' + item.color" aria-hidden="true"/><span t-out="item.label"/>
+            </section>
+
+            <section class="o_tp_att_ov_card o_tp_att_ov_recent" aria-labelledby="o_tp_att_ov_recent_title">
+                <header class="o_tp_att_ov_card_head">
+                    <div>
+                        <h2 id="o_tp_att_ov_recent_title">10 nhân viên chấm gần nhất</h2>
+                        <p class="o_tp_att_muted">Mới nhất ở trên · theo bộ lọc và quyền xem</p>
+                    </div>
+                    <span class="o_tp_att_ov_info" tabindex="0" role="note"
+                          title="ENTI chỉ trả giờ vào đầu tiên và giờ ra cuối cùng mỗi ngày; Odoo không tự thêm lượt chấm. Giờ hiển thị là giờ chấm trên máy."
+                          aria-label="ENTI chỉ trả giờ vào đầu tiên và giờ ra cuối cùng mỗi ngày; Odoo không tự thêm lượt chấm.">
+                        <i class="oi" data-icon="info" aria-hidden="true"/>
+                    </span>
+                </header>
+                <p t-if="!this.data.recent.length" class="o_tp_att_ov_empty">Chưa có lượt chấm công trong phạm vi lọc.</p>
+                <ol t-else="" class="o_tp_att_ov_recent_list">
+                    <li t-foreach="this.data.recent" t-as="row" t-key="row.employee_id" t-att-class="{'o_fresh': this.isFresh(row.key)}">
+                        <button type="button" t-on-click="() => this.openPerson(row)" t-att-title="this.recentTitle(row)">
+                            <img class="o_avatar" t-att-src="row.avatar" alt="" loading="lazy" width="36" height="36"/>
+                            <span class="o_who">
+                                <span class="o_name" t-out="row.name"/>
+                                <small><t t-out="row.code or 'Chưa có mã'"/><t t-if="row.department"> · <t t-out="row.department"/></t></small>
+                                <small class="o_times">
+                                    <t t-out="row.day_label"/> · Vào <b t-out="row.in or '—'"/> · Ra
+                                    <b t-if="row.out" t-out="row.out"/><em t-else="" t-out="row.missing"/>
+                                </small>
+                            </span>
+                            <span class="o_mark" t-att-class="'o_' + row.kind">
+                                <span t-out="row.kind_label"/>
+                                <strong t-out="row.time"/>
+                            </span>
                         </button>
                     </li>
-                </ul>
-                <p class="o_tp_att_muted">Mỗi cột là một ngày; chiều cao tính trên tổng nhân viên. Bấm cột để xem danh sách ngày đó.</p>
-            </t>
-        </section>
+                </ol>
+            </section>
+        </div>
 
-        <section class="o_tp_att_drill" aria-label="Danh sách chi tiết">
-            <div t-if="this.data.drill === 'attention'" class="o_tp_att_attention_intro">
-                <i class="oi" data-icon="fact_check" aria-hidden="true"/>
-                <div><strong>Đối chiếu giờ chấm công</strong><p>Các dòng dưới đây còn thiếu giờ hoặc có dữ liệu cần kiểm tra. Bấm nhân viên để xem chi tiết; ô trống không được tính là nghỉ.</p></div>
-                <span><strong t-out="this.data.total"/> dòng cần xem</span>
-            </div>
-            <div class="o_tp_att_drill_head">
-                <h2><t t-out="this.drillTitle"/> <small class="o_tp_att_muted">(<t t-out="this.data.total"/>)</small></h2>
-                <button t-if="this.data.drill_date" type="button" class="btn btn-link btn-sm" t-on-click="() => this.drillTo(this.data.drill, '')">Bỏ lọc ngày</button>
-                <label class="o_tp_att_field o_tp_att_search"><span class="visually-hidden">Tìm nhân viên</span>
-                    <input type="search" placeholder="Tìm tên hoặc mã nhân viên…" t-att-value="this.state.search" t-on-input="this.onSearch" aria-label="Tìm tên hoặc mã nhân viên"/>
-                </label>
-            </div>
+        <div class="o_tp_att_ov_grid o_tp_att_ov_trends">
+            <section class="o_tp_att_ov_card" aria-labelledby="o_tp_att_ov_trend_title">
+                <header class="o_tp_att_ov_card_head">
+                    <div>
+                        <h2 id="o_tp_att_ov_trend_title">Diễn biến theo ngày</h2>
+                        <p class="o_tp_att_muted"><t t-out="this.data.trend_label"/> · đơn vị: người mỗi ngày · bấm cột để xem ngày đó</p>
+                    </div>
+                    <ul class="o_tp_att_ov_keys" aria-hidden="true">
+                        <li><span class="o_in"/>Có giờ vào</li>
+                        <li><span class="o_out"/>Có giờ ra</li>
+                        <li><span class="o_warn"/>Thiếu / cần kiểm tra</li>
+                        <li><span class="o_absent"/>Vắng</li>
+                    </ul>
+                </header>
+                <div class="o_tp_att_ov_chart">
+                    <canvas t-ref="this.trend.ref" role="img" t-att-aria-label="'Biểu đồ cột số người có giờ vào, giờ ra, thiếu giờ và vắng theo ngày, ' + this.data.trend_label"/>
+                </div>
+            </section>
+            <section class="o_tp_att_ov_card" aria-labelledby="o_tp_att_ov_late_title">
+                <header class="o_tp_att_ov_card_head">
+                    <div>
+                        <h2 id="o_tp_att_ov_late_title">Phút đi muộn theo ngày</h2>
+                        <p class="o_tp_att_muted">Theo ENTI · ngày chưa có số liệu để trống, không tính là 0</p>
+                    </div>
+                </header>
+                <div t-if="!this.lateKnown" class="o_tp_att_ov_empty">Chưa có số liệu đi muộn từ ENTI trong kỳ này.</div>
+                <div t-else="" class="o_tp_att_ov_chart o_small">
+                    <canvas t-ref="this.lateChart.ref" role="img" aria-label="Biểu đồ cột tổng phút đi muộn theo ngày"/>
+                </div>
+            </section>
+        </div>
+
+        <section class="o_tp_att_ov_card o_tp_att_ov_table_card" aria-labelledby="o_tp_att_ov_table_title">
+            <header class="o_tp_att_ov_card_head">
+                <div>
+                    <h2 id="o_tp_att_ov_table_title" t-out="this.statusTitle"/>
+                    <p class="o_tp_att_muted"><t t-out="this.data.total"/> dòng · ngày mới nhất ở trên · bấm một dòng để xem giờ theo ngày</p>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm" t-on-click="() => this.openBoard()">
+                    <i class="oi me-1" data-icon="table_view" aria-hidden="true"/>Mở Bảng chấm công
+                </button>
+            </header>
             <div class="o_tp_att_table_wrap">
-                <table class="o_tp_att_table o_tp_att_overview_table">
-                    <thead><tr><th scope="col">Nhân viên</th><th scope="col">Phòng ban</th><th scope="col">Thứ/ngày</th><th scope="col">Giờ vào</th><th scope="col">Giờ ra</th><th scope="col">Tình trạng</th><th scope="col"><span class="visually-hidden">Chi tiết</span></th></tr></thead>
+                <table class="o_tp_att_table o_tp_att_ov_table">
+                    <thead><tr>
+                        <th scope="col">Nhân viên</th><th scope="col">Phòng ban</th><th scope="col">Thứ/ngày</th>
+                        <th scope="col">Giờ vào</th><th scope="col">Giờ ra</th><th scope="col">Tình trạng</th><th scope="col" class="o_num">Phút muộn</th>
+                    </tr></thead>
                     <tbody>
-                        <tr t-if="!this.data.rows.length"><td colspan="7" class="o_tp_att_empty">Không có dòng nào trong nhóm này.</td></tr>
-                        <tr t-foreach="this.data.rows" t-as="row" t-key="row.employee_id + row.date" class="o_tp_att_click" tabindex="0"
+                        <tr t-if="!this.data.rows.length"><td colspan="7" class="o_tp_att_empty">Không có dòng nào khớp bộ lọc.</td></tr>
+                        <tr t-foreach="this.data.rows" t-as="row" t-key="row.employee_id + ':' + row.date" class="o_tp_att_click" tabindex="0"
                             t-on-click="() => this.openPerson(row)" t-on-keydown="(ev) => ev.key === 'Enter' and this.openPerson(row)">
-                            <t t-set="issue" t-value="this.attendanceIssue(row)"/>
                             <th scope="row" data-label="Nhân viên"><span class="o_tp_att_name" t-out="row.name"/><small t-out="row.code or 'Chưa có mã'"/></th>
                             <td data-label="Phòng ban" t-out="row.department or '—'"/>
                             <td data-label="Thứ/ngày" t-out="row.day_label"/>
-                            <td data-label="Giờ vào"><span class="o_tp_att_clock" t-att-class="row.in ? 'o_recorded' : (row.state === 'missing' ? 'o_missing' : '')"><t t-out="row.in or (row.state === 'missing' ? 'Thiếu giờ vào' : '—')"/></span></td>
-                            <td data-label="Giờ ra"><span class="o_tp_att_clock" t-att-class="row.out ? 'o_recorded' : (row.state === 'missing' ? 'o_missing' : '')"><t t-out="row.out or (row.state === 'missing' ? 'Thiếu giờ ra' : '—')"/></span></td>
-                            <td data-label="Tình trạng"><span class="o_tp_att_issue" t-att-class="'o_' + row.state"><i class="oi" t-att-data-icon="issue.icon" aria-hidden="true"/><t t-out="issue.label"/></span></td>
-                            <td class="o_tp_att_detail_cell"><button type="button" class="o_tp_att_detail_btn" t-att-aria-label="'Xem công của ' + row.name" t-on-click.stop="() => this.openPerson(row)">Chi tiết <i class="oi" data-icon="chevron_forward" aria-hidden="true"/></button></td>
+                            <td data-label="Giờ vào"><span class="o_time" t-out="row.in or '—'"/></td>
+                            <td data-label="Giờ ra"><span class="o_time" t-out="row.out or '—'"/></td>
+                            <td data-label="Tình trạng">
+                                <span class="o_tp_att_ov_state" t-att-class="'o_' + row.state">
+                                    <t t-out="row.state === 'missing' ? this.attendanceIssue(row).label : row.state_label"/>
+                                </span>
+                            </td>
+                            <td data-label="Phút muộn" class="o_num" t-out="row.late === null ? '—' : row.late"/>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <AttPager data="this.data" unit="'dòng'" onPage="(page) => this.setPage(page)" onSize="(size) => this.setSize(size)"/>
+            <AttPager t-if="this.data.total" data="this.data" unit="'dòng'" onPage="(page) => this.setPage(page)" onSize="(size) => this.setSize(size)"/>
         </section>
     </t>
 </div>

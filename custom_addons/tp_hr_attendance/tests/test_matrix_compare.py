@@ -8,8 +8,10 @@ from odoo.tests import tagged
 
 from .common import AttendanceCase, report
 from .test_matrix_pure import _build_matrix_xlsx
+from odoo.addons.tp_hr_attendance.models.attendance_common import internal
 from odoo.addons.tp_hr_attendance.models.attendance_matrix import (
     SNAPSHOT_FIRST_PARSER_VERSION,
+    _tp_migrate_matrix_003,
 )
 from odoo.addons.tp_hr_attendance.models.attendance_parser import PARSER_VERSION
 
@@ -22,7 +24,7 @@ class TestMatrixAndCompare(AttendanceCase):
     def _b64(self, raw_bytes):
         return base64.b64encode(raw_bytes).decode('ascii')
 
-    def test_upload_persists_preview_and_discard_keeps_audit(self):
+    def test_history_upload_applies_newest_file_and_stale_preview_discard_keeps_audit(self):
         raw_ok = report([
             {'code': '9901', 'name': 'Synthetic Người Một', 'times': [('08:20', '17:05'), (None, None)]},
             {'code': '9902', 'name': 'Synthetic Người Hai', 'times': [(None, None), (None, None)]},
@@ -30,19 +32,21 @@ class TestMatrixAndCompare(AttendanceCase):
         importer_env = self.env_for(self.manager)
         Batch = importer_env['tp.hr.attendance.batch']
 
-        res = Batch.tp_upload_files([
-            {'filename': 'nguon_hop_le.xlsx', 'content_b64': self._b64(raw_ok)},
-            {'filename': 'sai_dinh_dang.txt', 'content_b64': self._b64(b'not xlsx')},
-        ])
-        self.assertEqual(len(res['created']), 1)
-        self.assertEqual(len(res['rejected']), 1)
-        batch_id = res['created'][0]['id']
+        res = Batch._tp_upload_files({'files': [
+            {'file_name': 'nguon_hop_le.xlsx', 'data': self._b64(raw_ok)},
+            {'file_name': 'sai_dinh_dang.txt', 'data': self._b64(b'not xlsx')},
+        ]})
+        self.assertEqual(len(res['created_ids']), 1)
+        self.assertEqual(res['error_count'], 1)
+        self.assertEqual([r['ok'] for r in res['results']], [True, False])
+        batch_id = res['created_ids'][0]
 
         batch = self.env['tp.hr.attendance.batch'].sudo().browse(batch_id)
-        self.assertEqual(batch.state, 'preview')
+        # The internal upload helper (UI flow closed by ENTI-ATTENDANCE-002) applies the newest file at once.
+        self.assertEqual(batch.state, 'applied')
         self.assertTrue(batch.batch_code.startswith('LÔ-'))
-        # Preview upload NEVER writes canonical sessions
-        self.assertFalse(self.env['tp.hr.attendance.session'].sudo().search([('employee_id', 'in', (self.emp_a + self.emp_b).ids)]))
+        sessions = self.env['tp.hr.attendance.session'].sudo().search([('employee_id', 'in', (self.emp_a + self.emp_b).ids)])
+        self.assertEqual((sessions.employee_id, sessions.work_date), (self.emp_a, MONDAY))
 
         # Matrix data includes both people (including all-blank emp_b)
         mdata = Batch.tp_matrix_data({'batch_id': batch_id, 'page_size': 10})
@@ -51,19 +55,19 @@ class TestMatrixAndCompare(AttendanceCase):
         self.assertEqual(len(all_people), 2)
         self.assertTrue(all_people[1]['all_empty'])
 
-        # Discard requires reason and keeps audit record
+        # Applied history is never discarded; a stale preview that was never applied can be, with its audit record kept.
         with self.assertRaises(UserError):
-            Batch.tp_discard_batch(batch_id, '')
-        discard = Batch.tp_discard_batch(batch_id, 'Tải nhầm bản nháp cũ')
-        self.assertTrue(discard['discarded'])
-        batch.invalidate_recordset()
-        self.assertEqual(batch.state, 'cancelled')
-        self.assertEqual(batch.cancel_reason, 'Tải nhầm bản nháp cũ')
+            Batch.tp_discard_batch(batch_id, 'Không được bỏ lô đã áp dụng')
+        raw_draft = report([{'code': '9901', 'name': 'Synthetic Người Một', 'times': [('08:25', '17:00'), (None, None)]}], MONDAY, 2)
+        preview_id = Batch._tp_upload_preview({'file_name': 'ban_nhap.xlsx', 'data': self._b64(raw_draft)})['batch_id']
+        discard = Batch.tp_discard_batch(preview_id, 'Tải nhầm bản nháp cũ')
+        self.assertEqual(discard['state'], 'cancelled')
+        preview = self.env['tp.hr.attendance.batch'].sudo().browse(preview_id)
+        self.assertEqual((preview.state, preview.cancel_reason), ('cancelled', 'Tải nhầm bản nháp cũ'))
+        self.assertEqual(sessions.exists(), sessions, 'discarding a preview never touches applied history')
 
     def test_compare_same_provenance_diff_partial_and_resolve_guards(self):
-        # Employee A uses code TP001/1 in file A, and code 9901 (mapped via different machine code? wait: test both mapping to emp_a!)
-        self.emp_a.sudo().write({'tp_employee_code': 'TP10001'})
-        # Map 9901 -> emp_a (already in AttendanceCase? ensure mapping via attendance.code)
+        # Both files carry machine code 9901, which resolves to emp_a through its reviewed source code (AttendanceCase).
         importer_env = self.env_for(self.manager)
         Batch = importer_env['tp.hr.attendance.batch']
 
@@ -94,11 +98,11 @@ class TestMatrixAndCompare(AttendanceCase):
             ],
         }])
 
-        up = Batch.tp_upload_files([
-            {'filename': 'file_a.xlsx', 'content_b64': self._b64(raw_a)},
-            {'filename': 'file_b.xlsx', 'content_b64': self._b64(raw_b)},
-        ])
-        id_a, id_b = up['created'][0]['id'], up['created'][1]['id']
+        up = Batch._tp_upload_files({'files': [
+            {'file_name': 'file_a.xlsx', 'data': self._b64(raw_a)},
+            {'file_name': 'file_b.xlsx', 'data': self._b64(raw_b)},
+        ]})
+        id_a, id_b = up['created_ids'][:2]
 
         cmp = Batch.tp_compare_batches({'batch_a_id': id_a, 'batch_b_id': id_b})
         # Unmapped rows with identical name across A and B MUST NOT be merged!
@@ -116,7 +120,7 @@ class TestMatrixAndCompare(AttendanceCase):
         self.assertEqual(by_d['2026-11-12']['a_scope'], 'out_of_scope')
 
         # Partial apply valid: same (Nov 9) + only_b (Nov 12) applied; Nov 10 & Nov 11 left conflict/unapplied
-        applied = Batch.tp_apply_compare_valid({'batch_a_id': id_a, 'batch_b_id': id_b})
+        applied = Batch._tp_apply_compare_valid({'batch_a_id': id_a, 'batch_b_id': id_b})
         self.assertEqual(applied['applied_cells'], 2)
         s09 = self.env['tp.hr.attendance.session'].sudo().search([
             ('employee_id', '=', self.emp_a.id), ('work_date', '=', date(2026, 11, 9)), ('active', '=', True),
@@ -128,7 +132,7 @@ class TestMatrixAndCompare(AttendanceCase):
         day10 = next(d for d in applied['compare']['rows'] if d['employee_id'] == self.emp_a.id)['days']
         d10 = next(x for x in day10 if x['date'] == '2026-11-10')
         with self.assertRaises(UserError):
-            Batch.tp_resolve_compare_batch({
+            Batch._tp_resolve_compare_batch({
                 'batch_a_id': id_a, 'batch_b_id': id_b,
                 'reason': 'Test stale digest',
                 'items': [{'target_kind': 'day', 'employee_id': self.emp_a.id, 'work_date': '2026-11-10',
@@ -136,7 +140,7 @@ class TestMatrixAndCompare(AttendanceCase):
             })
 
         # Valid resolve with use_b creates resolution audit log + updates canonical session
-        res = Batch.tp_resolve_compare_batch({
+        res = Batch._tp_resolve_compare_batch({
             'batch_a_id': id_a, 'batch_b_id': id_b,
             'reason': 'Chọn B theo xác nhận trưởng bộ phận',
             'items': [{'target_kind': 'day', 'employee_id': self.emp_a.id, 'work_date': '2026-11-10',
@@ -152,7 +156,7 @@ class TestMatrixAndCompare(AttendanceCase):
         cmp_after = res['compare']
         d10_after = next(x for x in next(r for r in cmp_after['rows'] if r['employee_id'] == self.emp_a.id)['days'] if x['date'] == '2026-11-10')
         with self.assertRaises(UserError):
-            Batch.tp_resolve_compare_batch({
+            Batch._tp_resolve_compare_batch({
                 'batch_a_id': id_a, 'batch_b_id': id_b,
                 'reason': '',
                 'items': [{'target_kind': 'day', 'employee_id': self.emp_a.id, 'work_date': '2026-11-10',
@@ -172,7 +176,7 @@ class TestMatrixAndCompare(AttendanceCase):
         with self.assertRaises(AccessError):
             viewer_env['tp.hr.attendance.batch'].tp_compare_batches({})
         with self.assertRaises(AccessError):
-            viewer_env['tp.hr.attendance.batch'].tp_upload_files([])
+            viewer_env['tp.hr.attendance.batch']._tp_upload_files({'files': []})
         with self.assertRaises(AccessError):
             viewer_env['tp.hr.attendance.snapshot.person'].search([])
         with self.assertRaises(AccessError):
@@ -185,24 +189,26 @@ class TestMatrixAndCompare(AttendanceCase):
             'title': 'Lock check', 'start': MONDAY, 'end': MONDAY,
             'rows': [{'stt': 1, 'code': '9901', 'name': 'Synthetic Người Một', 'times': [('08:15', '17:00')], 'late': (0, 0)}],
         }])
-        up = Batch.tp_upload_files([{'filename': 'lock.xlsx', 'content_b64': self._b64(raw_lock)}])
-        bid = up['created'][0]['id']
-        self.env['tp.hr.attendance.period'].sudo().create({
-            'company_id': self.company.id, 'date_from': MONDAY, 'date_to': MONDAY, 'state': 'locked',
+        up = Batch._tp_upload_files({'files': [{'file_name': 'lock.xlsx', 'data': self._b64(raw_lock)}]})
+        bid = up['created_ids'][0]
+        # A period is created open and locked only through the internal path (never a forged state on create).
+        period = self.env['tp.hr.attendance.period'].sudo().create({
+            'name': 'Synthetic locked', 'company_id': self.company.id, 'date_from': MONDAY, 'date_to': MONDAY,
         })
+        internal(period).write({'state': 'locked'})
         cmp = Batch.tp_compare_batches({'batch_a_id': bid, 'batch_b_id': 0})
         row = next(r for r in cmp['rows'] if r['employee_id'] == self.emp_a.id)
         d0 = row['days'][0]
         self.assertIn('chốt', d0['blocked_reason'])
         with self.assertRaises(UserError):
-            Batch.tp_resolve_compare_batch({
+            Batch._tp_resolve_compare_batch({
                 'batch_a_id': bid, 'batch_b_id': 0, 'reason': 'Attempt locked overwrite',
                 'items': [{'target_kind': 'day', 'employee_id': self.emp_a.id, 'work_date': MONDAY.isoformat(),
                            'decision': 'use_a', 'expected_digest': d0['target_digest']}],
             })
         # Idempotent migration helper does not duplicate snapshots
-        Batch.sudo()._tp_migrate_matrix_003()
-        Batch.sudo()._tp_migrate_matrix_003()
+        _tp_migrate_matrix_003(self.env)
+        _tp_migrate_matrix_003(self.env)
         self.assertEqual(self.env['tp.hr.attendance.snapshot.person'].sudo().search_count([('batch_id', '=', bid)]), 1)
 
     def test_existing_snapshot_with_lost_flags_is_marked_ready_without_rebuild(self):
@@ -213,7 +219,7 @@ class TestMatrixAndCompare(AttendanceCase):
             'title': 'Lost flags', 'start': MONDAY, 'end': MONDAY,
             'rows': [{'stt': 1, 'code': '9901', 'name': 'Synthetic Người Một', 'times': [('08:15', '17:00')], 'late': (0, 0)}],
         }])
-        bid = Batch.tp_upload_files([{'filename': 'lost_flags.xlsx', 'content_b64': self._b64(raw)}])['created'][0]['id']
+        bid = Batch._tp_upload_files({'files': [{'file_name': 'lost_flags.xlsx', 'data': self._b64(raw)}]})['created_ids'][0]
         batch = self.env['tp.hr.attendance.batch'].sudo().browse(bid)
         Person = self.env['tp.hr.attendance.snapshot.person'].sudo()
         Cell = self.env['tp.hr.attendance.snapshot.cell'].sudo()
@@ -222,7 +228,7 @@ class TestMatrixAndCompare(AttendanceCase):
         self.assertEqual((batch.snapshot_state, batch.snapshot_version), ('ready', PARSER_VERSION))
         self.assertTrue(people and cells)
 
-        batch.write({'snapshot_state': 'pending', 'snapshot_version': 0})
+        internal(batch).write({'snapshot_state': 'pending', 'snapshot_version': 0})
         self.assertTrue(batch._tp_build_snapshot())
         batch.invalidate_recordset()
         self.assertEqual((batch.snapshot_state, batch.snapshot_version, batch.snapshot_note),
@@ -231,7 +237,7 @@ class TestMatrixAndCompare(AttendanceCase):
         self.assertEqual(Cell.search_count([('batch_id', '=', bid)]), cells)
 
         # The matrix read path heals a pending batch the same way, then a ready batch is never written again
-        batch.write({'snapshot_state': 'pending', 'snapshot_version': 0})
+        internal(batch).write({'snapshot_state': 'pending', 'snapshot_version': 0})
         self.assertEqual(Batch.tp_matrix_data({'batch_id': bid})['batch']['snapshot_state'], 'ready')
         with patch.object(type(batch), 'write', autospec=True) as write_mock:
             self.assertTrue(batch._tp_build_snapshot())

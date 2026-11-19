@@ -5,6 +5,7 @@ Handles authentication, session cookies, app selection, token auto-refresh,
 pagination, and safe error handling without leaking credentials.
 """
 import logging
+import threading
 import time
 from datetime import datetime, timedelta
 
@@ -16,6 +17,12 @@ ENTI_BASE_URL = "https://enti.vn"
 DEFAULT_TIMEOUT = 30
 MAX_PAGES = 50
 DEFAULT_COMPANY_KEYWORD = "Tấn Phát"
+RETRY_STATUS = (429, 500, 502, 503, 504)
+# One authenticated client per (database, source, account): the cron and the "sync now" button reuse the
+# token and session cookies instead of logging in every minute (ENTI-ATTENDANCE-002). Process memory only:
+# tokens never reach the database, logs or the browser.
+_CLIENT_CACHE = {}
+_CLIENT_CACHE_LOCK = threading.Lock()
 
 
 class EntiError(Exception):
@@ -99,8 +106,8 @@ class EntiClient:
                     continue
                 raise EntiAuthError("Phiên làm việc ENTI đã hết hạn hoặc thông tin đăng nhập không đúng.", status_code=401)
 
-            # Handle 429 Too Many Requests or 5xx server errors with backoff
-            if resp.status_code in (429, 502, 503, 504) and attempt < retry_count:
+            # Handle 429 Too Many Requests or 5xx server errors with bounded backoff
+            if resp.status_code in RETRY_STATUS and attempt < retry_count:
                 retry_after = resp.headers.get("Retry-After")
                 sleep_sec = int(retry_after) if retry_after and retry_after.isdigit() else (2 * (attempt + 1))
                 time.sleep(min(sleep_sec, 10))
@@ -206,16 +213,17 @@ class EntiClient:
         return apps
 
     def find_app_for_company(self, target_name=DEFAULT_COMPANY_KEYWORD):
-        """Find the matching application for Tấn Phát."""
+        """Find the ENTI application of the company; never guess between several applications."""
         apps = self.get_apps()
         if not apps:
             return None
-        target_lower = (target_name or DEFAULT_COMPANY_KEYWORD).lower()
+        targets = [name.lower() for name in {target_name or "", DEFAULT_COMPANY_KEYWORD} if name]
         for app in apps:
             name = (app.get("name") or app.get("app_name") or app.get("ten") or "").lower()
-            if target_lower in name:
+            if any(target in name for target in targets):
                 return app
-        return apps[0]
+        # A single application on the account is unambiguous; several without a name match are not.
+        return apps[0] if len(apps) == 1 else None
 
     def select_app(self, app_key):
         """Select active company context and establish session cookies."""
@@ -263,12 +271,14 @@ class EntiClient:
     def get_attendance(self, start_date, end_date, max_results_per_page=50):
         """Fetch attendance report for the date range with full pagination handling.
 
-        Keeps exact endpoint spelling: /api/attendace/bang-cong.
-        Returns a list of employee attendance records.
+        Keeps exact endpoint spelling: /api/attendace/bang-cong. Pages follow ``moreData`` and
+        ``totalData``; a repeated employee key is kept once. When ENTI announces more employees than it
+        returns, the call fails instead of handing a partial board to the sync (old data stays).
         """
-        all_data = []
+        rows = {}
         search_pos = 0
         total_data = None
+        pages = 0
 
         start_str = start_date.strftime("%Y-%m-%d") if hasattr(start_date, "strftime") else str(start_date)[:10]
         end_str = end_date.strftime("%Y-%m-%d") if hasattr(end_date, "strftime") else str(end_date)[:10]
@@ -284,31 +294,51 @@ class EntiClient:
             }
 
             res = self._request("POST", "/api/attendace/bang-cong", json_data=payload)
+            pages = page + 1
             page_data = res.get("data") or []
-            total_data = res.get("totalData", total_data)
-            num_of_data = res.get("numOfData", len(page_data))
-            more_data = res.get("moreData", False)
+            if res.get("totalData") is not None:
+                total_data = int(res.get("totalData") or 0)
+            num_of_data = int(res.get("numOfData") or len(page_data))
+            more_data = bool(res.get("moreData"))
 
-            all_data.extend(page_data)
+            for item in page_data:
+                key = (item or {}).get("keyNV")
+                if key and key not in rows:
+                    rows[key] = item
 
-            _logger.info(
-                "ENTI attendance page %s: fetched %s records (total: %s, more: %s)",
-                page + 1,
-                len(page_data),
-                total_data,
-                more_data,
-            )
-
-            if not more_data or not page_data:
+            if not page_data or num_of_data <= 0:
                 break
-
             search_pos += num_of_data
-            if total_data is not None and search_pos >= total_data:
+            if total_data is not None:
+                if search_pos >= total_data:
+                    break
+            elif not more_data:
                 break
 
+        if total_data is not None and len(rows) < total_data:
+            raise EntiError(
+                f"ENTI chỉ trả {len(rows)}/{total_data} nhân viên cho {start_str}–{end_str}; giữ nguyên dữ liệu cũ, thử lại lượt sau.",
+            )
+        _logger.info("ENTI attendance %s..%s: %s employees in %s page(s)", start_str, end_str, len(rows), pages)
         return {
-            "data": all_data,
-            "total": len(all_data),
+            "data": list(rows.values()),
+            "total": len(rows),
+            "pages": pages,
             "startDate": start_str,
             "endDate": end_str,
         }
+
+
+def cached_client(cache_key):
+    """Return the shared client for ``cache_key`` (created on first use) and its lock."""
+    with _CLIENT_CACHE_LOCK:
+        entry = _CLIENT_CACHE.get(cache_key)
+        if entry is None:
+            entry = _CLIENT_CACHE[cache_key] = {"client": EntiClient(), "lock": threading.Lock(), "app_key": None}
+        return entry
+
+
+def drop_cached_client(cache_key):
+    """Forget a client (credentials changed or the session is unusable); the next run logs in again."""
+    with _CLIENT_CACHE_LOCK:
+        _CLIENT_CACHE.pop(cache_key, None)

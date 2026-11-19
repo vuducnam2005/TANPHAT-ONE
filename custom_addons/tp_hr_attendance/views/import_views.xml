@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- HR-ATTENDANCE-001: preview → apply import; staging stays with HR / assigned officers. -->
+<!-- HR-ATTENDANCE-001: preview → apply import; staging stays with HR / assigned officers.
+     ENTI-ATTENDANCE-002: Excel file import is closed; batches are read-only history (no create, no read/apply buttons). -->
 <odoo>
     <record id="batch_list" model="ir.ui.view">
         <field name="name">tp.hr.attendance.batch.list</field>
         <field name="model">tp.hr.attendance.batch</field>
         <field name="arch" type="xml">
-            <list string="Nhập dữ liệu công" js_class="tp_hr_table" limit="20" import="0" export_xlsx="0">
+            <list string="Lịch sử nhập Excel chấm công" js_class="tp_hr_table" limit="20" create="0" import="0" export_xlsx="0">
                 <field name="batch_code" string="Mã lô"/>
                 <field name="name"/>
                 <field name="file_name"/>
@@ -45,22 +46,18 @@
         <field name="name">tp.hr.attendance.batch.form</field>
         <field name="model">tp.hr.attendance.batch</field>
         <field name="arch" type="xml">
-            <form string="Lô nhập dữ liệu công" class="o_tp_att_batch_form" duplicate="0">
+            <form string="Lô nhập Excel (lịch sử)" class="o_tp_att_batch_form" create="0" duplicate="0">
                 <header>
-                    <button name="action_preview" type="object" string="Đọc tệp và xem trước" class="btn-primary" invisible="state != 'draft'"/>
                     <button name="action_open_matrix" type="object" string="Xem bảng ma trận theo file" class="btn-primary" invisible="state == 'draft'"/>
                     <button name="action_open_compare" type="object" string="Đối chiếu với file khác" class="btn-secondary" invisible="state == 'draft'"/>
-                    <button name="action_apply" type="object" string="Áp dụng dòng hợp lệ" class="btn-secondary" invisible="state != 'preview'"
-                            confirm="Chỉ các dòng Hợp lệ được ghi nhận. Dòng thiếu giờ, cần kiểm tra hoặc xung đột được giữ lại để xử lý; dòng trùng bị bỏ qua. Tiếp tục?"/>
-                    <button name="action_cancel" type="object" string="Bỏ qua nguồn" invisible="state != 'preview'"/>
+                    <button name="action_cancel" type="object" string="Bỏ qua nguồn chưa áp dụng" invisible="state != 'preview'"/>
                     <button name="action_open_lines" type="object" string="Xem và lọc tất cả dòng" invisible="state == 'draft'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,preview,partial,applied"/>
                 </header>
                 <sheet>
-                    <div class="alert alert-info" role="status" invisible="state != 'draft'">
-                        Chọn tệp <strong>.xlsx</strong> xuất từ máy chấm công (tiêu đề STT / Mã nhân viên / Tên nhân viên / ID, mỗi người hai dòng Vào và Ra, dòng "Từ ngày … Đến ngày …" phía trên).
-                        Hệ thống đọc giờ vào/ra theo ngày và nhóm <strong>Đi muộn (Lần/Phút)</strong> đúng kỳ của tệp; không đọc Về sớm, Tổng công, OT, ghi chú, macro hoặc liên kết ngoài, và không tạo hay sửa hồ sơ nhân viên.
-                        Cách nhanh hơn: kéo-thả tệp ở <strong>Bảng chấm công</strong> → <em>Nhập Excel máy chấm công</em>.
+                    <div class="alert alert-info" role="status">
+                        Đã ngừng nhập tệp Excel chấm công: dữ liệu công lấy tự động từ <strong>ENTI</strong>.
+                        Lô này được giữ làm lịch sử (tệp nguồn, dòng, tổng đi muộn và các thay đổi đã áp dụng); không đọc hoặc áp dụng thêm tệp.
                     </div>
                     <div class="alert alert-warning" role="status" invisible="not same_file_batch_id">
                         Tệp này đã được áp dụng ở lô <field name="same_file_batch_id" readonly="1" class="d-inline"/>; các dòng đã ghi nhận sẽ hiện là Trùng.
@@ -68,10 +65,10 @@
                     <div class="oe_title"><h1><field name="name" placeholder="Tên lô nhập"/></h1></div>
                     <group>
                         <group>
-                            <field name="file_data" filename="file_name" readonly="state != 'draft'" required="state == 'draft'"/>
+                            <field name="file_data" filename="file_name" readonly="1"/>
                             <field name="file_name" invisible="1"/>
-                            <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
-                            <field name="tz"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="tz" readonly="1"/>
                         </group>
                         <group invisible="state == 'draft'">
                             <field name="period_from"/>
@@ -158,7 +155,7 @@
     </record>
 
     <record id="action_import" model="ir.actions.act_window">
-        <field name="name">Nhập dữ liệu công</field>
+        <field name="name">Lịch sử nhập Excel chấm công</field>
         <field name="res_model">tp.hr.attendance.batch</field>
         <field name="path">nhap-cong</field>
         <field name="view_mode">list,form</field>
@@ -167,7 +164,7 @@
             (0, 0, {'view_mode': 'form', 'view_id': ref('batch_form')})]"/>
         <field name="search_view_id" ref="batch_search"/>
         <field name="context">{'tp_filter_profile': 'batches'}</field>
-        <field name="help" type="html"><p>Chưa có lô nhập. Tạo lô, chọn tệp báo cáo máy chấm công rồi bấm Đọc tệp và xem trước.</p></field>
+        <field name="help" type="html"><p>Chưa có lô nhập Excel nào. Dữ liệu công lấy tự động từ ENTI; đã ngừng nhập tệp Excel.</p></field>
     </record>
 
     <record id="line_list" model="ir.ui.view">

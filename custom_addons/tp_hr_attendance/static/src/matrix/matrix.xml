@@ -8,8 +8,7 @@
             batches="this.data?.batches || []"
             initialA="this.state.compareBatchAId"
             initialB="this.state.compareBatchBId"
-            onBack="(bid) => this.backToMatrix(bid)"
-            onUpload="() => this.openUploadMore()"/>
+            onBack="(bid) => this.backToMatrix(bid)"/>
     </t>
     <t t-else="">
         <header class="o_tp_att_header">
@@ -20,30 +19,19 @@
                 <div>
                     <h1>Bảng công Vào/Ra</h1>
                     <p class="o_tp_att_subtitle">
-                        Tệp mới nhất tự cập nhật bảng công trong phạm vi nhân viên và ngày của tệp. Giờ tham chiếu <strong t-out="(this.data?.reference_hours || '08:30-17:00').replace('-', '–')"/>; giữ nguyên giờ thiếu và kỳ đã chốt.
+                        Lịch sử các tệp Excel đã nhập trước đây (đã ngừng nhập: dữ liệu công lấy tự động từ ENTI). Chỉ xem và xuất lại; giờ tham chiếu <strong t-out="(this.data?.reference_hours || '08:30-17:00').replace('-', '–')"/>.
                     </p>
                 </div>
             </div>
             <div class="o_tp_att_actions">
-                <button type="button" class="btn btn-outline-primary" t-on-click="this.openUploadMore">
-                    <i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Tải thêm file
-                </button>
                 <button t-if="this.batch" type="button" class="btn btn-outline-secondary" t-on-click="this.exportMatrix">
                     <i class="oi me-1" data-icon="download" aria-hidden="true"/>Xuất Excel
                 </button>
                 <button t-if="this.batch?.can_discard" type="button" class="btn btn-outline-danger" t-on-click="this.openDiscardConfirm">
                     Bỏ qua nguồn
                 </button>
-                <button t-if="this.batch?.can_apply" type="button" class="btn btn-primary" t-on-click="this.openApplyConfirm">
-                    <i class="oi me-1" data-icon="check" aria-hidden="true"/>Áp dụng toàn bộ lô
-                </button>
             </div>
         </header>
-
-        <div t-if="this.state.uploadNotice" class="alert alert-warning d-flex justify-content-between align-items-start gap-2" role="alert">
-            <div><strong>Một số tệp trong lần tải vừa rồi bị từ chối:</strong> <t t-out="this.state.uploadNotice"/> (các tệp hợp lệ vẫn được lưu nguồn đầy đủ).</div>
-            <button type="button" class="btn-close" aria-label="Đóng thông báo" t-on-click="() => this.state.uploadNotice = ''"/>
-        </div>
 
         <div t-if="this.state.error" class="alert alert-danger" role="alert">
             <t t-out="this.state.error"/>
@@ -55,25 +43,11 @@
         <t t-elif="this.data and !this.data.has_batches">
             <section class="o_tp_att_panel text-center py-5">
                 <h2>Chưa có tệp Excel nguồn nào được lưu</h2>
-                <p class="o_tp_att_muted mt-2 mb-3">Tải tệp .xlsx máy chấm công để xem bảng Vào/Ra và tự cập nhật số liệu hợp lệ.</p>
-                <button type="button" class="btn btn-primary" t-on-click="this.openUploadMore">
-                    <i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Chọn tệp Excel máy chấm công
-                </button>
+                <p class="o_tp_att_muted mt-2 mb-0">Đã ngừng nhập tệp Excel chấm công; dữ liệu công lấy tự động từ ENTI.</p>
             </section>
         </t>
 
         <t t-elif="this.batch">
-            <!-- Quick pills when multiple files were just uploaded in this session -->
-            <div t-if="this.uploadedBatches.length &gt; 1" class="o_tp_att_recent_uploads" role="region" aria-label="Các tệp vừa tải lên">
-                <span class="o_tp_att_muted fw-semibold">Tệp vừa tải (<t t-out="this.uploadedBatches.length"/>):</span>
-                <button t-foreach="this.uploadedBatches" t-as="ub" t-key="ub.id" type="button"
-                    class="o_tp_att_upload_pill" t-att-class="{'active': ub.id === this.batch.id}"
-                    t-on-click="() => this.selectBatch(ub.id)">
-                    <strong t-out="ub.batch_code"/> · <span t-out="ub.file_name || ub.name"/>
-                    <small t-if="ub.period_label">(<t t-out="ub.period_label"/>)</small>
-                </button>
-            </div>
-
             <!-- Selected source file panel -->
             <section class="o_tp_att_file_panel" aria-label="Thông tin tệp nguồn đang xem">
                 <p t-if="this.batch.state === 'partial'" class="alert alert-warning mb-2">Đã cập nhật phần hợp lệ. Một số dòng cần kiểm tra hoặc thuộc kỳ đã chốt/điều chỉnh đã duyệt; các dòng này giữ dữ liệu hiện tại.</p>

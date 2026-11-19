@@ -113,7 +113,7 @@
                         <input type="date" t-att-value="this.state.date" t-on-change="(ev) => this.onDate(ev)" aria-label="Chọn một ngày trong tuần (T2–CN)"/>
                     </label>
                     <div t-else="" class="o_tp_mine_range_chip">
-                        <span class="o_tp_mine_input_label">Kỳ file</span>
+                        <span class="o_tp_mine_input_label">Khoảng ngày</span>
                         <strong t-out="this.data.period_label"/>
                     </div>
                     <button type="button" class="o_tp_mine_icon_btn" t-on-click="() => this.step(1)" aria-label="Kỳ sau" title="Kỳ sau">
@@ -122,29 +122,6 @@
                     <button type="button" class="o_tp_mine_today_btn" t-on-click="() => this.goToday()">Hôm nay</button>
                 </div>
 
-                <div class="o_tp_mine_file_wrap">
-                    <button type="button" class="o_tp_mine_file_trigger"
-                        t-att-class="{'active': this.state.mode === 'range' or this.state.fileMenu}"
-                        t-att-aria-expanded="this.state.fileMenu ? 'true' : 'false'"
-                        aria-haspopup="menu"
-                        t-on-click="() => this.toggleFileMenu()">
-                        <i class="oi" data-icon="description" aria-hidden="true"/>
-                        <span>Kỳ theo file</span>
-                        <i class="oi o_tp_mine_caret" t-att-data-icon="this.state.fileMenu ? 'expand_less' : 'expand_more'" aria-hidden="true"/>
-                    </button>
-                    <div t-if="this.state.fileMenu" class="o_tp_mine_file_popover" role="menu" aria-label="Chọn kỳ theo tệp đã nhập">
-                        <div class="o_tp_mine_file_popover_head">Kỳ theo tệp Excel đã nhập</div>
-                        <p t-if="!this.data.file_periods.length" class="o_tp_mine_file_empty">Chưa có tệp Excel máy nào được nhập.</p>
-                        <button t-foreach="this.data.file_periods" t-as="item" t-key="item.from + item.to" type="button" role="menuitem"
-                            class="o_tp_mine_file_option"
-                            t-att-class="{'active': this.state.mode === 'range' and this.state.from === item.from and this.state.to === item.to}"
-                            t-on-click="() => this.openFilePeriod(item)">
-                            <span class="o_tp_mine_file_opt_range" t-out="item.label"/>
-                            <span t-if="item.has_late" class="o_tp_mine_file_opt_tag">Có tổng đi muộn</span>
-                            <small t-if="item.file" t-out="item.file" t-att-title="item.file"/>
-                        </button>
-                    </div>
-                </div>
             </div>
 
             <div t-if="!this.isEmbedded" class="o_tp_mine_range_display" aria-live="polite">
@@ -188,20 +165,18 @@
                 </button>
             </div>
 
-            <div class="o_tp_mine_summary_group o_group_excel" aria-label="Tổng đi muộn theo kỳ nguồn Excel">
+            <div class="o_tp_mine_summary_group o_group_excel" t-att-aria-label="this.lateOrigin === 'excel' ? 'Tổng đi muộn theo kỳ nguồn Excel' : 'Tổng đi muộn trong kỳ đang xem'">
                 <article class="o_tp_mine_stat o_stat_excel">
                     <div class="o_tp_mine_stat_top">
                         <span class="o_tp_mine_stat_label">Số lần đi muộn</span>
-                        <span class="o_tp_mine_source_tag">Kỳ nguồn Excel</span>
+                        <span class="o_tp_mine_source_tag" t-out="this.lateOrigin === 'excel' ? 'Kỳ nguồn Excel' : 'Theo ENTI'"/>
                     </div>
                     <div class="o_tp_mine_stat_val">
                         <strong t-if="this.late.state === 'exact'" t-out="this.late.count"/>
                         <strong t-else="" class="o_val_na">—</strong>
                         <span t-if="this.late.state === 'exact'" class="o_tp_mine_stat_unit">lần</span>
                     </div>
-                    <p t-if="this.late.state === 'exact'" class="o_tp_mine_stat_note o_note_exact">
-                        Excel máy · kỳ <t t-out="this.late.source"/>
-                    </p>
+                    <p t-if="this.late.state === 'exact'" class="o_tp_mine_stat_note o_note_exact" t-out="this.late.note"/>
                     <p t-else="" class="o_tp_mine_stat_note">
                         <t t-out="this.late.text"/>
                         <button t-if="this.latePeriodHint" type="button" class="o_tp_mine_inline_link" t-on-click="() => this.openFilePeriod(this.latePeriodHint)">
@@ -213,18 +188,21 @@
                 <article class="o_tp_mine_stat o_stat_excel">
                     <div class="o_tp_mine_stat_top">
                         <span class="o_tp_mine_stat_label">Tổng phút đi muộn</span>
-                        <span class="o_tp_mine_source_tag">Kỳ nguồn Excel</span>
+                        <span class="o_tp_mine_source_tag" t-out="this.lateOrigin === 'excel' ? 'Kỳ nguồn Excel' : 'Theo ENTI'"/>
                     </div>
                     <div class="o_tp_mine_stat_val">
                         <strong t-if="this.late.state === 'exact'" t-out="this.late.minutes"/>
                         <strong t-else="" class="o_val_na">—</strong>
                         <span t-if="this.late.state === 'exact'" class="o_tp_mine_stat_unit">phút</span>
                     </div>
-                    <p t-if="this.late.state === 'exact'" class="o_tp_mine_stat_note o_note_exact">
+                    <p t-if="this.lateOrigin === 'excel'" class="o_tp_mine_stat_note o_note_exact">
                         Tổng kỳ <t t-out="this.late.source"/> · không tính lại theo bộ lọc ngày
                     </p>
+                    <p t-elif="this.lateOrigin === 'enti'" class="o_tp_mine_stat_note o_note_exact">
+                        Cộng đúng các ngày trong kỳ đang xem
+                    </p>
                     <p t-else="" class="o_tp_mine_stat_note">
-                        Không tự quy đổi thành 0 khi kỳ xem khác kỳ nguồn Excel
+                        Chưa đủ số liệu đi muộn cho kỳ này; không tự quy đổi thành 0
                     </p>
                 </article>
             </div>
@@ -237,7 +215,7 @@
                     <button type="button" class="o_tp_mine_filter_toggle"
                         t-att-aria-expanded="this.state.mobileFiltersOpen ? 'true' : 'false'"
                         t-on-click="() => this.state.mobileFiltersOpen = !this.state.mobileFiltersOpen">
-                        <i class="oi" data-icon="filter_list" aria-hidden="true"/>
+                        <i class="oi" data-icon="filter_alt" aria-hidden="true"/>
                         <span>Bộ lọc</span>
                         <span t-if="this.activeFilterCount" class="o_tp_mine_filter_badge" t-out="this.activeFilterCount"/>
                     </button>
@@ -282,7 +260,7 @@
                         <strong t-out="chip.label"/>
                         <i class="oi" data-icon="close" aria-hidden="true"/>
                     </button>
-                    <span t-if="this.late.state === 'exact'" class="o_tp_mine_filter_late_note">
+                    <span t-if="this.lateOrigin === 'excel'" class="o_tp_mine_filter_late_note">
                         Tổng đi muộn giữ nguyên theo toàn bộ kỳ nguồn Excel (<t t-out="this.late.source"/>).
                     </span>
                 </div>
@@ -376,7 +354,7 @@
                                                 Nguồn: <strong t-out="this.sourceName(row.source)"/>
                                             </span>
                                             <span t-if="row.updated_at" class="o_tp_mine_detail_tag">
-                                                <i class="oi" data-icon="update" aria-hidden="true"/>
+                                                <i class="oi" data-icon="history" aria-hidden="true"/>
                                                 Cập nhật: <strong t-out="row.updated_at"/>
                                             </span>
                                             <span class="o_tp_mine_detail_tag" t-att-class="row.lock_state === 'locked' ? 'o_tag_locked' : ''">

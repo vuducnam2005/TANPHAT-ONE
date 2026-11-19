@@ -53,7 +53,7 @@ class TestAttendanceCorrection(AttendanceCase):
     def upload(self, clock_in, clock_out):
         raw = report([{'code': '9901', 'name': 'Synthetic Người Một', 'times': [(clock_in, clock_out)], 'late': (1, 7)}],
                      DAY, 1, late=True)
-        result = self.env_for(self.manager)['tp.hr.attendance.batch'].tp_upload_files({
+        result = self.env_for(self.manager)['tp.hr.attendance.batch']._tp_upload_files({
             'files': [{'file_name': 'synthetic.xlsx', 'data': base64.b64encode(raw).decode()}]})
         self.assertEqual(result['error_count'], 0, result)
 

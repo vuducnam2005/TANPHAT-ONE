@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T14:52:58.204097+00:00",
-  "last_change_id": "CHG-20261119-028",
-  "code_digest": "d77c3600ba603f24240cebb3f83c3fd3328af4a4e6c9604ea2dd25470dbb5a61",
-  "code_file_count": 702,
+  "updated_at": "2026-11-19T20:24:01.826311+00:00",
+  "last_change_id": "CHG-20261119-029",
+  "code_digest": "cdf9867080bc1ed001d3a58b762886d88c83488d93228653de06a39dd0e1c017",
+  "code_file_count": 708,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "157fc9206b95756d5f9c2a1fedc87d05d705611e05dd2aa2c4dee48171e26d35",
-    "docs/CHANGELOG.md": "7eaf9db6df920afb724ebea3ec89ca9d8a1e4ecc72992e1c91f9571874726d8c",
+    "docs/PROJECT_STATUS.md": "5f8995c0a571350f75831bd27e45bf8bfe6dfa64194c51dfe0f79781cce1cdf2",
+    "docs/CHANGELOG.md": "089b756612b42741725337a4beec64ae22a31e0684238ab245cb3bd27e11aac7",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
     "docs/ROADMAP.md": "94d80e67a9a67acf82a35cf7bce4d78cbeb2a3e00cd1bac71204ecb6a29c853e",
-    "docs/DECISIONS.md": "882c75bea03192ca48bb4734e6f2a05a49115e733b92f2e480f9a2e07c303b6e",
+    "docs/DECISIONS.md": "c38a4d70cabe1f3d33816a5f66b0b93a34f43ec898ca0cc86950392b09173abc",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,6 +20,11 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Docs receipt: PC upgrade of tp_web_home/tp_hr_workspace/tp_kd_workspace exit0/0ERROR, business/security snapshot unchanged except 3 module versions (attendance days 724=724), 23 source checksums, public/server JS e1aad712/CSS 3e5f447c SHA256 match with in-screen error code and summary height rule, health/login 200."
+    "tp_tanphat_test: odoo -u tp_hr_attendance --test-tags /tp_hr_attendance: 95 tests, 0 failed, 1 error pre-existing cross-module (test_access officer group sync blocked by tp_admin_delegation guards.py:418)",
+    "ruff check: tp_hr_attendance tests + scripts/enti_att002_*.py clean",
+    "Playwright scripts/enti_att002_ui.cjs local18179: 9/9 PASS (overview 1440/768/390/320, board/mine/sources, Excel import closed)",
+    "Playwright scripts/enti_att002_live.cjs local18179: new out punch shown 0.7s after commit without reload (ENTI->Odoo->screen only)",
+    "scripts/enti_att002_export_check.py local: week 09-15/11, 01-19/11, month 11/2026 workbooks match backend, 0 problems",
+    "PC server not yet applied in this change"
   ]
 }

@@ -805,7 +805,8 @@ class AttendanceBatchCompare(models.Model):
             'compare_groups': [{'key': k, 'label': lbl, 'cells': cell_counts[k], 'lates': late_counts[k]} for k, lbl in COMPARE_GROUPS],
             'cell_counts': cell_counts,
             'late_counts': late_counts,
-            'can_apply_valid': bool(cell_counts['same'] + cell_counts['only_a'] + cell_counts['only_b'] + late_counts['same'] + late_counts['only_a'] + late_counts['only_b']),
+            # ENTI-ATTENDANCE-002: Excel import is closed; the comparison is read-only history.
+            'can_apply_valid': False,
             'rows': page_rows,
             'total': total,
             'total_all_people': len(ctx['people_rows']),
@@ -1032,6 +1033,11 @@ class AttendanceBatchCompare(models.Model):
 
     @api.model
     def tp_apply_compare_valid(self, params=None):
+        """Former "Áp dụng phần giống & mới hợp lệ" RPC: closed, Excel import is closed (ENTI-ATTENDANCE-002)."""
+        return self._tp_import_closed()
+
+    @api.model
+    def _tp_apply_compare_valid(self, params=None):
         """Apply all non-conflicting same/only_a/only_b valid pair cells and exact late totals from comparison.
 
         Runs inside advisory + row lock, re-evaluates fresh DB state, leaves conflicts/unready/locked intact,
@@ -1296,6 +1302,16 @@ class AttendanceBatchCompare(models.Model):
 
     @api.model
     def tp_resolve_compare(self, params=None):
+        """Former per-cell source decision RPC: closed (ENTI-ATTENDANCE-002)."""
+        return self._tp_import_closed()
+
+    @api.model
+    def tp_resolve_compare_batch(self, params=None):
+        """Former batch source decision RPC: closed (ENTI-ATTENDANCE-002)."""
+        return self._tp_import_closed()
+
+    @api.model
+    def _tp_resolve_compare(self, params=None):
         """Apply one explicit source decision for selected day cells or period late totals under lock + CAS."""
         params = dict(params or {})
         decision = params.get('decision')
@@ -1304,10 +1320,10 @@ class AttendanceBatchCompare(models.Model):
         if not isinstance(targets, list) or not targets:
             raise UserError(self.env._('Chưa chọn phạm vi nhân viên / ngày cần xử lý.'))
         items = [dict(t, decision=decision, reason=t.get('reason') if t.get('reason') is not None else reason) for t in targets]
-        return self.tp_resolve_compare_batch(dict(params, items=items))
+        return self._tp_resolve_compare_batch(dict(params, items=items))
 
     @api.model
-    def tp_resolve_compare_batch(self, params=None):
+    def _tp_resolve_compare_batch(self, params=None):
         """Apply mixed per-item source decisions atomically inside one advisory/row lock + CAS transaction."""
         params = dict(params or {})
         default_reason = str(params.get('reason') or '').strip()

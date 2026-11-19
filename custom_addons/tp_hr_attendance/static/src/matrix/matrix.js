@@ -7,7 +7,6 @@ import { useService } from "@web/core/utils/hooks";
 import { downloadBase64, formatDate, readStore, rpcError, writeStore } from "../common";
 import { AttendanceCompare } from "./compare";
 import { AttPager } from "../parts";
-import { openAttendanceUpload } from "../upload/upload";
 
 const STORE_KEY = "tp_hr_attendance.matrix.v2";
 
@@ -76,8 +75,6 @@ export class AttendanceFileMatrix extends Component {
             batchId: Number(actionParams.batch_id || 0),
             compareBatchAId: Number(actionParams.batch_a_id || actionParams.batch_id || 0),
             compareBatchBId: Number(actionParams.batch_b_id || 0),
-            uploadedIds: Array.isArray(actionParams.uploaded_ids) ? actionParams.uploaded_ids : [],
-            uploadNotice: actionParams.upload_notice || "",
             includeCancelled: false,
             sheetIndex: 0,
             // Pending filter inputs (DEC-044: applied only on "Áp dụng" / Enter / chip removal)
@@ -124,13 +121,6 @@ export class AttendanceFileMatrix extends Component {
     }
     get sheet() {
         return this.data?.sheet || null;
-    }
-    get uploadedBatches() {
-        if (!this.state.uploadedIds.length || !this.data?.batches) {
-            return [];
-        }
-        const wanted = new Set(this.state.uploadedIds);
-        return this.data.batches.filter((b) => wanted.has(b.id));
     }
     get stateBadgeTone() {
         const st = this.batch?.state;
@@ -412,46 +402,6 @@ export class AttendanceFileMatrix extends Component {
             sheet: this.sheet,
             batch: this.batch,
             formatDate: this.formatDate,
-        });
-    }
-
-    openUploadMore() {
-        openAttendanceUpload(this.env, {
-            onUploaded: ({ createdIds, uploadNotice }) => {
-                Object.assign(this.state, {
-                    viewMode: "matrix",
-                    batchId: createdIds[createdIds.length - 1] || this.state.batchId,
-                    uploadedIds: createdIds,
-                    uploadNotice: uploadNotice || "",
-                    sheetIndex: 0,
-                    draftFrom: "",
-                    draftTo: "",
-                    draftGroup: "",
-                    dateFrom: "",
-                    dateTo: "",
-                    sourceGroup: "",
-                    page: 1,
-                });
-                this.load();
-            },
-        });
-    }
-
-    openApplyConfirm() {
-        if (!this.batch?.can_apply) {
-            return;
-        }
-        const summary = this.data?.summary || {};
-        this.dialog.add(MatrixConfirmDialog, {
-            title: "Áp dụng toàn bộ lô nguồn vào bảng chấm công",
-            mode: "apply",
-            batch: this.batch,
-            summary,
-            onConfirm: async () => {
-                await this.orm.call("tp.hr.attendance.batch", "tp_upload_apply", [this.batch.id]);
-                this.notification.add("Đã áp dụng các dòng hợp lệ của lô nguồn vào bảng chấm công.", { type: "success" });
-                await this.load();
-            },
         });
     }
 

@@ -1,5 +1,16 @@
 # TANPHAT ONE — Sổ quyết định
 
+## DEC-063 — Công lấy tự động từ ENTI; ngừng nhập tệp Excel chấm công (20/11/2026)
+
+**Người dùng yêu cầu trực tiếp** (ENTI-ATTENDANCE-002): xác minh kết nối ENTI, làm lại Tổng quan chấm công, thêm 10 nhân viên có giờ vào/ra gần nhất, xuất Excel theo mẫu và chỉ bỏ nhập tệp Excel sau khi API đạt; “có người chấm công ở máy chấm công thì nó sẽ hiện data nhanh nhất có thể … mà k cần load lại”. Thay phần nhập Excel của DEC-056/058/059; giữ dữ liệu lịch sử của chúng.
+
+- ENTI là nguồn công tự động. Chỉ máy chủ Odoo gọi ENTI (cron canonical, một lượt có khóa, đủ phân trang, làm mới token, thử lại có giới hạn); trình duyệt không gọi ENTI và không nhận `raw_json`/token/cookie. Trong giờ làm đọc hôm nay khoảng 15 giây/lần; màn hình cập nhật qua bus chỉ khi dữ liệu đổi, không cần tải lại.
+- Thứ tự ưu tiên khi ghi ngày công: điều chỉnh đã duyệt > ENTI > Excel cũ. Không ghi đè kỳ đã chốt. Lỗi đồng bộ hoặc ENTI trả trống không xóa công đã có; ghi rõ “cần kiểm tra trên ENTI”.
+- Ghép nhân viên ENTI ↔ hồ sơ HR chỉ khi có căn cứ: mã/họ tên khớp đúng một hồ sơ, hoặc nhân sự xác nhận kèm lý do được lưu. Không tạo nhân viên, không ghép theo tên gần giống; người chưa ghép hiện kèm lý do.
+- Trạng thái tách bạch: Chưa có dữ liệu / Thiếu giờ / Chưa chấm công / Nghỉ đã xác nhận / Vắng theo lịch. Vắng không tính Chủ nhật, ngày tương lai, ngoài thời gian làm việc, nghỉ đã duyệt; chỉ một lần chấm không phải vắng. Giờ 08:30–17:00 chỉ tham chiếu; phút đi muộn lấy từ ENTI, không tự tính.
+- Ngừng nhập tệp Excel: gỡ mọi đường nhập trên giao diện và chặn RPC công khai ở server. Không drop bảng, không xóa lô/snapshot/tổng muộn/nhật ký/điều chỉnh/kỳ chốt; lịch sử vẫn xem, đối chiếu chỉ đọc và xuất lại. Giữ `openpyxl` cho xuất Excel.
+- Độ trễ chỉ công bố phần đo được (ENTI → Odoo → màn hình). Khoảng máy chấm công → ENTI do ENTI quyết định, không được ghi là đã đo.
+
 ## DEC-062 — Admin gốc quản lý admin ủy quyền; admin ngang hàng chỉ đọc (19/11/2026)
 
 **Đã chốt trực tiếp bởi người dùng**, thay quy tắc bắt thu hồi admin trước khi khóa. Admin gốc được khóa/mở các tài khoản khác, gồm admin ủy quyền, sửa tài khoản/login/reset/hồ sơ theo chức năng; giữ bảo vệ hệ thống, ngăn tự khóa và giữ admin gốc cuối cùng. Chỉ admin gốc cấp/thu quyền admin (DEC-054).

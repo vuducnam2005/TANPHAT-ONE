@@ -98,15 +98,16 @@ class AttendanceCase(TransactionCase):
         return self.env(user=user, context=dict(self.env.context, allowed_company_ids=[self.company.id]))
 
     def batch(self, data, user=None, name='Synthetic batch'):
+        # ENTI-ATTENDANCE-002: public Excel import is closed; tests seed history through the private helpers.
         env = self.env_for(user or self.manager)
-        return env['tp.hr.attendance.batch'].create({
+        return env['tp.hr.attendance.batch']._tp_new_batch({
             'name': name, 'company_id': self.company.id, 'file_data': base64.b64encode(data).decode(), 'file_name': 'synthetic.xlsx'})
 
     def run_batch(self, data, user=None, apply=True):
         batch = self.batch(data, user)
-        batch.action_preview()
+        batch._tp_read_file()
         if apply:
-            batch.action_apply()
+            batch._tp_apply_file()
         return batch
 
     def lines(self, batch, **filters):
