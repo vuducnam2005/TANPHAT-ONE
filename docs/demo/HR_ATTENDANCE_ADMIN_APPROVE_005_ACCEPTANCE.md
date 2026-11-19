@@ -1,5 +1,7 @@
 # HR-ATTENDANCE-ADMIN-APPROVE-005 — Nghiệm thu kỹ thuật: Admin chính duyệt điều chỉnh công
 
+> Cập nhật CHG-20261119-012 ([DEC-061](../DECISIONS.md)): admin được ủy quyền đang hiệu lực cũng nhận và Duyệt/Trả lại như Admin chính; xem [nghiệm thu 012](HR_ATTENDANCE_ADMIN_APPROVE_012_ACCEPTANCE.md).
+
 - Mã thay đổi: `CHG-20261119-005` (local verified) / addon `tp_hr_attendance` `20.0.3.1.0 → 20.0.3.2.0` (đổi view/menu/ACL + migration, **cần** `-u tp_hr_attendance`). Quyết định: [DEC-060](../DECISIONS.md).
 - Phạm vi: mọi đề nghị điều chỉnh công (`tp.hr.attendance.correction`) của mọi phòng ban chỉ chuyển đến và chỉ được Duyệt/Trả lại bởi **Admin chính (admin gốc)** xác định bằng `res.users._tp_is_original_admin()` của `tp_admin_delegation`. Không hardcode login/UID.
 - Môi trường kiểm: snapshot cách ly `.local/admin-approve005/snapshot` + DB kiểm thử `tp_tanphat_test`, chỉ dữ liệu giả (`Synthetic ADM005 Persist Co`, người dùng `adm005.persist.*`, mật khẩu ngẫu nhiên chỉ qua biến môi trường). Không duyệt phiếu thật của nhân viên.

@@ -1,7 +1,7 @@
 {
     "name": "TANPHAT ONE — Chấm công",
     "summary": "Nhập Excel máy chấm công có xem trước, bảng công tối giản, tổng quan và nền tích hợp API máy (chưa kết nối)",
-    "version": "20.0.3.2.0",
+    "version": "20.0.3.3.0",
     "license": "LGPL-3",
     "author": "Tan Phat JSC",
     "depends": ["tp_hr_workspace"],

@@ -26,8 +26,7 @@ access_att_log_officer,Attendance log officer,tp.hr.attendance.log,tp_hr_attenda
 rule_att_log_company,Attendance log company,tp.hr.attendance.log,,crud,"[('company_id', 'in', company_ids)]"
 access_att_period_officer,Attendance periods officer create,tp.hr.attendance.period,tp_hr_attendance.group_attendance_officer,cr,
 access_att_correction_own,Attendance corrections own,tp.hr.attendance.correction,base.group_user,crud,"[('employee_id.user_id', '=', user.id)]"
-access_att_correction_reviewer,Attendance corrections Original Admin reviewer,tp.hr.attendance.correction,base.group_user,r,"[('reviewer_user_ids', 'in', user.id)]"
-access_att_correction_admin,Attendance corrections system admin oversight,tp.hr.attendance.correction,base.group_system,r,"[('state', '!=', 'draft')]"
+access_att_correction_admin,Attendance corrections admins (Original + delegated) read,tp.hr.attendance.correction,base.group_system,r,"[('state', '!=', 'draft')]"
 access_att_correction_manager,Attendance corrections HR manager,tp.hr.attendance.correction,hr.group_hr_manager,r,"[('state', '!=', 'draft')]"
 rule_att_correction_company,Attendance corrections company,tp.hr.attendance.correction,,crud,"[('company_id', 'in', company_ids)]"
 access_att_review_wizard_user,Attendance review dialog,tp.hr.attendance.review.wizard,base.group_user,crud,

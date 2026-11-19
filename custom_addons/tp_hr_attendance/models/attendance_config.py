@@ -143,10 +143,10 @@ class AttendanceAssignment(models.Model):
     company_id = fields.Many2one('res.company', 'Công ty', required=True, default=lambda self: self.env.company)
     department_ids = fields.Many2many('hr.department', string='Phạm vi phòng', check_company=True, help='Để trống = toàn công ty.')
     can_import = fields.Boolean('Nhập dữ liệu công', help='Chỉ hiệu lực khi phạm vi là toàn công ty.')
-    # Kept for stored data and shared exports; corrections are approved by the Original Admin only (CHG-20261119-005).
+    # Kept for stored data and shared exports; corrections are approved by admins only (CHG-20261119-005/-012).
     can_review = fields.Boolean('Xuất bảng công trong phạm vi',
                                 help='Chỉ mở quyền xuất bảng công chung của các phòng trong phạm vi. Duyệt / trả điều chỉnh công '
-                                     'do admin chính (admin gốc) thực hiện, không theo phân công này.')
+                                     'do admin (admin gốc hoặc admin được ủy quyền) thực hiện, không theo phân công này.')
     can_lock = fields.Boolean('Chốt / mở kỳ')
     active = fields.Boolean(default=True)
     note = fields.Char('Căn cứ phân công')

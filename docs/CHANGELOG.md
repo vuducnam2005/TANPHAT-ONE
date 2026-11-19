@@ -1,5 +1,22 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-012 — Admin được ủy quyền duyệt điều chỉnh công
+
+- 19/11/2026; yêu cầu trực tiếp “quyền admin là toàn quyền chừ việc tự bổ nhiệm quyền admin cho người khác thôi” ([DEC-061](DECISIONS.md)). `tp_hr_attendance` `20.0.3.2.0 → 20.0.3.3.0` (Python/view/ACL/JS + migration, **cần** `-u tp_hr_attendance`).
+- Backend: `require_correction_admin` / `correction_admins` thay `require_original_admin` / `original_admins`. Người duyệt là Admin chính hoặc admin ủy quyền có grant đang hiệu lực ở công ty của phiếu. Duyệt/trả lấy khóa chia sẻ của `tp_admin_delegation` để không lẫn với thu hồi đồng thời. Menu `Xử lý điều chỉnh`, `tp_can_review` và danh sách `Admin nhận duyệt` dùng cùng kiểm tra. Logic `action_approve` / `action_return` không đổi.
+- Bỏ dòng ACL `access_att_correction_reviewer` (đọc theo `reviewer_user_ids`) để admin bị thu hồi mất quyền xem ngay. Migration `20.0.3.3.0` làm mới danh sách người nhận của phiếu đã gửi. Lời nhắc và thông báo đổi thành “admin (admin gốc hoặc admin được ủy quyền)”.
+- Sửa kèm hiển thị trên cùng màn hình: ô Minh chứng trống không còn in chữ `false` (widget binary chỉ đọc của Odoo).
+- Kiểm `TestAttendanceCorrection` 11/11, thêm `test_admin012_delegate_returns_own_blocked_and_revoke_is_immediate`. Bộ `/tp_hr_attendance` 72 test chỉ còn 8 lỗi trùng baseline HEAD. Ruff đạt cho các tệp đã sửa.
+- Kiểm lưu thật trên `tp_tanphat_test` bằng dữ liệu giả `adm012.persist.*`, 17/17 đạt:
+  - Admin ủy quyền duyệt `ĐC00062` qua wizard; dữ liệu còn sau khởi động lại registry và đăng nhập lại HTTP.
+  - Excel nhập lại không ghi đè; đi muộn giữ `1 lần/7 phút`.
+  - Admin ủy quyền trả lại `ĐC00063`. Sau khi thu hồi grant, người đó bị từ chối và Admin chính duyệt.
+- Đăng nhập lại sau thu hồi (`ĐC00064`): đọc, mở, duyệt, trả lại và wizard đều báo `AccessError`.
+- Playwright 2 lượt:
+  - Admin ủy quyền thấy menu, duyệt `ĐC00065`/`ĐC00080` và trả lại `ĐC00066`/`ĐC00081` (bắt buộc lý do); DB đọc lại khớp.
+  - Chủ phiếu không có menu hay nút xử lý. 0 lỗi console. [Nghiệm thu](demo/HR_ATTENDANCE_ADMIN_APPROVE_012_ACCEPTANCE.md).
+- Commit này chưa giao PC server hay local `18069`.
+
 ## CHG-20261119-011 — Kiểm Odoo thứ tự và quyền xuất nhân viên
 
 - 19/11/2026; kiểm bổ sung tự chọn trên DB test hiện có, không bắt cổng 18079 và không tạo DB mới. Backup dump/restore-list + filestore 2.200 tệp/6.328.315.069B + config + SHA256 tại `.local/hr-employee-xlsx001/test-backup-20261119T122312` trước upgrade/test HR; main/server không tạo fixture.

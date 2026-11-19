@@ -1,5 +1,15 @@
 # TANPHAT ONE — Sổ quyết định
 
+## DEC-061 — Admin được ủy quyền cũng duyệt điều chỉnh công (19/11/2026)
+
+Người dùng bổ sung trực tiếp: “quyền admin là toàn quyền chừ việc tự bổ nhiệm quyền admin cho người khác thôi”. Sửa DEC-060 ở phần người duyệt; giữ DEC-053/054.
+
+- Người nhận và Duyệt/Trả lại đề nghị điều chỉnh công gồm Admin chính (admin gốc) **và** admin được ủy quyền (Full Admin) có grant đang hiệu lực ở đúng công ty của phiếu trong `tp_admin_delegation`. Xác định bằng `_tp_is_original_admin()` và `_tp_has_live_admin_grant(company)` (đọc sổ ủy quyền, không phụ thuộc công ty đang chọn trong phiên). Không hardcode login/UID.
+- Chỉ việc cấp/thu hồi quyền admin vẫn thuộc riêng Admin chính (DEC-054).
+- Thu hồi grant có hiệu lực ngay: mất quyền xem, duyệt, trả lại; danh sách người nhận của phiếu đang chờ được làm mới; phiên web của người bị thu hồi bị kết thúc. Duyệt/trả và thu hồi đồng thời được tuần tự hóa bằng khóa của `tp_admin_delegation`.
+- Giữ nguyên: không tự duyệt phiếu của mình (phiếu của một admin do admin khác xử lý); không cấp người duyệt thay thế; HR manager, trưởng phòng và người được phân công không có grant admin thì không duyệt; kỳ đã chốt vẫn cần phân công chốt và lý do đính chính; thiếu `tp_admin_delegation` thì không ai duyệt.
+- Bỏ quyền đọc theo danh sách người nhận (`reviewer_user_ids`); admin đọc phiếu đã gửi qua `base.group_system`, nên mất quyền admin là mất quyền xem.
+
 ## DEC-060 — Admin chính duyệt điều chỉnh công (19/11/2026)
 
 Người dùng yêu cầu trực tiếp “BỔ SUNG: ADMIN CHÍNH DUYỆT ĐIỀU CHỈNH CÔNG”. Quyết định thay quy tắc duyệt theo phân công `can_review` của HR-ATTENDANCE-001; phần nhập dữ liệu, chốt kỳ và DEC-058/059 giữ nguyên.

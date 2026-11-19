@@ -57,3 +57,18 @@ Release theo quy trình `git archive <SHA> custom_addons/tp_hr_attendance` (gi�
 - Sau khi giao: version `20.0.3.2.0`, health 200, log không ERROR, URL public mở được, bundle asset mới; probe ORM chỉ đọc: menu `Quản trị chấm công → Xử lý điều chỉnh` hiện với Admin chính và ẩn với admin được ủy quyền/HR; `tp_can_review` chỉ đúng với Admin chính. **Không** tạo hoặc duyệt phiếu thật để smoke.
 - Hoàn nguyên: dừng `tp-odoo`, khôi phục `source-config.tar.gz` của đúng backup rồi `-u tp_hr_attendance` về `20.0.3.1.0`; dòng ACL đọc phiếu cho `base.group_system` tự gỡ khi nâng cấp bản cũ. Phiếu đã duyệt giữ nguyên dữ liệu. Hoàn nguyên đầy đủ dùng dump + filestore cùng backup trong khung bảo trì.
 - Đã giao PC server (CHG-20261119-010): backup `C:\TANPHAT-backups\admin-approve005\admin-approve005-20261119T121945`, khởi động `tp-odoo` 05:21:03Z, upgrade exit 0, 0 ERROR, health/public 200, số liệu không đổi. Script `.local/admin-approve005/deploy005.py` + `deploy-server005.ps1` (từ chối nếu có container/tiến trình khác đang chạy trong `tp-odoo`). Local `18069` chưa áp.
+
+## ADMIN-APPROVE-012 `20.0.3.3.0` (`CHG-20261119-012`)
+
+- Nâng cấp `20.0.3.2.0 → 20.0.3.3.0`: đổi Python/view/ACL/JS và thêm `migrations/20.0.3.3.0/post-migrate.py`, nên **cần** `-u tp_hr_attendance`. Chép đúng commit, giữ `mtime` theo commit; chỉ khởi động lại `tp-odoo`, không restart tunnel.
+- Trước khi giao: backup dump + `restore-list` + filestore + source/config. Kiểm chỉ đọc Admin chính, grant ủy quyền đang hiệu lực theo công ty và số phiếu theo trạng thái.
+- Migration chỉ làm mới `reviewer_user_ids` của phiếu không ở nháp sang admin hiện hành (Admin chính + admin ủy quyền có grant ở công ty đó). Dòng ACL `access_att_correction_reviewer` bị xóa khi nâng cấp. Không đổi trạng thái, người xử lý, giờ, phiên, ngày công, kỳ chốt hay đi muộn.
+- Sau khi giao:
+  - Version `20.0.3.3.0`, health 200, log không ERROR.
+  - Bundle mới có chuỗi “chỉ admin (admin gốc hoặc admin được ủy quyền) duyệt hoặc trả lại”.
+  - Probe ORM chỉ đọc: `correction_admins(company)` = Admin chính + admin ủy quyền đang hiệu lực, và menu `Xử lý điều chỉnh` hiện với họ.
+  - **Không** tạo hoặc duyệt phiếu thật để smoke.
+- Hoàn nguyên:
+  - Dừng `tp-odoo`, khôi phục `source-config.tar.gz` của đúng backup rồi `-u tp_hr_attendance` về `20.0.3.2.0`.
+  - Dòng ACL đọc theo `reviewer_user_ids` sẽ được tạo lại. Chạy `_tp_refresh_reviewers()` để danh sách người nhận chỉ còn Admin chính.
+  - Phiếu đã duyệt giữ nguyên dữ liệu. Hoàn nguyên đầy đủ dùng dump + filestore cùng backup.

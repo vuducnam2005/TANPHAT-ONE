@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T05:36:47.537434+00:00",
-  "last_change_id": "CHG-20261119-010",
-  "code_digest": "5f68235da09fcda43f9921a767f52b83ed4b9f23481172870c048adbec34234f",
-  "code_file_count": 678,
+  "updated_at": "2026-11-19T06:27:26.888647+00:00",
+  "last_change_id": "CHG-20261119-012",
+  "code_digest": "45b64a1a4e7b0ea43fe2242785fdd56d2154f6185805b6b2172833da426ab9fc",
+  "code_file_count": 679,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "f26db4833756dc3f3815236e964e87447515bc5c7726807794f2dd3831be5a8d",
-    "docs/CHANGELOG.md": "40735ecf79707fec71706a0f178d1a03bac394afd1058863418f6eca9337413b",
+    "docs/PROJECT_STATUS.md": "d98daa2a611e253b34b758874d9ef52c955de3cf6178e47e545cea78666bf9e2",
+    "docs/CHANGELOG.md": "c48fe557bc53f71b389ff5393815450f38ca8794b50ad7552415c2d58b615921",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
     "docs/ROADMAP.md": "68666640835902699870130ff6656445574d01620194c544b76d4c73d2a2e087",
-    "docs/DECISIONS.md": "6efc61c3092883f8b14695cda625db0cb20297ef74c3da28c802167f42396533",
+    "docs/DECISIONS.md": "b626970d325dc4349d73241bc8f170b09f16bb5db5d443d9d5c14cf102b7c564",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,11 +20,10 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC server deploy of app 44b0c9e2 (tp_hr_attendance 20.0.3.1.0 -> 20.0.3.2.0 via -u): backup C:\\TANPHAT-backups\\admin-approve005\\admin-approve005-20261119T121945 (dump 10191235 B, restore-list 15789 entries, filestore 32272814 B, source-config 195339 B, SHA256SUMS); upgrade exit 0; 0 ERROR in upgrade and post-start logs; /web/health and /web/login 200; tunnel not restarted",
-    "Server verify: source 64/64 files match 44b0c9e2; employees 39, users 32, group digest, roster, sessions 384, days 480, late 117, batches 5, delegation grants and web.base.url unchanged; read-only ORM probe: Original Admin of company 1 = admin (uid 2), tp_can_review present, 0 pending corrections",
-    "Public URL /web/health and /dang-nhap 200; new asset bundles CSS 73d8d48 / JS 5c1f5ad contain the new UI strings",
-    "No correction request created, submitted or approved on the server; no account or permission changed outside scope",
-    "Local 18069 NOT_RUN: port serves the HR-EMPLOYEE-XLSX candidate runtime of another session, not stopped or modified; apply later with -u tp_hr_attendance after backup",
-    "Docs-only commit: git diff --cached --check OK; no application code changed"
+    "TestAttendanceCorrection 11/11 on tp_tanphat_test after -u tp_hr_attendance 20.0.3.2.0 -> 20.0.3.3.0 (post-migrate ran, reviewer ACL row deleted); full /tp_hr_attendance 72 tests: 8 failures identical to the HEAD baseline (test_access x1, test_directory_privacy x1, test_matrix_compare x4, test_upload x2); ruff OK on changed files",
+    "Synthetic persistence on tp_tanphat_test (adm012.persist.*) 17/17: delegated admin approves via wizard, data survives registry restart and HTTP re-login, Excel re-import does not overwrite, late totals unchanged, delegated return needs a note, revoke takes effect, Original Admin approves",
+    "Revoked delegate fresh re-login: search empty; read, open approve, approve, return and wizard confirm all AccessError; Original Admin approves",
+    "Playwright 2 runs: delegated admin gets the Xu ly dieu chinh menu and row buttons, approve/return persisted in DB, empty return reason blocked, empty evidence cell no longer shows false, owner has no review menu/buttons, 0 console errors",
+    "Not deployed by this commit: PC server and local 18069 pending; no real employee request created, submitted or approved"
   ]
 }

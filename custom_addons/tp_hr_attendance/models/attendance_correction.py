@@ -1,11 +1,12 @@
-"""Attendance correction requests: owner drafts, the Original Admin approves or returns (HR-ATTENDANCE-001 S3).
+"""Attendance correction requests: owner drafts, an admin approves or returns (HR-ATTENDANCE-001 S3).
 
-Since CHG-20261119-005 every submitted request, from any department, goes to the company's Original
-Admin(s) as resolved by tp_admin_delegation (``group_original_admin`` without a live grant). Delegated
-Full Admins, HR managers, department heads and attendance assignments never approve. Reason, evidence
-and review notes are private: only the requester, the Original Admin(s) and HR managers (read-only,
-after submission) can read them. Every transition is a backend action that locks the row first, so a
-retried or concurrent approval never applies twice.
+Every submitted request, from any department, goes to the company's admins as resolved by
+tp_admin_delegation: the Original Admin(s) (CHG-20261119-005) and, since CHG-20261119-012, delegated
+Full Admins with a live grant in that company (full admin rights except granting/revoking admin
+rights). HR managers, department heads and attendance assignments never approve by themselves.
+Reason, evidence and review notes are private: only the requester, the admins and HR managers
+(read-only, after submission) can read them. Every transition is a backend action that locks the row
+first, so a retried or concurrent approval never applies twice.
 """
 import math
 from datetime import time
@@ -16,13 +17,13 @@ from odoo.exceptions import AccessError, UserError, ValidationError
 from .attendance_common import (
     DEFAULT_TZ,
     can,
+    correction_admins,
     internal,
     is_internal,
     local_to_utc,
     local_today,
-    original_admins,
     require,
-    require_original_admin,
+    require_correction_admin,
     utc_to_local,
 )
 from .attendance_import import ADVISORY_KEY
@@ -36,8 +37,8 @@ OWNER_FIELDS = {'work_date', 'requested_in', 'requested_out', 'reason', 'evidenc
 DERIVED_FIELDS = {'employee_id', 'company_id', 'department_id', 'employee_code', 'employee_name'}
 # Values the web client may echo back for a new record; anything else on a system field is refused.
 NEUTRAL = {'state': 'draft', 'name': 'Mới', 'version': 1}
-NO_REVIEWER = ('Chưa có admin chính (admin gốc) đang hoạt động để nhận duyệt điều chỉnh công của công ty này. '
-               'Phiếu vẫn được lưu nháp; hệ thống không tự chuyển cho người duyệt thay thế. Liên hệ quản trị hệ thống.')
+NO_REVIEWER = ('Chưa có admin (admin gốc hoặc admin được ủy quyền đang hiệu lực) khác bạn để nhận duyệt điều chỉnh công '
+               'của công ty này. Phiếu vẫn được lưu nháp; hệ thống không tự chuyển cho người duyệt thay thế. Liên hệ quản trị hệ thống.')
 
 
 def float_clock(value):
@@ -93,7 +94,7 @@ class AttendanceCorrection(models.Model):
     reviewed_at = fields.Datetime('Xử lý lúc', readonly=True, copy=False)
     review_note = fields.Text('Ý kiến người xử lý', readonly=True, copy=False)
     reviewer_user_ids = fields.Many2many('res.users', 'tp_hr_att_correction_reviewer_rel', 'correction_id', 'user_id',
-                                         'Admin chính nhận duyệt', readonly=True, copy=False)
+                                         'Admin nhận duyệt', readonly=True, copy=False)
     is_amendment = fields.Boolean('Đính chính kỳ đã chốt', readonly=True, copy=False)
     period_id = fields.Many2one('tp.hr.attendance.period', 'Kỳ đã đính chính', readonly=True, copy=False)
     day_id = fields.Many2one('tp.hr.attendance.day', 'Ngày công tổng hợp', readonly=True, copy=False, ondelete='set null')
@@ -119,7 +120,7 @@ class AttendanceCorrection(models.Model):
             locked = bool(record.work_date and company and Period._tp_is_locked(company.id, record.work_date))
             record.tp_is_owner = owner == self.env.user
             record.tp_period_locked = locked
-            # Display hint only: _tp_check_reviewer re-checks the live Original Admin on every action.
+            # Display hint only: _tp_check_reviewer re-checks the live admin right on every action.
             record.tp_can_review = bool(
                 record.state == 'submitted' and owner != self.env.user
                 and company in self.env.companies and self.env.user in admins[company.id]
@@ -142,19 +143,19 @@ class AttendanceCorrection(models.Model):
 
     @api.model
     def _tp_reviewers_for(self, company, department=None, owner=None):
-        """Every department's requests go to the company's Original Admin(s); the requester never reviews.
+        """Every department's requests go to the company's admins (Original + live delegated); never the requester.
 
         ``department`` is kept for callers but no longer narrows the list: department heads and
-        attendance assignments do not approve. No Original Admin = empty list (no substitute).
+        attendance assignments do not approve. No admin = empty list (no substitute).
         """
         users = self.env['res.users']
         if not company:
             return users
-        users = original_admins(self.env, company)
+        users = correction_admins(self.env, company)
         return users - owner if owner else users
 
     def _tp_sync_reviewers(self):
-        """Stored reviewer list (read rule) = the company's Original Admin(s) now, never the requester."""
+        """Stored recipient list = the company's admins now (Original + live delegated), never the requester."""
         for record in internal(self):
             if record.state == 'draft':
                 wanted = record.env['res.users']
@@ -298,7 +299,7 @@ class AttendanceCorrection(models.Model):
         self.check_access('read')
         if self.sudo().employee_id.user_id == self.env.user:
             raise AccessError(self.env._('Không tự duyệt hoặc trả đề nghị của chính mình.'))
-        require_original_admin(self.env, self.company_id)
+        require_correction_admin(self.env, self.company_id)
 
     def action_return(self, note=None):
         self.ensure_one()

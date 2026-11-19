@@ -1,4 +1,4 @@
-"""AT02-C/AT03-C/AT06-A-D + CHG-20261119-005 (Original Admin approves every correction).
+"""AT02-C/AT03-C/AT06-A-D + CHG-20261119-005/-012 (admins, Original or live delegated, approve corrections).
 
 Synthetic fixtures only: run in an explicitly authorized test DB; nothing here touches real employees.
 """
@@ -11,6 +11,7 @@ from odoo.exceptions import AccessError, UserError
 from odoo.tests import tagged
 
 from .common import AttendanceCase, report
+from odoo.addons.tp_hr_attendance.models.attendance_common import correction_admins
 from odoo.addons.tp_organization.models.hr_employee import _ROSTER_WRITE
 
 DAY = date(2026, 11, 9)
@@ -56,17 +57,21 @@ class TestAttendanceCorrection(AttendanceCase):
             'files': [{'file_name': 'synthetic.xlsx', 'data': base64.b64encode(raw).decode()}]})
         self.assertEqual(result['error_count'], 0, result)
 
-    def delegate(self):
+    def delegate(self, login='att005.synthetic.delegate', companies=None):
         """A Full Admin granted through tp_admin_delegation by the synthetic Original Admin."""
+        companies = companies or self.company
         user = self.env['res.users'].with_context(no_reset_password=True).create({
-            'name': 'att005.synthetic.delegate', 'login': 'att005.synthetic.delegate', 'company_id': self.company.id,
-            'company_ids': [Command.set([self.company.id])], 'group_ids': [Command.set([self.env.ref('base.group_user').id])]})
-        self.env['tp.admin.delegation'].with_user(self.root).with_context(allowed_company_ids=[self.company.id])._change(
-            user, self.company, 'grant', 'Synthetic delegated full admin')
+            'name': login, 'login': login, 'company_id': self.company.id,
+            'company_ids': [Command.set(companies.ids)], 'group_ids': [Command.set([self.env.ref('base.group_user').id])]})
+        self.delegation(user, 'grant')
         self.assertTrue(user._tp_has_live_admin_grant(company=self.company))
         self.assertTrue(user.has_group('hr.group_hr_manager'))
         self.assertFalse(user._tp_is_original_admin())
         return user
+
+    def delegation(self, user, operation):
+        self.env['tp.admin.delegation'].with_user(self.root).with_context(allowed_company_ids=[self.company.id])._change(
+            user, self.company, operation, f'Synthetic {operation} full admin')
 
     # ----------------------------------------------------------------- owner
     def test_at06a_owner_is_session_even_with_foreign_id(self):
@@ -88,11 +93,12 @@ class TestAttendanceCorrection(AttendanceCase):
                 'check_in': '2026-11-09 01:00:00', 'check_out': '2026-11-09 10:00:00', 'source': 'correction'})
 
     def test_admin005_no_original_admin_means_no_submit_and_no_substitute(self):
-        # The only Original Admin loses the role: nobody inherits it, the draft stays a draft.
+        # The only admin loses the role: nobody inherits it (system rights or assignments alone do not count).
         self.root.write({'group_ids': [Command.unlink(self.env.ref('tp_admin_delegation.group_original_admin').id)]})
+        self.assertTrue(self.root.has_group('base.group_system'))
         self.assign()
         request = self.request()
-        with self.assertRaisesRegex(UserError, 'admin chính'):
+        with self.assertRaisesRegex(UserError, 'admin gốc hoặc admin được ủy quyền'):
             request.action_submit()
         self.assertEqual(request.state, 'draft')
         self.assertFalse(request.reviewer_user_ids)
@@ -120,8 +126,8 @@ class TestAttendanceCorrection(AttendanceCase):
         self.assertEqual(self.as_user(self.root, request).reason, 'Synthetic private reason')
 
     # ------------------------------------------------------- who may approve
-    def test_at03c_roles_never_approve_only_original_admin(self):
-        """HR manager, review assignee, department head and delegated Full Admin are refused in the backend."""
+    def test_at03c_roles_never_approve_only_admins(self):
+        """HR manager, review assignee and department head are refused in the backend; a delegated Full Admin approves."""
         self.assign()
         head_user = self.env['res.users'].with_context(no_reset_password=True).create({
             'name': 'att005.synthetic.head', 'login': 'att005.synthetic.head', 'company_id': self.company.id,
@@ -131,10 +137,10 @@ class TestAttendanceCorrection(AttendanceCase):
         delegate = self.delegate()
         request = self.request()
         request.action_submit()
-        self.assertEqual(request.reviewer_user_ids, self.root)
+        self.assertEqual(request.reviewer_user_ids, self.root | delegate)
         self.assertTrue(self.as_user(self.manager, request).read(['reason']))
         self.assertTrue(self.as_user(delegate, request).read(['reason']))
-        for user in (self.manager, self.officer, head_user, delegate):
+        for user in (self.manager, self.officer, head_user):
             record = self.as_user(user, request)
             with self.assertRaises(AccessError):
                 record.action_approve()
@@ -147,15 +153,69 @@ class TestAttendanceCorrection(AttendanceCase):
                     {'correction_id': request.id, 'decision': 'approve'}).action_confirm()
         request.invalidate_recordset()
         self.assertEqual(request.state, 'submitted')
+        self.assertFalse(self.as_user(self.manager, request).tp_can_review)
         self.assertTrue(self.as_user(self.root, request).tp_can_review)
-        self.assertFalse(self.as_user(delegate, request).tp_can_review)
+        self.assertTrue(self.as_user(delegate, request).tp_can_review)
         self.assertTrue(self.env_for(self.manager)['tp.hr.attendance.rule'].has_access('create'))
+        # Full admin rights include handling corrections: the delegate approves through the same dialog.
+        self.as_user(delegate, request).action_open_approve()
+        wizard = self.env_for(delegate)['tp.hr.attendance.review.wizard'].create({'correction_id': request.id, 'decision': 'approve'})
+        self.assertEqual(wizard.action_confirm()['params']['type'], 'success')
+        request.invalidate_recordset()
+        self.assertEqual((request.state, request.reviewer_id), ('approved', delegate))
+        self.assertEqual(request.session_id.source, 'correction')
+        with self.assertRaisesRegex(UserError, 'không còn chờ duyệt'):
+            self.as_user(self.root, request).action_approve()
 
-    def test_admin005_menu_follows_original_admin(self):
+    def test_admin012_delegate_returns_own_blocked_and_revoke_is_immediate(self):
+        other = self.env['res.company'].create({'name': 'Synthetic ADM012 Other Company'})
+        self.root.write({'company_ids': [Command.link(other.id)]})
+        delegate = self.delegate(companies=self.company | other)
+        # The grant is per company: same user, system rights and access to the other company, but no grant there.
+        self.assertIn(delegate, correction_admins(self.env, self.company))
+        self.assertNotIn(delegate, correction_admins(self.env, other))
+        request = self.request()
+        request.action_submit()
+        record = self.as_user(delegate, request)
+        with self.assertRaises(UserError):
+            record.action_return(' ')
+        self.assertTrue(record.action_return('Synthetic bổ sung căn cứ'))
+        request.invalidate_recordset()
+        self.assertEqual((request.state, request.reviewer_id, request.review_note), ('returned', delegate, 'Synthetic bổ sung căn cứ'))
+        # The delegate's own request goes to the other admins only; self-approval stays blocked.
+        self.employee(name='Synthetic Admin Ủy Quyền', department_id=self.dept_other.id, user_id=delegate.id)
+        own = self.request(user=delegate)
+        own.action_submit()
+        self.assertEqual(own.reviewer_user_ids, self.root)
+        with self.assertRaises(AccessError):
+            own.action_approve()
+        # Revoke by the Original Admin: no approval, no return, no private read, list recomputed on next submit.
+        request.action_submit()
+        self.assertEqual(request.reviewer_user_ids, self.root | delegate)
+        self.delegation(delegate, 'revoke')
+        self.assertFalse(delegate._tp_has_live_admin_grant(company=self.company))
+        stale = self.as_user(delegate, request)
+        for call in (stale.action_approve, lambda: stale.action_return('Synthetic'), stale.action_open_approve,
+                     lambda: stale.read(['reason'])):
+            with self.assertRaises(AccessError):
+                call()
+        self.assertNotIn(delegate, correction_admins(self.env, self.company))
+        request.invalidate_recordset()
+        self.assertEqual(request.state, 'submitted')
+        self.as_user(self.root, request).action_approve()
+        request.invalidate_recordset()
+        self.assertEqual((request.state, request.reviewer_id, request.reviewer_user_ids), ('approved', self.root, self.root))
+
+    def test_admin005_menu_follows_admin_right(self):
         menu = self.env.ref('tp_hr_attendance.menu_review')
         self.assign()
         self.assertNotIn(menu.id, self.env_for(self.officer)['ir.ui.menu']._visible_menu_ids())
         self.assertIn(menu.id, self.env_for(self.root)['ir.ui.menu']._visible_menu_ids())
+        self.assertIn(menu.id, self.env_for(self.delegate())['ir.ui.menu']._visible_menu_ids())
+        # System rights without the Original Admin role or a live grant do not open the queue.
+        plain = self.admin_factory('att012.synthetic.plain.system')
+        plain.write({'group_ids': [Command.unlink(self.env.ref('tp_admin_delegation.group_original_admin').id)]})
+        self.assertNotIn(menu.id, self.env_for(plain)['ir.ui.menu']._visible_menu_ids())
         # HR managers keep the read-only oversight entry they had before.
         self.assertIn(menu.id, self.env_for(self.manager)['ir.ui.menu']._visible_menu_ids())
 

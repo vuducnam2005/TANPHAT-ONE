@@ -1,5 +1,11 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261119-012 — HR-ATTENDANCE-ADMIN-APPROVE-012 — LOCAL_VERIFIED_SERVER_READY.** Theo yêu cầu “quyền admin là toàn quyền chừ việc tự bổ nhiệm quyền admin cho người khác thôi” ([DEC-061](DECISIONS.md)):
+- Người nhận và Duyệt/Trả lại đề nghị điều chỉnh công gồm Admin chính và admin được ủy quyền có grant đang hiệu lực ở công ty đó. Chỉ cấp/thu hồi admin vẫn thuộc Admin chính.
+- Thu hồi grant làm mất quyền xem/duyệt ngay. Không tự duyệt, không người thay thế. HR, trưởng phòng và người được phân công không có grant thì không duyệt.
+- `tp_hr_attendance` `20.0.3.3.0`, cần `-u`. Test 11/11, kiểm lưu thật 17/17, đăng nhập lại sau thu hồi đạt, Playwright admin ủy quyền đạt ([nghiệm thu](demo/HR_ATTENDANCE_ADMIN_APPROVE_012_ACCEPTANCE.md)).
+- Next: giao PC server bằng `-u tp_hr_attendance` sau backup.
+
 **Đã giao — CHG-20261119-010: HR-ATTENDANCE-ADMIN-APPROVE-005 — PC_SERVER_APPLIED.** App `44b0c9e2` (CHG-20261119-005) chạy trên PC server: `tp_hr_attendance` `20.0.3.2.0` qua `-u` sau backup `C:\TANPHAT-backups\admin-approve005\admin-approve005-20261119T121945`. Upgrade exit 0, 0 ERROR, health/login/public 200, nguồn khớp 64/64, số liệu nhân sự/tài khoản/nhóm/công không đổi. Người duyệt mọi đề nghị điều chỉnh công: Admin chính `admin` qua `Quản trị chấm công → Xử lý điều chỉnh`. Admin ủy quyền có HR manager chỉ xem, không có nút Duyệt/Trả lại. Server chưa có phiếu thật; không tạo phiếu giả. Local `18069` chưa áp vì đang chạy candidate của phiên khác. Next: `-u tp_hr_attendance` local khi runtime đó rảnh; nghiệm thu nghiệp vụ khi có phiếu thật đầu tiên.
 
 **CHG-20261119-011 — HR-EMPLOYEE-XLSX-001 — ODOO_TEST_VERIFIED, SERVER_APPLIED.** Bổ sung kiểm chứng trên `tp_tanphat_test` hiện có sau backup riêng `.local/hr-employee-xlsx001/test-backup-20261119T122312`: `TestEmployeeExport` **4/4 PASS, 0 failed/error**. Dữ liệu giả kiểm sắp hai nhân viên qua action backend, đổi thứ tự phòng, flush SQL + invalidate cache rồi xuất lại hai sheet; đúng thứ tự mới và export không sửa sequence/write_date nhân viên. Thêm lọc/selected/forged ID/công ty/field/private/credential, từ chối non-HR và hợp đồng nhiều dòng giữ đúng tổng. Không còn user fixture `hr001.synthetic.*`. Sau đợt deploy chấm công của phiên khác, kiểm lại PC: 13 tệp addon Excel giữ SHA256, ORM 22/22 và public health/login + JS/CSS khớp server PASS (JS mới `5c1f5ad`, CSS `73d8d48`). App vẫn `2c397ffb`, HR `20.0.1.14.0`; chỉ cập nhật test/tài liệu, không restart runtime. [Acceptance/cột/cách dùng](demo/HR_EMPLOYEE_XLSX_001_ACCEPTANCE.md). Chưa browser kéo/persist qua commit người thật, authenticated public E2E hoặc iOS/Safari; không thay dữ liệu thật. Next: người dùng tải lại trang và nghiệm thu nút Xuất Excel.
@@ -149,7 +155,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261119-010`
+Last change: `CHG-20261119-012`
 
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.

@@ -10,7 +10,7 @@ DEFAULT_TZ = 'Asia/Ho_Chi_Minh'
 HR_MANAGER = 'hr.group_hr_manager'
 HR_USER = 'hr.group_hr_user'
 OFFICER = 'tp_hr_attendance.group_attendance_officer'
-# Soft reference: tp_hr_attendance does not depend on tp_admin_delegation; missing group = nobody approves.
+# Soft reference: tp_hr_attendance does not depend on tp_admin_delegation; missing module = nobody approves.
 ORIGINAL_ADMIN = 'tp_admin_delegation.group_original_admin'
 # Only server code holding this sentinel may write imported punches, day summaries and the audit log.
 INTERNAL = object()
@@ -69,7 +69,7 @@ def can(env, capability, company, departments=None):
     Review and lock never follow from a job title or group: only an active assignment whose
     department scope (empty = whole company) covers every given department. Since
     CHG-20261119-005 a review assignment only widens shared exports; approving or returning a
-    correction belongs to the Original Admin (``require_original_admin``).
+    correction belongs to the admins (``require_correction_admin``: Original or delegated Full Admin).
     """
     if company not in env.companies:
         return False
@@ -85,35 +85,63 @@ def can(env, capability, company, departments=None):
     return False
 
 
-def original_admins(env, company=None):
-    """Active Original Admins (tp_admin_delegation, DEC-054) who handle every attendance correction.
+def _delegation_ready(env):
+    Users = env['res.users']
+    return bool(env.ref(ORIGINAL_ADMIN, raise_if_not_found=False) and all(
+        hasattr(Users, name) for name in ('_tp_is_original_admin', '_tp_has_live_admin_grant', '_tp_admin_lock')))
 
-    Resolved only through the delegation module's own check: delegated Full Admins, HR managers,
-    department heads and attendance assignments never qualify. When the delegation module is not
-    installed nobody qualifies, so approval fails closed instead of falling back to another role.
+
+def _is_correction_admin_user(user, company):
+    """Original Admin, or a delegated Full Admin whose grant is live in ``company`` (DEC-053/054/061).
+
+    Delegated Full Admins hold every admin right except granting/revoking admin rights, so they
+    handle attendance corrections like the Original Admin. The grant is read from the delegation
+    ledger itself (SQL, no session-company dependency) so a revoke takes effect immediately.
     """
-    Users = env['res.users'].sudo().with_context(active_test=False)
-    group = env.ref(ORIGINAL_ADMIN, raise_if_not_found=False)
-    if not group or not hasattr(Users, '_tp_is_original_admin'):
+    user = user.sudo().with_context(active_test=False)
+    if not user.active or user.share or not user.has_group('base.group_system'):
+        return False
+    if company is not None and company not in user.company_ids:
+        return False
+    if user._tp_is_original_admin():
+        return True
+    return bool(company is not None and company.ids and user._tp_has_live_admin_grant(company=company))
+
+
+def correction_admins(env, company=None):
+    """Admins who receive and handle every attendance correction of ``company``.
+
+    = the Original Admin(s) plus delegated Full Admins with a live grant in that company, resolved
+    only through tp_admin_delegation. HR managers, department heads and attendance assignments
+    never qualify by themselves. Without the delegation module nobody qualifies (fail closed).
+    """
+    if not _delegation_ready(env):
         return env['res.users']
-    domain = [('all_group_ids', 'in', group.id), ('active', '=', True), ('share', '=', False)]
+    Users = env['res.users'].sudo().with_context(active_test=False)
+    domain = [('all_group_ids', 'in', env.ref('base.group_system').id), ('active', '=', True), ('share', '=', False)]
     if company:
         domain.append(('company_ids', 'in', company.id))
-    users = Users.search(domain).filtered(lambda user: user._tp_is_original_admin())
+    users = Users.search(domain).filtered(lambda user: _is_correction_admin_user(user, company or None))
     return env['res.users'].browse(users.ids)
 
 
-def is_original_admin(env, company=None):
-    """True when the session user is an Original Admin with ``company`` open in the session."""
-    if company is not None and company not in env.companies:
+def is_correction_admin(env, company, lock=False):
+    """True when the session user is a correction admin of ``company`` with it open in the session.
+
+    ``lock`` takes the delegation module's shared lock first, so an approval and a concurrent
+    revoke of the same user's grant serialize instead of interleaving.
+    """
+    if not company or company not in env.companies or not _delegation_ready(env):
         return False
-    return env.user in original_admins(env, company)
+    if lock and not env.cr.readonly:
+        env.user.sudo()._tp_admin_lock()
+    return _is_correction_admin_user(env.user, company)
 
 
-def require_original_admin(env, company):
-    if not is_original_admin(env, company):
-        raise AccessError(env._('Chỉ admin chính (admin gốc) được duyệt hoặc trả đề nghị điều chỉnh công. '
-                                'Admin được ủy quyền, trưởng phòng và người được phân công không có quyền này.'))
+def require_correction_admin(env, company):
+    if not is_correction_admin(env, company, lock=True):
+        raise AccessError(env._('Chỉ admin (admin gốc hoặc admin được ủy quyền đang hiệu lực) được duyệt hoặc trả '
+                                'đề nghị điều chỉnh công. Trưởng phòng, HR và người được phân công không có quyền này.'))
 
 
 def require(env, capability, company, departments=None):
