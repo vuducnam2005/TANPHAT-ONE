@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-014 — Giao local/PC server: đổi tên đăng nhập nhân viên
+
+- App `0ba04faf88f03f34400e628968ff6624e9a5f82c` đã push origin/main và deploy riêng tp_hr_workspace20.0.1.15.0 + tp_admin_delegation20.0.2.0.2. Local dùng main-candidate giữ các addon runtime đang chạy; không tự áp chấm công/báo cáo/sidebar/branding WIP. PCserver16/16tệp đúngSHA256 vàmtimeGit, chỉ nâng2addon, không restart tp-tunnel.
+- Backup local `.local/hr-login-rename-impl001/main-backup-20261119T132213` (dump10.477.809B, filestore1.692.120.615B, source/config/restore-list/SHA256). PC `C:/TANPHAT-backups/hr-login-rename-impl001/hr-login013-20261119T133244`: dump10.191.650B, restore15.789mục, filestore636entry/34.322.377B, source/config2.234.534B vàSHA256. Upgrade exit0/0ERROR cảhai môi trường.
+- Snapshot trước/sau chỉ2moduleversion đổi; giữ39employee/32user, credentials digest gồm login/password/active/partner, company membership/resource links/employee roster/department/job/sequence/groups/implied, equipment/proposal/grants/days/baseURL. Không đổi login hay mật khẩu người thật. Backend chỉ đọc17/17PASS mỗi môi trường, gồm related/unique/action/audit/capability/refuse ordinary+sudo/export đúng nguồn hiện tại.
+- Public https://eight-championships-launches-plaintiff.trycloudflare.com health/login200; JS `/web/assets/993d7c1/web.assets_web.min.js`8.484.470B SHA256efbc0887c4d0…7d7b819, CSS73d8d48 SHA2563dda3b6e09d9…98cff2 khớpserver; thực tải có client action/template/input/validation/re-login. Local JS6a2b665/CSS34096a9 có giao diện mới, health/login200. Source checksum không dùng thay bằng chứng asset.
+- Kết quả kỹ thuật013: backend4+account5+HttpCase2 và race2PASS; browser desktop/mobile/inline/cancel/save/reload0error; HTTP tên mới với password cũ thành công, cũ/sai case từ chối, native token thay đổi, Excel sau rename đúng. Chưa authenticated public E2E hoặc iOS/Safari thật; không login mới thay phiên người thật. [Acceptance](demo/HR_LOGIN_RENAME_001_ACCEPTANCE.md). Người dùng Ctrl+F5 và nghiệm thu nghiệp vụ/hình thức riêng.
+- Receipt tài liệu dùng index riêng + workflow snapshot sạch, giữ checkpoint18/11 và foreign WIP. CHG013 rebase onto concurrent commitattendance012 trước commit, chỉ sourceHR/admin của hạng mục này được đóng gói và deploy; runtime chấm công ngoài scope giữ nguyên theo từng môi trường.
+
 ## CHG-20261119-013 — Triển khai đổi tên đăng nhập nhân viên
 
 - 19/11/2026 Asia/Saigon; người dùng trực tiếp giao phiên chính triển khai, thay vai trò chỉ điều phối trong hạng mục009. Tiếp nhận WIP `hr_account_wizard.py`/`hr_history.py`; hoàn thiện trong custom_addons, không sửa core/API/React. HR `20.0.1.15.0`, admin delegation `20.0.2.0.2`.

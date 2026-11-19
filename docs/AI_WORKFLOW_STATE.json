@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T06:29:10.387624+00:00",
-  "last_change_id": "CHG-20261119-013",
+  "updated_at": "2026-11-19T06:38:43.304539+00:00",
+  "last_change_id": "CHG-20261119-014",
   "code_digest": "1ae225169487cc161e1280a3ea358a1e387d7d09b62f12b2a0d51bc5b480677f",
   "code_file_count": 681,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "1e3252880eb0ec2fd1ae2b998eee6707e0b405c23c07076448dfcfb30069891f",
-    "docs/CHANGELOG.md": "99d9524fd16b05020c7924b74e36888a71034abdc5c84d8d51e88b3ba1526d91",
+    "docs/PROJECT_STATUS.md": "b9b78cddd54cf3ca78099a5630d896972b95be146ea1d5e9577f72d4886d2541",
+    "docs/CHANGELOG.md": "57505c6b0d650df3f0a6020a905dff128d3cea6283d8dfdf9f47e140739bce95",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "709a1894f413b1a62dc4f5400f470a4737651b5fc0331f367c88ba2fc1aaf728",
+    "docs/ROADMAP.md": "51e8b6e4da8783406ac3c86c24c10e7ebee692f8923302017c68d27ae4e4396f",
     "docs/DECISIONS.md": "b626970d325dc4349d73241bc8f170b09f16bb5db5d443d9d5c14cf102b7c564",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Backend4/account5/HttpCase2/race2 PASS; browser desktop+390px0errors; XML AST Ruff Node validator8 PASS; local upgrade0errors backup and credentials/business unchanged readonly17/17PASS; rebased onto concurrent attendance012 without its WIP"
+    "App0ba04faf pushed/deployed local18069+PC HR15/admin2.0.2; backup dump/restore/filestore/source/config/SHA256; upgrade0ERROR; identity/credentials/business digests unchanged; readonly17/17each; serverSource16/16; actual public+serverJS/CSS matching SHA256 and dialogmarkers health/login200; synthetic backend4/account5/HttpCase2/race2PASS; public authenticated E2E and realSafari NOT_RUN"
   ]
 }

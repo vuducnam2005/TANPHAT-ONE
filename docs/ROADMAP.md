@@ -6,7 +6,7 @@
 
 | ID | Công việc | Trạng thái | Đầu vào/phụ thuộc | Điều kiện hoàn tất |
 | --- | --- | --- | --- | --- |
-| HR-LOGIN-RENAME-001 | Đổi tên đăng nhập từ Tài khoản nhân viên, giữ danh tính và quyền | VERIFIED_RELEASE_READY CHG-20261119-013 | Người dùng giao trực tiếp triển khai; DEC-054/057; [acceptance](demo/HR_LOGIN_RENAME_001_ACCEPTANCE.md) | Backend4+account5+HTTP/browser2 và race2 PASS; chờ receipt áp local/PCserver; người dùng nghiệm thu nghiệp vụ riêng |
+| HR-LOGIN-RENAME-001 | Đổi tên đăng nhập từ Tài khoản nhân viên, giữ danh tính và quyền | MAIN_AND_PC_SERVER_APPLIED CHG-20261119-014 | App0ba04faf; [acceptance](demo/HR_LOGIN_RENAME_001_ACCEPTANCE.md); DEC-054/057 | backend4+account5+HTTP/browser2+race2PASS; read-only17/17mỗi môi trường; source16/16 vàpublicassetsPASS; người dùng nghiệm thu nghiệp vụ riêng |
 | HR-ATTENDANCE-MATRIX-003 | Bảng công đầy đủ theo file, tải nhiều file và đối chiếu trước tổng hợp | MAIN_AND_PC_SERVER_APPLIED CHG-20261118-031 | DEC-058; `tp_hr_attendance` `20.0.3.0.0` (code `b7765bd1`); [acceptance](demo/HR_ATTENDANCE_MATRIX_003_ACCEPTANCE.md) / [guide](demo/HR_ATTENDANCE_MATRIX_003_USER_GUIDE.md) | 18069 + PC server upgrade `0` lỗi (`195` snapshot people / `1.365` cells); pure `26/26` + ORM rollback + ACL `uid=34` + live public CSS/JS `200 OK` + anon smoke PASS; login admin & DB-write `18079` `NOT_RUN` |
 
 | HR-EMPLOYEE-ORDER | Thứ tự nhân viên dùng chung, kéo cả hàng trong phòng | MAIN_AND_PC_SERVER_ASSETS_VERIFIED CHG-20261118-028 | [acceptance](demo/HR_EMPLOYEE_ORDER_ACCEPTANCE.md) / [runbook](../ops/runbooks/HR_EMPLOYEE_ORDER_DEPLOY_AND_ROLLBACK.md) | HR20.0.1.13.1; native regression, ORM thật rollback PASS; full browser persist/race chưa chạy |
