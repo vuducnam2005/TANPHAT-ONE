@@ -1,4 +1,5 @@
 import { Component, onMounted, onWillStart, onWillUnmount, proxy, useProps } from "@odoo/owl";
+import { browser } from "@web/core/browser/browser";
 import { registry } from "@web/core/registry";
 import { patch } from "@web/core/utils/patch";
 import { useService } from "@web/core/utils/hooks";
@@ -60,6 +61,11 @@ export class MyAttendance extends Component {
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
+        try {
+            this.busService = useService("bus_service");
+        } catch (_) {
+            this.busService = null;
+        }
         const saved = readStore(STORE_KEY);
         const savedMode = MODES.some(([key]) => key === saved.mode) ? saved.mode : "month";
         const savedPageSize = PAGE_SIZES.includes(Number(saved.pageSize)) ? Number(saved.pageSize) : 50;
@@ -88,6 +94,7 @@ export class MyAttendance extends Component {
         this.mineStatusInfo = mineStatusInfo;
         this.formatHours = formatHours;
         this.request = 0;
+        this.pollTimer = null;
 
         const onKeyDown = (ev) => {
             if (ev.key !== "Escape") {
@@ -109,12 +116,32 @@ export class MyAttendance extends Component {
         onMounted(() => {
             document.addEventListener("keydown", onKeyDown);
             document.addEventListener("click", onDocumentClick);
+            this.pollTimer = browser.setInterval(() => {
+                if (!document.hidden && !this.state.loading) {
+                    this.load();
+                }
+            }, 30000);
         });
         onWillUnmount(() => {
             document.removeEventListener("keydown", onKeyDown);
             document.removeEventListener("click", onDocumentClick);
+            if (this.pollTimer) {
+                browser.clearInterval(this.pollTimer);
+            }
         });
-        onWillStart(() => this.load());
+        onWillStart(async () => {
+            if (this.busService) {
+                try {
+                    this.busService.addChannel("tp_hr_attendance_channel");
+                    this.busService.subscribe("enti_sync_completed", () => {
+                        if (!this.state.loading) {
+                            this.load();
+                        }
+                    });
+                } catch (_) {}
+            }
+            await this.load();
+        });
     }
 
     get data() {

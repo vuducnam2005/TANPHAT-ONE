@@ -7,6 +7,7 @@ from . import (
     test_latest_file,
     test_matrix_compare,
     test_matrix_pure,
+    test_enti_sync,
     test_parser,
     test_parser_late,
     test_upload,

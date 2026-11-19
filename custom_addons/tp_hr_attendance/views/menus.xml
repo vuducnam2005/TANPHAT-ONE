@@ -18,6 +18,12 @@
               groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
     <menuitem id="menu_sources" name="Nguồn dữ liệu" parent="menu_group_attendance_admin" action="action_sources" sequence="20"
               groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
+    <menuitem id="menu_enti_mapping" name="Đối chiếu nhân viên ENTI" parent="menu_group_attendance_admin" action="action_enti_mapping" sequence="22"
+              groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
+    <menuitem id="menu_enti_config" name="Cấu hình kết nối ENTI" parent="menu_group_attendance_admin" action="action_enti_config" sequence="23"
+              groups="hr.group_hr_manager,base.group_system"/>
+    <menuitem id="menu_enti_logs" name="Nhật ký đồng bộ ENTI" parent="menu_group_attendance_admin" action="action_enti_logs" sequence="24"
+              groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
     <menuitem id="menu_review" name="Xử lý điều chỉnh" parent="menu_group_attendance_admin" action="action_review" sequence="30"
               groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer,base.group_system"/>
     <menuitem id="menu_periods" name="Chốt kỳ" parent="menu_group_attendance_admin" action="action_periods" sequence="40"

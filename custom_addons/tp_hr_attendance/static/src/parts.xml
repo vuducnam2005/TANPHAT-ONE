@@ -9,7 +9,7 @@
         <span t-if="this.props.source.data_to">Dữ liệu đến <strong t-out="this.props.source.data_to"/></span>
         <span t-if="this.props.source.updated_at">Cập nhật <t t-out="this.props.source.updated_at"/></span>
         <span t-if="this.props.source.file" class="o_tp_att_source_file" t-att-title="this.props.source.file">Tệp: <t t-out="this.props.source.file"/></span>
-        <span>API máy: <t t-out="this.props.source.api"/> · Kết nối trực tiếp: tắt</span>
+        <span t-if="this.props.source.api">API máy: <t t-out="this.props.source.api"/> · Kết nối trực tiếp: <strong t-att-class="this.props.source.live ? 'text-success' : 'text-muted'" t-out="this.props.source.live ? 'bật (tự động)' : 'tắt'"/></span>
         <span t-if="this.props.source.note" class="o_tp_att_muted" t-out="this.props.source.note"/>
         <button t-if="this.props.onSources" type="button" class="btn btn-link btn-sm" t-on-click="() => this.props.onSources()">Nguồn dữ liệu</button>
     </div>

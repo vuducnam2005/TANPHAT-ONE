@@ -31,31 +31,30 @@
                 </dl>
                 <p class="o_tp_att_muted" t-out="this.data.excel.note"/>
             </article>
-            <article class="o_tp_att_source_card o_muted">
+            <article class="o_tp_att_source_card" t-att-class="this.data.api.enti &amp;&amp; this.data.api.enti.live ? 'o_ok' : 'o_muted'">
                 <header>
-                    <i class="oi" data-icon="cloud_off" aria-hidden="true"/>
-                    <h2>API máy chấm công</h2>
-                    <span class="o_tp_att_badge o_muted" t-out="this.data.api.label"/>
+                    <i class="oi" t-att-data-icon="this.data.api.enti &amp;&amp; this.data.api.enti.live ? 'cloud_done' : 'cloud_off'" aria-hidden="true"/>
+                    <h2>API chấm công ENTI (enti.vn)</h2>
+                    <span class="o_tp_att_badge" t-att-class="this.data.api.enti &amp;&amp; this.data.api.enti.live ? 'o_ok' : 'o_muted'" t-out="this.data.api.label"/>
                 </header>
                 <dl>
-                    <div><dt>Kết nối trực tiếp</dt><dd>Tắt</dd></div>
-                    <div><dt>Lịch tự đồng bộ</dt><dd>Không có</dd></div>
-                    <div><dt>Sự kiện thô đã nhận</dt><dd t-out="this.data.api.events"/></div>
-                    <div><dt>Chưa khớp nhân viên</dt><dd t-out="this.data.api.unmapped"/></div>
+                    <div><dt>Kết nối trực tiếp</dt><dd t-out="this.data.api.enti &amp;&amp; this.data.api.enti.live ? 'Bật (Tự động)' : 'Tắt'"/></div>
+                    <div><dt>Lịch tự đồng bộ</dt><dd t-out="this.data.api.enti &amp;&amp; this.data.api.enti.live ? '1 phút / lần' : 'Tắt'"/></div>
+                    <div><dt>Đã khớp nhân viên</dt><dd t-out="this.data.api.enti ? this.data.api.enti.mapped_count : 0"/></div>
+                    <div><dt>Chờ đối chiếu</dt><dd t-out="this.data.api.enti ? this.data.api.enti.unmapped_count : 0"/></div>
+                    <div><dt>Ngày công đã lấy</dt><dd t-out="this.data.api.enti ? this.data.api.enti.days_count : 0"/></div>
+                    <div><dt>Dữ liệu đến ngày</dt><dd t-out="(this.data.api.enti &amp;&amp; this.data.api.enti.data_to) || '—'"/></div>
+                    <div><dt>Lần lấy gần nhất</dt><dd t-out="(this.data.api.enti &amp;&amp; this.data.api.enti.last_success_at) || '—'"/></div>
                 </dl>
-                <p class="o_tp_att_muted">Nền tích hợp đã sẵn (nguồn theo không gian mã, sự kiện thô bất biến, chống trùng bằng dấu vân tay, mốc đọc tiếp)
-                    nhưng chưa nối máy thật: không có địa chỉ công khai nhận dữ liệu, không lưu token, dữ liệu không phải thời gian thực.</p>
-                <ul t-if="this.data.api.sources.length" class="o_tp_att_source_list">
-                    <li t-foreach="this.data.api.sources" t-as="source" t-key="source.id">
-                        <strong t-out="source.name"/> <code t-out="source.namespace"/> · <t t-out="source.state_label"/>
-                        <t t-if="source.vendor"> · <t t-out="source.vendor"/> <t t-out="source.model"/></t>
-                        · <t t-out="source.codes"/> mã nhân viên
-                        <small t-if="source.last_error" class="text-danger d-block" t-out="source.last_error"/>
-                    </li>
-                </ul>
+                <p t-if="this.data.api.enti &amp;&amp; this.data.api.enti.last_error" class="text-danger small mb-2">
+                    Lỗi lần trước: <t t-out="this.data.api.enti.last_error"/>
+                </p>
+                <p class="o_tp_att_muted">Kết nối trực tiếp với dịch vụ chấm công ENTI qua API backend. Tự động lấy giờ vào/ra, đối chiếu với hồ sơ nhân viên Odoo và cập nhật bảng công chuẩn.</p>
                 <div class="o_tp_att_actions">
-                    <button t-if="this.data.can_configure" type="button" class="btn btn-outline-secondary btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_source_records')">Khai báo nguồn API</button>
-                    <button type="button" class="btn btn-link btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_events')">Sự kiện thô</button>
+                    <button t-if="this.data.can_configure" type="button" class="btn btn-primary btn-sm" t-on-click="this.syncEntiNow" t-att-disabled="this.state.loading"><i class="oi me-1" data-icon="sync" aria-hidden="true"/>Đồng bộ ngay</button>
+                    <button t-if="this.data.can_configure" type="button" class="btn btn-outline-secondary btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_enti_mapping')">Đối chiếu nhân viên</button>
+                    <button t-if="this.data.can_configure" type="button" class="btn btn-outline-secondary btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_enti_config')">Cấu hình kết nối</button>
+                    <button type="button" class="btn btn-link btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_enti_logs')">Nhật ký đồng bộ</button>
                 </div>
             </article>
         </section>

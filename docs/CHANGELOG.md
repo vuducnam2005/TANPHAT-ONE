@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-025 — Tích hợp chấm công ENTI thật, tự động đồng bộ theo lịch và cập nhật UI trực tiếp
+
+- 19/11/2026 Asia/Saigon; nhiệm vụ `ENTI-LIVE-001`. Tích hợp API chấm công ENTI (`enti.vn`) trực tiếp từ backend Python (`EntiClient` qua session HTTP an toàn), tự động chọn ứng dụng công ty Tấn Phát, quản trị token và refresh token không qua trình duyệt.
+- `tp_hr_attendance` 20.0.3.4.0: đối chiếu nhân viên `tp.hr.attendance.enti.mapping` bảo vệ Odoo HR là Single Source of Truth; lưu trữ bất biến dữ liệu thô `tp.hr.attendance.enti.day`; xử lý đầy đủ các ca chưa đủ giờ (in-only / out-only) không bịa 17:00 và không vi phạm ràng buộc `check_out > check_in`; phân cấp ưu tiên nghiêm ngặt (Điều chỉnh đã duyệt > Live ENTI > Excel fallback); cron tự động `ir_cron_enti_attendance_sync` quét mỗi 1 phút; bus notification `bus.bus` + polling ngầm 30s cập nhật giao diện Dashboard, Bảng công, Công của tôi và Nguồn dữ liệu mà không cần F5; wizard cấu hình bảo mật mật khẩu không lộ log/trình duyệt. Migration `20.0.3.4.0` gỡ ràng buộc `_live_off`. Unit test pure 4/4 PASS, test Odoo ORM đầy đủ. [Nghiệm thu](demo/ENTI_LIVE_001_ACCEPTANCE.md), [runbook](../ops/runbooks/ENTI_LIVE_001_DEPLOY_AND_ROLLBACK.md).
+
+
+
 ## CHG-20261119-024 — Đã áp thông báo thông tin còn thiếu và tìm tên trực tiếp lên PCserver
 
 - 19/11/2026: app `720d7fa9` đã push, backup/upgrade HR 20.0.1.18.0 và Home 20.0.1.10.0 trên PCserver exit0/0ERROR; snapshot dữ liệu/quyền trước/sau giống hệt, chỉ đổi phiên bản module. Backup `C:\TANPHAT-backups\form-validation001\form-validation023-20261119T182936`; dump/filestore/source/config/SHA256.

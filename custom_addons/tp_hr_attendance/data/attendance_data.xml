@@ -5,4 +5,14 @@
         <field name="key">tp_hr_attendance.reference_hours</field>
         <field name="value">08:30-17:00</field>
     </record>
+
+    <record id="ir_cron_enti_attendance_sync" model="ir.cron">
+        <field name="name">Đồng bộ chấm công ENTI tự động</field>
+        <field name="model_id" ref="model_tp_hr_attendance_source"/>
+        <field name="state">code</field>
+        <field name="code">model._tp_cron_enti_sync()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
 </odoo>

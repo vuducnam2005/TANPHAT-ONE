@@ -53,3 +53,14 @@ rule_att_snap_cell_company,Attendance snapshot cell company,tp.hr.attendance.sna
 access_att_resolution_manager,Attendance compare resolution HR manager,tp.hr.attendance.resolution,hr.group_hr_manager,r,
 access_att_resolution_officer,Attendance compare resolution officer,tp.hr.attendance.resolution,tp_hr_attendance.group_attendance_officer,r,
 rule_att_resolution_company,Attendance compare resolution company,tp.hr.attendance.resolution,,crud,"[('company_id', 'in', company_ids)]"
+access_att_enti_map_manager,Attendance ENTI mapping HR manager,tp.hr.attendance.enti.mapping,hr.group_hr_manager,crud,
+access_att_enti_map_officer,Attendance ENTI mapping officer,tp.hr.attendance.enti.mapping,tp_hr_attendance.group_attendance_officer,r,
+rule_att_enti_map_company,Attendance ENTI mapping company,tp.hr.attendance.enti.mapping,,crud,"[('company_id', 'in', company_ids)]"
+access_att_enti_day_manager,Attendance ENTI days HR manager,tp.hr.attendance.enti.day,hr.group_hr_manager,crud,
+access_att_enti_day_officer,Attendance ENTI days officer,tp.hr.attendance.enti.day,tp_hr_attendance.group_attendance_officer,r,
+rule_att_enti_day_company,Attendance ENTI days company,tp.hr.attendance.enti.day,,crud,"[('company_id', 'in', company_ids)]"
+access_att_enti_log_manager,Attendance ENTI sync log HR manager,tp.hr.attendance.enti.sync.log,hr.group_hr_manager,r,
+access_att_enti_log_officer,Attendance ENTI sync log officer,tp.hr.attendance.enti.sync.log,tp_hr_attendance.group_attendance_officer,r,
+rule_att_enti_log_company,Attendance ENTI sync log company,tp.hr.attendance.enti.sync.log,,crud,"[('company_id', 'in', company_ids)]"
+access_att_enti_wizard_manager,Attendance ENTI config wizard HR manager,tp.hr.attendance.enti.config.wizard,hr.group_hr_manager,crud,
+access_att_enti_wizard_admin,Attendance ENTI config wizard Admin,tp.hr.attendance.enti.config.wizard,base.group_system,crud,

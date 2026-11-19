@@ -24,7 +24,13 @@ from .attendance_logic import CODE_MAX, EventError, fingerprint, normalize_event
 ADVISORY_KEY = 761121
 INGEST_MAX = 5000
 CREDENTIAL_RE = re.compile(r'^[A-Z][A-Z0-9_]{2,63}$')
-SOURCE_STATES = [('not_configured', 'Chưa cấu hình'), ('ready', 'Sẵn sàng nhận (chưa kết nối máy)'), ('paused', 'Tạm dừng')]
+SOURCE_STATES = [
+    ('not_configured', 'Chưa cấu hình'),
+    ('ready', 'Sẵn sàng'),
+    ('connected', 'Đang kết nối'),
+    ('paused', 'Tạm dừng'),
+    ('error', 'Lỗi kết nối'),
+]
 DIRECTION_LABELS = [('IN', 'Vào'), ('OUT', 'Ra'), ('UNKNOWN', 'Chưa rõ chiều')]
 # What HR must get from the device vendor before a real adapter can be written (shown on "Nguồn dữ liệu").
 VENDOR_CHECKLIST = [
@@ -57,12 +63,12 @@ class AttendanceSource(models.Model):
 
     name = fields.Char('Tên nguồn', required=True)
     company_id = fields.Many2one('res.company', 'Công ty', required=True, default=lambda self: self.env.company, index=True)
-    kind = fields.Selection([('device_api', 'API máy chấm công')], 'Loại', required=True, default='device_api')
+    kind = fields.Selection([('device_api', 'API máy chấm công'), ('enti_api', 'API chấm công ENTI')], 'Loại', required=True, default='device_api')
     namespace = fields.Char('Không gian mã', required=True,
                             help='Mã nhân viên trên máy chỉ có nghĩa trong không gian này (vd. may-van-phong-1).')
     state = fields.Selection(SOURCE_STATES, 'Trạng thái', required=True, default='not_configured')
-    live_enabled = fields.Boolean('Kết nối trực tiếp', default=False, readonly=True,
-                                  help='Luôn tắt trong phiên bản này: chưa có adapter cho máy thật.')
+    live_enabled = fields.Boolean('Kết nối trực tiếp', default=False,
+                                  help='Bật kết nối trực tiếp khi adapter và cấu hình xác thực đã sẵn sàng.')
     vendor = fields.Char('Hãng máy')
     device_model = fields.Char('Model máy')
     timezone = fields.Char('Múi giờ máy', default=DEFAULT_TZ, required=True)
@@ -77,7 +83,6 @@ class AttendanceSource(models.Model):
     note = fields.Text('Ghi chú')
 
     _namespace_unique = models.Constraint('UNIQUE(company_id, namespace)', 'Không gian mã đã dùng cho nguồn khác của công ty.')
-    _live_off = models.Constraint('CHECK(live_enabled IS NOT TRUE)', 'Kết nối trực tiếp chưa được hỗ trợ trong phiên bản này.')
 
     @api.constrains('credential_ref', 'namespace', 'timezone')
     def _check_safe_values(self):
@@ -224,13 +229,43 @@ class AttendanceSource(models.Model):
             })
         sources = self.sudo().search([('company_id', '=', company.id)])
         Event = self.env['tp.hr.attendance.event'].sudo()
+        Mapping = self.env['tp.hr.attendance.enti.mapping'].sudo()
+        EntiDay = self.env['tp.hr.attendance.enti.day'].sudo()
+        enti_sources = sources.filtered(lambda s: s.kind == 'enti_api')
+        live_active = any(s.live_enabled for s in sources)
+        mapped_count = Mapping.search_count([('company_id', '=', company.id), ('state', '=', 'mapped')])
+        unmapped_count = Mapping.search_count([('company_id', '=', company.id), ('state', '!=', 'mapped')])
+        enti_days_count = EntiDay.search_count([('company_id', '=', company.id)])
+        enti_latest_day = EntiDay.search([('company_id', '=', company.id)], order='work_date desc', limit=1)
+
+        api_label = 'Chưa cấu hình'
+        if enti_sources:
+            first_enti = enti_sources[0]
+            if first_enti.live_enabled and first_enti.state == 'ready':
+                api_label = 'Đang hoạt động (Trực tiếp)'
+            else:
+                api_label = states.get(first_enti.state, 'Chưa kết nối')
+        elif sources:
+            api_label = f'{len(sources)} nguồn đã khai báo'
+
         return {
             'excel': {'in_use': bool(applied), 'batches': len(applied), 'file': applied[:1].file_name or '' if applied else '',
                       'updated_at': updated['at'] if updated else '', 'data_to': updated['to'] if updated else '',
                       'note': 'Mỗi lần nhập là ảnh chụp theo file; dữ liệu không tự cập nhật theo thời gian thực.'},
-            'api': {'label': 'Chưa cấu hình' if not sources else f'{len(sources)} nguồn đã khai báo', 'live': False,
+            'api': {'label': api_label, 'live': live_active,
                     'events': Event.search_count([('company_id', '=', company.id)]),
                     'unmapped': Event.search_count([('company_id', '=', company.id), ('state', '=', 'unmapped')]),
+                    'enti': {
+                        'configured': bool(enti_sources),
+                        'live': bool(enti_sources and enti_sources[0].live_enabled),
+                        'state': enti_sources[:1].state if enti_sources else 'not_configured',
+                        'last_success_at': stamp(enti_sources[:1].last_success_at) if enti_sources else '',
+                        'last_error': enti_sources[:1].last_error or '' if enti_sources else '',
+                        'mapped_count': mapped_count,
+                        'unmapped_count': unmapped_count,
+                        'days_count': enti_days_count,
+                        'data_to': day(enti_latest_day.work_date) if enti_latest_day else '',
+                    },
                     'sources': [{'id': source.id, 'name': source.name, 'namespace': source.namespace, 'state': source.state,
                                  'state_label': states[source.state], 'vendor': source.vendor or '', 'model': source.device_model or '',
                                  'last_success_at': stamp(source.last_success_at), 'latest_event_at': stamp(source.latest_event_at),

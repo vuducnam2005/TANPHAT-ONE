@@ -49,7 +49,7 @@ class AttendanceSession(models.Model):
     check_in = fields.Datetime('Giờ vào', required=True)
     check_out = fields.Datetime('Giờ ra', required=True)
     worked_hours = fields.Float('Giờ ghi nhận', compute='_compute_worked_hours', store=True)
-    source = fields.Selection([('import', 'Nhập từ báo cáo máy'), ('correction', 'Điều chỉnh đã duyệt')], 'Nguồn', required=True, default='import')
+    source = fields.Selection([('import', 'Nhập từ báo cáo máy'), ('correction', 'Điều chỉnh đã duyệt'), ('enti', 'API chấm công ENTI')], 'Nguồn', required=True, default='import')
     # A punch replaced by an approved correction is kept inactive (never deleted) so the original stays auditable.
     active = fields.Boolean('Đang hiệu lực', default=True, index=True)
     day_id = fields.Many2one('tp.hr.attendance.day', 'Ngày công tổng hợp', index=True, ondelete='set null')
@@ -120,6 +120,7 @@ class AttendanceDay(models.Model):
     units_display = fields.Char('Công xác nhận', compute='_compute_labels')
     rule_id = fields.Many2one('tp.hr.attendance.rule', 'Quy tắc áp dụng', readonly=True)
     data_state = fields.Selection(DATA_STATES, 'Tình trạng dữ liệu', readonly=True, required=True, default='ok', index=True)
+    source_kind = fields.Selection([('excel', 'Excel máy chấm công'), ('enti', 'API chấm công ENTI'), ('correction', 'Điều chỉnh đã duyệt')], string='Nguồn chuẩn', default='excel', index=True)
     lock_state = fields.Selection(LOCK_STATES, 'Trạng thái kỳ', compute='_compute_lock_state', search='_search_lock_state')
     source_updated_at = fields.Datetime('Cập nhật nguồn', readonly=True)
     version = fields.Integer('Phiên bản', readonly=True, default=1)
@@ -248,6 +249,9 @@ class AttendanceDay(models.Model):
         for employee_id, work_date in sorted(keys, key=lambda key: (key[1], key[0])):
             employee = employees.browse(employee_id)
             day = Day.search([('employee_id', '=', employee_id), ('work_date', '=', work_date)])
+            if day and day.source_kind == 'enti':
+                # ENTI is higher priority than Excel import; do not overwrite ENTI day with Excel
+                continue
             sessions = Session.search([('employee_id', '=', employee_id), ('work_date', '=', work_date)], order='check_in')
             issues = Line.search([('employee_id', '=', employee_id), ('work_date', '=', work_date), ('issue_open', '=', True)])
             if not sessions and not issues:
@@ -270,6 +274,8 @@ class AttendanceDay(models.Model):
         now = fields.Datetime.now()
         ranges = self.env['tp.hr.attendance.period']._tp_locked_ranges(self.company_id.ids)
         for day in internal(self):
+            if day.source_kind == 'enti':
+                continue
             if not allow_locked and self.env['tp.hr.attendance.period']._tp_is_locked(day.company_id.id, day.work_date, ranges):
                 continue
             sessions = day.session_ids.sorted('check_in')

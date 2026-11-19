@@ -11,4 +11,9 @@ from . import (
     attendance_source,
     attendance_source_guard,
     directory_privacy,
+    enti_client,
+    enti_day,
+    enti_mapping,
+    enti_sync,
+    enti_wizard,
 )

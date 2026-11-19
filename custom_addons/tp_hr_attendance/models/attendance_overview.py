@@ -48,7 +48,13 @@ LEAVE = 'leave'
 LABELS = dict(PRESENCE, leave='Nghỉ đã xác nhận')
 STATE_ORDER = (*PRESENCE_ORDER, LEAVE)
 ATTENTION = ('missing', 'review')
-SOURCE_LABELS = {'excel': 'Excel máy chấm công', 'api': 'API máy chấm công', 'mixed': 'Excel + API máy', 'none': 'Chưa có nguồn dữ liệu'}
+SOURCE_LABELS = {
+    'excel': 'Excel máy chấm công',
+    'api': 'API máy chấm công',
+    'enti': 'API chấm công ENTI',
+    'mixed': 'Excel + ENTI',
+    'none': 'Chưa có nguồn dữ liệu',
+}
 MINE_STATE_FILTER_LABELS = {
     'out_recorded': 'Đủ vào/ra',
     'working': 'Chờ ghi nhận giờ ra',
@@ -196,7 +202,7 @@ class AttendanceDayOverview(models.Model):
                 elif key in day_map:
                     day = day_map[key]
                     cell.update(state=presence_from_day(day.data_state, day.in_time, day.out_time, work_date == today),
-                                source='excel', day_id=day.id, **{'in': day.in_time or '', 'out': day.out_time or ''})
+                                source=day.source_kind or 'excel', day_id=day.id, **{'in': day.in_time or '', 'out': day.out_time or ''})
                 elif leave and key in leave:
                     cell['state'] = LEAVE
                 elif any(employee_id in people and first <= work_date <= last for first, last, people in coverage):
@@ -211,19 +217,59 @@ class AttendanceDayOverview(models.Model):
     def _tp_source_strip(self, company, today):
         updated, applied = self._tp_updated(company)
         Event = self.env['tp.hr.attendance.event'].sudo()
+        EntiDay = self.env['tp.hr.attendance.enti.day'].sudo()
         sources = self.env['tp.hr.attendance.source'].sudo().search([('company_id', '=', company.id)])
         last_event = Event.search([('company_id', '=', company.id)], order='timestamp desc', limit=1)
-        kind = 'mixed' if applied and last_event else 'api' if last_event else 'excel' if applied else 'none'
+        enti_days = EntiDay.search([('company_id', '=', company.id)], order='work_date desc', limit=1)
+        has_enti = bool(enti_days)
+        is_live = any(s.live_enabled for s in sources)
+
+        if has_enti and applied:
+            kind = 'mixed'
+        elif has_enti:
+            kind = 'enti'
+        elif applied and last_event:
+            kind = 'mixed'
+        elif last_event:
+            kind = 'api'
+        elif applied:
+            kind = 'excel'
+        else:
+            kind = 'none'
+
         states = dict(self.env['tp.hr.attendance.source']._fields['state'].selection)
         latest_day = self.search([('company_id', '=', company.id), ('work_date', '<=', today)], order='work_date desc', limit=1).work_date
         latest_event = last_event.local_date if last_event and last_event.local_date <= today else None
-        latest = max(filter(None, [latest_day, latest_event]), default=None)
+        latest_enti = enti_days.work_date if enti_days and enti_days.work_date <= today else None
+        latest = max(filter(None, [latest_day, latest_event, latest_enti]), default=None)
+
+        # Get latest update timestamp
+        source_updated_str = updated['at'] if updated else ''
+        enti_sources = sources.filtered(lambda s: s.kind == 'enti_api')
+        if enti_sources and enti_sources[0].last_success_at:
+            Day = self.env['tp.hr.attendance.day']
+            tz_env = Day.with_context(tz=self.env.user.tz or DEFAULT_TZ)
+            stamp = fields.Datetime.context_timestamp(tz_env, enti_sources[0].last_success_at)
+            source_updated_str = stamp.strftime('%d/%m/%Y %H:%M')
+
+        data_to_str = updated['to'] if updated else ''
+        if latest_enti:
+            data_to_str = latest_enti.strftime('%d/%m/%Y')
+
+        note = ''
+        if kind == 'enti':
+            note = 'Dữ liệu được đồng bộ tự động từ ENTI.'
+        elif kind == 'mixed':
+            note = 'Dữ liệu kết hợp nguồn ENTI và Excel.'
+        elif kind == 'excel':
+            note = 'Excel là ảnh chụp theo file đã nhập, không phải thời gian thực.'
+
         return {
-            'kind': kind, 'label': SOURCE_LABELS[kind], 'updated_at': updated['at'] if updated else '',
-            'data_to': updated['to'] if updated else '', 'file': applied[:1].file_name or '' if applied else '',
-            'api': ', '.join(f'{source.name}: {states[source.state]}' for source in sources) or 'Chưa cấu hình',
-            'live': False, 'latest_date': latest.isoformat() if latest else '',
-            'note': 'Excel là ảnh chụp theo file đã nhập, không phải thời gian thực.' if kind in ('excel', 'mixed') else '',
+            'kind': kind, 'label': SOURCE_LABELS.get(kind, 'Chưa có nguồn'), 'updated_at': source_updated_str,
+            'data_to': data_to_str, 'file': applied[:1].file_name or '' if applied else '',
+            'api': ', '.join(f'{source.name}: {states.get(source.state, source.state)}' for source in sources) or 'Chưa cấu hình',
+            'live': is_live, 'latest_date': latest.isoformat() if latest else '',
+            'note': note,
         }
 
     @api.model

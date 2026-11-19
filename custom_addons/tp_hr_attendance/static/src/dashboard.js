@@ -1,4 +1,4 @@
-import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
+import { Component, onMounted, onWillStart, onWillUnmount, proxy, useProps } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
@@ -25,6 +25,11 @@ export class AttendanceDashboard extends Component {
         this.orm = useService("orm");
         this.action = useService("action");
         this.dialog = useService("dialog");
+        try {
+            this.busService = useService("bus_service");
+        } catch (_) {
+            this.busService = null;
+        }
         const saved = readStore(STORE_KEY);
         this.state = proxy({
             mode: ["day", "week", "month"].includes(saved.mode) ? saved.mode : "day", date: "",
@@ -39,7 +44,35 @@ export class AttendanceDashboard extends Component {
         this.formatDate = formatDate;
         this.request = 0;
         this.searchTimer = null;
-        onWillStart(() => this.load());
+        this.pollTimer = null;
+
+        onWillStart(async () => {
+            if (this.busService) {
+                try {
+                    this.busService.addChannel("tp_hr_attendance_channel");
+                    this.busService.subscribe("enti_sync_completed", () => {
+                        if (!this.state.loading) {
+                            this.load();
+                        }
+                    });
+                } catch (_) {}
+            }
+            await this.load();
+        });
+
+        onMounted(() => {
+            this.pollTimer = browser.setInterval(() => {
+                if (!document.hidden && !this.state.loading) {
+                    this.load();
+                }
+            }, 30000);
+        });
+
+        onWillUnmount(() => {
+            if (this.pollTimer) {
+                browser.clearInterval(this.pollTimer);
+            }
+        });
     }
 
     get data() {

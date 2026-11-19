@@ -1,7 +1,7 @@
 {
     "name": "TANPHAT ONE — Chấm công",
-    "summary": "Nhập Excel máy chấm công có xem trước, bảng công tối giản, tổng quan và nền tích hợp API máy (chưa kết nối)",
-    "version": "20.0.3.3.0",
+    "summary": "Tích hợp chấm công tự động từ API ENTI, nhập Excel dự phòng, bảng công tối giản, tổng quan thời gian thực",
+    "version": "20.0.3.4.0",
     "license": "LGPL-3",
     "author": "Tan Phat JSC",
     "depends": ["tp_hr_workspace"],
@@ -15,6 +15,7 @@
         "views/config_views.xml",
         "views/correction_views.xml",
         "views/source_views.xml",
+        "views/enti_views.xml",
         "views/menus.xml",
     ],
     "assets": {
