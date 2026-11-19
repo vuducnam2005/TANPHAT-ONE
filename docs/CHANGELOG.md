@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-030 — Đã áp ENTI-ATTENDANCE-002 lên PC server
+
+- 20/11/2026 03:25 giờ VN: release từ `51e1421b` (51 file, 7 mới, 2 bỏ, checksum khớp), `tp_hr_attendance` 20.0.3.4.1 → 20.0.3.5.0, upgrade exit 0/0 ERROR. Backup `C:\TANPHAT-backups\enti-attendance002\enti002-20261120T032523` (dump + `pg_restore -l`, filestore, source, config, SHA256). Snapshot dữ liệu/quyền trước/sau giống hệt, chỉ đổi phiên bản module và priority cron ENTI 5 → 10; trùng lặp ngày/phiên/ngày ENTI 0.
+- Đồng bộ thật: code cũ ghi lại 234 ngày công mỗi phút; code mới chạy lượt cửa sổ 03:28 (3,1 giây, 0 thay đổi, lần đầu điền `raw_hash`) rồi 5 lượt đọc hôm nay liên tiếp 03:29–03:33 (~0,25 giây, 0 lỗi); lượt không đổi không ghi ngày công/nhật ký, `last_success_at` tiến theo từng lượt. Nhịp 15 giây (05:00–22:00) chưa quan sát trên PC vì lúc kiểm ngoài khung. Độ trễ đo được chỉ là ENTI → Odoo → màn hình; máy chấm công → ENTI không đo.
+- Bundle công khai có code mới, không còn hộp thoại tải tệp; health 200, login 302. Không đăng nhập tài khoản thật trên PC. Hoàng Xuân Tiến (id 44, ENTI `TP032`) đã ghép đúng từ trước, lần này chỉ kiểm. Xuất Excel trên dữ liệu thật 3 kỳ 0 sai lệch. Phút muộn giữ nguyên ENTI: tuần 09–15/11 có 23/91 lần ≥ 2 giờ do lần chấm đầu tiên rơi vào buổi chiều — chờ nhân sự quyết định. [Nghiệm thu §6](demo/ENTI_ATTENDANCE_002_ACCEPTANCE.md#6-pc-server-chg-20261119-030).
+
 ## CHG-20261119-029 — Công lấy tự động từ ENTI gần thời gian thực; Tổng quan mới; ngừng nhập tệp Excel
 
 - 20/11/2026 Asia/Saigon; nhiệm vụ `ENTI-ATTENDANCE-002`. `tp_hr_attendance` 20.0.3.5.0. [DEC-063](DECISIONS.md), [Nghiệm thu](demo/ENTI_ATTENDANCE_002_ACCEPTANCE.md).

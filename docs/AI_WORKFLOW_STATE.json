@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T20:24:01.826311+00:00",
-  "last_change_id": "CHG-20261119-029",
+  "updated_at": "2026-11-19T20:37:47.247330+00:00",
+  "last_change_id": "CHG-20261119-030",
   "code_digest": "cdf9867080bc1ed001d3a58b762886d88c83488d93228653de06a39dd0e1c017",
   "code_file_count": 708,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "5f8995c0a571350f75831bd27e45bf8bfe6dfa64194c51dfe0f79781cce1cdf2",
-    "docs/CHANGELOG.md": "089b756612b42741725337a4beec64ae22a31e0684238ab245cb3bd27e11aac7",
+    "docs/PROJECT_STATUS.md": "88ed302ef412d36596c94d240149d83d74fd0ad99bf29c837e85a8a0210c86f2",
+    "docs/CHANGELOG.md": "99d60b604f1c6eaf49979c58d8457f00aa7603be53fae5b8b49795d622fb5482",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,11 +20,10 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "tp_tanphat_test: odoo -u tp_hr_attendance --test-tags /tp_hr_attendance: 95 tests, 0 failed, 1 error pre-existing cross-module (test_access officer group sync blocked by tp_admin_delegation guards.py:418)",
-    "ruff check: tp_hr_attendance tests + scripts/enti_att002_*.py clean",
-    "Playwright scripts/enti_att002_ui.cjs local18179: 9/9 PASS (overview 1440/768/390/320, board/mine/sources, Excel import closed)",
-    "Playwright scripts/enti_att002_live.cjs local18179: new out punch shown 0.7s after commit without reload (ENTI->Odoo->screen only)",
-    "scripts/enti_att002_export_check.py local: week 09-15/11, 01-19/11, month 11/2026 workbooks match backend, 0 problems",
-    "PC server not yet applied in this change"
+    "PC server tp_tanphat_dev: deploy-enti-attendance002.ps1 from 51e1421b, 51 files checksum OK, upgrade 20.0.3.4.1 -> 20.0.3.5.0 exit 0, 0 ERROR; backup enti002-20261120T032523 with SHA256",
+    "PC snapshot before/after identical except module version and ENTI cron priority 5 -> 10; duplicate days/sessions/ENTI days 0",
+    "PC live ENTI sync: 6 consecutive automatic successes 03:28-03:33 VN (1 window, 5 today), unchanged polls write no day/log rows, container log 0 ERROR; 15s daytime cadence not yet observed on PC",
+    "PC export check (read-only, rollback): week 09-15/11, 01-19/11, month 11 - 0 problems, overview KPIs match file",
+    "PC public bundle contains new overview and bus channel, no upload dialog; health 200, login 302"
   ]
 }

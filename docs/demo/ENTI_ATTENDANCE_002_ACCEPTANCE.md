@@ -1,10 +1,10 @@
 # ENTI-ATTENDANCE-002 — Nghiệm thu kỹ thuật
 
-Change: `CHG-20261119-029` (code) · Quyết định: [DEC-063](../DECISIONS.md) · Module `tp_hr_attendance` `20.0.3.5.0`
-· Kế thừa [ENTI-LIVE-001](ENTI_LIVE_001_ACCEPTANCE.md) (`CHG-20261119-025/026`).
+Change: `CHG-20261119-029` (code) · `CHG-20261119-030` (áp PC server) · Quyết định: [DEC-063](../DECISIONS.md)
+· Module `tp_hr_attendance` `20.0.3.5.0` · Kế thừa [ENTI-LIVE-001](ENTI_LIVE_001_ACCEPTANCE.md) (`CHG-20261119-025/026`).
 
-Trạng thái: **VERIFIED_RELEASE_READY** trên DB kiểm thử cục bộ `tp_tanphat_test` (cổng 18179). Phần PC server
-ghi ở mục 6 sau khi áp. Đây là nghiệm thu kỹ thuật, chưa phải nghiệm thu nghiệp vụ của phòng nhân sự.
+Trạng thái: **MAIN_AND_PC_SERVER_APPLIED**. Kiểm kỹ thuật trên DB kiểm thử cục bộ `tp_tanphat_test` (cổng 18179, mục 2–4)
+và áp PC server ngày 20/11/2026 (mục 6). Đây là nghiệm thu kỹ thuật, chưa phải nghiệm thu nghiệp vụ của phòng nhân sự.
 
 ## 1. Phạm vi đã làm
 
@@ -69,6 +69,59 @@ Hoàn tác: dừng `tp-odoo`; khôi phục `source.tar.gz` vào `custom_addons/t
 `tp_tanphat_dev` và giải nén `filestore.tar.gz` nếu cần; khởi động lại. Migration `20.0.3.5.0` chỉ đổi priority cron ENTI
 5 → 10, không sửa dữ liệu.
 
-## 6. PC server
+## 6. PC server (`CHG-20261119-030`)
 
-Chưa áp ở commit code này; kết quả triển khai, đồng bộ tự động thật và đối chiếu ghi ở change kế tiếp.
+Giờ dưới đây là giờ Việt Nam (UTC+7), ngày 20/11/2026.
+
+**Triển khai.** Release từ commit `51e1421b` (51 file, 7 file mới, 2 file bỏ; checksum từng file khớp) chép vào
+`.local\enti-attendance002` rồi chạy script ở mục 5. `tp_hr_attendance` 20.0.3.4.1 → 20.0.3.5.0, upgrade exit 0, log upgrade
+0 ERROR; Odoo dừng 03:25:23, chạy lại 03:26:37. Backup `C:\TANPHAT-backups\enti-attendance002\enti002-20261120T032523`
+(dump + `pg_restore -l`, filestore, source module, config, SHA256).
+
+**Snapshot trước/sau** giống hệt, chỉ đổi phiên bản module và priority cron ENTI 5 → 10: 39 nhân viên, 32 user, nhóm quyền,
+roster, 780 ngày công, 787 phiên, 780 ngày ENTI, 39 người ENTI đã ghép, 5 lô Excel cũ, 0 điều chỉnh, 0 kỳ chốt, `base_url`.
+Trùng lặp ngày công / phiên / ngày ENTI theo khóa duy nhất: 0 / 0 / 0.
+
+**Truy cập.** Trên PC `/web/health` 200, `/web/login` 302; qua URL công khai health 200 (0,55 giây), login 302. Bundle
+`web.assets_web` công khai (JS 7556850, CSS 6f82a6b, sinh lại sau nâng cấp) có kênh bus `tp_hr_attendance/updated`, khối
+*10 nhân viên gần nhất*, 6 KPI và thông báo *Đã ngừng nhập tệp Excel*; không còn mã của luồng tải tệp. Không đăng nhập
+tài khoản thật trên PC (tránh làm văng phiên người dùng), nên chưa xem giao diện PC bằng mắt.
+
+**Đồng bộ tự động thật** (cron `ir_cron_enti_attendance_sync`, nguồn ENTI id 3, chỉ đọc DB và log):
+
+| Lúc | Lượt | Kết quả |
+| --- | --- | --- |
+| 03:17–03:25 | Code cũ, 8 lượt | Mỗi phút ghi lại **234 ngày công** dù ENTI không đổi. |
+| 03:28:18 | Code mới, cửa sổ 15–20/11 (đăng nhập ENTI, token 900 giây) | Thành công 3,1 giây, `changed 0`, nhật ký `scope=window`, `polls=1`; lần đầu điền `raw_hash` (cột mới) cho 234 dòng ngày ENTI, không ghi ngày công. |
+| 03:29:22 → 03:33:23 | Code mới, hôm nay, mỗi phút | 5 lượt thành công liên tiếp, mỗi lượt ~0,25 giây, 0 lỗi; `last_success_at` tiến theo từng lượt (giờ *Tự động đồng bộ* lấy từ đây). |
+
+Trong 6 lượt mới: `write_date` lớn nhất của ngày công đứng yên ở 03:25:07 (lượt cuối của code cũ), ngày ENTI không ghi gì
+sau 03:28:18, nhật ký đồng bộ không thêm dòng (lượt không đổi chỉ ghi nhịp tim 30 phút/lần), số ngày công/phiên giữ
+780/787, log container 0 ERROR. Lúc kiểm là 03:28–03:34, ngoài khung 05:00–22:00, nên cron đọc mỗi phút; nhịp đọc 15 giây
+trong giờ làm **đã kiểm trên DB kiểm thử, chưa quan sát trên PC**.
+
+**Độ trễ.** Đo được phần ENTI → Odoo → màn hình: cục bộ 0,7 giây sau commit. Trên PC, giờ mới có ở ENTI được đọc trong
+tối đa ~15 giây (05:00–22:00) hoặc ~60 giây (ngoài khung), cộng ~0,3 giây một lượt đọc hôm nay. Khoảng máy chấm công →
+ENTI nằm ngoài Odoo và **không đo**.
+
+**Hoàng Xuân Tiến.** Hồ sơ id 44 (`TP10065`, phòng Thiết kế) đã mang tên đúng *Hoàng Xuân Tiến*; người ENTI `TP032` đã ghép
+vào hồ sơ này (trạng thái *đã ghép*, lý do: người dùng xác nhận đổi tên Tuyến → Tiến và cùng một người), có 20 ngày ENTI
+→ 20 ngày công. Việc này đã làm trước khi áp bản này; lần này chỉ kiểm, không sửa. Không còn người ENTI chưa ghép.
+
+**Xuất Excel trên dữ liệu thật** (`scripts/enti_att002_export_check.py` chạy trong container, chỉ đọc, rollback):
+
+| Kỳ | Người | Ô ngày | Ô có giờ | Lần muộn | Phút muộn | Vắng | Dòng Chi tiết | Sai lệch |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Tuần 09–15/11 | 39 | 273 | 329 | 91 | 6612 | 56 | 273 | 0 |
+| 01–19/11 (nhiều tuần) | 39 | 741 | 888 | 220 | 13938 | 142 | 739 | 0 |
+| Tháng 11 | 39 | 1170 | 888 | 220 | 13938 | 142 | 778 | 0 |
+
+*Ô có giờ* đếm riêng ô Vào và ô Ra. Dòng Chi tiết bỏ ô ngoài thời gian làm việc và ngày tương lai; tháng 11 có thêm
+39 dòng của 20/11. KPI Tổng quan cùng phạm vi khớp file.
+
+**Điểm cần phòng nhân sự xem.** Phút muộn lấy nguyên từ ENTI (ca `HC`). Tuần 09–15/11: 71/91 lần muộn bằng đúng số phút sau
+08:30; các lần còn lại ENTI trừ 90 phút nghỉ trưa vì lần chấm đầu tiên rơi vào buổi chiều. 23/91 lần muộn từ 2 giờ trở lên,
+ví dụ chỉ chấm một lần lúc 18:08 → ENTI tính muộn 488 phút. Odoo hiển thị đúng như ENTI tính; cần nhân sự quyết định các
+ngày này là đi muộn, nghỉ nửa buổi hay quên chấm.
+
+**Chưa làm.** Xem giao diện trên PC bằng tài khoản thật; quan sát nhịp 15 giây trong giờ làm trên PC; nghiệm thu nghiệp vụ.
