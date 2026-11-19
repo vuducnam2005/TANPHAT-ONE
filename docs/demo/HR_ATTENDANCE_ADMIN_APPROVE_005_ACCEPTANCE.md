@@ -39,3 +39,12 @@
 
 - DB chính local và PC server hiện không có phiếu điều chỉnh thật; không tạo phiếu giả ở đó, nên kiểm trên server chỉ đọc (menu theo Admin chính, số phiếu chờ, version).
 - Chưa kiểm trên thiết bị iOS/Safari thật. Nghiệm thu nghiệp vụ thuộc quyền người dùng khi có phiếu thật đầu tiên.
+
+## Giao bản PC server — CHG-20261119-010
+
+- Commit ứng dụng: `44b0c9e2a0978a2ab2f7a6efd91fab916476e9c8`; `tp_hr_attendance` `20.0.3.1.0 → 20.0.3.2.0` bằng `-u tp_hr_attendance` (13 tệp, 1 migration mới).
+- Backup trước nâng cấp: `C:\TANPHAT-backups\admin-approve005\admin-approve005-20261119T121945` (dump `10.191.235`B / `15.789` mục restore-list, filestore `32.272.814`B, source-config `195.339`B, `SHA256SUMS.json`).
+- Kết quả: upgrade exit 0, 0 ERROR (nâng cấp và sau khởi động), health/login 200, nguồn khớp commit 64/64. Nhân sự 39, tài khoản 32, digest nhóm, roster, phiên 384, ngày công 480, đi muộn 117, lô 5, grant ủy quyền và base URL không đổi.
+- Người duyệt trên server: **Admin chính `admin`** (uid 2, công ty 1), đường dẫn **Quản trị chấm công → Xử lý điều chỉnh**. 5 admin ủy quyền có nhóm HR manager vẫn thấy hàng đợi ở chế độ chỉ xem như trước; họ không có nút Duyệt/Trả lại và backend từ chối.
+- Public `https://eight-championships-launches-plaintiff.trycloudflare.com`: `/web/health`, `/dang-nhap` 200; bundle `73d8d48` (CSS) / `5c1f5ad` (JS) có chuỗi giao diện mới.
+- Server chưa có phiếu điều chỉnh thật; không tạo, gửi hay duyệt phiếu để thử. Local `18069` chưa áp vì đang chạy candidate của phiên khác.

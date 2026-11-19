@@ -16,6 +16,7 @@
 - Public `https://eight-championships-launches-plaintiff.trycloudflare.com`: `/web/health`, `/dang-nhap` 200; bundle mới `/web/assets/73d8d48/web.assets_web.min.css` (SHA256 `3dda3b6e…cff2`) và `/web/assets/5c1f5ad/web.assets_web.min.js` (SHA256 `c65e7521…4b7e`) có chuỗi giao diện mới.
 - Local `18069` chưa áp: cổng này đang chạy candidate của phiên HR-EMPLOYEE-XLSX (`.local/hr-employee-xlsx001/candidate`, `tp_hr_attendance` `20.0.3.1.0`), nên không dừng hay sửa runtime của phiên khác. Áp sau bằng `-u tp_hr_attendance` có backup khi runtime đó rảnh.
 - Không tạo, gửi hay duyệt phiếu nào trên server; không đổi tài khoản/quyền ngoài phạm vi. `docs/AI_WORKFLOW_STATE.json` sinh từ đúng cây commit trong thư mục tạm; checkpoint và tài liệu dở của phiên khác được giữ nguyên.
+- Provenance CHG-20261119-010: mục changelog này đã lên `origin/main` qua commit `b4a8dae1` của phiên HR-LOGIN-RENAME. Phiên đó commit index chung đúng lúc mục này đang được stage (xem ghi chú ở CHG-20261119-009). Trạng thái dự án, biên bản nghiệm thu, runbook và workflow state của lần giao này ở commit tài liệu riêng ngay sau, dùng index riêng; không có application code.
 
 ## CHG-20261119-009 — Prompt đổi tên đăng nhập nhân viên (HR-LOGIN-RENAME-001)
 
