@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-019 — Giao quyền quản lý tài khoản admin lên local và PC server
+
+- 19/11/2026 Asia/Saigon, theo quyền triển khai đã giao và DEC-051/062. App `3442143c6c23c6384a0450a1e61a361dcf8352fb` đã push origin/main và áp local18069 + PCserver; HR20.0.1.16.0/admin20.0.2.1.0, exit0/0ERROR mỗi môi trường. Các addon/session/tunnel/config khác giữ.
+- Backup PC `C:\TANPHAT-backups\admin-account-policy001\admin-account018-20261119T150313`: dump10.191.206B, pg_restore-list15.790mục, filestore628mục/32.038.793B, source/config và SHA256. Local `.local/admin-account-policy001/main-backup-20261119T150023`: dump/pg_restore-list, 150.508.243B filestore DB-referenced, source/config/SHA256. Không snapshot GC orphan và không xóa dữ liệu hiện hành.
+- Snapshot trước/sau giữ39employee/32user, groups/implied, login/password/active/locks/revision, company/partner/resource/roster, toàn ledger cấp quyền và nghiệp vụ; chỉ2module version đổi. Không cấp/thu/khóa/reset tài khoản người thật. Main/server không fixture test. Local không grant hiện có; PC5grant live, original capabilitymanage=true và leveldelegated, mọi peer cấm sửa/rename/manage.
+- Probe READ ONLY 13/13 local, 68/68 PC server; source28/28SHA256, public health/login200, actual JS/CSS khớp server và có controller/dialog/readonly mới. Odoo40/40, race2/2 và browserdesktop/mobile đã PASS ở018. [Bằng chứng](demo/ADMIN_ACCOUNT_POLICY_001_ACCEPTANCE.md); chưa authenticated real-user public E2E hoặc iOS/Safari. Người dùng nghiệm thu hình thức/nghiệp vụ riêng.
+- Snapshot HEAD+scope và private index giữ foreign checkpoint18/11/WIP; receipt chỉ tài liệu, không restart/upgrade. Next: Ctrl+F5 và nghiệm thu UI/thao tác theo quyền mới; không dùng kết quả kỹ thuật thay business acceptance/pilot authorization.
+
 ## CHG-20261119-018 — Quyền quản lý tài khoản và hồ sơ admin
 
 - 19/11/2026 Asia/Saigon; yêu cầu trực tiếp đính kèm cho phép phiên chính triển khai. DEC-062 thay revoke-first lock, giữ DEC-053/054: chỉ admin gốc cấp/thu admin, delegate quản trị nghiệp vụ toàn hệ thống nhưng không sửa peer/original account/profile.

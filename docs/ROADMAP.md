@@ -1,6 +1,6 @@
 # TANPHAT ONE — Backlog và cổng nghiệm thu
 
-**ADMIN-ACCOUNT-POLICY-001 — CHG-20261119-018 / DEC-062:** đã kiểm kỹ thuật sửa quyền quản lý tài khoản/hồ sơ admin; original khóa/mở delegate không revoke, peer chỉ đọc kể cả inactive; [acceptance](demo/ADMIN_ACCOUNT_POLICY_001_ACCEPTANCE.md). Rollout theo DEC-051 sau kiểm phù hợp, không thay nghiệm thu nghiệp vụ.
+**ADMIN-ACCOUNT-POLICY-001 — CHG-20261119-019 / DEC-062:** đã áp local/PCserver sửa quyền quản lý tài khoản/hồ sơ admin; original khóa/mở delegate không revoke, peer chỉ đọc kể cả inactive; [acceptance](demo/ADMIN_ACCOUNT_POLICY_001_ACCEPTANCE.md). Rollout theo DEC-051 sau kiểm phù hợp, không thay nghiệm thu nghiệp vụ.
 
 Đây là bản đồ công việc; `PROJECT_STATUS.md` là nơi xác định việc hiện tại và việc tiếp theo. Không đánh dấu xong chỉ vì đã tạo thư mục hoặc viết thiết kế. Mỗi mã việc phải có bằng chứng nghiệm thu.
 

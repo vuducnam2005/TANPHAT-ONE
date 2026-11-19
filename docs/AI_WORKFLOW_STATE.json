@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T07:57:28.213960+00:00",
-  "last_change_id": "CHG-20261119-018",
+  "updated_at": "2026-11-19T08:09:08.348171+00:00",
+  "last_change_id": "CHG-20261119-019",
   "code_digest": "b77e3ae01df5b88a2c59b1f478f172c956fff24911c21f8398bb678959ebfc5b",
   "code_file_count": 684,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "53ea214663857b9129aa599a9811742a3c6feeb01f66639d8574e7d88e974c35",
-    "docs/CHANGELOG.md": "c9aedef0cec9a2de9c17d21a8f24acdd731f167008cb35f7059b3279c60b8b6f",
+    "docs/PROJECT_STATUS.md": "9f48b95a77758884f34e9170e63f502b7dc4508c4f74ad35b2be5a56de9c07e9",
+    "docs/CHANGELOG.md": "678c5145da67e06f2d2a2c5c30cc5598afa5fe9c0a0aa3478a9361af20f32c27",
     "AGENTS.md": "41da7729acb3c746356fb7595b8c1e452c6edcebe22d398f22361c67113038dc",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "4fa3343ba9cf90b97228ba50a6f29fbe8906d4be10bbd10f3c738b7bd8c12dee",
+    "docs/ROADMAP.md": "94d80e67a9a67acf82a35cf7bce4d78cbeb2a3e00cd1bac71204ecb6a29c853e",
     "docs/DECISIONS.md": "882c75bea03192ca48bb4734e6f2a05a49115e733b92f2e480f9a2e07c303b6e",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Odoo 40/40 PASS, 0 failed / 0 errors (tests-5.log): toàn addon admin delegation, login rename backend/HTTP/browser và account-role regression. Tag mới gồm 7 TransactionCase + 2 HttpCase; kiểm lock/unlock ledger/groups không đổi, audit reason/actor/target/revision, phiên cũ bị từ chối, login mới khóa có thông báo và mở lại đăng nhập được; peer writes mọi trường/sudo/context/inactive/bulk/profile/contact/resource/hr.version/link/unlink bị chặn; ordinary management/self service và original-only grant/revoke giữ.\n\nRace 2/2 PASS (race.log), PostgreSQL hai giao dịch độc lập: rename+rename và create+rename cùng login có đúng một winner; fixture đã cleanup. Lệnh python -m scripts.tests.test_hr_login_rename_race --config .local/admin-account-policy001/runtime-test.conf; không chạy trên main/server.\n\nPlaywright 1440x900 và 390x844 PASS: original khóa/mở qua lý do + xác nhận, trạng thái DB/reload đúng và 3 nhãn loại tài khoản; peer employee profile và native res.users chỉ đọc, không rename/reset/lock/edit/menu thao tác, 0 pageerror. Hồi quy rename dialog/unique/inline/cancel/save/reload/mobile PASS. Screenshot/result ignored .local/admin-account-policy/browser và .local/hr-login-rename-impl001/browser.\n\nRuff, AST Python, XML parse, Node syntax và scoped git diff --check PASS. Review chéo phát hiện/sửa self-rule áp rộng nhầm ordinary HR và menu mobile native vẫn hiện; khóa target dùng exclusive advisory theo namespace grant, không đổi scope revision. Các lần đầu lỗi fixture cookie/HR role/sequence/config API và selector icon đã sửa, không giảm guard để làm test xanh. Chưa authenticated public E2E bằng người thật/iOS/Safari thật; không khóa/reset/cấp quyền người thật. Kiểm kỹ thuật không thay nghiệm thu nghiệp vụ.\n"
+    "App3442143c pushed/applied local+PC; exit0/0ERROR; read-only 13/13 local, 68/68 PC server; source28/28; snapshots unchanged; real public/server assets+health/login PASS; Odoo40/40 race2/2 Playwrightdesktop/mobile from018; business acceptance/real-user authenticated public E2E pending"
   ]
 }
