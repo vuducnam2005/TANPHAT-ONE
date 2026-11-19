@@ -1,5 +1,13 @@
 # TANPHAT ONE — Sổ quyết định
 
+## DEC-062 — Admin gốc quản lý admin ủy quyền; admin ngang hàng chỉ đọc (19/11/2026)
+
+**Đã chốt trực tiếp bởi người dùng**, thay quy tắc bắt thu hồi admin trước khi khóa. Admin gốc được khóa/mở các tài khoản khác, gồm admin ủy quyền, sửa tài khoản/login/reset/hồ sơ theo chức năng; giữ bảo vệ hệ thống, ngăn tự khóa và giữ admin gốc cuối cùng. Chỉ admin gốc cấp/thu quyền admin (DEC-054).
+
+Admin ủy quyền A/B không sửa bất kỳ thông tin tài khoản hoặc hồ sơ tương ứng của nhau: không khóa/mở/archive/delete/login/reset/quyền, không đổi họ tên/ảnh/email/điện thoại/phòng/chức vụ/liên kết qua user, employee, partner, resource, hr.version hoặc model đồng bộ. B đang khóa vẫn được bảo vệ nếu grant chưa thu. Backend kiểm actor/target từ marker và ledger hiện có, không suy original từ system group/UID/login, không tin context/sudo. Batch có target bị cấm thì từ chối toàn bộ trước ghi.
+
+Khóa/mở là trạng thái DB và vô hiệu hóa session; không sửa ledger/quyền/hồ sơ/lịch sử. Mở lại không tạo grant và giữ grant còn hiệu lực. UI hiển thị Admin gốc/Admin ủy quyền/Nhân viên; peer readonly có giải thích và ẩn mọi edit control. Self dùng chức năng cá nhân cho phép; quản trị nhân viên thường/nghiệp vụ toàn phòng giữ DEC-053/061. Lịch sử actor/target/time/action/reason/before-after, không password/token. Không chặn dự án/thiết bị/báo cáo chỉ do tham chiếu admin. [Acceptance](demo/ADMIN_ACCOUNT_POLICY_001_ACCEPTANCE.md).
+
 ## DEC-061 — Admin được ủy quyền cũng duyệt điều chỉnh công (19/11/2026)
 
 Người dùng bổ sung trực tiếp: “quyền admin là toàn quyền chừ việc tự bổ nhiệm quyền admin cho người khác thôi”. Sửa DEC-060 ở phần người duyệt; giữ DEC-053/054.

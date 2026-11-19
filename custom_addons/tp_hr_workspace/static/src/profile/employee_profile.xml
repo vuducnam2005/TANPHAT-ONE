@@ -1,7 +1,7 @@
 <templates xml:space="preserve">
     <t t-name="tp_hr_workspace.ProfileButtons">
-        <button t-if="this.canEdit and !this.model.root.isInEdition" class="btn btn-primary o_tp_hr_edit" t-on-click="this.editProfile"><i class="oi" data-icon="edit" aria-hidden="true"/><t t-out="this.props.resModel === 'hr.employee' ? 'Sửa hồ sơ' : 'Chỉnh sửa'"/></button>
-        <t t-if="this.canEdit and this.model.root.isInEdition"><button class="btn btn-primary o_tp_hr_save" t-on-click="this.saveProfile">Lưu</button><button class="btn btn-outline-secondary o_tp_hr_cancel" t-on-click="this.cancelProfile">Hủy</button></t>
+        <button t-if="this.canEdit and !this.model.root.data.tp_account_profile_readonly and !this.model.root.isInEdition" class="btn btn-primary o_tp_hr_edit" t-on-click="this.editProfile"><i class="oi" data-icon="edit" aria-hidden="true"/><t t-out="this.props.resModel === 'hr.employee' ? 'Sửa hồ sơ' : 'Chỉnh sửa'"/></button>
+        <t t-if="this.canEdit and !this.model.root.data.tp_account_profile_readonly and this.model.root.isInEdition"><button class="btn btn-primary o_tp_hr_save" t-on-click="this.saveProfile">Lưu</button><button class="btn btn-outline-secondary o_tp_hr_cancel" t-on-click="this.cancelProfile">Hủy</button></t>
         <!-- UI-BACK-001: "Quay lại" is the shared tp_web_home control-panel button (one per screen). -->
     </t>
     <t t-name="tp_hr_workspace.EmployeeProfile" t-inherit="web.FormView" t-inherit-mode="primary">

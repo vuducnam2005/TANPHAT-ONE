@@ -9,6 +9,11 @@ class DelegationCase(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        employee_model = cls.env['hr.employee']
+        sequence = employee_model._tp_code_sequence()
+        cls.env.cr.execute('SELECT last_value, is_called FROM ir_sequence_%03d' % sequence.id)
+        cls.addClassCleanup(cls._restore_employee_sequence, sequence.id, *cls.env.cr.fetchone())
+        employee_model._tp_reset_code_sequence(employee_model._tp_code_floor())
         cls.company = cls.env.company
         cls.admin = cls.env.ref('base.user_admin')
         cls.env['tp.admin.delegation']._migrate_admin_full_001()
@@ -42,6 +47,11 @@ class DelegationCase(TransactionCase):
         return self.env['tp.admin.delegation'].with_user(self.admin)._change(
             user or self.users[0], self.company, operation, 'Synthetic reviewed full admin',
         )
+
+    @classmethod
+    def _restore_employee_sequence(cls, sequence_id, last_value, is_called):
+        with cls.registry.cursor() as cr:
+            cr.execute('SELECT setval(%s, %s, %s)', ['ir_sequence_%03d' % sequence_id, last_value, is_called])
 
     def actor(self, user=None):
         target = user or self.users[0]
@@ -89,7 +99,7 @@ class TestAdminDelegation(DelegationCase):
         user.with_user(self.admin).write({'group_ids': [Command.link(scoped_staff.id)]})
 
         own_profile = self.env['res.users'].with_user(user).tp_get_my_profile()
-        self.assertEqual(own_profile['header']['admin_level'], 'Quản trị viên (toàn hệ thống)')
+        self.assertEqual(own_profile['header']['admin_level'], 'Admin ủy quyền')
 
         self.grant(user, operation='revoke')
         self.assertFalse(user._tp_is_granted_admin())
@@ -175,7 +185,7 @@ class TestAdminDelegation(DelegationCase):
                 ('module', '=', 'base'), ('name', '=', 'user_admin'),
             ]).write({'res_id': granted.id}),
             lambda: self.env['ir.module.module'].with_user(granted).search([('name', '=', 'tp_admin_delegation')]).button_immediate_uninstall(),
-            lambda: self.env['ir.config_parameter'].with_user(granted).sudo().set_param('database.secret', 'tampered'),
+            lambda: self.env['ir.config_parameter'].with_user(granted).sudo().set_str('database.secret', 'tampered'),
         ]
         for attempt in attempts:
             with self.assertRaises((AccessError, UserError)), self.env.cr.savepoint():
@@ -188,6 +198,10 @@ class TestAdminDelegation(DelegationCase):
 
     def test_last_original_admin_protection_and_idempotent_migration(self):
         orig_group = self.env.ref('tp_admin_delegation.group_original_admin')
+        # Keep the last-admin scenario independent of extra originals in the test DB.
+        others = self.env['res.users'].with_context(active_test=False).search([
+            ('id', '!=', self.admin.id), ('group_ids', 'in', orig_group.ids)])
+        others.with_user(self.admin).write({'group_ids': [Command.unlink(orig_group.id)]})
         with self.assertRaises(UserError), self.env.cr.savepoint():
             self.admin.with_user(self.admin).write({'group_ids': [Command.unlink(orig_group.id)]})
 

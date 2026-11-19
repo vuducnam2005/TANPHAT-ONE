@@ -83,4 +83,19 @@
         <field name="context">{'default_operation': 'create'}</field></record>
     <menuitem id="menu_delegated_hr_create" name="Tạo hồ sơ ngoài phòng" parent="tp_hr_workspace.menu_group_employees"
               action="action_delegated_hr_create" sequence="50" active="False"/>
+    <record id="account_wizard_protected_admin_info" model="ir.ui.view">
+        <field name="name">tp.hr.account.protected.admin.info</field>
+        <field name="model">tp.hr.account.wizard</field>
+        <field name="inherit_id" ref="tp_hr_workspace.view_tp_hr_account_wizard_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='account_status']/.." position="after">
+                <div class="o_tp_hr_account_row"><label for="account_kind"/><field name="account_kind" readonly="1"/></div>
+            </xpath>
+            <xpath expr="//field[@name='expected_user_id']" position="after">
+                <field name="profile_readonly" invisible="1"/>
+                <div class="alert alert-info" role="status" invisible="not profile_readonly">Chỉ admin gốc được thay đổi tài khoản hoặc hồ sơ của admin ủy quyền khác.</div>
+            </xpath>
+            <xpath expr="//field[@name='reason']" position="attributes"><attribute name="readonly">not is_admin</attribute></xpath>
+        </field>
+    </record>
 </odoo>

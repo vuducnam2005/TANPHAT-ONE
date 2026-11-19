@@ -2,10 +2,17 @@
 import hashlib
 import json
 
+from lxml import etree
+
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
 
-from .guards import _PROFILE, _PROFILE_CREATE
+from .guards import (
+    _PROFILE,
+    _PROFILE_CREATE,
+    account_actor_uid,
+    can_manage_account_target,
+)
 
 PROFILE_FIELDS = ('name', 'work_email', 'work_phone', 'mobile_phone', 'job_title')
 
@@ -13,13 +20,48 @@ PROFILE_FIELDS = ('name', 'work_email', 'work_phone', 'mobile_phone', 'job_title
 class ScopedHrEmployee(models.Model):
     _inherit = 'hr.employee'
 
+    tp_account_profile_readonly = fields.Boolean(compute='_compute_tp_account_profile_readonly')
+
+    @api.depends('user_id')
+    @api.depends_context('uid')
+    def _compute_tp_account_profile_readonly(self):
+        for employee in self:
+            target = employee.sudo().with_context(active_test=False).user_id
+            actor = self.env['res.users'].browse(account_actor_uid(self.env))
+            employee.tp_account_profile_readonly = bool(
+                target and actor._tp_is_main_admin()
+                and (target.id == actor.id or not can_manage_account_target(self.env, target)),
+            )
+
     @api.model
     def get_view(self, view_id=None, view_type='form', **options):
         if (view_type in ('list', 'form', 'search') and self.env.user._tp_has_admin_delegation()
                 and not self.env.user.has_group('hr.group_hr_user')):
             # Same employee/action; only request fields the caller can actually read.
             view_id = self.env.ref('tp_admin_delegation.delegated_employee_' + view_type).id
-        return super().get_view(view_id, view_type, **options)
+        result = super().get_view(view_id, view_type, **options)
+        if view_type == 'form':
+            arch = etree.fromstring(result['arch'])
+            # Apply only to this employee, never embedded records belonging to another model.
+            for node in arch.xpath("//field[not(ancestor::field)]"):
+                previous = node.get('readonly', 'False')
+                node.set('readonly', f'({previous}) or tp_account_profile_readonly')
+            for node in arch.xpath("//button[@type='object'][not(ancestor::field)]"):
+                previous = node.get('invisible', 'False')
+                node.set('invisible', f'({previous}) or tp_account_profile_readonly')
+            sheet = arch.find('sheet')
+            if sheet is not None:
+                flag = etree.Element('field', name='tp_account_profile_readonly', invisible='1')
+                sheet.insert(0, flag)
+                notice = etree.Element('div', {'class': 'alert alert-info', 'role': 'status',
+                    'invisible': 'not tp_account_profile_readonly or user_id == uid'})
+                notice.text = 'Chỉ admin gốc được thay đổi tài khoản hoặc hồ sơ của admin ủy quyền khác.'
+                sheet.insert(1, notice)
+            result['arch'] = etree.tostring(arch, encoding='unicode')
+            result['models'] = {**result['models'], self._name: (
+                set(result['models'].get(self._name, ())) | {'tp_account_profile_readonly'}
+            )}
+        return result
 
     def action_tp_edit_delegated_profile(self):
         self.ensure_one()

@@ -345,8 +345,11 @@ class PersonalEmployee(models.Model):
                 record = self.env.ref(xmlid, raise_if_not_found=False)
                 if record:
                     protected.add(record.id)
-            original_rename = login_rename and not is_orig_target and hasattr(actor_env.user, '_tp_is_original_admin') and actor_env.user._tp_is_original_admin()
-            if user.id in protected or user.share or (user.has_group('base.group_system') and not original_rename):
+            original_manage = (hasattr(actor_env.user, '_tp_is_original_admin')
+                               and actor_env.user._tp_is_original_admin())
+            if hasattr(user, '_tp_can_manage_account_target') and not user._tp_can_manage_account_target():
+                raise AccessError(self.env._('Chỉ admin gốc được thay đổi tài khoản hoặc hồ sơ của admin ủy quyền khác.'))
+            if user.id in protected or user.share or (user.has_group('base.group_system') and not original_manage):
                 raise UserError(self.env._('Tài khoản quản trị/hệ thống hoặc chính mình được bảo vệ.'))
             if set(user.company_ids.ids) - set(self.env.companies.ids):
                 raise AccessError(self.env._('Tài khoản có công ty ngoài phạm vi quản lý.'))

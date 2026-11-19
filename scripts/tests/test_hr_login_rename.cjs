@@ -51,8 +51,8 @@ async function run() {
         await page.screenshot({ path: path.join(output, 'account-after.png') });
         checks.push('Save updates employee detail after native reload');
         if (fixture.grantedAdmin) {
-            assert.equal(await page.getByRole('button', { name: 'Đặt lại mật khẩu', exact: true }).count(), 0);
-            checks.push('Original admin sees rename for granted admin while lock/reset stay protected');
+            assert.equal(await page.getByRole('button', { name: 'Đặt lại mật khẩu', exact: true }).count(), 1);
+            checks.push('Original admin can rename and reset a granted admin independently of its grant');
         }
         await button.click();
         assert.equal(await dialog.locator('#tp_login_current').inputValue(), fixture.newLogin);

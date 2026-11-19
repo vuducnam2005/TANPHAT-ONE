@@ -54,7 +54,12 @@ export class HrProfileController extends FormController {
         if (this.props.resId && !this.props.state?.modelState) params.config.mode = this.props.context?.form_view_initial_mode || "readonly";
         return params;
     }
+    get actionMenuItems() {
+        const items = super.actionMenuItems;
+        return this.model.root.data.tp_account_profile_readonly ? {...items, action: []} : items;
+    }
     async editProfile() {
+        if (this.model.root.data.tp_account_profile_readonly) return;
         await this.model.root.switchMode("edit");
     }
     async saveProfile() {

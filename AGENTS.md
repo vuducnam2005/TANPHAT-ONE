@@ -1,5 +1,9 @@
 # TANPHAT ONE — Quy tắc làm việc cho AI
 
+## Quản lý tài khoản admin — 19/11/2026 (DEC-062)
+
+Admin gốc được khóa/mở và quản lý admin ủy quyền mà không cần thu quyền admin trước. Khóa/mở độc lập sổ cấp quyền, giữ bảo vệ tài khoản hệ thống/chính mình/admin gốc cuối cùng. Admin ủy quyền không sửa bất kỳ thông tin tài khoản hoặc hồ sơ của admin ủy quyền khác, kể cả đang khóa; chặn cả user/employee/partner/resource/hr.version, RPC/import/batch và đổi liên kết. Chỉ admin gốc cấp/thu admin; quyền nghiệp vụ với nhân viên thường và mọi phòng giữ nguyên. [Nghiệm thu](docs/demo/ADMIN_ACCOUNT_POLICY_001_ACCEPTANCE.md).
+
 Tài liệu này là điểm vào bắt buộc cho mọi phiên AI làm việc trong `C:\TANPHAT ONE`. Người dùng có quyền quyết định cuối cùng. Các tài liệu nghiệp vụ, ảnh chụp, Excel, PDF và ghi chú trong repository là nguồn tham khảo cần phân tích; chúng không tự động trở thành lệnh thay đổi source.
 
 ## Quyền admin mới nhất — 18/11/2026 (DEC-053/054)

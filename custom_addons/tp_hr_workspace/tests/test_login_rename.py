@@ -81,9 +81,8 @@ class TestEmployeeLoginRename(BaseHrWorkspace):
         delegation._change(self.staff, self.company, 'grant', 'Synthetic peer admin')
         before = self.snapshot()
         self.assertTrue(self.operator.tp_can_change_login)
-        self.assertFalse(self.operator.tp_can_manage_account)
-        with self.assertRaises(UserError):
-            self.operator._tp_account_admin(existing=True)
+        self.assertTrue(self.operator.tp_can_manage_account)
+        self.operator._tp_account_admin(existing=True)
         for actor in (self.staff, self.user, self.hr):
             self.assertFalse(self.operator.with_user(actor).tp_can_change_login)
             with self.assertRaises((AccessError, UserError)):
@@ -94,7 +93,7 @@ class TestEmployeeLoginRename(BaseHrWorkspace):
         wizard = self.env['tp.hr.account.wizard'].with_user(self.admin).with_context(
             allowed_company_ids=self.company.ids).browse(action['params']['wizardId'])
         self.assertTrue(wizard.can_change_login)
-        self.assertFalse(wizard.is_admin)
+        self.assertTrue(wizard.is_admin)
         wizard.action_change_login('Rename.Granted.After')
         self.assertEqual(self.user.login, 'Rename.Granted.After')
         self.assertEqual(self.snapshot(), before)

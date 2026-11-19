@@ -1,5 +1,7 @@
 # TANPHAT ONE — Backlog và cổng nghiệm thu
 
+**ADMIN-ACCOUNT-POLICY-001 — CHG-20261119-018 / DEC-062:** đã kiểm kỹ thuật sửa quyền quản lý tài khoản/hồ sơ admin; original khóa/mở delegate không revoke, peer chỉ đọc kể cả inactive; [acceptance](demo/ADMIN_ACCOUNT_POLICY_001_ACCEPTANCE.md). Rollout theo DEC-051 sau kiểm phù hợp, không thay nghiệm thu nghiệp vụ.
+
 Đây là bản đồ công việc; `PROJECT_STATUS.md` là nơi xác định việc hiện tại và việc tiếp theo. Không đánh dấu xong chỉ vì đã tạo thư mục hoặc viết thiết kế. Mỗi mã việc phải có bằng chứng nghiệm thu.
 
 **Hướng hiện hành 05/11/2026 — DEC-030:** giao diện chính phát triển trong native Odoo; React là source legacy được giữ, không tiếp tục làm giao diện chính. Các mô tả React/API và test ở bảng dưới giữ bằng chứng lịch sử; batch UI tương lai phải đặc tả lại cho native, không tự coi view native đã có. [Kế hoạch chuyển](architecture/TP_NATIVE_ODOO_DIRECTION.md). Backend, cổng nghiệp vụ và audit pending giữ nguyên.

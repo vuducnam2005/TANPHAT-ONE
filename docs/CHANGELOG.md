@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-018 — Quyền quản lý tài khoản và hồ sơ admin
+
+- 19/11/2026 Asia/Saigon; yêu cầu trực tiếp đính kèm cho phép phiên chính triển khai. DEC-062 thay revoke-first lock, giữ DEC-053/054: chỉ admin gốc cấp/thu admin, delegate quản trị nghiệp vụ toàn hệ thống nhưng không sửa peer/original account/profile.
+- Sửa nguyên nhân tại capability/wizard/backend: bỏ loại toàn bộ system-group target cho original; helper actor-target chung bảo vệ cả inactive grant/group, không tin sudo/context; chặn mọi field/CRUD/link trên user/employee/partner/resource/hr.version, preflight bulk; UI readonly/ẩn controls và nhãn loại tài khoản. Khóa native active/hr_locked/revision giữ session invalidation; ledger không đổi. Audit append-only có lý do/snapshot đã khử credential.
+- Phiên bản HR20.0.1.16.0/admin20.0.2.1.0. Không core Odoo/API/React; không nghiệp vụ/reporting/equipment mới. Không bảng mới; [inventory](ui/TP_TABLE_FILTER_INVENTORY.md) ghi N/A form/wizard và tái dùng search/audit hiện có.
+- Đã đạt 40/40 Odoo, HTTP/browser synthetic trên tp_tanphat_test sau dump/pg_restore-list/filestore DB-referenced/source/config/SHA256 `.local/admin-account-policy001/test-backup-20261119T143137`; không tạo DB mới hoặc sửa tài khoản thật. AST/XML/Node/Ruff/diff-check PASS; kết quả cuối và receipt sau deploy ghi [acceptance](demo/ADMIN_ACCOUNT_POLICY_001_ACCEPTANCE.md). Không coi kiểm kỹ thuật là nghiệm thu nghiệp vụ.
+- Giữ checkpoint foreign18/11/index/WIP; snapshot sạch HEAD+đúng scope cho finish/check/commit, không seal code dở của phiên khác. Next: hoàn tất kiểm, commit/push scope và deploy local/PCserver sau backup, kiểm public thật.
+
 ## CHG-20261119-017 — Giao bản sửa nút đổi tên đăng nhập lên local và PC server
 
 - 19/11/2026: app `cf4cf11411cd0d89b2e76c5d7be4723ef9817c37` đã push origin/main và áp riêng HR `20.0.1.15.1` / admin delegation `20.0.2.0.3`. Hai môi trường upgrade exit 0, 0 ERROR. Không áp WIP khác; chấm công PC giữ `20.0.3.3.0`, local giữ `20.0.3.1.0`.

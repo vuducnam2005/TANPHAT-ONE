@@ -1,4 +1,5 @@
 from odoo import Command, fields
+from odoo.exceptions import AccessError
 from odoo.tests import TransactionCase, tagged
 
 
@@ -41,10 +42,12 @@ class TestDelegationBusinessBaseline(TransactionCase):
     def test_preexisting_hr_and_reporting_groups_preserved_across_grant_and_revoke(self):
         before_groups = set(self.user.group_ids.ids)
         self.grant('grant')
-        self.employee.with_user(self.user).write({'job_title': 'Updated own dept description'})
+        with self.assertRaises(AccessError):
+            self.employee.with_user(self.user).write({'job_title': 'Forbidden self appointment'})
         self.coworker.with_user(self.user).write({'job_title': 'Updated coworker description'})
         self.grant('revoke')
         self.assertEqual(set(self.user.group_ids.ids), before_groups)
         self.assertTrue(self.user.has_group('hr.group_hr_user'))
         self.assertTrue(self.user.has_group('tp_reporting.group_reporting_config'))
         self.assertFalse(self.user.has_group('base.group_system'))
+        self.employee.with_user(self.user).write({'job_title': 'Updated after revoke HR description'})

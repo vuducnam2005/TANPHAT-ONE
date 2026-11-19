@@ -7,12 +7,12 @@ and preservation of HR-DELEGATE-FIX-001 field-group privacy for non-HR users.
   code/ACL/module/XMLID vectors — even when entering through `.sudo()`, import, copy, or defaults.
 - System always preserves at least one active Original Administrator.
 """
-from odoo import SUPERUSER_ID, api, models
+from odoo import SUPERUSER_ID, api, fields, models
 from odoo.exceptions import AccessError, UserError
+from odoo.http import request
 
 from .delegation import (
-    _ADMIN_PROVISION,
-    _MIGRATE,
+    LOCK_NAMESPACE,
     _system_protected_users,
 )
 from odoo.addons.tp_hr_workspace.models.my_profile import (
@@ -55,22 +55,61 @@ _SENSITIVE_XMLID_MODELS = frozenset({
     'ir.ui.menu',
     'tp.admin.delegation',
 })
-_OTHER_ADMIN_SECURITY_FIELDS = frozenset({
-    'active', 'share', 'login', 'password', 'new_password', 'email',
-    'partner_id', 'company_id', 'company_ids', 'group_ids', 'groups_id',
-    'all_group_ids', 'role', 'api_key_ids', 'totp_secret', 'totp_device_ids',
-    'tp_hr_locked', 'tp_lock_revision', 'tp_admin_scope_revision',
-})
+
+
+def account_actor_uid(env):
+    """sudo/context must never replace the authenticated HTTP actor."""
+    if request and request.session and request.session.uid:
+        return request.session.uid
+    return env.uid
 
 
 def _is_trusted_original_or_cli(env):
-    """True only for system CLI/module loader (`SUPERUSER_ID`) or an active Original Admin."""
-    if env.uid == SUPERUSER_ID:
-        return True
-    if env.context.get('_tp_admin_migrate') is _MIGRATE or env.context.get('_tp_admin_provision') is _ADMIN_PROVISION:
-        return True
-    caller = env['res.users'].browse(env.uid)
+    actor_uid = account_actor_uid(env)
+    if actor_uid == SUPERUSER_ID and not request:
+        return True  # Module loader / server-side CLI, not an administrator identity.
+    caller = env['res.users'].sudo().with_context(active_test=False).browse(actor_uid)
     return bool(caller.exists() and caller._tp_is_original_admin())
+
+
+def account_target_kind(user):
+    user.ensure_one()
+    user = user.sudo().with_context(active_test=False)
+    if _is_protected_original_target(user):
+        return 'original_admin'
+    full_group = user.env.ref('tp_admin_delegation.group_full_admin', raise_if_not_found=False)
+    if user._tp_has_live_admin_grant() or (full_group and full_group.sudo() in user.all_group_ids):
+        return 'granted_admin'
+    return 'employee'
+
+
+def can_manage_account_target(env, user, allow_self=False):
+    """Shared account/profile boundary; callers must also check business capability."""
+    if _is_trusted_original_or_cli(env):
+        return True
+    if user.id == account_actor_uid(env):
+        return bool(allow_self and account_target_kind(user) != 'original_admin')
+    return account_target_kind(user) == 'employee'
+
+
+def _lock_account_targets(env, users):
+    """Serialize identity writes with grants without changing the session revision."""
+    if env.cr.readonly or not users:
+        return
+    users = users.sudo().with_context(active_test=False).sorted('id')
+    for user in users:
+        env.cr.execute('SELECT pg_advisory_xact_lock(%s, %s)', [LOCK_NAMESPACE, user.id])
+    env.cr.execute('SELECT id FROM res_users WHERE id IN %s ORDER BY id FOR UPDATE', [tuple(users.ids)])
+    users.invalidate_recordset(['active', 'share', 'company_ids', 'group_ids', 'all_group_ids'])
+
+
+def assert_can_manage_account_targets(env, users, allow_self=False):
+    _lock_account_targets(env, users)
+    if any(not can_manage_account_target(env, user, allow_self=allow_self)
+           for user in users.sudo().with_context(active_test=False)):
+        raise AccessError(env._(
+            'Chỉ admin gốc được thay đổi tài khoản hoặc hồ sơ của admin ủy quyền khác.',
+        ))
 
 
 def _require_original_admin(env, message=None):
@@ -150,6 +189,10 @@ def lock_live_delegates(env):
 class ProtectedUser(models.Model):
     _inherit = 'res.users'
 
+    def _tp_can_manage_account_target(self, allow_self=False):
+        self.ensure_one()
+        return can_manage_account_target(self.env, self, allow_self=allow_self)
+
     def _tp_admin_group_state(self, protected_groups):
         u = self.sudo().with_context(active_test=False)
         return (
@@ -160,6 +203,12 @@ class ProtectedUser(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         trusted = _is_trusted_original_or_cli(self.env)
+        if not trusted:
+            for vals in vals_list:
+                _assert_profile_commands(self.env, vals)
+                partner_id = vals.get('partner_id', self.env.context.get('default_partner_id'))
+                if partner_id:
+                    self.env['res.partner'].browse(partner_id)._tp_check_partner_admin_boundary(vals=vals)
         users = super().create(vals_list)
         if not trusted:
             protected_groups = _protected_admin_groups(self.env)
@@ -178,6 +227,7 @@ class ProtectedUser(models.Model):
         protected_groups = _protected_admin_groups(self.env)
         targets = self.sudo().with_context(active_test=False)
 
+        _lock_account_targets(self.env, targets)
         touches_orig = any(_is_protected_original_target(u) for u in targets)
         if touches_orig and not self.env.cr.readonly:
             self.env.cr.execute(
@@ -186,8 +236,6 @@ class ProtectedUser(models.Model):
             )
 
         if not trusted:
-            dynamic_group_keys = any(key.startswith(('in_group_', 'sel_groups_')) for key in vals)
-            touches_security = bool(set(vals) & _OTHER_ADMIN_SECURITY_FIELDS) or dynamic_group_keys
             for target in targets:
                 if _is_protected_original_target(target):
                     raise AccessError(self.env._(
@@ -195,12 +243,23 @@ class ProtectedUser(models.Model):
                     ))
                 # Another administrator (e.g. a peer Granted Admin) cannot be locked, edited,
                 # or have credentials/groups altered by a non-Original-Admin.
+                if target.id == account_actor_uid(self.env) and account_target_kind(target) == 'granted_admin':
+                    allowed = {'email', 'phone', 'mobile', 'lang', 'tz', 'signature', 'password', 'new_password',
+                               'image_1920', 'image_1024', 'image_512', 'image_256', 'image_128',
+                               'totp_secret', 'totp_trusted_device_ids'}
+                    if set(vals) - allowed:
+                        raise AccessError(self.env._('Tài khoản của mình chỉ được sửa qua chức năng cá nhân được phép.'))
                 _dir, eff = target._tp_admin_group_state(protected_groups)
-                if target.id != self.env.uid and eff and touches_security:
+                if target.id != account_actor_uid(self.env) and (eff or account_target_kind(target) == 'granted_admin'):
                     raise AccessError(self.env._(
-                        'Chỉ Quản trị gốc được quản lý trạng thái, nhóm quyền hoặc thông tin bảo mật của Quản trị viên khác.',
+                        'Chỉ admin gốc được thay đổi tài khoản hoặc hồ sơ của admin ủy quyền khác.',
                     ))
 
+        if not trusted:
+            _assert_profile_commands(self.env, vals)
+        if not trusted and vals.get('partner_id'):
+            self.env['res.partner'].browse(vals['partner_id'])._tp_check_partner_admin_boundary(vals=vals)
+        audit_before = _profile_audit_snapshot(self, vals)
         before_states = {u.id: u._tp_admin_group_state(protected_groups) for u in targets}
         res = super().write(vals)
 
@@ -218,6 +277,7 @@ class ProtectedUser(models.Model):
                             or any(k.startswith(('in_group_', 'sel_groups_')) for k in vals)):
             _assert_at_least_one_original_admin(self.env)
 
+        _record_profile_audit(self, vals, audit_before)
         return res
 
     def unlink(self):
@@ -227,7 +287,7 @@ class ProtectedUser(models.Model):
             raise AccessError(self.env._('Không được xóa tài khoản hệ thống hoặc Quản trị gốc.'))
         if not _is_trusted_original_or_cli(self.env):
             protected_groups = _protected_admin_groups(self.env)
-            if any(bool(u.all_group_ids & protected_groups) for u in targets):
+            if any((account_target_kind(u) != 'employee' or bool(u.all_group_ids & protected_groups)) for u in targets):
                 raise AccessError(self.env._('Chỉ Quản trị gốc được xóa hoặc gỡ tài khoản quản trị viên.'))
         res = super().unlink()
         _assert_at_least_one_original_admin(self.env)
@@ -237,9 +297,9 @@ class ProtectedUser(models.Model):
         if not _is_trusted_original_or_cli(self.env):
             protected_groups = _protected_admin_groups(self.env)
             for target in self.sudo().with_context(active_test=False):
-                if target.id == self.env.uid:
+                if target.id == account_actor_uid(self.env):
                     continue
-                if _is_protected_original_target(target) or bool(target.all_group_ids & protected_groups):
+                if _is_protected_original_target(target) or (account_target_kind(target) != 'employee' or bool(target.all_group_ids & protected_groups)):
                     raise AccessError(self.env._(
                         'Không được đổi mật khẩu của Quản trị gốc hoặc Quản trị viên khác.',
                     ))
@@ -249,9 +309,9 @@ class ProtectedUser(models.Model):
         if not _is_trusted_original_or_cli(self.env):
             protected_groups = _protected_admin_groups(self.env)
             for target in self.sudo().with_context(active_test=False):
-                if target.id == self.env.uid:
+                if target.id == account_actor_uid(self.env):
                     continue
-                if _is_protected_original_target(target) or bool(target.all_group_ids & protected_groups):
+                if _is_protected_original_target(target) or (account_target_kind(target) != 'employee' or bool(target.all_group_ids & protected_groups)):
                     raise AccessError(self.env._(
                         'Không được đặt lại mật khẩu của Quản trị gốc hoặc Quản trị viên khác.',
                     ))
@@ -261,9 +321,9 @@ class ProtectedUser(models.Model):
         if not _is_trusted_original_or_cli(self.env):
             protected_groups = _protected_admin_groups(self.env)
             for target in self.sudo().with_context(active_test=False):
-                if target.id == self.env.uid:
+                if target.id == account_actor_uid(self.env):
                     continue
-                if _is_protected_original_target(target) or bool(target.all_group_ids & protected_groups):
+                if _is_protected_original_target(target) or (account_target_kind(target) != 'employee' or bool(target.all_group_ids & protected_groups)):
                     raise AccessError(self.env._(
                         'Không được lấy liên kết đặt lại mật khẩu của Quản trị gốc hoặc Quản trị viên khác.',
                     ))
@@ -278,8 +338,8 @@ class ProtectedChangePasswordWizard(models.TransientModel):
             protected_groups = _protected_admin_groups(self.env)
             for line in self.sudo().user_ids:
                 target = line.user_id
-                if target and target.id != self.env.uid and (
-                    _is_protected_original_target(target) or bool(target.all_group_ids & protected_groups)
+                if target and target.id != account_actor_uid(self.env) and (
+                    _is_protected_original_target(target) or (account_target_kind(target) != 'employee' or bool(target.all_group_ids & protected_groups))
                 ):
                     raise AccessError(self.env._(
                         'Chỉ Quản trị gốc được đặt lại mật khẩu của tài khoản quản trị.',
@@ -295,8 +355,8 @@ class ProtectedChangePasswordUser(models.TransientModel):
             protected_groups = _protected_admin_groups(self.env)
             for line in self.sudo():
                 target = line.user_id
-                if target and target.id != self.env.uid and (
-                    _is_protected_original_target(target) or bool(target.all_group_ids & protected_groups)
+                if target and target.id != account_actor_uid(self.env) and (
+                    _is_protected_original_target(target) or (account_target_kind(target) != 'employee' or bool(target.all_group_ids & protected_groups))
                 ):
                     raise AccessError(self.env._(
                         'Chỉ Quản trị gốc được đặt lại mật khẩu của tài khoản quản trị.',
@@ -310,7 +370,7 @@ class ProtectedApiKeys(models.Model):
     def _remove(self):
         if not _is_trusted_original_or_cli(self.env):
             for key in self.sudo():
-                if key.user_id.id != self.env.uid and _is_protected_original_target(key.user_id):
+                if key.user_id.id != account_actor_uid(self.env) and account_target_kind(key.user_id) != 'employee':
                     raise AccessError(self.env._('Không được gỡ khóa API của Quản trị gốc.'))
         return super()._remove()
 
@@ -321,7 +381,7 @@ class ProtectedTotpDevice(models.Model):
     def _remove(self):
         if not _is_trusted_original_or_cli(self.env):
             for dev in self.sudo():
-                if dev.user_id.id != self.env.uid and _is_protected_original_target(dev.user_id):
+                if dev.user_id.id != account_actor_uid(self.env) and account_target_kind(dev.user_id) != 'employee':
                     raise AccessError(self.env._('Không được gỡ thiết bị xác thực của Quản trị gốc.'))
         return super()._remove()
 
@@ -406,26 +466,19 @@ class ProtectedEmployee(models.Model):
     def _tp_assert_not_original_admin_employee(self, vals=None):
         if _is_trusted_original_or_cli(self.env):
             return
-        if vals and set(vals) == {'sequence'}:
-            from odoo.addons.tp_hr_workspace.models.employee_order import is_trusted_employee_reorder
-            if is_trusted_employee_reorder(self.env, vals):
-                return
-        for emp in self.sudo().with_context(active_test=False):
-            if emp.user_id and _is_protected_original_target(emp.user_id):
-                raise AccessError(self.env._('Hồ sơ gắn với Quản trị gốc chỉ do Quản trị gốc thay đổi.'))
-        if vals and vals.get('user_id'):
-            linked = self.env['res.users'].sudo().with_context(active_test=False).browse(vals['user_id'])
-            if _is_protected_original_target(linked):
-                raise AccessError(self.env._('Không được liên kết hồ sơ nhân sự vào Quản trị gốc.'))
+        assert_can_manage_account_targets(self.env, self.sudo().mapped('user_id'), allow_self=True)
+        own = self.sudo().filtered(lambda emp: emp.user_id.id == account_actor_uid(self.env)
+                                  and account_target_kind(emp.user_id) == 'granted_admin')
+        if own and vals and set(vals) - _SELF_FIELDS:
+            raise AccessError(self.env._('Hồ sơ của mình chỉ được sửa thông tin cá nhân trong danh sách cho phép.'))
+        if vals:
+            _assert_profile_links(self.env, vals)
 
     @api.model_create_multi
     def create(self, vals_list):
         if not _is_trusted_original_or_cli(self.env):
             for vals in vals_list:
-                if vals.get('user_id'):
-                    linked = self.env['res.users'].sudo().with_context(active_test=False).browse(vals['user_id'])
-                    if _is_protected_original_target(linked):
-                        raise AccessError(self.env._('Không được liên kết hồ sơ nhân sự vào Quản trị gốc.'))
+                _assert_profile_links(self.env, vals, defaults=True)
         # Preserve HR-DELEGATE-FIX-001: non-HR actors cannot inject restricted fields (e.g. mobile_phone)
         # via create values or default_* context even through sudo().
         if self.env.uid != SUPERUSER_ID and not self.env.user.has_group('hr.group_hr_user'):
@@ -455,9 +508,13 @@ class ProtectedEmployee(models.Model):
                     field = caller._fields.get(key)
                     if field and not caller._has_field_access(field, 'write'):
                         raise AccessError(self.env._('Không có quyền ghi trường nhân sự bị giới hạn.'))
-        return super().write(vals)
+        audit_before = _profile_audit_snapshot(self, vals)
+        result = super().write(vals)
+        _record_profile_audit(self, vals, audit_before)
+        return result
 
     def unlink(self):
+        assert_can_manage_account_targets(self.env, self.sudo().mapped('user_id'), allow_self=False)
         self._tp_assert_not_original_admin_employee()
         return super().unlink()
 
@@ -468,29 +525,198 @@ class ProtectedPartner(models.Model):
     def _tp_check_partner_admin_boundary(self, vals=None, unlink=False):
         if _is_trusted_original_or_cli(self.env):
             return
-        protected_groups = _protected_admin_groups(self.env)
-        for partner in self.sudo().with_context(active_test=False):
-            users = partner.with_context(active_test=False).user_ids
-            for target in users:
-                if _is_protected_original_target(target):
-                    raise AccessError(self.env._('Thông tin liên hệ/định danh của Quản trị gốc được bảo vệ.'))
-                if target.id != self.env.uid and bool(target.all_group_ids & protected_groups):
-                    if unlink or (vals and set(vals) & {
-                        'email', 'active', 'company_id', 'user_ids', 'employee_ids',
-                        'signup_type', 'signup_token', 'signup_expiration',
-                    }):
-                        raise AccessError(self.env._(
-                            'Không được sửa email khôi phục, trạng thái hoặc liên kết định danh của Quản trị viên khác.',
-                        ))
+        if vals:
+            _assert_profile_commands(self.env, vals)
+        partners = self.sudo().with_context(active_test=False)
+        users = partners.mapped('user_ids')
+        employees = self.env['hr.employee'].sudo().with_context(active_test=False).search([
+            ('work_contact_id', 'in', partners.ids),
+        ])
+        assert_can_manage_account_targets(self.env, users | employees.mapped('user_id'), allow_self=not unlink)
+        own = (users | employees.mapped('user_id')).filtered(lambda u: u.id == account_actor_uid(self.env) and account_target_kind(u) == 'granted_admin')
+        if own and vals:
+            allowed = {'email', 'phone', 'mobile', 'lang', 'tz', 'image_1920', 'image_1024', 'image_512',
+                       'image_256', 'image_128', 'signup_type', 'signup_token', 'signup_expiration'}
+            if set(vals) - allowed:
+                raise AccessError(self.env._('Thông tin của mình chỉ được sửa qua chức năng cá nhân được phép.'))
         if vals and vals.get('user_ids'):
             raise AccessError(self.env._('Không được đổi liên kết tài khoản đăng nhập trực tiếp từ liên hệ.'))
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        if not _is_trusted_original_or_cli(self.env):
+            for vals in vals_list:
+                _assert_profile_commands(self.env, vals)
+                if vals.get('user_ids') or self.env.context.get('default_user_ids'):
+                    raise AccessError(self.env._('Không được đổi liên kết tài khoản đăng nhập trực tiếp từ liên hệ.'))
+        return super().create(vals_list)
+
     def write(self, vals):
         self._tp_check_partner_admin_boundary(vals=vals, unlink=False)
-        return super().write(vals)
+        audit_before = _profile_audit_snapshot(self, vals)
+        result = super().write(vals)
+        _record_profile_audit(self, vals, audit_before)
+        return result
 
     def unlink(self):
         self._tp_check_partner_admin_boundary(unlink=True)
+        return super().unlink()
+
+
+_AUDIT_PROFILE_FIELDS = frozenset({
+    'name', 'login', 'email', 'phone', 'mobile', 'work_email', 'work_phone', 'mobile_phone',
+    'active', 'tp_hr_locked', 'partner_id', 'user_id', 'resource_id', 'employee_id',
+    'work_contact_id', 'department_id', 'job_id', 'job_title', 'company_id', 'company_ids',
+    'lang', 'tz', 'image_1920', 'image_1024', 'image_512', 'image_256', 'image_128',
+})
+
+
+def _profile_audit_snapshot(records, vals):
+    keys = set(vals) & (_AUDIT_PROFILE_FIELDS | _SELF_FIELDS) & set(records._fields)
+
+    def value(record, key):
+        if key.startswith('image_'):
+            return bool(record[key])
+        field = record._fields[key]
+        if field.relational:
+            return record[key].ids
+        value = record[key]
+        return value.isoformat() if hasattr(value, 'isoformat') else value
+    return {record.id: {key: value(record, key) for key in keys} for record in records.sudo()}
+
+
+def _record_profile_audit(records, vals, before):
+    after = _profile_audit_snapshot(records, vals)
+    actor = records.env['res.users'].sudo().browse(account_actor_uid(records.env))
+    rows = []
+    for record in records.sudo():
+        old, new = before.get(record.id, {}), after.get(record.id, {})
+        changed = {key: {'before': old[key], 'after': new[key]} for key in old if old[key] != new[key]}
+        # Binary contents and credentials never enter the audit payload.
+        credential_changed = bool(set(vals) & {'password', 'new_password', 'totp_secret'})
+        if not changed and not credential_changed and not any(key.startswith('image_') for key in vals):
+            continue
+        if record._name == 'hr.employee':
+            employees = record
+        elif record._name == 'hr.version':
+            employees = record.employee_id
+        else:
+            field = {'res.users': 'user_id', 'res.partner': 'work_contact_id',
+                     'resource.resource': 'resource_id'}[record._name]
+            employees = records.env['hr.employee'].sudo().with_context(active_test=False).search([(field, '=', record.id)])
+        if record._name == 'res.partner' and not employees and not record.with_context(active_test=False).user_ids:
+            continue
+        user = record if record._name == 'res.users' else (employees[:1].user_id if employees else records.env['res.users'])
+        if not user and record._name == 'res.partner':
+            user = record.with_context(active_test=False).user_ids[:1]
+        if not user and record._name == 'resource.resource':
+            user = record.user_id
+        company = employees[:1].company_id if employees else records.env.company
+        rows.append({
+            'action': 'account_profile_change', 'employee_ref': employees[:1].id or 0,
+            'employee_name': employees[:1].name if employees else '',
+            'company_id': company.id, 'actor_id': actor.id, 'actor_name': actor.name,
+            'account_ref': user.id or 0, 'account_login': user.login if user else '',
+            'reason': records.env._('Cập nhật tài khoản/hồ sơ qua %(model)s #%(id)s', model=record._name, id=record.id),
+            'snapshot': {'model': record._name, 'record_id': record.id, 'changes': changed,
+                         'image_changed': any(key.startswith('image_') for key in vals),
+                         'credential_changed': credential_changed},
+        })
+    if rows:
+        records.env['tp.hr.employee.audit']._tp_record(rows)
+
+
+class AccountProfileAudit(models.Model):
+    _inherit = 'tp.hr.employee.audit'
+
+    action = fields.Selection(selection_add=[('account_profile_change', 'Thay đổi tài khoản/hồ sơ')],
+                              ondelete={'account_profile_change': 'cascade'})
+
+
+def _assert_profile_commands(env, vals):
+    """Preflight profile inverse commands before their parent can write any fields."""
+    for field, model in (('employee_ids', 'hr.employee'), ('version_ids', 'hr.version')):
+        commands = vals.get(field, env.context.get('default_' + field, ()))
+        for command in commands or ():
+            operation = command[0]
+            ids = command[2] if operation == 6 else ([command[1]] if operation in (1, 2, 3, 4) else [])
+            if ids:
+                records = env[model].sudo().with_context(active_test=False).browse(ids)
+                users = records.mapped('user_id' if model == 'hr.employee' else 'employee_id.user_id')
+                assert_can_manage_account_targets(env, users, allow_self=False)
+            if operation in (0, 1) and isinstance(command[2], dict):
+                _assert_profile_links(env, command[2])
+
+
+def _assert_profile_links(env, vals, defaults=False):
+    _assert_profile_commands(env, vals)
+    for field, model in (('user_id', 'res.users'), ('resource_id', 'resource.resource'),
+                         ('employee_id', 'hr.employee'), ('work_contact_id', 'res.partner')):
+        value = vals.get(field, env.context.get('default_' + field) if defaults else None)
+        if not value:
+            continue
+        linked = env[model].sudo().with_context(active_test=False).browse(value)
+        if model == 'res.partner':
+            linked._tp_check_partner_admin_boundary()
+        else:
+            users = linked if model == 'res.users' else linked.mapped('user_id')
+            assert_can_manage_account_targets(env, users, allow_self=False)
+
+
+class ProtectedResource(models.Model):
+    _inherit = 'resource.resource'
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        if not _is_trusted_original_or_cli(self.env):
+            for vals in vals_list:
+                _assert_profile_links(self.env, vals, defaults=True)
+        return super().create(vals_list)
+
+    def write(self, vals):
+        assert_can_manage_account_targets(self.env, self.sudo().mapped('user_id'), allow_self=True)
+        if not _is_trusted_original_or_cli(self.env):
+            own = self.sudo().filtered(lambda r: r.user_id.id == account_actor_uid(self.env) and account_target_kind(r.user_id) == 'granted_admin')
+            if own and set(vals) - {'tz'}:
+                raise AccessError(self.env._('Không được tự sửa tài nguyên định danh ngoài chức năng cá nhân.'))
+        if not _is_trusted_original_or_cli(self.env):
+            _assert_profile_links(self.env, vals)
+        audit_before = _profile_audit_snapshot(self, vals)
+        result = super().write(vals)
+        _record_profile_audit(self, vals, audit_before)
+        return result
+
+    def unlink(self):
+        assert_can_manage_account_targets(self.env, self.sudo().mapped('user_id'), allow_self=False)
+        return super().unlink()
+
+
+class ProtectedHrVersion(models.Model):
+    _inherit = 'hr.version'
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        if not _is_trusted_original_or_cli(self.env):
+            for vals in vals_list:
+                _assert_profile_links(self.env, vals, defaults=True)
+        return super().create(vals_list)
+
+    def write(self, vals):
+        assert_can_manage_account_targets(self.env, self.sudo().mapped('employee_id.user_id'), allow_self=True)
+        if not _is_trusted_original_or_cli(self.env):
+            own = self.sudo().filtered(lambda r: r.employee_id.user_id.id == account_actor_uid(self.env)
+                                      and account_target_kind(r.employee_id.user_id) == 'granted_admin')
+            if own and set(vals) - _SELF_FIELDS:
+                raise AccessError(self.env._('Hồ sơ của mình chỉ được sửa thông tin cá nhân trong danh sách cho phép.'))
+        if not _is_trusted_original_or_cli(self.env):
+            _assert_profile_links(self.env, vals)
+        audit_before = _profile_audit_snapshot(self, vals)
+        result = super().write(vals)
+        _record_profile_audit(self, vals, audit_before)
+        return result
+
+    def unlink(self):
+        assert_can_manage_account_targets(self.env, self.sudo().mapped('employee_id.user_id'), allow_self=False)
         return super().unlink()
 
 

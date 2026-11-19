@@ -1,6 +1,6 @@
 {
     'name': 'TANPHAT ONE — Quản trị viên toàn hệ thống',
-    'version': '20.0.2.0.3',
+    'version': '20.0.2.1.0',
     'license': 'LGPL-3',
     'author': 'Tan Phat JSC',
     'depends': ['tp_hr_workspace', 'tp_equipment', 'tp_reporting'],
@@ -19,6 +19,8 @@
         'web.assets_backend': [
             'tp_admin_delegation/static/src/my_profile.xml',
             'tp_admin_delegation/static/src/hr_overview_patch.js',
+            'tp_admin_delegation/static/src/protected_user_form.js',
+            'tp_admin_delegation/static/src/protected_user_form.xml',
         ],
     },
     'post_init_hook': '_post_init_admin_full',

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_admin_delegation.ProtectedUserForm" t-inherit="web.FormView" t-inherit-mode="primary">
+        <xpath expr="//CogMenu" position="attributes">
+            <attribute name="t-if">!this.model.root.data.tp_account_profile_readonly</attribute>
+        </xpath>
+    </t>
+</templates>

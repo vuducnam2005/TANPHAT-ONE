@@ -372,3 +372,7 @@ Dialog Đổi tên đăng nhập là form2ô, không có bảng mới: filter/pa
 ### HR-LOGIN-RENAME-001 — visibility fix CHG-20261119-016
 
 Không bảng mới: form/wizard rename tách capability lock/reset, filter/pager N/A. Browser target có grant active vàactor original kiểm nút/inline/reload/mobile; backend ordinary/peer/self/original protection/Excel giữ. Không suy full table-filter coverage từ sửa capability. [Acceptance](../demo/HR_LOGIN_RENAME_001_ACCEPTANCE.md).
+
+### ADMIN-ACCOUNT-POLICY-001 — CHG-20261119-018
+
+Không tạo/sửa bảng dữ liệu: form nhân viên/user và wizard khóa/mở chỉ đổi capability/readonly/label; filter/pager/count/export N/A. Lịch sử tái dùng tp.hr.employee.audit và search hiện có. Giữ domain/backend quyền và bộ lọc list/export trước đó. [Acceptance](../demo/ADMIN_ACCOUNT_POLICY_001_ACCEPTANCE.md).

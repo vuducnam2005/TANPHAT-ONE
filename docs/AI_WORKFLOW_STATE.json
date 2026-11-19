@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T07:15:48.370863+00:00",
-  "last_change_id": "CHG-20261119-017",
-  "code_digest": "96e01ce030697da95c6cbeaad059e2af523feb4df0ae0ca1759a01ad00c1f0d9",
-  "code_file_count": 681,
+  "updated_at": "2026-11-19T07:57:28.213960+00:00",
+  "last_change_id": "CHG-20261119-018",
+  "code_digest": "b77e3ae01df5b88a2c59b1f478f172c956fff24911c21f8398bb678959ebfc5b",
+  "code_file_count": 684,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "339b400b77cac1755b5f88ac2214551f3f13c129f4bc2b878820db95a99cebc2",
-    "docs/CHANGELOG.md": "2ba5ca53285a4630090b5d7b85274d51b3cbab0323b5e01ad8f0934e89615613",
-    "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
+    "docs/PROJECT_STATUS.md": "53ea214663857b9129aa599a9811742a3c6feeb01f66639d8574e7d88e974c35",
+    "docs/CHANGELOG.md": "c9aedef0cec9a2de9c17d21a8f24acdd731f167008cb35f7059b3279c60b8b6f",
+    "AGENTS.md": "41da7729acb3c746356fb7595b8c1e452c6edcebe22d398f22361c67113038dc",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "cae44ce48bdb7127eab6762197380dca515bcc2296f875d4134203440cb71b80",
-    "docs/DECISIONS.md": "b626970d325dc4349d73241bc8f170b09f16bb5db5d443d9d5c14cf102b7c564",
+    "docs/ROADMAP.md": "4fa3343ba9cf90b97228ba50a6f29fbe8906d4be10bbd10f3c738b7bd8c12dee",
+    "docs/DECISIONS.md": "882c75bea03192ca48bb4734e6f2a05a49115e733b92f2e480f9a2e07c303b6e",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "App cf4cf114 pushed; local/PC upgrades 0ERROR; backups verified; hash-only data unchanged; read-only 21/21 each including employee63 original-to-granted rename true and lock/reset false on PC; source10/10; actual public/server assets SHA256 and health/login200 PASS; Odoo8/8 browserdesktop/mobile from016 PASS; CUA CocCoc policy stopped, real-user public E2E NOT_RUN"
+    "Odoo 40/40 PASS, 0 failed / 0 errors (tests-5.log): toàn addon admin delegation, login rename backend/HTTP/browser và account-role regression. Tag mới gồm 7 TransactionCase + 2 HttpCase; kiểm lock/unlock ledger/groups không đổi, audit reason/actor/target/revision, phiên cũ bị từ chối, login mới khóa có thông báo và mở lại đăng nhập được; peer writes mọi trường/sudo/context/inactive/bulk/profile/contact/resource/hr.version/link/unlink bị chặn; ordinary management/self service và original-only grant/revoke giữ.\n\nRace 2/2 PASS (race.log), PostgreSQL hai giao dịch độc lập: rename+rename và create+rename cùng login có đúng một winner; fixture đã cleanup. Lệnh python -m scripts.tests.test_hr_login_rename_race --config .local/admin-account-policy001/runtime-test.conf; không chạy trên main/server.\n\nPlaywright 1440x900 và 390x844 PASS: original khóa/mở qua lý do + xác nhận, trạng thái DB/reload đúng và 3 nhãn loại tài khoản; peer employee profile và native res.users chỉ đọc, không rename/reset/lock/edit/menu thao tác, 0 pageerror. Hồi quy rename dialog/unique/inline/cancel/save/reload/mobile PASS. Screenshot/result ignored .local/admin-account-policy/browser và .local/hr-login-rename-impl001/browser.\n\nRuff, AST Python, XML parse, Node syntax và scoped git diff --check PASS. Review chéo phát hiện/sửa self-rule áp rộng nhầm ordinary HR và menu mobile native vẫn hiện; khóa target dùng exclusive advisory theo namespace grant, không đổi scope revision. Các lần đầu lỗi fixture cookie/HR role/sequence/config API và selector icon đã sửa, không giảm guard để làm test xanh. Chưa authenticated public E2E bằng người thật/iOS/Safari thật; không khóa/reset/cấp quyền người thật. Kiểm kỹ thuật không thay nghiệm thu nghiệp vụ.\n"
   ]
 }

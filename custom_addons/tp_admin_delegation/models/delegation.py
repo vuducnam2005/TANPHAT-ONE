@@ -47,9 +47,9 @@ SYSTEM_PROTECTED_USER_XMLIDS = (
     'base.default_user',
 )
 
-ORIGINAL_ADMIN_LABEL = 'Quản trị gốc'
-GRANTED_ADMIN_LABEL = 'Quản trị viên (toàn hệ thống)'
-BUSINESS_USER_LABEL = 'Người dùng nghiệp vụ'
+ORIGINAL_ADMIN_LABEL = 'Admin gốc'
+GRANTED_ADMIN_LABEL = 'Admin ủy quyền'
+BUSINESS_USER_LABEL = 'Nhân viên'
 ORIGINAL_SCOPE_TEXT = (
     'Quản trị viên gốc toàn hệ thống: quản trị mọi phòng ban và ứng dụng; '
     'được cấp và thu hồi quyền quản trị viên.'
@@ -487,7 +487,7 @@ class AdminEmployee(models.Model):
             ('main', ORIGINAL_ADMIN_LABEL),
         ],
         compute='_compute_tp_admin_level',
-        string='Quyền quản trị',
+        string='Loại tài khoản',
     )
     tp_admin_scope = fields.Text(compute='_compute_tp_admin_level', string='Phạm vi quản trị')
     tp_can_manage_delegation = fields.Boolean(compute='_compute_tp_admin_level')
@@ -495,18 +495,20 @@ class AdminEmployee(models.Model):
     @api.depends('user_id', 'company_id')
     @api.depends_context('uid', 'allowed_company_ids')
     def _compute_tp_admin_level(self):
-        caller = self.env['res.users'].browse(self.env.uid)
+        from .guards import (  # noqa: PLC0415 - guard imports delegation sentinels
+            account_actor_uid,
+            account_target_kind,
+        )
+
+        caller = self.env['res.users'].browse(account_actor_uid(self.env))
         can_manage = bool(caller.exists() and caller._tp_is_original_admin())
         for employee in self:
-            user = employee.sudo().user_id
-            company = employee.sudo().company_id
-            has_live_grant = bool(user and user._tp_has_live_admin_grant(company=company))
-            is_orig = bool(user and not has_live_grant and user._tp_is_original_admin())
-            is_other_sys = bool(user and not has_live_grant and not is_orig and user.has_group('base.group_system'))
-            if is_orig or is_other_sys:
+            user = employee.sudo().with_context(active_test=False).user_id
+            kind = account_target_kind(user) if user else 'employee'
+            if kind == 'original_admin':
                 employee.tp_admin_level = 'main'
-                employee.tp_admin_scope = ORIGINAL_SCOPE_TEXT if is_orig else 'Theo quyền quản trị hệ thống hiện có.'
-            elif has_live_grant:
+                employee.tp_admin_scope = ORIGINAL_SCOPE_TEXT
+            elif kind == 'granted_admin':
                 employee.tp_admin_level = 'delegated'
                 employee.tp_admin_scope = GRANTED_SCOPE_TEXT
             else:
