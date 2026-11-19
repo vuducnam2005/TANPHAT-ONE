@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-008 — Giao Xuất Excel nhân viên lên PC server
+
+- 19/11/2026; app`2c397ffb` (HR20.0.1.14.0) đã push/deploy16/16tệpSHA256; backup `C:/TANPHAT-backups/hr-employee-xlsx001/hr-xlsx006-20261119T120938` gồm dump/restore-list15.787entry, filestore631entry, source/config vàSHA256; upgrade chỉHR exit0/0ERROR. Giữ39employee/32user, roster/employeeSequence/groups/implied/ledger/equipment/480ngày công/baseURL, chỉversionHR đổi.
+- Server ORM READ ONLY22/22PASS; kiểm assets thực trênserver và `https://eight-championships-launches-plaintiff.trycloudflare.com` khớpSHA256: CSS73d8d48 (1.632.606B,3dda3b6e09d9…), JS e1de7bf (8.480.014B,bd588a0bbc30…); health/login200. Không ra lệnh thay cấu hình/restart tunnel; quan sát container tunnel restart trong lúc origin dừng, sau đó public hồi phục. Không authenticated browserE2Epublic vì không có phiên admin hợp lệ để dùng lại, không đăng nhập mới thay phiên người đang dùng.
+- Tài liệu giao bản/cột/thứ tự/test tại [acceptance](demo/HR_EMPLOYEE_XLSX_001_ACCEPTANCE.md); ảnhExcel minh họa nằmignored `.local/hr-employee-xlsx001/workbook-preview-crop.png`. Local browser8/8, download6/6, workbook5/5, order12/12 vàORM22/22PASS. Chưa chạyfixtureOdoo/dragpersist ghi thật hoặc iOS/Safari. Workflowseal đúngsourceGit trongsnapshot sạch, giữ checkpoint vàforeignWIP; cập nhật tài liệu không restartOdoo.
+
 ## CHG-20261119-006 — Xuất Excel danh sách nhân viên (HR-EMPLOYEE-XLSX-001)
 
 - 19/11/2026; người dùng giao phiên này trực tiếp triển khai, kiểm tra và deploy. Tái sử dụng `_build_xlsx`/xlsxwriter và `/tp_hr/export`; POST tải native có CSRF, giữ GET/filter cũ. Ba scope từ SearchModel domain/context đã áp, không lấy DOM/trang/nhóm mở; server đếm đúng nhân viên, giao cắt công ty/ACL/rule/field, không sudo vượt quyền; từ chối domain lỗi/toán tử bỏ quyền/credential, chống formula injection.

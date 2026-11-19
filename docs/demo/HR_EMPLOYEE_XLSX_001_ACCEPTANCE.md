@@ -1,6 +1,6 @@
 # HR-EMPLOYEE-XLSX-001 — Xuất danh sách nhân viên
 
-Ngày19/11/2026 · CHG-20261119-006 · `tp_hr_workspace`20.0.1.14.0 · LOCAL_VERIFIED_SERVER_READY.
+Ngày19/11/2026 · CHG-20261119-006 · `tp_hr_workspace`20.0.1.14.0 · MAIN_AND_PC_SERVER_APPLIED.
 
 ## Cách dùng
 
@@ -106,6 +106,15 @@ Workbook chính A3 ngang, fit1trang theo chiều rộng; chi tiết A4 ngang85% 
 
 Local18069 đã backup `.local/hr-employee-xlsx001/backup-20261119T114145` (dump/restore-list15787entry,filestore1077file,source/config,SHA256), upgrade chỉHR exit0; snapshot employee39/roster/employeeSequence/users/groups/implied/equipment/attendance/grants/baseURL giữ nguyên; chỉ versionHR đổi. Không18079, không fixture trên main/server, không reset login hoặc thay session winner.
 
-PC server: chờ giao bản commit này sau backup đúng môi trường. Giữ tunnel và các addon ngoài scope. Rollback cần giữ trạng thái mới, restore đồng bộ dump+filestore+source/config từ backup server; không dùng backup local thay server. Không rollback tự động bằng cách xóa field/sequence.
+PC server: đã giao app2c397ffb, xem biên bản phía dưới. Giữ tunnel và các addon ngoài scope. Rollback cần giữ trạng thái mới, restore đồng bộ dump+filestore+source/config từ backup server; không dùng backup local thay server. Không rollback tự động bằng cách xóa field/sequence.
 
 Technical verification như trên; chưa là business/visual acceptance của người dùng hoặc pilot authorization mới. Chưa có real-device iOS/Safari và authenticated browser E2E public.
+
+## Giao bản PC server — CHG-20261119-008
+
+- App commit **2c397ffb19a060696472004a5b805f93601ef9c3**, đã push `origin/main`; moduleHR **20.0.1.14.0**, local18069 và PCserver. Chỉ áp16tệp trongscope, đúngSHA256; `-u tp_hr_workspace` exit0/0ERROR; cácmodulekhác giữversion cũ tại thời điểm giao.
+- Backup server **C:/TANPHAT-backups/hr-employee-xlsx001/hr-xlsx006-20261119T120938**: dump10.163.359B, restore-list15.787entry; filestore32.737.554B/631entry; source-config2.193.386B; SHA256SUMS.json. Đây làbackupserver riêng, không dùngbackup18069 thay thế.
+- Snapshot trước/sau giữ39employee/32user, digestemployeeSequence/roster/groups/implied/ledger/equipment/480ngày công/baseURL; chỉversionHR đổi. Server READ ONLY22/22PASS,39employee/57cột/3sheet, gồm từ chối nonHR/credential/domainlỗi vàID/companygiả.
+- Public `https://eight-championships-launches-plaintiff.trycloudflare.com`: health/login200. CSS `/web/assets/73d8d48/web.assets_web.min.css`1.632.606B, SHA256 `3dda3b6e09d97c753d55c896cb0592cc2cdb8ff1430fc6f2a50136eb6c98cff2`; JS `/web/assets/e1de7bf/web.assets_web.min.js`8.480.014B, SHA256 `bd588a0bbc30d9f0dd839a51d13b5deb9f59f6b79fdd7b2d83700a4e7e9d9cd7`. Bytes/SHA256giốngserver, đã kiểm selector/function/dialog mới.
+- Không ra lệnh thay cấu hình/restart tunnel; quan sát container tunnel restart trong lúc origin dừng và public đã hồi phục. Chưa authenticated public browserE2E: không có phiênadminserver hợp lệ sẵn để tái dùng; không tạo loginmới thayphiên. Browser8/8 làlocal với phiêncó sẵn. Technical verification chưa thaybusiness/visual acceptance của người dùng.
+- Người dùng Ctrl+F5, TP HR → Danh sách nhân viên → Xuất Excel. Thứ tựphòng chỉnh ở Phòng ban và đơn vị; thứ tựnhân viên dùngkéo cảhàng cùngphòng hiện có. Không chạyfixtures hoặc thaythứtự thật để thử. GiữWIP/checkpointngoài scope; workflowsealGit trongsnapshot riêng.
