@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 from odoo import api, fields, models
 from odoo.exceptions import AccessError
 
-from .attendance_common import DEFAULT_TZ
+from .attendance_common import DEFAULT_TZ, internal
 
 _logger = logging.getLogger(__name__)
 
@@ -188,8 +188,8 @@ class AttendanceEntiDay(models.Model):
             )
             return
 
-        Day = self.env["tp.hr.attendance.day"].sudo()
-        Session = self.env["tp.hr.attendance.session"].sudo()
+        Day = internal(self.env["tp.hr.attendance.day"].sudo())
+        Session = internal(self.env["tp.hr.attendance.session"].sudo())
         now = fields.Datetime.now()
 
         # Find or create Day summary
@@ -218,7 +218,7 @@ class AttendanceEntiDay(models.Model):
             # Find existing ENTI session or create new
             enti_session = old_sessions.filtered(lambda s: s.source == "enti")[:1]
             if enti_session:
-                enti_session.write({
+                internal(enti_session).write({
                     "check_in": self.check_in_dt,
                     "check_out": self.check_out_dt,
                     "worked_hours": recorded_hours,
@@ -237,14 +237,14 @@ class AttendanceEntiDay(models.Model):
                     "active": True,
                 })
             # Inactivate any non-ENTI sessions
-            (old_sessions - active_session).write({
+            internal(old_sessions - active_session).write({
                 "active": False,
                 "superseded_reason": "Thay thế bằng dữ liệu chấm công ENTI",
             })
             data_state = "ok"
         else:
             # Half-punch or no punches: DO NOT create a dummy session
-            old_sessions.write({
+            internal(old_sessions).write({
                 "active": False,
                 "superseded_reason": "Thay thế bằng dữ liệu chấm công ENTI (thiếu giờ)",
             })
@@ -282,11 +282,11 @@ class AttendanceEntiDay(models.Model):
         }
 
         if day:
-            day.write(dict(day_vals, version=day.version + 1))
+            internal(day).write(dict(day_vals, version=day.version + 1))
         else:
             day = Day.create(dict(day_vals, version=1))
 
         if active_session:
-            active_session.write({"day_id": day.id})
+            internal(active_session).write({"day_id": day.id})
 
-        self.write({"state": "applied"})
+        self.sudo().write({"state": "applied"})

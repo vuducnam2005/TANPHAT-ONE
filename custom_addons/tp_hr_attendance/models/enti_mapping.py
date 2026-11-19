@@ -3,6 +3,8 @@
 Odoo HR is the single source of truth for employee profiles, internal codes,
 departments, and permissions. ENTI is only an external identity and attendance feed.
 """
+import unicodedata
+
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
 
@@ -113,16 +115,65 @@ class AttendanceEntiMapping(models.Model):
                 "match_reason": "Bị từ chối đối chiếu tự động; chờ đối chiếu thủ công.",
             })
 
+    def action_auto_match(self):
+        """Re-run matching algorithm for records in self."""
+        self._check_hr_manager()
+        for rec in self:
+            if rec.state == "mapped" and rec.employee_id:
+                continue
+            rec._match_and_apply()
+
+    def _match_and_apply(self):
+        """Match one record against hr.employee in company."""
+        self.ensure_one()
+        source = self.source_id
+        company = source.company_id
+        ten_nv = (self.ten_nv or "").strip()
+        ma_nv = (self.ma_nv or "").strip()
+        Employee = self.env["hr.employee"].sudo()
+
+        matched_emp = False
+        state = "unmapped"
+        reason = "Chưa tìm thấy nhân viên phù hợp trong Odoo HR."
+
+        norm_name = unicodedata.normalize("NFC", ten_nv).lower() if ten_nv else ""
+        if norm_name:
+            all_emps = Employee.search([("company_id", "=", company.id)])
+            name_matches = all_emps.filtered(
+                lambda e: unicodedata.normalize("NFC", (e.name or "").strip()).lower() == norm_name
+            )
+            if len(name_matches) == 1:
+                matched_emp = name_matches[0]
+                state = "mapped"
+                reason = f"Khớp chính xác họ tên 1-1 trong Odoo HR ({matched_emp.name})."
+            elif len(name_matches) > 1:
+                by_code = name_matches.filtered(lambda e: e.tp_employee_code == ma_nv)
+                if by_code:
+                    matched_emp = by_code[0]
+                    state = "mapped"
+                    reason = f"Khớp chính xác họ tên và mã nhân viên ({matched_emp.name})."
+                else:
+                    state = "suggested"
+                    reason = f"Có {len(name_matches)} nhân viên trùng họ tên trong Odoo. Chờ người quản lý xác nhận."
+
+        self.sudo().write({
+            "employee_id": matched_emp.id if matched_emp else False,
+            "state": state,
+            "match_reason": reason,
+        })
+        if state == "mapped" and matched_emp:
+            self.env["tp.hr.attendance.enti.day"]._tp_project_for_mapping(self)
+
     @api.model
     def tp_suggest_mapping(self, source, enti_employee):
         """Analyze one ENTI employee object and propose or create mapping.
 
-        enti_employee contains: keyNV, maNV, tenNV, keyBP, tenBP.
+        enti_employee contains: keyNV, maNV, tenNV/hoVaTen, keyBP/keyBoPhan, tenBP/tenBoPhan.
         Rules:
         - NEVER alter hr.employee codes or names.
         - NEVER match solely on fuzzy name.
         - Match exact name + code correlation -> suggested or mapped.
-        - Match exact name -> suggested.
+        - Match exact name -> suggested or mapped.
         - Otherwise -> unmapped.
         """
         key_nv = (enti_employee.get("keyNV") or "").strip()
@@ -130,14 +181,14 @@ class AttendanceEntiMapping(models.Model):
             return None
 
         ma_nv = (enti_employee.get("maNV") or "").strip()
-        ten_nv = (enti_employee.get("tenNV") or "").strip()
-        key_bp = (enti_employee.get("keyBP") or "").strip()
-        ten_bp = (enti_employee.get("tenBP") or "").strip()
+        ten_nv = (enti_employee.get("tenNV") or enti_employee.get("hoVaTen") or "").strip()
+        key_bp = (enti_employee.get("keyBP") or enti_employee.get("keyBoPhan") or "").strip()
+        ten_bp = (enti_employee.get("tenBP") or enti_employee.get("tenBoPhan") or "").strip()
         now = fields.Datetime.now()
 
         existing = self.search([("source_id", "=", source.id), ("key_nv", "=", key_nv)], limit=1)
         if existing:
-            # Update observation metadata without breaking existing confirmed mapping
+            # Update observation metadata
             existing.sudo().write({
                 "ma_nv": ma_nv or existing.ma_nv,
                 "ten_nv": ten_nv or existing.ten_nv,
@@ -145,6 +196,8 @@ class AttendanceEntiMapping(models.Model):
                 "ten_bp": ten_bp or existing.ten_bp,
                 "last_seen_at": now,
             })
+            if existing.state != "mapped" or not existing.employee_id:
+                existing._match_and_apply()
             return existing
 
         # Find matching employee in Odoo
@@ -154,40 +207,25 @@ class AttendanceEntiMapping(models.Model):
         state = "unmapped"
         reason = "Chưa tìm thấy nhân viên phù hợp trong Odoo HR."
 
-        # Search by exact name
-        name_matches = Employee.search([
-            ("company_id", "=", company.id),
-            ("name", "=", ten_nv),
-        ])
-
-        # Also search historical raw_source_code from Excel batches if ma_nv matches
-        if len(name_matches) == 1:
-            matched_emp = name_matches[0]
-            # Check if code also correlates
-            # e.g. ma_nv == TP001 and matched_emp.tp_employee_code == TP10001 or raw_source_code == TP001
-            Line = self.env["tp.hr.attendance.line"].sudo()
-            code_line = Line.search([
-                ("company_id", "=", company.id),
-                ("employee_id", "=", matched_emp.id),
-                ("raw_source_code", "=", ma_nv),
-            ], limit=1)
-
-            if code_line or matched_emp.tp_employee_code == ma_nv:
+        norm_name = unicodedata.normalize("NFC", ten_nv).lower() if ten_nv else ""
+        if norm_name:
+            all_emps = Employee.search([("company_id", "=", company.id)])
+            name_matches = all_emps.filtered(
+                lambda e: unicodedata.normalize("NFC", (e.name or "").strip()).lower() == norm_name
+            )
+            if len(name_matches) == 1:
+                matched_emp = name_matches[0]
                 state = "mapped"
-                reason = "Khớp chính xác họ tên và mã nguồn máy chấm công."
-            else:
-                state = "suggested"
-                reason = f"Khớp chính xác họ tên ({ten_nv}), mã Odoo ({matched_emp.tp_employee_code}) khác mã ENTI ({ma_nv}). Chờ xác nhận."
-        elif len(name_matches) > 1:
-            # Multiple employees with identical name: check code
-            by_code = name_matches.filtered(lambda e: e.tp_employee_code == ma_nv)
-            if by_code:
-                matched_emp = by_code[0]
-                state = "mapped"
-                reason = "Khớp chính xác họ tên và mã nhân viên."
-            else:
-                state = "unmapped"
-                reason = f"Có {len(name_matches)} nhân viên trùng họ tên trong Odoo. Cần người quản lý chọn thủ công."
+                reason = f"Khớp chính xác họ tên 1-1 trong Odoo HR ({matched_emp.name})."
+            elif len(name_matches) > 1:
+                by_code = name_matches.filtered(lambda e: e.tp_employee_code == ma_nv)
+                if by_code:
+                    matched_emp = by_code[0]
+                    state = "mapped"
+                    reason = f"Khớp chính xác họ tên và mã nhân viên ({matched_emp.name})."
+                else:
+                    state = "suggested"
+                    reason = f"Có {len(name_matches)} nhân viên trùng họ tên trong Odoo. Chờ người quản lý xác nhận."
 
         vals = {
             "source_id": source.id,
@@ -201,4 +239,8 @@ class AttendanceEntiMapping(models.Model):
             "match_reason": reason,
             "last_seen_at": now,
         }
+        res = self.sudo().create(vals)
+        if state == "mapped" and matched_emp:
+            self.env["tp.hr.attendance.enti.day"]._tp_project_for_mapping(res)
+        return res
         return self.sudo().create(vals)

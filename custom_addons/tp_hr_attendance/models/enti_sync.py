@@ -13,7 +13,7 @@ from datetime import date, datetime, timedelta
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
 
-from .attendance_common import DEFAULT_TZ, local_today
+from .attendance_common import DEFAULT_TZ, internal, local_today
 from .enti_client import EntiAuthError, EntiClient, EntiError
 from .enti_day import _parse_time_str
 
@@ -54,12 +54,14 @@ def _get_enti_credentials(env):
     # Check ir.config_parameter
     if not phone or not password:
         Param = env["ir.config_parameter"].sudo()
-        p_phone = Param.get_param("tp_hr_attendance.enti_phone")
-        p_pass = Param.get_param("tp_hr_attendance.enti_password")
-        p_app = Param.get_param("tp_hr_attendance.enti_app_key")
-        phone = phone or (p_phone.strip() if p_phone else None)
-        password = password or (p_pass.strip() if p_pass else None)
-        app_key = app_key or (p_app.strip() if p_app else None)
+        get_val = getattr(Param, "get_str", None) or getattr(Param, "get_param", None)
+        if get_val:
+            p_phone = get_val("tp_hr_attendance.enti_phone")
+            p_pass = get_val("tp_hr_attendance.enti_password")
+            p_app = get_val("tp_hr_attendance.enti_app_key")
+            phone = phone or (p_phone.strip() if p_phone else None)
+            password = password or (p_pass.strip() if p_pass else None)
+            app_key = app_key or (p_app.strip() if p_app else None)
 
     return phone, password, app_key
 
@@ -81,10 +83,12 @@ def _save_enti_credentials(env, phone, password, app_key=None):
         _logger.warning("Could not write to local ENTI secrets file: %s", exc)
 
     Param = env["ir.config_parameter"].sudo()
-    Param.set_param("tp_hr_attendance.enti_phone", phone.strip())
-    Param.set_param("tp_hr_attendance.enti_password", password.strip())
-    if app_key:
-        Param.set_param("tp_hr_attendance.enti_app_key", app_key.strip())
+    set_val = getattr(Param, "set_str", None) or getattr(Param, "set_param", None)
+    if set_val:
+        set_val("tp_hr_attendance.enti_phone", phone.strip())
+        set_val("tp_hr_attendance.enti_password", password.strip())
+        if app_key:
+            set_val("tp_hr_attendance.enti_app_key", app_key.strip())
 
 
 class AttendanceEntiSyncLog(models.Model):
@@ -149,9 +153,9 @@ class AttendanceSourceEnti(models.Model):
         if not source:
             phone, password, _ = _get_enti_credentials(self.env)
             if phone and password:
-                source = self.sudo().create({
+                source = internal(self).create({
                     "name": "API máy chấm công ENTI",
-                    "namespace": "ENTI",
+                    "namespace": "enti-tanphat",
                     "kind": "enti_api",
                     "company_id": company.id,
                     "timezone": DEFAULT_TZ,
@@ -198,14 +202,14 @@ class AttendanceSourceEnti(models.Model):
         phone, password, app_key = _get_enti_credentials(self.env)
         if not phone or not password:
             msg = "Chưa cấu hình thông tin xác thực ENTI trên máy chủ hoặc biến môi trường."
-            self.sudo().write({
+            internal(self).write({
                 "state": "not_configured",
                 "last_error_at": now,
                 "last_error": msg,
             })
             raise UserError(self.env._(msg))
 
-        client = EntiClient(base_url=ENTI_BASE_URL)
+        client = EntiClient()
         Log = self.env["tp.hr.attendance.enti.sync.log"].sudo()
         Mapping = self.env["tp.hr.attendance.enti.mapping"].sudo()
         EntiDay = self.env["tp.hr.attendance.enti.day"].sudo()
@@ -322,7 +326,7 @@ class AttendanceSourceEnti(models.Model):
             duration = round(time.time() - start_time, 2)
 
             # Update source state
-            self.sudo().write({
+            internal(self).write({
                 "state": "ready",
                 "live_enabled": True,
                 "last_success_at": now,
@@ -376,7 +380,7 @@ class AttendanceSourceEnti(models.Model):
             duration = round(time.time() - start_time, 2)
             err_msg = str(exc)
             _logger.error("ENTI sync failed: %s", err_msg)
-            self.sudo().write({
+            internal(self).write({
                 "last_error_at": now,
                 "last_error": err_msg[:240],
             })

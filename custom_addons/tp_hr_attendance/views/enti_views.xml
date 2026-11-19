@@ -59,18 +59,60 @@
         <field name="name">tp.hr.attendance.enti.mapping.list</field>
         <field name="model">tp.hr.attendance.enti.mapping</field>
         <field name="arch" type="xml">
-            <list string="Đối chiếu nhân viên ENTI - Odoo" js_class="tp_hr_table" default_order="state desc, ten_nv">
-                <field name="ma_nv" string="Mã ENTI"/>
-                <field name="ten_nv" string="Họ tên bên ENTI"/>
-                <field name="ten_bp" string="Bộ phận ENTI"/>
+            <list string="Đối chiếu nhân viên ENTI - Odoo" js_class="tp_hr_table" default_order="state desc, ten_nv" editable="bottom">
+                <field name="ma_nv" string="Mã ENTI" readonly="1"/>
+                <field name="ten_nv" string="Họ tên bên ENTI" readonly="1"/>
+                <field name="ten_bp" string="Bộ phận ENTI" readonly="1"/>
                 <field name="employee_id" string="Nhân viên Odoo"/>
-                <field name="employee_code" string="Mã Odoo"/>
-                <field name="employee_department" string="Phòng ban Odoo"/>
-                <field name="state" widget="badge" decoration-success="state == 'mapped'" decoration-warning="state == 'suggested'" decoration-danger="state == 'unmapped'"/>
-                <field name="match_reason" string="Căn cứ đối chiếu"/>
+                <field name="employee_code" string="Mã Odoo" readonly="1"/>
+                <field name="employee_department" string="Phòng ban Odoo" readonly="1"/>
+                <field name="state" widget="badge" decoration-success="state == 'mapped'" decoration-warning="state == 'suggested'" decoration-danger="state == 'unmapped'" readonly="1"/>
+                <field name="match_reason" string="Căn cứ đối chiếu" readonly="1"/>
                 <button name="action_confirm_mapping" type="object" string="Xác nhận" class="btn btn-sm btn-primary" invisible="state == 'mapped'"/>
                 <button name="action_reject_mapping" type="object" string="Hủy khớp" class="btn btn-sm btn-outline-danger" invisible="state == 'unmapped'"/>
             </list>
+        </field>
+    </record>
+
+    <record id="enti_mapping_form" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.enti.mapping.form</field>
+        <field name="model">tp.hr.attendance.enti.mapping</field>
+        <field name="arch" type="xml">
+            <form string="Đối chiếu nhân viên ENTI">
+                <header>
+                    <button name="action_confirm_mapping" type="object" string="Xác nhận đối chiếu" class="btn btn-primary" invisible="state == 'mapped'"/>
+                    <button name="action_reject_mapping" type="object" string="Hủy ghép nối" class="btn btn-outline-danger" invisible="state == 'unmapped'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="unmapped,suggested,mapped"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Dữ liệu từ ENTI">
+                            <field name="ma_nv" readonly="1"/>
+                            <field name="ten_nv" readonly="1"/>
+                            <field name="ten_bp" readonly="1"/>
+                            <field name="key_nv" readonly="1"/>
+                            <field name="last_seen_at" readonly="1"/>
+                        </group>
+                        <group string="Hồ sơ nhân viên Odoo">
+                            <field name="employee_id"/>
+                            <field name="employee_code" readonly="1"/>
+                            <field name="employee_department" readonly="1"/>
+                            <field name="match_reason" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_enti_mapping_auto_match" model="ir.actions.server">
+        <field name="name">Tự động tìm kiếm &amp; khớp lại</field>
+        <field name="model_id" ref="model_tp_hr_attendance_enti_mapping"/>
+        <field name="binding_model_id" ref="model_tp_hr_attendance_enti_mapping"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+records.action_auto_match()
         </field>
     </record>
 

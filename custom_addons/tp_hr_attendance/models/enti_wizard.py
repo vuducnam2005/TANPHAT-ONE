@@ -9,6 +9,7 @@ from datetime import date
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
 
+from .attendance_common import internal
 from .enti_client import EntiClient
 from .enti_sync import _get_enti_credentials, _save_enti_credentials
 
@@ -118,7 +119,7 @@ class AttendanceEntiConfigWizard(models.TransientModel):
         _save_enti_credentials(self.env, self.phone, self.password, self.app_key)
 
         # Find or create ENTI Attendance Source record
-        Source = self.env["tp.hr.attendance.source"].sudo()
+        Source = internal(self.env["tp.hr.attendance.source"])
         source = Source.search([
             ("company_id", "=", self.company_id.id),
             ("kind", "=", "enti_api"),
@@ -136,7 +137,7 @@ class AttendanceEntiConfigWizard(models.TransientModel):
             "live_enabled": True,
         }
         if source:
-            source.write(vals)
+            internal(source).write(vals)
         else:
             source = Source.create(vals)
 
@@ -156,7 +157,7 @@ class AttendanceEntiConfigWizard(models.TransientModel):
         self.ensure_one()
         self._check_permission()
 
-        Source = self.env["tp.hr.attendance.source"].sudo()
+        Source = internal(self.env["tp.hr.attendance.source"])
         source = Source.search([
             ("company_id", "=", self.company_id.id),
             ("kind", "=", "enti_api"),
