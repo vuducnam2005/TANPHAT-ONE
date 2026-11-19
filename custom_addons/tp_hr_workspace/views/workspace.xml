@@ -348,7 +348,8 @@
         <field name="name">tp.hr.department.list</field>
         <field name="model">hr.department</field>
         <field name="arch" type="xml">
-            <list string="Phòng ban và đơn vị" js_class="tp_hr_table" limit="20">
+            <list string="Phòng ban và đơn vị" js_class="tp_hr_table" limit="20" default_order="tp_sequence, id">
+ <field name="tp_sequence" widget="handle"/>
  <field name="color" column_invisible="True"/><field name="name" string="Phòng ban / Đơn vị" widget="tp_hr_identity"/>
  <field name="tp_manager_label" string="Người quản lý"/><field name="tp_visible_employee_count" string="Số nhân viên" widget="tp_hr_count"/>
  <field name="parent_id" string="Phòng ban cấp trên" optional="show"/>

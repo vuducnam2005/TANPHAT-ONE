@@ -1,5 +1,13 @@
 # TP HR — HR-001 implementation spec
 
+## HR-EMPLOYEE-XLSX-001 — 19/11/2026
+
+`20.0.1.14.0` thêm nút **Xuất Excel** trên thanh Danh sách nhân viên (desktop cạnh Thêm nhân viên; mobile trong thanh điều hướng). Dialog đếm nhân viên phía server và cho xuất toàn bộ kết quả đang lọc, toàn bộ trong quyền quản lý gồm lưu trữ, hoặc dòng đã chọn. Dùng domain/context đã áp của SearchModel, gồm bộ lọc nâng cao; không giới hạn trang hoặc nhóm đang mở.
+
+Exporter hiện có tạo sheet **Danh sách nhân viên**, **Dữ liệu chi tiết** và **Hợp đồng lao động** khi được phép/có dữ liệu. Danh sách cột thực, quyền, cách dùng và kiểm chứng tại [bàn giao](../../docs/demo/HR_EMPLOYEE_XLSX_001_ACCEPTANCE.md). Dữ liệu riêng tư chỉ theo field/record/company access của HR; không xuất lương, credential hoặc nội dung đính kèm.
+
+Thứ tự chung: `department.tp_sequence,id`, rồi `employee.sequence,id`; phòng chưa khai báo đứng cuối. Phòng ban và đơn vị dùng handle chuẩn Odoo; migration khởi tạo thứ tự theo `name,id` cũ. Nhân viên giữ cơ chế kéo cả hàng hiện hành. Xuất chỉ đọc, không ghi lại thứ tự.
+
 ## UI-TABLE-FILTER-001 — 14/11/2026
 
 Implemented content-appropriate table filtering (`DEC-044`, verified on `tp_tanphat_test` `18079`) via shared `<TpTableFilterBar>` (`static/src/table/filter_profiles.js`, `table.js/xml/scss`), action-specific `<search>` views (`views/search_views.xml`, `employment_contract.xml`) isolating `Hồ sơ cần bổ sung` / `Lưu trữ` / `Chưa có tài khoản` / `Training Attendances` / `Nơi làm việc` / `Nhãn` / `Bảng đối chiếu` / `Nhật ký` / `Loại hồ sơ năng lực` / `Hợp đồng nhân sự`, relation search widgets (`hr_ui.xml`, `tp_hr_relation` guard in `HrListModel._getNextConfig` preserving `HR-LIST-013` department grouping), self-profile filters (`my_profile.js/xml`), and `tests/test_table_filter_hr.py`. See [TP_TABLE_FILTER_INVENTORY.md](../../docs/ui/TP_TABLE_FILTER_INVENTORY.md) and [UI_TABLE_FILTER_001_ACCEPTANCE.md](../../docs/demo/UI_TABLE_FILTER_001_ACCEPTANCE.md).

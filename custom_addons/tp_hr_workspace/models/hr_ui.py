@@ -27,6 +27,9 @@ def open_employees(record, field):
 
 class Department(models.Model):
     _inherit = 'hr.department'
+    _order = 'tp_sequence, id'
+
+    tp_sequence = fields.Integer(string='Thứ tự phòng ban', default=10, index=True)
 
     tp_visible_employee_count = fields.Integer(string='Số nhân viên', compute='_compute_tp_visible_employee_count', groups='hr.group_hr_user')
     tp_manager_label = fields.Char(string='Người quản lý', compute='_compute_tp_manager_label', groups='hr.group_hr_user')

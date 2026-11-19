@@ -1,5 +1,7 @@
-import { Component, onPatched, onWillUnmount, proxy, useProps } from "@odoo/owl";
+import { Component, onPatched, onWillStart, onWillUnmount, proxy, useProps } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
+import { Dialog } from "@web/core/dialog/dialog";
+import { download } from "@web/core/network/download";
 import { formatDateTime } from "@web/core/l10n/dates";
 import { registry } from "@web/core/registry";
 import { useBus, useService } from "@web/core/utils/hooks";
@@ -26,6 +28,55 @@ const ROW_MOTION_EASING = "cubic-bezier(0.2, 0, 0, 1)";
 const ROW_SHIFT_MS = 180;
 const ROW_SETTLE_MS = 220;
 const DROP_SETTLE_MAX_WAIT_MS = 1000;
+
+export class HrEmployeeExportDialog extends Component {
+    static template = "tp_hr_workspace.EmployeeExportDialog";
+    static components = { Dialog };
+    props = useProps();
+
+    setup() {
+        this.orm = useService("orm");
+        this.state = proxy({ scope: "filtered", counts: {}, loading: true, busy: false, error: "" });
+        onWillStart(() => this.loadCounts());
+    }
+
+    async loadCounts() {
+        this.state.loading = true;
+        this.state.error = "";
+        try {
+            const results = await Promise.all(["filtered", "all", "selected"].map((scope) =>
+                this.orm.call("tp.hr.workspace", "get_employee_export_summary", [{ ...this.props.options, scope }])
+            ));
+            this.state.counts = Object.fromEntries(results.map((result) => [result.scope, result.count]));
+        } catch (error) {
+            this.state.error = error.data?.message || "Không đếm được nhân viên. Hãy thử lại.";
+        } finally {
+            this.state.loading = false;
+        }
+    }
+
+    async exportFile() {
+        if (this.state.busy || this.state.loading || !this.state.counts[this.state.scope]) {
+            return;
+        }
+        this.state.busy = true;
+        this.state.error = "";
+        try {
+            await download({ url: "/tp_hr/export", data: {
+                options: JSON.stringify({ ...this.props.options, scope: this.state.scope }),
+            } });
+            this.props.close();
+        } catch (error) {
+            this.state.error = error.data?.message || "Không xuất được Excel. Hãy thử lại.";
+        } finally {
+            this.state.busy = false;
+        }
+    }
+
+    changeScope(ev) {
+        this.state.scope = ev.target.value;
+    }
+}
 
 export class HrListModel extends RelationalModel {
     _getNextConfig(currentConfig, params) {
@@ -580,6 +631,26 @@ export class HrListController extends ListController {
         if (this.env.searchModel) {
             useBus(this.env.searchModel, "update", () => render(this));
         }
+    }
+
+    get showEmployeeExport() {
+        return this.props.resModel === "hr.employee" && !this.env.inDialog && !this.props.context?.tp_hr_relation;
+    }
+
+    openEmployeeExport() {
+        const root = this.model.root;
+        const facets = this.env.searchModel?.facets || [];
+        this.dialogService.add(HrEmployeeExportDialog, {
+            options: {
+                domain: JSON.parse(JSON.stringify(this.env.searchModel?.domain || root.domain)),
+                active_test: (this.env.searchModel?.context || root.context)?.active_test !== false,
+                selected_ids: root.selection.map((record) => record.resId),
+                selection_all: Boolean(root.isDomainSelected),
+                filter_label: facets.map((facet) =>
+                    [facet.title, ...(facet.values || []).map((value) => value.label)].filter(Boolean).join(": ")
+                ).join("; ") || "Phạm vi danh sách hiện hành",
+            },
+        });
     }
 
     get className() {

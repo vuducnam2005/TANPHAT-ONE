@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-006 — Xuất Excel danh sách nhân viên (HR-EMPLOYEE-XLSX-001)
+
+- 19/11/2026; người dùng giao phiên này trực tiếp triển khai, kiểm tra và deploy. Tái sử dụng `_build_xlsx`/xlsxwriter và `/tp_hr/export`; POST tải native có CSRF, giữ GET/filter cũ. Ba scope từ SearchModel domain/context đã áp, không lấy DOM/trang/nhóm mở; server đếm đúng nhân viên, giao cắt công ty/ACL/rule/field, không sudo vượt quyền; từ chối domain lỗi/toán tử bỏ quyền/credential, chống formula injection.
+- `tp_hr_workspace` `20.0.1.14.0`: sheet trình bày10 cột, chi tiết phẳng57 cột thực theo quyền và sheet hợp đồng khi có dữ liệu/quyền; màu tài khoản tách lưu trữ, mã/điện thoại text, ngày Excel, AutoFilter/freeze/in ngang. Nguồn chưa có thứ tự phòng tùy chỉnh: thêm `hr.department.tp_sequence`/native handle; migration khởi tạo theo thứ tự tên cũ. Các sheet đọc DB và sắp phòng `tp_sequence,id`, nhân viên `sequence,id`; xuất không ghi thứ tự/hồ sơ.
+- Kiểm: workbook5/5 + employee-order12/12; Ruff/AST/XML/Node PASS; read-only ORM22/22 trên18069; Playwright8/8 desktop/mobile không lỗi JS, 6XLSX thật khớp tổng/thứ tự (39đầy đủ/15tìm tên/31lọc nâng cao/1đã chọn); Excel thực mở/render workbook minh họa PASS. Odoo fixture tests bổ sung nhưng NOT_RUN (không tạo fixture/đổi thứ tự người thật trên main/server). Backup local và snapshot nghiệp vụ giữ nguyên. [Acceptance](demo/HR_EMPLOYEE_XLSX_001_ACCEPTANCE.md). Checkpoint và WIP ngoài phạm vi giữ nguyên; workflow seal trên snapshot sạch đúng source.
+
 ## CHG-20261119-005 — Admin chính duyệt điều chỉnh công (HR-ATTENDANCE-ADMIN-APPROVE-005)
 
 - Ngày 19/11/2026 Asia/Saigon; yêu cầu trực tiếp “BỔ SUNG: ADMIN CHÍNH DUYỆT ĐIỀU CHỈNH CÔNG”, theo [DEC-060](DECISIONS.md). Addon `tp_hr_attendance` `20.0.3.1.0 → 20.0.3.2.0`: đổi view/menu/ACL và thêm migration `migrations/20.0.3.2.0/post-migrate.py`, nên **cần** `-u tp_hr_attendance`.

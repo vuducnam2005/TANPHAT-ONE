@@ -9,7 +9,7 @@ from odoo.tests import TransactionCase, tagged
 
 
 @tagged('post_install', '-at_install')
-class TestHrWorkspace(TransactionCase):
+class BaseHrWorkspace(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -39,6 +39,8 @@ class TestHrWorkspace(TransactionCase):
     def report(self, actor=None):
         return self.env['tp.hr.workspace'].with_user(actor or self.hr).with_context(allowed_company_ids=[self.company.id])
 
+
+class TestHrWorkspace(BaseHrWorkspace):
     def test_population_filter_drilldown_parity(self):
         overview = self.report().get_overview()
         self.assertEqual(overview['total'], 2)
@@ -70,13 +72,13 @@ class TestHrWorkspace(TransactionCase):
 
     def test_report_export_scope_and_literal_text(self):
         workbook = load_workbook(BytesIO(self.report()._build_xlsx({'status': 'all'})), data_only=False)
-        detail = workbook['Danh sách nhân viên']
-        self.assertEqual(detail['B6'].value, '=SYNTHETIC()')
-        self.assertEqual(detail['B6'].data_type, 's')
-        self.assertEqual(detail.freeze_panes, 'A6')
-        self.assertEqual(len(list(detail.iter_rows(min_row=6, max_row=8))), 3)
+        detail = workbook['Dữ liệu chi tiết']
+        self.assertEqual(detail['C7'].value, '=SYNTHETIC()')
+        self.assertEqual(detail['C7'].data_type, 's')
+        self.assertEqual(detail.freeze_panes, 'D7')
+        self.assertEqual(len(list(detail.iter_rows(min_row=7, max_row=9))), 3)
         self.assertNotIn('Synthetic Other Secret', str(list(detail.values)))
-        self.assertEqual(workbook['Tổng hợp đơn vị']['B7'].value, '=SUM(B6:B6)')
+        self.assertEqual(workbook.sheetnames[:2], ['Danh sách nhân viên', 'Dữ liệu chi tiết'])
         workbook.close()
         with self.assertRaises(AccessError):
             self.report().get_overview({'department_id': self.other_department.id})

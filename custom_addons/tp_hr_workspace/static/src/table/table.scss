@@ -95,3 +95,18 @@
     .o_tp_hr_reorder_guidance { padding: 8px 16px; background: #eff6ff; }
 }
 body.o_tp_hr_drop_forbidden_cursor, body.o_tp_hr_drop_forbidden_cursor * { cursor: not-allowed !important; }
+
+.o_tp_hr_export_dialog {
+    .o_tp_hr_export_scope {
+        display: flex; align-items: center; gap: 12px; padding: 14px 10px;
+        border-bottom: 1px solid #dce4ed; cursor: pointer; min-height: 64px;
+        input { flex: 0 0 auto; }
+        span { flex: 1; }
+        strong, small { display: block; }
+        small { margin-top: 4px; color: #64748b; }
+        b { color: #173a54; font-variant-numeric: tabular-nums; }
+        &:has(input:checked) { background: #eef6fc; }
+        &:has(input:disabled) { opacity: .6; cursor: default; }
+    }
+    .o_tp_hr_export_count { margin: 18px 0 8px; color: #173a54; font-size: 16px; }
+}
