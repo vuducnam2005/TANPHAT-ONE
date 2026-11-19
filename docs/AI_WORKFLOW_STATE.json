@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T14:44:15.767558+00:00",
-  "last_change_id": "CHG-20261119-027",
+  "updated_at": "2026-11-19T14:52:58.204097+00:00",
+  "last_change_id": "CHG-20261119-028",
   "code_digest": "d77c3600ba603f24240cebb3f83c3fd3328af4a4e6c9604ea2dd25470dbb5a61",
   "code_file_count": 702,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "c684bd8a4eea1c99670c9b814fa856cc33d8454ae131af65b1fd02075f86c8d7",
-    "docs/CHANGELOG.md": "946496ada7c7a24cd82052c6d52cbcc832dc943ff846375760e3b91a1d5f1c25",
+    "docs/PROJECT_STATUS.md": "157fc9206b95756d5f9c2a1fedc87d05d705611e05dd2aa2c4dee48171e26d35",
+    "docs/CHANGELOG.md": "7eaf9db6df920afb724ebea3ec89ca9d8a1e4ecc72992e1c91f9571874726d8c",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "AST/XML/node --check/libsass PASS for scope; HOOT tp_web_home59(60)/307, tp_hr_workspace50(52)/256, tp_kd_workspace25/96 PASS on the final candidate; full HOOT 1438 pass/11 core fails pre-existing since CHG-023, no regression; Odoo Python tests not rerun (static assets and manifests only); Chromium with all write RPCs blocked on local18069 1440/390: MyProfile security refused in-card, employee reorder refused above table with order restored, KD overview access/connection in-screen, 0 danger toasts; shared summary height fix 908->104px on KD with native form geometry unchanged; local18069 upgrade exit0/0ERROR, data/permission snapshot preserved; backup .local/validation002/main-backup-20261119T193650; PC server not yet at this record."
+    "Docs receipt: PC upgrade of tp_web_home/tp_hr_workspace/tp_kd_workspace exit0/0ERROR, business/security snapshot unchanged except 3 module versions (attendance days 724=724), 23 source checksums, public/server JS e1aad712/CSS 3e5f447c SHA256 match with in-screen error code and summary height rule, health/login 200."
   ]
 }

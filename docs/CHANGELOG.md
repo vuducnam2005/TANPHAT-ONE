@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-028 — Đã áp lỗi thao tác trong màn (FORM-VALIDATION-002) lên PCserver
+
+- 19/11/2026: app `70cf30a8` đã push, backup/upgrade Home 20.0.1.11.0, HR 20.0.1.19.0, KD 20.0.1.10.0 trên PCserver exit0/0ERROR; snapshot dữ liệu/quyền trước/sau giống hệt, chỉ đổi phiên bản 3 module. Backup `C:\TANPHAT-backups\form-validation002\form-validation027-20261119T214803`; dump/filestore/source/config/SHA256.
+- Public health/login 200; JS/CSS public khớp SHA256 server (e1aad712/3e5f447c), có mã lỗi trong màn và rule chiều cao khối lỗi. Nguồn 23/23 checksum. Docs-only receipt đồng bộ source, không restart thêm. [Nghiệm thu](demo/FORM_VALIDATION_002_ACCEPTANCE.md).
+
 ## CHG-20261119-027 — Lỗi xóa/sắp xếp/mở hiện trong màn thay cho toast
 
 - 19/11/2026 Asia/Saigon; nhiệm vụ `FORM-VALIDATION-002`, người dùng chọn “Làm tiếp ở đây” cho việc chuyển các màn còn dùng toast sang khối lỗi trong màn.

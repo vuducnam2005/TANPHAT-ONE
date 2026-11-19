@@ -79,7 +79,7 @@ Kết quả và ảnh: `.local/validation002/screens-*-final.json`, `.local/vali
 | Local `tp_tanphat_dev` (18069) | Đã upgrade `tp_web_home` 20.0.1.10.0 → 20.0.1.11.0, `tp_hr_workspace` 20.0.1.18.0 → 20.0.1.19.0, `tp_kd_workspace` 20.0.1.9.1 → 20.0.1.10.0; exit 0, 0 ERROR, cảnh báo giống lần trước (86). Snapshot nhân viên/user/nhóm/roster/phiên bản/thiết bị/ledger/công/khóa/tài khoản/công ty/resource/base_url không đổi. `tp_hr_attendance` local giữ nguồn đang chạy (20.0.3.3.0): ENTI-LIVE-001 (20.0.3.4.x) là tác vụ khác, chưa áp local, bản này không áp thay |
 | Backup local | `.local/validation002/main-backup-20261119T193650`: dump + `pg_restore -l`, filestore 186 file DB tham chiếu (0 thiếu), config riêng, source cũ 3 module, SHA256 |
 | Test `tp_tanphat_test` (18079) | không dùng |
-| PC server | Chưa deploy ở mốc ghi này. Trước khi ghi, nguồn 18 file scope trên server khớp `dea9de54`; module Home 20.0.1.10.0 / HR 20.0.1.18.0 / KD 20.0.1.9.1 |
+| PC server | Đã áp `70cf30a8` (CHG-20261119-028): Home 20.0.1.10.0 → 20.0.1.11.0, HR 20.0.1.18.0 → 20.0.1.19.0, KD 20.0.1.9.1 → 20.0.1.10.0, exit 0 / 0 ERROR; trước deploy nguồn 18 file khớp `dea9de54`. Xem receipt dưới |
 
 ## Giới hạn
 
@@ -90,3 +90,13 @@ Kết quả và ảnh: `.local/validation002/screens-*-final.json`, `.local/vali
 - Hộp thoại lỗi RPC native của Odoo vẫn có thể xuất hiện cùng khối lỗi trong màn.
 - Ảnh chụp và log chỉ lưu trong `.local/validation002/` (bị ignore) để không đưa dữ liệu
   nhân viên vào Git. Technical verification khác nghiệm thu nghiệp vụ.
+
+## Receipt PC server — CHG-20261119-028
+
+- Commit app `70cf30a872f7354be4c2d305491a58224aa98223`; gói `form-validation027`, 23 file, checksum từng file khớp sau giải nén.
+- Trước deploy: nguồn 18 file scope = `dea9de54`; mọi module `tp_*` đã cài có phiên bản nguồn = DB; không có module chờ cài/nâng cấp, không có container upgrade khác.
+- Backup `C:\TANPHAT-backups\form-validation002\form-validation027-20261119T214803`: `tp_tanphat_dev.dump` + `restore-list.txt` (15928 mục), `filestore.tar.gz` (623 mục), source/config, SHA256SUMS.
+- Upgrade `-u tp_web_home,tp_hr_workspace,tp_kd_workspace` exit 0, 0 ERROR; snapshot trước/sau giống hệt ngoài phiên bản 3 module (ngày công 724 = 724; cron ENTI chạy mỗi phút nên mục này chỉ được phép tăng). `tp_hr_attendance` 20.0.3.4.1 không đổi; 10 phút sau restart không có ERROR.
+- Public `https://eight-championships-launches-plaintiff.trycloudflare.com`: `/web/health` 200, `/dang-nhap` 200; bundle JS `e1aad712…`, CSS `3e5f447c…` bằng SHA256 bản server, có `tp_web_home.InlineErrors`, câu “Chưa kết nối được máy chủ nên chưa”, `tpReorderError`, `tp_kd_filter_project`, và `.tp_validation_summary{flex: 0 0 auto; width: 100%; …}`.
+- Server còn các file chưa commit của phiên khác và `tp_branding` chưa track (có từ trước); bản này không thay đổi chúng.
+- Người dùng bấm Ctrl+F5 để tải bundle mới.
