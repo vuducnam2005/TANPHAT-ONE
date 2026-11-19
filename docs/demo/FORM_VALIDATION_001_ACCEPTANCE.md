@@ -76,7 +76,7 @@ Kết quả và ảnh: `.local/validation001/browser-receipt/*.json`, `.local/va
 | Local `tp_tanphat_dev` (18069) | Đã upgrade `tp_hr_workspace` 20.0.1.17.0 → 20.0.1.18.0, `tp_web_home` 20.0.1.9.1 → 20.0.1.10.0; exit 0, 0 ERROR. `tp_hr_attendance` 20.0.3.1.0 → 20.0.3.3.0 do là module phụ thuộc: DB local còn chậm so với HEAD (CHG-005/012 đã chạy trên PC). Snapshot nhân viên/user/nhóm/roster/phiên bản/thiết bị/ledger/công/khóa/tài khoản/công ty/resource/base_url không đổi |
 | Backup local | `.local/validation001/main-backup-20261119T181303`: dump + `pg_restore -l`, filestore các file DB tham chiếu (0 thiếu), config riêng, source cũ, SHA256 |
 | Test `tp_tanphat_test` (18079) | Chỉ chạy test; backup trước mỗi lần `.local/validation001/backup-test-db-20261119-180209.dump`, `-180704.dump`. `tp_branding` (chưa track, không nằm trong addons path kiểm thử) bị đánh dấu `to upgrade` trong DB test |
-| PC server | Chưa deploy ở mốc ghi này; nguồn 23 file trên server khớp HEAD `5b9910b3`, module HR 20.0.1.17.0 / Home 20.0.1.9.1 |
+| PC server | Đã áp `720d7fa9` (CHG-20261119-024): HR 20.0.1.17.0 → 20.0.1.18.0, Home 20.0.1.9.1 → 20.0.1.10.0, exit 0 / 0 ERROR; trước deploy nguồn 23 file khớp HEAD `5b9910b3`. Xem receipt dưới |
 
 ## Giới hạn
 
@@ -87,3 +87,13 @@ Kết quả và ảnh: `.local/validation001/browser-receipt/*.json`, `.local/va
 - Hộp thoại lỗi RPC native của Odoo vẫn xuất hiện cùng khối lỗi trong form.
 - Ảnh chụp và log chỉ lưu trong `.local/validation001/` (bị ignore) để không đưa dữ
   liệu nhân viên vào Git. Technical verification khác nghiệm thu nghiệp vụ.
+
+## Receipt PC server — CHG-20261119-024
+
+- Commit app `720d7fa9192e3349c0fd5845a3a0d232d2f685cf`; gói `form-validation023`, 29 file, checksum từng file khớp sau giải nén.
+- Trước deploy: kiểm drift nguồn 23 file = HEAD `5b9910b3`; mọi module `tp_*` có phiên bản nguồn = DB.
+- Backup `C:\TANPHAT-backups\form-validation001\form-validation023-20261119T182936`: `tp_tanphat_dev.dump` + `restore-list.txt` (15790 mục), `filestore.tar.gz` (634 mục), source/config, SHA256SUMS.
+- Upgrade `-u tp_hr_workspace,tp_web_home` exit 0, 0 ERROR; snapshot trước/sau giống hệt ngoài phiên bản 2 module.
+- Public `https://eight-championships-launches-plaintiff.trycloudflare.com`: `/web/health` 200, `/dang-nhap` 200; bundle JS `e8b9a2c9…`, CSS `5b4b6a4e…` bằng SHA256 bản server, có `tp_web_home.ValidationSummary`, `InlineErrors`, `HrEmployeeFilterBar`, `.tp_validation_summary`.
+- Server còn 6 file JS chưa commit của phiên khác và `tp_branding` chưa track (đã có trước bản này); bản này không thay đổi chúng.
+- Người dùng bấm Ctrl+F5 để tải bundle mới.

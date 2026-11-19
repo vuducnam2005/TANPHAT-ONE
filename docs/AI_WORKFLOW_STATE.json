@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T11:25:36.738393+00:00",
-  "last_change_id": "CHG-20261119-023",
+  "updated_at": "2026-11-19T11:34:12.818462+00:00",
+  "last_change_id": "CHG-20261119-024",
   "code_digest": "8ead81980dbc416f63692ba5fb4e6259c0d52401e1393a3d3c43f29a25db6a1f",
   "code_file_count": 691,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "7143d0c3cdc5a25f27f7a6d392458537986c839169fa47f07f6868b2f136ef1d",
-    "docs/CHANGELOG.md": "f338d7ff7d7d320b612ab3ec416fb9afc92c633b1c26bcbed66c78fff1c150f8",
+    "docs/PROJECT_STATUS.md": "83d44935b8896a9c2032a224ac80335a500be8805d9f3e675ef31ac6d959729a",
+    "docs/CHANGELOG.md": "6ade7d3db35ae414283548175d6f43bed086b6e52de5ac75279a254d8513e065",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "AST/XML/node --check/libsass PASS for scope; HOOT tp_web_home57/296, tp_hr_workspace50/243, tp_kd_workspace22/85, tp_equipment2/4 PASS; full HOOT 1429 pass/11 core fails identical to HEAD; Odoo /tp_hr_workspace,/tp_web_home 103 tests, 8 fail+2 error pre-existing on HEAD (102), no regression; Chromium with all write RPCs blocked on local18069: new employee 1440/768/390, 6 server error kinds, sub-table rows/popup 1440/390, quick-create, live name search 1440/390 PASS; local18069 upgrade exit0/0ERROR, data/permission snapshot preserved; backup .local/validation001/main-backup-20261119T181303; PC server not yet at this record."
+    "Docs receipt: PC upgrade exit0/0ERROR, business/security snapshot unchanged except 2 module versions, 29 source checksums, public/server JS e8b9a2c9/CSS 5b4b6a4e SHA256 match with validation and live-search code, health/login 200."
   ]
 }

@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-024 — Đã áp thông báo thông tin còn thiếu và tìm tên trực tiếp lên PCserver
+
+- 19/11/2026: app `720d7fa9` đã push, backup/upgrade HR 20.0.1.18.0 và Home 20.0.1.10.0 trên PCserver exit0/0ERROR; snapshot dữ liệu/quyền trước/sau giống hệt, chỉ đổi phiên bản module. Backup `C:\TANPHAT-backups\form-validation001\form-validation023-20261119T182936`; dump/filestore/source/config/SHA256.
+- Public health/login 200; JS/CSS public khớp SHA256 server (e8b9a2c9/5b4b6a4e), có presenter validation và tìm tên. Nguồn 29/29 checksum. Không đụng 6 file JS chưa commit của phiên khác đang có trên server. Docs-only receipt đồng bộ source, không restart thêm. [Nghiệm thu](demo/FORM_VALIDATION_001_ACCEPTANCE.md).
+
 ## CHG-20261119-023 — Thông báo rõ thông tin còn thiếu khi thêm mới/lưu; khôi phục tìm tên trực tiếp
 
 - 19/11/2026 Asia/Saigon; nhiệm vụ `FORM-VALIDATION-001` theo yêu cầu “tiếp tục … THÔNG BÁO RÕ THÔNG TIN CÒN THIẾU CHO MỌI MÀN THÊM MỚI”. `tp_web_home` 20.0.1.10.0 thêm presenter dùng chung `static/src/validation/`: khối “Chưa lưu được. Vui lòng kiểm tra N thông tin” trong form/popup/wizard/quick-create thay toast chung; mỗi dòng có nhãn đang hiển thị, tab/nhóm, cách sửa, bấm mở tab và focus đúng ô; khung đỏ, câu dưới ô, số lỗi trên tab, `*` chỉ ô bắt buộc sửa được (gỡ rule `*` cũ trong `inputs.scss`), tự cập nhật khi sửa, không nhảy focus. Bảng con báo theo dòng; popup giữ lỗi và không đóng.
