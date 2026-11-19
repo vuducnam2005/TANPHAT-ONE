@@ -344,8 +344,8 @@ export class TpTableFilterBar extends Component {
         }
     }
 
-    async applyFilters() {
-        if (this.blocked || this.validationErrors.length) {
+    async applyFilters(onlyKey = null) {
+        if (this.blocked || (!onlyKey && this.validationErrors.length)) {
             return;
         }
         this.state.openPopoverKey = null;
@@ -358,6 +358,7 @@ export class TpTableFilterBar extends Component {
         const prefilters = [];
         try {
             for (const criterion of this.criteria) {
+                if (onlyKey && criterion.key !== onlyKey) continue;
                 const built = buildCriterionFilter(criterion, this.state.pending[criterion.key]);
                 if (built) {
                     prefilters.push({
@@ -385,7 +386,7 @@ export class TpTableFilterBar extends Component {
             const managedGroups = new Set();
             for (const q of searchModel.query || []) {
                 const item = searchModel.searchItems?.[q.searchItemId];
-                if (item?.tpFilterKey) {
+                if (item?.tpFilterKey && (!onlyKey || item.tpFilterKey === onlyKey)) {
                     managedGroups.add(item.groupId);
                 }
             }

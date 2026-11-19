@@ -142,3 +142,7 @@ Không đánh dấu hoàn thành UI bảng nếu chưa có đủ các mục sau 
 - [Inventory KH-KD lịch sử KD-UI-007](KD_UI_007_TABLE_INVENTORY.md): nguồn đối
   chiếu, cần resolve lại view hiện tại; không coi thống kê 07/11 là coverage hôm nay.
 - [Quy trình thay đổi](../AI_CHANGE_WORKFLOW.md), [mẫu bàn giao](../HANDOFF_TEMPLATE.md).
+
+## Ngoại lệ Danh sách nhân viên — 19/11/2026
+
+Theo yêu cầu trực tiếp CHG-20261119-020, riêng Danh sách nhân viên TP HR bỏ thanh tìm kiếm native lớn trùng với hàng lọc. Giữ SearchModel và menu native Lọc/Nhóm/Ưa thích. Ô Họ tên gợi ý và áp dụng khi gõ sau250ms, không cần Enter/Áp dụng; chọn gợi ý dùng ID. Chỉ điều kiện tên tự áp; các tiêu chí khác giữ pending/applied rõ ràng. Truy vấn gợi ý và bảng đều giữ phạm vi action/company/ACL/record rule, không lọc riêng trang hiện tại. Các bảng khác tiếp tục chuẩn chung.

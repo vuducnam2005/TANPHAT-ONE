@@ -1,0 +1,33 @@
+<templates xml:space="preserve">
+    <t t-name="tp_hr_workspace.NameAutoComplete" t-inherit="web.AutoComplete" t-inherit-mode="primary">
+        <xpath expr="//input" position="attributes">
+            <attribute name="t-on-compositionstart">this.onCompositionStart</attribute>
+            <attribute name="t-on-compositionend">this.onCompositionEnd</attribute>
+        </xpath>
+    </t>
+    <t t-name="tp_hr_workspace.EmployeeFilterBar" t-inherit="tp_web_home.TableFilterBar" t-inherit-mode="primary">
+        <xpath expr="//button[hasclass('tp_filter_advanced')]" position="replace">
+            <div t-if="this.liveNamesEnabled" class="d-flex align-items-center gap-2">
+                <SearchBarMenu dropdownState="this.advancedDropdown"/>
+                <span>Lọc / Nhóm / Ưa thích</span>
+            </div>
+            <button t-else="" type="button" class="btn btn-outline-primary tp_filter_advanced tp_kd_advanced"
+                t-att-disabled="this.blocked" t-on-click="this.openAdvanced">Bộ lọc nâng cao</button>
+        </xpath>
+        <xpath expr="//input[@t-if=&quot;crit.type === 'char'&quot;]" position="replace">
+            <div t-if="crit.type === 'char'" class="tp_filter_m2o_wrap">
+                <HrNameAutoComplete t-if="crit.recordSuggestions and !this.blocked"
+                    t-key="this.state.nameReset"
+                    id="'tp_f_' + crit.key" value="this.nameValue(crit)"
+                    placeholder="crit.placeholder" sources="this.nameSources(crit)"
+                    onInput="(args) => this.onNameInput(args, crit)"
+                    inputDebounceDelay="250" autoSelect="false"/>
+                <input t-else="" t-att-id="'tp_f_' + crit.key" type="text" class="tp_filter_control"
+                    t-att-placeholder="crit.placeholder" t-att-disabled="this.blocked"
+                    t-att-value="this.nameValue(crit)"
+                    t-on-input="(ev) => this.setSingleValue(crit, ev.target.value)"
+                    t-on-keydown="this.onTextKeyDown"/>
+            </div>
+        </xpath>
+    </t>
+</templates>

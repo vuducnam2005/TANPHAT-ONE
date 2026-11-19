@@ -376,3 +376,9 @@ Không bảng mới: form/wizard rename tách capability lock/reset, filter/page
 ### ADMIN-ACCOUNT-POLICY-001 — CHG-20261119-018
 
 Không tạo/sửa bảng dữ liệu: form nhân viên/user và wizard khóa/mở chỉ đổi capability/readonly/label; filter/pager/count/export N/A. Lịch sử tái dùng tp.hr.employee.audit và search hiện có. Giữ domain/backend quyền và bộ lọc list/export trước đó. [Acceptance](../demo/ADMIN_ACCOUNT_POLICY_001_ACCEPTANCE.md).
+
+### HR-PROFILE-RESPONSIVE-UI-001 / LIVE-NAME-SEARCH — CHG-20261119-020
+
+- HR-T01 / `action_employees` / `employee_list`: thay search lớn bằng Họ tên tự gợi ý và áp dụng sau250ms; native SearchModel, menu Lọc/Nhóm/Ưa thích, facets/count/pager/export và department grouping giữ. Tên là substring ilike, chọn gợi ý là ID; xóa tên giữ các điều kiện khác.
+- HR-T18 và tab con hồ sơ nhân viên/Thông tin cá nhân: chỉ typography/responsive/scroll; bộ lọc đang có giữ. Không thêm bảng hoặc tiêu chí nghiệp vụ. Popup account/position/credentials là form một bản ghi: N/A bộ lọc bảng, không mở quyền. HR-T02/T03/T04 và KH-KD/reporting giữ search/hành vi cũ.
+- Kiểm thực và phần chưa kiểm: [acceptance](../demo/HR_PROFILE_LIVE_SEARCH_001_ACCEPTANCE.md). Không chuyển coverage của inventory cũ thành chứng minh task này đã nghiệm thu.

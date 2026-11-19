@@ -133,6 +133,9 @@ export function cloneCriterionValue(criterion, value) {
 }
 
 export function valuesEqual(criterion, a, b) {
+    if (criterion.recordSuggestions && (a?.id || b?.id)) {
+        return a?.id === b?.id && a?.label === b?.label;
+    }
     if (criterion.type === "date" || criterion.type === "datetime") {
         return (a?.from || "") === (b?.from || "") && (a?.to || "") === (b?.to || "");
     }
@@ -194,6 +197,13 @@ export function buildCriterionFilter(criterion, value) {
     const snapshot = cloneCriterionValue(criterion, value);
 
     if (criterion.type === "char") {
+        if (criterion.recordSuggestions && value?.id) {
+            return {
+                description: `${criterion.label}: ${value.label}`,
+                domain: new Domain([["id", "=", value.id]]).toString(),
+                snapshot,
+            };
+        }
         const trimmed = String(value).trim();
         return {
             description: `${criterion.label}: ${trimmed}`,

@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-020 — Hồ sơ HR responsive và tìm tên ngay khi gõ
+
+- 19/11/2026 Asia/Saigon; người dùng giao thực thi trực tiếp “làm đi” sau prompt hợp nhất. Phần bổ sung trực tiếp giới hạn bỏ thanh search lớn tại Danh sách nhân viên và autocomplete/lọc tên từ ký tự đầu, không cần Enter; tài liệu đính kèm là tham chiếu thiết kế hồ sơ.
+- HR20.0.1.17.0/Home20.0.1.9.1. Native AutoComplete/SearchModel/ORM: gợi ý chứa từ khóa theo quyền, chống stale response, composition tiếng Việt, chọn ID phân biệt người trùng tên; chỉ áp tiêu chí tên, giữ điều kiện khác. Native menu lọc/nhóm/favorite vẫn dùng được; không thay search bảng KH-KD/báo cáo.
+- Profile/My Profile sửa rule gốc typography/grid/card/tabs/wrapping và popup; không đổi model/state/quyền/API hoặc ghi hồ sơ thật. [Bàn giao và kiểm](demo/HR_PROFILE_LIVE_SEARCH_001_ACCEPTANCE.md). [Ngoại lệ quy chuẩn](ui/TP_TABLE_FILTER_STANDARD.md), [inventory](ui/TP_TABLE_FILTER_INVENTORY.md).
+- Đã kiểm syntax AST/XML/Node, libsass, compile7OWL template và test logic cô lập; local upgrade exit0/0ERROR và snapshot hash tài khoản/quyền/liên kết/nghiệp vụ giữ. Browser7tab9width/10behavior+10extra PASS, HOOT48test243assertion PASS; không fixturemain, không18079.
+- Backup local `.local/hr-profile-live001/main-backup-20261119T153938`: dump/pg_restore-list/filestore DB-referenced/source/config/SHA256. Chưa deploy PCserver ở mốc ghi này. Giữ foreign WIP/checkpoint, seal snapshot HEAD+scope khi sẵn sàng; không finish hộ batch khác. Next: commit/push/deploy đúng scope, kiểm public và bàn giao receipt; yêu cầu validation mới sẽ triển khai batch riêng.
+
 ## CHG-20261119-019 — Giao quyền quản lý tài khoản admin lên local và PC server
 
 - 19/11/2026 Asia/Saigon, theo quyền triển khai đã giao và DEC-051/062. App `3442143c6c23c6384a0450a1e61a361dcf8352fb` đã push origin/main và áp local18069 + PCserver; HR20.0.1.16.0/admin20.0.2.1.0, exit0/0ERROR mỗi môi trường. Các addon/session/tunnel/config khác giữ.

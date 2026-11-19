@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T08:09:08.348171+00:00",
-  "last_change_id": "CHG-20261119-019",
-  "code_digest": "b77e3ae01df5b88a2c59b1f478f172c956fff24911c21f8398bb678959ebfc5b",
-  "code_file_count": 684,
+  "updated_at": "2026-11-19T09:06:41.114548+00:00",
+  "last_change_id": "CHG-20261119-020",
+  "code_digest": "b2fa64329dd0f215ee9c5cf44cfe109c8b275ca0d41c7fc4608c490eb52db5e2",
+  "code_file_count": 686,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "9f48b95a77758884f34e9170e63f502b7dc4508c4f74ad35b2be5a56de9c07e9",
-    "docs/CHANGELOG.md": "678c5145da67e06f2d2a2c5c30cc5598afa5fe9c0a0aa3478a9361af20f32c27",
+    "docs/PROJECT_STATUS.md": "57b1033ddef40d887e88cfd198a050531eb0cd8e0b920bab533303b8a16b0f37",
+    "docs/CHANGELOG.md": "56fe86f10bee4707b666d2588ca1db58bcd95c9fbbdb0fd4ef90cdf8e6a5fb8c",
     "AGENTS.md": "41da7729acb3c746356fb7595b8c1e452c6edcebe22d398f22361c67113038dc",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "App3442143c pushed/applied local+PC; exit0/0ERROR; read-only 13/13 local, 68/68 PC server; source28/28; snapshots unchanged; real public/server assets+health/login PASS; Odoo40/40 race2/2 Playwrightdesktop/mobile from018; business acceptance/real-user authenticated public E2E pending"
+    "Live filter unit PASS; AST/XML/Node syntax and 3SCSS PASS; 7 inherited OWL templates compile PASS; HOOT48tests/243assertions PASS; Chromium10behavior checks + 63tab/width geometry checks + 10extra keyboard/clear/low-height/CSS-zoom/reduced-motion/long-text checks PASS; local18069 upgrade0ERROR/snapshot preserved; no fixturemain or18079."
   ]
 }
