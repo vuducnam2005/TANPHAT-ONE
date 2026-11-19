@@ -41,7 +41,7 @@ export class HrProfileController extends FormController {
     }
     async beforeExecuteActionButton(params) {
         const result = await super.beforeExecuteActionButton(params);
-        if (result !== false && ["action_open_account_dialog", "action_reset_user_password"].includes(params.name)) {
+        if (result !== false && ["action_open_account_dialog", "action_reset_user_password", "action_open_change_login_dialog"].includes(params.name)) {
             this.rememberAccountOpener(params.name);
         }
         return result;

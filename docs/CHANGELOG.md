@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-013 — Triển khai đổi tên đăng nhập nhân viên
+
+- 19/11/2026 Asia/Saigon; người dùng trực tiếp giao phiên chính triển khai, thay vai trò chỉ điều phối trong hạng mục009. Tiếp nhận WIP `hr_account_wizard.py`/`hr_history.py`; hoàn thiện trong custom_addons, không sửa core/API/React. HR `20.0.1.15.0`, admin delegation `20.0.2.0.2`.
+- Dialog native OWL dùng account assets có sẵn: nhân viên/tên hiện tại/tên mới, Lưu/Hủy, lỗi tại ô nhập, focus/reload/390px; thông báo mật khẩu giữ nguyên và phiên cần đăng nhập lại. Giữ thao tác tạo tài khoản cho người chưa có. Backend gốc res.users.write kiểm actor không suy quyền từ sudo, ACL/phạm vi, bảo vệ admin gốc/hệ thống/self theo policy hiện hành; kiểm stale link/login sau khóa, giữ related tp_user_login, unique case-sensitive toàn DB bằng constraint res_users_login_key. Audit actor/time/userID/old/new append-only và chatter cùng savepoint, không password/token.
+- Test thật trên tp_tanphat_test hiện có sau backup `.local/hr-login-rename-impl001/test-backup-20261119T125912`: 4/4 backend + 5/5 hồi quy tạo/reset/liên kết; 2/2 HttpCase gồm Playwright desktop/mobile với tài khoản giả và real HTTP password auth (mới đúng case thành công; cũ/sai case thất bại; token native đổi); 2 race độc lập đổi–đổi/tạo–đổi mỗi cặp đúng một winner, cleanup fixture. Native SQL unique errors trong race là kết quả mong đợi. Excel thật openpyxl có tên mới; snapshot synthetic giữ ID/password hash/group/company/resource/department/job/avatar. Ruff/AST/XML/Node/validator8cases và diff --check PASS. Chưa chạy full HOOT hoặc iOS/Safari thật; không thử đổi tài khoản người thật.
+- Lần đầu browser dùng accessible name tab không khớp icon; sửa selector theo DOM đã quan sát. Probe JSON-RPC phiên hết hạn gặp Windows socket reset trong harness; thay bằng đối chiếu session token native trước/sau, HTTP old/new auth độc lập vẫn kiểm thật và đạt. Không sửa product để né lỗi harness. Log GC filestore test WinError5 có sẵn, không xóa blob hoặc đổi quyền ngoài scope.
+- [Acceptance/cách dùng](demo/HR_LOGIN_RENAME_001_ACCEPTANCE.md), [runbook/rollback](../ops/runbooks/HR_LOGIN_RENAME_001_DEPLOY_AND_ROLLBACK.md); không có bảng mới, inventory ghi N/A popup và tái dùng search/export. Tách technical verification với business acceptance; commit/push/deploy ghi receipt sau khi chạy. Workflow seal từ snapshot HEAD + đúng scope, giữ checkpoint18/11 và WIP/index của phiên khác.
+
 ## CHG-20261119-012 — Admin được ủy quyền duyệt điều chỉnh công
 
 - 19/11/2026; yêu cầu trực tiếp “quyền admin là toàn quyền chừ việc tự bổ nhiệm quyền admin cho người khác thôi” ([DEC-061](DECISIONS.md)). `tp_hr_attendance` `20.0.3.2.0 → 20.0.3.3.0` (Python/view/ACL/JS + migration, **cần** `-u tp_hr_attendance`).

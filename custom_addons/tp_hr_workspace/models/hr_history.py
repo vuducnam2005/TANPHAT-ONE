@@ -432,8 +432,14 @@ class HrIdentityAudit(models.Model):
             ('identity', 'Đồng bộ danh tính hồ sơ và tài khoản'),
             ('role_change', 'Thay đổi vai trò nghiệp vụ'),
             ('department_transfer', 'Chuyển phòng ban'),
+            ('login_change', 'Đổi tên đăng nhập'),
         ],
-        ondelete={'identity': 'cascade', 'role_change': 'cascade', 'department_transfer': 'cascade'},
+        ondelete={
+            'identity': 'cascade',
+            'role_change': 'cascade',
+            'department_transfer': 'cascade',
+            'login_change': 'cascade',
+        },
     )
 
 

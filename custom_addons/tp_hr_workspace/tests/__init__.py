@@ -8,6 +8,7 @@ from . import (
     test_hr_ui,
     test_hr_workspace,
     test_identity_org,
+    test_login_rename,
     test_my_profile,
     test_table_filter_hr,
 )

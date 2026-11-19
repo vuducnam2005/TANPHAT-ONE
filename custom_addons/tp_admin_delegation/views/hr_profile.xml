@@ -36,7 +36,7 @@
         <field name="name">tp.hr.employee.delegated.form</field><field name="model">hr.employee</field>
         <field name="priority">200</field>
         <field name="arch" type="xml"><form string="Hồ sơ nhân viên" class="o_tp_hr_employee_form" create="false" edit="false" delete="false" duplicate="false">
-            <header><field name="tp_can_manage_account" invisible="1"/><field name="user_id" invisible="1"/>
+            <header><field name="tp_can_change_login" invisible="1"/><field name="tp_can_manage_account" invisible="1"/><field name="user_id" invisible="1"/>
                 <button name="action_tp_edit_delegated_profile" type="object" string="Cập nhật hồ sơ ngoài phòng" class="btn-primary" invisible="not tp_can_manage_account"/>
                 <button name="action_tp_archive_delegated_profile" type="object" string="Lưu trữ hồ sơ chưa có tài khoản" invisible="user_id or not tp_can_manage_account"/>
             </header><sheet>
@@ -51,7 +51,7 @@
                     <p class="text-muted">Phòng mình giữ quyền nghiệp vụ hiện hành. Hồ sơ ngoài phòng chỉ được quản lý bằng các thao tác đã kiểm phạm vi.</p>
                     <div class="d-flex flex-wrap gap-2" invisible="not tp_can_manage_account">
                         <button name="action_open_account_dialog" type="object" string="Quản lý tài khoản" class="btn-primary"/>
-                        <button name="action_reset_user_password" type="object" string="Đặt lại mật khẩu" invisible="not user_id"/>
+                        <button name="action_reset_user_password" type="object" string="Đặt lại mật khẩu" invisible="not user_id"/><button name="action_open_change_login_dialog" type="object" string="Đổi tên đăng nhập" invisible="not user_id or not tp_can_change_login"/>
                     </div>
                 </page></notebook>
             </sheet><chatter/></form></field>

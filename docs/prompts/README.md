@@ -12,7 +12,7 @@ Thư mục này quản lý các prompt giao việc cho các phiên AI thực thi
 
 ## 1. Prompt đang hiệu lực trong thư mục source
 
-**HR-LOGIN-RENAME-001 — 19/11/2026:** [Đổi tên đăng nhập nhân viên](CLAUDE_HR_LOGIN_RENAME_001_EMPLOYEE_LOGIN.md). PROMPT_READY_WIP_NOT_ACCEPTED: Claude tiếp nhận WIP HR, hoàn thiện dialog/backend/audit/unique/Excel/phiên, kiểm và giao PCserver theo policy17/11; chưa có nghiệm thu hoặc áp tính năng.
+**HR-LOGIN-RENAME-001 — 19/11/2026:** [Đổi tên đăng nhập nhân viên](CLAUDE_HR_LOGIN_RENAME_001_EMPLOYEE_LOGIN.md). CHG-20261119-013: người dùng giao trực tiếp triển khai; technical verification PASS, [acceptance/cách dùng](../demo/HR_LOGIN_RENAME_001_ACCEPTANCE.md) ghi receipt runtime; prompt009 là lịch sử điều phối trước triển khai.
 
 **Yêu cầu mới18/11 — MATRIX003:** dùng prompt003 để hoàn thiện xem bảng theo file và đối chiếu trước tổng hợp. SIMPLE002 đã giao20.0.2.0.0/CHG-019; không chạy lại002. Các trạng thái PROMPT_READY của002 bên dưới là mốc lịch sử chưa cập nhật runtime, xem [bàn giao mới](../demo/HR_ATTENDANCE_SIMPLE_002_ACCEPTANCE.md).
 

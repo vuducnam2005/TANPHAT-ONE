@@ -3,13 +3,74 @@ import time
 
 from psycopg2.errors import UniqueViolation
 
-from odoo import Command, api, fields, models
+from odoo import SUPERUSER_ID, Command, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.http import request
 
 from odoo.addons.base.models.res_users import check_identity
 
 _PERSONAL_ACCOUNT = object()
+
+
+def validate_employee_login(env, raw_login, current_login=None):
+    """Validate and normalize an employee login according to TANPHAT ONE login rules."""
+    if not isinstance(raw_login, str) or not raw_login or not raw_login.strip():
+        raise ValidationError(env._('Vui lòng nhập tên đăng nhập.'))
+    login = raw_login.strip()
+    if not login or len(login) > 254 or any(c.isspace() for c in login):
+        raise ValidationError(env._('Nhập tên đăng nhập không chứa khoảng trắng, tối đa 254 ký tự.'))
+    if not login.isprintable():
+        raise ValidationError(env._('Tên đăng nhập không được chứa ký tự điều khiển hoặc ký tự ẩn.'))
+    if current_login is not None and login == (current_login or ''):
+        raise ValidationError(env._('Tên đăng nhập mới phải khác tên đăng nhập hiện tại.'))
+    return login
+
+
+def assert_unique_user_login(env, login, exclude_user_id=0):
+    """Match native case-sensitive authentication, including inactive users and other companies."""
+    env.cr.execute(
+        'SELECT id FROM res_users WHERE login = %s AND id != %s LIMIT 1',
+        [login, int(exclude_user_id or 0)],
+    )
+    if env.cr.fetchone():
+        raise ValidationError(env._('Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.'))
+
+
+def record_employee_login_audit(env, employee, user, old_login, new_login):
+    """Record immutable audit log and employee chatter history for a login rename (no secrets/tokens)."""
+    tz_name = env.context.get('tz') or env.user.tz or 'Asia/Ho_Chi_Minh'
+    now_utc = fields.Datetime.now()
+    local_stamp = fields.Datetime.context_timestamp(employee.with_context(tz=tz_name), now_utc).strftime('%d/%m/%Y %H:%M:%S')
+    env['tp.hr.employee.audit']._tp_record([{
+        'action': 'login_change',
+        'employee_ref': employee.id,
+        'employee_name': employee.name,
+        'employee_code': employee.tp_employee_code,
+        'company_id': employee.company_id.id,
+        'reason': env._('Đổi tên đăng nhập tài khoản #%(uid)s: %(old)s → %(new)s', uid=user.id, old=old_login, new=new_login),
+        'account_action': 'kept',
+        'account_ref': user.id,
+        'account_login': new_login,
+        'snapshot': {
+            'user_id': user.id,
+            'old_login': old_login,
+            'new_login': new_login,
+            'actor_id': env.user.id,
+            'actor_name': env.user.name,
+            'changed_at': fields.Datetime.to_string(now_utc),
+        },
+    }])
+    employee.message_post(
+        body=env._(
+            'Đã đổi tên đăng nhập tài khoản (ID #%(uid)s): %(old)s → %(new)s. '
+            'Người thực hiện: %(actor)s. Thời gian: %(stamp)s.',
+            uid=user.id,
+            old=old_login,
+            new=new_login,
+            actor=env.user.name,
+            stamp=local_stamp,
+        ),
+    )
 
 
 class TpHrAccountWizard(models.TransientModel):
@@ -24,6 +85,7 @@ class TpHrAccountWizard(models.TransientModel):
     job_id = fields.Many2one(related='employee_id.job_id')
     current_user_id = fields.Many2one(related='employee_id.user_id')
     expected_user_id = fields.Many2one('res.users', readonly=True)
+    expected_login = fields.Char(readonly=True)
     current_login = fields.Char(related='employee_id.tp_user_login', string='Tên đăng nhập')
     account_status = fields.Selection(related='employee_id.tp_account_status', string='Tình trạng')
     is_linked = fields.Boolean(compute='_compute_info')
@@ -48,6 +110,7 @@ class TpHrAccountWizard(models.TransientModel):
         employee.invalidate_recordset(['user_id'])
         if employee.user_id != self.expected_user_id:
             raise UserError(self.env._('Tài khoản đã thay đổi. Vui lòng mở lại hộp thoại.'))
+        employee._tp_account_admin(existing=existing)
         return employee
 
     @api.model
@@ -64,6 +127,28 @@ class TpHrAccountWizard(models.TransientModel):
 
     def action_reset_password(self):
         return self.action_prepare_credentials(reset=True)
+
+    def action_open_change_login(self):
+        employee = self._employee(existing=True)
+        self.expected_login = employee.user_id.login
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'tp_hr_workspace.change_login',
+            'params': {
+                'wizardId': self.id,
+                'employeeId': employee.id,
+                'employeeName': employee.name,
+                'employeeCode': employee.tp_employee_code or '',
+                'department': employee.department_id.name or 'Chưa khai báo phòng ban',
+                'currentLogin': employee.user_id.login or '',
+            },
+        }
+
+    def action_change_login(self, login=None):
+        self.ensure_one()
+        employee = self._employee(existing=True)
+        raw_login = login if login is not None else self.new_user_login
+        return employee._tp_change_user_login(raw_login, expected_login=self.expected_login)
 
     def action_prepare_credentials(self, reset=False):
         if not isinstance(reset, bool):
@@ -137,19 +222,15 @@ class TpHrAccountWizard(models.TransientModel):
         self._require_recent_identity()
         if employee.user_id:
             raise UserError(self.env._('Nhân viên đã có tài khoản riêng.'))
-        login = login if login is not None else self.new_user_login
-        if not isinstance(login, str):
-            raise ValidationError(self.env._('Vui lòng nhập tên đăng nhập.'))
-        login = login.strip()
-        if not login or len(login) > 254 or any(c.isspace() for c in login):
-            raise ValidationError(self.env._('Nhập tên đăng nhập không chứa khoảng trắng, tối đa 254 ký tự.'))
+        login = validate_employee_login(self.env, login if login is not None else self.new_user_login)
         self._validate_password(password, confirmation)
-        self.env.cr.execute('SELECT pg_advisory_xact_lock(761112, hashtext(%s))', [login])
-        if self.env['res.users'].sudo().with_context(active_test=False).search_count([('login', '=', login)]):
-            raise ValidationError(self.env._('Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.'))
+        assert_unique_user_login(self.env, login)
         try:
             with self.env.cr.savepoint():
-                user = self.env['res.users'].sudo().with_context(no_reset_password=True).create({
+                user = self.env['res.users'].sudo().with_context(
+                    no_reset_password=True,
+                    _tp_personal_account=_PERSONAL_ACCOUNT,
+                ).create({
                     'name': employee.name, 'login': login, 'password': password,
                     'lang': self._tp_account_lang(),
                     'company_id': employee.company_id.id,
@@ -172,6 +253,18 @@ class TpHrAccountWizard(models.TransientModel):
 class PersonalEmployee(models.Model):
     _inherit = 'hr.employee'
 
+    tp_can_change_login = fields.Boolean(compute='_compute_tp_can_change_login')
+
+    @api.depends('user_id', 'company_id')
+    @api.depends_context('uid', 'allowed_company_ids')
+    def _compute_tp_can_change_login(self):
+        for employee in self:
+            try:
+                employee.with_env(self.env(su=False))._tp_account_admin(existing=True)
+                employee.tp_can_change_login = True
+            except (AccessError, UserError):
+                employee.tp_can_change_login = False
+
     @api.onchange('work_email')
     def _onchange_work_email_link_user(self):
         # Native email matching would silently propose another existing identity.
@@ -192,19 +285,62 @@ class PersonalEmployee(models.Model):
     def action_deactivate_user_and_depart(self):
         raise AccessError(self.env._('Khóa tài khoản và kết thúc hồ sơ là hai thao tác riêng.'))
 
+    def action_open_change_login_dialog(self):
+        self._tp_account_admin(existing=True)
+        wizard = self.env['tp.hr.account.wizard'].create({
+            'employee_id': self.id,
+            'current_user_id': self.user_id.id,
+            'expected_user_id': self.user_id.id,
+        })
+        return wizard.action_open_change_login()
+
+    def action_change_user_login(self, new_login):
+        return self._tp_change_user_login(new_login)
+
+    def _tp_change_user_login(self, new_login, expected_login=None):
+        self.ensure_one()
+        self._tp_account_admin(existing=True)
+        self.env.cr.execute('SELECT id FROM hr_employee WHERE id=%s FOR UPDATE', [self.id])
+        self.env.cr.execute('SELECT id FROM resource_resource WHERE id=%s FOR UPDATE', [self.resource_id.id])
+        self.resource_id.invalidate_recordset(['user_id'])
+        self.invalidate_recordset(['user_id', 'tp_user_login'])
+        self._tp_account_admin(existing=True)
+        user = self.user_id.with_context(active_test=False)
+        if not user:
+            raise UserError(self.env._('Chưa có tài khoản.'))
+        self.env.cr.execute('SELECT id FROM res_users WHERE id=%s FOR UPDATE', [user.id])
+        user.invalidate_recordset(['login'])
+        old_login = user.login or ''
+        if expected_login is not None and expected_login != old_login:
+            raise UserError(self.env._('Tên đăng nhập đã thay đổi. Vui lòng mở lại hộp thoại.'))
+        cleaned = validate_employee_login(self.env, new_login, current_login=old_login)
+        user.write({'login': cleaned})
+        return {'ok': True, 'user_id': user.id, 'old_login': old_login, 'new_login': cleaned}
+
     def _tp_account_admin(self, existing=False):
         self.ensure_one()
-        if not self.env.user.has_group('base.group_system'):
+        actor_env = self.env(su=False)
+        if not actor_env.user.has_group('base.group_system'):
             raise AccessError(self.env._('Chỉ Quản trị viên hệ thống được quản lý tài khoản và vai trò.'))
-        self.check_access('write')
+        self.with_env(actor_env).check_access('write')
         if self.company_id != self.env.company:
             raise AccessError(self.env._('Hồ sơ ngoài công ty đang quản lý.'))
         if existing:
             user = self.user_id
             if not user:
                 raise UserError(self.env._('Chưa có tài khoản.'))
-            protected = {self.env.uid}
-            for xmlid in ('base.user_root', 'base.user_admin', 'base.public_user', 'base.template_portal_user', 'base.default_user'):
+            orig_xmlids = ('base.user_root', 'base.user_admin')
+            orig_ids = {
+                rec.id for xmlid in orig_xmlids
+                if (rec := self.env.ref(xmlid, raise_if_not_found=False))
+            }
+            is_orig_target = user.id in orig_ids or (
+                hasattr(user, '_tp_is_original_admin') and user._tp_is_original_admin()
+            )
+            if is_orig_target and hasattr(self.env.user, '_tp_is_original_admin') and not self.env.user._tp_is_original_admin():
+                raise AccessError(self.env._('Tài khoản Quản trị gốc được bảo vệ; chỉ Quản trị gốc được thay đổi.'))
+            protected = {self.env.uid} | orig_ids
+            for xmlid in ('base.public_user', 'base.template_portal_user', 'base.default_user'):
                 record = self.env.ref(xmlid, raise_if_not_found=False)
                 if record:
                     protected.add(record.id)
@@ -218,6 +354,8 @@ class PersonalEmployee(models.Model):
     def create(self, vals_list):
         if not self.env.su:
             for vals in vals_list:
+                if 'tp_user_login' in vals:
+                    raise AccessError(self.env._('Tên đăng nhập là trường đồng bộ từ tài khoản; không ghi trực tiếp trên hồ sơ nhân viên.'))
                 resource = self.env['resource.resource'].sudo().browse(vals.get('resource_id')).exists()
                 if vals.get('user_id') or resource.user_id:
                     raise AccessError(self.env._('Tạo hồ sơ trước, sau đó dùng Tạo tài khoản riêng.'))
@@ -226,6 +364,8 @@ class PersonalEmployee(models.Model):
     def write(self, vals):
         internal = self.env.context.get('_tp_personal_account') is _PERSONAL_ACCOUNT
         if not self.env.su and not internal:
+            if 'tp_user_login' in vals:
+                raise AccessError(self.env._('Tên đăng nhập là trường đồng bộ từ tài khoản; hãy dùng Đổi tên đăng nhập trong phần Tài khoản.'))
             if 'user_id' in vals and any(e.user_id.id != (vals['user_id'] or False) for e in self):
                 raise AccessError(self.env._('Không được gán, gỡ hoặc chuyển tài khoản cá nhân qua thao tác ghi.'))
             if 'resource_id' in vals and any(e.resource_id.id != vals['resource_id'] for e in self):
@@ -246,3 +386,46 @@ class PersonalResource(models.Model):
                        or ('company_id' in vals and r.company_id.id != vals['company_id']) for r in self):
                     raise AccessError(self.env._('Không được chuyển danh tính qua tài nguyên nhân viên.'))
         return super().write(vals)
+
+
+class PersonalAccountUser(models.Model):
+    _inherit = 'res.users'
+
+    def write(self, vals):
+        if 'login' not in vals or not self or self.env.uid == SUPERUSER_ID:
+            return super().write(vals)
+        actor_users = self.with_env(self.env(su=False)).with_context(active_test=False)
+        if not actor_users.env.user.has_group('base.group_system'):
+            raise AccessError(self.env._('Chỉ người có quyền quản lý tài khoản được đổi tên đăng nhập.'))
+        self.ensure_one()
+        employees = actor_users.env['hr.employee'].sudo().with_context(active_test=False).search([
+            ('user_id', '=', self.id),
+        ])
+        employees = employees.with_env(actor_users.env)
+        for employee in employees.sorted('id'):
+            employee._tp_account_admin(existing=True)
+            self.env.cr.execute('SELECT id FROM hr_employee WHERE id=%s FOR UPDATE', [employee.id])
+            self.env.cr.execute('SELECT id FROM resource_resource WHERE id=%s FOR UPDATE', [employee.resource_id.id])
+            employee.resource_id.invalidate_recordset(['user_id'])
+            employee.invalidate_recordset(['user_id'])
+            employee._tp_account_admin(existing=True)
+            if employee.user_id.id != self.id:
+                raise UserError(self.env._('Tài khoản đã thay đổi. Vui lòng mở lại hộp thoại.'))
+        self.env.cr.execute('SELECT id FROM res_users WHERE id=%s FOR UPDATE', [self.id])
+        self.invalidate_recordset(['login'])
+        old_login = self.login
+        cleaned = validate_employee_login(self.env, vals['login'])
+        if cleaned == old_login:
+            return super().write({**vals, 'login': cleaned})
+        assert_unique_user_login(self.env, cleaned, exclude_user_id=self.id)
+        try:
+            with self.env.cr.savepoint():
+                result = super().write({**vals, 'login': cleaned})
+                self.flush_recordset(['login'])
+                for employee in employees:
+                    record_employee_login_audit(actor_users.env, employee, actor_users, old_login, cleaned)
+        except UniqueViolation as error:
+            if error.diag.constraint_name == 'res_users_login_key':
+                raise ValidationError(self.env._('Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.')) from error
+            raise
+        return result

@@ -1,6 +1,6 @@
 {
     'name': 'TANPHAT ONE — Quản trị viên toàn hệ thống',
-    'version': '20.0.2.0.1',
+    'version': '20.0.2.0.2',
     'license': 'LGPL-3',
     'author': 'Tan Phat JSC',
     'depends': ['tp_hr_workspace', 'tp_equipment', 'tp_reporting'],

@@ -364,3 +364,7 @@ Giao CHG-20261119-004: app `5859a83e` chạy local 18069 + PC server (`https://e
 ### Bổ sung kiểm xuất nhân viên — CHG-20261119-011
 
 `TestEmployeeExport` trên `tp_tanphat_test` hiện có: **4/4 PASS** sau backup riêng; gồm reorder nhân viên, đổi thứ tự phòng rồi flush SQL/invalidate cache, cùng thứ tự ở hai sheet, không ghi sequence khi xuất; domain OR/selected/ID giả/công ty/field/private/non-HR/hợp đồng nhiều dòng. Thay giới hạn fixture NOT_RUN tại bản006 bằng kết quả này. Chưa browser drag+persist qua commit người thật hoặc authenticated E2E public. Server22/22 và assets/public đã kiểm lại sau đợt deploy chấm công khác, PASS.
+
+### HR-LOGIN-RENAME-001 — CHG-20261119-013
+
+Dialog Đổi tên đăng nhập là form2ô, không có bảng mới: filter/pager/count N/A. Danh sách nhân viên giữ SearchModel/search tp_user_login và exporter hiện có; TestEmployeeLoginRename kiểm search_read nhận login mới, wizard current_login và Excel thật sau rename. Lịch sử tái dùng audit/chatter đã có, không tạo bảng lịch sử riêng. Không đánh dấu hoàn tất coverage bộ lọc toàn hệ thống từ thay đổi này. Role review: system account manager; staff/HR thường không có capability; original-admin policy giữ. [Acceptance](../demo/HR_LOGIN_RENAME_001_ACCEPTANCE.md).
