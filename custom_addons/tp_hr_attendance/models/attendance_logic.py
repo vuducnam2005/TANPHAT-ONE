@@ -14,6 +14,7 @@ from openpyxl.styles import Font
 
 DEFAULT_TZ = 'Asia/Ho_Chi_Minh'
 WEEKDAY_LABELS = ('T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN')
+WEEKDAY_FULL_LABELS = ('Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật')
 DIRECTIONS = ('IN', 'OUT', 'UNKNOWN')
 CODE_MAX = 64
 # One main presence state per person and day (dashboard donut / chips); 'future' is never drawn.
@@ -27,6 +28,20 @@ PRESENCE = {
     'future': 'Chưa đến',
 }
 PRESENCE_ORDER = ('out_recorded', 'working', 'missing', 'review', 'no_punch', 'no_source')
+MINE_STATE_FILTERS = (
+    '',
+    'out_recorded',
+    'working',
+    'attention',
+    'missing_in',
+    'missing_out',
+    'review',
+    'no_punch',
+    'no_source',
+    'leave',
+    'future',
+)
+MINE_WEEKDAY_FILTERS = ('', 'workdays', 'weekend', '0', '1', '2', '3', '4', '5', '6')
 
 
 # ---------------------------------------------------------------- periods
@@ -242,3 +257,81 @@ def build_xlsx(sheets):
 
 def to_date(value):
     return value if isinstance(value, date) else date.fromisoformat(value)
+
+
+# ----------------------------------------------------------- personal view
+def mine_row_status(state, in_time='', out_time=''):
+    """Human-readable Vietnamese status for one personal attendance day (never invents attendance credit)."""
+    if state == 'out_recorded':
+        return 'Đủ vào/ra'
+    if state == 'working':
+        return 'Chờ ghi nhận giờ ra'
+    if state == 'missing':
+        if not in_time and not out_time:
+            return 'Thiếu giờ vào/ra'
+        if not in_time:
+            return 'Thiếu giờ vào'
+        if not out_time:
+            return 'Thiếu giờ ra'
+        return 'Thiếu lượt chấm công'
+    if state == 'review':
+        return 'Cần kiểm tra'
+    if state == 'no_punch':
+        return 'Chưa chấm công'
+    if state == 'no_source':
+        return 'Chưa có dữ liệu'
+    if state == 'leave':
+        return 'Nghỉ đã xác nhận'
+    if state == 'future':
+        return 'Chưa đến'
+    return PRESENCE.get(state, '')
+
+
+def filter_mine_rows(rows, state_filter='', weekday_filter=''):
+    """Filter personal attendance rows over the whole period before counting/pagination/export."""
+    result = []
+    for row in rows:
+        state = row.get('state') or ''
+        in_time = row.get('in') or ''
+        out_time = row.get('out') or ''
+        if state_filter:
+            if state_filter == 'attention':
+                if state not in ('missing', 'review'):
+                    continue
+            elif state_filter == 'missing_in':
+                if state != 'missing' or bool(in_time):
+                    continue
+            elif state_filter == 'missing_out':
+                if state != 'missing' or bool(out_time):
+                    continue
+            elif state != state_filter:
+                continue
+        if weekday_filter:
+            idx = row.get('weekday_index')
+            if weekday_filter == 'workdays':
+                if idx is None or idx >= 5:
+                    continue
+            elif weekday_filter == 'weekend':
+                if idx is None or idx < 5:
+                    continue
+            elif str(idx) != weekday_filter:
+                continue
+        result.append(row)
+    return result
+
+
+def summarize_mine_rows(rows):
+    """Period-level summary over all days in the viewed range (always computed before row filtering)."""
+    return {
+        'total_days': len(rows),
+        'recorded_days': sum(1 for row in rows if row.get('in') or row.get('out')),
+        'complete_days': sum(1 for row in rows if row.get('state') == 'out_recorded'),
+        'working_days': sum(1 for row in rows if row.get('state') == 'working'),
+        'attention_days': sum(1 for row in rows if row.get('state') in ('missing', 'review')),
+        'missing_days': sum(1 for row in rows if row.get('state') == 'missing'),
+        'review_days': sum(1 for row in rows if row.get('state') == 'review'),
+        'no_punch_days': sum(1 for row in rows if row.get('state') == 'no_punch'),
+        'no_source_days': sum(1 for row in rows if row.get('state') == 'no_source'),
+        'leave_days': sum(1 for row in rows if row.get('state') == 'leave'),
+        'future_days': sum(1 for row in rows if row.get('state') == 'future'),
+    }

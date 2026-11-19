@@ -20,17 +20,24 @@ from .attendance_common import (
     local_today,
     utc_to_local,
 )
+from .attendance_correction import clock_label
 from .attendance_logic import (
+    MINE_STATE_FILTERS,
+    MINE_WEEKDAY_FILTERS,
     PRESENCE,
     PRESENCE_ORDER,
+    WEEKDAY_FULL_LABELS,
     WEEKDAY_LABELS,
     build_xlsx,
     dates_between,
     day_label,
+    filter_mine_rows,
+    mine_row_status,
     period_range,
     presence_from_day,
     presence_from_events,
     short_range,
+    summarize_mine_rows,
 )
 
 PAGE_SIZES = (10, 20, 50, 100)
@@ -42,6 +49,23 @@ LABELS = dict(PRESENCE, leave='Nghỉ đã xác nhận')
 STATE_ORDER = (*PRESENCE_ORDER, LEAVE)
 ATTENTION = ('missing', 'review')
 SOURCE_LABELS = {'excel': 'Excel máy chấm công', 'api': 'API máy chấm công', 'mixed': 'Excel + API máy', 'none': 'Chưa có nguồn dữ liệu'}
+MINE_STATE_FILTER_LABELS = {
+    'out_recorded': 'Đủ vào/ra',
+    'working': 'Chờ ghi nhận giờ ra',
+    'attention': 'Thiếu giờ / Cần kiểm tra',
+    'missing_in': 'Thiếu giờ vào',
+    'missing_out': 'Thiếu giờ ra',
+    'review': 'Cần kiểm tra',
+    'no_punch': 'Chưa chấm công',
+    'no_source': 'Chưa có dữ liệu',
+    'leave': 'Nghỉ đã xác nhận',
+    'future': 'Ngày tương lai',
+}
+MINE_WEEKDAY_FILTER_LABELS = {
+    'workdays': 'Thứ 2 – Thứ 6',
+    'weekend': 'Thứ 7 – Chủ nhật',
+    **{str(index): label for index, label in enumerate(WEEKDAY_FULL_LABELS)},
+}
 NO_LATE = 'Chưa có số liệu'
 NO_EXACT = 'Chưa có tổng đúng kỳ'
 
@@ -52,9 +76,9 @@ def range_label(start, end):
     return label if start.year != end.year else f'{label}/{end.year}'
 
 
-def _page(rows, params):
-    size = int(params.get('page_size') or 20)
-    size = size if size in PAGE_SIZES else 20
+def _page(rows, params, default_size=20):
+    size = int(params.get('page_size') or default_size)
+    size = size if size in PAGE_SIZES else default_size
     count = max(1, -(-len(rows) // size))
     page = min(max(1, int(params.get('page') or 1)), count)
     return rows[(page - 1) * size:page * size], {'page': page, 'page_count': count, 'page_size': size, 'total': len(rows)}
@@ -415,6 +439,89 @@ class AttendanceDayOverview(models.Model):
 
     # ----------------------------------------------------------- own view
     @api.model
+    def _tp_mine_dataset(self, company, employee, params):
+        """Build full personal attendance rows, period summary and filtered rows for the logged-in employee."""
+        mode = params.get('mode') if params.get('mode') in ('week', 'month', 'range') else 'month'
+        state_filter = (params.get('state') or '').strip()
+        weekday_filter = str(params.get('weekday') or '').strip()
+        if state_filter not in MINE_STATE_FILTERS or weekday_filter not in MINE_WEEKDAY_FILTERS:
+            raise UserError(self.env._('Bộ lọc công cá nhân không hợp lệ.'))
+        mode, _anchor, start, end, today = self._tp_period(dict(params, mode=mode))
+        cells, has_leave = self._tp_presence(company, [employee.id], start, end, today)
+        cover = self.env['tp.hr.attendance.late']._tp_cover(company, [employee.id], start, end)[employee.id]
+        day_ids = [cell['day_id'] for cell in cells.values() if cell.get('day_id')]
+        day_records = {day.id: day for day in self.browse(day_ids)} if day_ids else {}
+        session_sources = dict(self.env['tp.hr.attendance.session']._fields['source'].selection)
+        Correction = self.env['tp.hr.attendance.correction']
+        request_states = dict(Correction._fields['state'].selection)
+        requests = Correction.search([
+            ('company_id', '=', company.id), ('employee_id', '=', employee.id),
+            ('work_date', '>=', start), ('work_date', '<=', end),
+        ])
+        by_date_requests = defaultdict(list)
+        for req in requests:
+            by_date_requests[req.work_date].append({
+                'id': req.id, 'name': req.name, 'state': req.state, 'state_label': request_states[req.state],
+                'requested_in': clock_label(req.requested_in), 'requested_out': clock_label(req.requested_out),
+                'review_note': req.review_note or '', 'is_amendment': req.is_amendment,
+            })
+        Period = self.env['tp.hr.attendance.period']
+        locked_ranges = Period._tp_locked_ranges([company.id])
+        tz_ctx = self.with_context(tz=self.env.user.tz or DEFAULT_TZ)
+        all_rows = []
+        for work_date in dates_between(start, end):
+            cell = cells[employee.id, work_date]
+            record = day_records.get(cell.get('day_id'))
+            locked = Period._tp_is_locked(company.id, work_date, locked_ranges)
+            sessions = []
+            if record:
+                for session in record.session_ids.sorted('check_in'):
+                    sessions.append({
+                        'in': utc_to_local(session.check_in).strftime('%H:%M') if session.check_in else '',
+                        'out': utc_to_local(session.check_out).strftime('%H:%M') if session.check_out else '',
+                        'hours': session.worked_hours,
+                        'source': session.source,
+                        'source_label': session_sources.get(session.source, ''),
+                    })
+            day_requests = by_date_requests.get(work_date, [])
+            updated_at = ''
+            if record and record.source_updated_at:
+                stamp = fields.Datetime.context_timestamp(tz_ctx, record.source_updated_at)
+                updated_at = stamp.strftime('%d/%m/%Y %H:%M')
+            weekday_index = work_date.weekday()
+            has_detail = bool(sessions or day_requests or locked or cell.get('source') or record)
+            all_rows.append({
+                'date': work_date.isoformat(),
+                'day_label': day_label(work_date),
+                'date_display': f'{work_date:%d/%m/%Y}',
+                'weekday': WEEKDAY_LABELS[weekday_index],
+                'weekday_full': WEEKDAY_FULL_LABELS[weekday_index],
+                'weekday_index': weekday_index,
+                'in': cell['in'],
+                'out': cell['out'],
+                'state': cell['state'],
+                'state_label': cell['label'],
+                'status_label': mine_row_status(cell['state'], cell['in'], cell['out']),
+                'source': cell.get('source') or '',
+                'weekend': weekday_index >= 5,
+                'future': work_date > today,
+                'is_today': work_date == today,
+                'lock_state': 'locked' if locked else 'open',
+                'sessions': sessions,
+                'requests': day_requests,
+                'updated_at': updated_at,
+                'has_detail': has_detail,
+            })
+        summary = summarize_mine_rows(all_rows)
+        filtered_rows = filter_mine_rows(all_rows, state_filter, weekday_filter)
+        return {
+            'mode': mode, 'start': start, 'end': end, 'today': today,
+            'has_leave_source': has_leave, 'late': _late_view(cover),
+            'all_rows': all_rows, 'filtered_rows': filtered_rows, 'summary': summary,
+            'applied_filters': {'state': state_filter, 'weekday': weekday_filter},
+        }
+
+    @api.model
     def tp_mine(self, params=None):
         """"Công của tôi": the employee always comes from the session user; client IDs are ignored."""
         self.check_access('read')
@@ -425,15 +532,37 @@ class AttendanceDayOverview(models.Model):
         if not employee:
             return {'has_employee': False, 'today': today.isoformat(),
                     'message': self.env._('Tài khoản chưa gắn hồ sơ nhân viên trong công ty đang chọn; cần admin/HR gắn hồ sơ.')}
-        mode = params.get('mode') if params.get('mode') in ('week', 'month', 'range') else 'month'
-        mode, _anchor, start, end, today = self._tp_period(dict(params, mode=mode))
-        person = {'id': employee.id, 'name': employee.name, 'code': employee.tp_employee_code or '',
-                  'department': employee.department_id.name or ''}
-        data = self._tp_person_data(company, person, start, end, today)
-        data.update(has_employee=True, mode=mode, date=start.isoformat(), file_periods=self._tp_file_periods(company),
-                    source=self._tp_source_strip(company, today),
-                    period_label=f'Tháng {start:%m/%Y}' if mode == 'month' else data['period_label'])
-        return data
+        dataset = self._tp_mine_dataset(company, employee, params)
+        start, end = dataset['start'], dataset['end']
+        page_rows, pager = _page(dataset['filtered_rows'], params, default_size=50)
+        period_label = f'Tháng {start:%m/%Y}' if dataset['mode'] == 'month' else range_label(start, end)
+        ref_hours = self.env['ir.config_parameter'].sudo().get_str('tp_hr_attendance.reference_hours') or '08:30-17:00'
+        return dict({
+            'has_employee': True,
+            'employee': {
+                'id': employee.id,
+                'name': employee.name,
+                'code': employee.tp_employee_code or '',
+                'department': employee.department_id.name or '',
+            },
+            'mode': dataset['mode'],
+            'date': start.isoformat(),
+            'start': start.isoformat(),
+            'end': end.isoformat(),
+            'today': dataset['today'].isoformat(),
+            'period_label': period_label,
+            'range_display': f'{start:%d/%m/%Y} – {end:%d/%m/%Y}',
+            'late': dataset['late'],
+            'summary': dataset['summary'],
+            'period_days': len(dataset['all_rows']),
+            'has_leave_source': dataset['has_leave_source'],
+            'applied_filters': dataset['applied_filters'],
+            'reference_hours': ref_hours,
+            'rows': page_rows,
+            'labels': LABELS,
+            'file_periods': self._tp_file_periods(company),
+            'source': self._tp_source_strip(company, dataset['today']),
+        }, **pager)
 
     # -------------------------------------------------------------- export
     @api.model
@@ -486,11 +615,40 @@ class AttendanceDayOverview(models.Model):
 
     @api.model
     def tp_export_mine(self, params=None):
-        data = self.tp_mine(params)
-        if not data.get('has_employee'):
-            raise UserError(data['message'])
+        """Export ALL matching personal rows for the applied filters (never only the active page); owner from session."""
+        self.check_access('read')
+        params = dict(params or {})
         company = self.env.company
-        start, end = fields.Date.from_string(data['start']), fields.Date.from_string(data['end'])
-        person = data['employee']
-        sheets = self._tp_export_sheets(company, [person], start, end, fields.Date.from_string(data['today']), 'Công của tôi')
+        employee = self.env['tp.hr.attendance.correction']._tp_own_employee(company)
+        if not employee:
+            raise UserError(self.env._('Tài khoản chưa gắn hồ sơ nhân viên trong công ty đang chọn; cần admin/HR gắn hồ sơ.'))
+        dataset = self._tp_mine_dataset(company, employee, params)
+        start, end = dataset['start'], dataset['end']
+        applied = dataset['applied_filters']
+        filter_parts = []
+        if applied['state']:
+            filter_parts.append(f"Tình trạng: {MINE_STATE_FILTER_LABELS.get(applied['state'], applied['state'])}")
+        if applied['weekday']:
+            filter_parts.append(f"Ngày: {MINE_WEEKDAY_FILTER_LABELS.get(applied['weekday'], applied['weekday'])}")
+        filter_note = (' · Bộ lọc đang áp: ' + '; '.join(filter_parts)) if filter_parts else ''
+        stamp = fields.Datetime.context_timestamp(self.with_context(tz=self.env.user.tz or DEFAULT_TZ), fields.Datetime.now())
+        note = (f'Công của tôi · Khoảng ngày {start:%d/%m/%Y} – {end:%d/%m/%Y}{filter_note} · '
+                f'Nguồn: báo cáo máy chấm công · Xuất lúc {stamp:%d/%m/%Y %H:%M} · Thiếu giờ ghi "—", không tự điền.')
+        code = employee.tp_employee_code or ''
+        dept = employee.department_id.name or ''
+        day_rows = [
+            [employee.name, code, dept, row['day_label'], row['in'] or '—', row['out'] or '—', row['status_label']]
+            for row in dataset['filtered_rows']
+        ]
+        sheets = [{'title': 'Giờ theo ngày', 'note': note,
+                   'header': ['Nhân viên', 'Mã NV', 'Phòng ban', 'Thứ/ngày', 'Giờ vào', 'Giờ ra', 'Tình trạng'], 'rows': day_rows}]
+        late = dataset['late']
+        if late['state'] == 'exact':
+            sheets.append({
+                'title': 'Tổng đi muộn',
+                'note': (f'Theo Excel máy, đúng kỳ nguồn trong {start:%d/%m/%Y} – {end:%d/%m/%Y}; '
+                         'không chia theo ngày, không tính lại theo bộ lọc ngày.'),
+                'header': ['Nhân viên', 'Mã NV', 'Phòng ban', 'Kỳ nguồn', 'Số lần đi muộn', 'Tổng phút muộn'],
+                'rows': [[employee.name, code, dept, late['source'], late['count'], late['minutes']]],
+            })
         return self._tp_xlsx_result('cong-cua-toi', start, end, sheets)

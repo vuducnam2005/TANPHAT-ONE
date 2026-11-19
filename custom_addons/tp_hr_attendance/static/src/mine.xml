@@ -5,47 +5,437 @@
         <div t-if="this.state.activeTab === 'attendance'" class="tab-pane active show"><MyAttendance embedded="true"/></div>
     </xpath>
 </t>
+
 <t t-name="tp_hr_attendance.Mine">
-<section class="o_tp_att o_tp_att_mine" t-att-class="{'o_tp_att_embedded': this.props.embedded}" aria-label="Công của tôi" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
-    <div t-if="this.state.error" class="alert alert-danger" role="alert"><t t-out="this.state.error"/> <button class="btn btn-link p-0" t-on-click="this.load">Thử lại</button></div>
-    <p t-elif="!this.data" role="status" class="o_tp_att_loading">Đang tải công cá nhân…</p>
-    <div t-elif="!this.data.has_employee" class="alert alert-info" t-out="this.data.message"/>
-    <t t-else="">
-        <header class="o_tp_att_header">
-            <div>
-                <h1 t-if="!this.props.embedded">Công của tôi</h1>
-                <p class="o_tp_att_subtitle"><t t-out="this.data.employee.name"/> · <t t-out="this.data.employee.code or 'Chưa có mã'"/> · <t t-out="this.data.employee.department or 'Chưa có phòng ban'"/></p>
+<section class="o_tp_att o_tp_att_mine" t-att-class="{'o_tp_att_embedded': this.isEmbedded, 'o_tp_mine_loading': this.state.loading and !!this.data}" aria-label="Công của tôi" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
+    <div t-if="this.state.error" class="alert alert-danger o_tp_mine_alert" role="alert">
+        <i class="oi" data-icon="error_outline" aria-hidden="true"/>
+        <span t-out="this.state.error"/>
+        <button type="button" class="btn btn-link btn-sm p-0 ms-auto" t-on-click="() => this.load()">Thử lại</button>
+    </div>
+
+    <div t-if="!this.data and !this.state.error" class="o_tp_mine_skeleton" role="status" aria-label="Đang tải công cá nhân">
+        <div class="o_tp_mine_skel_bar"/>
+        <div class="o_tp_mine_skel_summary">
+            <div class="o_tp_mine_skel_card"/>
+            <div class="o_tp_mine_skel_card"/>
+            <div class="o_tp_mine_skel_card"/>
+            <div class="o_tp_mine_skel_card"/>
+        </div>
+        <div class="o_tp_mine_skel_table">
+            <div class="o_tp_mine_skel_thead"/>
+            <div t-foreach="this.skeletonRows" t-as="sk" t-key="sk" class="o_tp_mine_skel_row"/>
+        </div>
+        <span class="visually-hidden">Đang tải công cá nhân…</span>
+    </div>
+
+    <div t-elif="this.data and !this.data.has_employee" class="o_tp_mine_unlinked" role="status">
+        <i class="oi" data-icon="person_off" aria-hidden="true"/>
+        <div>
+            <strong>Chưa gắn hồ sơ nhân viên</strong>
+            <p t-out="this.data.message"/>
+        </div>
+    </div>
+
+    <t t-elif="this.data">
+        <!-- A. Header: full identity once when standalone; compact action bar when embedded in Hồ sơ cá nhân -->
+        <header t-if="!this.isEmbedded" class="o_tp_mine_header">
+            <div class="o_tp_mine_title_block">
+                <h1>Công của tôi</h1>
+                <div class="o_tp_mine_identity">
+                    <span class="o_tp_mine_emp_name" t-out="this.data.employee.name"/>
+                    <span class="o_tp_mine_meta_pill" t-out="this.data.employee.code or 'Chưa có mã'"/>
+                    <span class="o_tp_mine_meta_dept">
+                        <i class="oi" data-icon="account_tree" aria-hidden="true"/>
+                        <t t-out="this.data.employee.department or 'Chưa có phòng ban'"/>
+                    </span>
+                </div>
             </div>
-            <div class="o_tp_att_actions">
-                <button type="button" class="btn btn-outline-primary" t-on-click="this.exportOwn"><i class="oi me-1" data-icon="download" aria-hidden="true"/>Xuất Excel</button>
-                <button type="button" class="btn btn-outline-secondary" t-on-click="this.openRequests">Yêu cầu của tôi</button>
-                <button type="button" class="btn btn-light" t-on-click="this.openRequest">Đề nghị điều chỉnh</button>
+            <div class="o_tp_mine_actions">
+                <button type="button" class="btn o_tp_mine_btn_tertiary" t-on-click="() => this.openRequests()">
+                    <i class="oi" data-icon="receipt_long" aria-hidden="true"/>
+                    <span>Yêu cầu của tôi</span>
+                </button>
+                <button type="button" class="btn o_tp_mine_btn_secondary" t-att-disabled="this.state.exporting" t-on-click="() => this.exportOwn()">
+                    <i class="oi" data-icon="download" aria-hidden="true"/>
+                    <span t-if="this.state.exporting">Đang xuất…</span>
+                    <span t-else="">Xuất Excel</span>
+                </button>
+                <button type="button" class="btn o_tp_mine_btn_primary" t-on-click="() => this.openRequest()">
+                    <i class="oi" data-icon="edit_note" aria-hidden="true"/>
+                    <span>Đề nghị điều chỉnh</span>
+                </button>
             </div>
         </header>
-        <section class="o_tp_att_toolbar" aria-label="Chọn kỳ">
-            <div class="o_tp_att_segment" role="group" aria-label="Chế độ xem">
-                <button t-foreach="this.modes" t-as="mode" t-key="mode[0]" type="button" t-att-class="{'active': this.state.mode === mode[0]}"
-                    t-att-aria-pressed="this.state.mode === mode[0] ? 'true' : 'false'" t-on-click="() => this.setMode(mode[0])" t-out="mode[1]"/>
-                <button type="button" t-att-class="{'active': this.state.mode === 'range'}" t-att-aria-expanded="this.state.fileMenu ? 'true' : 'false'"
-                    t-on-click="() => this.state.fileMenu = !this.state.fileMenu">Kỳ theo file</button>
+
+        <div t-else="" class="o_tp_mine_embedded_bar">
+            <div class="o_tp_mine_embedded_range">
+                <i class="oi" data-icon="calendar_today" aria-hidden="true"/>
+                <span t-out="this.rangeBannerText"/>
             </div>
-            <div class="o_tp_att_period">
-                <button type="button" class="o_tp_att_icon_btn" t-on-click="() => this.step(-1)" aria-label="Kỳ trước"><i class="oi" data-icon="chevron_backward" aria-hidden="true"/></button>
-                <input t-if="this.state.mode === 'month'" type="month" t-att-value="this.data.start.slice(0, 7)" t-on-change="this.onMonth" aria-label="Chọn tháng"/>
-                <input t-elif="this.state.mode === 'week'" type="date" t-att-value="this.state.date" t-on-change="this.onDate" aria-label="Chọn một ngày trong tuần (T2–CN)"/>
-                <span t-else="" class="o_tp_att_badge o_info" t-out="this.data.period_label"/>
-                <button type="button" class="o_tp_att_icon_btn" t-on-click="() => this.step(1)" aria-label="Kỳ sau"><i class="oi" data-icon="chevron_forward" aria-hidden="true"/></button>
-                <button type="button" class="btn btn-light" t-on-click="this.goToday">Hôm nay</button>
+            <div class="o_tp_mine_actions">
+                <button type="button" class="btn btn-sm o_tp_mine_btn_tertiary" t-on-click="() => this.openRequests()">
+                    <i class="oi" data-icon="receipt_long" aria-hidden="true"/>
+                    <span>Yêu cầu của tôi</span>
+                </button>
+                <button type="button" class="btn btn-sm o_tp_mine_btn_secondary" t-att-disabled="this.state.exporting" t-on-click="() => this.exportOwn()">
+                    <i class="oi" data-icon="download" aria-hidden="true"/>
+                    <span t-if="this.state.exporting">Đang xuất…</span>
+                    <span t-else="">Xuất Excel</span>
+                </button>
+                <button type="button" class="btn btn-sm o_tp_mine_btn_primary" t-on-click="() => this.openRequest()">
+                    <i class="oi" data-icon="edit_note" aria-hidden="true"/>
+                    <span>Đề nghị điều chỉnh</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- B. Period Selector Bar -->
+        <section class="o_tp_mine_period_bar" aria-label="Chọn kỳ chấm công">
+            <div class="o_tp_mine_period_controls">
+                <div class="o_tp_mine_segment" role="group" aria-label="Chế độ xem kỳ">
+                    <button t-foreach="this.modes" t-as="mode" t-key="mode[0]" type="button"
+                        t-att-class="{'active': this.state.mode === mode[0]}"
+                        t-att-aria-pressed="this.state.mode === mode[0] ? 'true' : 'false'"
+                        t-on-click="() => this.setMode(mode[0])" t-out="mode[1]"/>
+                </div>
+
+                <div class="o_tp_mine_nav_group">
+                    <button type="button" class="o_tp_mine_icon_btn" t-on-click="() => this.step(-1)" aria-label="Kỳ trước" title="Kỳ trước">
+                        <i class="oi" data-icon="chevron_backward" aria-hidden="true"/>
+                    </button>
+                    <label t-if="this.state.mode === 'month'" class="o_tp_mine_input_field">
+                        <span class="o_tp_mine_input_label">Tháng</span>
+                        <input type="month" t-att-value="this.data.start.slice(0, 7)" t-on-change="(ev) => this.onMonth(ev)" aria-label="Chọn tháng"/>
+                    </label>
+                    <label t-elif="this.state.mode === 'week'" class="o_tp_mine_input_field">
+                        <span class="o_tp_mine_input_label">Ngày trong tuần</span>
+                        <input type="date" t-att-value="this.state.date" t-on-change="(ev) => this.onDate(ev)" aria-label="Chọn một ngày trong tuần (T2–CN)"/>
+                    </label>
+                    <div t-else="" class="o_tp_mine_range_chip">
+                        <span class="o_tp_mine_input_label">Kỳ file</span>
+                        <strong t-out="this.data.period_label"/>
+                    </div>
+                    <button type="button" class="o_tp_mine_icon_btn" t-on-click="() => this.step(1)" aria-label="Kỳ sau" title="Kỳ sau">
+                        <i class="oi" data-icon="chevron_forward" aria-hidden="true"/>
+                    </button>
+                    <button type="button" class="o_tp_mine_today_btn" t-on-click="() => this.goToday()">Hôm nay</button>
+                </div>
+
+                <div class="o_tp_mine_file_wrap">
+                    <button type="button" class="o_tp_mine_file_trigger"
+                        t-att-class="{'active': this.state.mode === 'range' or this.state.fileMenu}"
+                        t-att-aria-expanded="this.state.fileMenu ? 'true' : 'false'"
+                        aria-haspopup="menu"
+                        t-on-click="() => this.toggleFileMenu()">
+                        <i class="oi" data-icon="description" aria-hidden="true"/>
+                        <span>Kỳ theo file</span>
+                        <i class="oi o_tp_mine_caret" t-att-data-icon="this.state.fileMenu ? 'expand_less' : 'expand_more'" aria-hidden="true"/>
+                    </button>
+                    <div t-if="this.state.fileMenu" class="o_tp_mine_file_popover" role="menu" aria-label="Chọn kỳ theo tệp đã nhập">
+                        <div class="o_tp_mine_file_popover_head">Kỳ theo tệp Excel đã nhập</div>
+                        <p t-if="!this.data.file_periods.length" class="o_tp_mine_file_empty">Chưa có tệp Excel máy nào được nhập.</p>
+                        <button t-foreach="this.data.file_periods" t-as="item" t-key="item.from + item.to" type="button" role="menuitem"
+                            class="o_tp_mine_file_option"
+                            t-att-class="{'active': this.state.mode === 'range' and this.state.from === item.from and this.state.to === item.to}"
+                            t-on-click="() => this.openFilePeriod(item)">
+                            <span class="o_tp_mine_file_opt_range" t-out="item.label"/>
+                            <span t-if="item.has_late" class="o_tp_mine_file_opt_tag">Có tổng đi muộn</span>
+                            <small t-if="item.file" t-out="item.file" t-att-title="item.file"/>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div t-if="!this.isEmbedded" class="o_tp_mine_range_display" aria-live="polite">
+                <i class="oi" data-icon="calendar_today" aria-hidden="true"/>
+                <span>Khoảng xem: <strong t-out="this.rangeBannerText"/></span>
             </div>
         </section>
-        <div t-if="this.state.fileMenu" class="o_tp_att_file_menu" role="menu" aria-label="Kỳ theo tệp đã nhập">
-            <p t-if="!this.data.file_periods.length" class="o_tp_att_muted">Chưa có tệp Excel máy nào được nhập.</p>
-            <button t-foreach="this.data.file_periods" t-as="item" t-key="item.from + item.to" type="button" role="menuitem"
-                t-att-class="{'active': this.state.mode === 'range' and this.state.from === item.from and this.state.to === item.to}"
-                t-on-click="() => this.openFilePeriod(item)"><strong t-out="item.label"/></button>
-        </div>
+
+        <!-- C. Compact Summary Strip (Period metrics vs Excel source late totals clearly separated) -->
+        <section class="o_tp_mine_summary" aria-label="Tóm tắt công trong kỳ">
+            <div class="o_tp_mine_summary_group" aria-label="Tổng hợp kỳ đang xem">
+                <article class="o_tp_mine_stat o_stat_ok">
+                    <div class="o_tp_mine_stat_top">
+                        <span class="o_tp_mine_stat_label">Ngày có ghi nhận vào/ra</span>
+                        <i class="oi o_stat_icon_ok" data-icon="check_circle" aria-hidden="true"/>
+                    </div>
+                    <div class="o_tp_mine_stat_val">
+                        <strong t-out="this.summary.recorded_days"/>
+                        <span class="o_tp_mine_stat_unit">ngày</span>
+                    </div>
+                    <p class="o_tp_mine_stat_note">
+                        <t t-out="this.summary.complete_days"/> đủ vào/ra<t t-if="this.summary.working_days"> · <t t-out="this.summary.working_days"/> đang chờ giờ ra</t>
+                    </p>
+                </article>
+
+                <button type="button" class="o_tp_mine_stat o_stat_warn o_stat_interactive"
+                    t-att-class="{'o_has_issue': this.summary.attention_days &gt; 0, 'o_active': this.state.appliedState === 'attention'}"
+                    t-on-click="() => this.quickFilterAttention()">
+                    <div class="o_tp_mine_stat_top">
+                        <span class="o_tp_mine_stat_label">Ngày cần kiểm tra</span>
+                        <i class="oi o_stat_icon_warn" data-icon="schedule" aria-hidden="true"/>
+                    </div>
+                    <div class="o_tp_mine_stat_val">
+                        <strong t-out="this.summary.attention_days"/>
+                        <span class="o_tp_mine_stat_unit">ngày</span>
+                    </div>
+                    <p class="o_tp_mine_stat_note" t-if="this.summary.attention_days &gt; 0">
+                        <t t-out="this.summary.missing_days"/> thiếu giờ<t t-if="this.summary.review_days"> · <t t-out="this.summary.review_days"/> cần đối chiếu</t> · Bấm để lọc
+                    </p>
+                    <p class="o_tp_mine_stat_note" t-else="">Không có ngày thiếu giờ hoặc lỗi nguồn</p>
+                </button>
+            </div>
+
+            <div class="o_tp_mine_summary_group o_group_excel" aria-label="Tổng đi muộn theo kỳ nguồn Excel">
+                <article class="o_tp_mine_stat o_stat_excel">
+                    <div class="o_tp_mine_stat_top">
+                        <span class="o_tp_mine_stat_label">Số lần đi muộn</span>
+                        <span class="o_tp_mine_source_tag">Kỳ nguồn Excel</span>
+                    </div>
+                    <div class="o_tp_mine_stat_val">
+                        <strong t-if="this.late.state === 'exact'" t-out="this.late.count"/>
+                        <strong t-else="" class="o_val_na">—</strong>
+                        <span t-if="this.late.state === 'exact'" class="o_tp_mine_stat_unit">lần</span>
+                    </div>
+                    <p t-if="this.late.state === 'exact'" class="o_tp_mine_stat_note o_note_exact">
+                        Excel máy · kỳ <t t-out="this.late.source"/>
+                    </p>
+                    <p t-else="" class="o_tp_mine_stat_note">
+                        <t t-out="this.late.text"/>
+                        <button t-if="this.latePeriodHint" type="button" class="o_tp_mine_inline_link" t-on-click="() => this.openFilePeriod(this.latePeriodHint)">
+                            Xem kỳ <t t-out="this.latePeriodHint.label"/>
+                        </button>
+                    </p>
+                </article>
+
+                <article class="o_tp_mine_stat o_stat_excel">
+                    <div class="o_tp_mine_stat_top">
+                        <span class="o_tp_mine_stat_label">Tổng phút đi muộn</span>
+                        <span class="o_tp_mine_source_tag">Kỳ nguồn Excel</span>
+                    </div>
+                    <div class="o_tp_mine_stat_val">
+                        <strong t-if="this.late.state === 'exact'" t-out="this.late.minutes"/>
+                        <strong t-else="" class="o_val_na">—</strong>
+                        <span t-if="this.late.state === 'exact'" class="o_tp_mine_stat_unit">phút</span>
+                    </div>
+                    <p t-if="this.late.state === 'exact'" class="o_tp_mine_stat_note o_note_exact">
+                        Tổng kỳ <t t-out="this.late.source"/> · không tính lại theo bộ lọc ngày
+                    </p>
+                    <p t-else="" class="o_tp_mine_stat_note">
+                        Không tự quy đổi thành 0 khi kỳ xem khác kỳ nguồn Excel
+                    </p>
+                </article>
+            </div>
+        </section>
+
+        <!-- D. Filter Bar + Main Personal Attendance Table Card -->
+        <section class="o_tp_mine_card" aria-label="Bảng giờ vào ra cá nhân">
+            <div class="o_tp_mine_card_head">
+                <div class="o_tp_mine_filter_mobile_row">
+                    <button type="button" class="o_tp_mine_filter_toggle"
+                        t-att-aria-expanded="this.state.mobileFiltersOpen ? 'true' : 'false'"
+                        t-on-click="() => this.state.mobileFiltersOpen = !this.state.mobileFiltersOpen">
+                        <i class="oi" data-icon="filter_list" aria-hidden="true"/>
+                        <span>Bộ lọc</span>
+                        <span t-if="this.activeFilterCount" class="o_tp_mine_filter_badge" t-out="this.activeFilterCount"/>
+                    </button>
+                    <span class="o_tp_mine_count_pill" t-out="this.resultSummaryText"/>
+                </div>
+
+                <form class="o_tp_mine_filter_form" t-att-class="{'is-open': this.state.mobileFiltersOpen}" t-on-submit.prevent="() => this.applyFilters()" aria-label="Lọc bảng công cá nhân">
+                    <label class="o_tp_mine_filter_field">
+                        <span>Tình trạng dữ liệu</span>
+                        <select t-on-change="(ev) => this.onDraftState(ev)" aria-label="Lọc theo tình trạng dữ liệu">
+                            <option t-foreach="this.stateOptions" t-as="opt" t-key="opt[0]" t-att-value="opt[0]"
+                                t-att-selected="this.state.draftState === opt[0]" t-out="opt[1]"/>
+                        </select>
+                    </label>
+                    <label class="o_tp_mine_filter_field">
+                        <span>Ngày trong tuần</span>
+                        <select t-on-change="(ev) => this.onDraftWeekday(ev)" aria-label="Lọc theo ngày trong tuần">
+                            <option t-foreach="this.weekdayOptions" t-as="opt" t-key="opt[0]" t-att-value="opt[0]"
+                                t-att-selected="this.state.draftWeekday === opt[0]" t-out="opt[1]"/>
+                        </select>
+                    </label>
+                    <div class="o_tp_mine_filter_btns">
+                        <button type="submit" class="btn btn-sm o_tp_mine_apply_btn" t-att-class="{'o_has_pending': this.hasPendingChanges}">
+                            <i class="oi" data-icon="check" aria-hidden="true"/>
+                            <span>Áp dụng</span>
+                        </button>
+                        <button type="button" class="btn btn-sm o_tp_mine_clear_btn" t-att-disabled="!this.hasAnyFilterOrDraft" t-on-click="() => this.clearFilters()">
+                            Xóa bộ lọc
+                        </button>
+                    </div>
+                    <div class="o_tp_mine_count_desktop">
+                        <span class="o_tp_mine_count_pill" t-out="this.resultSummaryText"/>
+                    </div>
+                </form>
+
+                <div t-if="this.appliedChips.length" class="o_tp_mine_chips_row" aria-label="Điều kiện đang áp dụng">
+                    <span class="o_tp_mine_chips_label">Đang lọc:</span>
+                    <button t-foreach="this.appliedChips" t-as="chip" t-key="chip.key" type="button" class="o_tp_mine_chip"
+                        t-on-click="() => this.removeChip(chip.key)"
+                        t-att-aria-label="'Bỏ lọc ' + chip.title + ': ' + chip.label">
+                        <span class="o_tp_mine_chip_k"><t t-out="chip.title"/>:</span>
+                        <strong t-out="chip.label"/>
+                        <i class="oi" data-icon="close" aria-hidden="true"/>
+                    </button>
+                    <span t-if="this.late.state === 'exact'" class="o_tp_mine_filter_late_note">
+                        Tổng đi muộn giữ nguyên theo toàn bộ kỳ nguồn Excel (<t t-out="this.late.source"/>).
+                    </span>
+                </div>
+            </div>
+
+            <div class="o_tp_mine_table_wrap">
+                <table class="o_tp_mine_table">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="o_col_day">Thứ / Ngày</th>
+                            <th scope="col" class="o_col_time">Giờ vào</th>
+                            <th scope="col" class="o_col_time">Giờ ra</th>
+                            <th scope="col" class="o_col_status">Tình trạng</th>
+                            <th t-if="this.anyRowHasDetail" scope="col" class="o_col_expand"><span class="visually-hidden">Chi tiết</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-if="!this.data.rows.length" class="o_tp_mine_empty_row">
+                            <td t-att-colspan="this.anyRowHasDetail ? 5 : 4">
+                                <div class="o_tp_mine_empty_box">
+                                    <i class="oi" data-icon="event_busy" aria-hidden="true"/>
+                                    <p t-if="this.activeFilterCount">Không có ngày nào phù hợp với bộ lọc đang áp dụng.</p>
+                                    <p t-else="">Chưa có dữ liệu chấm công trong kỳ đang xem.</p>
+                                    <button t-if="this.activeFilterCount" type="button" class="btn btn-sm o_tp_mine_btn_secondary" t-on-click="() => this.clearFilters()">Xóa bộ lọc</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <t t-foreach="this.data.rows" t-as="row" t-key="row.date">
+                            <t t-set="status" t-value="this.mineStatusInfo(row)"/>
+                            <t t-set="inMiss" t-value="this.cellMissingLabel(row, 'in')"/>
+                            <t t-set="outMiss" t-value="this.cellMissingLabel(row, 'out')"/>
+                            <tr class="o_tp_mine_row"
+                                t-att-class="{
+                                    'o_is_today': row.is_today,
+                                    'o_is_weekend': row.weekend,
+                                    'o_is_future': row.future,
+                                    'o_is_warn': row.state === 'missing',
+                                    'o_is_danger': row.state === 'review',
+                                    'o_is_expanded': this.isExpanded(row.date),
+                                }">
+                                <th scope="row" class="o_cell_day" data-label="Thứ / Ngày">
+                                    <div class="o_tp_mine_day_cell">
+                                        <div class="o_tp_mine_date_line">
+                                            <span class="o_tp_mine_date_text" t-out="row.date_display"/>
+                                            <span t-if="row.is_today" class="o_tp_mine_today_pill">Hôm nay</span>
+                                        </div>
+                                        <span class="o_tp_mine_weekday_text" t-out="row.weekday_full"/>
+                                    </div>
+                                </th>
+                                <td class="o_cell_time" data-label="Giờ vào">
+                                    <span t-if="row.in" class="o_tp_mine_clock o_clock_ok" t-out="row.in"/>
+                                    <span t-elif="inMiss" class="o_tp_mine_missing_cell" t-att-class="'o_tone_' + status.tone">
+                                        <span class="o_dash">—</span>
+                                        <span class="o_miss_label" t-out="inMiss"/>
+                                    </span>
+                                    <span t-else="" class="o_tp_mine_dash">—</span>
+                                </td>
+                                <td class="o_cell_time" data-label="Giờ ra">
+                                    <span t-if="row.out" class="o_tp_mine_clock o_clock_ok" t-out="row.out"/>
+                                    <span t-elif="outMiss" class="o_tp_mine_missing_cell" t-att-class="'o_tone_' + status.tone">
+                                        <span class="o_dash">—</span>
+                                        <span class="o_miss_label" t-out="outMiss"/>
+                                    </span>
+                                    <span t-else="" class="o_tp_mine_dash">—</span>
+                                </td>
+                                <td class="o_cell_status" data-label="Tình trạng">
+                                    <span class="o_tp_mine_status_pill" t-att-class="'o_tone_' + status.tone">
+                                        <i class="oi" t-att-data-icon="status.icon" aria-hidden="true"/>
+                                        <span t-out="status.label"/>
+                                    </span>
+                                    <span t-if="row.requests.length" class="o_tp_mine_req_indicator" t-att-title="row.requests.length + ' phiếu điều chỉnh'">
+                                        <i class="oi" data-icon="assignment" aria-hidden="true"/>
+                                        <t t-out="row.requests.length"/>
+                                    </span>
+                                </td>
+                                <td t-if="this.anyRowHasDetail" class="o_cell_expand">
+                                    <button t-if="row.has_detail" type="button" class="o_tp_mine_expand_btn"
+                                        t-att-aria-expanded="this.isExpanded(row.date) ? 'true' : 'false'"
+                                        t-att-aria-label="(this.isExpanded(row.date) ? 'Thu gọn chi tiết ngày ' : 'Xem chi tiết ngày ') + row.date_display"
+                                        t-on-click="() => this.toggleRow(row)">
+                                        <i class="oi" t-att-data-icon="this.isExpanded(row.date) ? 'expand_less' : 'expand_more'" aria-hidden="true"/>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr t-if="row.has_detail and this.isExpanded(row.date)" class="o_tp_mine_detail_row">
+                                <td t-att-colspan="this.anyRowHasDetail ? 5 : 4">
+                                    <div class="o_tp_mine_detail_panel">
+                                        <div class="o_tp_mine_detail_meta">
+                                            <span t-if="row.source" class="o_tp_mine_detail_tag">
+                                                <i class="oi" data-icon="description" aria-hidden="true"/>
+                                                Nguồn: <strong t-out="this.sourceName(row.source)"/>
+                                            </span>
+                                            <span t-if="row.updated_at" class="o_tp_mine_detail_tag">
+                                                <i class="oi" data-icon="update" aria-hidden="true"/>
+                                                Cập nhật: <strong t-out="row.updated_at"/>
+                                            </span>
+                                            <span class="o_tp_mine_detail_tag" t-att-class="row.lock_state === 'locked' ? 'o_tag_locked' : ''">
+                                                <i class="oi" t-att-data-icon="row.lock_state === 'locked' ? 'lock' : 'lock_open'" aria-hidden="true"/>
+                                                <t t-if="row.lock_state === 'locked'">Kỳ đã chốt</t>
+                                                <t t-else="">Kỳ đang mở</t>
+                                            </span>
+                                            <button t-if="row.lock_state !== 'locked' and !row.future" type="button" class="btn btn-sm o_tp_mine_btn_secondary ms-auto"
+                                                t-on-click="() => this.openRequest(row.date)">
+                                                <i class="oi" data-icon="edit_note" aria-hidden="true"/>
+                                                <span>Đề nghị điều chỉnh ngày này</span>
+                                            </button>
+                                        </div>
+
+                                        <div t-if="row.sessions.length" class="o_tp_mine_detail_block">
+                                            <h4>Phiên vào / ra đã ghi nhận</h4>
+                                            <ul class="o_tp_mine_session_list">
+                                                <li t-foreach="row.sessions" t-as="sess" t-key="sess.in + sess.out + sess.source">
+                                                    <span class="o_tp_mine_sess_clock"><t t-out="sess.in"/> – <t t-out="sess.out"/></span>
+                                                    <span class="o_tp_mine_sess_hours"><t t-out="this.formatHours(sess.hours)"/> giờ</span>
+                                                    <span class="o_tp_mine_sess_src" t-out="sess.source_label"/>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        <div t-if="row.requests.length" class="o_tp_mine_detail_block">
+                                            <h4>Đề nghị điều chỉnh của bạn trong ngày</h4>
+                                            <ul class="o_tp_mine_req_list">
+                                                <li t-foreach="row.requests" t-as="req" t-key="req.id">
+                                                    <strong t-out="req.name"/>
+                                                    <span class="o_tp_mine_req_state" t-out="req.state_label"/>
+                                                    <span>Đề nghị: <t t-out="req.requested_in"/> – <t t-out="req.requested_out"/></span>
+                                                    <span t-if="req.review_note" class="o_tp_mine_req_note">Ghi chú: <t t-out="req.review_note"/></span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- E. Footer: Compact Color Legend + Pagination -->
+            <footer class="o_tp_mine_card_foot">
+                <div class="o_tp_mine_legend" aria-label="Chú thích màu">
+                    <span><i class="o_dot o_dot_ok" aria-hidden="true"/>Đủ vào/ra (dữ liệu máy, chưa đồng nghĩa đủ ngày công)</span>
+                    <span><i class="o_dot o_dot_warn" aria-hidden="true"/>Thiếu giờ</span>
+                    <span><i class="o_dot o_dot_danger" aria-hidden="true"/>Cần kiểm tra</span>
+                    <span><i class="o_dot o_dot_muted" aria-hidden="true"/>Chưa có dữ liệu / Tương lai</span>
+                    <span><i class="o_dot o_dot_blue" aria-hidden="true"/>Hôm nay</span>
+                    <span class="o_tp_mine_ref_hours">Giờ tham chiếu: <strong t-out="this.data.reference_hours or '08:30–17:00'"/></span>
+                </div>
+                <AttPager data="this.data" unit="'ngày'" onPage="(page) => this.setPage(page)" onSize="(size) => this.setPageSize(size)"/>
+            </footer>
+        </section>
+
         <SourceStrip source="this.data.source"/>
-        <PersonDetail data="this.data"/>
     </t>
 </section>
 </t>

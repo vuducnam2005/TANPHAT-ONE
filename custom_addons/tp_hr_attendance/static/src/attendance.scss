@@ -364,6 +364,1395 @@
     .o_tp_att_drop { min-height: 180px; padding: 16px; }
 }
 
+// ============================================================================
+// HR-ATTENDANCE-MINE-UI-001: Scoped redesign for "Công của tôi"
+// Applies strictly inside .o_tp_att_mine (standalone & embedded profile tab).
+// Preserves Overview, FileMatrix, PersonDialog and scroll containment fixes.
+// ============================================================================
+.o_tp_att_mine {
+    --mine-bg: #f4f7fb;
+    --mine-surface: #ffffff;
+    --mine-border: #dce5f0;
+    --mine-grid: #e7edf5;
+    --mine-head-bg: #f5f8fc;
+    --mine-hover: #f4f8fd;
+    --mine-ink: #172b4d;
+    --mine-muted: #5b6e84;
+    --mine-blue: #1677ff;
+    --mine-blue-hover: #0958d9;
+    --mine-blue-soft: #e6f4ff;
+    --mine-blue-border: #91caff;
+    --mine-ok: #15803d;
+    --mine-ok-bg: #ecfdf3;
+    --mine-ok-border: #bbf7d0;
+    --mine-warn: #c2410c;
+    --mine-warn-bg: #fff7ed;
+    --mine-warn-border: #fed7aa;
+    --mine-danger: #b42318;
+    --mine-danger-bg: #fef2f2;
+    --mine-danger-border: #fecaca;
+    --mine-leave: #6941c6;
+    --mine-leave-bg: #f4f0ff;
+    --mine-leave-border: #ddd6fe;
+    --mine-grey: #5d6b7c;
+    --mine-grey-bg: #f1f5f9;
+    --mine-grey-border: #e2e8f0;
+    --mine-future: #8b9bb0;
+
+    background: var(--mine-bg);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px 24px 32px;
+
+    &.o_tp_att_embedded {
+        background: transparent;
+        padding: 6px 0 12px;
+        gap: 12px;
+    }
+
+    &.o_tp_mine_loading .o_tp_mine_table {
+        opacity: 0.65;
+    }
+
+    // Focus states (accessible high-contrast blue halo)
+    select:focus,
+    input[type=month]:focus,
+    input[type=date]:focus {
+        border-color: var(--mine-blue);
+        box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.16);
+        outline: none;
+    }
+
+    // Alert & unlinked banner
+    .o_tp_mine_alert {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+        border-radius: 10px;
+    }
+    .o_tp_mine_unlinked {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 18px 20px;
+        background: var(--mine-surface);
+        border: 1px solid var(--mine-blue-border);
+        border-left: 4px solid var(--mine-blue);
+        border-radius: 12px;
+        > .oi { font-size: 26px; color: var(--mine-blue); flex: none; margin-top: 2px; }
+        strong { display: block; font-size: 15px; color: var(--mine-ink); margin-bottom: 4px; }
+        p { margin: 0; color: var(--mine-muted); font-size: 14px; }
+    }
+
+    // Static stable skeleton (zero continuous animation)
+    .o_tp_mine_skeleton {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+    .o_tp_mine_skel_bar {
+        height: 60px;
+        border-radius: 12px;
+        background: #e6eef7;
+    }
+    .o_tp_mine_skel_summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+    }
+    .o_tp_mine_skel_card {
+        height: 86px;
+        border-radius: 12px;
+        background: #e6eef7;
+    }
+    .o_tp_mine_skel_table {
+        background: var(--mine-surface);
+        border: 1px solid var(--mine-border);
+        border-radius: 12px;
+        overflow: hidden;
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .o_tp_mine_skel_thead {
+        height: 36px;
+        border-radius: 6px;
+        background: #edf2f8;
+    }
+    .o_tp_mine_skel_row {
+        height: 44px;
+        border-radius: 6px;
+        background: #f3f6fa;
+    }
+
+    // A. Header & 3-tier action buttons
+    .o_tp_mine_header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px 16px;
+        flex-wrap: wrap;
+    }
+    .o_tp_mine_title_block {
+        min-width: 0;
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 6px;
+            color: var(--mine-ink);
+            letter-spacing: -0.25px;
+        }
+    }
+    .o_tp_mine_identity {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px 10px;
+        font-size: 13.5px;
+        color: var(--mine-muted);
+    }
+    .o_tp_mine_emp_name {
+        font-weight: 650;
+        color: var(--mine-ink);
+    }
+    .o_tp_mine_meta_pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: var(--mine-blue-soft);
+        color: var(--mine-blue-hover);
+        font-size: 12px;
+        font-weight: 650;
+        font-variant-numeric: tabular-nums;
+    }
+    .o_tp_mine_meta_dept {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--mine-muted);
+        .oi { font-size: 15px; opacity: 0.8; }
+    }
+
+    .o_tp_mine_embedded_bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        padding-bottom: 2px;
+    }
+    .o_tp_mine_embedded_range {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--mine-ink);
+        .oi { color: var(--mine-blue); font-size: 17px; }
+    }
+
+    .o_tp_mine_actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 40px;
+            padding: 0 14px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+            .oi { font-size: 17px; }
+        }
+        .btn.btn-sm {
+            min-height: 36px;
+            padding: 0 12px;
+            font-size: 13px;
+        }
+    }
+    .o_tp_mine_btn_primary {
+        background: var(--mine-blue);
+        border: 1px solid var(--mine-blue);
+        color: #ffffff;
+        box-shadow: 0 1px 2px rgba(22, 119, 255, 0.22);
+        &:hover:not(:disabled) {
+            background: var(--mine-blue-hover);
+            border-color: var(--mine-blue-hover);
+            color: #ffffff;
+        }
+    }
+    .o_tp_mine_btn_secondary {
+        background: var(--mine-surface);
+        border: 1px solid var(--mine-blue-border);
+        color: var(--mine-blue-hover);
+        &:hover:not(:disabled) {
+            background: var(--mine-blue-soft);
+            border-color: var(--mine-blue);
+            color: var(--mine-blue-hover);
+        }
+    }
+    .o_tp_mine_btn_tertiary {
+        background: var(--mine-surface);
+        border: 1px solid var(--mine-border);
+        color: var(--mine-muted);
+        &:hover:not(:disabled) {
+            background: #f8fafc;
+            border-color: #b7c8dc;
+            color: var(--mine-ink);
+        }
+    }
+
+    // B. Period Selector Bar
+    .o_tp_mine_period_bar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px 14px;
+        background: var(--mine-surface);
+        border: 1px solid var(--mine-border);
+        border-radius: 12px;
+        padding: 10px 14px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+    .o_tp_mine_period_controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 12px;
+    }
+    .o_tp_mine_segment {
+        display: inline-flex;
+        padding: 3px;
+        background: #edf2f8;
+        border: 1px solid var(--mine-border);
+        border-radius: 9px;
+        button {
+            min-height: 36px;
+            min-width: 66px;
+            padding: 0 14px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: var(--mine-muted);
+            font-size: 13.5px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+            &:hover { color: var(--mine-ink); }
+            &.active {
+                background: var(--mine-surface);
+                color: var(--mine-blue-hover);
+                box-shadow: 0 1px 3px rgba(15, 23, 42, 0.10);
+            }
+        }
+    }
+    .o_tp_mine_nav_group {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .o_tp_mine_icon_btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border: 1px solid var(--mine-border);
+        border-radius: 8px;
+        background: var(--mine-surface);
+        color: var(--mine-ink);
+        padding: 0;
+        transition: background-color 150ms ease, border-color 150ms ease;
+        &:hover:not(:disabled) {
+            background: var(--mine-blue-soft);
+            border-color: var(--mine-blue-border);
+            color: var(--mine-blue-hover);
+        }
+    }
+    .o_tp_mine_input_field {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        padding: 0 10px;
+        min-height: 40px;
+        border: 1px solid var(--mine-border);
+        border-radius: 8px;
+        background: var(--mine-surface);
+        transition: border-color 150ms ease, box-shadow 150ms ease;
+        &:hover { border-color: #9fb5ce; }
+        &:focus-within {
+            border-color: var(--mine-blue);
+            box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.16);
+        }
+        input {
+            min-height: 36px;
+            padding: 2px 0;
+            border: 0;
+            background: transparent;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--mine-ink);
+            &:focus { box-shadow: none; outline: none; }
+        }
+    }
+    .o_tp_mine_input_label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--mine-muted);
+        white-space: nowrap;
+    }
+    .o_tp_mine_range_chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 0 12px;
+        border-radius: 8px;
+        background: var(--mine-blue-soft);
+        border: 1px solid var(--mine-blue-border);
+        color: var(--mine-blue-hover);
+        font-size: 13.5px;
+    }
+    .o_tp_mine_today_btn {
+        min-height: 40px;
+        padding: 0 12px;
+        border: 1px solid var(--mine-border);
+        border-radius: 8px;
+        background: var(--mine-surface);
+        color: var(--mine-ink);
+        font-size: 13.5px;
+        font-weight: 600;
+        white-space: nowrap;
+        &:hover {
+            background: var(--mine-blue-soft);
+            border-color: var(--mine-blue-border);
+            color: var(--mine-blue-hover);
+        }
+    }
+
+    // Secondary "Kỳ theo file" dropdown popover
+    .o_tp_mine_file_wrap {
+        position: relative;
+    }
+    .o_tp_mine_file_trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 40px;
+        padding: 0 12px;
+        border: 1px dashed #b9cadf;
+        border-radius: 8px;
+        background: #f8fbff;
+        color: var(--mine-muted);
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+        &:hover,
+        &.active {
+            border-style: solid;
+            border-color: var(--mine-blue-border);
+            background: var(--mine-blue-soft);
+            color: var(--mine-blue-hover);
+        }
+        .oi { font-size: 16px; }
+        .o_tp_mine_caret { font-size: 18px; margin-left: -2px; }
+    }
+    .o_tp_mine_file_popover {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        z-index: 25;
+        min-width: 280px;
+        max-width: 340px;
+        max-height: 300px;
+        overflow-y: auto;
+        background: var(--mine-surface);
+        border: 1px solid var(--mine-border);
+        border-radius: 10px;
+        padding: 6px;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        animation: o_tp_att_fade 160ms ease-out;
+    }
+    .o_tp_mine_file_popover_head {
+        font-size: 11.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        color: var(--mine-muted);
+        padding: 4px 8px 6px;
+        border-bottom: 1px solid var(--mine-grid);
+    }
+    .o_tp_mine_file_empty {
+        margin: 0;
+        padding: 10px 8px;
+        font-size: 13px;
+        color: var(--mine-muted);
+    }
+    .o_tp_mine_file_option {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 2px 8px;
+        width: 100%;
+        min-height: 42px;
+        padding: 7px 10px;
+        border: 1px solid transparent;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--mine-ink);
+        text-align: left;
+        &:hover {
+            background: var(--mine-hover);
+            border-color: var(--mine-border);
+        }
+        &.active {
+            background: var(--mine-blue-soft);
+            border-color: var(--mine-blue-border);
+            color: var(--mine-blue-hover);
+        }
+        small {
+            flex: 1 1 100%;
+            font-size: 11.5px;
+            color: var(--mine-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+    .o_tp_mine_file_opt_range { font-size: 13.5px; font-weight: 650; font-variant-numeric: tabular-nums; }
+    .o_tp_mine_file_opt_tag {
+        margin-left: auto;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 1px 6px;
+        border-radius: 999px;
+        background: var(--mine-ok-bg);
+        color: var(--mine-ok);
+    }
+
+    .o_tp_mine_range_display {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        background: #f5f8fc;
+        border: 1px solid var(--mine-grid);
+        font-size: 13px;
+        color: var(--mine-muted);
+        strong { color: var(--mine-ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+        .oi { font-size: 16px; color: var(--mine-blue); }
+    }
+
+    // C. Compact Summary Strip (2 visually distinct groups)
+    .o_tp_mine_summary {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 12px;
+    }
+    .o_tp_mine_summary_group {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        &.o_group_excel {
+            padding: 4px;
+            margin: -4px;
+            border-radius: 14px;
+            background: #eef5fd;
+            border: 1px solid #d4e4f7;
+        }
+    }
+    .o_tp_mine_stat {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 4px;
+        padding: 12px 14px;
+        background: var(--mine-surface);
+        border: 1px solid var(--mine-border);
+        border-left: 3px solid var(--mine-border);
+        border-radius: 10px;
+        text-align: left;
+        color: var(--mine-ink);
+        min-width: 0;
+        &.o_stat_ok { border-left-color: var(--mine-ok); }
+        &.o_stat_warn {
+            border-left-color: var(--mine-grey);
+            &.o_has_issue {
+                border-left-color: var(--mine-warn);
+                .o_tp_mine_stat_val strong { color: var(--mine-warn); }
+            }
+            &.o_active {
+                background: var(--mine-warn-bg);
+                border-color: var(--mine-warn-border);
+                border-left-color: var(--mine-warn);
+            }
+        }
+        &.o_stat_interactive {
+            cursor: pointer;
+            transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+            &:hover {
+                border-color: #a9c1dc;
+                box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+            }
+        }
+        &.o_stat_excel {
+            border-left-color: var(--mine-blue);
+            background: var(--mine-surface);
+        }
+    }
+    .o_tp_mine_stat_top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        .oi { font-size: 17px; color: var(--mine-muted); opacity: 0.85; }
+        .o_stat_icon_ok { color: var(--mine-ok); }
+        .o_stat_icon_warn { color: var(--mine-warn); }
+    }
+    .o_tp_mine_stat_label {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--mine-muted);
+    }
+    .o_tp_mine_source_tag {
+        font-size: 10.5px;
+        font-weight: 650;
+        padding: 1px 7px;
+        border-radius: 999px;
+        background: var(--mine-blue-soft);
+        color: var(--mine-blue-hover);
+        white-space: nowrap;
+    }
+    .o_tp_mine_stat_val {
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+        strong {
+            font-size: 24px;
+            line-height: 1.15;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            color: var(--mine-ink);
+            &.o_val_na { color: var(--mine-muted); font-weight: 600; }
+        }
+    }
+    .o_tp_mine_stat_unit {
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--mine-muted);
+    }
+    .o_tp_mine_stat_note {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.35;
+        color: var(--mine-muted);
+        &.o_note_exact { color: var(--mine-ok); font-weight: 550; }
+    }
+    .o_tp_mine_inline_link {
+        display: inline;
+        margin-left: 5px;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--mine-blue-hover);
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: underline;
+        cursor: pointer;
+        &:hover { color: var(--mine-blue); }
+    }
+
+    // D. Main Table Card (Ant Design Table-inspired)
+    .o_tp_mine_card {
+        background: var(--mine-surface);
+        border: 1px solid var(--mine-border);
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    }
+    .o_tp_mine_card_head {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--mine-grid);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .o_tp_mine_filter_mobile_row {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    .o_tp_mine_filter_toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 44px;
+        padding: 0 14px;
+        border: 1px solid var(--mine-border);
+        border-radius: 8px;
+        background: var(--mine-surface);
+        color: var(--mine-ink);
+        font-size: 13.5px;
+        font-weight: 600;
+        .oi { font-size: 18px; color: var(--mine-blue); }
+    }
+    .o_tp_mine_filter_badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: var(--mine-blue);
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .o_tp_mine_filter_form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 10px 12px;
+    }
+    .o_tp_mine_filter_field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin: 0;
+        span {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--mine-muted);
+        }
+        select {
+            min-height: 38px;
+            min-width: 195px;
+            padding: 6px 10px;
+            border: 1px solid var(--mine-border);
+            border-radius: 8px;
+            background: var(--mine-surface);
+            color: var(--mine-ink);
+            font-size: 13.5px;
+            &:hover { border-color: #9fb5ce; }
+        }
+    }
+    .o_tp_mine_filter_btns {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .btn {
+            min-height: 38px;
+            padding: 0 14px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            .oi { font-size: 16px; }
+        }
+    }
+    .o_tp_mine_apply_btn {
+        background: #eaf2fb;
+        border: 1px solid var(--mine-blue-border);
+        color: var(--mine-blue-hover);
+        &:hover {
+            background: var(--mine-blue);
+            border-color: var(--mine-blue);
+            color: #ffffff;
+        }
+        &.o_has_pending {
+            background: var(--mine-blue);
+            border-color: var(--mine-blue);
+            color: #ffffff;
+            &:hover {
+                background: var(--mine-blue-hover);
+                border-color: var(--mine-blue-hover);
+            }
+        }
+    }
+    .o_tp_mine_clear_btn {
+        background: var(--mine-surface);
+        border: 1px solid var(--mine-border);
+        color: var(--mine-muted);
+        &:hover:not(:disabled) {
+            background: #f8fafc;
+            border-color: #b7c8dc;
+            color: var(--mine-ink);
+        }
+        &:disabled { opacity: 0.45; }
+    }
+    .o_tp_mine_count_desktop {
+        margin-left: auto;
+        align-self: center;
+    }
+    .o_tp_mine_count_pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 11px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: var(--mine-ink);
+        font-size: 12.5px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    // Applied filter chips
+    .o_tp_mine_chips_row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 8px;
+        padding-top: 2px;
+    }
+    .o_tp_mine_chips_label {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--mine-muted);
+    }
+    .o_tp_mine_chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 30px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--mine-blue-border);
+        background: var(--mine-blue-soft);
+        color: var(--mine-blue-hover);
+        font-size: 12.5px;
+        cursor: pointer;
+        &:hover {
+            background: #d5ecff;
+            border-color: var(--mine-blue);
+        }
+        .o_tp_mine_chip_k { opacity: 0.8; }
+        .oi { font-size: 14px; margin-left: 2px; }
+    }
+    .o_tp_mine_filter_late_note {
+        margin-left: auto;
+        font-size: 12px;
+        color: var(--mine-muted);
+    }
+
+    // Table container: NO nested vertical scrollbar on desktop; sticky thead sticks to .o_tp_att_mine scrollport
+    .o_tp_mine_table_wrap {
+        overflow: clip;
+        max-height: none;
+    }
+    .o_tp_mine_table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin: 0;
+        font-size: 14px;
+        background: var(--mine-surface);
+
+        thead th {
+            position: sticky;
+            top: -20px;
+            z-index: 3;
+            background: var(--mine-head-bg);
+            color: #475569;
+            font-size: 12.5px;
+            font-weight: 700;
+            letter-spacing: 0.15px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--mine-border);
+            border-right: 1px solid var(--mine-grid);
+            text-align: left;
+            white-space: nowrap;
+            &:last-child { border-right: 0; }
+        }
+        .o_tp_att_embedded & thead th {
+            top: 0;
+        }
+        .o_col_day { width: 28%; }
+        .o_col_time { width: 20%; text-align: center; }
+        .o_col_status { width: 27%; }
+        .o_col_expand { width: 5%; text-align: center; }
+
+        tbody tr.o_tp_mine_row {
+            transition: background-color 150ms ease;
+            > th,
+            > td {
+                height: 52px;
+                padding: 8px 16px;
+                border-bottom: 1px solid var(--mine-grid);
+                border-right: 1px solid #eef3f8;
+                vertical-align: middle;
+                background: var(--mine-surface);
+                transition: background-color 150ms ease;
+                &:last-child { border-right: 0; }
+            }
+            &.o_is_weekend > th,
+            &.o_is_weekend > td {
+                background: #f8fafc;
+            }
+            &.o_is_future > th,
+            &.o_is_future > td {
+                color: var(--mine-future);
+            }
+            &.o_is_today > th,
+            &.o_is_today > td {
+                background: #eff6ff;
+            }
+            &.o_is_today > th {
+                box-shadow: inset 3px 0 0 var(--mine-blue);
+            }
+            &:hover > th,
+            &:hover > td {
+                background: var(--mine-hover);
+            }
+            &.o_is_today:hover > th,
+            &.o_is_today:hover > td {
+                background: #e5f1ff;
+            }
+        }
+        tbody tr:last-child > th,
+        tbody tr:last-child > td {
+            border-bottom: 0;
+        }
+    }
+
+    // Day / Date hierarchy cell
+    .o_tp_mine_day_cell {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+    .o_tp_mine_date_line {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+    }
+    .o_tp_mine_date_text {
+        font-size: 14px;
+        font-weight: 650;
+        font-variant-numeric: tabular-nums;
+        color: var(--mine-ink);
+    }
+    .o_is_future .o_tp_mine_date_text {
+        color: var(--mine-future);
+        font-weight: 550;
+    }
+    .o_tp_mine_weekday_text {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--mine-muted);
+    }
+    .o_is_future .o_tp_mine_weekday_text {
+        color: #9aa8b8;
+    }
+    .o_tp_mine_today_pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 1px 8px;
+        border-radius: 999px;
+        background: var(--mine-blue);
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 650;
+        line-height: 1.5;
+    }
+
+    // Time cells (centered, tabular-nums, green recorded, orange missing with explicit label)
+    .o_cell_time {
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+    }
+    .o_tp_mine_clock {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 68px;
+        padding: 4px 10px;
+        border-radius: 7px;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        font-variant-numeric: tabular-nums;
+        &.o_clock_ok {
+            color: var(--mine-ok);
+            background: var(--mine-ok-bg);
+            border: 1px solid var(--mine-ok-border);
+        }
+    }
+    .o_tp_mine_missing_cell {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 3px 9px;
+        border-radius: 7px;
+        font-size: 12px;
+        font-weight: 600;
+        .o_dash { font-weight: 700; opacity: 0.7; }
+        &.o_tone_warn {
+            color: var(--mine-warn);
+            background: var(--mine-warn-bg);
+            border: 1px solid var(--mine-warn-border);
+        }
+        &.o_tone_info {
+            color: var(--mine-blue-hover);
+            background: var(--mine-blue-soft);
+            border: 1px solid var(--mine-blue-border);
+        }
+        &.o_tone_danger {
+            color: var(--mine-danger);
+            background: var(--mine-danger-bg);
+            border: 1px solid var(--mine-danger-border);
+        }
+    }
+    .o_tp_mine_dash {
+        color: #9aa8b8;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    // Status pill cell
+    .o_cell_status {
+        white-space: nowrap;
+    }
+    .o_tp_mine_status_pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12.5px;
+        font-weight: 600;
+        line-height: 1.3;
+        .oi { font-size: 15px; }
+        &.o_tone_ok {
+            color: var(--mine-ok);
+            background: var(--mine-ok-bg);
+            border: 1px solid var(--mine-ok-border);
+        }
+        &.o_tone_info {
+            color: var(--mine-blue-hover);
+            background: var(--mine-blue-soft);
+            border: 1px solid var(--mine-blue-border);
+        }
+        &.o_tone_warn {
+            color: var(--mine-warn);
+            background: var(--mine-warn-bg);
+            border: 1px solid var(--mine-warn-border);
+        }
+        &.o_tone_danger {
+            color: var(--mine-danger);
+            background: var(--mine-danger-bg);
+            border: 1px solid var(--mine-danger-border);
+        }
+        &.o_tone_leave {
+            color: var(--mine-leave);
+            background: var(--mine-leave-bg);
+            border: 1px solid var(--mine-leave-border);
+        }
+        &.o_tone_muted {
+            color: var(--mine-grey);
+            background: var(--mine-grey-bg);
+            border: 1px solid var(--mine-grey-border);
+        }
+        &.o_tone_future {
+            color: var(--mine-future);
+            background: #f8fafc;
+            border: 1px solid #e6ecf2;
+        }
+    }
+    .o_tp_mine_req_indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        margin-left: 6px;
+        padding: 2px 7px;
+        border-radius: 999px;
+        background: var(--mine-blue-soft);
+        color: var(--mine-blue-hover);
+        font-size: 11.5px;
+        font-weight: 650;
+        .oi { font-size: 13px; }
+    }
+
+    // Expand chevron button & detail panel
+    .o_cell_expand {
+        text-align: center;
+        padding: 6px 8px !important;
+    }
+    .o_tp_mine_expand_btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border: 1px solid transparent;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--mine-muted);
+        padding: 0;
+        transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+        &:hover {
+            background: var(--mine-blue-soft);
+            border-color: var(--mine-blue-border);
+            color: var(--mine-blue-hover);
+        }
+        .oi { font-size: 20px; }
+    }
+    tr.o_tp_mine_detail_row > td {
+        padding: 0;
+        background: #f8fbff;
+        border-bottom: 1px solid var(--mine-border);
+    }
+    .o_tp_mine_detail_panel {
+        padding: 12px 18px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        animation: o_tp_att_fade 170ms ease-out;
+    }
+    .o_tp_mine_detail_meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+        .btn { min-height: 34px; padding: 0 12px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 5px; }
+    }
+    .o_tp_mine_detail_tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12.5px;
+        color: var(--mine-muted);
+        background: var(--mine-surface);
+        border: 1px solid var(--mine-border);
+        padding: 4px 10px;
+        border-radius: 7px;
+        strong { color: var(--mine-ink); font-weight: 600; }
+        .oi { font-size: 15px; color: var(--mine-blue); }
+        &.o_tag_locked {
+            background: #f1f5f9;
+            .oi { color: var(--mine-grey); }
+        }
+    }
+    .o_tp_mine_detail_block {
+        h4 {
+            margin: 0 0 6px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.25px;
+            color: var(--mine-muted);
+        }
+    }
+    .o_tp_mine_session_list,
+    .o_tp_mine_req_list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        li {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 12px;
+            padding: 7px 10px;
+            border-radius: 7px;
+            background: var(--mine-surface);
+            border: 1px solid var(--mine-grid);
+            font-size: 13px;
+        }
+    }
+    .o_tp_mine_sess_clock { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--mine-ok); }
+    .o_tp_mine_sess_hours { font-variant-numeric: tabular-nums; color: var(--mine-ink); font-weight: 600; }
+    .o_tp_mine_sess_src { color: var(--mine-muted); font-size: 12px; margin-left: auto; }
+    .o_tp_mine_req_state {
+        padding: 1px 8px;
+        border-radius: 999px;
+        background: var(--mine-blue-soft);
+        color: var(--mine-blue-hover);
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .o_tp_mine_req_note { color: var(--mine-muted); font-size: 12.5px; }
+
+    // Empty state
+    .o_tp_mine_empty_row td {
+        padding: 36px 16px;
+        text-align: center;
+    }
+    .o_tp_mine_empty_box {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        color: var(--mine-muted);
+        .oi { font-size: 32px; color: #94a3b8; }
+        p { margin: 0; font-size: 14px; }
+    }
+
+    // E. Footer: Legend + Pager
+    .o_tp_mine_card_foot {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px 16px;
+        padding: 12px 16px;
+        border-top: 1px solid var(--mine-grid);
+        background: #fafcff;
+        border-radius: 0 0 12px 12px;
+        .o_tp_att_pager { margin-top: 0; }
+    }
+    .o_tp_mine_legend {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 14px;
+        font-size: 12px;
+        color: var(--mine-muted);
+        > span {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .o_dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex: none;
+        }
+        .o_dot_ok { background: var(--mine-ok); }
+        .o_dot_warn { background: #ea580c; }
+        .o_dot_danger { background: var(--mine-danger); }
+        .o_dot_muted { background: #94a3b8; }
+        .o_dot_blue { background: var(--mine-blue); }
+    }
+    .o_tp_mine_ref_hours {
+        padding-left: 6px;
+        border-left: 1px solid var(--mine-border);
+        strong { color: var(--mine-ink); font-variant-numeric: tabular-nums; }
+    }
+
+    // Discreet SourceStrip at bottom of Công của tôi
+    .o_tp_att_source {
+        margin: 0;
+        background: #f8fafd;
+        border-color: var(--mine-border);
+        border-left-width: 3px;
+        font-size: 12.5px;
+        padding: 7px 12px;
+    }
+}
+
+@media (max-width: 1199.98px) {
+    .o_tp_att_mine {
+        .o_tp_mine_summary {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+}
+
+@media (max-width: 767.98px) {
+    .o_tp_att_mine {
+        padding: 12px 14px 24px;
+        gap: 12px;
+        &.o_tp_att_embedded { padding: 4px 0 12px; }
+
+        .o_tp_mine_title_block h1 { font-size: 21px; }
+        .o_tp_mine_actions {
+            width: 100%;
+            .btn {
+                flex: 1 1 calc(50% - 4px);
+                min-height: 44px;
+                padding: 0 10px;
+                font-size: 13px;
+            }
+            .o_tp_mine_btn_primary { flex: 1 1 100%; }
+        }
+        .o_tp_mine_period_bar { padding: 10px 12px; gap: 8px; }
+        .o_tp_mine_period_controls { width: 100%; gap: 8px; }
+        .o_tp_mine_segment { width: 100%; button { flex: 1; min-height: 42px; } }
+        .o_tp_mine_nav_group { width: 100%; }
+        .o_tp_mine_icon_btn { width: 44px; height: 44px; }
+        .o_tp_mine_input_field { flex: 1 1 190px; min-height: 44px; min-width: 0; input { width: 100%; min-width: 0; } }
+        .o_tp_mine_range_chip { flex: 1 1 190px; min-height: 44px; }
+        .o_tp_mine_today_btn { min-height: 44px; flex: 1 1 auto; }
+        .o_tp_mine_file_wrap { width: 100%; }
+        .o_tp_mine_file_trigger { width: 100%; justify-content: space-between; min-height: 44px; }
+        .o_tp_mine_file_popover { left: 0; right: 0; min-width: 0; max-width: none; }
+        .o_tp_mine_range_display { width: 100%; font-size: 12.5px; }
+
+        .o_tp_mine_summary_group {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .o_tp_mine_stat {
+            padding: 10px 11px;
+            .o_tp_mine_stat_val strong { font-size: 20px; }
+            .o_tp_mine_stat_top { flex-wrap: wrap; }
+        }
+        .o_tp_mine_skel_summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+        // Collapsible filter panel on mobile
+        .o_tp_mine_card_head { padding: 10px 12px; }
+        .o_tp_mine_filter_mobile_row { display: flex; }
+        .o_tp_mine_count_desktop { display: none; }
+        .o_tp_mine_filter_form {
+            display: none;
+            padding-top: 8px;
+            border-top: 1px solid var(--mine-grid);
+            &.is-open {
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                animation: o_tp_att_fade 170ms ease-out;
+            }
+        }
+        .o_tp_mine_filter_field {
+            width: 100%;
+            select { width: 100%; min-width: 0; min-height: 44px; }
+        }
+        .o_tp_mine_filter_btns {
+            width: 100%;
+            .btn { flex: 1; min-height: 44px; justify-content: center; }
+        }
+        .o_tp_mine_filter_late_note { margin-left: 0; flex: 1 1 100%; }
+
+        // Mobile clean card rows: weekday/date + status on top, Giờ vào | Giờ ra side-by-side below
+        .o_tp_mine_table_wrap {
+            overflow: visible;
+            padding: 8px 10px;
+            background: #f6f9fc;
+        }
+        .o_tp_mine_table {
+            background: transparent;
+            thead {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                overflow: hidden;
+                clip: rect(0 0 0 0);
+            }
+            tbody {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            tbody tr.o_tp_mine_row {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                gap: 8px 10px;
+                padding: 12px;
+                background: var(--mine-surface);
+                border: 1px solid var(--mine-border);
+                border-radius: 10px;
+                &.o_is_today {
+                    background: #eff6ff;
+                    border-color: var(--mine-blue-border);
+                    box-shadow: inset 3px 0 0 var(--mine-blue);
+                }
+                &.o_is_weekend { background: #f8fafc; }
+                > th,
+                > td {
+                    height: auto;
+                    padding: 0;
+                    border: 0;
+                    background: transparent !important;
+                    box-shadow: none !important;
+                }
+                > th.o_cell_day {
+                    grid-column: 1 / -1;
+                    padding-bottom: 6px;
+                    border-bottom: 1px solid var(--mine-grid);
+                }
+                > td.o_cell_time {
+                    text-align: left;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 4px;
+                    &::before {
+                        content: attr(data-label);
+                        font-size: 11px;
+                        font-weight: 600;
+                        color: var(--mine-muted);
+                    }
+                }
+                > td.o_cell_status {
+                    grid-column: 1 / -1;
+                    white-space: normal;
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    gap: 6px;
+                    padding-top: 4px;
+                }
+                > td.o_cell_expand {
+                    grid-column: 1 / -1;
+                    text-align: right;
+                    padding: 0 !important;
+                    margin-top: -36px;
+                    pointer-events: none;
+                    .o_tp_mine_expand_btn {
+                        pointer-events: auto;
+                        width: 40px;
+                        height: 40px;
+                    }
+                }
+            }
+            tbody tr.o_tp_mine_detail_row {
+                display: block;
+                margin-top: -6px;
+                border: 1px solid var(--mine-blue-border);
+                border-top: 0;
+                border-radius: 0 0 10px 10px;
+                overflow: hidden;
+                > td { display: block; border: 0; }
+            }
+            tbody tr.o_tp_mine_empty_row {
+                display: block;
+                > td { display: block; }
+            }
+        }
+        .o_tp_mine_day_cell {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .o_tp_mine_card_foot {
+            padding: 12px;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .o_tp_mine_ref_hours { border-left: 0; padding-left: 0; }
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .o_tp_att, .o_tp_att *, .o_tp_att_dialog *, .o_tp_att_upload * { animation: none !important; transition: none !important; }
     .o_tp_att_kpi:hover { transform: none !important; }

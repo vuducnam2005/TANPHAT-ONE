@@ -1,32 +1,119 @@
-import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
+import { Component, onMounted, onWillStart, onWillUnmount, proxy, useProps } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { patch } from "@web/core/utils/patch";
 import { useService } from "@web/core/utils/hooks";
 import { HrListController } from "@tp_hr_workspace/table/table";
 import { TpHrMyProfile } from "@tp_hr_workspace/my_profile/my_profile";
-import { downloadBase64, readStore, rpcError, stepPeriod, writeStore } from "./common";
-import { PersonDetail, SourceStrip } from "./parts";
+import {
+    PAGE_SIZES,
+    downloadBase64,
+    formatHours,
+    mineStatusInfo,
+    readStore,
+    rpcError,
+    stepPeriod,
+    writeStore,
+} from "./common";
+import { AttPager, SourceStrip } from "./parts";
 
 /**
- * "Công của tôi" (HR-ATTENDANCE-SIMPLE-002). The employee always comes from the session user (tp_mine ignores
- * any client id): header, two machine late metrics for the exact source period, then Thứ/ngày · Giờ vào · Giờ ra.
+ * "Công của tôi" (HR-ATTENDANCE-MINE-UI-001).
+ * The employee is always resolved on the backend from the session user (tp_mine / tp_export_mine ignore any client id).
+ * Supports standalone menu and compact embedded tab inside "Thông tin cá nhân".
  */
-const STORE_KEY = "tp_hr_attendance.mine";
-const MODES = [["week", "Tuần"], ["month", "Tháng"]];
+const STORE_KEY = "tp_hr_attendance.mine.v2";
+const MODES = [
+    ["week", "Tuần"],
+    ["month", "Tháng"],
+];
+const STATE_OPTIONS = [
+    ["", "Tất cả tình trạng"],
+    ["out_recorded", "Đủ vào/ra"],
+    ["working", "Chờ ghi nhận giờ ra"],
+    ["attention", "Thiếu giờ / Cần kiểm tra"],
+    ["missing_in", "Thiếu giờ vào"],
+    ["missing_out", "Thiếu giờ ra"],
+    ["review", "Cần kiểm tra"],
+    ["no_punch", "Chưa chấm công"],
+    ["no_source", "Chưa có dữ liệu"],
+    ["leave", "Nghỉ đã xác nhận"],
+    ["future", "Ngày tương lai"],
+];
+const WEEKDAY_OPTIONS = [
+    ["", "Tất cả các ngày"],
+    ["workdays", "Thứ 2 – Thứ 6"],
+    ["weekend", "Thứ 7 – Chủ nhật"],
+    ["0", "Thứ 2"],
+    ["1", "Thứ 3"],
+    ["2", "Thứ 4"],
+    ["3", "Thứ 5"],
+    ["4", "Thứ 6"],
+    ["5", "Thứ 7"],
+    ["6", "Chủ nhật"],
+];
 
 export class MyAttendance extends Component {
     static template = "tp_hr_attendance.Mine";
-    static components = { PersonDetail, SourceStrip };
+    static components = { AttPager, SourceStrip };
     props = useProps();
 
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
         const saved = readStore(STORE_KEY);
-        this.state = proxy({ mode: MODES.some(([key]) => key === saved.mode) ? saved.mode : "month", date: "", from: "", to: "",
-            fileMenu: false, loading: true, error: "", data: null });
+        const savedMode = MODES.some(([key]) => key === saved.mode) ? saved.mode : "month";
+        const savedPageSize = PAGE_SIZES.includes(Number(saved.pageSize)) ? Number(saved.pageSize) : 50;
+        this.state = proxy({
+            mode: savedMode,
+            date: "",
+            from: "",
+            to: "",
+            draftState: "",
+            draftWeekday: "",
+            appliedState: "",
+            appliedWeekday: "",
+            page: 1,
+            pageSize: savedPageSize,
+            fileMenu: false,
+            mobileFiltersOpen: false,
+            expandedDate: "",
+            loading: true,
+            exporting: false,
+            error: "",
+            data: null,
+        });
         this.modes = MODES;
+        this.weekdayOptions = WEEKDAY_OPTIONS;
+        this.skeletonRows = [0, 1, 2, 3, 4, 5];
+        this.mineStatusInfo = mineStatusInfo;
+        this.formatHours = formatHours;
         this.request = 0;
+
+        const onKeyDown = (ev) => {
+            if (ev.key !== "Escape") {
+                return;
+            }
+            if (this.state.fileMenu) {
+                this.state.fileMenu = false;
+                document.querySelector(".o_tp_mine_file_trigger")?.focus();
+            } else if (this.state.mobileFiltersOpen) {
+                this.state.mobileFiltersOpen = false;
+                document.querySelector(".o_tp_mine_filter_toggle")?.focus();
+            }
+        };
+        const onDocumentClick = (ev) => {
+            if (this.state.fileMenu && !ev.target.closest?.(".o_tp_mine_file_wrap")) {
+                this.state.fileMenu = false;
+            }
+        };
+        onMounted(() => {
+            document.addEventListener("keydown", onKeyDown);
+            document.addEventListener("click", onDocumentClick);
+        });
+        onWillUnmount(() => {
+            document.removeEventListener("keydown", onKeyDown);
+            document.removeEventListener("click", onDocumentClick);
+        });
         onWillStart(() => this.load());
     }
 
@@ -34,21 +121,153 @@ export class MyAttendance extends Component {
         return this.state.data;
     }
 
+    get isEmbedded() {
+        return Boolean(this.props.embedded);
+    }
+
+    get stateOptions() {
+        const hasLeave = Boolean(this.data?.has_leave_source);
+        return STATE_OPTIONS.filter(([key]) => key !== "leave" || hasLeave);
+    }
+
+    get summary() {
+        return (
+            this.data?.summary || {
+                total_days: 0,
+                recorded_days: 0,
+                complete_days: 0,
+                working_days: 0,
+                attention_days: 0,
+                missing_days: 0,
+                review_days: 0,
+                no_punch_days: 0,
+                no_source_days: 0,
+                leave_days: 0,
+                future_days: 0,
+            }
+        );
+    }
+
+    get late() {
+        return this.data?.late || { state: "none", count: null, minutes: null, source: "", text: "Chưa có số liệu" };
+    }
+
+    get latePeriodHint() {
+        if (this.late.state === "exact") {
+            return null;
+        }
+        const periods = this.data?.file_periods || [];
+        return periods.find((item) => item.has_late) || null;
+    }
+
+    get hasPendingChanges() {
+        return (
+            this.state.draftState !== this.state.appliedState ||
+            this.state.draftWeekday !== this.state.appliedWeekday
+        );
+    }
+
+    get appliedChips() {
+        const chips = [];
+        if (this.state.appliedState) {
+            const found = STATE_OPTIONS.find(([key]) => key === this.state.appliedState);
+            chips.push({
+                key: "state",
+                title: "Tình trạng",
+                label: found ? found[1] : this.state.appliedState,
+            });
+        }
+        if (this.state.appliedWeekday) {
+            const found = WEEKDAY_OPTIONS.find(([key]) => key === this.state.appliedWeekday);
+            chips.push({
+                key: "weekday",
+                title: "Ngày",
+                label: found ? found[1] : this.state.appliedWeekday,
+            });
+        }
+        return chips;
+    }
+
+    get activeFilterCount() {
+        return this.appliedChips.length;
+    }
+
+    get hasAnyFilterOrDraft() {
+        return Boolean(
+            this.state.appliedState ||
+            this.state.appliedWeekday ||
+            this.state.draftState ||
+            this.state.draftWeekday
+        );
+    }
+
+    get anyRowHasDetail() {
+        return Boolean(this.data?.rows?.some((row) => row.has_detail));
+    }
+
+    get rangeBannerText() {
+        if (!this.data) {
+            return "";
+        }
+        if (this.data.mode === "month") {
+            return `${this.data.period_label} (${this.data.range_display})`;
+        }
+        if (this.data.mode === "week") {
+            return `Tuần ${this.data.range_display}`;
+        }
+        return `Kỳ theo file: ${this.data.range_display}`;
+    }
+
+    get resultSummaryText() {
+        if (!this.data) {
+            return "";
+        }
+        const total = this.data.total ?? 0;
+        const periodDays = this.data.period_days ?? total;
+        if (this.activeFilterCount > 0) {
+            return `Tìm thấy ${total} / ${periodDays} ngày trong kỳ`;
+        }
+        return `${total} ngày trong kỳ`;
+    }
+
+    buildQueryParams(includePage = true) {
+        const params = {
+            mode: this.state.mode,
+            date: this.state.date,
+            from: this.state.from,
+            to: this.state.to,
+            state: this.state.appliedState,
+            weekday: this.state.appliedWeekday,
+        };
+        if (includePage) {
+            params.page = this.state.page;
+            params.page_size = this.state.pageSize;
+        }
+        return params;
+    }
+
     async load() {
         const request = ++this.request;
         this.state.loading = true;
         this.state.error = "";
         try {
-            const data = await this.orm.call("tp.hr.attendance.day", "tp_mine", [{
-                mode: this.state.mode, date: this.state.date, from: this.state.from, to: this.state.to,
-            }]);
+            const data = await this.orm.call("tp.hr.attendance.day", "tp_mine", [this.buildQueryParams(true)]);
             if (request !== this.request) {
                 return;
             }
             this.state.data = data;
             if (data.has_employee) {
-                Object.assign(this.state, { date: data.date, from: data.start, to: data.end });
-                writeStore(STORE_KEY, { mode: data.mode === "range" ? "month" : data.mode });
+                Object.assign(this.state, {
+                    date: data.date,
+                    from: data.start,
+                    to: data.end,
+                    page: data.page || 1,
+                    pageSize: data.page_size || this.state.pageSize,
+                });
+                writeStore(STORE_KEY, {
+                    mode: data.mode === "range" ? "month" : data.mode,
+                    pageSize: this.state.pageSize,
+                });
             }
         } catch (error) {
             if (request === this.request) {
@@ -60,51 +279,201 @@ export class MyAttendance extends Component {
             }
         }
     }
-    reset(changes) {
-        Object.assign(this.state, { fileMenu: false }, changes);
+
+    resetPeriod(changes) {
+        Object.assign(
+            this.state,
+            {
+                fileMenu: false,
+                expandedDate: "",
+                page: 1,
+            },
+            changes
+        );
         return this.load();
     }
+
     setMode(mode) {
-        return this.reset({ mode, date: this.state.from || this.state.date });
+        return this.resetPeriod({ mode, date: this.state.from || this.state.date });
     }
+
     step(delta) {
-        return this.reset(stepPeriod(this.state.mode, this.data, delta));
+        if (!this.data) {
+            return;
+        }
+        return this.resetPeriod(stepPeriod(this.state.mode, this.data, delta));
     }
+
     goToday() {
-        return this.reset({ mode: this.state.mode === "range" ? "month" : this.state.mode, date: this.data?.today || "" });
+        return this.resetPeriod({
+            mode: this.state.mode === "range" ? "month" : this.state.mode,
+            date: this.data?.today || "",
+        });
     }
+
     onDate(ev) {
         if (ev.target.value) {
-            return this.reset({ date: ev.target.value });
+            return this.resetPeriod({ date: ev.target.value });
         }
     }
+
     onMonth(ev) {
         if (ev.target.value) {
-            return this.reset({ date: `${ev.target.value}-01` });
+            return this.resetPeriod({ date: `${ev.target.value}-01` });
         }
     }
-    openFilePeriod(item) {
-        return this.reset({ mode: "range", from: item.from, to: item.to });
+
+    toggleFileMenu() {
+        this.state.fileMenu = !this.state.fileMenu;
     }
+
+    openFilePeriod(item) {
+        return this.resetPeriod({ mode: "range", from: item.from, to: item.to });
+    }
+
+    onDraftState(ev) {
+        this.state.draftState = ev.target.value;
+    }
+
+    onDraftWeekday(ev) {
+        this.state.draftWeekday = ev.target.value;
+    }
+
+    applyFilters() {
+        Object.assign(this.state, {
+            appliedState: this.state.draftState,
+            appliedWeekday: this.state.draftWeekday,
+            page: 1,
+            expandedDate: "",
+            mobileFiltersOpen: false,
+        });
+        return this.load();
+    }
+
+    clearFilters() {
+        Object.assign(this.state, {
+            draftState: "",
+            draftWeekday: "",
+            appliedState: "",
+            appliedWeekday: "",
+            page: 1,
+            expandedDate: "",
+            mobileFiltersOpen: false,
+        });
+        return this.load();
+    }
+
+    removeChip(key) {
+        if (key === "state") {
+            this.state.draftState = "";
+            this.state.appliedState = "";
+        } else if (key === "weekday") {
+            this.state.draftWeekday = "";
+            this.state.appliedWeekday = "";
+        }
+        this.state.page = 1;
+        this.state.expandedDate = "";
+        return this.load();
+    }
+
+    quickFilterAttention() {
+        if (this.state.appliedState === "attention") {
+            return this.removeChip("state");
+        }
+        Object.assign(this.state, {
+            draftState: "attention",
+            appliedState: "attention",
+            page: 1,
+            expandedDate: "",
+        });
+        return this.load();
+    }
+
+    setPage(page) {
+        this.state.page = page;
+        this.state.expandedDate = "";
+        return this.load();
+    }
+
+    setPageSize(size) {
+        Object.assign(this.state, { pageSize: size, page: 1, expandedDate: "" });
+        return this.load();
+    }
+
+    toggleRow(row) {
+        if (!row.has_detail) {
+            return;
+        }
+        this.state.expandedDate = this.state.expandedDate === row.date ? "" : row.date;
+    }
+
+    isExpanded(dateIso) {
+        return this.state.expandedDate === dateIso;
+    }
+
+    cellMissingLabel(row, side) {
+        if (row.state === "missing") {
+            if (side === "in" && !row.in) {
+                return "Thiếu giờ vào";
+            }
+            if (side === "out" && !row.out) {
+                return "Thiếu giờ ra";
+            }
+        }
+        if (row.state === "working" && side === "out" && !row.out) {
+            return "Chờ ghi nhận giờ ra";
+        }
+        if (row.state === "review" && ((side === "in" && !row.in) || (side === "out" && !row.out))) {
+            return "Cần kiểm tra";
+        }
+        return "";
+    }
+
+    sourceName(code) {
+        if (code === "excel") {
+            return "Excel máy chấm công";
+        }
+        if (code === "api") {
+            return "API máy chấm công";
+        }
+        return "";
+    }
+
     async exportOwn() {
+        if (this.state.exporting) {
+            return;
+        }
+        this.state.exporting = true;
+        this.state.error = "";
         try {
-            downloadBase64(await this.orm.call("tp.hr.attendance.day", "tp_export_mine", [{
-                mode: this.state.mode, date: this.state.date, from: this.state.from, to: this.state.to,
-            }]));
+            downloadBase64(await this.orm.call("tp.hr.attendance.day", "tp_export_mine", [this.buildQueryParams(false)]));
         } catch (error) {
             this.state.error = rpcError(error, "Không xuất được công cá nhân. Vui lòng thử lại.");
+        } finally {
+            this.state.exporting = false;
         }
     }
-    async openRequest() {
-        await this.action.doAction({
-            type: "ir.actions.act_window", name: "Đề nghị điều chỉnh công", res_model: "tp.hr.attendance.correction",
-            views: [[false, "form"]], target: "new",
-        }, { onClose: () => this.load() });
+
+    async openRequest(workDate = "") {
+        const context = workDate ? { default_work_date: workDate } : {};
+        await this.action.doAction(
+            {
+                type: "ir.actions.act_window",
+                name: "Đề nghị điều chỉnh công",
+                res_model: "tp.hr.attendance.correction",
+                views: [[false, "form"]],
+                target: "new",
+                context,
+            },
+            { onClose: () => this.load() }
+        );
     }
+
     openRequests() {
         return this.action.doAction("tp_hr_attendance.action_my_requests");
     }
 }
+
 registry.category("actions").add("tp_hr_attendance.mine", MyAttendance);
 
 const CONTENT = {
@@ -114,7 +483,9 @@ const CONTENT = {
     "tp.hr.attendance.log": ["Nhật ký chấm công", "Lịch sử thao tác và phiên bản, không chứa giải trình hoặc minh chứng cá nhân.", "", "Chưa có nhật ký"],
 };
 patch(HrListController.prototype, {
-    get hrContent() { return CONTENT[this.props.resModel] || super.hrContent; },
+    get hrContent() {
+        return CONTENT[this.props.resModel] || super.hrContent;
+    },
 });
 
 patch(TpHrMyProfile, { components: { ...TpHrMyProfile.components, MyAttendance } });

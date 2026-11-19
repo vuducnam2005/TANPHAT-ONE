@@ -10,14 +10,17 @@ from odoo.addons.tp_hr_attendance.models.attendance_logic import (
     EventError,
     build_xlsx,
     day_label,
+    filter_mine_rows,
     fingerprint,
     late_cover,
+    mine_row_status,
     month_range,
     normalize_event,
     period_range,
     presence_from_day,
     presence_from_events,
     short_range,
+    summarize_mine_rows,
     week_range,
     xlsx_safe,
 )
@@ -154,3 +157,42 @@ class TestAttendanceLogic(BaseCase):
         self.assertEqual(book.sheetnames, ['Theo ngày', 'Tổng đi muộn'])
         self.assertEqual(book['Theo ngày'].cell(3, 1).value, "'=cmd")
         self.assertEqual(book['Tổng đi muộn'].cell(3, 2).value, 3)
+
+    def test_mine_status_filter_and_summary(self):
+        self.assertEqual(mine_row_status('out_recorded', '08:00', '17:05'), 'Đủ vào/ra')
+        self.assertEqual(mine_row_status('working', '08:00', ''), 'Chờ ghi nhận giờ ra')
+        self.assertEqual(mine_row_status('missing', '08:00', ''), 'Thiếu giờ ra')
+        self.assertEqual(mine_row_status('missing', '', '17:05'), 'Thiếu giờ vào')
+        self.assertEqual(mine_row_status('missing', '', ''), 'Thiếu giờ vào/ra')
+        self.assertEqual(mine_row_status('review', '08:00', ''), 'Cần kiểm tra')
+        self.assertEqual(mine_row_status('no_punch', '', ''), 'Chưa chấm công')
+        self.assertEqual(mine_row_status('no_source', '', ''), 'Chưa có dữ liệu')
+        self.assertEqual(mine_row_status('future', '', ''), 'Chưa đến')
+        self.assertEqual(mine_row_status('leave', '', ''), 'Nghỉ đã xác nhận')
+
+        rows = [
+            {'date': '2026-11-09', 'weekday_index': 0, 'in': '08:10', 'out': '17:05', 'state': 'out_recorded'},
+            {'date': '2026-11-10', 'weekday_index': 1, 'in': '08:20', 'out': '', 'state': 'missing'},
+            {'date': '2026-11-11', 'weekday_index': 2, 'in': '', 'out': '17:10', 'state': 'missing'},
+            {'date': '2026-11-12', 'weekday_index': 3, 'in': '08:30', 'out': '', 'state': 'working'},
+            {'date': '2026-11-13', 'weekday_index': 4, 'in': '', 'out': '', 'state': 'review'},
+            {'date': '2026-11-14', 'weekday_index': 5, 'in': '', 'out': '', 'state': 'no_punch'},
+            {'date': '2026-11-15', 'weekday_index': 6, 'in': '', 'out': '', 'state': 'future'},
+        ]
+        summary = summarize_mine_rows(rows)
+        self.assertEqual(summary['total_days'], 7)
+        self.assertEqual(summary['recorded_days'], 4)
+        self.assertEqual(summary['complete_days'], 1)
+        self.assertEqual(summary['working_days'], 1)
+        self.assertEqual(summary['attention_days'], 3)
+        self.assertEqual(summary['missing_days'], 2)
+        self.assertEqual(summary['review_days'], 1)
+        self.assertEqual(summary['future_days'], 1)
+
+        self.assertEqual([r['date'] for r in filter_mine_rows(rows, 'attention')], ['2026-11-10', '2026-11-11', '2026-11-13'])
+        self.assertEqual([r['date'] for r in filter_mine_rows(rows, 'missing_out')], ['2026-11-10'])
+        self.assertEqual([r['date'] for r in filter_mine_rows(rows, 'missing_in')], ['2026-11-11'])
+        self.assertEqual([r['date'] for r in filter_mine_rows(rows, '', 'weekend')], ['2026-11-14', '2026-11-15'])
+        self.assertEqual([r['date'] for r in filter_mine_rows(rows, 'attention', 'workdays')], ['2026-11-10', '2026-11-11', '2026-11-13'])
+        self.assertEqual([r['date'] for r in filter_mine_rows(rows, 'out_recorded', '0')], ['2026-11-09'])
+        self.assertEqual(filter_mine_rows(rows, 'out_recorded', '5'), [])

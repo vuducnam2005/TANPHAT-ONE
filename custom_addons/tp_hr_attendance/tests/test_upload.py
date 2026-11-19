@@ -133,9 +133,23 @@ class TestAttendanceUpload(AttendanceCase):
         self.assertEqual(mine['employee']['id'], self.emp_a.id)
         self.assertEqual((mine['late']['state'], mine['late']['count'], mine['late']['minutes']), ('exact', 3, 47))
         self.assertEqual(len(mine['rows']), 7)
+        self.assertEqual((mine['page_size'], mine['total'], mine['period_days']), (50, 7, 7))
+        self.assertEqual((mine['summary']['recorded_days'], mine['summary']['attention_days']), (2, 1))
+        filtered = Mine.tp_mine(dict(WEEK, state='missing_out', employee_id=self.emp_b.id))
+        self.assertEqual((filtered['employee']['id'], filtered['total'], len(filtered['rows'])), (self.emp_a.id, 1, 1))
+        self.assertEqual(filtered['rows'][0]['date'], '2026-11-10')
+        # Period summary and Excel late totals stay full-period even when rows are filtered.
+        self.assertEqual((filtered['summary']['recorded_days'], filtered['late']['count']), (2, 3))
+        with self.assertRaises(UserError):
+            Mine.tp_mine(dict(WEEK, state='forged_state'))
         own = load_workbook(BytesIO(base64.b64decode(Mine.tp_export_mine(WEEK)['data'])))
         self.assertEqual(own.sheetnames, ['Giờ theo ngày', 'Tổng đi muộn'])
         self.assertEqual({row[0] for row in own['Giờ theo ngày'].iter_rows(min_row=3, values_only=True)}, {self.emp_a.name})
+        own_filtered = load_workbook(BytesIO(base64.b64decode(Mine.tp_export_mine(dict(WEEK, state='missing_out', page=1, page_size=10))['data'])))
+        self.assertEqual(own_filtered.sheetnames, ['Giờ theo ngày', 'Tổng đi muộn'])
+        self.assertEqual(list(own_filtered['Giờ theo ngày'].iter_rows(min_row=3, values_only=True)), [
+            (self.emp_a.name, self.emp_a.tp_employee_code, self.dept_a.name, 'T3 10/11/2026', '07:50', '—', 'Thiếu giờ ra'),
+        ])
         # Read-only users cannot export shared data; HR can, with the late sheet for exact periods only.
         with self.assertRaises(AccessError):
             Mine.tp_export_sheet(WEEK)

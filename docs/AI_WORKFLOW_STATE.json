@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T02:12:27.299704+00:00",
-  "last_change_id": "CHG-20261119-002",
-  "code_digest": "1971a2dcce86f6ce8b230ae3ca3baa9a8e902c6be3c34d99a43eb2e12b66e064",
+  "updated_at": "2026-11-19T03:51:57.221112+00:00",
+  "last_change_id": "CHG-20261119-003",
+  "code_digest": "8bfd64d2469ff21f74e37c5be6f51e62fabe52719c93d684e6155abd07813e62",
   "code_file_count": 674,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "d04a0aeb0fe12c75b7ce9fcaf95a0f63f3d6583a59f85b16cc50139ba0a09a2e",
-    "docs/CHANGELOG.md": "335c67f365c62279185dc906e2dd8b19c414f1e3a8779a09f29c861218e04b0b",
+    "docs/PROJECT_STATUS.md": "84f08b50e6aa7097f599dd65ab77fcb84745e047e251fa1d7146caf3bdc94122",
+    "docs/CHANGELOG.md": "7f1702f42d79bcc9d6788a065d772c3288cef9d551b55259d773a04ec60a1d49",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Server18files20.0.3.1.0 backup+upgrade PASS; counts/groupdigest unchanged; server/public actual CSS+JS SHA256 match and new UI markers; health200 via current tunnel. Local browser2/2, ORM6/6, scroll12/12 PASS. Public authenticated E2E NOT_RUN; old public hostname NXDOMAIN; no tunnel changes."
+    "AST/XML/SCSS/Ruff/Node/pure-logic PASS; read-only ORM uid=41/34/2 PASS; Playwright mine_ui 10/10 + scroll 12/12 + latest_ui 2/2 PASS, 0 JS errors"
   ]
 }

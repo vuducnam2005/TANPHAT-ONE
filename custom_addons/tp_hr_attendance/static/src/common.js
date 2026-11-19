@@ -148,3 +148,39 @@ export function cellNote(row, side) {
     }
     return "";
 }
+
+/** Semantic status pill for one personal attendance row (maps strictly to backend presence state). */
+export function mineStatusInfo(row) {
+    if (!row) {
+        return { key: "no_source", label: "Chưa có dữ liệu", tone: "muted", icon: "remove" };
+    }
+    if (row.state === "out_recorded") {
+        return { key: "out_recorded", label: "Đủ vào/ra", tone: "ok", icon: "check_circle" };
+    }
+    if (row.state === "working") {
+        return { key: "working", label: "Chờ ghi nhận giờ ra", tone: "info", icon: "schedule" };
+    }
+    if (row.state === "missing") {
+        const label = !row.in && !row.out
+            ? "Thiếu giờ vào/ra"
+            : !row.in
+                ? "Thiếu giờ vào"
+                : !row.out
+                    ? "Thiếu giờ ra"
+                    : "Thiếu lượt chấm công";
+        return { key: "missing", label, tone: "warn", icon: "schedule" };
+    }
+    if (row.state === "review") {
+        return { key: "review", label: "Cần kiểm tra", tone: "danger", icon: "warning" };
+    }
+    if (row.state === "leave") {
+        return { key: "leave", label: "Nghỉ đã xác nhận", tone: "leave", icon: "event_available" };
+    }
+    if (row.state === "no_punch") {
+        return { key: "no_punch", label: "Chưa chấm công", tone: "muted", icon: "radio_button_unchecked" };
+    }
+    if (row.state === "future" || row.future) {
+        return { key: "future", label: "Ngày tương lai", tone: "future", icon: "event" };
+    }
+    return { key: "no_source", label: row.status_label || "Chưa có dữ liệu", tone: "muted", icon: "help_outline" };
+}
