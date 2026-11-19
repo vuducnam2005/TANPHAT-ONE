@@ -44,6 +44,26 @@ test("MyProfile history filters separate profile, role/transfer and account entr
     expect(comp.filteredHistory.map((r) => r.id)).toEqual([3]);
 });
 
+test("MyProfile delete/security failures stay in the card the user acted on, never a toast", async () => {
+    const comp = Object.create(TpHrMyProfile.prototype);
+    comp.state = { activeTab: "resume", actionError: null, actionAttempt: 0 };
+    comp.confirmDiscard = async () => true;
+    comp.notification = { add: (message, { type }) => expect.step(type) };
+    comp.orm = { call: async () => { throw { data: { name: "odoo.exceptions.UserError", message: "Kỹ năng đang được dùng." } }; } };
+    await comp.deleteSkill({ id: 5, skill_name: "AutoCAD" });
+    expect.verifySteps([]);
+    expect(comp.actionErrorFor("resume")).toBe(null);
+    expect(comp.actionErrorFor("skill")).toEqual({ area: "skill", kind: "business", title: "Máy chủ từ chối xóa",
+        message: "Kỹ năng đang được dùng.", note: "Danh sách chưa thay đổi." });
+    expect(comp.state.actionAttempt).toBe(1);
+    comp.orm = { call: async () => { throw { data: { name: "odoo.exceptions.AccessError", message: "" } }; } };
+    await comp.openAccountSecurityPreferences();
+    expect(comp.actionErrorFor("skill")).toBe(null);
+    expect(comp.actionErrorFor("security").title).toBe("Không có quyền mở cài đặt bảo mật");
+    comp.setTab("account");
+    expect(comp.state.actionError).toBe(null);
+});
+
 test("MyProfile popups list the backend rules that block saving, only after a save attempt", () => {
     const comp = Object.create(TpHrMyProfile.prototype);
     comp.state = { draftAttempted: false, resumeDraft: { name: " ", date_start: "", date_end: "" }, skillDraft: null };

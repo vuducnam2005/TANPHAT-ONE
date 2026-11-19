@@ -2,6 +2,8 @@
     <t t-name="tp_web_home.InlineErrors">
         <t t-set="errors" t-value="this.props.errors"/>
         <t t-set="server" t-value="this.props.server"/>
+        <t t-set="intro" t-value="this.props.intro"/>
+        <t t-set="note" t-value="this.props.note"/>
         <section t-if="errors.length or server" class="tp_validation_summary" role="alert" t-ref="this.section"
             t-att-data-attempt="this.props.attempt">
             <t t-call="tp_web_home.ValidationSummaryBody"/>

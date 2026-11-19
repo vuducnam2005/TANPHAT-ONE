@@ -1,6 +1,6 @@
 <templates xml:space="preserve">
     <t t-name="tp_web_home.ValidationSummaryBody">
-        <strong t-if="errors.length" class="d-block">Chưa lưu được. Vui lòng kiểm tra <t t-out="errors.length"/> thông tin:</strong>
+        <strong t-if="errors.length" class="d-block"><t t-out="intro or 'Chưa lưu được. Vui lòng kiểm tra'"/> <t t-out="errors.length"/> thông tin:</strong>
         <ul t-if="errors.length">
             <li t-foreach="errors" t-as="error" t-key="error.key or error.id">
                 <button t-if="!error.hidden" type="button" class="tp_validation_link" t-on-click="(ev) => this.focusError(error, ev)"><t t-out="error.label"/><t t-if="error.location"> — <t t-out="error.location"/></t></button>
@@ -12,7 +12,7 @@
             <strong t-out="server.title"/>
             <p class="mb-0" t-out="server.message"/>
         </div>
-        <small class="d-block">Dữ liệu đã nhập được giữ nguyên.<t t-if="errors.length"> Dấu * đánh dấu thông tin bắt buộc.</t></small>
+        <small class="d-block"><t t-out="note or (server and server.note) or 'Dữ liệu đã nhập được giữ nguyên.'"/><t t-if="errors.length and !note"> Dấu * đánh dấu thông tin bắt buộc.</t></small>
     </t>
 
     <t t-name="tp_web_home.ValidationSummary">

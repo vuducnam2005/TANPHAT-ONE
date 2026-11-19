@@ -1,13 +1,17 @@
 import { Component, onMounted, onPatched, signal, t, useProps } from "@odoo/owl";
 
 /**
- * Error summary for custom OWL forms. Callers pass errors from their own real
+ * Error summary for custom OWL forms and screens. Callers pass errors from their own real
  * validators ({id, label, location, message}) and the classified server error;
- * this component never decides what is required.
+ * this component never decides what is required. `intro` replaces “Chưa lưu được…” and
+ * `note` the closing line on screens where nothing typed is being saved.
  */
 export class InlineErrors extends Component {
     static template = "tp_web_home.InlineErrors";
-    props = useProps({ errors: t.array(), server: t.any().optional(), attempt: t.number().optional() });
+    props = useProps({
+        errors: t.array(), server: t.any().optional(), attempt: t.number().optional(),
+        intro: t.string().optional(), note: t.string().optional(),
+    });
     section = signal.ref();
 
     setup() {

@@ -176,6 +176,23 @@ describe("saveError classification", () => {
         expect(saveError(new ConnectionLostError("/web/dataset/call_kw")).kind).toBe("connection");
     });
 
+    test("names the action the user tried; typed-data wording stays only for saves", () => {
+        expect(saveError(rpc("AccessError", ""), { verb: "xóa", note: "Danh sách chưa thay đổi." })).toEqual({
+            kind: "access", title: "Không có quyền xóa",
+            message: "Tài khoản của bạn không có quyền thực hiện thao tác này. Vui lòng liên hệ người quản trị.",
+            note: "Danh sách chưa thay đổi." });
+        expect(saveError(rpc("UserError", "Chọn Dự án trước."), { verb: "thêm mới" }).title).toBe("Máy chủ từ chối thêm mới");
+        expect(saveError(new ConnectionLostError("/web/dataset/call_kw"), { verb: "mở hồ sơ", write: false }).message)
+            .toBe("Chưa kết nối được máy chủ nên chưa mở hồ sơ được. Kiểm tra kết nối rồi thử lại.");
+        expect(saveError(new ConnectionLostError("/web/dataset/call_kw"), { verb: "sắp xếp" }).message)
+            .toInclude("Chưa xác nhận được kết quả sắp xếp.");
+        const system = saveError({ data: { name: "builtins.KeyError", message: "'x_secret_field'" } }, { verb: "sắp xếp" });
+        expect([system.title, system.message]).toEqual(["Lỗi hệ thống khi sắp xếp",
+            "Hệ thống chưa sắp xếp được. Thử lại sau ít phút hoặc liên hệ người quản trị kèm thời điểm xảy ra lỗi."]);
+        expect(JSON.stringify(system)).not.toInclude("x_secret_field");
+        expect("note" in saveError(rpc("UserError", "Kỳ đã khóa."))).toBe(false);
+    });
+
     test("never shows technical details of unexpected failures", () => {
         const error = saveError({ data: { name: "builtins.KeyError", message: "'x_secret_field'", debug: "Traceback..." } });
         expect(error.kind).toBe("system");
@@ -203,6 +220,25 @@ describe("InlineErrors for custom forms", () => {
         expect(".tp_validation_server").toHaveAttribute("data-kind", "access");
         await contains(".tp_validation_summary button.tp_validation_link").click();
         expect("#tp_demo_name").toBeFocused();
+    });
+
+    test("screens that save nothing typed replace the save wording", async () => {
+        await mountWithCleanup(InlineErrors, {
+            props: {
+                errors: [{ id: "tp_demo_project", label: "Dự án", location: "Bộ lọc", message: "Chọn Dự án." }],
+                intro: "Chưa mở được màn thêm mới. Vui lòng kiểm tra", note: "Bộ lọc được giữ nguyên.", attempt: 1,
+            },
+        });
+        expect(".tp_validation_summary strong").toHaveText("Chưa mở được màn thêm mới. Vui lòng kiểm tra 1 thông tin:");
+        expect(".tp_validation_summary small").toHaveText("Bộ lọc được giữ nguyên.");
+    });
+
+    test("a classified action error carries its own closing line", async () => {
+        await mountWithCleanup(InlineErrors, {
+            props: { errors: [], server: { kind: "business", title: "Máy chủ từ chối xóa", message: "Mục đã khóa.", note: "Danh sách chưa thay đổi." } },
+        });
+        expect(".tp_validation_server").toHaveText(/Máy chủ từ chối xóa\s+Mục đã khóa\./);
+        expect(".tp_validation_summary small").toHaveText("Danh sách chưa thay đổi.");
     });
 
     test("renders nothing while there is nothing to fix", async () => {

@@ -4,6 +4,8 @@ import { Dropdown } from "@web/core/dropdown/dropdown";
 import { DropdownItem } from "@web/core/dropdown/dropdown_item";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
 import {
     kdPrefs,
     LAST_LEAF_KEY,
@@ -121,7 +123,7 @@ function isAccessError(error) {
  */
 export class TpKdOverview extends Component {
     static template = "tp_kd_workspace.Overview";
-    static components = { Dropdown, DropdownItem, TpKdPrefs };
+    static components = { Dropdown, DropdownItem, InlineErrors, TpKdPrefs };
 
     props = useProps();
     prefs = kdPrefs;
@@ -157,6 +159,9 @@ export class TpKdOverview extends Component {
             denied: false,
             error: "",
             dateError: "",
+            actionErrors: [],
+            actionError: null,
+            actionAttempt: 0,
             data: null,
             filters: emptyFilters(),
             filtersOpen: false,
@@ -393,35 +398,47 @@ export class TpKdOverview extends Component {
     }
 
     // ------------------------------------------------------------------ actions
-    async run(method, args) {
+    /**
+     * FORM-VALIDATION-002: a failed open/create stays on the overview as an error block
+     * (classified like a form save), never a vanishing toast; filters and numbers stay put.
+     */
+    async run(model, method, args, verb = "mở hồ sơ") {
+        this.state.actionErrors = [];
+        this.state.actionError = null;
         try {
-            const action = await this.orm.call(MODEL, method, args);
+            const action = await this.orm.call(model, method, args);
             await this.action.doAction(withViews(action));
         } catch (error) {
-            this.notification.add(errorMessage(error, "Không mở được hồ sơ."), { type: "danger" });
+            this.state.actionError = saveError(error, { verb, write: false, note: "Bộ lọc và số liệu đang xem được giữ nguyên." });
+            this.state.actionAttempt++;
         }
     }
 
     open(key, params = {}) {
-        return this.run("action_kd_open", [key, this.filters(), params]);
+        return this.run(MODEL, "action_kd_open", [key, this.filters(), params]);
     }
 
     create(kind) {
-        return this.run("action_kd_create", [kind, this.state.filters.project_id || false]);
+        if (kind === "task" && !this.state.filters.project_id) {
+            // Same rule as action_kd_create; the server still checks it.
+            this.state.filtersOpen = true;
+            this.state.actionError = null;
+            this.state.actionErrors = [{ id: "tp_kd_filter_project", label: "Dự án", location: "Bộ lọc",
+                message: "Chọn Dự án trên Tổng quan trước khi thêm công việc / WBS." }];
+            this.state.actionAttempt++;
+            return;
+        }
+        return this.run(MODEL, "action_kd_create", [kind, this.state.filters.project_id || false], "thêm mới");
     }
 
-    async projectAction(method, projectId) {
-        try {
-            const action = await this.orm.call("project.project", method, [[projectId]]);
-            await this.action.doAction(withViews(action));
-        } catch (error) {
-            this.notification.add(errorMessage(error, "Không mở được hồ sơ."), { type: "danger" });
-        }
+    projectAction(method, projectId) {
+        return this.run("project.project", method, [[projectId]]);
     }
 
     // ------------------------------------------------------------------ filters
     setFilter(key, ev) {
         const raw = ev.target.value;
+        this.state.actionErrors = [];
         this.state.filters[key] = key.endsWith("_id") ? Number(raw) || false : raw || false;
         const f = this.state.filters;
         if (f.date_from && f.date_to && f.date_to < f.date_from) {

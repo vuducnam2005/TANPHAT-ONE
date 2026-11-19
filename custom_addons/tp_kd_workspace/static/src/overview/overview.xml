@@ -88,6 +88,8 @@
                 </span>
                 <button type="button" class="btn btn-link" t-on-click="() => this.reload()">Thử lại</button>
             </div>
+            <InlineErrors errors="this.state.actionErrors" server="this.state.actionError" attempt="this.state.actionAttempt"
+                          intro="'Chưa mở được màn thêm mới. Vui lòng kiểm tra'" note="'Bộ lọc và số liệu đang xem được giữ nguyên.'"/>
 
             <!-- Filters: one row on desktop, collapsible with a count chip on mobile -->
             <section t-if="!this.state.denied" class="o_tp_kd_filters" t-att-class="{'is-open': this.state.filtersOpen}" aria-label="Bộ lọc">
@@ -101,7 +103,8 @@
                 <div id="tp_kd_filters_body" class="o_tp_kd_filters_body">
                     <label class="o_tp_kd_f_wide">
                         <span>Dự án</span>
-                        <select class="o_input" t-on-change="(ev) => this.setFilter('project_id', ev)">
+                        <select id="tp_kd_filter_project" class="o_input" t-on-change="(ev) => this.setFilter('project_id', ev)"
+                                t-att-aria-invalid="this.state.actionErrors.length ? 'true' : undefined">
                             <option value="" t-att-selected="!this.state.filters.project_id">Tất cả dự án trong quyền</option>
                             <t t-if="d">
                                 <option t-foreach="d.options.projects" t-as="p" t-key="p.id" t-att-value="p.id"

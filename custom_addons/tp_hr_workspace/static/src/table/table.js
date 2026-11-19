@@ -14,6 +14,8 @@ import { ListController } from "@web/views/list/list_controller";
 import { ListRenderer } from "@web/views/list/list_renderer";
 import { listView } from "@web/views/list/list_view";
 import { TpTableFilterBar } from "@tp_web_home/search/table_filter_bar";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
 import { HrEmployeeFilterBar } from "./live_name_filter";
 import { PAGE_SIZE_OPTIONS, readPageSize, tablePageKey, writePageSize } from "../prefs";
 import {
@@ -130,10 +132,14 @@ export class HrListRenderer extends ListRenderer {
     static template = "tp_hr_workspace.ListRenderer";
     static recordRowTemplate = "tp_hr_workspace.RecordRow";
     static groupRowTemplate = "tp_hr_workspace.GroupRow";
+    static components = { ...ListRenderer.components, InlineErrors };
 
     setup() {
         super.setup();
         this.tpReorderBusy = false;
+        // FORM-VALIDATION-002: a rejected reorder is explained above the list it happened in.
+        this.tpReorderError = null;
+        this.tpReorderAttempt = 0;
         this._tpSuppressClickUntil = 0;
         this._tpCleanupDragPointer = null;
         this._tpRowAnimations = new Map();
@@ -505,6 +511,7 @@ export class HrListRenderer extends ListRenderer {
             ? { employeeId, beforeId, afterId, releaseRect, at: Date.now() }
             : null;
         this.tpReorderBusy = true;
+        this.tpReorderError = null;
         render(this);
         let saved = false;
         try {
@@ -560,11 +567,9 @@ export class HrListRenderer extends ListRenderer {
             if (this._tpUnmounted || this.props.list !== rootList) {
                 return;
             }
-            const msg =
-                err?.data?.message ||
-                err?.message ||
-                "Không thể cập nhật thứ tự nhân viên. Đã khôi phục vị trí cũ.";
-            this.notificationService.add(msg, { type: "danger" });
+            this.tpReorderError = saveError(err, { verb: "sắp xếp", note: "Đã khôi phục vị trí cũ trong danh sách." });
+            this.tpReorderAttempt++;
+            render(this);
         } finally {
             this.tpReorderBusy = false;
         }

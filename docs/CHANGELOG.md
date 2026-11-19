@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-027 — Lỗi xóa/sắp xếp/mở hiện trong màn thay cho toast
+
+- 19/11/2026 Asia/Saigon; nhiệm vụ `FORM-VALIDATION-002`, người dùng chọn “Làm tiếp ở đây” cho việc chuyển các màn còn dùng toast sang khối lỗi trong màn.
+- `tp_web_home` 20.0.1.11.0: `saveError` nhận `verb`/`write`/`note`, `InlineErrors` nhận `intro`/`note`, câu mở/câu cuối theo thao tác; khối lỗi dùng chung `flex: 0 0 auto; width: 100%` thay `flex: 0 0 100%` để không cao hết khung flex dọc (form native đo lại không đổi).
+- `tp_hr_workspace` 20.0.1.19.0: Hồ sơ của tôi (xóa kinh nghiệm/kỹ năng, mở cài đặt bảo mật) và kéo thả sắp xếp nhân viên báo lỗi trong màn, không toast; thứ tự cũ vẫn được khôi phục. `tp_kd_workspace` 20.0.1.10.0: Tổng quan báo lỗi mở hồ sơ/thêm mới/mở dự án trong màn; kiểm trước thêm công việc/WBS khi chưa chọn Dự án, không gọi máy chủ.
+- Không đổi quy định bắt buộc, quyền, dữ liệu, workflow, API; backend vẫn kiểm. HOOT Home/HR/KD PASS, full HOOT không regression; browser chặn ghi 1440/390 PASS; local18069 upgrade exit0/0ERROR, snapshot giữ. [Quy chuẩn](ui/TP_FORM_VALIDATION_STANDARD.md), [Nghiệm thu](demo/FORM_VALIDATION_002_ACCEPTANCE.md).
+
 ## CHG-20261119-026 — Hoàn thành tải, đối chiếu và áp dụng dữ liệu chấm công thật từ ENTI vào database
 
 - 19/11/2026 Asia/Saigon; nhiệm vụ `ENTI-LIVE-001`. Đã kết nối API ENTI thật, lấy dữ liệu bảng công từ ngày 01/11/2026 đến 19/11/2026, đối chiếu định danh nhân sự và áp dụng thành công vào hệ thống database chính trên PC server (`192.168.1.73`).

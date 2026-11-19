@@ -68,34 +68,41 @@ export function fieldMessage(record, name, label, info) {
     return `Giá trị ${label} chưa đúng định dạng. Vui lòng kiểm tra lại.`;
 }
 
-/** Classify a save failure; business messages from the backend are kept verbatim. */
-export function saveError(error) {
+/**
+ * Classify a failed server call; business messages from the backend are kept verbatim.
+ * `verb` names what the user tried ("lưu", "xóa", "mở hồ sơ"…). `write: false` marks a call
+ * that changes nothing, so a lost connection leaves no doubt about the outcome. `note`
+ * replaces the closing line when the screen has no typed data to keep.
+ */
+export function saveError(error, { verb = "lưu", write = true, note = "" } = {}) {
     const name = error?.data?.name || error?.exceptionName || "";
     const backend = (error?.data?.message || "").trim();
+    const result = (kind, title, message) => (note ? { kind, title, message, note } : { kind, title, message });
     if (error instanceof ConnectionLostError || /ConnectionLost|ConnectionAborted|NetworkError/.test(name)) {
-        return { kind: "connection", title: "Lỗi kết nối",
-            message: "Chưa xác nhận được kết quả lưu. Kiểm tra kết nối rồi tải lại để xem dữ liệu hiện tại trước khi thử lại." };
+        return result("connection", "Lỗi kết nối", write
+            ? `Chưa xác nhận được kết quả ${verb}. Kiểm tra kết nối rồi tải lại để xem dữ liệu hiện tại trước khi thử lại.`
+            : `Chưa kết nối được máy chủ nên chưa ${verb} được. Kiểm tra kết nối rồi thử lại.`);
     }
     if (/AccessError|AccessDenied/.test(name)) {
-        return { kind: "access", title: "Không có quyền lưu",
-            message: backend || "Tài khoản của bạn không có quyền thực hiện thao tác này. Vui lòng liên hệ người quản trị." };
+        return result("access", `Không có quyền ${verb}`,
+            backend || "Tài khoản của bạn không có quyền thực hiện thao tác này. Vui lòng liên hệ người quản trị.");
     }
     if (/MissingError/.test(name)) {
-        return { kind: "missing", title: "Bản ghi không còn tồn tại",
-            message: backend || "Bản ghi có thể đã bị xóa. Vui lòng tải lại trang trước khi thử lại." };
+        return result("missing", "Bản ghi không còn tồn tại",
+            backend || "Bản ghi có thể đã bị xóa. Vui lòng tải lại trang trước khi thử lại.");
     }
     if (/ValidationError/.test(name)) {
         const kind = DUPLICATE.test(backend) ? "duplicate" : MISSING.test(backend) ? "required"
             : DATE.test(backend) ? "date" : "validation";
         const title = { duplicate: "Giá trị bị trùng", required: "Còn thiếu thông tin bắt buộc",
             date: "Ngày tháng không hợp lệ", validation: "Dữ liệu chưa hợp lệ" }[kind];
-        return { kind, title, message: backend || "Máy chủ từ chối dữ liệu. Vui lòng kiểm tra lại thông tin đã nhập." };
+        return result(kind, title, backend || "Máy chủ từ chối dữ liệu. Vui lòng kiểm tra lại thông tin đã nhập.");
     }
     if (/UserError|RedirectWarning/.test(name)) {
-        return { kind: "business", title: "Máy chủ từ chối lưu", message: backend || "Thao tác chưa được chấp nhận." };
+        return result("business", `Máy chủ từ chối ${verb}`, backend || "Thao tác chưa được chấp nhận.");
     }
-    return { kind: "system", title: "Lỗi hệ thống khi lưu",
-        message: "Hệ thống chưa lưu được. Thử lại sau ít phút hoặc liên hệ người quản trị kèm thời điểm xảy ra lỗi." };
+    return result("system", `Lỗi hệ thống khi ${verb}`,
+        `Hệ thống chưa ${verb} được. Thử lại sau ít phút hoặc liên hệ người quản trị kèm thời điểm xảy ra lỗi.`);
 }
 
 /** The label the user reads beside a field: its separate visible <label for>, else the field string. */

@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T14:36:34.242997+00:00",
-  "last_change_id": "CHG-20261119-026",
-  "code_digest": "1aa27e111cb3e808fe80ffeda7c68b8d0d67a07cefa75b0b9ff1c53703884f19",
-  "code_file_count": 723,
+  "updated_at": "2026-11-19T14:44:15.767558+00:00",
+  "last_change_id": "CHG-20261119-027",
+  "code_digest": "d77c3600ba603f24240cebb3f83c3fd3328af4a4e6c9604ea2dd25470dbb5a61",
+  "code_file_count": 702,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "113af86325aa2fa616f4f49652fa2219fa2dde0e51e7034977e4d6d051f9072c",
-    "docs/CHANGELOG.md": "2755bff119d49b95f9b4c748151c72f3374cadb7411da2ebc864ac5c4e7f3531",
+    "docs/PROJECT_STATUS.md": "c684bd8a4eea1c99670c9b814fa856cc33d8454ae131af65b1fd02075f86c8d7",
+    "docs/CHANGELOG.md": "946496ada7c7a24cd82052c6d52cbcc832dc943ff846375760e3b91a1d5f1c25",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "eb762826b3aa52ff6c476bcf4a61100e2b1a1ff2c685680a9f0b5771b4b8aeca",
-    "docs/DECISIONS.md": "e9ff63df26bcdbfc9066018bcef02481bd9e1a720b8ddd1f624dfd2cb3007ffe",
+    "docs/ROADMAP.md": "94d80e67a9a67acf82a35cf7bce4d78cbeb2a3e00cd1bac71204ecb6a29c853e",
+    "docs/DECISIONS.md": "882c75bea03192ca48bb4734e6f2a05a49115e733b92f2e480f9a2e07c303b6e",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Live ENTI sync 39 emps, 722 days applied, 399 sessions created, 38 mapped, 1 unmapped, health 200 OK"
+    "AST/XML/node --check/libsass PASS for scope; HOOT tp_web_home59(60)/307, tp_hr_workspace50(52)/256, tp_kd_workspace25/96 PASS on the final candidate; full HOOT 1438 pass/11 core fails pre-existing since CHG-023, no regression; Odoo Python tests not rerun (static assets and manifests only); Chromium with all write RPCs blocked on local18069 1440/390: MyProfile security refused in-card, employee reorder refused above table with order restored, KD overview access/connection in-screen, 0 danger toasts; shared summary height fix 908->104px on KD with native form geometry unchanged; local18069 upgrade exit0/0ERROR, data/permission snapshot preserved; backup .local/validation002/main-backup-20261119T193650; PC server not yet at this record."
   ]
 }

@@ -104,6 +104,8 @@ export class TpHrMyProfile extends Component {
             draftAttempted: false,
             draftAttempt: 0,
             draftSaveError: null,
+            actionError: null,
+            actionAttempt: 0,
         });
 
         const onBeforeUnload = (ev) => {
@@ -193,6 +195,7 @@ export class TpHrMyProfile extends Component {
 
     setTab(tabId) {
         this.state.activeTab = tabId;
+        this.state.actionError = null;
     }
 
     setHistoryFilter(filterId) {
@@ -462,14 +465,13 @@ export class TpHrMyProfile extends Component {
         if (!ok) {
             return;
         }
+        this.state.actionError = null;
         try {
             const payload = await this.orm.call("res.users", "tp_delete_my_resume_line", [line.id]);
             this.applyProfilePayload(payload);
             this.notification.add(_t("Đã xóa mục hồ sơ năng lực."), { type: "success" });
         } catch (err) {
-            this.notification.add(err?.data?.message || _t("Không thể xóa mục hồ sơ năng lực."), {
-                type: "danger",
-            });
+            this.showActionError("resume", err, { verb: "xóa", note: "Danh sách chưa thay đổi." });
         }
     }
 
@@ -572,25 +574,36 @@ export class TpHrMyProfile extends Component {
         if (!ok) {
             return;
         }
+        this.state.actionError = null;
         try {
             const payload = await this.orm.call("res.users", "tp_delete_my_skill", [skillRec.id]);
             this.applyProfilePayload(payload);
             this.notification.add(_t("Đã xóa kỹ năng."), { type: "success" });
         } catch (err) {
-            this.notification.add(err?.data?.message || _t("Không thể xóa kỹ năng."), {
-                type: "danger",
-            });
+            this.showActionError("skill", err, { verb: "xóa", note: "Danh sách chưa thay đổi." });
         }
     }
 
     async openAccountSecurityPreferences() {
+        this.state.actionError = null;
         try {
             const actionDescription = await this.orm.call("res.users", "action_get", []);
             actionDescription.res_id = user.userId;
             await this.action.doAction(actionDescription);
-        } catch {
-            this.notification.add(_t("Không thể mở cài đặt bảo mật tài khoản."), { type: "danger" });
+        } catch (err) {
+            this.showActionError("security", err, {
+                verb: "mở cài đặt bảo mật", write: false, note: "Tài khoản chưa thay đổi.",
+            });
         }
+    }
+
+    /** FORM-VALIDATION-002: a failed action is explained inside the card the user acted on. */
+    showActionError(area, error, options) {
+        this.state.actionError = { area, ...saveError(error, options) };
+        this.state.actionAttempt++;
+    }
+    actionErrorFor(area) {
+        return this.state.actionError?.area === area ? this.state.actionError : null;
     }
 
     async goBack() {

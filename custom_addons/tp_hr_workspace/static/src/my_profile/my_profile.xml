@@ -51,6 +51,7 @@
                                 </div>
                             </div>
                             <div class="p-3">
+                                <InlineErrors errors="[]" server="this.actionErrorFor('security')" attempt="this.state.actionAttempt"/>
                                 <div class="alert alert-info mb-3">
                                     Tài khoản này chưa gắn với hồ sơ nhân viên trong công ty hiện tại. Bạn vẫn có thể cập nhật ảnh đại diện, ngôn ngữ, mật khẩu và bảo mật tài khoản qua hộp thoại Tùy chọn tài khoản.
                                 </div>
@@ -399,6 +400,7 @@
                                                     <button type="button" class="btn btn-sm btn-outline-primary" t-on-click="() => this.openResumeModal(null)">+ Thêm mục</button>
                                                 </div>
                                                 <div class="p-3">
+                                                    <InlineErrors errors="[]" server="this.actionErrorFor('resume')" attempt="this.state.actionAttempt"/>
                                                     <div t-if="!this.state.data.resume.lines.length" class="text-muted">Chưa có thông tin kinh nghiệm / học vấn.</div>
                                                     <div t-foreach="this.state.data.resume.lines" t-as="line" t-key="line.id" class="tp-myprofile-list-item">
                                                         <div>
@@ -422,6 +424,7 @@
                                                     <button type="button" class="btn btn-sm btn-outline-primary" t-on-click="() => this.openSkillModal()">+ Thêm kỹ năng</button>
                                                 </div>
                                                 <div class="p-3">
+                                                    <InlineErrors errors="[]" server="this.actionErrorFor('skill')" attempt="this.state.actionAttempt"/>
                                                     <div t-if="!this.state.data.resume.skills.length" class="text-muted">Chưa khai báo kỹ năng cá nhân.</div>
                                                     <div t-foreach="this.state.data.resume.skills" t-as="sk" t-key="sk.id" class="tp-myprofile-list-item">
                                                         <div>
@@ -550,6 +553,7 @@
                                                     <div class="o_wrap_input"><span t-out="this.state.data.header.company_name"/></div>
                                                 </div>
                                                 <div class="p-3 pt-0">
+                                                    <InlineErrors errors="[]" server="this.actionErrorFor('security')" attempt="this.state.actionAttempt"/>
                                                     <button type="button" class="btn btn-outline-primary" t-on-click="() => this.openAccountSecurityPreferences()">
                                                         Đổi mật khẩu &amp; Tùy chọn tài khoản
                                                     </button>

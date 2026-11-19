@@ -1,8 +1,9 @@
 # TANPHAT ONE — Quy chuẩn thông báo thông tin còn thiếu khi thêm mới/lưu
 
-Ngày: 19/11/2026. Task `FORM-VALIDATION-001`, CHG-20261119-023.
-Trạng thái: **đã triển khai cho mọi form native và các form tùy biến HR ghi ở mục 6**;
-các màn còn thiếu được ghi rõ ở mục 7, không coi là đã đạt.
+Ngày: 19/11/2026. Task `FORM-VALIDATION-001`, CHG-20261119-023; mở rộng
+`FORM-VALIDATION-002`, CHG-20261119-027 (thao tác xóa/sắp xếp/mở trong màn tự viết).
+Trạng thái: **đã triển khai cho mọi form native, các form tùy biến HR và các thao tác
+ghi ở mục 6**; phần còn lại ghi rõ ở mục 7, không coi là đã đạt.
 
 ## 1. Mục tiêu
 
@@ -73,6 +74,19 @@ Lỗi khi lưu được phân loại bằng `saveError()`:
 | `connection` | mất kết nối | chưa xác nhận kết quả, tải lại trước khi thử lại |
 | `system` | lỗi khác | câu chung; **không** hiện traceback, tên trường, giá trị |
 
+Tiêu đề nói đúng thao tác người dùng vừa làm: `saveError(error, {verb, write, note})`.
+
+- `verb` mặc định “lưu”; màn khác truyền “xóa”, “sắp xếp”, “mở hồ sơ”, “thêm mới”,
+  “mở cài đặt bảo mật” → “Không có quyền xóa”, “Máy chủ từ chối sắp xếp”, “Lỗi hệ
+  thống khi mở hồ sơ”.
+- `write: false` cho thao tác không ghi dữ liệu (mở hồ sơ, mở màn thêm mới, mở cài
+  đặt bảo mật): mất kết nối thì báo “Chưa kết nối được máy chủ nên chưa {verb} được.
+  Kiểm tra kết nối rồi thử lại.”, vì không có kết quả nào cần xác nhận lại.
+- `note` thay câu cuối “Dữ liệu đã nhập được giữ nguyên.” khi màn không có dữ liệu
+  nhập: “Danh sách chưa thay đổi.”, “Tài khoản chưa thay đổi.”, “Đã khôi phục vị trí
+  cũ trong danh sách.”, “Bộ lọc và số liệu đang xem được giữ nguyên.” Khi có `note`
+  thì không thêm câu giải thích dấu `*`.
+
 Hộp thoại lỗi RPC native của Odoo vẫn giữ nguyên; khối trong form là thông tin bổ sung.
 
 ## 5. Kỹ thuật (một presenter dùng chung)
@@ -86,6 +100,8 @@ Hộp thoại lỗi RPC native của Odoo vẫn giữ nguyên; khối trong form
   `ListRenderer` (summary dòng đang sửa), `Field` (câu dưới ô).
 - `inline_errors.js/xml`: `InlineErrors` cho form OWL tự viết; caller truyền lỗi từ
   validator thật của màn đó (`{id, label, location, message}`) và `saveError(error)`.
+  `intro` thay câu mở “Chưa lưu được. Vui lòng kiểm tra” khi thao tác không phải lưu
+  (vd. “Chưa mở được màn thêm mới. Vui lòng kiểm tra”), `note` thay câu cuối.
 - `validation.scss`: style trong phạm vi `.tp_validation_*`, `.tp_required_*`; không
   `!important`, không đụng CSS toàn hệ thống. Rule `::after "*"` cũ trong
   `inputs/inputs.scss` đã gỡ để không có hai dấu `*`.
@@ -107,23 +123,32 @@ gọi backend để kiểm tra.
 | Hợp đồng/phiên bản trên hồ sơ mới | `version_id` ẩn khi chưa có `id` (field tính, không cho nhập) |
 | Hồ sơ của tôi (`MyProfile`): lưu hồ sơ, popup kinh nghiệm/học vấn, popup kỹ năng | `InlineErrors`; điều kiện thiếu giống `tp_save_my_resume_line`/`tp_save_my_skill`; backend vẫn kiểm |
 | Tài khoản đăng nhập (`AccountCredentials`, đổi tên đăng nhập) | `InlineErrors` + `saveError` trong hộp thoại |
+| Xóa nhân viên (`employee_delete`) | `InlineErrors` trong hộp thoại (đã có trước CHG-027) |
+| Hồ sơ của tôi: xóa dòng kinh nghiệm/học vấn, xóa kỹ năng, mở cài đặt bảo mật (CHG-027) | khối lỗi trong đúng thẻ người dùng thao tác (Kinh nghiệm & học vấn, Kỹ năng, Tài khoản; hoặc thẻ “chưa liên kết hồ sơ” khi không có hồ sơ nhân viên); mỗi lúc một khối; đổi tab thì xóa; không toast |
+| Danh sách nhân viên: kéo thả sắp xếp (CHG-027) | khối lỗi phía trên bảng: “Máy chủ từ chối sắp xếp” + câu backend + “Đã khôi phục vị trí cũ trong danh sách.”; thứ tự cũ khôi phục như trước; lần kéo sau xóa khối; không toast |
+| Tổng quan KD: mở hồ sơ từ số liệu, thêm mới, mở dự án (CHG-027) | khối lỗi dưới thanh cảnh báo của Tổng quan; bộ lọc/số liệu giữ nguyên. Thêm công việc/WBS khi chưa chọn Dự án: báo trước, **không gọi máy chủ**, mở bộ lọc, bấm tới ô Dự án; backend `action_kd_create` vẫn kiểm |
 
-## 7. Chưa áp dụng (còn toast `danger` hoặc lỗi riêng)
+## 7. Chưa áp dụng hoặc cố ý giữ cách khác
 
-| Vị trí | Hiện trạng |
-|---|---|
-| `tp_hr_workspace` my_profile.js: xóa dòng kinh nghiệm/kỹ năng, mở tùy chọn bảo mật | toast danger (không phải thêm mới) |
-| `tp_hr_workspace` table.js: sắp xếp thứ tự nhân viên | toast danger kèm khôi phục vị trí |
-| `tp_kd_workspace` overview.js (2 chỗ) | toast danger |
-| `tp_web_home` identity_service.js: đăng xuất, mở thông tin cá nhân | toast danger |
-| Component OWL tự ghi dữ liệu khác: `tp_equipment` (scan), `tp_hr_attendance` (upload, mine), `tp_kd_workspace` (report center, table tools), `tp_reporting` (person), HR delete/department workspace | có thông báo riêng của màn, chưa chuyển sang `InlineErrors`/`saveError` |
+Sau CHG-027 không còn `notification.add(..., {type: "danger"})` cho lỗi lưu/ghi trong
+`custom_addons/*/static/src`; chỉ còn hai toast danger có chủ đích của menu người
+dùng (dòng đầu bảng).
+
+| Vị trí | Hiện trạng | Lý do |
+|---|---|---|
+| `tp_web_home` identity_service.js: đăng xuất, mở thông tin cá nhân từ menu người dùng | toast danger | thao tác từ menu trên cùng, không có form/màn để đặt khối lỗi; `user_menu_logout.test.js` khóa hành vi này |
+| Hồ sơ của tôi: chọn ảnh đại diện sai loại hoặc quá 5 MB | toast cảnh báo (`warning`), kiểm trước khi gửi | không có ô nhập để gắn lỗi; chưa chuyển |
+| `tp_reporting` person | lỗi riêng trong màn (`state.error`) | file đang có thay đổi chưa commit của tác vụ khác; chuyển sau khi tác vụ đó đóng |
+| `tp_equipment` (scan), `tp_hr_attendance` (upload, công của tôi), `tp_kd_workspace` (report center, table tools) | lỗi riêng trong màn (`state.error`), không toast danger | chưa đổi sang `InlineErrors`/`saveError`, nên câu chữ chưa theo bảng mục 4 |
 
 ## 8. Giới hạn đã biết
 
-- Mất kết nối: Odoo có chế độ offline riêng; presenter chỉ báo “chưa xác nhận kết
-  quả lưu”, không tự gửi lại.
+- Mất kết nối: Odoo có chế độ offline riêng; với thao tác ghi presenter chỉ báo “chưa
+  xác nhận kết quả {verb}”, không tự gửi lại.
 - Lỗi ẩn/khóa chỉ hiển thị khi Odoo vẫn coi là thiếu; presenter không mở quyền hoặc
   hiện field để người dùng nhập.
 - Phân loại `ValidationError` dựa trên câu chữ backend (trùng/thiếu/ngày); câu không
   rơi vào nhóm nào hiện là “Dữ liệu chưa hợp lệ”, nội dung vẫn đúng nguyên văn.
 - Form OWL tự viết chỉ có lỗi khi màn đó truyền lỗi; chưa có cơ chế tự động.
+- Kéo thả sắp xếp: khối lỗi chỉ được xóa khi kéo thả lần sau hoặc khi màn danh sách
+  được mở lại; chuyển trang/lọc không tự xóa khối.
