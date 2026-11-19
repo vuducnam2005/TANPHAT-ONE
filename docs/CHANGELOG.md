@@ -1,5 +1,15 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-001 — Chấm công: Vào/Ra mặc định, giờ thiếu trực quan, nguồn mới nhất
+
+- Ngày19/11/2026 Asia/Saigon; thực thi theo yêu cầu trực tiếp và steering bỏ Trùng/Khác giờ, cập nhật theo file mới nhất (DEC-059 thay phần xung đột DEC-058).
+- Ẩn menu/nút Bảng chấm công, giữ XMLID/path và shared-reader fallback; importer mở matrix ở link cũ. Back về Tổng quan. Bỏ button đối chiếu ở lối chính, nhãn/màu/option Trùng/Khác giờ; snapshot/công cụ lịch sử vẫn giữ.
+- Danh sách kiểm tra: giờ ghi nhận xanh, nhãn Thiếu giờ vào/ra cam, cần đối chiếu đỏ, hướng dẫn và số dòng theo bộ lọc server; Chi tiết có keyboard và mobilecards, giữ scope/pager/search/phòng/ngày.
+- Upload tự áp nguồn mới trong transaction/savepoint từng tệp, company advisory lock bảo đảm thứ tự. Dùng writer hiện có giữ session cũ inactive, không nhân đôi. Cùng employee/day theo file mới, blank gỡ giờ import cũ, absentemployee/date giữ; old-source replay không thắng newer. Bảo vệ kỳ chốt/approved correction/API; mapping/giờ/duplicate rows trong file không chắc chắn không ghi. Tổng muộn giữ nguyên số kỳ từ Excel, không phân rã theo ngày. Sửa flush state tổng muộn cũ trước activate tổng mới để unique index không lỗi.
+- Addon20.0.3.1.0, không thêm schema/ACL/field. Không tự reapply các file thật sẵn có. Tests tổng hợp transaction trên tp_tanphat_test, không fixturemain/server:6/6PASS (latest5+menu1), label5/5, ruff/XML/PythonPASS. Browser authenticated18069 desktop1440/mobile3902/2, detail/back/matrix/linkcũ/nhãn/overflow và0JSerrors; scroll12/12PASS. TestGC có warning Windows permission trên filestoretest, assertions0failed/0error; không dọn filestore.
+- Main backup dump10MB+restore-list+filestore~1.6GB before compression; upgrade giữ counts/group digest. Private evidence `.local/attendance-ui001`. Foreign checkpoint và dirtycode/docs được giữ; workflow chạy committedsnapshot đúngscope. Pending PCserver deploy/public assetverification; không iOS/Safari thật, không độc lậpaudit hoặc UAT.
+
+
 ## CHG-20261118-039 — HR-ATTENDANCE-SCROLL: giao18069/PCserver và kiểm CSS thực public
 
 - Ngày18/11/2026 Asia/Saigon. App `2b287001` đã push; PC chỉ thay `attendance.scss` cóSHA256 `027e32977c5389d648974b3d2f2fbb8bf5bff9760b374d2aba2c4d231f11dde2`, giữmtimeGit khác0, so khớp sourcecũ trước ghi và backupCSS/config/metadata tại `/workspace/.local/attendance-scroll038/source-before-20261118T131024Z`. Restarttp-odoo, khôngupgrade module/DB hoặc restarttunnel. Rollback: khôi phụcCSS+mtime từbackup vàrestartservice.

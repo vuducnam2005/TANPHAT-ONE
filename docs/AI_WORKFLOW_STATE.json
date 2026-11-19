@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-18T13:16:03.121421+00:00",
-  "last_change_id": "CHG-20261118-039",
-  "code_digest": "d34859cfcd94e0f31d18be5a008d39ba88c8188de196ce2702f5c951495eccf2",
-  "code_file_count": 673,
+  "updated_at": "2026-11-19T02:00:37.707485+00:00",
+  "last_change_id": "CHG-20261119-001",
+  "code_digest": "1971a2dcce86f6ce8b230ae3ca3baa9a8e902c6be3c34d99a43eb2e12b66e064",
+  "code_file_count": 674,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "1518af83731ee2c43cd89c6f459c6dfe4d67f53c037940ce8cb1d45868e792d4",
-    "docs/CHANGELOG.md": "959cc22e35d399c461ef7ad672062490a61ad8b805ca3724e21d1bf8d78b3202",
+    "docs/PROJECT_STATUS.md": "75f1193cb155aefc23103c18e81f0b7ae7494c7678636f20b68cdea70f26e4e2",
+    "docs/CHANGELOG.md": "b8ace9cb8abb51ba98ac01f03bbf5255a5e9d97a3e1488c0fa4a5c9c3615d848",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
     "docs/ROADMAP.md": "f921c27ddbce6aeed8c76754bf33cea643cd58d44782657b17392d90a7d07773",
-    "docs/DECISIONS.md": "4ba259fb184cf4af9316f2997386c4ff3229b3e980c93c1d35ab30e4911f0e38",
+    "docs/DECISIONS.md": "8e17d1759869b79b9b62235edd90b38728ce6bc3eefb04d09aef1c1446b9af65",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,7 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "18069: 12/12 authenticated viewport/mode wheel cases PASS + three other attendance screens; node syntax PASS; no JS errors.",
-    "PC source CSS checksum/mtime/backup verified; only tp-odoo restart, no upgrade or business writes. Public health and 2 login viewports PASS; actual CSS asset has both rules. Authenticated public scroll and real Safari/iOS NOT_RUN."
+    "ORM testDB6/6; UI desktop/mobile2/2; scroll12/12; label5/5; XML/Python/ruff PASS. Main backup+upgrade20.0.3.1.0 no business count/group drift. PCserver pending; foreign checkpoint retained in root."
   ]
 }

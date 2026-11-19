@@ -147,11 +147,12 @@ class TestAttendanceAccess(AttendanceCase):
         menu_import = self.env.ref('tp_hr_attendance.menu_import').id
         config = self.env.ref('tp_hr_attendance.menu_rules').id
         viewer_menus = visible(self.viewer)
-        self.assertIn(board, viewer_menus)
+        self.assertNotIn(board, viewer_menus)
         self.assertNotIn(menu_import, viewer_menus)
         self.assertNotIn(config, viewer_menus)
         manager_menus = visible(self.manager)
-        self.assertLessEqual({board, menu_import, config}, manager_menus)
+        self.assertNotIn(board, manager_menus)
+        self.assertLessEqual({menu_import, config, self.env.ref('tp_hr_attendance.menu_file_matrix').id}, manager_menus)
 
     def test_rejects_non_excel_and_macro_files(self):
         batch = self.batch(b'not an excel file')

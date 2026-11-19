@@ -742,3 +742,17 @@ RACI/capability/transition mới, policy field/export/attachment, SLA/threshold/
 | ID | Trạng thái | Quyết định | Cơ sở/ảnh hưởng |
 | --- | --- | --- | --- |
 | DEC-039 | Người dùng yêu cầu trực tiếp; đã triển khai CHG-20261111-010 | Phiên chính thực thi prompt HR-DASH-001 trong scope này; kiểm18079, backup/restore kiểm chứng, áp18069, không commit/push. Bổ sung khóa/mở, cột Tình trạng Khóa/Mở/Chưa liên kết; thông báo đăng nhập bị khóa và Gửi phản hồi placeholder. | Giữ native Odoo; khóa user tách archive employee. Admin đúng company nhập lý do, bảo vệ tài khoản hệ thống/self; nativeactive + cờHR/tokenrevision, session cũ không hồi sinh. Chỉ thông báo khóa sau credential đúng; feedback chưa gửi backend. Không sửa roster/quyền/password người thật để test. Ngoại lệ vai trò chỉ task, visual/business/pilot riêng; xem guide HR-DASH-001. |
+
+## Chấm công ưu tiên tệp mới — DEC-059 (19/11/2026)
+
+Người dùng yêu cầu trực tiếp bỏ mục Bảng chấm công cũ, mở bảng Vào/Ra mặc định;
+sau đó chốt bỏ “Trùng/Khác giờ”, dữ liệu cập nhật theo tệp tải lên mới nhất.
+Quyết định này thay phần DEC-058 yêu cầu chọn nguồn thủ công trước tổng hợp.
+Tệp vẫn lưu riêng bất biến để tra cứu. Thứ tự upload server (ID dưới company
+advisory lock), nhiều tệp trong một lần thì tệp cuối ưu tiên. Phạm vi thay thế
+là employee/day có trong tệp: blank cũng thay giờ import trước thành chưa ghi
+nhận, không suy nghỉ; không xóa dữ liệu người/ngày ngoài tệp. Không thay kỳ đã
+chốt, điều chỉnh đã duyệt hoặc sự kiện API. Không tự ghép mã/tên không chắc chắn
+hoặc giờ sai; hiển thị cần kiểm tra. Nguồn cũ không tự thắng khi áp lại. Giữ
+backend import capability, không cấp raw source cho toàn bộ nhân viên. Số muộn
+theo kỳ Excel, không tự chia ngày. Không tự phát lại nguồn thật cũ trong deploy.

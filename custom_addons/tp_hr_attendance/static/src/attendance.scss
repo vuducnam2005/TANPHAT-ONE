@@ -208,6 +208,48 @@
 }
 
 // Person detail (dialog, Công của tôi).
+.o_tp_att_attention_intro {
+    display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin-bottom: 16px;
+    background: #fff8ed; border: 1px solid #f1d6a6; border-left: 4px solid #d38a27; border-radius: 12px;
+    > .oi { color: #a85d12; font-size: 27px; flex: none; }
+    > div { flex: 1; min-width: 0; }
+    strong { font-weight: 650; }
+    p { margin: 4px 0 0; color: #735b3a; font-size: 13px; line-height: 1.5; }
+    > span { flex: none; padding: 8px 12px; border-radius: 8px; color: #8c4b0b; background: #ffedcf; font-size: 13px; }
+}
+.o_tp_att_overview_table {
+    th, td { padding: 14px 16px; }
+    thead th { background: #edf3fa; color: #405672; }
+    tbody tr:nth-child(even) { background: #fbfdff; }
+    .o_tp_att_name { font-size: 14px; margin-bottom: 4px; }
+    tbody th { border-left: 3px solid transparent; }
+    tbody tr:hover th { border-left-color: var(--att-accent); }
+}
+.o_tp_att_clock {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 70px; padding: 5px 9px;
+    border-radius: 6px; font-weight: 650; font-size: 14px; font-variant-numeric: tabular-nums;
+    &.o_recorded { color: #176044; background: #eaf6ef; }
+    &.o_missing { color: #a35d12; background: #fff3df; font-size: 12px; font-weight: 600; }
+}
+.o_tp_att_issue {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 7px;
+    font-size: 12px; font-weight: 600; color: var(--att-none); background: var(--att-none-bg);
+    &.o_missing { color: #995411; background: #fff0d8; }
+    &.o_review { color: var(--att-danger); background: var(--att-danger-bg); }
+    &.o_working, &.o_out_recorded { color: var(--att-ok); background: var(--att-ok-bg); }
+    &.o_leave { color: var(--att-leave); background: var(--att-leave-bg); }
+}
+.o_tp_att_detail_btn {
+    display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; border: 1px solid var(--att-line);
+    border-radius: 7px; padding: 6px 9px; min-height: 36px; color: var(--att-accent); background: #fff; font-size: 12px;
+    &:hover { border-color: var(--att-accent); background: var(--att-soft); }
+}
+@media (max-width: 767.98px) {
+    .o_tp_att_attention_intro { flex-wrap: wrap; gap: 10px; padding: 12px; > span { margin-left: 37px; } }
+    .o_tp_att_overview_table .o_tp_att_detail_cell { display: flex; justify-content: flex-end; grid-column: 1 / -1; }
+    .o_tp_att_detail_btn { min-height: 44px; }
+}
+
 .o_tp_att_person { display: grid; gap: 12px; }
 .o_tp_att_person_head {
     display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap;

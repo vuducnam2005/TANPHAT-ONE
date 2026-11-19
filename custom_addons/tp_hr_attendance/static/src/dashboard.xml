@@ -8,7 +8,6 @@
             <p class="o_tp_att_subtitle" t-out="this.heading"/>
         </div>
         <div class="o_tp_att_actions">
-            <button type="button" class="btn btn-outline-primary" t-on-click="() => this.openBoard()"><i class="oi me-1" data-icon="table" aria-hidden="true"/>Bảng chấm công</button>
             <button t-if="this.data?.can_import" type="button" class="btn btn-outline-primary" t-on-click="() => this.openFileMatrix()"><i class="oi me-1" data-icon="grid_on" aria-hidden="true"/>Bảng công theo file (Vào/Ra)</button>
             <button t-if="this.data?.can_import" type="button" class="btn btn-primary" t-on-click="this.openUpload"><i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Nhập Excel máy chấm công</button>
         </div>
@@ -120,6 +119,11 @@
         </section>
 
         <section class="o_tp_att_drill" aria-label="Danh sách chi tiết">
+            <div t-if="this.data.drill === 'attention'" class="o_tp_att_attention_intro">
+                <i class="oi" data-icon="fact_check" aria-hidden="true"/>
+                <div><strong>Đối chiếu giờ chấm công</strong><p>Các dòng dưới đây còn thiếu giờ hoặc có dữ liệu cần kiểm tra. Bấm nhân viên để xem chi tiết; ô trống không được tính là nghỉ.</p></div>
+                <span><strong t-out="this.data.total"/> dòng cần xem</span>
+            </div>
             <div class="o_tp_att_drill_head">
                 <h2><t t-out="this.drillTitle"/> <small class="o_tp_att_muted">(<t t-out="this.data.total"/>)</small></h2>
                 <button t-if="this.data.drill_date" type="button" class="btn btn-link btn-sm" t-on-click="() => this.drillTo(this.data.drill, '')">Bỏ lọc ngày</button>
@@ -128,18 +132,20 @@
                 </label>
             </div>
             <div class="o_tp_att_table_wrap">
-                <table class="o_tp_att_table">
-                    <thead><tr><th scope="col">Nhân viên</th><th scope="col">Phòng ban</th><th scope="col">Thứ/ngày</th><th scope="col">Giờ vào</th><th scope="col">Giờ ra</th><th scope="col">Tình trạng</th></tr></thead>
+                <table class="o_tp_att_table o_tp_att_overview_table">
+                    <thead><tr><th scope="col">Nhân viên</th><th scope="col">Phòng ban</th><th scope="col">Thứ/ngày</th><th scope="col">Giờ vào</th><th scope="col">Giờ ra</th><th scope="col">Tình trạng</th><th scope="col"><span class="visually-hidden">Chi tiết</span></th></tr></thead>
                     <tbody>
-                        <tr t-if="!this.data.rows.length"><td colspan="6" class="o_tp_att_empty">Không có dòng nào trong nhóm này.</td></tr>
+                        <tr t-if="!this.data.rows.length"><td colspan="7" class="o_tp_att_empty">Không có dòng nào trong nhóm này.</td></tr>
                         <tr t-foreach="this.data.rows" t-as="row" t-key="row.employee_id + row.date" class="o_tp_att_click" tabindex="0"
                             t-on-click="() => this.openPerson(row)" t-on-keydown="(ev) => ev.key === 'Enter' and this.openPerson(row)">
+                            <t t-set="issue" t-value="this.attendanceIssue(row)"/>
                             <th scope="row" data-label="Nhân viên"><span class="o_tp_att_name" t-out="row.name"/><small t-out="row.code or 'Chưa có mã'"/></th>
                             <td data-label="Phòng ban" t-out="row.department or '—'"/>
                             <td data-label="Thứ/ngày" t-out="row.day_label"/>
-                            <td data-label="Giờ vào"><span class="o_time" t-out="row.in or '—'"/></td>
-                            <td data-label="Giờ ra"><span class="o_time" t-out="row.out or '—'"/></td>
-                            <td data-label="Tình trạng"><span class="o_tp_att_state" t-att-class="'o_' + row.state"><i class="o_tp_att_dot" t-att-style="'background:' + this.colors[row.state]" aria-hidden="true"/><t t-out="row.state_label"/></span></td>
+                            <td data-label="Giờ vào"><span class="o_tp_att_clock" t-att-class="row.in ? 'o_recorded' : (row.state === 'missing' ? 'o_missing' : '')"><t t-out="row.in or (row.state === 'missing' ? 'Thiếu giờ vào' : '—')"/></span></td>
+                            <td data-label="Giờ ra"><span class="o_tp_att_clock" t-att-class="row.out ? 'o_recorded' : (row.state === 'missing' ? 'o_missing' : '')"><t t-out="row.out or (row.state === 'missing' ? 'Thiếu giờ ra' : '—')"/></span></td>
+                            <td data-label="Tình trạng"><span class="o_tp_att_issue" t-att-class="'o_' + row.state"><i class="oi" t-att-data-icon="issue.icon" aria-hidden="true"/><t t-out="issue.label"/></span></td>
+                            <td class="o_tp_att_detail_cell"><button type="button" class="o_tp_att_detail_btn" t-att-aria-label="'Xem công của ' + row.name" t-on-click.stop="() => this.openPerson(row)">Chi tiết <i class="oi" data-icon="chevron_forward" aria-hidden="true"/></button></td>
                         </tr>
                     </tbody>
                 </table>

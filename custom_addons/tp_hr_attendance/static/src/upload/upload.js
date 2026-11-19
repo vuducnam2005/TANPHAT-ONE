@@ -7,8 +7,7 @@ import { rpcError } from "../common";
  * Multi-file Excel uploader (HR-ATTENDANCE-MATRIX-003, DEC-058):
  * - Supports drag-and-drop or picking one or many .xlsx files at once.
  * - Each file is validated and read independently (one invalid file never loses valid files).
- * - Saved source batches stay persistent in 'preview' ('Đã đọc/Lưu nguồn – Chưa áp dụng'); closing the
- *   dialog NEVER cancels already-saved source batches.
+ * - Each source stays persistent; valid open days update from the newest file, with old hours retained in history.
  * - Immediately opens "Bảng dữ liệu theo file" in the main content area when >= 1 file succeeds.
  */
 const MAX_BYTES = 15 * 1024 * 1024;
@@ -153,11 +152,11 @@ export class AttendanceUploadDialog extends Component {
         if (createdIds.length) {
             this.notification.add(
                 createdIds.length === 1
-                    ? "Đã đọc và lưu nguồn tệp Excel (chưa áp dụng vào bảng tổng hợp)."
-                    : `Đã đọc và lưu nguồn ${createdIds.length} tệp Excel riêng biệt.`,
+                    ? "Đã lưu tệp và cập nhật bảng công theo nguồn mới nhất."
+                    : `Đã lưu ${createdIds.length} tệp và cập nhật bảng công theo thứ tự tải lên.`,
                 { type: "success" }
             );
-            // Navigate immediately to the full-width file matrix screen (Prompt §3).
+            // Show the last uploaded source, including any rows that still need review.
             const uploadNotice = failed.length
                 ? failed.map((f) => `${f.file_name}: ${f.error}`).join(" | ")
                 : "";
@@ -170,7 +169,7 @@ export class AttendanceUploadDialog extends Component {
                     tag: "tp_hr_attendance.file_matrix",
                     name: "Bảng dữ liệu theo file",
                     params: {
-                        batch_id: createdIds[0],
+                        batch_id: createdIds[createdIds.length - 1],
                         uploaded_ids: createdIds,
                         upload_notice: uploadNotice,
                     },

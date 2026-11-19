@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 <t t-name="tp_hr_attendance.Board">
-<div class="o_tp_att o_tp_att_board" aria-label="Bảng chấm công" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
+<AttendanceFileMatrix t-if="this.data?.can_import" action="this.props.action"/>
+<div t-else="" class="o_tp_att o_tp_att_board" aria-label="Bảng chấm công" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
     <header class="o_tp_att_header">
         <div>
             <h1>Bảng chấm công</h1>

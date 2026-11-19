@@ -335,3 +335,13 @@ S4 đã deploy PC server từ `cc2bfcb6`: 37/37 tệp checksum, public 40 dashbo
 | --- | --- | --- |
 | Bảng dữ liệu theo file / `menu_file_matrix` / `tp_hr_attendance.file_matrix` / `tp_matrix_data` | Chỉ `can('import')` trong `env.company`; bộ lọc lô/file, sheet, khoảng ngày trong kỳ, đơn vị nguồn (thu/mở không đếm nhầm nhân viên), tìm tên/mã Excel/mã HR/ID máy, tình trạng đối chiếu; `Áp dụng`/`Xóa bộ lọc`/chip; phân trang `10/20/50/100` theo nhân viên giữ cặp `Vào/Ra`; xuất Excel đúng bộ lọc giữ nhãn *Đi muộn* nguyên kỳ; cột phụ tùy chọn & mobile toggle | Pure `26/26` + shell ORM rollback `18069` & `PC server` (`SERVER_MATRIX_OK`: `39` người/`18` ngày/`5` nhóm; `SERVER_EXPORT_OK`: `92×25`; `SERVER_ACL_OK` `uid=34` `5/5`) + public served CSS/JS `9931cc6`/`2116504` `200 OK` PASS; browser đã đăng nhập admin/importer `NOT_RUN` |
 | Đối chiếu nguồn A/B / `tp_hr_attendance.compare` / `tp_compare_batches` | Chỉ `can('import')` cùng công ty; chọn Lô/Sheet A & B (hoặc hệ thống), toggle `Chỉ xem sai khác`, nhóm 5 trạng thái (`same`/`only_a`/`only_b`/`diff`/`unready`), đơn vị nguồn, ngày công, tìm nhân viên/mã; phân trang `10/20/50/100`; xuất đối chiếu 2 sheet; xử lý `keep_current`/`use_a`/`use_b`/`defer` qua `tp_resolve_compare_batch` + CAS lock | Shell ORM rollback `18069` & `PC server` (`SERVER_COMPARE_OK`: lô 4 vs 3 = `40` dòng, `175 same`/`271 only_a`/`2 diff`/`4 unready`) + public bundle `2116504` chứa `tp_compare_batches`/`tp_resolve_compare_batch` PASS; test ghi `test_matrix_compare.py` (`18079`) & browser admin `NOT_RUN` |
+
+## Chấm công Vào/Ra và giờ thiếu — CHG-20261119-001
+
+| Vị trí | Bộ lọc / scope | Kiểm tra |
+| --- | --- | --- |
+| action_dashboard / Dashboard / tp_overview / drill list | Giữ ngày-tuần-tháng/phòng/tên-mã/drill/date, server count/pager10/20/50/100, không lọc chỉ trang hiện tại. Nhãn giờ thiếu chỉ trình bày payload sẵn có. | Local admin1440/390 detail/back/overflowPASS; scroll12/12PASS. Không thêm popup chọn/bảng mới. |
+| action_file_matrix + legacy action_board importer / FileMatrix / tp_matrix_data | Giữ sourcefile/sheet/đơn vị/tên-mã/from-to/status/pager/columnprefs; bỏ option Trùng/Khác giờ ởUI, backend comparison compatibility còn. Back về overview, newestfile mặc định. Export vẫn theo filtered snapshot đúng quyền, không biến thành canonicalexport. | Local admin1440/390 matrix/linkcũ/noTrùngKhácgiờ/backPASS; ORMmenu viewer/importerPASS. Rawsource viewer bị chặn như cũ; không test fixture trênmain/server. |
+
+Menu_board ẩn; ordinary viewer dùng overview/shared summary và Công của tôi;
+deep link cũ giữ read-only canonical fallback, không mở raw source.

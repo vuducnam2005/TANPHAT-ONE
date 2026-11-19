@@ -12,6 +12,13 @@ export const STATE_COLORS = {
     no_punch: "#667085", no_source: "#c3cad4", leave: "#7a5af8", future: "#eef1f5",
 };
 export const TOTAL_COLOR = "#1f6fb2";
+export function attendanceIssue(row) {
+    if (row.state === "missing") {
+        const label = !row.in && !row.out ? "Thiếu giờ vào và ra" : !row.in ? "Thiếu giờ vào" : !row.out ? "Thiếu giờ ra" : "Thiếu lượt chấm công";
+        return { label, icon: "schedule" };
+    }
+    return { label: row.state === "review" ? "Cần đối chiếu dữ liệu" : row.state_label, icon: row.state === "review" ? "warning" : "info" };
+}
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const EXPECTED = ["odoo.exceptions.UserError", "odoo.exceptions.ValidationError", "odoo.exceptions.AccessError"];
 

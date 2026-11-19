@@ -15,21 +15,18 @@
         <header class="o_tp_att_header">
             <div class="o_tp_att_title_group">
                 <button type="button" class="btn btn-light btn-sm o_tp_att_back_btn" t-on-click="this.goBack">
-                    <i class="oi me-1" data-icon="arrow_back" aria-hidden="true"/>Quay lại Bảng chấm công
+                    <i class="oi me-1" data-icon="arrow_back" aria-hidden="true"/>Quay lại Tổng quan
                 </button>
                 <div>
-                    <h1>Bảng dữ liệu theo file</h1>
+                    <h1>Bảng công Vào/Ra</h1>
                     <p class="o_tp_att_subtitle">
-                        Ảnh chụp nguyên gốc từ tệp Excel máy chấm công (giờ tham chiếu <strong t-out="(this.data?.reference_hours || '08:30-17:00').replace('-', '–')"/>; không tự điền giờ thiếu, không sửa hồ sơ HR)
+                        Tệp mới nhất tự cập nhật bảng công trong phạm vi nhân viên và ngày của tệp. Giờ tham chiếu <strong t-out="(this.data?.reference_hours || '08:30-17:00').replace('-', '–')"/>; giữ nguyên giờ thiếu và kỳ đã chốt.
                     </p>
                 </div>
             </div>
             <div class="o_tp_att_actions">
                 <button type="button" class="btn btn-outline-primary" t-on-click="this.openUploadMore">
                     <i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Tải thêm file
-                </button>
-                <button t-if="(this.data?.batches?.length || 0) &gt;= 1" type="button" class="btn btn-outline-primary" t-on-click="this.openCompare">
-                    <i class="oi me-1" data-icon="compare_arrows" aria-hidden="true"/>Đối chiếu
                 </button>
                 <button t-if="this.batch" type="button" class="btn btn-outline-secondary" t-on-click="this.exportMatrix">
                     <i class="oi me-1" data-icon="download" aria-hidden="true"/>Xuất Excel
@@ -58,7 +55,7 @@
         <t t-elif="this.data and !this.data.has_batches">
             <section class="o_tp_att_panel text-center py-5">
                 <h2>Chưa có tệp Excel nguồn nào được lưu</h2>
-                <p class="o_tp_att_muted mt-2 mb-3">Tải một hoặc nhiều tệp .xlsx xuất từ máy chấm công để xem ngay bảng ma trận đầy đủ và đối chiếu trước khi tổng hợp.</p>
+                <p class="o_tp_att_muted mt-2 mb-3">Tải tệp .xlsx máy chấm công để xem bảng Vào/Ra và tự cập nhật số liệu hợp lệ.</p>
                 <button type="button" class="btn btn-primary" t-on-click="this.openUploadMore">
                     <i class="oi me-1" data-icon="upload_file" aria-hidden="true"/>Chọn tệp Excel máy chấm công
                 </button>
@@ -79,6 +76,7 @@
 
             <!-- Selected source file panel -->
             <section class="o_tp_att_file_panel" aria-label="Thông tin tệp nguồn đang xem">
+                <p t-if="this.batch.state === 'partial'" class="alert alert-warning mb-2">Đã cập nhật phần hợp lệ. Một số dòng cần kiểm tra hoặc thuộc kỳ đã chốt/điều chỉnh đã duyệt; các dòng này giữ dữ liệu hiện tại.</p>
                 <div class="o_tp_att_file_panel_top">
                     <label class="o_tp_att_field o_tp_att_file_picker">
                         <span>Tệp / Lô nguồn đang xem</span>
@@ -110,9 +108,6 @@
                     <span>Trang: <strong t-out="this.sheet.name"/></span>
                     <span t-if="this.batch.uploaded_at">Tải lúc <t t-out="this.batch.uploaded_at"/><t t-if="this.batch.uploaded_by"> bởi <t t-out="this.batch.uploaded_by"/></t></span>
                     <span t-if="this.batch.applied_at">Áp dụng lúc <t t-out="this.batch.applied_at"/><t t-if="this.batch.applied_by"> bởi <t t-out="this.batch.applied_by"/></t></span>
-                    <span t-if="this.batch.same_file_code" class="o_tp_att_badge o_muted" t-att-title="'Cùng mã băm SHA-256 với ' + this.batch.same_file_code">
-                        Trùng nội dung tệp với <t t-out="this.batch.same_file_code"/>
-                    </span>
                 </div>
 
                 <div class="o_tp_att_mini_stats" aria-label="Tóm tắt phạm vi đang lọc">
@@ -122,8 +117,6 @@
                     <span t-if="this.data.summary.all_empty">Toàn ô trống: <strong t-out="this.data.summary.all_empty"/></span>
                     <span t-if="this.data.summary.valid" class="o_ok_text">Ô mới: <strong t-out="this.data.summary.valid"/></span>
                     <span t-if="this.data.summary.applied" class="o_ok_text">Ô đã áp: <strong t-out="this.data.summary.applied"/></span>
-                    <span t-if="this.data.summary.duplicate">Ô trùng: <strong t-out="this.data.summary.duplicate"/></span>
-                    <span t-if="this.data.summary.conflict" class="o_danger_text">Ô khác giờ: <strong t-out="this.data.summary.conflict"/></span>
                     <span t-if="this.data.summary.missing" class="o_warn_text">Ô thiếu giờ: <strong t-out="this.data.summary.missing"/></span>
                     <span t-if="this.data.summary.review" class="o_warn_text">Ô cần kiểm tra: <strong t-out="this.data.summary.review"/></span>
                 </div>
@@ -168,10 +161,10 @@
                 </label>
 
                 <label class="o_tp_att_field">
-                    <span>Tình trạng đối chiếu</span>
-                    <select t-on-change="(ev) => this.state.draftStatus = ev.target.value" aria-label="Lọc tình trạng đối chiếu">
+                    <span>Tình trạng dữ liệu</span>
+                    <select t-on-change="(ev) => this.state.draftStatus = ev.target.value" aria-label="Lọc tình trạng dữ liệu">
                         <option value="" t-att-selected="!this.state.draftStatus">Tất cả tình trạng</option>
-                        <option t-foreach="this.data.status_options" t-as="opt" t-key="opt.key" t-att-value="opt.key"
+                        <option t-foreach="this.data.status_options.filter(opt => !['duplicate', 'conflict'].includes(opt.key))" t-as="opt" t-key="opt.key" t-att-value="opt.key"
                             t-att-selected="opt.key === this.state.draftStatus" t-out="opt.label"/>
                     </select>
                 </label>
@@ -356,7 +349,7 @@
                                             t-att-class="(this.data.day_columns[cell_index]?.weekend ? 'o_weekend ' : '') + this.cellTone(cell.status)"
                                             t-att-title="this.cellTooltip(person, cell)">
                                             <span t-if="cell.raw_in" class="o_time" t-out="cell.raw_in"/>
-                                            <span t-if="cell.badge and cell.status !== 'applied'" class="o_cell_tag" t-out="cell.badge"/>
+                                            <span t-if="cell.badge and !['applied', 'duplicate', 'conflict'].includes(cell.status)" class="o_cell_tag" t-out="cell.badge"/>
                                         </td>
 
                                         <t t-if="this.sheet.has_late">
@@ -373,7 +366,6 @@
                                                 <strong t-if="person.late.minutes !== null" t-out="person.late.minutes"/>
                                                 <span t-elif="person.late.raw_minutes" class="text-danger" t-out="person.late.raw_minutes"/>
                                                 <span t-else="" class="o_tp_att_muted">—</span>
-                                                <span t-if="person.late.status === 'conflict'" class="o_cell_tag d-block">Khác tổng</span>
                                             </td>
                                         </t>
 
@@ -420,10 +412,7 @@
             <p class="alert alert-info">Thao tác áp dụng toàn bộ lô, gồm mọi trang tính và nhân viên; bộ lọc đang xem chỉ giới hạn bảng hiển thị. Số bên dưới là phạm vi đang lọc, không phải toàn bộ lô.</p>
             <ul class="small">
                 <li>Ô mới hợp lệ sẽ ghi nhận: <strong t-out="this.props.summary.valid || 0"/></li>
-                <li>Ô trùng giờ đã có (chỉ liên kết thêm nguồn, không nhân đôi): <strong t-out="this.props.summary.duplicate || 0"/></li>
-                <li t-if="this.props.summary.conflict">
-                    Ô khác giờ (<strong t-out="this.props.summary.conflict"/>): <strong>không tự ghi đè</strong>; sẽ giữ nguyên để đối chiếu chọn nguồn ở mục <em>Đối chiếu</em>.
-                </li>
+                <li>Cập nhật giờ theo tệp nguồn; không nhân đôi phiên chấm công. Nguồn mới hơn vẫn được ưu tiên nếu tệp này đã cũ.</li>
                 <li t-if="this.props.summary.unmapped">
                     Nhân viên chưa map HR (<strong t-out="this.props.summary.unmapped"/>): giữ nguyên ở nguồn, không tạo hồ sơ HR mới.
                 </li>
@@ -476,7 +465,7 @@
                             <td t-out="cell.cell_ref || '—'"/>
                             <td><strong t-out="cell.raw_in || '—'"/></td>
                             <td><strong t-out="cell.raw_out || '—'"/></td>
-                            <td><span t-out="cell.status_label"/><small t-if="cell.message" class="d-block o_tp_att_muted" t-out="cell.message"/></td>
+                            <td><span t-out="['duplicate', 'conflict'].includes(cell.status) ? 'Theo tệp nguồn' : cell.status_label"/><small t-if="cell.message and !['duplicate', 'conflict'].includes(cell.status)" class="d-block o_tp_att_muted" t-out="cell.message"/></td>
                         </tr>
                     </tbody>
                 </table>

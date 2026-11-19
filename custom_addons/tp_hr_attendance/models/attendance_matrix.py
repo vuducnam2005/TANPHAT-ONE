@@ -10,6 +10,7 @@ Design invariants:
    employees never read raw import batches.
 """
 import base64
+import json
 from collections import defaultdict
 from datetime import date
 from io import BytesIO
@@ -29,7 +30,13 @@ from .attendance_common import (
     local_to_utc,
     require,
 )
-from .attendance_import import KIND_MESSAGES, LINE_STATES, UPLOAD_MAX_B64, consistent
+from .attendance_import import (
+    ADVISORY_KEY,
+    KIND_MESSAGES,
+    LINE_STATES,
+    UPLOAD_MAX_B64,
+    consistent,
+)
 from .attendance_logic import short_range, xlsx_safe
 from .attendance_parser import (
     ABSENT_STATES,
@@ -49,7 +56,7 @@ EMPTY_GROUP_KEY = '__EMPTY__'
 BATCH_STATE_LABELS = {
     'draft': 'Chọn tệp',
     'preview': 'Đã đọc/Lưu nguồn – Chưa áp dụng vào bảng tổng hợp',
-    'partial': 'Đã áp dụng một phần – Còn khác biệt chờ chọn nguồn',
+    'partial': 'Đã cập nhật một phần – Còn dữ liệu cần kiểm tra',
     'applied': 'Đã áp dụng vào bảng tổng hợp',
     'cancelled': 'Đã bỏ qua nguồn – Không áp dụng',
 }
@@ -461,11 +468,7 @@ class AttendanceBatchMatrix(models.Model):
 
     @api.model
     def tp_upload_files(self, params=None):
-        """Read and persist one or many .xlsx files as independent source batches (savepoint per file).
-
-        One invalid workbook never rolls back valid files in the same upload action. Uploaded batches stay
-        in ``preview`` ('Đã đọc/Lưu nguồn - Chưa áp dụng') across reloads until applied or explicitly discarded.
-        """
+        """Persist each file and update attendance from its newest valid source, atomically per file."""
         params = dict(params or {})
         company = self.env.company
         require(self.env, 'import', company)
@@ -475,6 +478,8 @@ class AttendanceBatchMatrix(models.Model):
         if len(files) > MAX_FILES_UPLOAD:
             raise UserError(self.env._('Mỗi lần tải tối đa %(max)s tệp Excel.', max=MAX_FILES_UPLOAD))
 
+        # Allocate upload order under the same company lock as the canonical writers.
+        self.env.cr.execute('SELECT pg_advisory_xact_lock(%s, %s)', [ADVISORY_KEY, company.id])
         results, created_ids = [], []
         for idx, item in enumerate(files):
             if not isinstance(item, dict):
@@ -501,7 +506,8 @@ class AttendanceBatchMatrix(models.Model):
                         'company_id': company.id,
                     })
                     batch.action_preview()
-                    info = batch._tp_batch_selector_item()
+                    sync = batch._tp_apply_latest_file()
+                    info = dict(batch._tp_batch_selector_item(), sync=sync)
                 created_ids.append(info['id'])
                 results.append(dict(info, ok=True, index=idx))
             except (AttendanceFormatError, UserError, ValidationError, AccessError) as exc:
@@ -512,6 +518,93 @@ class AttendanceBatchMatrix(models.Model):
             'success_count': len(created_ids),
             'error_count': len(results) - len(created_ids),
         }
+
+    def _tp_apply_latest_file(self):
+        """Newest upload owns each mapped employee/day; keep immutable sources and all lock guards.
+
+        Reuse the comparison writers for replacement/idempotency. Blank cells in the new file clear
+        imported hours for that day; people/dates absent from the file stay untouched. Never replace
+        approved corrections or device events. Ambiguous rows inside one workbook need HR review.
+        """
+        self.ensure_one()
+        self._tp_require()
+        self._lock()
+        if self.state not in ('preview', 'partial', 'applied'):
+            raise UserError(self.env._('Tệp nguồn chưa sẵn sàng để cập nhật bảng công.'))
+        if not self._tp_build_snapshot():
+            raise UserError(self.env._('Không còn tệp nguồn để cập nhật bảng công.'))
+        company = self.company_id
+        Period = self.env['tp.hr.attendance.period']
+        locked = Period._tp_locked_ranges([company.id])
+        Session = internal(self.env['tp.hr.attendance.session'])
+        Line = internal(self.env['tp.hr.attendance.line'])
+        resolver, _codes = self._tp_mapper()
+        newer = defaultdict(list)
+        for person in self.env['tp.hr.attendance.snapshot.person'].sudo().search([
+                ('company_id', '=', company.id), ('batch_id', '>', self.id),
+                ('batch_id.state', 'in', ('applied', 'partial'))]):
+            employee, _candidate, problem, _message = resolver(person.machine_code, person.source_name)
+            if employee and not problem:
+                newer[employee.id].append((person.period_from, person.period_to))
+        days, totals = defaultdict(list), defaultdict(list)
+        stats = {'updated': 0, 'late_updated': 0, 'needs_review': 0, 'protected': 0, 'older_source': 0}
+        for index, _sheet in enumerate(self.sheet_summary or []):
+            evaluated = self._tp_evaluate_sheet_matrix(index)
+            for person in evaluated['people']:
+                if person['mapping_state'] != 'mapped':
+                    stats['needs_review'] += 1
+                    continue
+                for cell in person['cells']:
+                    days[person['employee_id'], fields.Date.from_string(cell['date'])].append((index, person, cell))
+                late = person['late']
+                if late['source_state'] == 'ok':
+                    totals[person['employee_id'], fields.Date.from_string(evaluated['from']),
+                           fields.Date.from_string(evaluated['to'])].append((index, person, late))
+        touched = set()
+        reason = self.env._('Cập nhật theo tệp tải lên mới nhất: %(file)s', file=self.file_name)
+        for (employee_id, work_date), entries in days.items():
+            if any(first <= work_date <= last for first, last in newer[employee_id]):
+                stats['older_source'] += 1
+                continue
+            protected = Period._tp_is_locked(company.id, work_date, locked) or Session.search_count([
+                ('employee_id', '=', employee_id), ('work_date', '=', work_date), ('source', '=', 'correction')])
+            protected = protected or self.env['tp.hr.attendance.event'].sudo().search_count([
+                ('company_id', '=', company.id), ('employee_id', '=', employee_id),
+                ('local_date', '=', work_date), ('state', '=', 'mapped')])
+            if protected:
+                stats['protected'] += 1
+                continue
+            index, person, cell = entries[0]
+            signatures = {(entry[2]['kind'], entry[2]['raw_in'], entry[2]['raw_out']) for entry in entries}
+            if len(signatures) != 1 or cell['kind'] not in ('pair', 'missing_in', 'missing_out', 'empty'):
+                stats['needs_review'] += 1
+                continue
+            if cell['kind'] == 'empty':
+                Session.search([('employee_id', '=', employee_id), ('work_date', '=', work_date)]).write(
+                    {'active': False, 'superseded_reason': reason})
+                Line.search([('employee_id', '=', employee_id), ('work_date', '=', work_date), ('issue_open', '=', True)]).write(
+                    {'issue_open': False, 'resolution': reason})
+            else:
+                self._tp_apply_cell_to_canonical(company, self, index, person, cell, [self], [], reason=reason)
+            touched.add((employee_id, work_date))
+            stats['updated'] += 1
+        for (employee_id, first, last), entries in totals.items():
+            if any(first <= end and last >= start for start, end in newer[employee_id]):
+                continue
+            if any(first <= end and last >= start for start, end in locked.get(company.id, [])):
+                continue
+            if len({(entry[2]['count'], entry[2]['minutes']) for entry in entries}) != 1:
+                stats['needs_review'] += 1
+                continue
+            index, person, late = entries[0]
+            self._tp_apply_late_to_canonical(company, employee_id, first, last, self, index, person, late, [self], reason=reason)
+            stats['late_updated'] += 1
+        self.env['tp.hr.attendance.day']._tp_refresh(company, touched)
+        self._tp_classify()
+        internal(self).write({'state': 'partial' if stats['needs_review'] or stats['protected'] else 'applied',
+                              'applied_by': self.env.uid, 'applied_at': fields.Datetime.now(), 'result': json.dumps(stats)})
+        self.env['tp.hr.attendance.log']._tp_log(self, 'import_latest_file', stats)
+        return stats
 
     @api.model
     def tp_discard_batch(self, batch_id, reason=''):

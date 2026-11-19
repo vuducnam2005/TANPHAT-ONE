@@ -4,6 +4,7 @@ from . import (
     test_directory_privacy,
     test_import,
     test_logic,
+    test_latest_file,
     test_matrix_compare,
     test_matrix_pure,
     test_parser,

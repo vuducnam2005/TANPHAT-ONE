@@ -616,7 +616,7 @@ class AttendanceBatch(models.Model):
     @api.model
     def tp_upload_apply(self, batch_id):
         batch = self._tp_upload_batch(batch_id)
-        batch.action_apply()
+        batch._tp_apply_latest_file()
         return batch._tp_preview_payload()
 
     @api.model

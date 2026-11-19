@@ -5,6 +5,7 @@ import { useService } from "@web/core/utils/hooks";
 import { cellNote, downloadBase64, formatDate, readStore, rpcError, stepPeriod, writeStore } from "../common";
 import { AttPager, LateDialog, PeriodTable, PersonDialog, SourceStrip } from "../parts";
 import { openAttendanceUpload } from "../upload/upload";
+import { AttendanceFileMatrix } from "../matrix/matrix";
 
 /**
  * "Bảng chấm công" (HR-ATTENDANCE-SIMPLE-002). Day: Nhân viên · Phòng ban · Thứ/ngày · Giờ vào · Giờ ra.
@@ -21,7 +22,7 @@ const DAY_STATES = [
 
 export class AttendanceBoard extends Component {
     static template = "tp_hr_attendance.Board";
-    static components = { AttPager, PeriodTable, SourceStrip };
+    static components = { AttPager, PeriodTable, SourceStrip, AttendanceFileMatrix };
     props = useProps();
 
     setup() {

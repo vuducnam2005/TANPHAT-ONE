@@ -994,6 +994,7 @@ class AttendanceBatchCompare(models.Model):
                 'supersede_reason': reason,
                 'version': current.version + 1,
             })
+            current.flush_recordset(['state'])
 
         internal(chosen_row).write({
             'state': 'applied',

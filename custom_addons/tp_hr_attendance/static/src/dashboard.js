@@ -2,7 +2,7 @@ import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { STATE_COLORS, STATE_ORDER, TOTAL_COLOR, cellNote, formatDate, readStore, rpcError, stepPeriod, writeStore } from "./common";
+import { STATE_COLORS, STATE_ORDER, TOTAL_COLOR, attendanceIssue, cellNote, formatDate, readStore, rpcError, stepPeriod, writeStore } from "./common";
 import { AttPager, PersonDialog, SourceStrip } from "./parts";
 import { openAttendanceUpload } from "./upload/upload";
 
@@ -35,6 +35,7 @@ export class AttendanceDashboard extends Component {
         this.colors = STATE_COLORS;
         this.totalColor = TOTAL_COLOR;
         this.cellNote = cellNote;
+        this.attendanceIssue = attendanceIssue;
         this.formatDate = formatDate;
         this.request = 0;
         this.searchTimer = null;

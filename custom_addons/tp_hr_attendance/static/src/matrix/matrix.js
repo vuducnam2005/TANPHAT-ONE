@@ -371,11 +371,8 @@ export class AttendanceFileMatrix extends Component {
         if (status === "valid" || status === "applied") {
             return "o_tone_ok";
         }
-        if (status === "duplicate") {
-            return "o_tone_dup";
-        }
-        if (status === "conflict") {
-            return "o_tone_conflict";
+        if (status === "duplicate" || status === "conflict") {
+            return "";
         }
         if (status === "missing") {
             return "o_tone_warn";
@@ -395,6 +392,10 @@ export class AttendanceFileMatrix extends Component {
             parts.push(`Ô ${cell.cell_ref}`);
         }
         parts.push(`Vào: ${cell.raw_in || "—"} | Ra: ${cell.raw_out || "—"}`);
+        if (["duplicate", "conflict"].includes(cell.status)) {
+            parts.push("Giờ theo tệp nguồn đang xem");
+            return parts.join(" · ");
+        }
         if (cell.status_label) {
             parts.push(cell.status_label);
         }
@@ -419,7 +420,7 @@ export class AttendanceFileMatrix extends Component {
             onUploaded: ({ createdIds, uploadNotice }) => {
                 Object.assign(this.state, {
                     viewMode: "matrix",
-                    batchId: createdIds[0] || this.state.batchId,
+                    batchId: createdIds[createdIds.length - 1] || this.state.batchId,
                     uploadedIds: createdIds,
                     uploadNotice: uploadNotice || "",
                     sheetIndex: 0,
@@ -507,7 +508,7 @@ export class AttendanceFileMatrix extends Component {
     }
 
     goBack() {
-        return this.action.doAction("tp_hr_attendance.action_board");
+        return this.action.doAction("tp_hr_attendance.action_dashboard");
     }
 }
 
