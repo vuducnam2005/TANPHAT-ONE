@@ -35,6 +35,16 @@ class TestEmployeeExport(BaseHrWorkspace):
         self.assertEqual(flat.auto_filter.ref.split(':')[0], 'A6')
         self.assertFalse(any(cell.data_type == 'f' for row in flat for cell in row))
         self.assertEqual(records.read(['sequence', 'write_date']), before)
+        second.tp_sequence = self.department.tp_sequence + 100
+        self.env.flush_all()
+        second.invalidate_recordset(['tp_sequence'])
+        reordered = self.report()._employee_export_records(options)[0]
+        self.assertEqual(reordered.ids, expected[1:] + expected[:1])
+        workbook = load_workbook(BytesIO(self.report()._build_xlsx(options=options)))
+        names = [row[2] for row in workbook['Danh sách nhân viên'].values if type(row[0]) is int]
+        self.assertEqual(names, reordered.mapped('name'))
+        self.assertEqual([row[2] for row in list(workbook['Dữ liệu chi tiết'].values)[6:]], names)
+        self.assertEqual(records.read(['sequence', 'write_date']), before)
 
     def test_applied_domain_selection_and_scope(self):
         report = self.report()

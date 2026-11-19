@@ -118,3 +118,18 @@ Technical verification như trên; chưa là business/visual acceptance của ng
 - Public `https://eight-championships-launches-plaintiff.trycloudflare.com`: health/login200. CSS `/web/assets/73d8d48/web.assets_web.min.css`1.632.606B, SHA256 `3dda3b6e09d97c753d55c896cb0592cc2cdb8ff1430fc6f2a50136eb6c98cff2`; JS `/web/assets/e1de7bf/web.assets_web.min.js`8.480.014B, SHA256 `bd588a0bbc30d9f0dd839a51d13b5deb9f59f6b79fdd7b2d83700a4e7e9d9cd7`. Bytes/SHA256giốngserver, đã kiểm selector/function/dialog mới.
 - Không ra lệnh thay cấu hình/restart tunnel; quan sát container tunnel restart trong lúc origin dừng và public đã hồi phục. Chưa authenticated public browserE2E: không có phiênadminserver hợp lệ sẵn để tái dùng; không tạo loginmới thayphiên. Browser8/8 làlocal với phiêncó sẵn. Technical verification chưa thaybusiness/visual acceptance của người dùng.
 - Người dùng Ctrl+F5, TP HR → Danh sách nhân viên → Xuất Excel. Thứ tựphòng chỉnh ở Phòng ban và đơn vị; thứ tựnhân viên dùngkéo cảhàng cùngphòng hiện có. Không chạyfixtures hoặc thaythứtự thật để thử. GiữWIP/checkpointngoài scope; workflowsealGit trongsnapshot riêng.
+
+## Kiểm bổ sung Odoo — CHG-20261119-011
+
+`TestEmployeeExport` **4/4 PASS, 0 failed/error** trên `tp_tanphat_test` hiện có, sau backup `.local/hr-employee-xlsx001/test-backup-20261119T122312` (dump + restore-list + filestore 2.200 tệp / 6.328.315.069B + config + SHA256). Không có tác vụ test ghi khác khi bắt đầu. Module test nâng riêng HR lên20.0.1.14.0; không restore test lên main hoặc tạo DB mới.
+
+- Sắp hai nhân viên giả qua `tp_reorder_in_department`, xuất và đối chiếu thứ tự hai sheet.
+- Đổi `tp_sequence` phòng giả, flush SQL, invalidate cache rồi đọc lại và xuất: vị trí phòng thay đúng; hai sheet giữ cùng thứ tự, employee sequence/write_date không đổi khi xuất.
+- Domain OR, chọn dòng/ID giả, chọn toàn bộ domain, công ty ngoài scope, field lương/credential, non-HR và mất nhóm HR đều được kiểm.
+- Hai hợp đồng của một nhân viên không nhân bản dòng danh sách; ngày Excel/text mã/số điện thoại/formula literal đúng.
+
+Fixture chạy trong transaction rollback; truy vấn sau test xác nhận không còn login `hr001.synthetic.*`. Đây là kiểm backend bằng dữ liệu giả, không phải thao tác browser kéo thả và commit/reload trên nhân viên thật. Có INFO WinError5 từ GC đổi tên một số blob test, không có log ERROR/CRITICAL; không xóa hoặc sửa quyền blob thủ công.
+
+Sau đợt deploy chấm công của phiên khác, kiểm lại addon Excel: 13 tệp nguồn addon giữ đúng SHA256 bản2c397ffb; ORM server22/22PASS,39 nhân viên/57 cột/3 sheet. Public health/login200; CSS73d8d48 giữ SHA256 `3dda3b6e09d97c753d55c896cb0592cc2cdb8ff1430fc6f2a50136eb6c98cff2`; JS hiện `/web/assets/5c1f5ad/web.assets_web.min.js`8.480.038B, SHA256 `c65e7521d9e326c0d23115c925ebc8937da54ef8cc2c3dcb3a49938442d74b7e`, cùng bytes/SHA256 với server và đủ dialog/count/scope/export mới. App HR giữ20.0.1.14.0, không restart thêm để giao test/tài liệu.
+
+Các nhãn fixture NOT_RUN trong biên bản006/008 là lịch sử tại thời điểm giao bản, đã được bổ sung bằng kết quả011 này. Authenticated public E2E và iOS/Safari thật vẫn chưa chạy.

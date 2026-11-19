@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-011 — Kiểm Odoo thứ tự và quyền xuất nhân viên
+
+- 19/11/2026; kiểm bổ sung tự chọn trên DB test hiện có, không bắt cổng 18079 và không tạo DB mới. Backup dump/restore-list + filestore 2.200 tệp/6.328.315.069B + config + SHA256 tại `.local/hr-employee-xlsx001/test-backup-20261119T122312` trước upgrade/test HR; main/server không tạo fixture.
+- `TestEmployeeExport` 4/4 PASS, 0 failed/error: reorder hai nhân viên, đổi thứ tự phòng, flush database/invalidate cache, xuất lại đúng thứ tự ở cả hai sheet và không đổi sequence/write_date nhân viên; domain/selected/ID/công ty/field quyền, chống formula, non-HR, hợp đồng nhiều dòng và ngày Excel. Ruff PASS; test user fixture không còn sau rollback. Log có INFO WinError5 khi GC không đổi tên được một số blob test; không có ERROR/CRITICAL, không xóa blob thủ công. Bổ sung assertion test, không thay application/runtime version.
+- Kiểm lại sau deploy chấm công của phiên khác: 13 tệp addon Excel giữ checksum; ORM server22/22PASS; public health/login200, CSS73d8d48 và JS5c1f5ad khớp SHA256 server. App2c397ffb/HR20.0.1.14.0 giữ nguyên. [Acceptance](demo/HR_EMPLOYEE_XLSX_001_ACCEPTANCE.md). Chưa browser drag/persist qua commit hoặc authenticated public E2E/real-device; workflow snapshot sạch, giữ checkpoint và WIP khác.
+
 ## CHG-20261119-010 — Giao PC server: Admin chính duyệt điều chỉnh công
 
 - Giao commit ứng dụng `44b0c9e2` (CHG-20261119-005) lên PC server: addon `tp_hr_attendance` `20.0.3.1.0 → 20.0.3.2.0` bằng `-u tp_hr_attendance` theo [runbook](../ops/runbooks/HR_ATTENDANCE_001_DEPLOY_AND_ROLLBACK.md). Script riêng `.local/admin-approve005/deploy005.py` + `deploy-server005.ps1`, 13 tệp (1 tệp mới là migration) giữ `mtime` theo commit.

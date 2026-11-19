@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T05:18:45.816878+00:00",
-  "last_change_id": "CHG-20261119-008",
-  "code_digest": "77792f5ad750c540722096769f409af4ae4cb77452342c3a0f9b70795ce94048",
+  "updated_at": "2026-11-19T05:35:11.915260+00:00",
+  "last_change_id": "CHG-20261119-011",
+  "code_digest": "5f68235da09fcda43f9921a767f52b83ed4b9f23481172870c048adbec34234f",
   "code_file_count": 678,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "a2513ac3b6f2b278b27a9d9b7a21d9fc369ae6855fb76dce81a3876bfb042ef6",
-    "docs/CHANGELOG.md": "783b61068fb4e3a7edfeb7903b3ecf82d52ea39a06edc7c89e111cc65401fd50",
+    "docs/PROJECT_STATUS.md": "45388a5b0bea3ca24f3fa9d68cddb53b5a250fb8447c9bc6992f2609086ee984",
+    "docs/CHANGELOG.md": "699c0754e75dc701dfac6e3756a1bfacda6f300b4f4d4cf2295cee588e495658",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "f921c27ddbce6aeed8c76754bf33cea643cd58d44782657b17392d90a7d07773",
+    "docs/ROADMAP.md": "68666640835902699870130ff6656445574d01620194c544b76d4c73d2a2e087",
     "docs/DECISIONS.md": "6efc61c3092883f8b14695cda625db0cb20297ef74c3da28c802167f42396533",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC16/16SHA256, upgrade0/0ERROR, unchanged business snapshot, serverReadonly22/22, public asset hashes+health/login200 PASS; public authenticated E2E NOT_RUN"
+    "Odoo TestEmployeeExport4/4 PASS on existing testDB with backup; SQL-flushed department+employee order; Ruff PASS; serverReadonly22/22 and actual public assets/health/login recheck PASS"
   ]
 }
