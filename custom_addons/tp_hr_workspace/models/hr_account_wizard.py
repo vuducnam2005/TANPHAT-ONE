@@ -86,6 +86,7 @@ class TpHrAccountWizard(models.TransientModel):
     current_user_id = fields.Many2one(related='employee_id.user_id')
     expected_user_id = fields.Many2one('res.users', readonly=True)
     expected_login = fields.Char(readonly=True)
+    can_change_login = fields.Boolean(related='employee_id.tp_can_change_login')
     current_login = fields.Char(related='employee_id.tp_user_login', string='Tên đăng nhập')
     account_status = fields.Selection(related='employee_id.tp_account_status', string='Tình trạng')
     is_linked = fields.Boolean(compute='_compute_info')
@@ -100,17 +101,17 @@ class TpHrAccountWizard(models.TransientModel):
             rec.is_linked = bool(rec.employee_id.user_id)
             rec.is_admin = self.env.user.has_group('base.group_system')
 
-    def _employee(self, existing=False):
+    def _employee(self, existing=False, login_rename=False):
         self.ensure_one()
         employee = self.employee_id
-        employee._tp_account_admin(existing=existing)
+        employee._tp_account_admin(existing=existing, login_rename=login_rename)
         self.env.cr.execute('SELECT id FROM hr_employee WHERE id=%s FOR UPDATE', [employee.id])
         self.env.cr.execute('SELECT id FROM resource_resource WHERE id=%s FOR UPDATE', [employee.resource_id.id])
         employee.resource_id.invalidate_recordset(['user_id'])
         employee.invalidate_recordset(['user_id'])
         if employee.user_id != self.expected_user_id:
             raise UserError(self.env._('Tài khoản đã thay đổi. Vui lòng mở lại hộp thoại.'))
-        employee._tp_account_admin(existing=existing)
+        employee._tp_account_admin(existing=existing, login_rename=login_rename)
         return employee
 
     @api.model
@@ -129,7 +130,7 @@ class TpHrAccountWizard(models.TransientModel):
         return self.action_prepare_credentials(reset=True)
 
     def action_open_change_login(self):
-        employee = self._employee(existing=True)
+        employee = self._employee(existing=True, login_rename=True)
         self.expected_login = employee.user_id.login
         return {
             'type': 'ir.actions.client',
@@ -146,7 +147,7 @@ class TpHrAccountWizard(models.TransientModel):
 
     def action_change_login(self, login=None):
         self.ensure_one()
-        employee = self._employee(existing=True)
+        employee = self._employee(existing=True, login_rename=True)
         raw_login = login if login is not None else self.new_user_login
         return employee._tp_change_user_login(raw_login, expected_login=self.expected_login)
 
@@ -260,7 +261,7 @@ class PersonalEmployee(models.Model):
     def _compute_tp_can_change_login(self):
         for employee in self:
             try:
-                employee.with_env(self.env(su=False))._tp_account_admin(existing=True)
+                employee.with_env(self.env(su=False))._tp_account_admin(existing=True, login_rename=True)
                 employee.tp_can_change_login = True
             except (AccessError, UserError):
                 employee.tp_can_change_login = False
@@ -286,7 +287,7 @@ class PersonalEmployee(models.Model):
         raise AccessError(self.env._('Khóa tài khoản và kết thúc hồ sơ là hai thao tác riêng.'))
 
     def action_open_change_login_dialog(self):
-        self._tp_account_admin(existing=True)
+        self._tp_account_admin(existing=True, login_rename=True)
         wizard = self.env['tp.hr.account.wizard'].create({
             'employee_id': self.id,
             'current_user_id': self.user_id.id,
@@ -299,12 +300,12 @@ class PersonalEmployee(models.Model):
 
     def _tp_change_user_login(self, new_login, expected_login=None):
         self.ensure_one()
-        self._tp_account_admin(existing=True)
+        self._tp_account_admin(existing=True, login_rename=True)
         self.env.cr.execute('SELECT id FROM hr_employee WHERE id=%s FOR UPDATE', [self.id])
         self.env.cr.execute('SELECT id FROM resource_resource WHERE id=%s FOR UPDATE', [self.resource_id.id])
         self.resource_id.invalidate_recordset(['user_id'])
         self.invalidate_recordset(['user_id', 'tp_user_login'])
-        self._tp_account_admin(existing=True)
+        self._tp_account_admin(existing=True, login_rename=True)
         user = self.user_id.with_context(active_test=False)
         if not user:
             raise UserError(self.env._('Chưa có tài khoản.'))
@@ -317,7 +318,7 @@ class PersonalEmployee(models.Model):
         user.write({'login': cleaned})
         return {'ok': True, 'user_id': user.id, 'old_login': old_login, 'new_login': cleaned}
 
-    def _tp_account_admin(self, existing=False):
+    def _tp_account_admin(self, existing=False, login_rename=False):
         self.ensure_one()
         actor_env = self.env(su=False)
         if not actor_env.user.has_group('base.group_system'):
@@ -344,7 +345,8 @@ class PersonalEmployee(models.Model):
                 record = self.env.ref(xmlid, raise_if_not_found=False)
                 if record:
                     protected.add(record.id)
-            if user.id in protected or user.share or user.has_group('base.group_system'):
+            original_rename = login_rename and not is_orig_target and hasattr(actor_env.user, '_tp_is_original_admin') and actor_env.user._tp_is_original_admin()
+            if user.id in protected or user.share or (user.has_group('base.group_system') and not original_rename):
                 raise UserError(self.env._('Tài khoản quản trị/hệ thống hoặc chính mình được bảo vệ.'))
             if set(user.company_ids.ids) - set(self.env.companies.ids):
                 raise AccessError(self.env._('Tài khoản có công ty ngoài phạm vi quản lý.'))
@@ -403,12 +405,12 @@ class PersonalAccountUser(models.Model):
         ])
         employees = employees.with_env(actor_users.env)
         for employee in employees.sorted('id'):
-            employee._tp_account_admin(existing=True)
+            employee._tp_account_admin(existing=True, login_rename=True)
             self.env.cr.execute('SELECT id FROM hr_employee WHERE id=%s FOR UPDATE', [employee.id])
             self.env.cr.execute('SELECT id FROM resource_resource WHERE id=%s FOR UPDATE', [employee.resource_id.id])
             employee.resource_id.invalidate_recordset(['user_id'])
             employee.invalidate_recordset(['user_id'])
-            employee._tp_account_admin(existing=True)
+            employee._tp_account_admin(existing=True, login_rename=True)
             if employee.user_id.id != self.id:
                 raise UserError(self.env._('Tài khoản đã thay đổi. Vui lòng mở lại hộp thoại.'))
         self.env.cr.execute('SELECT id FROM res_users WHERE id=%s FOR UPDATE', [self.id])

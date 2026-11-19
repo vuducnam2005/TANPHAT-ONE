@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-016 — Sửa nút đổi login bị ẩn với admin được ủy quyền
+
+- 19/11/2026; tiếp tục yêu cầu triển khai và ảnh “đâu”. Probe read-only PC: admin gốc đang xem tranphuongdong (employee63), target có system/grant, không phải original; cả account/rename capabilityfalse do dùng nhầm guard khóa/reset. Đây là thiếu sót bản013/014, không phải người dùng vào sai tab hoặc thiếuCtrl+F5.
+- Thêm tham số private login_rename cho guard/wizard và luồng res.users.write; chỉ admin gốc được ngoại lệ rename trên admin được cấp, sau ACL/company/system/self/original protections. Khóa/reset giữ mặc định, không mở credential của admin gốc cho delegate. Wizard capability riêng và inherited view không ẩn rename theo lock/reset; delegated form tách visibility từng thao tác. HR20.0.1.15.1/admin20.0.2.0.3, nâng riêng2addon.
+- Odoo8/8PASS: rename5, HttpCase2 (Playwright1440/390px target có grant thật và actor original giả; duplicate inline/Cancel/Save/reload0pageerror), hồi quy reset1. Giữ password hash/group/company/resource/department/job/avatar bytes/grant active vàaudit; peer/self/staff/HR/sudo từ chối. Lần đầu snapshot so object BinaryValue báo khác dù cùng attachment, sửa so bytes; lần rerun dải mã test đã cạn do nextval không rollback, fixture BaseHrWorkspace reset về floor và restore sequence bằng cleanup theo mẫu test hiện có. Không sửa allocator/runtime để né test. AST/XML/Ruff/Node/diff --checkPASS; race/unique core không đổi, giữ bằng chứng013.
+- Backup test mới `.local/hr-login-rename-fix016/test-backup-20261119T135937`: dump/restore/source/config/SHA256 +filestoredelta với baseZIP backup013 (content addressed, danh sách phục hồi ghi rõ), không tạo/restoreDB mới. Main/server không tạo fixture, không đổi login tài khoản thật. Cốc Cốc trực tiếp bị CUA chặn vì URL policy chưa hỗ trợ, dừng CUA; browser fixture độc lập đạt, không tuyên bố đã điều khiển cửa sổ người dùng.
+- [Acceptance](demo/HR_LOGIN_RENAME_001_ACCEPTANCE.md) ghi giới hạn vàreceipt sau deploy. Không bảng mới; inventory ghi N/A form và tái dùng audit/list. Giữ checkpoint/WIP khác, private index và workflow snapshot sạch. Technical verification khác business acceptance.
+
 ## CHG-20261119-015 — Giao PC server: admin được ủy quyền duyệt điều chỉnh công
 
 - Giao commit ứng dụng `af72ede1` (CHG-20261119-012) lên PC server: addon `tp_hr_attendance` `20.0.3.2.0 → 20.0.3.3.0` bằng `-u tp_hr_attendance` theo [runbook](../ops/runbooks/HR_ATTENDANCE_001_DEPLOY_AND_ROLLBACK.md). Script riêng `.local/admin-approve012/deploy012.py` + `deploy-server012.ps1`; 12 tệp (1 tệp mới là migration), giữ `mtime` theo commit.

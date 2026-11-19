@@ -34,7 +34,7 @@ class TestEmployeeLoginRename(BaseHrWorkspace):
         return (self.env.cr.fetchone()[0], self.user.id, self.user.partner_id.id,
                 self.user.group_ids.ids, self.user.company_ids.ids,
                 self.employee.resource_id.id, self.employee.department_id.id,
-                self.employee.job_id.id, self.employee.image_1920, self.user.active)
+                self.employee.job_id.id, bytes(self.employee.image_1920 or b''), self.user.active)
 
     def test_rename_preserves_identity_password_permissions_and_export(self):
         before = self.snapshot()
@@ -70,6 +70,37 @@ class TestEmployeeLoginRename(BaseHrWorkspace):
         self.assertNotIn('rename.synthetic.before', values)
         self.assertNotIn('Synthetic-Rename-2026', str(entries.snapshot))
         self.assertIn('login', self.user._get_session_token_fields())
+
+    def test_original_admin_can_rename_granted_admin_but_other_actors_cannot(self):
+        if 'tp.admin.delegation' not in self.env:
+            self.skipTest('Admin delegation addon is not installed')
+        delegation = self.env['tp.admin.delegation'].with_user(self.admin).with_context(
+            allowed_company_ids=self.company.ids)
+        delegation._change(self.user, self.company, 'grant', 'Synthetic login visibility regression')
+        grant = delegation.search([('user_id', '=', self.user.id), ('state', '=', 'active')])
+        delegation._change(self.staff, self.company, 'grant', 'Synthetic peer admin')
+        before = self.snapshot()
+        self.assertTrue(self.operator.tp_can_change_login)
+        self.assertFalse(self.operator.tp_can_manage_account)
+        with self.assertRaises(UserError):
+            self.operator._tp_account_admin(existing=True)
+        for actor in (self.staff, self.user, self.hr):
+            self.assertFalse(self.operator.with_user(actor).tp_can_change_login)
+            with self.assertRaises((AccessError, UserError)):
+                self.operator.with_user(actor).action_change_user_login('rename.granted.forbidden')
+            with self.assertRaises((AccessError, UserError)):
+                self.user.with_user(actor).sudo().write({'login': 'rename.granted.sudo'})
+        action = self.operator.action_open_change_login_dialog()
+        wizard = self.env['tp.hr.account.wizard'].with_user(self.admin).with_context(
+            allowed_company_ids=self.company.ids).browse(action['params']['wizardId'])
+        self.assertTrue(wizard.can_change_login)
+        self.assertFalse(wizard.is_admin)
+        wizard.action_change_login('Rename.Granted.After')
+        self.assertEqual(self.user.login, 'Rename.Granted.After')
+        self.assertEqual(self.snapshot(), before)
+        self.assertEqual(grant.state, 'active')
+        self.assertEqual(self.env['tp.hr.employee.audit'].search_count([
+            ('employee_ref', '=', self.employee.id), ('action', '=', 'login_change')]), 1)
 
     def test_invalid_duplicate_archived_and_other_company_are_atomic(self):
         old = self.user.login
@@ -140,6 +171,9 @@ class TestEmployeeLoginRename(BaseHrWorkspace):
 class TestEmployeeLoginRenameHttp(HttpCase):
     def test_browser_dialog_validation_save_reload_and_mobile(self):
         group = self.env.ref('base.group_system') | self.env.ref('hr.group_hr_manager')
+        original = self.env.ref('tp_admin_delegation.group_original_admin', raise_if_not_found=False)
+        if original:
+            group |= original
         operator = self.env['res.users'].with_context(no_reset_password=True).create({
             'name': 'Synthetic Rename Browser Admin', 'login': 'rename.browser.operator',
             'company_id': self.env.company.id, 'company_ids': [Command.set(self.env.company.ids)],
@@ -150,6 +184,9 @@ class TestEmployeeLoginRenameHttp(HttpCase):
             {'name': 'Synthetic Rename Browser Duplicate', 'login': 'rename.browser.taken'},
         ])
         employee = self.env['hr.employee'].create({'name': user.name, 'user_id': user.id})
+        if original:
+            self.env['tp.admin.delegation'].with_user(self.env.ref('base.user_admin'))._change(
+                user, self.env.company, 'grant', 'Synthetic browser granted-admin target')
         self.authenticate(operator.login, 'synthetic')
         root = Path(__file__).resolve().parents[3]
         # A release candidate lives under .local; locate the repository owning its test runner.
@@ -164,7 +201,7 @@ class TestEmployeeLoginRenameHttp(HttpCase):
             fixture_path.write_text(json.dumps({
                 'base': self.base_url(), 'employeeId': employee.id, 'employeeName': employee.name,
                 'oldLogin': user.login, 'newLogin': 'Rename.Browser.After', 'takenLogin': taken.login,
-                'output': str(output), 'cookies': [
+                'output': str(output), 'grantedAdmin': bool(original), 'cookies': [
                     {'name': 'session_id', 'value': self.session.sid, 'url': self.base_url(), 'httpOnly': True},
                     {'name': 'test_request_key', 'value': self.http_request_key, 'url': self.base_url()},
                 ],

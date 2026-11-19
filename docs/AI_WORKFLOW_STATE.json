@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T06:47:56.989892+00:00",
-  "last_change_id": "CHG-20261119-015",
-  "code_digest": "1ae225169487cc161e1280a3ea358a1e387d7d09b62f12b2a0d51bc5b480677f",
+  "updated_at": "2026-11-19T07:07:46.815189+00:00",
+  "last_change_id": "CHG-20261119-016",
+  "code_digest": "96e01ce030697da95c6cbeaad059e2af523feb4df0ae0ca1759a01ad00c1f0d9",
   "code_file_count": 681,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "571e440571b79f5ed2e22e22a47847417b3210a5a7ee9a7314c97f661be9c265",
-    "docs/CHANGELOG.md": "cce48186dd682772a04d8d87fc4304477954e119f2cf5f57a68ce92cf8bcf0c9",
+    "docs/PROJECT_STATUS.md": "2b47eace7859e757004fdb50d1004ff9ab5e1a28c77396862590f2a45e6b0895",
+    "docs/CHANGELOG.md": "826d79512e4e59c7b93c4209c1db58c76d7b16a5d6a5a1951ec9cbad7f33cadb",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,9 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC server preflight (read-only): tp_hr_attendance source matched baseline 44b0c9e2 64/64, no extra files; Original Admin admin + 5 live grants in company 1; 0 corrections; waited for the HR-LOGIN-RENAME server upgrade to finish",
-    "PC server deploy of af72ede1: backup dump+restore-list (15790 entries)+filestore+source/config with SHA256SUMS; -u tp_hr_attendance exit 0, upgrade and runtime logs 0 ERROR, health/login 200, module 20.0.3.3.0, source 65/65",
-    "Post-deploy read-only verify: ACL 55 -> 54 (reviewer row removed), employees/users/groups/roster/attendance/grant ledger/base_url unchanged; correction_admins(company 1) = admin + 5 delegated admins and review menu visible to all 6; public health/login 200 and JS bundle has the new text",
-    "Not done: local 18069 runs the HR-LOGIN-RENAME candidate, local tp_hr_attendance still 20.0.3.1.0; no correction created, submitted or approved on the server"
+    "Read-only PC reproduced original->granted capabilityfalse; fix backend+view login-only exception; testDB backup and Odoo8/8PASS(5rename,2HTTP,1reset); browsergrantedtarget desktop/mobile0errors; avatar bytes+grant unchanged; AST XML Ruff Node diffPASS; CUA CocCoc policy blocked, stopped; deployment pending"
   ]
 }

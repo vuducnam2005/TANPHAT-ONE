@@ -49,9 +49,9 @@
                     <group><field name="tp_user_login" readonly="1"/><field name="tp_account_status" widget="badge" readonly="1"/>
                         <field name="tp_admin_level" widget="badge" readonly="1"/><field name="tp_admin_scope" readonly="1"/></group>
                     <p class="text-muted">Phòng mình giữ quyền nghiệp vụ hiện hành. Hồ sơ ngoài phòng chỉ được quản lý bằng các thao tác đã kiểm phạm vi.</p>
-                    <div class="d-flex flex-wrap gap-2" invisible="not tp_can_manage_account">
-                        <button name="action_open_account_dialog" type="object" string="Quản lý tài khoản" class="btn-primary"/>
-                        <button name="action_reset_user_password" type="object" string="Đặt lại mật khẩu" invisible="not user_id"/><button name="action_open_change_login_dialog" type="object" string="Đổi tên đăng nhập" invisible="not user_id or not tp_can_change_login"/>
+                    <div class="d-flex flex-wrap gap-2" invisible="not tp_can_manage_account and not tp_can_change_login">
+                        <button name="action_open_account_dialog" type="object" string="Quản lý tài khoản" class="btn-primary" invisible="not tp_can_manage_account"/>
+                        <button name="action_reset_user_password" type="object" string="Đặt lại mật khẩu" invisible="not user_id or not tp_can_manage_account"/><button name="action_open_change_login_dialog" type="object" string="Đổi tên đăng nhập" invisible="not user_id or not tp_can_change_login"/>
                     </div>
                 </page></notebook>
             </sheet><chatter/></form></field>

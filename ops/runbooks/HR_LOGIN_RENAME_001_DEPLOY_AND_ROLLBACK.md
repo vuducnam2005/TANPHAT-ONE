@@ -1,6 +1,6 @@
 # HR-LOGIN-RENAME-001 — Deploy và rollback
 
-Phạm vi: HR20.0.1.15.0 và admin delegation20.0.2.0.2. Theo policy17/11, commit/push đúng scope rồi giao PCserver; không cần xin lại quyền. Không đổi login người thật để test.
+Phạm vi: HR20.0.1.15.1 và admin delegation20.0.2.0.3. Theo policy17/11, commit/push đúng scope rồi giao PCserver; không cần xin lại quyền. Không đổi login người thật để test.
 
 1. Kiểm source baseline từng file và runtime hiện tại; không áp WIP chấm công/báo cáo/sidebar/branding của phiên khác. Đóng gói đúng commit đã push, SHA256 chuẩn newline và mtime từ Git cho assets.
 2. Backup đúng DB/môi trường: dump định dạng custom + pg_restore-list, filestore, source/config và SHA256. Private config/dump chỉ ở ignored .local hoặc thư mục backup server, không Git. Snapshot hash-only credentials/IDs/links/groups/companies và số liệu nghiệp vụ trước/sau.

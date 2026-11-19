@@ -50,8 +50,8 @@ class DelegatedEmployee(models.Model):
     def _tp_delegated_account_check(self, existing=False, lock=True):
         raise AccessError(self.env._('Mô hình ủy quyền theo phòng ban đã ngừng sử dụng; dùng quyền Quản trị viên toàn hệ thống.'))
 
-    def _tp_account_admin(self, existing=False):
-        return super()._tp_account_admin(existing)
+    def _tp_account_admin(self, existing=False, login_rename=False):
+        return super()._tp_account_admin(existing, login_rename=login_rename)
 
     def action_open_account_dialog(self):
         return super().action_open_account_dialog()

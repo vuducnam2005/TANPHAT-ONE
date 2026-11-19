@@ -35,7 +35,7 @@
             </xpath>
             <xpath expr="//div[@groups='base.group_system']" position="attributes">
                 <attribute name="groups">base.group_system</attribute>
-                <attribute name="invisible">not is_linked or not is_admin</attribute>
+                <attribute name="invisible">not is_linked or (not is_admin and not can_change_login)</attribute>
             </xpath>
         </field>
     </record>

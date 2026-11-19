@@ -1,5 +1,7 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261119-016 — HR-LOGIN-RENAME-001 — FIX_VERIFIED_RELEASE_READY.** Ảnh người dùng cho thấy Administrator đang xem Trần Phương Đông nhưng không có nút. Probe chỉ đọc PC xác nhận actor là admin gốc, target là admin được ủy quyền, tp_can_change_login=false vì tái dùng nhầm chặn lock/reset cho mọi admin. Sửa riêng login_rename: admin gốc được đổi login admin được cấp; delegate vẫn không sửa admin gốc/admin khác/self, lock/reset giữ bảo vệ hiện hành. Native form/wizard có capability riêng. HR20.0.1.15.1/admin20.0.2.0.3; 8/8Odoo PASS gồm5backend+2HttpCase+reset1, browser desktop/mobile0error vàtarget có grant thật trong fixture. Đang backup/giao local18069/PCserver. Không đổi login người thật. Cốc Cốc trực tiếp bị công cụ chặn vì chưa hỗ trợ URL policy, không bypass; [acceptance](demo/HR_LOGIN_RENAME_001_ACCEPTANCE.md). Next: hoàn tất deploy rồi kiểm read-only đúng target, public và bàn giao vị trí nút.
+
 **Đã giao — CHG-20261119-015: HR-ATTENDANCE-ADMIN-APPROVE-012 — PC_SERVER_APPLIED.** App `af72ede1` (CHG-20261119-012) đã chạy trên PC server: `tp_hr_attendance` `20.0.3.3.0` qua `-u`, sau backup `C:\TANPHAT-backups\admin-approve012\admin-approve012-20261119T133902`. Upgrade exit 0, 0 ERROR, health/login/public 200, nguồn khớp 65/65; số liệu nhân sự/tài khoản/nhóm/công không đổi.
 - Người nhận và Duyệt/Trả lại đề nghị điều chỉnh công: Admin chính `admin` và 5 admin ủy quyền đang hiệu lực (`tuanln`, `thuannv`, `thipt`, `tranphuongdong`, `namvd`), qua `Quản trị chấm công → Xử lý điều chỉnh`. Chỉ Admin chính cấp/thu hồi quyền admin.
 - Server chưa có phiếu thật; không tạo phiếu giả. Local `18069` chưa áp vì đang chạy candidate của phiên khác.
@@ -164,7 +166,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261119-015`
+Last change: `CHG-20261119-016`
 
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.

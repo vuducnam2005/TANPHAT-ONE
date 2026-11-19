@@ -368,3 +368,7 @@ Giao CHG-20261119-004: app `5859a83e` chạy local 18069 + PC server (`https://e
 ### HR-LOGIN-RENAME-001 — CHG-20261119-013
 
 Dialog Đổi tên đăng nhập là form2ô, không có bảng mới: filter/pager/count N/A. Danh sách nhân viên giữ SearchModel/search tp_user_login và exporter hiện có; TestEmployeeLoginRename kiểm search_read nhận login mới, wizard current_login và Excel thật sau rename. Lịch sử tái dùng audit/chatter đã có, không tạo bảng lịch sử riêng. Không đánh dấu hoàn tất coverage bộ lọc toàn hệ thống từ thay đổi này. Role review: system account manager; staff/HR thường không có capability; original-admin policy giữ. [Acceptance](../demo/HR_LOGIN_RENAME_001_ACCEPTANCE.md).
+
+### HR-LOGIN-RENAME-001 — visibility fix CHG-20261119-016
+
+Không bảng mới: form/wizard rename tách capability lock/reset, filter/pager N/A. Browser target có grant active vàactor original kiểm nút/inline/reload/mobile; backend ordinary/peer/self/original protection/Excel giữ. Không suy full table-filter coverage từ sửa capability. [Acceptance](../demo/HR_LOGIN_RENAME_001_ACCEPTANCE.md).

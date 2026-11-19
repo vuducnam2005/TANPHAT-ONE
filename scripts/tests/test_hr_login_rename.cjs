@@ -50,6 +50,10 @@ async function run() {
         await page.waitForFunction(name => [...document.querySelectorAll('[name="tp_user_login"]')].some(el => el.textContent.includes(name)), fixture.newLogin);
         await page.screenshot({ path: path.join(output, 'account-after.png') });
         checks.push('Save updates employee detail after native reload');
+        if (fixture.grantedAdmin) {
+            assert.equal(await page.getByRole('button', { name: 'Đặt lại mật khẩu', exact: true }).count(), 0);
+            checks.push('Original admin sees rename for granted admin while lock/reset stay protected');
+        }
         await button.click();
         assert.equal(await dialog.locator('#tp_login_current').inputValue(), fixture.newLogin);
         await dialog.getByRole('button', { name: 'Hủy', exact: true }).click();

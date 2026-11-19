@@ -13,6 +13,12 @@ class BaseHrWorkspace(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        employee_model = cls.env['hr.employee']
+        sequence = employee_model._tp_code_sequence()
+        cls.env.cr.execute('SELECT last_value, is_called FROM ir_sequence_%03d' % sequence.id)
+        state = cls.env.cr.fetchone()
+        cls.addClassCleanup(cls._restore_employee_sequence, sequence.id, *state)
+        employee_model._tp_reset_code_sequence(employee_model._tp_code_floor())
         cls.company = cls.env['res.company'].create({'name': 'Synthetic HR Company'})
         cls.other = cls.env['res.company'].create({'name': 'Synthetic Other HR'})
         cls.department = cls.env['hr.department'].create({'name': 'Synthetic HR Unit', 'company_id': cls.company.id})
@@ -35,6 +41,12 @@ class BaseHrWorkspace(TransactionCase):
             {'name': 'Synthetic Archived', 'company_id': cls.company.id, 'department_id': cls.department.id, 'active': False},
         ])
         cls.env['hr.employee'].with_company(cls.other).create({'name': 'Synthetic Other Secret', 'company_id': cls.other.id})
+
+    @classmethod
+    def _restore_employee_sequence(cls, sequence_id, last_value, is_called):
+        # PostgreSQL nextval is not rolled back with synthetic employees.
+        with cls.registry.cursor() as cr:
+            cr.execute('SELECT setval(%s, %s, %s)', ['ir_sequence_%03d' % sequence_id, last_value, is_called])
 
     def report(self, actor=None):
         return self.env['tp.hr.workspace'].with_user(actor or self.hr).with_context(allowed_company_ids=[self.company.id])
