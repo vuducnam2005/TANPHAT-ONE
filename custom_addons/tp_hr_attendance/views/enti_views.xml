@@ -85,7 +85,7 @@
                 <filter name="state_suggested" string="Chờ xác nhận" domain="[('state', '=', 'suggested')]"/>
                 <filter name="state_unmapped" string="Chưa đối chiếu" domain="[('state', '=', 'unmapped')]"/>
                 <filter name="state_mapped" string="Đã khớp" domain="[('state', '=', 'mapped')]"/>
-                <group expand="0" string="Nhóm theo">
+                <group>
                     <filter name="group_state" string="Trạng thái đối chiếu" context="{'group_by': 'state'}"/>
                     <filter name="group_dept" string="Bộ phận ENTI" context="{'group_by': 'ten_bp'}"/>
                 </group>
