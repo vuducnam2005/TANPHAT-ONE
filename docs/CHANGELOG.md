@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-026 — Hoàn thành tải, đối chiếu và áp dụng dữ liệu chấm công thật từ ENTI vào database
+
+- 19/11/2026 Asia/Saigon; nhiệm vụ `ENTI-LIVE-001`. Đã kết nối API ENTI thật, lấy dữ liệu bảng công từ ngày 01/11/2026 đến 19/11/2026, đối chiếu định danh nhân sự và áp dụng thành công vào hệ thống database chính trên PC server (`192.168.1.73`).
+- `tp_hr_attendance` 20.0.3.4.1: sửa cơ chế bọc `internal(...)` chống chặn quyền trực tiếp khi áp session/ngày công và chuẩn hóa thuật toán đối chiếu 1-1 theo họ tên NFC.
+- Kết quả đối chiếu nhân viên: 38/39 nhân viên đã khớp chính xác 1-1 với hồ sơ `hr.employee` trong Odoo HR (`state='mapped'`); 1 nhân viên (`Hoàng Xuân Tiến` — `TP032`) được đưa vào danh sách **Chờ đối chiếu** (`state='unmapped'`, lý do: *Chưa tìm thấy nhân viên phù hợp trong Odoo HR*) đúng quy định bảo vệ dữ liệu Odoo HR.
+- Kết quả áp dụng dữ liệu công: Nhận 741 bản ghi ngày công từ ENTI, áp dụng thành công **722 ngày công** vào bảng công chuẩn `tp.hr.attendance.day` (`source_kind='enti'`), tạo **399 phiên vào - ra** thực tế trong `tp.hr.attendance.session` (`source='enti'`). 19 ngày công của nhân viên chưa khớp được lưu trữ an toàn tại `tp.hr.attendance.enti.day` ở trạng thái `pending_map`.
+- Xử lý đủ và thiếu giờ: Các ngày chỉ có giờ vào hoặc chỉ có giờ ra ghi nhận đúng `data_state='missing'`, không tự điền giả 17:00, không vi phạm ràng buộc `check_out > check_in`. Các ngày đủ giờ ghi nhận `data_state='ok'` và tính đúng số giờ làm việc thực tế.
+- Tự động hóa & Runtime: Cron `ir_cron_enti_attendance_sync` quét tự động mỗi 1 phút; container `tp-odoo` đã khởi động lại sạch 0 lỗi; endpoint Cloudflare `https://eight-championships-launches-plaintiff.trycloudflare.com/web/health` trả về HTTP 200 OK.
+
 ## CHG-20261119-025 — Tích hợp chấm công ENTI thật, tự động đồng bộ theo lịch và cập nhật UI trực tiếp
 
 - 19/11/2026 Asia/Saigon; nhiệm vụ `ENTI-LIVE-001`. Tích hợp API chấm công ENTI (`enti.vn`) trực tiếp từ backend Python (`EntiClient` qua session HTTP an toàn), tự động chọn ứng dụng công ty Tấn Phát, quản trị token và refresh token không qua trình duyệt.

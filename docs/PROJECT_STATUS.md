@@ -1,5 +1,19 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261119-026 — ENTI-LIVE-001 — LIVE_DATA_APPLIED_AND_PROJECTED.** Dữ liệu chấm công thật từ máy chấm công ENTI (enti.vn) đã được tải về, đối chiếu tự động và áp dụng thành công vào hệ thống database chính trên PC server (192.168.1.73).
+- **Addon**: `tp_hr_attendance` nâng cấp lên **20.0.3.4.1** (sửa cơ chế bọc `internal(...)` chống chặn quyền trực tiếp khi áp session/ngày công và chuẩn hóa đối chiếu 1-1 theo họ tên NFC).
+- **Kết quả đối chiếu nhân viên**: Quét 39 nhân viên từ ENTI:
+  - **38 nhân viên** đã khớp chính xác 1-1 với hồ sơ `hr.employee` trong Odoo HR (`state='mapped'`).
+  - **1 nhân viên** (`Hoàng Xuân Tiến` — mã ENTI `TP032`) được xếp vào danh sách **Chờ đối chiếu** (`state='unmapped'`, lý do: *Chưa tìm thấy nhân viên phù hợp trong Odoo HR*) đúng theo yêu cầu thiết kế Section 6.
+- **Kết quả áp dụng dữ liệu công (từ 01/11/2026 đến 19/11/2026)**:
+  - Nhận tổng cộng **741 bản ghi ngày công** từ ENTI.
+  - **722 ngày công** đã áp dụng thành công vào bảng công chuẩn `tp.hr.attendance.day` (`source_kind='enti'`).
+  - **399 phiên vào - ra** thực tế đã tạo trong `tp.hr.attendance.session` (`source='enti'`).
+  - **19 ngày công** thuộc nhân viên chưa đối chiếu (`Hoàng Xuân Tiến`) được lưu trữ tại `tp.hr.attendance.enti.day` ở trạng thái `pending_map` để chờ đối chiếu.
+- **Xử lý ngày chưa đủ giờ**: Các ngày chỉ có giờ vào hoặc chỉ có giờ ra (ví dụ ngày 17/11 của Trần Phương Đông, Vũ Đức Nam) được ghi nhận đúng `data_state='missing'`, không tự điền giả 17:00 và không tạo phiên sai ràng buộc `CHECK(check_out > check_in)`. Các ngày đủ giờ vào/ra ghi nhận `data_state='ok'` và tính đúng số giờ làm việc thực tế.
+- **Tự động hóa & Runtime**: Cron `ir_cron_enti_attendance_sync` kích hoạt chạy tự động 1 phút/lần. Container `tp-odoo` đã khởi động lại sạch 0 lỗi, public URL Cloudflare `https://eight-championships-launches-plaintiff.trycloudflare.com/web/health` trả về HTTP 200 OK.
+- **Bàn giao**: Người dùng và nhân viên có thể mở ngay "Công của tôi", "Tổng quan chấm công" và "Quản trị chấm công → Đối chiếu nhân viên ENTI" để nghiệm thu dữ liệu thực tế.
+
 **CHG-20261119-025 — ENTI-LIVE-001 — MAIN_AND_PC_SERVER_APPLIED.** Tích hợp dữ liệu chấm công ENTI thật, tự động đồng bộ theo lịch và cập nhật UI trực tiếp. Addon `tp_hr_attendance` 20.0.3.4.0 đã push và deploy thành công trên PC server (192.168.1.73), database `tp_tanphat_dev`, container `tp-odoo` upgrade exit 0, 0 ERROR. Ràng buộc `tp_hr_attendance_source_live_off` đã được xóa sạch qua migration `post-migrate.py`. Đã kích hoạt cron tự động `ir_cron_enti_attendance_sync` quét 1 phút/lần. Client HTTP `EntiClient` kết nối API `enti.vn`, tự động chọn ứng dụng công ty Tấn Phát, quản trị token/refresh_token và cookie phiên (`enti_active_app`, `enti_session`, `enti_tunnel`) không dùng trình duyệt thường trực; model đối chiếu `tp.hr.attendance.enti.mapping` ghép nối an toàn theo họ tên và mã máy lịch sử, giữ Odoo HR là Single Source of Truth; lưu trữ bất biến dữ liệu thô `tp.hr.attendance.enti.day`; xử lý đầy đủ các ca chưa đủ giờ (in-only / out-only) không bịa 17:00 và không vi phạm ràng buộc `check_out > check_in`; phân cấp ưu tiên nghiêm ngặt (Điều chỉnh đã duyệt > Live ENTI > Excel fallback); bus notification `bus.bus` + polling ngầm 30s khi tab mở tự làm mới Dashboard, Bảng công, Công của tôi và Nguồn dữ liệu mà không cần F5; wizard cấu hình bảo mật mật khẩu không lộ log/trình duyệt. Snapshot dữ liệu PC server giữ nguyên 100%: 39 nhân viên, 480 ngày công, 32 user. Backup PC `C:\TANPHAT-backups\enti-live001\tp_tanphat_dev_pre_enti_live001.dump` (10.197.039 B) và file zip addon. Public health 200 OK trên Cloudflare URL (`https://eight-championships-launches-plaintiff.trycloudflare.com/web/health`). [Acceptance](demo/ENTI_LIVE_001_ACCEPTANCE.md), [runbook](../ops/runbooks/ENTI_LIVE_001_DEPLOY_AND_ROLLBACK.md). Next: Quản trị viên/HR đăng nhập vào "Quản trị chấm công → Cấu hình kết nối ENTI" để kích hoạt lấy công kỳ mới nhất và nghiệm thu đối chiếu nhân sự.
 
 
@@ -186,7 +200,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261119-024`
+Last change: `CHG-20261119-026`
 
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.
