@@ -72,3 +72,4 @@ Release theo quy trình `git archive <SHA> custom_addons/tp_hr_attendance` (gi�
   - Dừng `tp-odoo`, khôi phục `source-config.tar.gz` của đúng backup rồi `-u tp_hr_attendance` về `20.0.3.2.0`.
   - Dòng ACL đọc theo `reviewer_user_ids` sẽ được tạo lại. Chạy `_tp_refresh_reviewers()` để danh sách người nhận chỉ còn Admin chính.
   - Phiếu đã duyệt giữ nguyên dữ liệu. Hoàn nguyên đầy đủ dùng dump + filestore cùng backup.
+- Đã giao PC server (CHG-20261119-015): backup `C:\TANPHAT-backups\admin-approve012\admin-approve012-20261119T133902`, upgrade exit 0, 0 ERROR, ACL chấm công `55 → 54`, người nhận duyệt công ty 1 = Admin chính + 5 admin ủy quyền. Script `.local/admin-approve012/deploy012.py` + `deploy-server012.ps1` từ chối nếu có container/tiến trình khác đang chạy trong `tp-odoo`; lần giao này đã chờ phiên HR-LOGIN-RENAME nâng cấp xong. Local `18069` chưa áp.

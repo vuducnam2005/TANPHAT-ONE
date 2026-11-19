@@ -36,3 +36,17 @@
 
 - DB kiểm thử `tp_tanphat_test` dùng chung với phiên khác; kiểm cuối chạy ngay sau `-u` lên `20.0.3.3.0` (đã kiểm phiên bản module và không còn dòng ACL cũ).
 - Main local và PC server không có phiếu điều chỉnh thật; không tạo phiếu giả ở đó, nên kiểm sau giao bản chỉ đọc (danh sách admin nhận duyệt, menu, version, bundle).
+
+## Giao PC server (CHG-20261119-015)
+
+| Kiểm tra | Kết quả |
+| --- | --- |
+| Nguồn trước giao | Khớp baseline `44b0c9e2` 64/64, không có tệp lạ |
+| Backup | `C:\TANPHAT-backups\admin-approve012\admin-approve012-20261119T133902` (dump + `restore-list` 15.790 mục + filestore + source/config + `SHA256SUMS.json`) |
+| Nâng cấp | `-u tp_hr_attendance` exit 0, 0 ERROR; module `20.0.3.3.0`; nguồn khớp commit `af72ede1` 65/65 |
+| Quyền | ACL chấm công `55 → 54` (xóa `access_att_correction_reviewer`); nhóm người dùng và sổ ủy quyền không đổi |
+| Người nhận duyệt (công ty 1) | `admin`, `namvd`, `thipt`, `thuannv`, `tranphuongdong`, `tuanln`: Admin chính và đúng 5 grant đang hiệu lực; menu `Xử lý điều chỉnh` hiện với cả 6 |
+| Dữ liệu | Nhân sự 39, tài khoản 32, phiên 384, ngày công 480, đi muộn 117, lô 5: không đổi; 0 phiếu điều chỉnh |
+| Web public | `/web/health`, `/dang-nhap` 200; bundle JS `/web/assets/ae4c8b5/web.assets_web.min.js` có chuỗi mới |
+
+Không tạo, gửi hay duyệt phiếu trên server. Biên bản máy: `.local/admin-approve012/server-preflight012.json`, `server-verify012.json`, `server-deploy-output.txt`.

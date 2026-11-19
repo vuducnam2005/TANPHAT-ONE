@@ -1,5 +1,16 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-015 — Giao PC server: admin được ủy quyền duyệt điều chỉnh công
+
+- Giao commit ứng dụng `af72ede1` (CHG-20261119-012) lên PC server: addon `tp_hr_attendance` `20.0.3.2.0 → 20.0.3.3.0` bằng `-u tp_hr_attendance` theo [runbook](../ops/runbooks/HR_ATTENDANCE_001_DEPLOY_AND_ROLLBACK.md). Script riêng `.local/admin-approve012/deploy012.py` + `deploy-server012.ps1`; 12 tệp (1 tệp mới là migration), giữ `mtime` theo commit.
+- Kiểm trước (chỉ đọc): nguồn server khớp baseline `44b0c9e2` 64/64 tệp, không có tệp lạ. Admin chính `admin` (uid 2, công ty 1). Công ty 1 có 5 grant ủy quyền đang hiệu lực: `tuanln`, `thuannv`, `thipt`, `tranphuongdong`, `namvd`. Server có 0 phiếu điều chỉnh, 0 phân công, 0 kỳ chốt. Phiên HR-LOGIN-RENAME đang nâng cấp server (container `tp-hr-login013-upgrade`). Chờ phiên đó xong và server yên rồi mới chạy, không chồng lên.
+- Backup `C:\TANPHAT-backups\admin-approve012\admin-approve012-20261119T133902`: `tp_tanphat_dev.dump` `10.181.205`B (`restore-list` `15.790` mục), `filestore.tar.gz` `32.036.864`B, `source-config.tar.gz` `199.970`B, `SHA256SUMS.json`. Dừng `tp-odoo`, chạy `-u` trong container một lần, khởi động `tp-odoo` lúc 06:40:21Z; không restart tunnel.
+- Kết quả: upgrade exit 0, log nâng cấp và log sau khởi động 0 ERROR, `/web/health` và `/web/login` 200. Module `20.0.3.3.0`; nguồn khớp commit 65/65. ACL chấm công `55 → 54`: đúng dòng `access_att_correction_reviewer` bị xóa. Nhân sự 39, tài khoản 32, digest nhóm, roster, phiên 384, ngày công 480, đi muộn 117, lô 5, sổ ủy quyền và `web.base.url` không đổi.
+- Probe ORM chỉ đọc: `correction_admins(công ty 1)` = `admin`, `namvd`, `thipt`, `thuannv`, `tranphuongdong`, `tuanln`, tức Admin chính cộng đúng 5 grant đang hiệu lực. Menu `Xử lý điều chỉnh` hiện với cả 6. Không có phiếu chờ nên migration không phải đổi người nhận.
+- Public `https://eight-championships-launches-plaintiff.trycloudflare.com`: `/web/health`, `/dang-nhap` 200. Bundle `/web/assets/73d8d48/web.assets_web.min.css` (SHA256 `3dda3b6e…cff2`) và `/web/assets/ae4c8b5/web.assets_web.min.js` (SHA256 `d4432e9a…f22e`) có chuỗi giao diện mới.
+- Local `18069` chưa áp: cổng này đang chạy candidate của phiên HR-LOGIN-RENAME (`.local/hr-login-rename-impl001/main-candidate`); DB local `tp_tanphat_dev` còn `tp_hr_attendance` `20.0.3.1.0`. Không dừng hay sửa runtime của phiên khác. Áp sau bằng `-u tp_hr_attendance` có backup khi runtime đó rảnh.
+- Không tạo, gửi hay duyệt phiếu nào trên server; không đổi tài khoản/quyền ngoài phạm vi. `docs/AI_WORKFLOW_STATE.json` sinh từ đúng cây commit trong thư mục tạm; checkpoint và tài liệu dở của phiên khác được giữ nguyên.
+
 ## CHG-20261119-014 — Giao local/PC server: đổi tên đăng nhập nhân viên
 
 - App `0ba04faf88f03f34400e628968ff6624e9a5f82c` đã push origin/main và deploy riêng tp_hr_workspace20.0.1.15.0 + tp_admin_delegation20.0.2.0.2. Local dùng main-candidate giữ các addon runtime đang chạy; không tự áp chấm công/báo cáo/sidebar/branding WIP. PCserver16/16tệp đúngSHA256 vàmtimeGit, chỉ nâng2addon, không restart tp-tunnel.
