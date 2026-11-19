@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-004 — Bàn giao PC server giao diện “Công của tôi” (HR-ATTENDANCE-MINE-UI-001)
+
+- Ngày 19/11/2026 Asia/Saigon; triển khai app `5859a83e` (`8/8` tệp trong `custom_addons/tp_hr_attendance/`, không đổi version `20.0.3.1.0`, không cần `-u`) lên PC server sau preflight SHA256 `8/8` và backup nguồn `/workspace/.local/mine-ui001/source-before-20261119T035343Z`.
+- Chỉ restart `tp-odoo` (không động `tp-tunnel`/`tp-postgres`); snapshot DB trước/sau giữ nguyên (`39` nhân sự, `32` tài khoản, `5` lô, `384` phiên, `480` ngày, digest nhóm `cd4581c4f4c47e2cfab004b6eefb3cdc`).
+- Kiểm thực URL public hiện hành `https://eight-championships-launches-plaintiff.trycloudflare.com` (`/web/health` và `/dang-nhap` `200`) và tải trực tiếp bundle thực: CSS `/web/assets/9b3c839/web.assets_web.min.css` (SHA256 `de9f259b9921…`) và JS `/web/assets/e42c27e/web.assets_web.min.js` (SHA256 `df6d2838e447…`) khớp 100% server, xác nhận có `.o_tp_mine_table`, `.o_tp_mine_summary`, `overscroll-behavior-y: contain`, sticky `-20px`, `mineStatusInfo`, `applyFilters`, nhãn lọc và ghi chú không quy đổi `0`.
+- Probe ORM chỉ đọc trên PC server (`uid=51`) PASS; giữ nguyên ghi nhận chưa chạy authenticated browser E2E trên URL public và chưa kiểm thiết bị iOS/Safari thật. Đồng bộ tài liệu lên PC server không restart Odoo.
+
 ## CHG-20261119-003 — Thiết kế lại giao diện “Công của tôi” (HR-ATTENDANCE-MINE-UI-001)
 
 - Ngày 19/11/2026 Asia/Saigon; triển khai theo yêu cầu trực tiếp `HR-ATTENDANCE-MINE-UI-001`, giữ nguyên addon version `20.0.3.1.0` (không đổi schema/menu/ACL).

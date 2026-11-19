@@ -31,3 +31,14 @@
 - Trình duyệt trên local `18069` dùng session hiện có kết hợp payload ORM chỉ đọc thật của nhân viên `uid=41` (do tài khoản `admin` local chưa gắn hồ sơ nhân viên, không reset mật khẩu hay tạo user giả).
 - Chưa chạy kiểm thử trình duyệt có đăng nhập trực tiếp bằng mật khẩu nhân viên trên URL public để tránh thay đổi phiên người đang sử dụng; chưa kiểm trên iOS/Safari thiết bị thật.
 - Nghiệm thu hình thức và nghiệp vụ thuộc quyền người dùng sau khi xem trực tiếp trên server.
+
+## Giao bản PC server — CHG-20261119-004
+
+- Commit ứng dụng: `5859a83e2a28f3c201dce2d8e5ea86baacd9bc4a` (addon `tp_hr_attendance` `20.0.3.1.0`, không thay schema/menu, chỉ `docker restart tp-odoo`).
+- Backup nguồn trước deploy trên PC server: `/workspace/.local/mine-ui001/source-before-20261119T035343Z`.
+- Snapshot DB trước/sau không đổi: `39` nhân sự, `32` tài khoản, `5` lô, `384` phiên, `480` ngày công, group digest `cd4581c4f4c47e2cfab004b6eefb3cdc`.
+- Link public thực tế đã kiểm: `https://eight-championships-launches-plaintiff.trycloudflare.com` (`/web/health` và `/dang-nhap` `200`; không hardcode hostname cũ, không restart tunnel).
+- Bundle thực phục vụ (khớp 100% giữa nội bộ server và public):
+  - CSS: `/web/assets/9b3c839/web.assets_web.min.css` (1631612 bytes, SHA256 `de9f259b9921044534fe20ab08e70788b9cf678b888b28139b36f3188a5f8ebe`)
+  - JS: `/web/assets/e42c27e/web.assets_web.min.js` (8474198 bytes, SHA256 `df6d2838e44789c0c1b68e604815b57b55e5f25eb3f31e147a6472950738ddd1`)
+- Probe ORM chỉ đọc trên PC server (`uid=51`): `tp_mine` / `tp_export_mine` chống giả mạo `employee_id`, lọc + xuất toàn bộ kết quả lọc + từ chối bộ lọc lỗi đạt PASS.

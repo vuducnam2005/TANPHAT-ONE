@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T03:51:57.221112+00:00",
-  "last_change_id": "CHG-20261119-003",
+  "updated_at": "2026-11-19T03:59:57.277277+00:00",
+  "last_change_id": "CHG-20261119-004",
   "code_digest": "8bfd64d2469ff21f74e37c5be6f51e62fabe52719c93d684e6155abd07813e62",
   "code_file_count": 674,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "84f08b50e6aa7097f599dd65ab77fcb84745e047e251fa1d7146caf3bdc94122",
-    "docs/CHANGELOG.md": "7f1702f42d79bcc9d6788a065d772c3288cef9d551b55259d773a04ec60a1d49",
+    "docs/PROJECT_STATUS.md": "10bd252d1524126a8381e4c1907818bd2cac3e2230cbb1cde3ca4a8df935da1c",
+    "docs/CHANGELOG.md": "1846c2f1d4106700ee13312325f82a078d43a326c0837af6941cdb6861a99114",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "AST/XML/SCSS/Ruff/Node/pure-logic PASS; read-only ORM uid=41/34/2 PASS; Playwright mine_ui 10/10 + scroll 12/12 + latest_ui 2/2 PASS, 0 JS errors"
+    "PC server deploy 5859a83e 8/8 SHA256 + backup + restart tp-odoo; DB snapshot unchanged; public https://eight-championships-launches-plaintiff.trycloudflare.com health/login 200; served CSS/JS hashes match server; server read-only ORM PASS"
   ]
 }
