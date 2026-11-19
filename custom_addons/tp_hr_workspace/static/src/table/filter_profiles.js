@@ -57,7 +57,7 @@ registerTableFilterProfile("hr.employee::pending", {
 
 registerTableFilterProfile("hr.employee.public::directory", {
     criteria: [
-        { key: "name", field: "name", label: "Họ tên / mã TP", type: "char", placeholder: "Tìm họ tên hoặc mã TP…" },
+        { key: "tp_search_identity", field: "tp_search_identity", label: "Họ tên / Mã NV", type: "char", placeholder: "Tìm họ tên hoặc mã NV…" },
         { key: "department_id", field: "department_id", label: "Phòng ban", type: "many2one", allowEmpty: true },
         { key: "job_id", field: "job_id", label: "Chức vụ", type: "many2one", allowEmpty: true },
         { key: "work_location_id", field: "work_location_id", label: "Nơi làm việc", type: "many2one", allowEmpty: true },

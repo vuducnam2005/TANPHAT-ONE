@@ -54,12 +54,18 @@ export class HrProfileController extends FormController {
         if (this.props.resId && !this.props.state?.modelState) params.config.mode = this.props.context?.form_view_initial_mode || "readonly";
         return params;
     }
+    get isReadonlyProfile() {
+        return Boolean(
+            this.model.root.data.tp_account_profile_readonly ||
+            this.props.resModel === "hr.employee.public"
+        );
+    }
     get actionMenuItems() {
         const items = super.actionMenuItems;
-        return this.model.root.data.tp_account_profile_readonly ? {...items, action: []} : items;
+        return this.isReadonlyProfile ? {...items, action: [], print: []} : items;
     }
     async editProfile() {
-        if (this.model.root.data.tp_account_profile_readonly) return;
+        if (this.isReadonlyProfile) return;
         await this.model.root.switchMode("edit");
     }
     async saveProfile() {
@@ -93,6 +99,7 @@ export class HrCatalogController extends HrProfileController {
 const backFallbacks = registry.category("tp_back_fallbacks");
 for (const [model, xmlid] of Object.entries({
     "hr.employee": "tp_hr_workspace.action_employees",
+    "hr.employee.public": "tp_hr_workspace.action_directory",
     "hr.department": "tp_hr_workspace.action_departments",
     "hr.job": "tp_hr_workspace.action_jobs",
     "hr.work.location": "tp_hr_workspace.action_locations",

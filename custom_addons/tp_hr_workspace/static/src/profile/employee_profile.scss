@@ -1,10 +1,9 @@
 .o_tp_hr_profile_view {
     color-scheme: light;
-    --tp-profile-ink: #172b4d;
-    color: var(--tp-profile-ink);
+    --tp-profile-ink: #183153;
     .btn-primary { --btn-bg: #2563eb; --btn-border-color: #2563eb; --btn-hover-bg: #1d4ed8; --btn-hover-border-color: #1d4ed8; background-image: none; box-shadow: none; }
     .o_control_panel { background: #fff; border-bottom: 1px solid #dce4ef; padding: 12px 20px; }
-    .o_control_panel .btn { min-height: 40px; border-radius: 6px; padding: 6px 12px; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
+    .o_control_panel .btn { min-height: 36px; border-radius: 6px; padding: 6px 12px; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
     .o_control_panel_breadcrumbs { font-size: 14px; }
     .o_control_panel_actions { min-width: 0; }
     .o_breadcrumb .active { color: #183153; font-size: 17px; font-weight: 600; }
@@ -25,27 +24,39 @@
     @media(max-width: 575px) { .o_form_sheet { padding: 12px !important; } .o_tp_hr_position_summary { padding: 12px; } }
 }
 .o_tp_hr_employee_form {
-    color: #172b4d;
-    line-height: 1.55;
-    container: tp-hr-profile / inline-size;
+    color: #263b55;
     .o_form_sheet_bg { padding: 20px; background: #f4f7fb; }
-    .o_form_sheet { width: 100%; max-width: 1440px; margin: 0 auto; padding: 24px; background: #fff; border: 1px solid #dce4ef; border-radius: 8px; box-shadow: none; }
+    .o_form_sheet { width: 100%; max-width: 1260px; margin: 0 auto; padding: 24px; background: #fff; border: 1px solid #dce4ef; border-radius: 8px; box-shadow: none; }
     .o_form_statusbar { display: none !important; }
-    .o_tp_hr_header { min-width: 0; display: flex; align-items: center; gap: 18px; min-height: 88px; padding: 8px 0 20px; border-bottom: 1px solid #dce4ef; }
+    .o_tp_hr_header { display: flex; align-items: center; gap: 18px; min-height: 104px; padding: 8px 0 20px; border-bottom: 1px solid #dce4ef; }
     .o_tp_hr_avatar { width: 76px; flex: 0 0 76px; img { width: 76px; height: 76px; max-width: 76px; max-height: 76px; object-fit: cover; border-radius: 50%; } }
     .o_tp_hr_identity { flex: 1; min-width: 0; }
     .o_tp_hr_name { font-size: 26px; font-weight: 700; line-height: 1.25; color: #183153; margin: 0 0 10px; overflow-wrap: anywhere; .o_field_widget, input { font: inherit; } }
-    .o_tp_hr_badges { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; > span { display: inline-flex; align-items: center; gap: 7px; min-width: 0; max-width: 100%; overflow-wrap: anywhere; } .oi { font-size: 18px; color: #607087; } .o_field_widget { font-size: inherit; } }
+    .o_tp_hr_badges { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; > span { display: inline-flex; align-items: center; gap: 7px; } .oi { font-size: 18px; color: #607087; } .o_field_widget { font-size: inherit; } }
     .o_tp_hr_badge_code { padding: 4px 8px; border-radius: 5px; background: #edf4ff; color: #2563eb; font-weight: 600; }
     .o_tp_hr_header > .o_field_badge { background: transparent; .badge { font-size: 13px; padding: 6px 10px; border-radius: 5px; } }
-    .o_notebook .nav-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; gap: 4px; border-bottom: 1px solid #dce4ef; }
-    .o_notebook .nav-link { display: inline-flex; align-items: center; gap: 6px; color: #607087; font-size: 15px; font-weight: 600; white-space: nowrap; padding: 12px 14px; border: 0; border-radius: 0; border-bottom: 3px solid transparent; background: transparent; transition: color 200ms, background-color 200ms; .oi { font-size: 20px; } }
+    .o_tp_hr_header_meta { display: flex; align-items: center; flex-shrink: 0; .o_tp_hr_readonly_badge { margin-left: 0; font-size: 13px; padding: 5px 12px; } }
+    .o_tp_hr_self_entry {
+        display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px;
+        margin: 14px 0 4px; padding: 10px 14px; border: 1px solid #d7e2ef; border-radius: 8px; background: #f3f7fc;
+        color: #17324d; font-size: 14px;
+        .btn { min-height: 38px; border-radius: 6px; font-size: 14px; font-weight: 600; flex-shrink: 0; }
+    }
+    .o_tp_hr_card_body { padding: 12px 16px 16px; }
+    .o_tp_hr_empty_inline { margin: 0; color: #52647d; font-size: 14px; }
+    &.o_tp_hr_directory_form {
+        .o_form_readonly .o_field_widget,
+        .o_form_readonly .o_form_label { opacity: 1; color: #172b4d; }
+        .o_form_readonly .o_form_label { color: #475569; }
+    }
+    .o_notebook .nav-tabs { gap: 4px; border-bottom: 1px solid #dce4ef; }
+    .o_notebook .nav-link { display: inline-flex; align-items: center; gap: 6px; color: #607087; font-size: 14px; font-weight: 600; padding: 12px 14px; border: 0; border-radius: 0; border-bottom: 3px solid transparent; background: transparent; transition: color 200ms, background-color 200ms; .oi { font-size: 20px; } }
     .o_notebook .nav-link.active { color: #2563eb; border-bottom-color: #2563eb; background: #f0f5ff; }
     .o_notebook .nav-link:hover { background-color: #f4f7fb; }
     .o_notebook .tab-content { padding-top: 22px; }
-    .o_tp_hr_overview_grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+    .o_tp_hr_overview_grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 20px; }
     .o_tp_hr_personal_grid {
-        display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start;
+        display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: stretch;
         .o_tp_hr_card > .o_inner_group { grid-template-columns: minmax(145px, 39%) minmax(0, 1fr); }
     }
     .o_tp_hr_split_row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; .o_tp_hr_sep { color: #7a8aa0; flex: 0 0 auto; } .o_hr_narrow_field { flex: 1 1 110px; min-width: 0; } }
@@ -62,11 +73,11 @@
         &:not(:has(.o_select_file_button)):has(.o_tp_hr_empty_val:not(.d-none)) .o_tp_hr_binary_widget_field { display: none; }
     }
     .o_tp_hr_distance_row { display: flex; align-items: center; gap: 8px; .o_tp_hr_unit { width: auto; min-width: 68px; } }
-    .o_tp_hr_card { min-width: 0; background: #fff; border: 1px solid #dce4ef; border-radius: 8px; container: tp-hr-card / inline-size; > .o_inner_group { padding: 8px 16px 14px; margin: 0; grid-template-columns: minmax(120px, 35%) minmax(0, 1fr); } .o_wrap_label, .o_wrap_input { border-bottom: 1px solid #edf1f6; padding: 8px 0; margin-bottom: 0; } &:is(.o_form_editable *) :is(.o_wrap_label, .o_wrap_input) { border-bottom-color: transparent; } .o_wrap_label { padding-right: 12px; } .o_inner_group { column-gap: 12px; } > button { margin: 0 16px 16px; } }
-    .o_tp_hr_card_title { display: flex; align-items: center; gap: 8px; padding: 12px 16px; font-size: 18px; color: #172b4d; font-weight: 650; margin: 0; background: #eef5f8; .oi { color: #0f766e; font-size: 21px; } }
-    .o_form_renderer .o_wrap_label .o_form_label, .o_form_label { color: #475569; font-size: 14px; font-weight: 600; white-space: normal; overflow-wrap: anywhere; }
-    .o_form_label_readonly { opacity: 1; font-weight: 600; }
-    .o_field_widget { font-size: 15px; font-weight: 500; min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+    .o_tp_hr_card { min-width: 0; background: #fff; border: 1px solid #dce4ef; border-radius: 6px; overflow: hidden; > .o_inner_group { padding: 8px 16px 14px; margin: 0; grid-template-columns: minmax(120px, 35%) minmax(0, 1fr); } .o_wrap_label, .o_wrap_input { border-bottom: 1px solid #edf1f6; padding: 8px 0; margin-bottom: 0; } &:is(.o_form_editable *) :is(.o_wrap_label, .o_wrap_input) { border-bottom-color: transparent; } .o_wrap_label { padding-right: 12px; } .o_inner_group { column-gap: 12px; } > button { margin: 0 16px 16px; } }
+    .o_tp_hr_card_title { display: flex; align-items: center; gap: 8px; padding: 12px 16px; font-size: 16px; color: #183153; font-weight: 600; margin: 0; background: #eef5f8; .oi { color: #0f766e; font-size: 21px; } }
+    .o_form_label { color: #607087; font-size: 14px; }
+    .o_form_label_readonly { opacity: 1; font-weight: 400; }
+    .o_field_widget { font-size: 14px; }
     .o_tp_hr_account_card { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 0; border-top: 1px solid #dce4ef; .btn { font-size: 14px; } }
     .o_tp_hr_account_summary { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 180px; > :is(.oi, .o_tp_hr_line_icon) { color: #0f766e; font-size: 22px; flex: 0 0 28px; } > div > div { margin-top: 4px; font-weight: 600; } .text-muted { font-size: 13px; } }
     .o_tp_hr_account_box { padding: 0; background: #fff; }
@@ -127,7 +138,7 @@
     .o_tp_hr_account_grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; margin-bottom: 15px; > section { min-width: 0; } > section + section { border-left: 1px solid #d8e6ef; padding-left: 24px; } }
     .o_tp_hr_account_row { display: grid; grid-template-columns: 38px minmax(130px, 175px) minmax(0, 1fr); align-items: center; gap: 14px; min-height: 40px;
         > :is(.oi, .o_tp_hr_line_icon) { display: grid; place-items: center; width: 36px; height: 32px; border-radius: 9px; background: #edf6fa; color: #007587; font-size: 22px; }
-        .o_form_label { margin: 0; font-size: 14px; font-weight: 600; color: #475569; white-space: normal; }
+        .o_form_label { margin: 0; font-size: 14px; font-weight: 400; color: #526074; white-space: normal; }
         .o_field_widget { font-size: 15px; margin: 0; min-width: 0; overflow-wrap: anywhere; }
         .badge { font-size: 14px; padding: 5px 12px; border-radius: 20px; }
     }
@@ -143,15 +154,15 @@
     .modal-content:has(.o_tp_hr_account_manage) { border-radius: 0; .modal-header { padding: 16px; } .modal-title { font-size: 21px; } .modal-footer { margin: 0 16px; } }
     .o_tp_hr_account_manage {
         .o_form_sheet { padding: 16px !important; }
-        .o_tp_hr_account_row { grid-template-columns: 32px minmax(0, 1fr); .o_field_widget { grid-column: 2; } gap: 10px; min-height: 48px; > :is(.oi, .o_tp_hr_line_icon) { width: 32px; height: 32px; font-size: 22px; } .o_form_label { font-size: 14px; } .o_field_widget { font-size: 15px; } }
+        .o_tp_hr_account_row { grid-template-columns: 32px 116px minmax(0, 1fr); gap: 10px; min-height: 48px; > :is(.oi, .o_tp_hr_line_icon) { width: 32px; height: 32px; font-size: 22px; } .o_form_label { font-size: 14px; } .o_field_widget { font-size: 15px; } }
         .o_tp_hr_account_reason { grid-template-columns: 32px minmax(0, 1fr); .o_field_widget { grid-column: 1 / -1; } }
         .o_tp_hr_account_actions { align-items: stretch; flex-direction: column; .btn { width: 100%; } }
     }
 }
 
-.o_tp_hr_profile_view .o_form_renderer { max-width: none; min-width: 0; }
+.o_tp_hr_profile_view .o_form_renderer { max-width: none; }
 .o_tp_hr_employee_form, .o_tp_hr_account_manage {
-    .o_field_widget, .o_form_label, input, button { font-family: inherit; }
+    .o_field_widget, .o_form_label, input, button { font-family: system-ui, sans-serif; font-weight: 400; }
     .btn { font-weight: 600; }
 }
 
@@ -167,49 +178,4 @@
         .o_group { display: block; }
         .o_inner_group { grid-template-columns: minmax(0, 1fr); }
     }
-}
-
-// Break at the width available after the sidebar, including browser zoom.
-@container tp-hr-profile (max-width: 860px) {
-    .o_tp_hr_overview_grid, .o_tp_hr_personal_grid { grid-template-columns: minmax(0, 1fr); }
-    .o_tp_hr_employee_form .o_group { grid-template-columns: minmax(0, 1fr); }
-}
-@container tp-hr-card (max-width: 440px) {
-    .o_tp_hr_employee_form :is(.o_tp_hr_personal_grid, .o_tp_hr_overview_grid, .o_notebook) .o_tp_hr_card > .o_inner_group { grid-template-columns: minmax(0, 1fr); row-gap: 0; }
-    .o_tp_hr_card .o_inner_group > .o_cell { grid-column: 1 / -1; }
-    .o_tp_hr_card .o_wrap_label { border-bottom: 0; padding-bottom: 2px; }
-    .o_tp_hr_card .o_wrap_input { padding-top: 0; padding-bottom: 12px; }
-}
-.o_tp_hr_employee_form {
-    .o_group, .o_inner_group, .o_wrap_label, .o_wrap_input, .o_notebook, .tab-content, .tab-pane { min-width: 0; max-width: 100%; }
-    .o_form_renderer .tab-pane .o_field_widget { font-size: 15px; font-weight: 500; }
-    .o_form_renderer .o_inner_group .o_wrap_label .o_form_label { font-size: 14px; font-weight: 600; color: #475569; }
-    .o_wrap_input, .o_field_widget a, .o_field_text, .o-mail-Message-body { overflow-wrap: anywhere; }
-    .o_notebook_headers { min-width: 0; max-width: 100%; }
-    .o_list_renderer { max-width: 100%; overflow-x: auto; }
-    .o_list_table { font-size: 14px; th { color: #172b4d; font-weight: 650; background: #eef3f9; } td { border-bottom: 1px solid #dce4ef; } }
-    .o_horizontal_separator { color: #172b4d; font-size: 18px; font-weight: 650; }
-    .o_form_readonly :is(.o_field_char, .o_field_text, .o_field_email, .o_field_phone, .o_field_many2one, .o_field_date, .o_field_datetime, .o_field_selection, .o_field_many2many_tags_salary_bank).o_field_empty::after { content: "Chưa cập nhật"; color: #475569; font-size: 14px; font-weight: 400; }
-    .o_form_readonly [name="birth_location"]:has([name="place_of_birth"].o_field_empty) [name="country_of_birth"].o_field_empty { display: none; }
-    .btn, summary { white-space: normal; }
-}
-@container tp-hr-profile (max-width: 575px) {
-    .o_tp_hr_employee_form .o_form_renderer .o_inner_group { grid-template-columns: minmax(0, 1fr); }
-    .o_tp_hr_employee_form .o_form_renderer .o_inner_group > .o_cell { grid-column: 1 / -1; }
-    .o_tp_hr_employee_form .o_wrap_label { border-bottom: 0; padding-bottom: 2px; }
-    .o_tp_hr_employee_form .o_wrap_input { padding-top: 0; }
-}
-@media (max-width: 575px) {
-    .o_tp_hr_employee_form {
-        .o_form_renderer .o_inner_group { grid-template-columns: minmax(0, 1fr); }
-        .o_wrap_label { border-bottom: 0; padding-bottom: 2px; }
-        .btn, summary, .o_notebook .nav-link { min-height: 44px; }
-        .o_tp_hr_name { font-size: 23px; }
-    }
-}
-.modal-content:has(:is(.o_tp_hr_account_manage, .o_tp_hr_position_dialog)) {
-    max-height: calc(100dvh - 24px);
-    .modal-body { min-height: 0; overflow-y: auto; }
-    .modal-footer { flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
-    .o_form_label, .o_field_widget { overflow-wrap: anywhere; }
 }

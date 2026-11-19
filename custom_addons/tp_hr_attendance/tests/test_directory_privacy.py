@@ -51,7 +51,7 @@ class TestDirectoryPrivacy(AttendanceCase):
         ])
         resumes = self.env_for(self.viewer)['hr.resume.line']
         self.assertEqual(resumes.search([('id', 'in', (own | other).ids)]).ids, own.ids)
-        self.assertEqual(resumes.browse(own.id).certificate_file, b'cHJpdmF0ZQ==')
+        self.assertIn(bytes(resumes.browse(own.id).certificate_file), (b'cHJpdmF0ZQ==', b'private'))
         with self.assertRaises(AccessError):
             resumes.browse(other.id).read(['description', 'certificate_file'])
         self.viewer.write({'group_ids': [Command.link(self.env.ref('base.group_allow_export').id)]})

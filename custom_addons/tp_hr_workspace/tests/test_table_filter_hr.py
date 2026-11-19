@@ -77,7 +77,7 @@ class TestTableFilterHr(HttpCase):
         self.assertEqual(resp.status_code, 200)
         wb = load_workbook(BytesIO(resp.content), data_only=True)
         ws = wb["Danh sách nhân viên"]
-        names = [ws.cell(r, 2).value for r in range(6, ws.max_row + 1) if ws.cell(r, 2).value]
+        names = [row[2] for row in ws.iter_rows(min_row=7, values_only=True) if isinstance(row[0], int)]
         self.assertEqual(names, [emp_a.name])
 
         # Non-HR user must still fail overview backend permission check

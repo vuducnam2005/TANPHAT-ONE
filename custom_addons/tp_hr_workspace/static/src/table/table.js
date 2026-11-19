@@ -14,7 +14,6 @@ import { ListController } from "@web/views/list/list_controller";
 import { ListRenderer } from "@web/views/list/list_renderer";
 import { listView } from "@web/views/list/list_view";
 import { TpTableFilterBar } from "@tp_web_home/search/table_filter_bar";
-import { HrEmployeeFilterBar } from "./live_name_filter";
 import { PAGE_SIZE_OPTIONS, readPageSize, tablePageKey, writePageSize } from "../prefs";
 import {
     REORDER_LOCK_GUIDANCE,
@@ -79,11 +78,15 @@ export class HrEmployeeExportDialog extends Component {
     }
 }
 
+function isEmployeeListModel(resModel) {
+    return resModel === "hr.employee" || resModel === "hr.employee.public";
+}
+
 export class HrListModel extends RelationalModel {
     _getNextConfig(currentConfig, params) {
         const nextConfig = super._getNextConfig(currentConfig, params);
         if (
-            nextConfig.resModel === "hr.employee" &&
+            isEmployeeListModel(nextConfig.resModel) &&
             !nextConfig.isMonoRecord &&
             !nextConfig.context?.tp_hr_relation &&
             nextConfig.fields?.department_id
@@ -290,10 +293,17 @@ export class HrListRenderer extends ListRenderer {
         return typeof raw === "number" && raw > 0 ? raw : 0;
     }
 
+    get hasSelectors() {
+        if (this.props.list.resModel === "hr.employee.public" && session.tp_hr_readonly) {
+            return false;
+        }
+        return super.hasSelectors;
+    }
+
     getActiveColumns() {
         const columns = super.getActiveColumns();
         const filtered =
-            this.props.list.resModel === "hr.employee" &&
+            isEmployeeListModel(this.props.list.resModel) &&
             this.props.list.groupBy?.includes("department_id")
                 ? columns.filter((column) => column.name !== "department_id")
                 : columns;
@@ -560,11 +570,11 @@ export class HrListRenderer extends ListRenderer {
     }
 
     getGroupText(group) {
-        return `${group.count} ${this.props.list.resModel === "hr.employee" ? "thành viên" : "bản ghi"}`;
+        return `${group.count} ${isEmployeeListModel(this.props.list.resModel) ? "thành viên" : "bản ghi"}`;
     }
 
     hrGroupLabel(group) {
-        return this.props.list.resModel === "hr.employee" &&
+        return isEmployeeListModel(this.props.list.resModel) &&
             group.groupByField.name === "department_id" &&
             !group.value
             ? "Chưa khai báo phòng ban"
@@ -610,8 +620,8 @@ const TABLE_CONTENT = {
         "Chưa có lô nhập",
     ],
     "hr.employee.public": [
-        "Danh bạ nhân viên",
-        "Chỉ xem: thông tin công việc của đồng nghiệp. Hợp đồng, lương và thông tin riêng tư không hiển thị.",
+        "Danh sách nhân viên",
+        "Thông tin công việc của đồng nghiệp trong phạm vi được xem.",
         "",
         "Chưa có nhân viên",
     ],
@@ -625,7 +635,7 @@ const TABLE_CONTENT = {
 
 export class HrListController extends ListController {
     static template = "tp_hr_workspace.ListView";
-    static components = { ...ListController.components, HrTableTools, TpTableFilterBar, HrEmployeeFilterBar };
+    static components = { ...ListController.components, HrTableTools, TpTableFilterBar };
 
     setup() {
         super.setup();
@@ -636,10 +646,6 @@ export class HrListController extends ListController {
 
     get showEmployeeExport() {
         return this.props.resModel === "hr.employee" && !this.env.inDialog && !this.props.context?.tp_hr_relation;
-    }
-
-    get showEmployeeLiveSearch() {
-        return this.showEmployeeExport && !this.props.context?.tp_filter_profile;
     }
 
     openEmployeeExport() {
@@ -658,8 +664,16 @@ export class HrListController extends ListController {
         });
     }
 
+    get isEmployeeList() {
+        return isEmployeeListModel(this.props.resModel);
+    }
+
+    get isReadonlyDirectory() {
+        return this.props.resModel === "hr.employee.public" && !this.activeActions?.edit;
+    }
+
     get className() {
-        return `${super.className || ""} o_tp_hr_table${this.props.resModel === "hr.employee" ? " o_tp_hr_employee_list" : ""}`;
+        return `${super.className || ""} o_tp_hr_table${this.isEmployeeList ? " o_tp_hr_employee_list" : ""}`;
     }
 
     get hrContent() {
@@ -765,7 +779,10 @@ export class HrIdentityCell extends Component {
     static template = "tp_hr_workspace.IdentityCell";
     props = useProps(standardFieldProps);
     get isEmployee() {
-        return this.props.record.resModel === "hr.employee";
+        return isEmployeeListModel(this.props.record.resModel);
+    }
+    get avatarUrl() {
+        return `/web/image/${this.props.record.resModel}/${this.props.record.resId}/avatar_128`;
     }
 }
 registry.category("fields").add("tp_hr_identity", {

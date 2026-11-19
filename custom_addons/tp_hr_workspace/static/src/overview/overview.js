@@ -1,5 +1,6 @@
 import { Component, proxy, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
+import { session } from "@web/session";
 import { useService } from "@web/core/utils/hooks";
 export const HR_COLORS = ['#287fc0','#17a99a','#8a68cc','#dc9930','#d2657b','#659a3e','#5369c3','#c47836','#3a9ebc','#a964a1','#899d34','#587f9e','#c34c69','#368c71'];
 export function departmentColor(id, catalog = []) {
@@ -39,7 +40,22 @@ export class HrOverview extends Component {
         this.request = 0; this.loadedFilters = null;
         onWillStart(() => this.load());
     }
-    get filters() { return {department_id: Number(this.state.department) || false, job_id: Number(this.state.job) || false, status: this.state.status, employment_kind: this.state.employment}; }
+    get isReadonly() {
+        return Boolean(
+            this.props?.action?.context?.tp_hr_public_overview ||
+            this.props?.action?.params?.readonly ||
+            session?.tp_hr_readonly
+        );
+    }
+    get filters() {
+        if (this.isReadonly) {
+            return {
+                department_id: Number(this.state.department) || false,
+                job_id: Number(this.state.job) || false,
+            };
+        }
+        return {department_id: Number(this.state.department) || false, job_id: Number(this.state.job) || false, status: this.state.status, employment_kind: this.state.employment};
+    }
     get ready() { return !this.state.loading && !this.state.error && Boolean(this.state.data); }
     get segments() { return chartSegments(this.state.data?.departments || [], this.state.data?.total || 0, this.state.catalog); }
     get jobs() { return [...(this.state.data?.jobs || [])].sort((a,b) => b.count-a.count || a.name.localeCompare(b.name,'vi') || a.id-b.id); }
@@ -64,7 +80,8 @@ export class HrOverview extends Component {
         this.state.loading = true; this.state.error = "";
         this.clearHighlight();
         try {
-            const data = await this.orm.call("tp.hr.workspace", "get_overview", [filters]);
+            const method = this.isReadonly ? "get_public_overview" : "get_overview";
+            const data = await this.orm.call("tp.hr.workspace", method, [filters]);
             if (request !== this.request) return;
             this.state.data = data; this.loadedFilters = filters;
             this.state.catalog = data.catalog_departments || data.departments;
@@ -82,7 +99,8 @@ export class HrOverview extends Component {
     changePageSize(ev) { this.state.pageSize = Number(ev.target.value); this.state.page = 1; }
     async openEmployees(extra = []) {
         if (!this.ready) return;
-        const action = await this.orm.call("tp.hr.workspace", "action_employees", [{...this.loadedFilters}, extra]);
+        const method = this.isReadonly ? "action_public_employees" : "action_employees";
+        const action = await this.orm.call("tp.hr.workspace", method, [{...this.loadedFilters}, extra]);
         return this.action.doAction(action);
     }
     onSliceKey(ev, row) { if (['Enter', ' '].includes(ev.key)) { ev.preventDefault(); return this.openDepartment(row); } }
@@ -104,11 +122,11 @@ export class HrOverview extends Component {
     openMissing() { return this.openEmployees(this.state.data?.missing_domain || MISSING_BASIC); }
     openSummary() { document.getElementById('hr-department-summary')?.scrollIntoView({block:'start'}); }
     createEmployee() {
-        if (!this.ready || !this.state.data.can_create) return;
+        if (!this.ready || this.isReadonly || !this.state.data.can_create) return;
         return this.action.doAction({type: "ir.actions.act_window", name: "Thêm nhân viên", res_model: "hr.employee", views: [[this.state.data.employee_form_id || false,"form"]], target: "current"});
     }
     exportFile() {
-        if (!this.ready) return;
+        if (!this.ready || this.isReadonly) return;
         const filters = this.loadedFilters;
         window.location.assign('/tp_hr/export?' + new URLSearchParams({department_id: filters.department_id || '', job_id: filters.job_id || '', status: filters.status, employment_kind: filters.employment_kind || ""}));
     }

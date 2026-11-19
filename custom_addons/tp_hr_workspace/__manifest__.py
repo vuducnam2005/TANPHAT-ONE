@@ -26,8 +26,6 @@
             "tp_hr_workspace/static/src/sidebar/readonly_badge.xml",
             "tp_hr_workspace/static/src/sidebar/readonly_badge.scss",
             "tp_hr_workspace/static/src/table/filter_profiles.js",
-            "tp_hr_workspace/static/src/table/live_name_filter.js",
-            "tp_hr_workspace/static/src/table/live_name_filter.xml",
             "tp_hr_workspace/static/src/table/employee_reorder_rules.js",
             "tp_hr_workspace/static/src/table/table.js",
             "tp_hr_workspace/static/src/table/table.xml",

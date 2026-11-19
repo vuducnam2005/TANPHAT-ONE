@@ -56,6 +56,11 @@
         --bs-table-bg: #cbf3f7;
         th, td { background: #cbf3f7; color: #183153; position: static; z-index: auto; }
     }
+    .o_tp_hr_list_readonly_badge {
+        margin-left: 0;
+        flex-shrink: 0;
+        align-self: center;
+    }
     .o_tp_hr_empty { padding: 32px 16px; text-align: center; }
     .o_tp_hr_empty + .o_list_renderer { display: none; }
 }

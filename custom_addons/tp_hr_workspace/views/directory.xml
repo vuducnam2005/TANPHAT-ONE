@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- HR-DIRECTORY-READONLY-001: whitelist views on the native hr.employee.public projection. -->
+<!-- HR-UNIFIED-READONLY-UI-001: unified read-only views on the native hr.employee.public projection. -->
 <odoo>
     <record id="directory_search" model="ir.ui.view">
         <field name="name">tp.hr.directory.search</field>
         <field name="model">hr.employee.public</field>
-        <field name="priority">90</field>
+        <field name="priority">10</field>
         <field name="arch" type="xml">
-            <search string="Danh bạ nhân viên">
-                <field name="name" string="Họ tên hoặc mã TP" filter_domain="['|', ('name', 'ilike', self), ('tp_employee_code', 'ilike', self)]"/>
+            <search string="Danh sách nhân viên">
+                <field name="name" string="Mã hoặc tên" filter_domain="['|', ('name', 'ilike', self), ('tp_employee_code', 'ilike', self)]"/>
+                <field name="tp_employee_code" string="Mã nhân viên"/>
                 <field name="department_id" string="Phòng ban" operator="child_of"/>
                 <field name="job_id" string="Chức vụ"/>
-                <field name="parent_id" string="Quản lý trực tiếp"/>
                 <field name="work_location_id" string="Nơi làm việc"/>
+                <field name="parent_id" string="Quản lý trực tiếp"/>
                 <filter name="my_department" string="Phòng của tôi" domain="[('member_of_department', '=', True)]"/>
                 <group>
                     <filter name="group_department" string="Phòng ban" context="{'group_by': 'department_id'}"/>
@@ -25,19 +26,20 @@
     <record id="directory_list" model="ir.ui.view">
         <field name="name">tp.hr.directory.list</field>
         <field name="model">hr.employee.public</field>
-        <field name="priority">90</field>
+        <field name="priority">10</field>
         <field name="arch" type="xml">
-            <list string="Danh bạ nhân viên" js_class="tp_hr_table" limit="20" create="0" edit="0" delete="0" import="0" export_xlsx="0" default_order="sequence, id">
+            <list string="Danh sách nhân viên" js_class="tp_hr_table" limit="20" groups_limit="20" expand="1" create="0" edit="0" delete="0" import="0" export_xlsx="0" default_order="sequence, id">
                 <field name="sequence" column_invisible="True"/>
-                <field name="tp_employee_code" string="Mã TP"/>
-                <field name="avatar_128" widget="image" options="{'size': [28, 28]}" string=" " width="44px"/>
-                <field name="name" string="Họ tên"/>
-                <field name="department_id" string="Phòng / đơn vị"/>
-                <field name="job_title" string="Chức vụ"/>
-                <field name="parent_id" string="Quản lý trực tiếp" optional="show"/>
+                <field name="department_id" string="Đơn vị / Phòng ban" optional="show"/>
+                <field name="tp_employee_code" string="Mã nhân viên"/>
+                <field name="name" string="Họ và tên" widget="tp_hr_identity"/>
+                <field name="job_id" string="Chức vụ" optional="show"/>
                 <field name="work_email" string="Email công việc" widget="email" optional="show"/>
                 <field name="work_phone" string="Điện thoại công việc" widget="phone" optional="show"/>
-                <field name="work_location_id" string="Nơi làm việc" optional="hide"/>
+                <field name="parent_id" string="Quản lý trực tiếp" optional="show"/>
+                <field name="work_location_id" string="Nơi làm việc" optional="show"/>
+                <field name="job_title" string="Chức danh mô tả" optional="hide"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
             </list>
         </field>
     </record>
@@ -45,7 +47,7 @@
     <record id="directory_kanban" model="ir.ui.view">
         <field name="name">tp.hr.directory.kanban</field>
         <field name="model">hr.employee.public</field>
-        <field name="priority">90</field>
+        <field name="priority">10</field>
         <field name="arch" type="xml">
             <kanban class="o_tp_hr_directory_kanban" create="0" edit="0" delete="0">
                 <templates>
@@ -56,7 +58,8 @@
                         <main class="ms-2">
                             <field class="fw-bolder" name="name"/>
                             <field name="tp_employee_code" class="text-muted small"/>
-                            <field t-if="record.job_title.raw_value" name="job_title"/>
+                            <field t-if="record.job_id.raw_value" name="job_id"/>
+                            <field t-elif="record.job_title.raw_value" name="job_title"/>
                             <field t-if="record.department_id.raw_value" name="department_id" class="text-muted"/>
                             <div t-if="record.work_email.raw_value" class="text-truncate">
                                 <i class="oi oi-fw me-2 text-primary" data-icon="mail" title="Email công việc"/>
@@ -73,55 +76,127 @@
         </field>
     </record>
 
+    <!-- Dedicated read-only subviews so directory_form arch stays strictly within hr.employee.public fields. -->
+    <record id="directory_subordinate_list" model="ir.ui.view">
+        <field name="name">tp.hr.directory.subordinate.list</field>
+        <field name="model">hr.employee.public</field>
+        <field name="priority">90</field>
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <list string="Cấp dưới trực tiếp" create="0" edit="0" delete="0" limit="20" default_order="sequence, id">
+                <field name="tp_employee_code" string="Mã nhân viên"/>
+                <field name="name" string="Họ và tên"/>
+                <field name="job_id" string="Chức vụ"/>
+                <field name="work_email" string="Email công việc"/>
+            </list>
+        </field>
+    </record>
+
     <record id="directory_form" model="ir.ui.view">
         <field name="name">tp.hr.directory.form</field>
         <field name="model">hr.employee.public</field>
-        <field name="priority">90</field>
+        <field name="priority">10</field>
         <field name="arch" type="xml">
-            <form string="Thông tin công việc" create="0" edit="0" delete="0" duplicate="0" class="o_tp_hr_directory_form">
+            <form string="Hồ sơ nhân viên" create="0" edit="0" delete="0" duplicate="0" js_class="tp_hr_profile" class="o_tp_hr_employee_form o_tp_hr_directory_form">
                 <sheet>
-                    <div class="o_tp_hr_readonly_note" role="note">
-                        <span class="o_tp_hr_readonly_badge">Chỉ xem</span>
-                        Thông tin công việc của đồng nghiệp. Hợp đồng, lương và thông tin riêng tư không hiển thị.
-                    </div>
                     <field name="avatar_128" invisible="1"/>
-                    <field name="image_1920" widget="image" class="oe_avatar" options="{'preview_image': 'avatar_128'}" readonly="1"/>
-                    <div class="oe_title">
-                        <h1><field name="name" readonly="1"/></h1>
-                        <h2><field name="job_title" readonly="1"/></h2>
+                    <field name="is_user" invisible="1"/>
+                    <div class="o_tp_hr_header">
+                        <div class="o_tp_hr_avatar">
+                            <field name="image_1920" widget="image" options="{'size':[72,72], 'preview_image':'avatar_128'}" readonly="1"/>
+                        </div>
+                        <div class="o_tp_hr_identity">
+                            <h1 class="o_tp_hr_name"><field name="name" readonly="1"/></h1>
+                            <div class="o_tp_hr_badges">
+                                <span class="o_tp_hr_badge_code" invisible="not tp_employee_code">
+                                    <i class="oi" data-icon="person" aria-hidden="true"/>
+                                    <field name="tp_employee_code" readonly="1"/>
+                                </span>
+                                <span>
+                                    <svg class="o_tp_hr_line_icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 10 6-10 6L2 9Z M2 13l10 6 10-6 M2 17l10 6 10-6"/></svg>
+                                    <field name="department_id" readonly="1" options="{'no_open': True}"/>
+                                </span>
+                                <span>
+                                    <i class="oi" data-icon="work" aria-hidden="true"/>
+                                    <field name="job_id" readonly="1" options="{'no_open': True}"/>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="o_tp_hr_header_meta">
+                            <span class="o_tp_hr_readonly_badge" title="Chế độ chỉ xem: hiển thị thông tin công việc được phép chia sẻ nội bộ.">Chỉ xem</span>
+                        </div>
                     </div>
-                    <group>
-                        <group string="Công việc">
-                            <field name="tp_employee_code" string="Mã TP"/>
-                            <field name="department_id" string="Phòng / đơn vị" options="{'no_open': True}"/>
-                            <field name="job_id" string="Chức vụ" options="{'no_open': True}"/>
-                            <field name="parent_id" string="Quản lý trực tiếp" options="{'no_open': True}"/>
-                            <field name="work_location_id" string="Nơi làm việc" options="{'no_open': True}"/>
-                            <field name="company_id" string="Đơn vị" options="{'no_open': True}" groups="base.group_multi_company"/>
-                        </group>
-                        <group string="Liên hệ công việc">
-                            <field name="work_email" string="Email công việc" widget="email"/>
-                            <field name="work_phone" string="Điện thoại công việc" widget="phone"/>
-                            <field name="birthday_public_display_string" string="Sinh nhật" invisible="birthday_public_display_string == 'hidden'"/>
-                        </group>
-                    </group>
+
+                    <div class="o_tp_hr_self_entry" invisible="not is_user" role="note">
+                        <span>Đây là hồ sơ của bạn. Dùng Hồ sơ cá nhân để xem đầy đủ và cập nhật thông tin được phép.</span>
+                        <button name="action_tp_open_my_profile" type="object" string="Mở Hồ sơ cá nhân" icon="person" class="btn btn-outline-primary"/>
+                    </div>
+
+                    <notebook>
+                        <page name="page_overview" string="Tổng quan">
+                            <div class="o_tp_hr_overview_grid">
+                                <section class="o_tp_hr_card">
+                                    <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="work" aria-hidden="true"/>Thông tin công việc</h2>
+                                    <group>
+                                        <field name="department_id" string="Phòng ban" readonly="1" options="{'no_open': True}"/>
+                                        <field name="job_id" string="Chức vụ nhân sự" readonly="1" options="{'no_open': True}"/>
+                                        <field name="parent_id" string="Quản lý trực tiếp" widget="many2one_avatar_employee" readonly="1" options="{'no_open': True}"/>
+                                        <field name="work_location_id" string="Nơi làm việc" readonly="1" options="{'no_open': True}"/>
+                                        <field name="company_id" string="Đơn vị" readonly="1" options="{'no_open': True}" groups="base.group_multi_company"/>
+                                        <field name="job_title" string="Chức danh hiển thị" readonly="1"/>
+                                        <div class="text-muted" invisible="parent_id" colspan="2">Chưa khai báo quản lý trực tiếp</div>
+                                    </group>
+                                </section>
+                                <section class="o_tp_hr_card">
+                                    <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="phone" aria-hidden="true"/>Liên hệ công việc</h2>
+                                    <group>
+                                        <field name="work_email" string="Email công việc" widget="email" readonly="1"/>
+                                        <field name="work_phone" string="Điện thoại công việc" widget="phone" readonly="1"/>
+                                        <field name="address_id" string="Địa chỉ làm việc" readonly="1" options="{'no_open': True}" invisible="not address_id"/>
+                                        <field name="birthday_public_display_string" string="Sinh nhật" readonly="1" invisible="not birthday_public_display_string or birthday_public_display_string == 'hidden'"/>
+                                    </group>
+                                </section>
+                            </div>
+                        </page>
+                        <page name="work_information" string="Hồ sơ và năng lực">
+                            <div class="o_tp_hr_overview_grid">
+                                <section class="o_tp_hr_card">
+                                    <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="group" aria-hidden="true"/>Quan hệ công việc</h2>
+                                    <group>
+                                        <field name="parent_id" string="Quản lý trực tiếp" widget="many2one_avatar_employee" readonly="1" options="{'no_open': True}"/>
+                                        <field name="coach_id" string="Người hướng dẫn" widget="many2one_avatar_employee" readonly="1" options="{'no_open': True}" invisible="not coach_id"/>
+                                    </group>
+                                    <div class="o_tp_hr_card_body">
+                                        <field name="child_ids" readonly="1" nolabel="1" context="{'list_view_ref': 'tp_hr_workspace.directory_subordinate_list'}" invisible="not child_ids"/>
+                                        <p class="o_tp_hr_empty_inline" invisible="child_ids">Không có nhân viên báo cáo trực tiếp.</p>
+                                    </div>
+                                </section>
+                            </div>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
     </record>
 
     <record id="action_directory" model="ir.actions.act_window">
-        <field name="name">Danh bạ nhân viên</field>
+        <field name="name">Danh sách nhân viên</field>
         <field name="res_model">hr.employee.public</field>
         <field name="path">danh-ba</field>
-        <field name="view_mode">list,kanban,form</field>
+        <field name="view_mode">list,form</field>
         <field name="view_ids" eval="[(5, 0, 0),
             (0, 0, {'view_mode': 'list', 'view_id': ref('directory_list')}),
-            (0, 0, {'view_mode': 'kanban', 'view_id': ref('directory_kanban')}),
             (0, 0, {'view_mode': 'form', 'view_id': ref('directory_form')})]"/>
         <field name="search_view_id" ref="directory_search"/>
         <field name="context">{'tp_filter_profile': 'directory'}</field>
         <field name="help" type="html"><p>Chưa có nhân viên đang làm việc trong đơn vị được xem.</p></field>
+    </record>
+
+    <record id="action_public_overview" model="ir.actions.client">
+        <field name="name">Tổng quan TP HR</field>
+        <field name="tag">tp_hr_workspace.overview</field>
+        <field name="path">tp-hr-tong-quan</field>
+        <field name="context">{'tp_hr_public_overview': True}</field>
     </record>
 
     <record id="action_hr_entry" model="ir.actions.server">

@@ -1,5 +1,15 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-022 — Đồng bộ giao diện HR chỉ xem và bảo vệ dữ liệu đồng nghiệp
+
+- 19/11/2026 Asia/Saigon; nhiệm vụ `HR-UNIFIED-READONLY-UI-001`. Đồng bộ toàn diện giao diện quản lý nhân sự giữa Admin và Nhân viên thường: cùng ngôn ngữ thiết kế, cùng cấu trúc bảng, chiều cao hàng, avatar cạnh họ tên, nhóm phòng ban, tìm kiếm, lọc và phân trang trên cả Desktop và Mobile qua `view_mode="list,form"`.
+- Bỏ tiêu đề "Danh bạ nhân viên" lặp lại và đoạn giải thích cồng kềnh; thống nhất tên "Danh sách nhân viên" kèm nhãn "Chỉ xem" nhỏ gọn.
+- Bảo tồn thứ tự phòng ban (`tp_sequence, id`) và thứ tự nhân viên đã kéo thả (`sequence, id`); vô hiệu hóa kéo thả đối với người xem chỉ xem.
+- Bảo vệ dữ liệu đồng nghiệp: ẩn hoàn toàn 3 tab nhạy cảm (Hợp đồng lao động, Lịch sử hoạt động, Tài khoản và phân quyền) và tab cá nhân khi mở chi tiết đồng nghiệp; không lộ tên tab, nội dung, bộ đếm hay liên kết. Bảo toàn quyền tự phục vụ khi xem hồ sơ cá nhân qua kiểm tra ID nhân viên thực tế `user._tp_main_employee().id == employee.id`.
+- Màn hình Tổng quan public an toàn: chỉ trả về tổng số nhân viên và cơ cấu phòng ban được phép, ẩn mọi nút tác vụ, import, export và các chỉ số tài khoản/chất lượng hồ sơ.
+- Bảo vệ backend nhiều lớp trên `hr.employee.public`: chặn mọi thao tác thêm, sửa, xóa, copy, export, RPC direct write; chuyển hướng an toàn deep link quản trị `hr.employee` sang `hr.employee.public` bằng `RedirectWarning`.
+- Bộ test tự động 45/45 PASS trên `tp_tanphat_test` (0 failed, 0 error). Playwright browser test đạt 100% trên desktop và mobile cho cả Admin và Nhân viên; lưu bằng chứng hình ảnh tại `docs/demo/evidence/hr_unified_readonly_001/`. [Nghiệm thu](demo/HR_UNIFIED_READONLY_001_ACCEPTANCE.md).
+
 ## CHG-20261119-021 — Đã áp bản hồ sơ và tìm tên lên PCserver
 
 - 19/11/2026: app `b96a4cb5` đã push, backup/upgrade HR20.0.1.17.0 và Home20.0.1.9.1 trên local18069/PCserver exit0/0ERROR; giữ snapshot dữ liệu/quyền. Server backup `C:\TANPHAT-backups\hr-profile-live001\hr-profile-live020-20261119T160823`; dump/filestore/source/config/SHA256 verified.

@@ -30,9 +30,9 @@ class DepartmentHead(models.Model):
 class EmployeeRole(models.Model):
     _inherit = 'hr.employee'
 
-    tp_business_role = fields.Char(compute='_compute_business_role', string='Vai trò nghiệp vụ')
-    tp_role_supported = fields.Boolean(compute='_compute_business_role')
-    tp_role_scope = fields.Char(compute='_compute_business_role', string='Phạm vi quyền')
+    tp_business_role = fields.Char(compute='_compute_business_role', string='Vai trò nghiệp vụ', groups='hr.group_hr_user,base.group_system')
+    tp_role_supported = fields.Boolean(compute='_compute_business_role', groups='hr.group_hr_user,base.group_system')
+    tp_role_scope = fields.Char(compute='_compute_business_role', string='Phạm vi quyền', groups='hr.group_hr_user,base.group_system')
     tp_extra_access = fields.Text(compute='_compute_business_role', string='Quyền cấp riêng', groups='base.group_system')
 
     def _tp_role_supported(self):

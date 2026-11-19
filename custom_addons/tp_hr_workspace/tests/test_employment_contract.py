@@ -164,11 +164,16 @@ class TestHrEmploymentContract(TransactionCase):
         employee.tp_employment_kind = False
         book = load_workbook(BytesIO(report._build_xlsx({'employment_kind': 'unknown', 'missing_basic': True})))
         sheet = book['Danh sách nhân viên']
+        detail = book['Dữ liệu chi tiết']
         self.assertEqual(sheet['B6'].data_type, 's')
-        headers = [c.value for c in sheet[5]]
-        self.assertEqual(sheet.cell(6, headers.index('Loại hình lao động') + 1).value, 'Chưa khai báo')
-        self.assertEqual(sheet.cell(6, headers.index('Cần bổ sung') + 1).value, employee.tp_missing_basic)
-        self.assertTrue(sheet.auto_filter.ref)
+        headers = [c.value for c in sheet[6]]
+        self.assertIn('Loại hình lao động', headers)
+        emp_row = [r for r in sheet.iter_rows(min_row=7, values_only=True) if isinstance(r[0], int)][0]
+        self.assertEqual(emp_row[headers.index('Loại hình lao động')], 'Chưa khai báo')
+        detail_headers = [c.value for c in detail[6]]
+        detail_row = [r for r in detail.iter_rows(min_row=7, values_only=True) if isinstance(r[0], int)][0]
+        self.assertEqual(detail_row[detail_headers.index('Thông tin cần bổ sung')], employee.tp_missing_basic)
+        self.assertTrue(detail.auto_filter.ref)
         self.assertNotIn('wage', str(list(sheet.values)))
         book.close()
 

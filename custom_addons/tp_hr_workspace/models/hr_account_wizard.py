@@ -254,7 +254,7 @@ class TpHrAccountWizard(models.TransientModel):
 class PersonalEmployee(models.Model):
     _inherit = 'hr.employee'
 
-    tp_can_change_login = fields.Boolean(compute='_compute_tp_can_change_login')
+    tp_can_change_login = fields.Boolean(compute='_compute_tp_can_change_login', groups='hr.group_hr_user,base.group_system')
 
     @api.depends('user_id', 'company_id')
     @api.depends_context('uid', 'allowed_company_ids')

@@ -431,6 +431,7 @@ class HrEmployee(models.Model):
         store=True,
         readonly=True,
         index=True,
+        groups='hr.group_hr_user,base.group_system',
     )
     tp_account_status = fields.Selection(
         [
@@ -442,6 +443,7 @@ class HrEmployee(models.Model):
         compute='_compute_tp_account_status',
         store=True,
         index=True,
+        groups='hr.group_hr_user,base.group_system',
     )
 
     @api.depends('user_id', 'user_id.active', 'user_id.tp_hr_locked')

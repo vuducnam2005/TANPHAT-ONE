@@ -4,6 +4,7 @@
     --hr-soft:#eaf6f6; --hr-amber:#835900; --hr-amber-bg:#fff3d9;
     color-scheme:light; --bs-body-color:#1e293b; --bs-body-bg:#fff; --bs-secondary-color:#526277; padding:21px; overflow:auto; color:var(--hr-text); background:var(--hr-bg); height:100%; min-width:0;
     header {display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:17px;}
+    .o_tp_hr_title_row {display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:5px; h1 {margin:0;} .o_tp_hr_readonly_badge {margin-left:0;}}
     h1 {font-size:28px;font-weight:700;letter-spacing:-.5px;margin:0 0 5px;color:var(--hr-navy);}
     h2 {font-size:17px;font-weight:650;margin:0;color:var(--hr-navy);}
     p {line-height:1.6;margin-bottom:6px;} small {color:var(--hr-muted);}
@@ -17,6 +18,8 @@
     .o_tp_hr_filters label:first-child {flex:1;max-width:340px;}
     .o_tp_hr_note {color:var(--hr-muted);font-size:14px;}
     .o_tp_hr_kpis {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:11px;margin-bottom:17px;}
+    .o_tp_hr_kpis.is-readonly {grid-template-columns:repeat(2,minmax(0,1fr));}
+    .o_tp_hr_summary_full {grid-column:1/-1;}
     .o_tp_hr_kpis > * {position:relative;display:flex;flex-direction:column;align-items:flex-start;background:var(--hr-surface);border:1px solid var(--hr-line);border-radius:8px;padding:15px 14px;text-align:left;color:var(--hr-text);text-decoration:none;min-width:0;box-shadow:0 2px 3px rgba(30,41,59,.025);}
     .o_tp_hr_kpis strong {font-size:34px;font-weight:700;line-height:1.2;margin-bottom:7px;color:var(--hr-navy);font-variant-numeric:tabular-nums;}
     .o_tp_hr_kpis > * > span {font-weight:600;font-size:13px;}
@@ -68,7 +71,7 @@
     button:focus-visible,a:focus-visible {outline:3px solid var(--hr-teal);outline-offset:3px;}
     :is(select,input[type=search]):focus {outline:2px solid transparent;border-color:var(--tp-input-focus);box-shadow:var(--tp-input-ring);}
     button:disabled {cursor:default;}
-    @media(max-width:1399px) {.o_tp_hr_kpis {grid-template-columns:repeat(3,minmax(0,1fr));}.o_tp_hr_charts{grid-template-columns:1fr;}}
+    @media(max-width:1399px) {.o_tp_hr_kpis {grid-template-columns:repeat(3,minmax(0,1fr));}.o_tp_hr_kpis.is-readonly {grid-template-columns:repeat(2,minmax(0,1fr));}.o_tp_hr_charts{grid-template-columns:1fr;}}
     @media(max-width:600px) {padding:16px;h1{font-size:24px;}section{padding:16px;}.o_tp_hr_kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}.o_tp_hr_kpis>*{padding:16px 12px;}.o_tp_hr_kpis strong{font-size:28px;}.o_tp_hr_kpi_icon{font-size:16px;right:12px;}
         .o_tp_hr_filters{gap:12px;} .o_tp_hr_filters label,.o_tp_hr_filters label:first-child{flex:1 0 100%;max-width:none;}select{min-width:0;width:100%;}
         .o_tp_hr_structure_content{flex-direction:column;}.o_tp_hr_donut{width:280px;max-width:100%;flex:auto;}.o_tp_hr_legend{width:100%;max-height:none;}
@@ -119,7 +122,7 @@
     .o_tp_hr_chart_tooltip {position:fixed;z-index:1070;width:288px;max-width:calc(100vw - 24px);padding:12px 14px;border:1px solid #aec6d6;border-radius:7px;background:#fff;color:var(--hr-text);box-shadow:0 4px 16px rgba(30,41,59,.14);pointer-events:none;font-size:14px;line-height:1.5;strong,span {display:block;}span {color:var(--hr-muted);}}
     .o_tp_hr_job_bars:focus-visible {outline:3px solid var(--hr-teal);outline-offset:2px;}
     @media(min-width:701px) and (max-width:1399px) {.o_tp_hr_structure_content {min-height:320px;}.o_tp_hr_donut {flex:0 0 300px;}.o_tp_hr_legend {max-width:540px;}}
-    @media(min-width:1101px) and (max-width:1399px) {.o_tp_hr_kpis {grid-template-columns:repeat(5,minmax(0,1fr));}}
+    @media(min-width:1101px) and (max-width:1399px) {.o_tp_hr_kpis {grid-template-columns:repeat(5,minmax(0,1fr));}.o_tp_hr_kpis.is-readonly {grid-template-columns:repeat(2,minmax(0,1fr));}}
     @media(max-width:700px) {.o_tp_hr_structure_content {flex-direction:column;gap:18px;}.o_tp_hr_donut {width:280px;max-width:100%;flex:auto;}.o_tp_hr_legend {width:100%;}.o_tp_hr_legend button {min-height:44px;}.o_tp_hr_kpi_icon {width:23px;height:23px;}.o_tp_hr_actions .btn {min-height:44px;}.o_tp_hr_summary table {min-width:570px;}.o_tp_hr_bar button {min-height:40px;}.o_tp_hr_legend button {grid-template-columns:10px minmax(0,1fr) 22px 45px;gap:6px;}}
 
 }
