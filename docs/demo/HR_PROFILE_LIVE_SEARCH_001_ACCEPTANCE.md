@@ -21,8 +21,13 @@ File chính: `tp_hr_workspace/static/src/table/live_name_filter.js/xml`, table.j
 
 ## Môi trường và backup
 
-Local runtime isolated candidate `.local/hr-profile-live001/main-candidate`; backup `.local/hr-profile-live001/main-backup-20261119T153938`, dump/pg_restore-list/filestore DB-referenced/source/config/SHA256. Không nhận foreign WIP/reporting/branding/sidebar. PCserver/public đang chờ chốt release. Workflow seal snapshot HEAD+scope; giữ checkpoint18/11 của batch khác.
+Local runtime isolated candidate `.local/hr-profile-live001/main-candidate`; backup `.local/hr-profile-live001/main-backup-20261119T153938`, dump/pg_restore-list/filestore DB-referenced/source/config/SHA256. Không nhận foreign WIP/reporting/branding/sidebar. PCserver/public đã áp và kiểm, xem receipt dưới. Workflow seal snapshot HEAD+scope; giữ checkpoint18/11 của batch khác.
 
 ## Giới hạn
 
 Chưa physicaldevice/iOS/Safari; CSSzoom125/150/200 và landscape/thấp PASS; chưa native browser zoom. Chưa kiểm authenticated public bằng người dùng thật, chưa business acceptance. Browser phiên admin gốc; không đổi phiên/quyền để kiểm mọi vai trò. My Profile chỉ kiểm khung vì actor hiện tại chưa liên kết hồ sơ; không tuyên bố full-data tabs đã kiểm. Không fixture trùng tên/nhiều trang trênmain; logic ID và query server đã kiểm cô lập. Browser phiên admin gốc; không đổi phiên/quyền để kiểm mọi vai trò. My Profile chỉ kiểm khung vì actor hiện tại chưa liên kết hồ sơ; không tuyên bố full-data tabs đã kiểm. Không fixture trùng tên/nhiều trang trênmain; logic ID và query server đã kiểm cô lập. Không test ghi/sửa/khóa/reset tài khoản hoặc hồ sơ thật; backend quyền không đổi. Không coi unit/geometry PASS là nghiệm thu thị giác; cần xem ảnh và computedstyles sau transition.
+
+
+## Receipt PCserver — CHG-20261119-021
+
+**CHG-20261119-021 — HR-PROFILE-RESPONSIVE-UI-001 / LIVE-NAME-SEARCH — MAIN_AND_PC_SERVER_APPLIED.** App `b96a4cb5` đã push và chạy local18069/PCserver: HR20.0.1.17.0/Home20.0.1.9.1, upgrade0ERROR. Bỏ search lớn Danh sách nhân viên; Họ tên gợi ý/lọc từ ký tự đầu, không Enter; chọn ID, giữ bộ lọc khác. Profile7tab ×9width320–1920, edit/cancel/mobile/popup và CSSzoom/keyboard/longtext/reducedmotion PASS; HOOT48/243. Snapshot tài khoản/quyền/roster/nghiệp vụ giữ, không ghi hồ sơ thật. Backup PC `C:\TANPHAT-backups\hr-profile-live001\hr-profile-live020-20261119T160823`, local `.local/hr-profile-live001/main-backup-20261119T153938`. Public health/login200, JSaa047ce/CSS7813afc khớp SHA256 server; nguồn19/19checksum. [Acceptance](demo/HR_PROFILE_LIVE_SEARCH_001_ACCEPTANCE.md). Chưa physicaldevice/nativezoom/mọi vai trò hoặc MyProfile có employee; technical khác business acceptance. ForeignWIP/checkpoint giữ. Next: triển khai yêu cầu mới thông báo lỗi validation chung; người dùng Ctrl+F5 để xem bản tìm kiếm/hồ sơ.

@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-021 — Đã áp bản hồ sơ và tìm tên lên PCserver
+
+- 19/11/2026: app `b96a4cb5` đã push, backup/upgrade HR20.0.1.17.0 và Home20.0.1.9.1 trên local18069/PCserver exit0/0ERROR; giữ snapshot dữ liệu/quyền. Server backup `C:\TANPHAT-backups\hr-profile-live001\hr-profile-live020-20261119T160823`; dump/filestore/source/config/SHA256 verified.
+- Public health/login200 và actual JS/CSS SHA256 bằng server, có live-name/profile styles. Nguồn19/19checksum; browser/unit/HOOT PASS; giới hạn và evidence trong [acceptance](demo/HR_PROFILE_LIVE_SEARCH_001_ACCEPTANCE.md). Chưa business acceptance; yêu cầu validation bổ sung là batch tiếp. Docs-only receipt source sync, không restart thêm.
+
+
 ## CHG-20261119-020 — Hồ sơ HR responsive và tìm tên ngay khi gõ
 
 - 19/11/2026 Asia/Saigon; người dùng giao thực thi trực tiếp “làm đi” sau prompt hợp nhất. Phần bổ sung trực tiếp giới hạn bỏ thanh search lớn tại Danh sách nhân viên và autocomplete/lọc tên từ ký tự đầu, không cần Enter; tài liệu đính kèm là tham chiếu thiết kế hồ sơ.

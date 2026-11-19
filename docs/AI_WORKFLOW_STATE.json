@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T09:06:41.114548+00:00",
-  "last_change_id": "CHG-20261119-020",
+  "updated_at": "2026-11-19T09:14:37.511338+00:00",
+  "last_change_id": "CHG-20261119-021",
   "code_digest": "b2fa64329dd0f215ee9c5cf44cfe109c8b275ca0d41c7fc4608c490eb52db5e2",
   "code_file_count": 686,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "57b1033ddef40d887e88cfd198a050531eb0cd8e0b920bab533303b8a16b0f37",
-    "docs/CHANGELOG.md": "56fe86f10bee4707b666d2588ca1db58bcd95c9fbbdb0fd4ef90cdf8e6a5fb8c",
+    "docs/PROJECT_STATUS.md": "a8024da3b9d5ac3dfaf71733ff094af2ce81ca248f147a59efb652b594c492bb",
+    "docs/CHANGELOG.md": "d6bcb451a83c38654438990c49159bbdc3a25661504685de89f505e6c4609939",
     "AGENTS.md": "41da7729acb3c746356fb7595b8c1e452c6edcebe22d398f22361c67113038dc",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Live filter unit PASS; AST/XML/Node syntax and 3SCSS PASS; 7 inherited OWL templates compile PASS; HOOT48tests/243assertions PASS; Chromium10behavior checks + 63tab/width geometry checks + 10extra keyboard/clear/low-height/CSS-zoom/reduced-motion/long-text checks PASS; local18069 upgrade0ERROR/snapshot preserved; no fixturemain or18079."
+    "Docs receipt: PC upgrade exit0/0ERROR, business/security snapshot unchanged, 19source hashes and actual public/server JS/CSS SHA256 match, health/login200."
   ]
 }
