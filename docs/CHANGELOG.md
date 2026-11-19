@@ -1,10 +1,22 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-010 — Giao PC server: Admin chính duyệt điều chỉnh công
+
+- Giao commit ứng dụng `44b0c9e2` (CHG-20261119-005) lên PC server: addon `tp_hr_attendance` `20.0.3.1.0 → 20.0.3.2.0` bằng `-u tp_hr_attendance` theo [runbook](../ops/runbooks/HR_ATTENDANCE_001_DEPLOY_AND_ROLLBACK.md). Script riêng `.local/admin-approve005/deploy005.py` + `deploy-server005.ps1`, 13 tệp (1 tệp mới là migration) giữ `mtime` theo commit.
+- Kiểm trước (chỉ đọc): nguồn server khớp baseline `c9892225` 63/63 tệp, không tệp lạ; Admin chính duy nhất `admin` (uid 2, công ty 1, không gắn nhân viên); 5 admin ủy quyền đang hiệu lực; server có 0 phiếu điều chỉnh, 0 phân công, 0 kỳ chốt. Lần chạy đầu dừng ở bước kiểm trước vì phiên HR-EMPLOYEE-XLSX đang giao bản (tp-odoo bị dừng). Lần đó chưa thay đổi gì; chạy lại khi server đã yên ≥ 2 phút.
+- Backup `C:\TANPHAT-backups\admin-approve005\admin-approve005-20261119T121945`: `tp_tanphat_dev.dump` `10.191.235`B (`restore-list` `15.789` mục), `filestore.tar.gz` `32.272.814`B, `source-config.tar.gz` `195.339`B, `SHA256SUMS.json`. Dừng `tp-odoo`, chạy `-u` trong container một lần, khởi động `tp-odoo` lúc 05:21:03Z; không restart tunnel.
+- Kết quả: upgrade exit 0, log nâng cấp và log sau khởi động 0 ERROR, `/web/health` và `/web/login` 200. Module `20.0.3.2.0`; nguồn khớp commit 64/64. Nhân sự 39, tài khoản 32, digest nhóm, roster, phiên 384, ngày công 480, đi muộn 117, lô 5, grant ủy quyền và `web.base.url` không đổi.
+- Probe ORM chỉ đọc: Admin chính của công ty 1 là `admin`; field `tp_can_review` đã có; không có phiếu chờ. Menu `Xử lý điều chỉnh` hiện với `admin`, và hiện chỉ đọc với 5 admin ủy quyền vì họ có nhóm HR manager như trước. Họ không phải Admin chính nên không có nút Duyệt/Trả lại và backend từ chối.
+- Public `https://eight-championships-launches-plaintiff.trycloudflare.com`: `/web/health`, `/dang-nhap` 200; bundle mới `/web/assets/73d8d48/web.assets_web.min.css` (SHA256 `3dda3b6e…cff2`) và `/web/assets/5c1f5ad/web.assets_web.min.js` (SHA256 `c65e7521…4b7e`) có chuỗi giao diện mới.
+- Local `18069` chưa áp: cổng này đang chạy candidate của phiên HR-EMPLOYEE-XLSX (`.local/hr-employee-xlsx001/candidate`, `tp_hr_attendance` `20.0.3.1.0`), nên không dừng hay sửa runtime của phiên khác. Áp sau bằng `-u tp_hr_attendance` có backup khi runtime đó rảnh.
+- Không tạo, gửi hay duyệt phiếu nào trên server; không đổi tài khoản/quyền ngoài phạm vi. `docs/AI_WORKFLOW_STATE.json` sinh từ đúng cây commit trong thư mục tạm; checkpoint và tài liệu dở của phiên khác được giữ nguyên.
+
 ## CHG-20261119-009 — Prompt đổi tên đăng nhập nhân viên (HR-LOGIN-RENAME-001)
 
 - Ngày 19/11/2026 Asia/Saigon; theo yêu cầu trực tiếp. Phiên chính điều phối tạo [prompt triển khai](prompts/CLAUDE_HR_LOGIN_RENAME_001_EMPLOYEE_LOGIN.md), đăng ký roadmap/index và cập nhật status; chưa sửa application hoặc áp tính năng.
 - Rà luồng account wizard/related/export, guard DEC-054, native UNIQUE(login)/so sánh đúng tên và session token chứa login. Tiếp nhận rõ WIP chưa commit trong hr_account_wizard.py/hr_history.py: không tự chốt chữ thường/case-insensitive từ WIP; yêu cầu bảo vệ mọi đường ghi, duplicate inactive/archive/race, audit atomic, UI inline/reload/Excel/phiên và giữ identity/password/quyền. Claude phải hoàn thiện/kiểm đúng scope rồi commit/push/deploy PCserver theo policy17/11; không thử tài khoản người thật, không bắt18079.
 - Kiểm thực lượt điều phối: đọc source/diff/caller/test, scripts/dev.py status (18069/PG đang nghe), SSH chỉ đọc xác nhận PCserver /workspace/docs và prompt chưa có; kiểm nội dung/link tài liệu và git diff --check. Workflow check FAIL từ baseline do foreignWIP, start RESUME checkpoint18/11; không finish/seal thay batch khác. Không chạy test ORM/HTTP/browser/race/Excel đổi login vì chưa có implementation được bàn giao; không gọi prompt là technical/business acceptance. Chỉ đồng bộ tài liệu, không restart/upgrade runtime.
+- Giao tài liệu: commit `02399eff4beb00b6045ef8d54ad313b4e2409f28` đã push `origin/main`, đồng bộ 5/5 tệp trên PCserver `/workspace` với kiểm SHA256; backup `/workspace/.local/hr-login-rename001/docs-before-20261119T052733Z`. Chỉ chèn mục CHG/task tương ứng và prompt, giữ tài liệu/server khác; không restart/upgrade Odoo, không ghi DB hoặc áp tính năng đổi login. Kiểm 4 link/14 điều kiện nội dung và diff --check PASS; 45 tệp code có sẵn và checkpoint giữ nguyên.
 
 ## CHG-20261119-008 — Giao Xuất Excel nhân viên lên PC server
 
