@@ -99,6 +99,14 @@ coverage/test hoặc N/A có lý do. Tái sử dụng SearchModel và công cụ
 không tự tạo filter engine mới. Đây là quy chuẩn phát triển, không chứng minh
 các bảng hiện tại đã được triển khai đủ.
 
+**Thông báo thông tin còn thiếu khi thêm mới/lưu (FORM-VALIDATION-001):** theo
+[quy chuẩn validation](docs/ui/TP_FORM_VALIDATION_STANDARD.md). Form native tự
+có khối lỗi trong form qua presenter `tp_web_home/static/src/validation/`; form
+OWL tự viết phải dùng `InlineErrors` + `saveError`, không toast `danger` cho lỗi
+lưu. Lỗi lấy từ trạng thái hợp lệ của Odoo và backend, không danh sách cứng;
+không đổi quy định bắt buộc, không thêm giá trị giả, không bỏ kiểm tra backend.
+Màn mới cập nhật bảng đã áp/chưa áp trong quy chuẩn.
+
 - Không sửa `odoo/` hoặc `addons/`; code riêng đặt trong `custom_addons/`.
 - Database dùng một PostgreSQL database cho mỗi môi trường, dùng chung các phòng ban; phạm vi được kiểm tra ở Odoo.
 - Theo DEC-037, local chỉ dùng `tp_tanphat_dev` (18069) và `tp_tanphat_test` (18079), trên cluster workspace55432; giữ các database hệ thống PostgreSQL. Theo chỉ thị mới17/11, không bắt buộc qua test18079 trước deploy. Nếu dùng test thì một tác vụ ghi tại một thời điểm, không tạo database theo task. Đọc [quy trình dữ liệu sạch/test](ops/runbooks/SAMPLE_DATA_CLEANUP_AND_TEST.md); helper clone/seed lịch sử cần đánh giá lại, không tự chạy để mở phiên. Dữ liệu giả chỉ trên test; không restore test đè main. Backup và kiểm nhanh main/server theo quy trình giao bản liên tục.

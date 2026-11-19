@@ -46,7 +46,8 @@ describe("HR-001 mounted native UI",()=>{
     });
     test("employee department sections survive clearing search without a group facet",async()=>{
         onRpc('web_read_group', ({ kwargs }) => { expect(kwargs.groupby).toEqual(['department_id']); });
-        await mountView({type:"list",resModel:"hr.employee",arch:'<list js_class="tp_hr_table" expand="1"><field name="department_id"/><field name="name"/></list>',searchViewArch:'<search><field name="name" string="Name"/></search>'});
+        await mountView({type:"list",resModel:"hr.employee",arch:'<list js_class="tp_hr_table" expand="1"><field name="department_id"/><field name="name"/></list>',searchViewArch:'<search><field name="name" string="Name"/></search>',context:{tp_filter_profile:'pending'}});
+        // Profile lists (pending, missing, archived, directory) keep the native search bar.
         expect('.o_tp_hr_employee_list').toHaveCount(1);
         expect('.o_searchview_facet').toHaveCount(0);
         expect('.o_group_header').toHaveCount(1);
@@ -66,7 +67,7 @@ describe("HR-001 mounted native UI",()=>{
         expect('.o_data_row [name="department_id"]').toHaveCount(0);
     });
     test("removing employee filters and secondary groups keeps department sections",async()=>{
-        await mountView({type:"list",resModel:"hr.employee",arch:'<list js_class="tp_hr_table" expand="1"><field name="department_id"/><field name="name"/></list>',searchViewArch:'<search><filter name="matching" string="Matching" domain="[(\'id\',\'=\',1)]"/><group><filter name="name" string="Name group" context="{\'group_by\':\'name\'}"/></group></search>',context:{search_default_matching:1,search_default_name:1}});
+        await mountView({type:"list",resModel:"hr.employee",arch:'<list js_class="tp_hr_table" expand="1"><field name="department_id"/><field name="name"/></list>',searchViewArch:'<search><filter name="matching" string="Matching" domain="[(\'id\',\'=\',1)]"/><group><filter name="name" string="Name group" context="{\'group_by\':\'name\'}"/></group></search>',context:{search_default_matching:1,search_default_name:1,tp_filter_profile:'pending'}});
         expect('.o_searchview_facet').toHaveCount(2);
         expect('.o_group_header').toHaveCount(2);
         await removeFacet('Name group');

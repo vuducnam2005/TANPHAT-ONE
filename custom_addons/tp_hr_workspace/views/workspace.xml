@@ -74,8 +74,8 @@
   <field name="tp_account_status" widget="badge" decoration-success="tp_account_status == 'active'" decoration-danger="tp_account_status == 'disabled'" decoration-muted="tp_account_status == 'unlinked'"/>
  </div>
 </xpath>
-<xpath expr="//div[hasclass('o_tp_hr_header')]" position="after"><div class="o_tp_hr_position_entry" groups="base.group_system"><button name="action_change_position" type="object" string="Đổi chức vụ" icon="group" class="btn btn-primary"/><span>Bổ nhiệm, chuyển về nhân viên hoặc đổi chức vụ ghi trong hồ sơ.</span></div></xpath>
-<xpath expr="//notebook" position="before"><div class="alert alert-warning" role="status" invisible="tp_employee_code and department_id and (job_id or tp_source_title)">Cần bổ sung mã nhân viên, phòng ban hoặc chức vụ để hoàn thiện thông tin công việc.</div></xpath>
+<xpath expr="//div[hasclass('o_tp_hr_header')]" position="after"><div class="o_tp_hr_position_entry" groups="base.group_system"><button name="action_change_position" type="object" string="Đổi chức vụ" icon="group" class="btn btn-outline-primary" help="Bổ nhiệm, chuyển về nhân viên hoặc đổi chức vụ ghi trong hồ sơ."/></div></xpath>
+<xpath expr="//notebook" position="before"><div class="alert alert-warning" role="status" invisible="(not id or tp_employee_code) and department_id and (job_id or tp_source_title)"><strong>Thông tin khuyến nghị hoàn thiện hồ sơ (không chặn lưu):</strong><ul class="mb-0"><li invisible="not id or tp_employee_code">Mã nhân viên — Tổng quan. Mã được hệ thống sinh khi tạo; nếu hồ sơ đã lưu vẫn thiếu mã, liên hệ người quản trị.</li><li invisible="department_id">Phòng ban — Tổng quan. Chọn đơn vị công tác khi đã xác định.</li><li invisible="job_id or tp_source_title">Chức vụ — Tổng quan. Bổ sung chức vụ hoặc thông tin chức vụ nguồn.</li></ul></div></xpath>
 <xpath expr="//page[@name='work_information']" position="before">
  <page name="page_overview" string="Tổng quan">
   <div class="o_tp_hr_overview_grid">

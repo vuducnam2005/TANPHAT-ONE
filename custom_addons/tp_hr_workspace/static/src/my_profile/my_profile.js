@@ -5,6 +5,8 @@ import { registry } from "@web/core/registry";
 import { user } from "@web/core/user";
 import { useService } from "@web/core/utils/hooks";
 import { navigateBack } from "@tp_web_home/back/back_navigation";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
@@ -68,6 +70,7 @@ function cloneEditableValues(values) {
 
 export class TpHrMyProfile extends Component {
     static template = "tp_hr_workspace.MyProfile";
+    static components = { InlineErrors };
 
     setup() {
         this.orm = useService("orm");
@@ -96,6 +99,11 @@ export class TpHrMyProfile extends Component {
             resumeDraft: null,
             skillDraft: null,
             error: "",
+            profileSaveError: null,
+            profileAttempt: 0,
+            draftAttempted: false,
+            draftAttempt: 0,
+            draftSaveError: null,
         });
 
         const onBeforeUnload = (ev) => {
@@ -286,6 +294,7 @@ export class TpHrMyProfile extends Component {
         this.state.form = { ...this.state.initialForm };
         this.state.pendingImageB64 = undefined;
         this.state.previewImageUrl = "";
+        this.state.profileSaveError = null;
         this.state.editing = false;
     }
 
@@ -376,6 +385,7 @@ export class TpHrMyProfile extends Component {
             return;
         }
         this.state.saving = true;
+        this.state.profileSaveError = null;
         try {
             const payload = await this.orm.call("res.users", "tp_save_my_profile", [diff]);
             this.applyProfilePayload(payload);
@@ -389,16 +399,15 @@ export class TpHrMyProfile extends Component {
                 type: "success",
             });
         } catch (err) {
-            this.notification.add(err?.data?.message || _t("Không thể lưu thay đổi hồ sơ."), {
-                title: _t("Lỗi cập nhật"),
-                type: "danger",
-            });
+            this.state.profileSaveError = saveError(err);
+            this.state.profileAttempt++;
         } finally {
             this.state.saving = false;
         }
     }
 
     openResumeModal(line = null) {
+        this.state.draftAttempted = false; this.state.draftSaveError = null;
         const types = this.state.data?.resume?.resume_types || [];
         this.state.resumeDraft = {
             id: line?.id || null,
@@ -419,6 +428,8 @@ export class TpHrMyProfile extends Component {
         if (!d) {
             return;
         }
+        this.state.draftAttempted = true; this.state.draftSaveError = null;
+        if (this.draftErrors.length) { this.state.draftAttempt++; return; }
         this.state.saving = true;
         try {
             const payload = await this.orm.call("res.users", "tp_save_my_resume_line", [
@@ -435,9 +446,8 @@ export class TpHrMyProfile extends Component {
             this.state.resumeDraft = null;
             this.notification.add(_t("Đã cập nhật mục hồ sơ năng lực."), { type: "success" });
         } catch (err) {
-            this.notification.add(err?.data?.message || _t("Không thể lưu mục hồ sơ năng lực."), {
-                type: "danger",
-            });
+            this.state.draftSaveError = saveError(err);
+            this.state.draftAttempt++;
         } finally {
             this.state.saving = false;
         }
@@ -474,6 +484,7 @@ export class TpHrMyProfile extends Component {
     }
 
     openSkillModal() {
+        this.state.draftAttempted = false; this.state.draftSaveError = null;
         const types = this.state.data?.resume?.skill_types || [];
         const firstTypeId = types[0]?.id || "";
         const firstSkill = (this.state.data?.resume?.skills_catalog || []).find(
@@ -512,6 +523,8 @@ export class TpHrMyProfile extends Component {
         if (!d) {
             return;
         }
+        this.state.draftAttempted = true; this.state.draftSaveError = null;
+        if (this.draftErrors.length) { this.state.draftAttempt++; return; }
         this.state.saving = true;
         try {
             const payload = await this.orm.call("res.users", "tp_save_my_skill", [
@@ -526,13 +539,29 @@ export class TpHrMyProfile extends Component {
             this.state.skillDraft = null;
             this.notification.add(_t("Đã cập nhật kỹ năng cá nhân."), { type: "success" });
         } catch (err) {
-            this.notification.add(err?.data?.message || _t("Không thể lưu kỹ năng."), {
-                type: "danger",
-            });
+            this.state.draftSaveError = saveError(err);
+            this.state.draftAttempt++;
         } finally {
             this.state.saving = false;
         }
     }
+
+    get draftErrors() {
+        if (!this.state.draftAttempted) return [];
+        const errors = [], resume = this.state.resumeDraft, skill = this.state.skillDraft;
+        const add = (id, label, message) => errors.push({id, label, message, location: "Hồ sơ và năng lực"});
+        // These mirror tp_save_my_resume_line/tp_save_my_skill; backend remains authoritative.
+        if (resume) {
+            if (!resume.name.trim()) add("tp_resume_name", "Tiêu đề / Chức danh / Bằng cấp", "Vui lòng nhập tiêu đề mục hồ sơ năng lực.");
+            if (!resume.date_start) add("tp_resume_start", "Từ ngày", "Vui lòng chọn ngày bắt đầu.");
+            if (resume.date_start && resume.date_end && resume.date_end < resume.date_start) add("tp_resume_end", "Đến ngày", "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.");
+        }
+        if (skill) for (const [key, label] of [["skill_type_id", "Loại kỹ năng"], ["skill_id", "Kỹ năng"], ["skill_level_id", "Mức độ"]]) {
+            if (!Number(skill[key])) add("tp_skill_" + key, label, "Vui lòng chọn " + label + ".");
+        }
+        return errors;
+    }
+    draftFieldError(id) { return this.draftErrors.find(e => e.id === id)?.message || ""; }
 
     async deleteSkill(skillRec) {
         const ok = await this.confirmDiscard(

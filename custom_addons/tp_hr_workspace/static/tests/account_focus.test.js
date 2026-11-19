@@ -70,7 +70,9 @@ describe("HR-AUTH-FOCUS-009 credential dialog", () => {
         await contains("#tp_account_password").fill("Synthetic-only-009");
         await contains("#tp_account_confirmation").fill("Different-synthetic-009");
         await contains(".modal-footer button[type='submit']").click();
-        expect(".o_tp_hr_credential_error").toHaveText(/chưa giống nhau/);
+        expect(".o_dialog .tp_validation_summary").toHaveText(/Nhập lại mật khẩu[\s\S]*chưa giống nhau/);
+        expect("#tp_account_confirmation").toHaveAttribute("aria-invalid", "true");
+        expect(".o_tp_hr_credential_field:has(#tp_account_confirmation) .tp_validation_inline").toHaveText(/chưa giống nhau/);
         expect(".modal-footer button[type='submit']").toBeFocused();
         expect("#tp_account_password").toHaveAttribute("type", "password");
         expect("#tp_account_password").toHaveAttribute("autocomplete", "new-password");

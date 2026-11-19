@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-023 — Thông báo rõ thông tin còn thiếu khi thêm mới/lưu; khôi phục tìm tên trực tiếp
+
+- 19/11/2026 Asia/Saigon; nhiệm vụ `FORM-VALIDATION-001` theo yêu cầu “tiếp tục … THÔNG BÁO RÕ THÔNG TIN CÒN THIẾU CHO MỌI MÀN THÊM MỚI”. `tp_web_home` 20.0.1.10.0 thêm presenter dùng chung `static/src/validation/`: khối “Chưa lưu được. Vui lòng kiểm tra N thông tin” trong form/popup/wizard/quick-create thay toast chung; mỗi dòng có nhãn đang hiển thị, tab/nhóm, cách sửa, bấm mở tab và focus đúng ô; khung đỏ, câu dưới ô, số lỗi trên tab, `*` chỉ ô bắt buộc sửa được (gỡ rule `*` cũ trong `inputs.scss`), tự cập nhật khi sửa, không nhảy focus. Bảng con báo theo dòng; popup giữ lỗi và không đóng.
+- Lỗi lưu từ backend hiện trong form theo loại (`saveError`): thiếu, định dạng/dữ liệu, trùng, ngày, quyền, bản ghi không còn, nghiệp vụ, kết nối, hệ thống; giữ nguyên văn câu backend, lỗi hệ thống không lộ traceback/tên trường/giá trị. 0/False không bị coi là thiếu. Form OWL tự viết dùng `InlineErrors` + `saveError`.
+- `tp_hr_workspace` 20.0.1.18.0: banner “khuyến nghị hoàn thiện hồ sơ (không chặn lưu)” cho Mã NV/Phòng ban/Chức vụ; `version_id` ẩn khi chưa lưu nên hồ sơ mới không còn đòi; Hồ sơ của tôi và hộp thoại tài khoản dùng khối lỗi. Gộp ba chiều khôi phục tìm tên trực tiếp/hồ sơ responsive CHG-020 bị `5b9910b3` gỡ, giữ phần chỉ xem của CHG-022.
+- Kiểm: HOOT Home57/296, HR50/243, KD22/85, Equipment2/4 PASS; full HOOT 1429 pass/11 fail core giống HEAD (HEAD 13 fail gồm 2 test HR tìm tên, nay PASS). Odoo `/tp_hr_workspace,/tp_web_home` 103 test, 8 fail/2 error có sẵn trên HEAD; test mới về `version_id` PASS. Browser Chromium chặn mọi RPC ghi trên local18069 PASS. Local upgrade exit0/0ERROR, snapshot dữ liệu/quyền giữ, backup `.local/validation001/main-backup-20261119T181303`. Quy chuẩn [validation](ui/TP_FORM_VALIDATION_STANDARD.md), [nghiệm thu](demo/FORM_VALIDATION_001_ACCEPTANCE.md); chưa PC server ở mốc ghi này.
+
 ## CHG-20261119-022 — Đồng bộ giao diện HR chỉ xem và bảo vệ dữ liệu đồng nghiệp
 
 - 19/11/2026 Asia/Saigon; nhiệm vụ `HR-UNIFIED-READONLY-UI-001`. Đồng bộ toàn diện giao diện quản lý nhân sự giữa Admin và Nhân viên thường: cùng ngôn ngữ thiết kế, cùng cấu trúc bảng, chiều cao hàng, avatar cạnh họ tên, nhóm phòng ban, tìm kiếm, lọc và phân trang trên cả Desktop và Mobile qua `view_mode="list,form"`.

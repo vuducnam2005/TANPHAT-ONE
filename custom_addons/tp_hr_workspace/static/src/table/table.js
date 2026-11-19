@@ -14,6 +14,7 @@ import { ListController } from "@web/views/list/list_controller";
 import { ListRenderer } from "@web/views/list/list_renderer";
 import { listView } from "@web/views/list/list_view";
 import { TpTableFilterBar } from "@tp_web_home/search/table_filter_bar";
+import { HrEmployeeFilterBar } from "./live_name_filter";
 import { PAGE_SIZE_OPTIONS, readPageSize, tablePageKey, writePageSize } from "../prefs";
 import {
     REORDER_LOCK_GUIDANCE,
@@ -635,7 +636,7 @@ const TABLE_CONTENT = {
 
 export class HrListController extends ListController {
     static template = "tp_hr_workspace.ListView";
-    static components = { ...ListController.components, HrTableTools, TpTableFilterBar };
+    static components = { ...ListController.components, HrTableTools, TpTableFilterBar, HrEmployeeFilterBar };
 
     setup() {
         super.setup();
@@ -646,6 +647,10 @@ export class HrListController extends ListController {
 
     get showEmployeeExport() {
         return this.props.resModel === "hr.employee" && !this.env.inDialog && !this.props.context?.tp_hr_relation;
+    }
+
+    get showEmployeeLiveSearch() {
+        return this.showEmployeeExport && !this.props.context?.tp_filter_profile;
     }
 
     openEmployeeExport() {

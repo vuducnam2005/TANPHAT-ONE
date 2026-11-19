@@ -5,6 +5,8 @@ import { useAutofocus, useService } from "@web/core/utils/hooks";
 import { FormController } from "@web/views/form/form_controller";
 import { formView } from "@web/views/form/form_view";
 import { useDialogOpener } from "@tp_web_login/js/identitycheck";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
 
 class HrAccountController extends FormController {
     setup() {
@@ -39,9 +41,19 @@ export function credentialError({login, password, confirmation}, minLength, rese
     return "";
 }
 
+export function credentialErrors(values, minLength, reset) {
+    const errors = [];
+    const add = (id, label, message) => { if (message) errors.push({id, label, message, location: "Thông tin tài khoản"}); };
+    if (!reset) add("tp_account_login", "Tên đăng nhập", loginError(values.login));
+    add("tp_account_password", "Mật khẩu mới", credentialError({...values, confirmation: values.password}, minLength, true));
+    add("tp_account_confirmation", "Nhập lại mật khẩu", !values.confirmation ? "Vui lòng nhập lại mật khẩu mới."
+        : values.password !== values.confirmation ? "Hai mật khẩu chưa giống nhau. Vui lòng nhập lại." : "");
+    return errors;
+}
+
 export class AccountCredentials extends Component {
     static template = "tp_hr_workspace.AccountCredentials";
-    static components = { Dialog };
+    static components = { Dialog, InlineErrors };
     props = useProps();
     setup() {
         this.orm = useService("orm");
@@ -50,14 +62,16 @@ export class AccountCredentials extends Component {
         this.loginInput = signal.ref();
         this.passwordInput = signal.ref();
         useAutofocus({ ref: this.props.reset ? this.passwordInput : this.loginInput });
-        this.state = proxy({login: this.props.login, password: "", confirmation: "", visible: false, busy: false, error: ""});
+        this.state = proxy({login: this.props.login, password: "", confirmation: "", visible: false, busy: false, attempted: false, attempt: 0, server: null});
         onWillDestroy(() => { this.state.password = ""; this.state.confirmation = ""; });
     }
+    get errors() { return this.state.attempted ? credentialErrors(this.state, this.props.minLength, this.props.reset) : []; }
+    fieldError(id) { return this.errors.find(e => e.id === id)?.message || ""; }
     async submit(ev) {
         ev?.preventDefault();
         if (this.state.busy) return;
-        this.state.error = credentialError(this.state, this.props.minLength, this.props.reset);
-        if (this.state.error) return;
+        this.state.attempted = true; this.state.server = null;
+        if (this.errors.length) { this.state.attempt++; return; }
         this.state.busy = true;
         try {
             const args = this.props.reset ? [this.state.password, this.state.confirmation] : [this.state.login.trim(), this.state.password, this.state.confirmation];
@@ -67,8 +81,8 @@ export class AccountCredentials extends Component {
             this.notification.add(this.props.reset ? "Đã đặt lại mật khẩu thành công." : "Đã tạo tài khoản riêng cho nhân viên.", {type: "success"});
             await this.action.doAction("soft_reload");
         } catch (error) {
-            const expected = ["odoo.exceptions.UserError", "odoo.exceptions.ValidationError", "odoo.exceptions.AccessError"];
-            this.state.error = expected.includes(error.data?.name) ? error.data.message : "Chưa thể lưu tài khoản. Vui lòng kiểm tra kết nối rồi thử lại. Nếu đã tạo thành công, hãy tải lại hồ sơ trước khi thao tác tiếp.";
+            this.state.server = saveError(error);
+            this.state.attempt++;
         } finally { this.state.busy = false; }
     }
 }
@@ -80,7 +94,7 @@ registry.category("actions").add("tp_hr_workspace.credentials", async function (
 
 export class ChangeLogin extends Component {
     static template = "tp_hr_workspace.ChangeLogin";
-    static components = { Dialog };
+    static components = { Dialog, InlineErrors };
     props = useProps();
     setup() {
         this.orm = useService("orm");
@@ -88,13 +102,17 @@ export class ChangeLogin extends Component {
         this.notification = useService("notification");
         this.loginInput = signal.ref();
         useAutofocus({ ref: this.loginInput });
-        this.state = proxy({ login: "", error: "", busy: false });
+        this.state = proxy({ login: "", busy: false, attempted: false, attempt: 0, server: null });
+    }
+    get errors() {
+        const message = this.state.attempted && loginError(this.state.login, this.props.currentLogin);
+        return message ? [{id: "tp_login_new", label: "Tên đăng nhập mới", message, location: "Đổi tên đăng nhập"}] : [];
     }
     async submit(ev) {
         ev?.preventDefault();
         if (this.state.busy) return;
-        this.state.error = loginError(this.state.login, this.props.currentLogin);
-        if (this.state.error) return;
+        this.state.attempted = true; this.state.server = null;
+        if (this.errors.length) { this.state.attempt++; return; }
         this.state.busy = true;
         try {
             await this.orm.call("tp.hr.account.wizard", "action_change_login", [[this.props.wizardId], this.state.login.trim()]);
@@ -102,8 +120,8 @@ export class ChangeLogin extends Component {
             this.notification.add("Đã đổi tên đăng nhập. Nhân viên cần đăng nhập lại bằng tên mới; mật khẩu giữ nguyên.", { type: "success" });
             await this.action.doAction("soft_reload");
         } catch (error) {
-            const expected = ["odoo.exceptions.UserError", "odoo.exceptions.ValidationError", "odoo.exceptions.AccessError"];
-            this.state.error = expected.includes(error.data?.name) ? error.data.message : "Chưa xác nhận được kết quả lưu. Vui lòng tải lại hồ sơ để kiểm tra tên hiện tại trước khi thử lại.";
+            this.state.server = saveError(error);
+            this.state.attempt++;
         } finally { this.state.busy = false; }
     }
 }

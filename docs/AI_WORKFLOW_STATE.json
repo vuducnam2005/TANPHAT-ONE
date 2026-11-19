@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T09:14:37.511338+00:00",
-  "last_change_id": "CHG-20261119-021",
-  "code_digest": "b2fa64329dd0f215ee9c5cf44cfe109c8b275ca0d41c7fc4608c490eb52db5e2",
-  "code_file_count": 686,
+  "updated_at": "2026-11-19T11:25:36.738393+00:00",
+  "last_change_id": "CHG-20261119-023",
+  "code_digest": "8ead81980dbc416f63692ba5fb4e6259c0d52401e1393a3d3c43f29a25db6a1f",
+  "code_file_count": 691,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "a8024da3b9d5ac3dfaf71733ff094af2ce81ca248f147a59efb652b594c492bb",
-    "docs/CHANGELOG.md": "d6bcb451a83c38654438990c49159bbdc3a25661504685de89f505e6c4609939",
-    "AGENTS.md": "41da7729acb3c746356fb7595b8c1e452c6edcebe22d398f22361c67113038dc",
+    "docs/PROJECT_STATUS.md": "7143d0c3cdc5a25f27f7a6d392458537986c839169fa47f07f6868b2f136ef1d",
+    "docs/CHANGELOG.md": "f338d7ff7d7d320b612ab3ec416fb9afc92c633b1c26bcbed66c78fff1c150f8",
+    "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
     "docs/ROADMAP.md": "94d80e67a9a67acf82a35cf7bce4d78cbeb2a3e00cd1bac71204ecb6a29c853e",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Docs receipt: PC upgrade exit0/0ERROR, business/security snapshot unchanged, 19source hashes and actual public/server JS/CSS SHA256 match, health/login200."
+    "AST/XML/node --check/libsass PASS for scope; HOOT tp_web_home57/296, tp_hr_workspace50/243, tp_kd_workspace22/85, tp_equipment2/4 PASS; full HOOT 1429 pass/11 core fails identical to HEAD; Odoo /tp_hr_workspace,/tp_web_home 103 tests, 8 fail+2 error pre-existing on HEAD (102), no regression; Chromium with all write RPCs blocked on local18069: new employee 1440/768/390, 6 server error kinds, sub-table rows/popup 1440/390, quick-create, live name search 1440/390 PASS; local18069 upgrade exit0/0ERROR, data/permission snapshot preserved; backup .local/validation001/main-backup-20261119T181303; PC server not yet at this record."
   ]
 }

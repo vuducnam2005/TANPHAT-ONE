@@ -91,7 +91,7 @@
                                 </div>
                             </div>
 
-                            <div class="tp-myprofile-sync-banner">
+                            <InlineErrors errors="[]" server="this.state.profileSaveError" attempt="this.state.profileAttempt"/><div class="tp-myprofile-sync-banner">
                                 <span>Mọi thông tin bạn chỉnh sửa và lưu tại đây sẽ được đồng bộ trực tiếp vào Hồ sơ nhân sự của công ty. Thông tin tổ chức, chức vụ và hợp đồng lao động do HR quản lý ở chế độ chỉ đọc.</span>
                             </div>
 
@@ -643,7 +643,7 @@
                         <h3 class="h6 mb-0" t-out="this.state.resumeDraft.id ? 'Sửa mục hồ sơ năng lực' : 'Thêm mục hồ sơ năng lực'"/>
                         <button type="button" class="btn-close" aria-label="Đóng" t-on-click="() => this.closeResumeModal()"/>
                     </div>
-                    <div class="card-body d-flex flex-column gap-3">
+                    <div class="card-body d-flex flex-column gap-3 tp_validation_form"><InlineErrors errors="this.draftErrors" server="this.state.draftSaveError" attempt="this.state.draftAttempt"/>
                         <div>
                             <label class="form-label">Loại mục</label>
                             <select class="form-select o_input" t-att-value="this.state.resumeDraft.line_type_id || ''" t-on-change="(ev) => this.onDraftInput('resumeDraft', 'line_type_id', ev)">
@@ -651,17 +651,17 @@
                             </select>
                         </div>
                         <div>
-                            <label class="form-label">Tiêu đề / Chức danh / Bằng cấp</label>
-                            <input type="text" class="form-control o_input" t-att-value="this.state.resumeDraft.name || ''" t-on-input="(ev) => this.onDraftInput('resumeDraft', 'name', ev)"/>
+                            <label for="tp_resume_name" class="form-label">Tiêu đề / Chức danh / Bằng cấp<span class="tp_required_mark" title="Thông tin bắt buộc"> *</span></label>
+                            <input id="tp_resume_name" t-att-aria-invalid="this.draftFieldError('tp_resume_name') ? 'true' : 'false'" type="text" class="form-control o_input" t-att-value="this.state.resumeDraft.name || ''" t-on-input="(ev) => this.onDraftInput('resumeDraft', 'name', ev)"/><div t-if="this.draftFieldError('tp_resume_name')" class="tp_validation_inline" t-out="this.draftFieldError('tp_resume_name')"/>
                         </div>
                         <div class="row g-2">
                             <div class="col-6">
-                                <label class="form-label">Từ ngày</label>
-                                <input type="date" class="form-control o_input" t-att-value="this.state.resumeDraft.date_start || ''" t-on-change="(ev) => this.onDraftInput('resumeDraft', 'date_start', ev)"/>
+                                <label for="tp_resume_start" class="form-label">Từ ngày<span class="tp_required_mark" title="Thông tin bắt buộc"> *</span></label>
+                                <input id="tp_resume_start" t-att-aria-invalid="this.draftFieldError('tp_resume_start') ? 'true' : 'false'" type="date" class="form-control o_input" t-att-value="this.state.resumeDraft.date_start || ''" t-on-change="(ev) => this.onDraftInput('resumeDraft', 'date_start', ev)"/><div t-if="this.draftFieldError('tp_resume_start')" class="tp_validation_inline" t-out="this.draftFieldError('tp_resume_start')"/>
                             </div>
                             <div class="col-6">
-                                <label class="form-label">Đến ngày</label>
-                                <input type="date" class="form-control o_input" t-att-value="this.state.resumeDraft.date_end || ''" t-on-change="(ev) => this.onDraftInput('resumeDraft', 'date_end', ev)"/>
+                                <label for="tp_resume_end" class="form-label">Đến ngày</label>
+                                <input id="tp_resume_end" t-att-aria-invalid="this.draftFieldError('tp_resume_end') ? 'true' : 'false'" type="date" class="form-control o_input" t-att-value="this.state.resumeDraft.date_end || ''" t-on-change="(ev) => this.onDraftInput('resumeDraft', 'date_end', ev)"/><div t-if="this.draftFieldError('tp_resume_end')" class="tp_validation_inline" t-out="this.draftFieldError('tp_resume_end')"/>
                             </div>
                         </div>
                         <div>
@@ -683,24 +683,24 @@
                         <h3 class="h6 mb-0">Thêm kỹ năng cá nhân</h3>
                         <button type="button" class="btn-close" aria-label="Đóng" t-on-click="() => this.closeSkillModal()"/>
                     </div>
-                    <div class="card-body d-flex flex-column gap-3">
+                    <div class="card-body d-flex flex-column gap-3 tp_validation_form"><InlineErrors errors="this.draftErrors" server="this.state.draftSaveError" attempt="this.state.draftAttempt"/>
                         <div>
-                            <label class="form-label">Loại kỹ năng</label>
-                            <select class="form-select o_input" t-att-value="this.state.skillDraft.skill_type_id" t-on-change="(ev) => this.onSkillTypeChange(ev)">
+                            <label for="tp_skill_skill_type_id" class="form-label">Loại kỹ năng<span class="tp_required_mark" title="Thông tin bắt buộc"> *</span></label>
+                            <select id="tp_skill_skill_type_id" t-att-aria-invalid="this.draftFieldError('tp_skill_skill_type_id') ? 'true' : 'false'" class="form-select o_input" t-att-value="this.state.skillDraft.skill_type_id" t-on-change="(ev) => this.onSkillTypeChange(ev)">
                                 <option t-foreach="this.state.data.resume.skill_types" t-as="st" t-key="st.id" t-att-value="st.id" t-out="st.name"/>
-                            </select>
+                            </select><div t-if="this.draftFieldError('tp_skill_skill_type_id')" class="tp_validation_inline" t-out="this.draftFieldError('tp_skill_skill_type_id')"/>
                         </div>
                         <div>
-                            <label class="form-label">Kỹ năng</label>
-                            <select class="form-select o_input" t-att-value="this.state.skillDraft.skill_id || ''" t-on-change="(ev) => this.onDraftInput('skillDraft', 'skill_id', ev)">
+                            <label for="tp_skill_skill_id" class="form-label">Kỹ năng<span class="tp_required_mark" title="Thông tin bắt buộc"> *</span></label>
+                            <select id="tp_skill_skill_id" t-att-aria-invalid="this.draftFieldError('tp_skill_skill_id') ? 'true' : 'false'" class="form-select o_input" t-att-value="this.state.skillDraft.skill_id || ''" t-on-change="(ev) => this.onDraftInput('skillDraft', 'skill_id', ev)">
                                 <option t-foreach="this.filteredSkillsForDraft" t-as="sk" t-key="sk.id" t-att-value="sk.id" t-out="sk.name"/>
-                            </select>
+                            </select><div t-if="this.draftFieldError('tp_skill_skill_id')" class="tp_validation_inline" t-out="this.draftFieldError('tp_skill_skill_id')"/>
                         </div>
                         <div>
-                            <label class="form-label">Mức độ</label>
-                            <select class="form-select o_input" t-att-value="this.state.skillDraft.skill_level_id || ''" t-on-change="(ev) => this.onDraftInput('skillDraft', 'skill_level_id', ev)">
+                            <label for="tp_skill_skill_level_id" class="form-label">Mức độ<span class="tp_required_mark" title="Thông tin bắt buộc"> *</span></label>
+                            <select id="tp_skill_skill_level_id" t-att-aria-invalid="this.draftFieldError('tp_skill_skill_level_id') ? 'true' : 'false'" class="form-select o_input" t-att-value="this.state.skillDraft.skill_level_id || ''" t-on-change="(ev) => this.onDraftInput('skillDraft', 'skill_level_id', ev)">
                                 <option t-foreach="this.filteredLevelsForDraft" t-as="lv" t-key="lv.id" t-att-value="lv.id" t-out="lv.name + ' (' + lv.progress + '%)'"/>
-                            </select>
+                            </select><div t-if="this.draftFieldError('tp_skill_skill_level_id')" class="tp_validation_inline" t-out="this.draftFieldError('tp_skill_skill_level_id')"/>
                         </div>
                     </div>
                     <div class="card-footer d-flex justify-content-end gap-2">

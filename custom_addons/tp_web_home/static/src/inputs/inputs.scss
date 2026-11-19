@@ -122,16 +122,8 @@ $tp-input-editable: ".o_form_editable .o_field_widget:not(.o_readonly_modifier)"
     background-image: none;
 }
 
-// Required marker on the label, driven by the same modifier Odoo validates on save.
-.o_form_editable {
-    .o_wrap_label:has(+ .o_cell .o_required_modifier:not(.o_readonly_modifier)) .o_form_label::after,
-    .o_form_label:has(+ .o_required_modifier:not(.o_readonly_modifier))::after {
-        content: "*";
-        margin-left: 3px;
-        color: var(--tp-input-error);
-        font-weight: 600;
-    }
-}
+// Required markers on form labels come from the validation presenter (validation/validation.js,
+// FormLabel.tpRequired): one `*` per truly required, editable field, never on 0/False fields.
 
 // Editable list row: frame the editable cell with an inset line so the row height never changes.
 .o_list_renderer .o_data_row.o_selected_row > .o_data_cell:not(.o_readonly_modifier) {

@@ -1,0 +1,58 @@
+<templates xml:space="preserve">
+    <t t-name="tp_web_home.ValidationSummaryBody">
+        <strong t-if="errors.length" class="d-block">Chưa lưu được. Vui lòng kiểm tra <t t-out="errors.length"/> thông tin:</strong>
+        <ul t-if="errors.length">
+            <li t-foreach="errors" t-as="error" t-key="error.key or error.id">
+                <button t-if="!error.hidden" type="button" class="tp_validation_link" t-on-click="(ev) => this.focusError(error, ev)"><t t-out="error.label"/><t t-if="error.location"> — <t t-out="error.location"/></t></button>
+                <span t-else="" class="tp_validation_link"><t t-out="error.label"/><t t-if="error.location"> — <t t-out="error.location"/></t></span>
+                <div t-out="error.message"/>
+            </li>
+        </ul>
+        <div t-if="server" class="tp_validation_server" t-att-data-kind="server.kind">
+            <strong t-out="server.title"/>
+            <p class="mb-0" t-out="server.message"/>
+        </div>
+        <small class="d-block">Dữ liệu đã nhập được giữ nguyên.<t t-if="errors.length"> Dấu * đánh dấu thông tin bắt buộc.</t></small>
+    </t>
+
+    <t t-name="tp_web_home.ValidationSummary">
+        <t t-set="errors" t-value="this.errors"/>
+        <t t-set="server" t-value="this.server"/>
+        <p t-if="this.showHint and !errors.length" class="tp_required_hint">Các ô có dấu <span class="tp_required_mark">*</span> là thông tin bắt buộc.</p>
+        <section t-if="errors.length or server" class="tp_validation_summary" role="alert" t-ref="this.section"
+            t-att-data-attempt="this.props.record._tpAttempts" t-att-data-scope="this.props.scope">
+            <t t-call="tp_web_home.ValidationSummaryBody"/>
+        </section>
+    </t>
+
+    <t t-inherit="web.Field" t-inherit-mode="extension">
+        <xpath expr="//t[@t-component='this.field.component']" position="after">
+            <div t-if="this.tpValidationMessage" class="tp_validation_inline" t-out="this.tpValidationMessage"/>
+        </xpath>
+        <xpath expr="//div[@t-att-name]" position="attributes">
+            <attribute name="t-att-aria-invalid">this.tpValidationMessage ? 'true' : undefined</attribute>
+            <attribute name="t-att-data-tp-record">this.props.record.id</attribute>
+        </xpath>
+    </t>
+
+    <t t-inherit="web.FormLabel" t-inherit-mode="extension">
+        <xpath expr="//t[@t-out='this.props.string']" position="after"><span t-if="this.tpRequired" class="tp_required_mark" title="Thông tin bắt buộc"> *</span></xpath>
+    </t>
+
+    <t t-inherit="web.Notebook" t-inherit-mode="extension">
+        <xpath expr="//button[@role='tab']" position="attributes">
+            <attribute name="t-att-data-tp-fields">this.tpTabFields(navItem)</attribute>
+        </xpath>
+        <xpath expr="//button[@role='tab']" position="inside">
+            <t t-set="tpErrors" t-value="this.tpErrorCount(navItem)"/>
+            <span t-if="tpErrors" class="tp_validation_count"><t t-out="tpErrors"/><span class="visually-hidden"> lỗi cần sửa</span></span>
+        </xpath>
+    </t>
+
+    <t t-inherit="web.ListRenderer" t-inherit-mode="extension">
+        <xpath expr="//table[@t-ref='this.tableRef']" position="before">
+            <t t-if="this.props.list.editedRecord" t-component="this.tpValidationSummary"
+                record="this.props.list.editedRecord" arch="this.props.archInfo" scope="'list'"/>
+        </xpath>
+    </t>
+</templates>

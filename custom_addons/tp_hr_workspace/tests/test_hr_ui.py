@@ -1,3 +1,5 @@
+from lxml import etree
+
 from odoo import Command
 from odoo.exceptions import AccessError
 from odoo.tests import TransactionCase, tagged
@@ -140,3 +142,13 @@ class TestHrUi(TransactionCase):
         self.assertEqual(finfo['certificate']['string'], 'Trình độ học vấn')
         self.assertEqual(dict(finfo['certificate']['selection'])['bachelor'], 'Cử nhân / Đại học')
         self.assertEqual(dict(finfo['marital']['selection'])['married'], 'Đã kết hôn')
+
+    def test_new_employee_form_never_asks_for_the_computed_version(self):
+        """A new employee has no version yet; a visible required version blocked every create."""
+        form = self.env.ref('tp_hr_workspace.employee_form')
+        employees = self.env['hr.employee'].with_user(self.officer).with_context(allowed_company_ids=self.company.ids)
+        arch = employees.get_views([(form.id, 'form')])['views']['form']['arch']
+        nodes = etree.fromstring(arch).xpath("//field[@name='version_id'][not(ancestor::field)]")
+        self.assertGreaterEqual(len(nodes), 2)
+        for node in nodes:
+            self.assertIn(node.get('invisible'), ('1', 'True', 'not id'))
