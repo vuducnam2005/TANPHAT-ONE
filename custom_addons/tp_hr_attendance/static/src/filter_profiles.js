@@ -87,7 +87,7 @@ registerTableFilterProfile("tp.hr.attendance.assignment::assignments", {
     criteria: [
         { key: "user_id", field: "user_id", label: "Người phụ trách", type: "many2one" },
         { key: "can_import", field: "can_import", label: "Nhập dữ liệu", type: "boolean" },
-        { key: "can_review", field: "can_review", label: "Duyệt điều chỉnh", type: "boolean" },
+        { key: "can_review", field: "can_review", label: "Xuất bảng công phạm vi", type: "boolean" },
         { key: "can_lock", field: "can_lock", label: "Chốt kỳ", type: "boolean" },
         { key: "active", field: "active", label: "Đang hiệu lực", type: "boolean" },
     ],

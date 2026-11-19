@@ -1,9 +1,10 @@
 """Menu visibility for HR-ATTENDANCE-001: processing entries follow the real capability, not a job title."""
 from odoo import models
 
-from .attendance_common import HR_MANAGER, can
+from .attendance_common import HR_MANAGER, can, is_original_admin
 
-# menu xmlid -> capability. HR manager always sees review/periods (read-only oversight); actions still check assignments.
+# menu xmlid -> capability. HR manager always sees review/periods (read-only oversight); actions still check rights.
+# "review" = the correction queue: only the Original Admin approves (CHG-20261119-005), so assignments do not open it.
 GATED = {
     'tp_hr_attendance.menu_file_matrix': 'import',
     'tp_hr_attendance.menu_import': 'import',
@@ -28,8 +29,10 @@ class IrUiMenuAttendance(models.Model):
                 continue
             if capability == 'import':
                 allowed = any(can(self.env, 'import', company) for company in companies)
+            elif capability == 'review':
+                allowed = any(is_original_admin(self.env, company) for company in companies)
             else:
-                # Department-scoped reviewers are enough to show the queue; lock needs a company-wide assignment.
+                # Lock needs an active lock assignment in one of the user's companies.
                 allowed = bool(self.env['tp.hr.attendance.assignment'].sudo().search_count([
                     ('user_id', '=', self.env.uid), ('active', '=', True), (f'can_{capability}', '=', True),
                     ('company_id', 'in', companies.ids)]))

@@ -48,3 +48,11 @@ Release theo quy trình `git archive <SHA> custom_addons/tp_hr_attendance` (gi�
 - Sau khi giao: health 200, log không ERROR, URL public mở được. Lô nào có snapshot mà còn `pending` sẽ tự về `ready` ở lần mở ma trận, đối chiếu hoặc xuất đầu tiên; không cần sửa DB tay.
 - Hoàn nguyên: khôi phục `models/attendance_matrix.py` từ `source-config.tar.gz` của backup rồi khởi động lại `tp-odoo`. Cờ `ready` đã ghi là đúng với dữ liệu nên giữ nguyên.
 - Đã giao PC server (CHG-20261118-037): backup `C:\TANPHAT-backups\snapshot-ready036\snapshot-ready036-20261118T200015`, restart lúc 13:00:20 UTC, health/public OK, 0 ERROR sau khởi động, cờ lô `ready/2` ×4. Script `.local/snapshot-ready036/deploy-server036.ps1`.
+
+## ADMIN-APPROVE-005 `20.0.3.2.0` (`CHG-20261119-005` / `006`)
+
+- Nâng cấp `20.0.3.1.0 → 20.0.3.2.0`: đổi view/menu/ACL và thêm migration `migrations/20.0.3.2.0/post-migrate.py`, nên **cần** `-u tp_hr_attendance` (không `-i`). Chép tệp đúng commit với `mtime` theo commit để Odoo tạo lại hash asset; chỉ khởi động lại `tp-odoo`, không restart tunnel.
+- Trước khi giao: backup dump + `restore-list` + filestore + source/config như các bản trên; kiểm chỉ đọc danh sách Admin chính (`res.users._tp_is_original_admin()`), số phiếu điều chỉnh theo trạng thái và grant ủy quyền đang hiệu lực.
+- Migration chỉ làm mới `reviewer_user_ids` (danh sách được đọc) của mọi phiếu không ở nháp sang Admin chính của công ty; không đổi trạng thái, người đã xử lý, giờ, phiên công, ngày công, kỳ chốt hay đi muộn. Server không có phiếu thì migration không ghi gì.
+- Sau khi giao: version `20.0.3.2.0`, health 200, log không ERROR, URL public mở được, bundle asset mới; probe ORM chỉ đọc: menu `Quản trị chấm công → Xử lý điều chỉnh` hiện với Admin chính và ẩn với admin được ủy quyền/HR; `tp_can_review` chỉ đúng với Admin chính. **Không** tạo hoặc duyệt phiếu thật để smoke.
+- Hoàn nguyên: dừng `tp-odoo`, khôi phục `source-config.tar.gz` của đúng backup rồi `-u tp_hr_attendance` về `20.0.3.1.0`; dòng ACL đọc phiếu cho `base.group_system` tự gỡ khi nâng cấp bản cũ. Phiếu đã duyệt giữ nguyên dữ liệu. Hoàn nguyên đầy đủ dùng dump + filestore cùng backup trong khung bảo trì.

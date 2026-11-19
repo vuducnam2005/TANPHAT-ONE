@@ -145,8 +145,8 @@
             <form string="Phân công xử lý công">
                 <sheet>
                     <div class="alert alert-info" role="status">
-                        Quyền xử lý công chỉ đến từ phân công này; không suy ra từ chức danh hay trưởng phòng.
-                        Người được phân công không duyệt được đề nghị của chính mình.
+                        Quyền nhập dữ liệu, xuất bảng công phạm vi và chốt kỳ chỉ đến từ phân công này; không suy ra từ chức danh hay trưởng phòng.
+                        Duyệt / trả đề nghị điều chỉnh công do admin chính (admin gốc) thực hiện, không theo phân công.
                     </div>
                     <group>
                         <group>

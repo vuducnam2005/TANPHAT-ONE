@@ -477,7 +477,7 @@ export class MyAttendance extends Component {
 registry.category("actions").add("tp_hr_attendance.mine", MyAttendance);
 
 const CONTENT = {
-    "tp.hr.attendance.correction": ["Đề nghị điều chỉnh công", "Phiếu riêng theo người đề nghị và phạm vi được phân công xử lý.", "Tạo đề nghị", "Chưa có đề nghị"],
+    "tp.hr.attendance.correction": ["Đề nghị điều chỉnh công", "Phiếu riêng của người đề nghị; chỉ admin chính (admin gốc) duyệt hoặc trả lại.", "Tạo đề nghị", "Chưa có đề nghị"],
     "tp.hr.attendance.period": ["Chốt kỳ công", "Rà soát các ngày và đề nghị trước khi chốt. Quyền chốt cần phân công riêng.", "Tạo kỳ công", "Chưa có kỳ công"],
     "tp.hr.attendance.batch": ["Nhập dữ liệu công", "Xem trước và đối chiếu nguồn trước khi ghi nhận giờ công.", "Tạo lô nhập", "Chưa có lô nhập"],
     "tp.hr.attendance.log": ["Nhật ký chấm công", "Lịch sử thao tác và phiên bản, không chứa giải trình hoặc minh chứng cá nhân.", "", "Chưa có nhật ký"],

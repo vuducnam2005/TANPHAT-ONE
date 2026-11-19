@@ -1,5 +1,16 @@
 # TANPHAT ONE — Sổ quyết định
 
+## DEC-060 — Admin chính duyệt điều chỉnh công (19/11/2026)
+
+Người dùng yêu cầu trực tiếp “BỔ SUNG: ADMIN CHÍNH DUYỆT ĐIỀU CHỈNH CÔNG”. Quyết định thay quy tắc duyệt theo phân công `can_review` của HR-ATTENDANCE-001; phần nhập dữ liệu, chốt kỳ và DEC-058/059 giữ nguyên.
+
+- Mọi đề nghị điều chỉnh công của nhân viên, thuộc bất kỳ phòng ban nào, chuyển đến và chỉ được Duyệt/Trả lại bởi Admin chính (admin gốc) theo cơ chế DEC-054:`res.users._tp_is_original_admin()` của `tp_admin_delegation` (nhóm `group_original_admin`, quyền hệ thống, không có grant ủy quyền đang hiệu lực). Không hardcode login hoặc UID.
+- Admin được ủy quyền, HR manager, trưởng phòng và người được phân công không nhận quyền duyệt từ vai trò; phân công `can_review` chỉ còn mở xuất bảng công trong phạm vi. Kiểm ở backend, không chỉ ẩn nút.
+- Không tự duyệt phiếu của chính mình và không cấp người duyệt thay thế: công ty chưa có Admin chính đang hoạt động thì Gửi duyệt bị chặn, phiếu giữ nháp. Phiếu của chính Admin chính chỉ do Admin chính khác xử lý.
+- Duyệt tái sử dụng `action_approve` và cơ chế lưu hiện có; thông báo thành công chỉ sau khi lưu xong, lỗi thì rollback toàn bộ. Tệp Excel nhập sau không ghi đè điều chỉnh đã duyệt; không tính lại tổng đi muộn từ Excel.
+- Kỳ đã chốt giữ cơ chế đính chính: Admin chính cần thêm phân công chốt (`can_lock`) và lý do đính chính.
+- `tp_hr_attendance` không phụ thuộc cứng `tp_admin_delegation`; thiếu module thì không ai duyệt (fail closed), không rơi về HR manager.
+
 ## DEC-058 — Bảng công theo từng file, đối chiếu trước tổng hợp (18/11/2026)
 
 - **Người dùng đã chọn:** giữ riêng file và đối chiếu trước khi tổng hợp.

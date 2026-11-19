@@ -5,9 +5,30 @@
         <field name="arch" type="xml">
             <list string="Đề nghị điều chỉnh" js_class="tp_hr_table" import="0" limit="20" duplicate="0">
                 <field name="name"/><field name="work_date"/><field name="employee_code"/><field name="employee_name"/>
-                <field name="department_id"/><field name="requested_in" widget="float_time"/><field name="requested_out" widget="float_time"/>
-                <field name="state" widget="badge" decoration-success="state == 'approved'" decoration-warning="state == 'submitted'"/>
-                <field name="reviewer_id" optional="show"/><field name="is_amendment" optional="hide"/>
+                <field name="department_id"/><field name="requested_in" widget="float_time" options="{'numeric': true}"/><field name="requested_out" widget="float_time" options="{'numeric': true}"/>
+                <field name="state" widget="badge" decoration-success="state == 'approved'" decoration-warning="state == 'submitted'" decoration-danger="state == 'returned'"/>
+                <field name="reviewer_id" optional="show"/><field name="reviewed_at" optional="show"/>
+                <field name="review_note" optional="show"/><field name="is_amendment" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <!-- Original Admin queue (CHG-20261119-005): current vs requested hours, reason and evidence with row decisions.
+         Buttons only open the existing approve/return dialog; the backend re-checks the Original Admin on every call. -->
+    <record id="correction_review_list" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.correction.review.list</field><field name="model">tp.hr.attendance.correction</field>
+        <field name="priority">30</field>
+        <field name="arch" type="xml">
+            <list string="Xử lý điều chỉnh" js_class="tp_hr_table" import="0" limit="20" duplicate="0" create="0" delete="0">
+                <field name="tp_can_review" column_invisible="1"/><field name="evidence_name" column_invisible="1"/>
+                <field name="name"/><field name="employee_code"/><field name="employee_name"/><field name="department_id"/>
+                <field name="work_date"/><field name="current_in"/><field name="current_out"/>
+                <field name="requested_in" widget="float_time" options="{'numeric': true}"/><field name="requested_out" widget="float_time" options="{'numeric': true}"/>
+                <field name="reason" optional="show"/><field name="evidence_file" filename="evidence_name" widget="binary" optional="show"/>
+                <field name="submitted_at" optional="hide"/>
+                <field name="state" widget="badge" decoration-success="state == 'approved'" decoration-warning="state == 'submitted'" decoration-danger="state == 'returned'"/>
+                <field name="reviewer_id" optional="show"/><field name="reviewed_at" optional="hide"/><field name="is_amendment" optional="hide"/>
+                <button name="action_open_approve" type="object" string="Duyệt" icon="fa-check" class="btn-link text-success" invisible="not tp_can_review"/>
+                <button name="action_open_return" type="object" string="Trả lại" icon="fa-undo" class="btn-link" invisible="not tp_can_review"/>
             </list>
         </field>
     </record>
@@ -16,7 +37,8 @@
         <field name="arch" type="xml"><search>
             <field name="name"/><field name="employee_name" filter_domain="['|', ('employee_name', 'ilike', self), ('employee_code', 'ilike', self)]"/>
             <field name="department_id"/><field name="work_date"/><field name="state"/><field name="reviewer_id"/>
-            <filter name="pending" string="Chờ duyệt" domain="[('state', '=', 'submitted')]"/>
+            <filter name="pending" string="Chờ admin duyệt" domain="[('state', '=', 'submitted')]"/>
+            <filter name="returned" string="Đã trả lại" domain="[('state', '=', 'returned')]"/>
             <filter name="amendment" string="Đính chính sau chốt" domain="[('is_amendment', '=', True)]"/>
         </search></field>
     </record>
@@ -34,15 +56,18 @@
                 <sheet>
                     <field name="tp_is_owner" invisible="1"/><field name="tp_can_review" invisible="1"/>
                     <field name="tp_period_locked" invisible="1"/><field name="tp_has_reviewer" invisible="1"/>
-                    <div class="alert alert-info" role="status">Giải trình và minh chứng chỉ dành cho bạn, người được phân công xử lý và HR có quyền. Bảng công chung không hiển thị nội dung này.</div>
-                    <div class="alert alert-warning" role="status" invisible="tp_has_reviewer">Chưa phân công người duyệt cho phòng này. Có thể lưu nháp; HR cấu hình tại Cấu hình → Phân công xử lý công.</div>
+                    <div class="alert alert-info" role="status">Giải trình và minh chứng chỉ dành cho bạn, admin chính (admin gốc) nhận duyệt và HR có quyền xem. Bảng công chung không hiển thị nội dung này.</div>
+                    <div class="alert alert-info" role="status" invisible="not tp_is_owner or state not in ('draft', 'returned')">Lưu nháp chưa thay đổi bảng công. Bấm Gửi duyệt để chuyển phiếu cho admin chính.</div>
+                    <div class="alert alert-warning" role="status" invisible="state != 'submitted'">Phiếu đang chờ admin chính duyệt. Giờ công chỉ thay đổi sau khi được duyệt.</div>
+                    <div class="alert alert-danger" role="status" invisible="state != 'returned'">Phiếu đã bị trả lại: xem Ý kiến người xử lý bên dưới, sửa nội dung rồi Gửi duyệt lại.</div>
+                    <div class="alert alert-warning" role="status" invisible="tp_has_reviewer or state not in ('draft', 'returned')">Chưa có admin chính đang hoạt động để nhận duyệt. Có thể lưu nháp; hệ thống không tự chuyển phiếu cho người duyệt khác.</div>
                     <div class="alert alert-warning" role="status" invisible="not tp_period_locked">Ngày thuộc kỳ đã chốt. Duyệt cần quyền chốt kỳ và lý do đính chính; giờ gốc được giữ trong lịch sử.</div>
                     <h1><field name="name" readonly="1"/></h1>
                     <group>
                         <group string="Ngày và giờ đề nghị">
                             <field name="work_date" readonly="state not in ('draft', 'returned') or not tp_is_owner"/>
-                            <field name="requested_in" widget="float_time" readonly="state not in ('draft', 'returned') or not tp_is_owner"/>
-                            <field name="requested_out" widget="float_time" readonly="state not in ('draft', 'returned') or not tp_is_owner"/>
+                            <field name="requested_in" widget="float_time" options="{'numeric': true}" readonly="state not in ('draft', 'returned') or not tp_is_owner"/>
+                            <field name="requested_out" widget="float_time" options="{'numeric': true}" readonly="state not in ('draft', 'returned') or not tp_is_owner"/>
                             <field name="current_in"/><field name="current_out"/>
                         </group>
                         <group string="Hồ sơ gắn với tài khoản">
@@ -73,13 +98,16 @@
     <record id="action_review" model="ir.actions.act_window">
         <field name="name">Xử lý điều chỉnh</field><field name="res_model">tp.hr.attendance.correction</field><field name="view_mode">list,form</field>
         <field name="domain">[('state', '!=', 'draft')]</field><field name="context">{'tp_filter_profile': 'corrections', 'search_default_pending': 1}</field>
-        <field name="search_view_id" ref="correction_search"/>
-        <field name="help" type="html"><p>Không có phiếu trong phạm vi của bạn. Quyền duyệt đến từ Phân công xử lý công; không tự duyệt phiếu của mình.</p></field>
+        <field name="view_id" ref="correction_review_list"/><field name="search_view_id" ref="correction_search"/>
+        <field name="help" type="html"><p>Không có phiếu chờ xử lý. Mọi đề nghị điều chỉnh công của các phòng chuyển đến admin chính (admin gốc); không ai tự duyệt phiếu của mình.</p></field>
     </record>
     <record id="review_wizard_form" model="ir.ui.view">
         <field name="name">tp.hr.attendance.review.wizard.form</field><field name="model">tp.hr.attendance.review.wizard</field>
         <field name="arch" type="xml"><form string="Xử lý đề nghị">
             <group><field name="correction_id" options="{'no_open': True}"/><field name="decision"/><field name="period_locked" invisible="1"/>
+                <field name="employee_name"/><field name="work_date"/>
+                <label for="current_in" string="Giờ đang ghi"/><div class="o_row"><field name="current_in"/><span>–</span><field name="current_out"/></div>
+                <label for="requested_in" string="Giờ đề nghị"/><div class="o_row"><field name="requested_in" widget="float_time" options="{'numeric': true}"/><span>–</span><field name="requested_out" widget="float_time" options="{'numeric': true}"/></div>
                 <field name="note" required="decision == 'return' or period_locked" placeholder="Lý do trả lại hoặc đính chính kỳ đã chốt…"/>
             </group>
             <div class="alert alert-warning" role="status" invisible="not period_locked">Đây là đính chính sau chốt. Phiên gốc được giữ, phiên bản kỳ và ngày công được tăng.</div>

@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T03:59:57.277277+00:00",
-  "last_change_id": "CHG-20261119-004",
-  "code_digest": "8bfd64d2469ff21f74e37c5be6f51e62fabe52719c93d684e6155abd07813e62",
-  "code_file_count": 674,
+  "updated_at": "2026-11-19T05:04:41.290499+00:00",
+  "last_change_id": "CHG-20261119-005",
+  "code_digest": "f529d4608466d3692cbda73f56b6ebc665a6c06913524347ecaef46f58f471cb",
+  "code_file_count": 675,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "10bd252d1524126a8381e4c1907818bd2cac3e2230cbb1cde3ca4a8df935da1c",
-    "docs/CHANGELOG.md": "1846c2f1d4106700ee13312325f82a078d43a326c0837af6941cdb6861a99114",
+    "docs/PROJECT_STATUS.md": "970716f638baa2b0da9a1869ce63d3128b7f6e4e2ba25e9db7b21fd254f921ea",
+    "docs/CHANGELOG.md": "195bb5af1381f1ff4b7fa45efde21bf644a71b97ff91c2e1a78684f83433a3f8",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
     "docs/ROADMAP.md": "f921c27ddbce6aeed8c76754bf33cea643cd58d44782657b17392d90a7d07773",
-    "docs/DECISIONS.md": "8e17d1759869b79b9b62235edd90b38728ce6bc3eefb04d09aef1c1446b9af65",
+    "docs/DECISIONS.md": "6efc61c3092883f8b14695cda625db0cb20297ef74c3da28c802167f42396533",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,6 +20,9 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC server deploy 5859a83e 8/8 SHA256 + backup + restart tp-odoo; DB snapshot unchanged; public https://eight-championships-launches-plaintiff.trycloudflare.com health/login 200; served CSS/JS hashes match server; server read-only ORM PASS"
+    "tp_tanphat_test isolated snapshot: /tp_hr_attendance 71 tests, TestAttendanceCorrection 10/10 PASS (admin005_* x4, rewritten at02c/at03c/at06a-d); 8 remaining failures identical to HEAD baseline (test_access, test_directory_privacy, test_matrix_compare x4, test_upload x2)",
+    "persist_check.py synthetic data only (Synthetic ADM005 Persist Co): committed approve of ĐC00037 by synthetic Original Admin; owner/HR manager/department head refused; new process + new HTTP server re-login: approved, reviewer, times, original punch kept; Công của tôi/Bảng công/Tổng quan 08:00-17:00; late 1/7 kept; later Excel 07:50-17:20 not overwritten; owner RPC state write/session create refused; second approve refused",
+    "ui_check.py Playwright on tp_tanphat_test: Original Admin queue row + Duyệt/Trả lại buttons, approve wizard success after save, empty return reason blocked, return with reason, queue empty, owner My Requests shows status/handler/time/note and 0 review buttons, 0 console errors/5xx; DB re-read in new process matches",
+    "Ruff on changed Python, XML parse, git diff --check PASS; server/local 18069 deploy NOT_RUN in this change (follows as CHG-20261119-006)"
   ]
 }

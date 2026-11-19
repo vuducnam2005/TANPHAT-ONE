@@ -10,6 +10,8 @@ DEFAULT_TZ = 'Asia/Ho_Chi_Minh'
 HR_MANAGER = 'hr.group_hr_manager'
 HR_USER = 'hr.group_hr_user'
 OFFICER = 'tp_hr_attendance.group_attendance_officer'
+# Soft reference: tp_hr_attendance does not depend on tp_admin_delegation; missing group = nobody approves.
+ORIGINAL_ADMIN = 'tp_admin_delegation.group_original_admin'
 # Only server code holding this sentinel may write imported punches, day summaries and the audit log.
 INTERNAL = object()
 CONTEXT_KEY = '_tp_attendance_internal'
@@ -65,7 +67,9 @@ def can(env, capability, company, departments=None):
 
     Import and configuration need HR manager rights or a company-wide import assignment.
     Review and lock never follow from a job title or group: only an active assignment whose
-    department scope (empty = whole company) covers every given department.
+    department scope (empty = whole company) covers every given department. Since
+    CHG-20261119-005 a review assignment only widens shared exports; approving or returning a
+    correction belongs to the Original Admin (``require_original_admin``).
     """
     if company not in env.companies:
         return False
@@ -79,6 +83,37 @@ def can(env, capability, company, departments=None):
             if wanted and wanted <= set(assignment.department_ids.ids):
                 return True
     return False
+
+
+def original_admins(env, company=None):
+    """Active Original Admins (tp_admin_delegation, DEC-054) who handle every attendance correction.
+
+    Resolved only through the delegation module's own check: delegated Full Admins, HR managers,
+    department heads and attendance assignments never qualify. When the delegation module is not
+    installed nobody qualifies, so approval fails closed instead of falling back to another role.
+    """
+    Users = env['res.users'].sudo().with_context(active_test=False)
+    group = env.ref(ORIGINAL_ADMIN, raise_if_not_found=False)
+    if not group or not hasattr(Users, '_tp_is_original_admin'):
+        return env['res.users']
+    domain = [('all_group_ids', 'in', group.id), ('active', '=', True), ('share', '=', False)]
+    if company:
+        domain.append(('company_ids', 'in', company.id))
+    users = Users.search(domain).filtered(lambda user: user._tp_is_original_admin())
+    return env['res.users'].browse(users.ids)
+
+
+def is_original_admin(env, company=None):
+    """True when the session user is an Original Admin with ``company`` open in the session."""
+    if company is not None and company not in env.companies:
+        return False
+    return env.user in original_admins(env, company)
+
+
+def require_original_admin(env, company):
+    if not is_original_admin(env, company):
+        raise AccessError(env._('Chỉ admin chính (admin gốc) được duyệt hoặc trả đề nghị điều chỉnh công. '
+                                'Admin được ủy quyền, trưởng phòng và người được phân công không có quyền này.'))
 
 
 def require(env, capability, company, departments=None):
