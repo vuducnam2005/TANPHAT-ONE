@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-017 — Giao bản sửa nút đổi tên đăng nhập lên local và PC server
+
+- 19/11/2026: app `cf4cf11411cd0d89b2e76c5d7be4723ef9817c37` đã push origin/main và áp riêng HR `20.0.1.15.1` / admin delegation `20.0.2.0.3`. Hai môi trường upgrade exit 0, 0 ERROR. Không áp WIP khác; chấm công PC giữ `20.0.3.3.0`, local giữ `20.0.3.1.0`.
+- Backup local `.local/hr-login-rename-fix016/main-backup-20261119T140631`: dump 10.480.205 B, filestore 1.700.605.234 B, source/config/restore-list/SHA256. PC `C:/TANPHAT-backups/hr-login-rename-fix016/hr-login016-20261119T140905`: dump 10.182.487 B, restore-list 15.790 mục, filestore 630 mục / 33.846.814 B, source/config 2.254.942 B và SHA256. Chỉ hai module version đổi trong snapshot; login/password, nhóm, công ty, roster/resource, sequence và nghiệp vụ giữ nguyên.
+- Probe READ ONLY 21/21 PASS mỗi môi trường, xuất XLSX đọc login hiện tại. Đúng employee 63 trên PC là admin được cấp: admin gốc đổi tên được (`tp_can_change_login=true`), khóa/reset vẫn chặn (`tp_can_manage_account=false`), native view có nút với điều kiện đúng. Local target là nhân viên thường nên khóa/reset vẫn theo quyền hiện hành; không cấp admin để ép dữ liệu hai môi trường giống nhau. Không đổi login người thật.
+- Nguồn server 10/10 SHA256; health/login local/server/public 200. JS public `ae4c8b5`, CSS `73d8d48` khớp SHA256 server và có dialog/validation/re-login thực. Không đổi static JS trong bản sửa nên URL bundle giữ như bản attendance gần nhất là đúng. Kiểm Odoo 8/8, browser synthetic original → granted admin desktop/mobile 0 lỗi tại CHG016; không đăng nhập mới hoặc rename người thật.
+- [Acceptance](demo/HR_LOGIN_RENAME_001_ACCEPTANCE.md) ghi vị trí dưới Chức vụ nhân sự, trên Quyền bổ sung đang giữ. Cốc Cốc trực tiếp bị công cụ chặn URL policy; đã dừng, không bypass. Authenticated public E2E bằng tài khoản thật và iOS/Safari thật NOT_RUN. Receipt tài liệu dùng snapshot sạch/index riêng, giữ checkpoint 18/11 và foreign WIP; không restart Odoo khi đồng bộ tài liệu. Nghiệm thu hình thức/nghiệp vụ chờ người dùng.
+
 ## CHG-20261119-016 — Sửa nút đổi login bị ẩn với admin được ủy quyền
 
 - 19/11/2026; tiếp tục yêu cầu triển khai và ảnh “đâu”. Probe read-only PC: admin gốc đang xem tranphuongdong (employee63), target có system/grant, không phải original; cả account/rename capabilityfalse do dùng nhầm guard khóa/reset. Đây là thiếu sót bản013/014, không phải người dùng vào sai tab hoặc thiếuCtrl+F5.

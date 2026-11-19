@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T07:07:46.815189+00:00",
-  "last_change_id": "CHG-20261119-016",
+  "updated_at": "2026-11-19T07:15:48.370863+00:00",
+  "last_change_id": "CHG-20261119-017",
   "code_digest": "96e01ce030697da95c6cbeaad059e2af523feb4df0ae0ca1759a01ad00c1f0d9",
   "code_file_count": 681,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "2b47eace7859e757004fdb50d1004ff9ab5e1a28c77396862590f2a45e6b0895",
-    "docs/CHANGELOG.md": "826d79512e4e59c7b93c4209c1db58c76d7b16a5d6a5a1951ec9cbad7f33cadb",
+    "docs/PROJECT_STATUS.md": "339b400b77cac1755b5f88ac2214551f3f13c129f4bc2b878820db95a99cebc2",
+    "docs/CHANGELOG.md": "2ba5ca53285a4630090b5d7b85274d51b3cbab0323b5e01ad8f0934e89615613",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "51e8b6e4da8783406ac3c86c24c10e7ebee692f8923302017c68d27ae4e4396f",
+    "docs/ROADMAP.md": "cae44ce48bdb7127eab6762197380dca515bcc2296f875d4134203440cb71b80",
     "docs/DECISIONS.md": "b626970d325dc4349d73241bc8f170b09f16bb5db5d443d9d5c14cf102b7c564",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Read-only PC reproduced original->granted capabilityfalse; fix backend+view login-only exception; testDB backup and Odoo8/8PASS(5rename,2HTTP,1reset); browsergrantedtarget desktop/mobile0errors; avatar bytes+grant unchanged; AST XML Ruff Node diffPASS; CUA CocCoc policy blocked, stopped; deployment pending"
+    "App cf4cf114 pushed; local/PC upgrades 0ERROR; backups verified; hash-only data unchanged; read-only 21/21 each including employee63 original-to-granted rename true and lock/reset false on PC; source10/10; actual public/server assets SHA256 and health/login200 PASS; Odoo8/8 browserdesktop/mobile from016 PASS; CUA CocCoc policy stopped, real-user public E2E NOT_RUN"
   ]
 }
