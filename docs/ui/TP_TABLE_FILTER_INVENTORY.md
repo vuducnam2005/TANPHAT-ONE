@@ -345,3 +345,5 @@ S4 đã deploy PC server từ `cc2bfcb6`: 37/37 tệp checksum, public 40 dashbo
 
 Menu_board ẩn; ordinary viewer dùng overview/shared summary và Công của tôi;
 deep link cũ giữ read-only canonical fallback, không mở raw source.
+
+GiaoCHG-20261119-002: server20.0.3.1.0/menuoldinactive,actualpublicassets đạt; giữNOT_RUN authenticatedpublic vàphạmvi kiểm001.

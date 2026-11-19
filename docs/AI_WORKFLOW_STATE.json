@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-19T02:00:37.707485+00:00",
-  "last_change_id": "CHG-20261119-001",
+  "updated_at": "2026-11-19T02:12:27.299704+00:00",
+  "last_change_id": "CHG-20261119-002",
   "code_digest": "1971a2dcce86f6ce8b230ae3ca3baa9a8e902c6be3c34d99a43eb2e12b66e064",
   "code_file_count": 674,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "75f1193cb155aefc23103c18e81f0b7ae7494c7678636f20b68cdea70f26e4e2",
-    "docs/CHANGELOG.md": "b8ace9cb8abb51ba98ac01f03bbf5255a5e9d97a3e1488c0fa4a5c9c3615d848",
+    "docs/PROJECT_STATUS.md": "d04a0aeb0fe12c75b7ce9fcaf95a0f63f3d6583a59f85b16cc50139ba0a09a2e",
+    "docs/CHANGELOG.md": "335c67f365c62279185dc906e2dd8b19c414f1e3a8779a09f29c861218e04b0b",
     "AGENTS.md": "ff1b8cc71bb6880693e7fccd63d211142f6c2b52ca561e4cc0c6e8eeee8a4699",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "ORM testDB6/6; UI desktop/mobile2/2; scroll12/12; label5/5; XML/Python/ruff PASS. Main backup+upgrade20.0.3.1.0 no business count/group drift. PCserver pending; foreign checkpoint retained in root."
+    "Server18files20.0.3.1.0 backup+upgrade PASS; counts/groupdigest unchanged; server/public actual CSS+JS SHA256 match and new UI markers; health200 via current tunnel. Local browser2/2, ORM6/6, scroll12/12 PASS. Public authenticated E2E NOT_RUN; old public hostname NXDOMAIN; no tunnel changes."
   ]
 }

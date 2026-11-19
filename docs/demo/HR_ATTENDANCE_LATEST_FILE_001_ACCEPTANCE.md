@@ -23,6 +23,18 @@ Không upload/filefake trênmain. ORM chỉ chạy DBtest hiện có. Sourcehash
 đúng committedsnapshot; checkpoint/foreignWIP giữ nguyên. Test filestoreGC có warning
 Windowspermission; kết quả6/6PASS, không can thiệp các attachment đó.
 
-PCserver đang chờ giao bản và kiểm actual JS/CSS. Không coi assets/login là public
+PCserver đã giao và kiểm actual JS/CSS theo mục002 bên dưới. Không coi assets/login là public
 authenticatedE2E. Chưa kiểm iOS/Safari thật, race thực, fixture riêng approved/API
 hoặc nghiệp vụ/UAT; không tự replay batch thật cũ. Nguồn lịch sử giữ nguyên.
+
+
+## Giao bản — CHG-20261119-002
+
+Appcaf24a1c/version20.0.3.1.0 đãchạy18069vàPCserver. Serverbackup
+`/workspace/.local/attendance-ui001/backup-20261119T020340Z`; restore-list từPG16,
+giữ39employee/32user/4batch/355session/456dayvàgroupdigest. Oldmenuinactive.
+Thực tảipublicCSS76ac1e0/JSa4da174: hasheskhớpserver,cólayoutmới/label/Back/contain.
+Publichealth200 tại`https://tiny-wasp-93.loca.lt`; URLtrycloudflarecũNXDOMAIN.
+Tunnel hiệncó ngoài scope, khôngsửa/restart. PublicauthenticatedE2E chưa chạy;
+khôngdùngadminđểtránhđáphiênngườidùng. Localbrowser2/2vàscroll12/12,ORM6/6PASS.
+Không tựphátlạibatchthậtcũ. Người dùngCtrl+F5; uploadlầnmới ápquytắcmới.

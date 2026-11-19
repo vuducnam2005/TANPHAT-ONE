@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-002 — Giao chấm công Vào/Ra và ưu tiên file mới lên PCserver
+
+- Source app`caf24a1c`20.0.3.1.0 đãpush; giao đúng18addonfiles, so sánhbaseline đãbiết/hashes, backupDB+restore-list+filestore+source/config trước-u. Không hạaddon hoặc ghi dữliệu/người giả trênmain/server, không restarttunnel. Serverbackup`/workspace/.local/attendance-ui001/backup-20261119T020340Z`.
+- Cố gắngbackupđầu tiên bị chặn pg_dump15/serverPG16 trước khi thayfile; serviceđượcbậtlại. Sauđó dump/restore-list dùngchínhcontainerPG16, counts readonly giữ39employee/32user/4batch/355session/456day vàgroupdigest; version20.0.3.1.0,menuoldinactive.
+- Serverinternalhealth200; publicURLtrycloudflarecũNXDOMAIN. Tunnelhiệncó node/localtunnel ởngoàiscope,cólink`https://tiny-wasp-93.loca.lt`,health200. Không tự đổi tunnel hoặc dùngcredentialadmin trênpublic.
+- Kiểm actualpublicbundle: CSS`/web/assets/76ac1e0/web.assets_web.min.css`1.595.983B,SHA256`5d1d63376c4da8ab1c459c1979f0eab2b91a4b592bfc299024e06f2a97849d1e`; JS`/web/assets/a4da174/web.assets_web.min.js`8.441.668B,SHA256`5776a8632c7de2122bc3f7a0bed6d3401e11169581c771609002233d72cf4f73`; cóattentionintro/clock/matrixsubtitle/back/detail/containedscroll, hasheskhớpserver. Coldassets tốn35–56s; lượtđầutimeoutkhôngcoiPASS, warmedretryđạt.
+- Browserlocal saucuốicùng2/2PASS,0JSerror; scroll12/12PASS từ001,ORM6/6PASS. No businessreplayfilethậtcũ. PublicauthenticatedE2E/thiếtbịthật/UAT cònNOT_RUN. Foreigncheckpoint/WIP giữ,workflow committedsnapshotđúngscope; giao docs khôngrestart/upgrade thêm.
+
+
 ## CHG-20261119-001 — Chấm công: Vào/Ra mặc định, giờ thiếu trực quan, nguồn mới nhất
 
 - Ngày19/11/2026 Asia/Saigon; thực thi theo yêu cầu trực tiếp và steering bỏ Trùng/Khác giờ, cập nhật theo file mới nhất (DEC-059 thay phần xung đột DEC-058).
