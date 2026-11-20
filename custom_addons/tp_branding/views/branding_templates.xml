@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution). -->
+<!-- BRAND-WHITELABEL-002 (CHG-20261117-002): server-rendered identity and
+     branded auth URLs. priority="99" so these run after tp_web_login and keep
+     the approved UI-LOGIN-002 layout untouched (only titles/hrefs/labels). -->
+<odoo>
+
+    <!-- SSR title fallback of every page rendered with web.layout
+         (webclient boot, frontend, 403/404, offline). -->
+    <template id="layout_brand_title" inherit_id="web.layout" priority="99">
+        <xpath expr="//head/title" position="attributes">
+            <attribute name="t-out">title or 'TANPHAT ONE'</attribute>
+        </xpath>
+    </template>
+
+    <!-- Authentication shell: branded paths render the approved TANPHAT ONE
+         layout and get "<page> | TANPHAT ONE" before any JS runs. -->
+    <template id="login_layout_brand" inherit_id="web.login_layout" priority="99">
+        <xpath expr="//t[@t-set='tp_auth_page']" position="attributes">
+            <attribute name="t-value">request.httprequest.path.rstrip('/') in ('/web/login', '/web/login/totp', '/web/signup', '/web/reset_password', '/dang-nhap', '/dang-nhap/xac-thuc', '/tao-tai-khoan', '/quen-mat-khau')</attribute>
+        </xpath>
+        <xpath expr="//t[@t-set='tp_auth_page']" position="after">
+            <t t-set="tp_auth_title" t-value="{'/web/login': 'Đăng nhập', '/dang-nhap': 'Đăng nhập', '/web/login/totp': 'Xác thực đăng nhập', '/dang-nhap/xac-thuc': 'Xác thực đăng nhập', '/web/signup': 'Tạo tài khoản', '/tao-tai-khoan': 'Tạo tài khoản', '/web/reset_password': 'Đặt lại mật khẩu', '/quen-mat-khau': 'Đặt lại mật khẩu'}.get(request.httprequest.path.rstrip('/'))"/>
+            <t t-set="title" t-value="title or (tp_auth_title and tp_auth_title + ' | TANPHAT ONE') or 'TANPHAT ONE'"/>
+        </xpath>
+        <xpath expr="//a[contains(@href, 'www.odoo.com')]" position="replace">
+            <span t-translation="off">Phát triển bởi <strong>TADIC</strong></span>
+        </xpath>
+    </template>
+
+    <!-- Login page: post to the branded alias (a wrong password re-renders
+         on /dang-nhap, not /web/login) and branded link preview metadata. -->
+    <template id="login_brand" inherit_id="web.login" priority="99">
+        <xpath expr="//form[@data-captcha='login']" position="attributes">
+            <attribute name="t-attf-action">/dang-nhap</attribute>
+            <attribute name="onsubmit">this.action = '/dang-nhap' + location.hash</attribute>
+        </xpath>
+        <xpath expr="//meta[@property='og:site_name']" position="attributes">
+            <attribute name="content">TANPHAT ONE</attribute>
+        </xpath>
+        <xpath expr="//meta[@property='og:description']" position="attributes">
+            <attribute name="content">TANPHAT ONE — không gian làm việc chung của Tấn Phát. Phát triển bởi TADIC.</attribute>
+        </xpath>
+        <xpath expr="//meta[@property='og:image:alt']" position="attributes">
+            <attribute name="content">TANPHAT ONE</attribute>
+        </xpath>
+        <xpath expr="//meta[@property='og:image:width']" position="attributes">
+            <attribute name="content">900</attribute>
+        </xpath>
+        <xpath expr="//meta[@property='og:image:height']" position="attributes">
+            <attribute name="content">885</attribute>
+        </xpath>
+        <xpath expr="//meta[@name='twitter:site']" position="replace"/>
+        <xpath expr="//meta[@name='twitter:description']" position="attributes">
+            <attribute name="content">TANPHAT ONE — không gian làm việc chung của Tấn Phát. Phát triển bởi TADIC.</attribute>
+        </xpath>
+        <xpath expr="//meta[@name='twitter:image:alt']" position="attributes">
+            <attribute name="content">TANPHAT ONE</attribute>
+        </xpath>
+    </template>
+
+    <template id="login_self_service_brand" inherit_id="auth_signup.login" priority="99">
+        <xpath expr="//a[hasclass('tp-auth-signup-link')]" position="attributes">
+            <attribute name="t-attf-href">/tao-tai-khoan?{{ keep_query() }}</attribute>
+        </xpath>
+        <xpath expr="//a[hasclass('tp-auth-reset-link')]" position="attributes">
+            <attribute name="t-attf-href">/quen-mat-khau?{{ keep_query() }}</attribute>
+        </xpath>
+    </template>
+
+    <template id="signup_brand" inherit_id="auth_signup.signup" priority="99">
+        <xpath expr="//a[hasclass('tp-auth-signup-link')]" position="attributes">
+            <attribute name="t-attf-href">/dang-nhap?{{ keep_query() }}</attribute>
+        </xpath>
+    </template>
+
+    <template id="reset_password_brand" inherit_id="auth_signup.reset_password" priority="99">
+        <xpath expr="//div[@t-if='message']//a[hasclass('tp-auth-signup-link')]" position="attributes">
+            <attribute name="href">/dang-nhap</attribute>
+        </xpath>
+        <xpath expr="//a[@t-if='not token']" position="attributes">
+            <attribute name="t-attf-href">/dang-nhap?{{ keep_query() }}</attribute>
+        </xpath>
+        <xpath expr="//a[@t-if='invalid_token']" position="attributes">
+            <attribute name="href">/dang-nhap</attribute>
+        </xpath>
+    </template>
+
+    <!-- "Hủy và quay lại" of the verification page logs out (POST) and lands
+         on the branded login page. -->
+    <template id="auth_totp_form_brand" inherit_id="auth_totp.auth_totp_form" priority="99">
+        <xpath expr="//form[@action='/web/session/logout']/input[@name='redirect']" position="attributes">
+            <attribute name="value">/dang-nhap</attribute>
+        </xpath>
+    </template>
+
+    <!-- Footer credit of frontend pages (403/404, portal) -->
+    <template id="brand_promotion_message_brand" inherit_id="web.brand_promotion_message" priority="99">
+        <xpath expr="//t[@t-out]" position="replace">
+            <span t-translation="off">Phát triển bởi <strong>TADIC</strong></span>
+        </xpath>
+    </template>
+
+    <template id="portal_record_sidebar_brand" inherit_id="portal.portal_record_sidebar" priority="99">
+        <xpath expr="//a[contains(@href, 'utm_medium=portal')]/.." position="replace">
+            <div class="d-none d-lg-block mt-4 small text-center text-muted" t-translation="off">Phát triển bởi <strong>TADIC</strong></div>
+        </xpath>
+    </template>
+
+    <!-- Offline page served by the service worker -->
+    <template id="webclient_offline_brand" inherit_id="web.webclient_offline" priority="99">
+        <xpath expr="//t[@t-set='head']/style" position="after">
+            <style>
+                .card button { background-color: #061b40; border-color: #061b40; }
+            </style>
+        </xpath>
+        <xpath expr="//t[@t-call='web.layout']" position="attributes">
+            <attribute name="title.translate"/>
+            <attribute name="title">'Ngoại tuyến | TANPHAT ONE'</attribute>
+        </xpath>
+        <xpath expr="//div[hasclass('card')]" position="replace">
+            <div class="card" t-translation="off">
+                <img t-attf-src="data:image/png;base64,{{odoo_icon.to_base64()}}" alt="TANPHAT ONE"/>
+                <h1>Bạn đang ngoại tuyến</h1>
+                <p>Vui lòng kiểm tra kết nối mạng. TANPHAT ONE sẽ tải lại ngay khi có mạng trở lại.</p>
+                <button onclick="location.reload()">Thử lại</button>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- Title (and PDF metadata title) of generated reports -->
+    <template id="report_layout_brand" inherit_id="web.report_layout" priority="99">
+        <xpath expr="//head/title/t" position="attributes">
+            <attribute name="t-out">title or 'TANPHAT ONE'</attribute>
+        </xpath>
+    </template>
+
+    <template id="report_preview_layout_brand" inherit_id="web.report_preview_layout" priority="99">
+        <xpath expr="//head/title/t" position="attributes">
+            <attribute name="t-out">title or 'TANPHAT ONE'</attribute>
+        </xpath>
+    </template>
+
+    <!-- Public Discuss/meeting page -->
+    <template id="discuss_public_brand" inherit_id="mail.discuss_public_channel_template" priority="99">
+        <xpath expr="//head/title" position="attributes">
+            <attribute name="t-out">title or 'TANPHAT ONE'</attribute>
+        </xpath>
+        <xpath expr="//head/link[@rel='shortcut icon']" position="attributes">
+            <attribute name="t-att-href">x_icon or '/tp_web_home/static/img/brand/favicon.ico'</attribute>
+        </xpath>
+    </template>
+
+    <!-- Identity check dialog (tp_web_login Vietnamese form) -->
+    <record id="identitycheck_brand" model="ir.ui.view">
+        <field name="name">TANPHAT ONE — liên kết quên mật khẩu</field>
+        <field name="model">res.users.identitycheck</field>
+        <field name="inherit_id" ref="base.res_users_identitycheck_view_form"/>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <xpath expr="//a[@href='/web/reset_password/']" position="attributes">
+                <attribute name="href">/quen-mat-khau</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

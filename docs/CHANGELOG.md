@@ -1,6 +1,20 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
-## CHG-20261120-008 — Script áp PC tự đóng dấu thời gian file phát hành
+## CHG-20261120-009 — SYSTEM-URL-001: Chuẩn hóa URL phân hệ và màn hình toàn hệ thống
+
+- 20/11/2026 (Asia/Saigon). Thực hiện chuẩn hóa URL toàn hệ thống theo 8 quy tắc vàng: Tiếng Việt không dấu (`kebab-case`), phân hệ cố định (`nhan-su`, `khkd`, `thiet-bi`, `bao-cao`, `quan-tri`, `trang-chu`), tên rõ nghiệp vụ, không dùng `action-528` hoặc model kỹ thuật làm URL chính, hỗ trợ chi tiết `/<id>` và tạo mới `/tao-moi`. Phân biệt Quản lý dự án (`/app/khkd/quan-ly-du-an`) và Quản trị dự án (`/app/khkd/quan-tri-du-an`).
+- Nâng cấp `custom_addons/tp_branding` lên `20.0.2.0.0`:
+  - `brand_routes.py` & `static/src/brand_routes.js`: Registry định nghĩa 46 canonical business routes, action XML IDs, tags, native slugs, chi tiết, alias, đồng bộ 100% giữa Python và Owl JS.
+  - `models/ir_http.py`: Override `ir.http.session_info` query động bảng `ir_model_data` theo XML ID thực tế của database hiện hành, cung cấp bảng ánh xạ 2 chiều `xml_to_id` và `id_to_xml` chống lệch numeric action ID giữa các môi trường.
+  - `static/src/router_patch.js`: Adapter 2 chiều hoàn chỉnh: `stateToUrl` sinh URL nghiệp vụ chuẩn kèm chi tiết/tạo mới; `urlToState` phân tích URL nghiệp vụ thành native action target cho core Odoo xử lý.
+  - Đảm bảo tương thích ngược 100% với legacy URLs (`/app/action-528`, `/app/tp-home`, `/odoo/...`, `/web/login`).
+  - Tài liệu: `docs/ui/TP_URL_NAMING_STANDARD.md` và `docs/ui/TP_URL_ROUTE_INVENTORY.md`.
+- Kiểm thử và triển khai:
+  - Local `tp_tanphat_test`: 31/31 Odoo test PASS (12/12 unit tests + 19/19 HttpCase tests đạt 0 failed, 0 error).
+  - Local `tp_tanphat_dev`: Upgrade `-u tp_branding` thành công exit code 0.
+  - PC Server `192.168.1.73`: Sao lưu an toàn tại `C:\TANPHAT-backups\system-url001\20261120T143858\` (dump DB `10.405.836` bytes, source tarball, deploy package). Đồng bộ source, đóng dấu mtime mới cho JS/XML, upgrade `-u tp_branding` trong Docker container `tp-odoo` exit 0, restart container.
+  - Xác minh thực tế trên Public Domain `https://tpone.tadic.vn`: 13/13 business route anonymous deep link redirects sang `/dang-nhap?redirect=/app/...` chuẩn xác; 5/5 legacy redirects đạt; dynamic mapping nhận diện đúng action `528` cho `tp_hr_workspace.action_employees`.
+  - [Bản nghiệm thu](demo/SYSTEM_URL_001_ACCEPTANCE.md).
 
 - 20/11/2026, theo yêu cầu “Sửa luôn” sau sự cố CHG-20261120-007. `ops/runbooks/deploy-enti-attendance002.ps1`: sau khi giải nén và kiểm checksum, đặt thời gian sửa của mọi file trong `release` bằng giờ triển khai, trước khi upgrade và khởi động lại Odoo; kết quả JSON thêm `stamped_at`. Odoo tính phiên bản bundle CSS/JS theo URL + thời gian sửa, nên lần áp sau trình duyệt nhận bundle mới mà không cần khởi động lại thêm, kể cả khi tarball mang mtime 1970. Không đổi module hay dữ liệu.
 - Kiểm: script parse 0 lỗi. Trên PC, trong thư mục tạm ngoài dự án, chạy đúng đoạn mã mới: file giải nén từ tarball mtime 0 mang 1970-01-01, sau bước đóng dấu mang giờ hiện tại; thư mục thử đã xóa. Bản script trên PC được thay bằng bản commit và kiểm SHA256.

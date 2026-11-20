@@ -1,5 +1,19 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261120-009 — SYSTEM-URL-001 — PC_SERVER_APPLIED.** Chuẩn hóa URL có tên rõ ràng theo phân hệ và từng màn hình trên toàn hệ thống TANPHAT ONE (thay thế URL kỹ thuật như `https://tpone.tadic.vn/app/action-528`).
+- Nâng cấp `custom_addons/tp_branding` lên `20.0.2.0.0`:
+  - 8 quy tắc vàng URL: Tiếng Việt không dấu (`kebab-case`), phân hệ cố định (`nhan-su`, `khkd`, `thiet-bi`, `bao-cao`, `quan-tri`, `trang-chu`), tên rõ nghiệp vụ, không dùng `action-ID` làm URL chính, chi tiết `/<id>`, tạo mới `/tao-moi`. Phân biệt `/app/khkd/quan-ly-du-an` và `/app/khkd/quan-tri-du-an`.
+  - Đồng bộ 100% hai chiều giữa Python Registry (`brand_routes.py`) và Owl JS Router (`brand_routes.js` + `router_patch.js`).
+  - Dynamic XML ID <-> Action ID mapping qua `ir.http.session_info` (`models/ir_http.py`), query trực tiếp từ `ir_model_data` theo DB hiện hành, chống lệch action numeric ID giữa local và PC Server (xác nhận action `tp_hr_workspace.action_employees` ánh xạ chính xác sang `ID 528` trên PC Server thật).
+  - Tương thích ngược 100% với legacy URLs (`/app/action-528`, `/app/tp-home`, `/odoo/...`, `/web/login`).
+  - Tài liệu: `docs/ui/TP_URL_NAMING_STANDARD.md` và `docs/ui/TP_URL_ROUTE_INVENTORY.md` (kiểm kê 46 màn hình).
+- Kiểm thử và triển khai:
+  - Local `tp_tanphat_test`: 31/31 Odoo test PASS (12 unit tests + 19 HttpCase tests đạt 0 failed, 0 error).
+  - Local `tp_tanphat_dev`: Upgrade exit code 0.
+  - PC Server `192.168.1.73`: Sao lưu tại `C:\TANPHAT-backups\system-url001\20261120T143858\` (`tp_tanphat_dev_pre.dump` 10.405.836B, source tarball, deploy package). Đồng bộ mã nguồn, đóng dấu mtime mới cho JS/XML, upgrade `-u tp_branding` trong Docker container `tp-odoo` exit 0, restart container, health check 200 OK.
+  - Kiểm chứng public domain `https://tpone.tadic.vn`: 13/13 business route anonymous deep link redirects sang `/dang-nhap?redirect=/app/...` chuẩn xác; 5/5 legacy redirects đạt; dynamic mapping nhận diện đúng action `528`.
+  - [Nghiệm thu](demo/SYSTEM_URL_001_ACCEPTANCE.md). Next: Người dùng truy cập `https://tpone.tadic.vn` để nghiệm thu các URL nghiệp vụ mới.
+
 **CHG-20261120-008 — Script áp PC đóng dấu thời gian — VERIFIED.** `deploy-enti-attendance002.ps1` đặt thời gian sửa của file phát hành bằng giờ triển khai sau khi kiểm checksum, nên bundle CSS/JS mới lên ngay sau lần áp sau (sửa nguyên nhân sự cố CHG-20261120-007). Kiểm trên PC trong thư mục tạm: 1970 → giờ hiện tại; script trên PC đã thay và khớp commit. Next: lần áp sau xác nhận bundle công khai đổi mà không cần khởi động lại thủ công.
 
 **CHG-20261120-007 — ATTENDANCE-DASH-004 thanh thẻ gọn — PC_SERVER_APPLIED.** App `f710eeec` đã push và áp PC 20/11/2026 13:09 giờ VN: `tp_hr_attendance` 20.0.3.5.4, upgrade exit 0/log 0 ERROR, nguồn 81/81 khớp release. Backup `C:\TANPHAT-backups\enti-attendance002\enti002-dash004b-20261120T130940`. Snapshot trước/sau chỉ đổi phiên bản. Bundle CSS cũ bị giữ do file release mang mtime 1970; đã đặt thời gian sửa thật cho 2 file và khởi động lại Odoo, bundle công khai `940ffac` khớp PC và có thẻ gọn. Health/login công khai đạt, cron ENTI vẫn chạy. [Nghiệm thu §6](demo/ATTENDANCE_DASH_004_ACCEPTANCE.md). Next: người dùng Ctrl+F5 xem thanh thẻ trên dữ liệu thật; gói release sau phải mang thời gian sửa thật.

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution). -->
+<!-- BRAND-WHITELABEL-002 (CHG-20261117-002): branded hrefs and labels of
+     native webclient templates. Only attributes/texts change; behaviour,
+     click handlers and structure stay native. -->
+<templates xml:space="preserve">
+
+    <t t-inherit="web.NavBar.AppsMenu" t-inherit-mode="extension">
+        <xpath expr="//a[hasclass('o_menu_toggle')]" position="attributes">
+            <attribute name="href">/app</attribute>
+        </xpath>
+    </t>
+
+    <t t-inherit="web.NavBar.AppsMenu.Sidebar" t-inherit-mode="extension">
+        <xpath expr="//a[@href='/odoo'][hasclass('btn-primary')]" position="attributes">
+            <attribute name="href">/app</attribute>
+        </xpath>
+    </t>
+
+    <t t-inherit="web.SessionExpiredDialog" t-inherit-mode="extension">
+        <xpath expr="//Dialog" position="attributes">
+            <attribute name="title.translate">Phiên làm việc đã hết hạn</attribute>
+        </xpath>
+        <xpath expr="//div[@role='alert']/p" position="replace">
+            <p class="text-prewrap">Phiên làm việc của bạn đã hết hạn. Trang hiện tại sẽ được tải lại.</p>
+        </xpath>
+    </t>
+
+    <t t-inherit="web.CheckIdentityFormPassword" t-inherit-mode="extension">
+        <xpath expr="//a[@href='/web/reset_password']" position="attributes">
+            <attribute name="href">/quen-mat-khau</attribute>
+        </xpath>
+    </t>
+
+</templates>
