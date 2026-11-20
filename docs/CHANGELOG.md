@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-005 — Đã áp dashboard chấm công gọn lên PC server
+
+- 20/11/2026 11:55 giờ VN; release `162bc409` (11 file, checksum khớp), `tp_hr_attendance` 20.0.3.5.2 → 20.0.3.5.3, upgrade exit 0/0 ERROR. Backup `C:\TANPHAT-backups\enti-attendance002\enti002-dash004-20261120T115540` (dump + restore-list, filestore, source, config, SHA256). Nguồn PC 79/79 trước và 81/81 sau khớp commit; snapshot nghiệp vụ trước/sau giống hệt, chỉ đổi phiên bản.
+- Kiểm chỉ đọc bằng ORM có rollback trên dữ liệu thật hôm nay: thẻ 25/4/10/0 (tổng 39) bằng tổng danh sách từng nhóm cho cả admin và nhân viên thường. Bảng gần nhất ở chế độ mốc vào đầu/ra cuối, giây thật, không có địa điểm (PC 0 sự kiện quẹt). Không lộ raw; nhân viên thường không xuất. Health 200/login 302 cục bộ và công khai; bundle công khai JS `297acd1e`/CSS `0d689c15` khớp PC và có code mới; log 0 ERROR, cron ENTI vẫn chạy. Không đăng nhập tài khoản thật trên PC. [Nghiệm thu §5](demo/ATTENDANCE_DASH_004_ACCEPTANCE.md#5-pc-server-đã-áp-dụng-chg-20261120-005).
+
 ## CHG-20261120-004 — Dashboard chấm công gọn: ba thẻ bấm mở danh sách, bảng chấm gần nhất
 
 - 20/11/2026 Asia/Saigon; prompt hợp nhất của người dùng thay các yêu cầu còn mâu thuẫn (kể cả giữ sáu thẻ). `tp_hr_attendance` 20.0.3.5.3. Ba thẻ Đang làm/Đã về/Chưa đi làm cao bằng nhau, bấm mở hộp thoại danh sách (tab nhóm, tìm không dấu, phòng ban, 10/20/50, trạng thái tải/lỗi/trống, Đóng giữ ngày/bộ lọc/cuộn). Một phân loại backend cho thẻ, donut, biểu đồ và danh sách: mỗi người một nhóm mỗi ngày; chỉ có giờ ra vẫn là Đã về; mất nguồn/chưa ghép mã là Chưa xác định kèm lý do, không bao giờ âm thầm thành Chưa đi làm.

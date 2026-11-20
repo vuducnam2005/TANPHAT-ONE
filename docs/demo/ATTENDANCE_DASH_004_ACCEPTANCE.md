@@ -69,3 +69,25 @@ DB kiểm thử `tp_tanphat_test` cổng 18079. Không ghi dữ liệu giả và
 - Theo chính sách hiện hành, nhân viên thường xem được ngày công của cả công ty (rule theo công ty, ACL đọc cho
   `base.group_user`). Đợt này giữ nguyên, không thu hẹp quyền.
 - Admin được ủy quyền chưa được kiểm bằng trình duyệt riêng. Cùng component và cùng kiểm tra quyền backend như hai vai trò đã chạy.
+
+## 5. PC server đã áp dụng (CHG-20261120-005)
+
+- 20/11/2026 11:55 giờ VN: release từ `162bc409` (11 file, 2 mới, 0 bỏ, checksum khớp), `tp_hr_attendance` 20.0.3.5.2 →
+  20.0.3.5.3, upgrade exit 0 và 0 ERROR. Trước khi áp, nguồn module trên PC khớp commit gốc 79/79 file; sau khi áp khớp
+  release 81/81 file, không có file lạ.
+- Backup `C:\TANPHAT-backups\enti-attendance002\enti002-dash004-20261120T115540`: dump và `pg_restore -l`, filestore,
+  source, config, SHA256.
+- Snapshot nghiệp vụ trước và sau giống hệt, chỉ đổi phiên bản module: 39 nhân viên, 32 user, nhóm, roster, 780 ngày công,
+  791 phiên, 780 ngày nguồn, 39 mapping, 5 lô lịch sử, 0 điều chỉnh, 0 kỳ chốt, cron và base_url.
+- Kiểm chỉ đọc trên dữ liệu thật bằng ORM, rollback sau khi kiểm. Hôm nay 20/11 nguồn live khỏe. Với admin và một nhân viên
+  thường:
+  - thẻ Đang làm 25, Đã về 4, Chưa đi làm 10, Chưa xác định 0, tổng 39;
+  - tổng danh sách từng nhóm bằng đúng số trên thẻ;
+  - bảng gần nhất ở chế độ `daily`, tiêu đề “Chấm công gần nhất”, 10 dòng có giây thật của nguồn, địa điểm trống
+    (hiện “—”);
+  - không có raw trong dữ liệu trả về; nhân viên thường không có quyền xuất;
+  - bảng sự kiện quẹt có 0 dòng.
+- Health 200; login 302 cả cục bộ lẫn công khai. Bundle công khai JS `297acd1e`, CSS `0d689c15` khớp SHA256 của chính PC,
+  có code hộp thoại nhóm và bảng mới, không còn danh sách cũ. Log 0 ERROR; cron ENTI vẫn chạy đúng nhịp (39 nhân viên mỗi lượt).
+- Không đăng nhập tài khoản thật trên PC, nên chưa có ảnh giao diện của dữ liệu thật. Người dùng cần Ctrl+F5 để tải
+  bundle mới. Local 18069 không được áp kèm.
