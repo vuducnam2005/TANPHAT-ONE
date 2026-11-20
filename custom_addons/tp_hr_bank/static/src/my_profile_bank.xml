@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_hr_bank.BankCard">
+        <section t-if="this.bankInfo" class="o_tp_hr_card o_tp_bank_card" aria-labelledby="tp_bank_card_title">
+            <div class="o_tp_hr_card_title justify-content-between">
+                <span id="tp_bank_card_title"><i class="oi" data-icon="account_balance" aria-hidden="true"/>Tài khoản ngân hàng</span>
+                <button t-if="this.canAddBankAccount" type="button" class="btn btn-sm btn-outline-primary o_tp_bank_add"
+                    t-on-click="() => this.openBankModal()">+ Thêm tài khoản</button>
+            </div>
+            <div class="p-3">
+                <InlineErrors errors="[]" server="this.actionErrorFor('bank')" attempt="this.state.actionAttempt"/>
+                <div t-if="!this.bankInfo.available" class="alert alert-warning mb-0" role="status" t-out="this.bankInfo.message"/>
+                <t t-else="">
+                    <div t-if="!this.bankInfo.accounts.length" class="o_tp_bank_empty">
+                        <span class="text-muted">Chưa khai báo tài khoản ngân hàng.</span>
+                        <button type="button" class="btn btn-link p-0 align-baseline" t-on-click="() => this.openBankModal()">Thêm tài khoản nhận lương</button>
+                    </div>
+                    <div t-foreach="this.bankInfo.accounts" t-as="acc" t-key="acc.id" class="tp-myprofile-list-item o_tp_bank_account">
+                        <div class="o_tp_bank_account_main">
+                            <TpBankBadge bank="acc.bank"/>
+                            <div class="o_tp_bank_account_text">
+                                <div class="fw-semibold">
+                                    <t t-out="acc.bank_label"/>
+                                    <span t-if="acc.primary and this.bankInfo.accounts.length gt 1" class="badge rounded-pill text-bg-light ms-1">Tài khoản chính</span>
+                                </div>
+                                <div class="o_tp_bank_number" t-out="this.formatAccountNumber(acc.account_number)"/>
+                                <div class="o_tp_bank_holder" t-out="acc.holder_name"/>
+                                <div t-if="acc.trusted" class="o_tp_bank_status is-verified small">
+                                    <i class="oi" data-icon="verified" aria-hidden="true"/> Nhân sự đã xác minh
+                                </div>
+                                <div t-else="" class="o_tp_bank_status is-pending small">
+                                    <i class="oi" data-icon="schedule" aria-hidden="true"/> Chờ Nhân sự xác minh
+                                </div>
+                            </div>
+                        </div>
+                        <div class="o_tp_bank_account_actions">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.openBankModal(acc)"
+                                t-att-aria-label="'Sửa tài khoản ' + acc.bank_label">Sửa</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" t-on-click="() => this.removeBankAccount(acc)"
+                                t-att-aria-label="'Gỡ tài khoản ' + acc.bank_label">Gỡ</button>
+                        </div>
+                    </div>
+                    <p class="o_tp_bank_note">
+                        <i class="oi" data-icon="info" aria-hidden="true"/>
+                        <span>Tài khoản mới, hoặc vừa đổi ngân hàng/số tài khoản, cần bộ phận Nhân sự xác minh trước khi dùng để chi lương.</span>
+                    </p>
+                </t>
+            </div>
+        </section>
+    </t>
+
+    <t t-name="tp_hr_bank.BankModal">
+        <div t-if="this.state.bankDraft" class="tp-myprofile-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="tp_bank_modal_title">
+            <div class="tp-myprofile-modal card o_tp_bank_modal">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 id="tp_bank_modal_title" class="h6 mb-0" t-out="this.state.bankDraft.id ? 'Sửa tài khoản ngân hàng' : 'Thêm tài khoản ngân hàng'"/>
+                    <button type="button" class="btn-close" aria-label="Đóng" t-on-click="() => this.closeBankModal()"/>
+                </div>
+                <div class="card-body d-flex flex-column gap-3 tp_validation_form">
+                    <InlineErrors errors="this.bankErrors" server="this.state.bankSaveError" attempt="this.state.bankAttempt"/>
+                    <div>
+                        <label for="tp_bank_bank_id" class="form-label">Ngân hàng<span class="tp_required_mark" title="Thông tin bắt buộc"> *</span></label>
+                        <TpBankPicker id="'tp_bank_bank_id'" banks="this.bankInfo.banks" value="this.state.bankDraft.bank_id"
+                            invalid="!!this.bankFieldError('tp_bank_bank_id')" onSelect="(bank) => this.onBankSelect(bank)"/>
+                        <div t-if="this.bankFieldError('tp_bank_bank_id')" class="tp_validation_inline" t-out="this.bankFieldError('tp_bank_bank_id')"/>
+                    </div>
+                    <div>
+                        <label for="tp_bank_account_number" class="form-label">Số tài khoản<span class="tp_required_mark" title="Thông tin bắt buộc"> *</span></label>
+                        <input id="tp_bank_account_number" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="30"
+                            class="form-control o_input o_tp_bank_number_input" aria-describedby="tp_bank_account_number_help"
+                            t-att-aria-invalid="this.bankFieldError('tp_bank_account_number') ? 'true' : 'false'"
+                            t-att-value="this.state.bankDraft.account_number"
+                            t-on-input="(ev) => this.onBankDraftInput('account_number', ev)"/>
+                        <small id="tp_bank_account_number_help" class="form-text">Số tài khoản ngân hàng (6–20 chữ số), không phải số thẻ ATM.</small>
+                        <div t-if="this.bankFieldError('tp_bank_account_number')" class="tp_validation_inline" t-out="this.bankFieldError('tp_bank_account_number')"/>
+                    </div>
+                    <div>
+                        <label for="tp_bank_holder_name" class="form-label">Tên chủ tài khoản<span class="tp_required_mark" title="Thông tin bắt buộc"> *</span></label>
+                        <input id="tp_bank_holder_name" type="text" autocomplete="off" spellcheck="false" maxlength="120"
+                            class="form-control o_input o_tp_bank_holder_input" aria-describedby="tp_bank_holder_name_help"
+                            t-att-aria-invalid="this.bankFieldError('tp_bank_holder_name') ? 'true' : 'false'"
+                            t-att-value="this.state.bankDraft.holder_name"
+                            t-on-input="(ev) => this.onBankDraftInput('holder_name', ev)"
+                            t-on-change="(ev) => this.onBankHolderChange(ev)"/>
+                        <small id="tp_bank_holder_name_help" class="form-text">Viết hoa không dấu, đúng tên ngân hàng đăng ký, ví dụ NGUYEN VAN AN.</small>
+                        <div t-if="this.bankFieldError('tp_bank_holder_name')" class="tp_validation_inline" t-out="this.bankFieldError('tp_bank_holder_name')"/>
+                    </div>
+                    <div t-if="this.state.bankDraft.trusted" class="alert alert-info small mb-0" role="note">
+                        Nếu đổi ngân hàng hoặc số tài khoản, tài khoản sẽ chờ Nhân sự xác minh lại.
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-secondary" t-on-click="() => this.closeBankModal()">Hủy</button>
+                    <button type="button" class="btn btn-primary o_tp_bank_save" t-att-disabled="this.state.saving" t-on-click="() => this.saveBankDraft()">Lưu</button>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="tp_hr_bank.MyProfile" t-inherit="tp_hr_workspace.MyProfile" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('tp-myprofile-personal-grid')]" position="inside">
+            <t t-call="tp_hr_bank.BankCard"/>
+        </xpath>
+        <xpath expr="//t[@t-elif='this.state.data and !this.state.data.has_employee']/div[hasclass('p-3')]" position="inside">
+            <div class="mt-3 o_tp_bank_standalone">
+                <t t-call="tp_hr_bank.BankCard"/>
+            </div>
+        </xpath>
+        <xpath expr="//div[hasclass('o_tp_hr_my_profile')]" position="inside">
+            <t t-call="tp_hr_bank.BankModal"/>
+        </xpath>
+    </t>
+</templates>

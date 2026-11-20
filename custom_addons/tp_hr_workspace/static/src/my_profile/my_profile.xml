@@ -121,25 +121,25 @@
                                                 <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="work" aria-hidden="true"/>Thông tin công việc (Chỉ đọc)</h2>
                                                 <div class="o_inner_group">
                                                     <div class="o_wrap_label"><span class="o_form_label">Mã nhân viên</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.code"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.state.data.header.code"/></div>
 
                                                     <div class="o_wrap_label"><span class="o_form_label">Phòng ban</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.department_name"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.state.data.header.department_name"/></div>
 
                                                     <div class="o_wrap_label"><span class="o_form_label">Chức vụ nhân sự</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.job_name"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.state.data.header.job_name"/></div>
 
                                                     <div class="o_wrap_label"><span class="o_form_label">Loại hình lao động</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.employment_kind_label"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.state.data.header.employment_kind_label"/></div>
 
                                                     <div class="o_wrap_label"><span class="o_form_label">Quản lý trực tiếp</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.parent_name"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.state.data.header.parent_name"/></div>
 
                                                     <div class="o_wrap_label"><span class="o_form_label">Nơi làm việc</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.work_location_name"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.state.data.header.work_location_name"/></div>
 
                                                     <div class="o_wrap_label"><span class="o_form_label">Chức danh hiển thị</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.job_title or this.state.data.header.job_name"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.state.data.header.job_title or this.state.data.header.job_name"/></div>
                                                 </div>
                                             </section>
 
@@ -149,19 +149,19 @@
                                                     <div class="o_wrap_label"><label for="tp_mp_work_email" class="o_form_label">Email công việc</label></div>
                                                     <div class="o_wrap_input">
                                                         <input t-if="this.state.editing" id="tp_mp_work_email" type="email" class="form-control o_input" t-att-value="this.state.form.work_email || ''" t-on-input="(ev) => this.onFormInput('work_email', ev)" placeholder="ten@congty.vn"/>
-                                                        <span t-else="" t-out="this.state.form.work_email or 'Chưa khai báo'"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.work_email or 'Chưa khai báo'"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_work_phone" class="o_form_label">Điện thoại công ty</label></div>
                                                     <div class="o_wrap_input">
                                                         <input t-if="this.state.editing" id="tp_mp_work_phone" type="tel" class="form-control o_input" t-att-value="this.state.form.work_phone || ''" t-on-input="(ev) => this.onFormInput('work_phone', ev)" placeholder="Số máy bàn / công ty"/>
-                                                        <span t-else="" t-out="this.state.form.work_phone or 'Chưa khai báo'"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.work_phone or 'Chưa khai báo'"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_mobile_phone" class="o_form_label">Di động</label></div>
                                                     <div class="o_wrap_input">
                                                         <input t-if="this.state.editing" id="tp_mp_mobile_phone" type="tel" class="form-control o_input" t-att-value="this.state.form.mobile_phone || ''" t-on-input="(ev) => this.onFormInput('mobile_phone', ev)" placeholder="Số điện thoại di động"/>
-                                                        <span t-else="" t-out="this.state.form.mobile_phone or 'Chưa khai báo'"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.mobile_phone or 'Chưa khai báo'"/>
                                                     </div>
                                                 </div>
                                             </section>
@@ -196,20 +196,20 @@
 
                                                     <div class="o_wrap_label"><label for="tp_mp_private_email" class="o_form_label">Email cá nhân</label></div>
                                                     <div class="o_wrap_input">
-                                                        <input t-if="this.state.editing" id="tp_mp_private_email" type="email" class="form-control o_input" t-att-value="this.state.form.private_email || ''" t-on-input="(ev) => this.onFormInput('private_email', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.private_email or 'Chưa khai báo'"/>
+                                                        <input t-if="this.state.editing" id="tp_mp_private_email" placeholder="vd: ten.ban@gmail.com" autocomplete="email" type="email" class="form-control o_input" t-att-value="this.state.form.private_email || ''" t-on-input="(ev) => this.onFormInput('private_email', ev)"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.private_email or 'Chưa khai báo'"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_private_phone" class="o_form_label">Điện thoại cá nhân</label></div>
                                                     <div class="o_wrap_input">
-                                                        <input t-if="this.state.editing" id="tp_mp_private_phone" type="tel" class="form-control o_input" t-att-value="this.state.form.private_phone || ''" t-on-input="(ev) => this.onFormInput('private_phone', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.private_phone or 'Chưa khai báo'"/>
+                                                        <input t-if="this.state.editing" id="tp_mp_private_phone" placeholder="vd: 0912 345 678" autocomplete="tel" type="tel" class="form-control o_input" t-att-value="this.state.form.private_phone || ''" t-on-input="(ev) => this.onFormInput('private_phone', ev)"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.private_phone or 'Chưa khai báo'"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_birthday" class="o_form_label">Ngày sinh</label></div>
                                                     <div class="o_wrap_input">
-                                                        <input t-if="this.state.editing" id="tp_mp_birthday" type="date" class="form-control o_input" t-att-value="this.state.form.birthday || ''" t-on-change="(ev) => this.onFormInput('birthday', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.birthday or 'Chưa khai báo'"/>
+                                                        <DateTimeInput t-if="this.state.editing" id="'tp_mp_birthday'" type="'date'" format="'dd/MM/yyyy'" class="'form-control'" value="this.dateValue(this.state.form.birthday)" placeholder="'Chọn ngày'" maxDate="'today'" onChange="(value) => this.onFormDate('birthday', value)"/>
+                                                        <TpProfileValue t-else="" text="this.formatDate(this.state.form.birthday)"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_sex" class="o_form_label">Giới tính</label></div>
@@ -218,22 +218,19 @@
                                                             <option value="">-- Chọn --</option>
                                                             <option t-foreach="this.state.data.options.sex" t-as="opt" t-key="opt.value" t-att-value="opt.value" t-out="opt.label"/>
                                                         </select>
-                                                        <span t-else="" t-out="this.optionLabel('sex', this.state.form.sex)"/>
+                                                        <TpProfileValue t-else="" text="this.optionLabel('sex', this.state.form.sex)"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_pob" class="o_form_label">Nơi sinh</label></div>
                                                     <div class="o_wrap_input">
-                                                        <input t-if="this.state.editing" id="tp_mp_pob" type="text" class="form-control o_input" t-att-value="this.state.form.place_of_birth || ''" t-on-input="(ev) => this.onFormInput('place_of_birth', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.place_of_birth or 'Chưa khai báo'"/>
+                                                        <input t-if="this.state.editing" id="tp_mp_pob" placeholder="vd: Hà Nội" type="text" class="form-control o_input" t-att-value="this.state.form.place_of_birth || ''" t-on-input="(ev) => this.onFormInput('place_of_birth', ev)"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.place_of_birth or 'Chưa khai báo'"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_country_birth" class="o_form_label">Quốc gia nơi sinh</label></div>
                                                     <div class="o_wrap_input">
-                                                        <select t-if="this.state.editing" id="tp_mp_country_birth" class="form-select o_input" t-att-value="this.state.form.country_of_birth || ''" t-on-change="(ev) => this.onFormInput('country_of_birth', ev)">
-                                                            <option value="">-- Chọn --</option>
-                                                            <option t-foreach="this.state.data.options.countries" t-as="c" t-key="c.id" t-att-value="c.id" t-out="c.name"/>
-                                                        </select>
-                                                        <span t-else="" t-out="this.countryName(this.state.form.country_of_birth, this.state.data.values.country_of_birth_name)"/>
+                                                        <TpSearchSelect t-if="this.state.editing" id="'tp_mp_country_birth'" options="this.state.data.options.countries" value="this.state.form.country_of_birth" noun="'quốc gia'" onSelect="(option) => this.onFormSelect('country_of_birth', option)"/>
+                                                        <TpProfileValue t-else="" text="this.countryName(this.state.form.country_of_birth, this.state.data.values.country_of_birth_name)"/>
                                                     </div>
                                                 </div>
                                             </section>
@@ -243,41 +240,38 @@
                                                 <div class="o_inner_group">
                                                     <div class="o_wrap_label"><label for="tp_mp_country" class="o_form_label">Quốc tịch</label></div>
                                                     <div class="o_wrap_input">
-                                                        <select t-if="this.state.editing" id="tp_mp_country" class="form-select o_input" t-att-value="this.state.form.country_id || ''" t-on-change="(ev) => this.onFormInput('country_id', ev)">
-                                                            <option value="">-- Chọn --</option>
-                                                            <option t-foreach="this.state.data.options.countries" t-as="c" t-key="c.id" t-att-value="c.id" t-out="c.name"/>
-                                                        </select>
-                                                        <span t-else="" t-out="this.countryName(this.state.form.country_id, this.state.data.values.country_name)"/>
+                                                        <TpSearchSelect t-if="this.state.editing" id="'tp_mp_country'" options="this.state.data.options.countries" value="this.state.form.country_id" noun="'quốc gia'" onSelect="(option) => this.onFormSelect('country_id', option)"/>
+                                                        <TpProfileValue t-else="" text="this.countryName(this.state.form.country_id, this.state.data.values.country_name)"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_cccd" class="o_form_label">Số CCCD / CMND</label></div>
                                                     <div class="o_wrap_input">
-                                                        <input t-if="this.state.editing" id="tp_mp_cccd" type="text" class="form-control o_input" t-att-value="this.state.form.identification_id || ''" t-on-input="(ev) => this.onFormInput('identification_id', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.identification_id or 'Chưa khai báo'"/>
+                                                        <input t-if="this.state.editing" id="tp_mp_cccd" placeholder="12 chữ số trên thẻ CCCD" inputmode="numeric" maxlength="20" type="text" class="form-control o_input" t-att-value="this.state.form.identification_id || ''" t-on-input="(ev) => this.onFormInput('identification_id', ev)"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.identification_id or 'Chưa khai báo'"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_passport" class="o_form_label">Số hộ chiếu</label></div>
                                                     <div class="o_wrap_input">
-                                                        <input t-if="this.state.editing" id="tp_mp_passport" type="text" class="form-control o_input" t-att-value="this.state.form.passport_id || ''" t-on-input="(ev) => this.onFormInput('passport_id', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.passport_id or 'Chưa khai báo'"/>
+                                                        <input t-if="this.state.editing" id="tp_mp_passport" placeholder="vd: C1234567" type="text" class="form-control o_input" t-att-value="this.state.form.passport_id || ''" t-on-input="(ev) => this.onFormInput('passport_id', ev)"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.passport_id or 'Chưa khai báo'"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_passport_exp" class="o_form_label">Hết hạn hộ chiếu</label></div>
                                                     <div class="o_wrap_input">
-                                                        <input t-if="this.state.editing" id="tp_mp_passport_exp" type="date" class="form-control o_input" t-att-value="this.state.form.passport_expiration_date || ''" t-on-change="(ev) => this.onFormInput('passport_expiration_date', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.passport_expiration_date or 'Chưa khai báo'"/>
+                                                        <DateTimeInput t-if="this.state.editing" id="'tp_mp_passport_exp'" type="'date'" format="'dd/MM/yyyy'" class="'form-control'" value="this.dateValue(this.state.form.passport_expiration_date)" placeholder="'Chọn ngày'" onChange="(value) => this.onFormDate('passport_expiration_date', value)"/>
+                                                        <TpProfileValue t-else="" text="this.formatDate(this.state.form.passport_expiration_date)"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_emergency_contact" class="o_form_label">Liên hệ khẩn cấp (Họ tên)</label></div>
                                                     <div class="o_wrap_input">
-                                                        <input t-if="this.state.editing" id="tp_mp_emergency_contact" type="text" class="form-control o_input" t-att-value="this.state.form.emergency_contact || ''" t-on-input="(ev) => this.onFormInput('emergency_contact', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.emergency_contact or 'Chưa khai báo'"/>
+                                                        <input t-if="this.state.editing" id="tp_mp_emergency_contact" placeholder="Họ tên người thân" type="text" class="form-control o_input" t-att-value="this.state.form.emergency_contact || ''" t-on-input="(ev) => this.onFormInput('emergency_contact', ev)"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.emergency_contact or 'Chưa khai báo'"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_emergency_phone" class="o_form_label">SĐT khẩn cấp</label></div>
                                                     <div class="o_wrap_input">
-                                                        <input t-if="this.state.editing" id="tp_mp_emergency_phone" type="tel" class="form-control o_input" t-att-value="this.state.form.emergency_phone || ''" t-on-input="(ev) => this.onFormInput('emergency_phone', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.emergency_phone or 'Chưa khai báo'"/>
+                                                        <input t-if="this.state.editing" id="tp_mp_emergency_phone" placeholder="vd: 0912 345 678" type="tel" class="form-control o_input" t-att-value="this.state.form.emergency_phone || ''" t-on-input="(ev) => this.onFormInput('emergency_phone', ev)"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.emergency_phone or 'Chưa khai báo'"/>
                                                     </div>
                                                 </div>
                                             </section>
@@ -287,44 +281,38 @@
                                                 <div class="o_inner_group">
                                                     <div class="o_wrap_label"><label for="tp_mp_street" class="o_form_label">Số nhà, đường</label></div>
                                                     <div class="o_wrap_input">
-                                                        <input t-if="this.state.editing" id="tp_mp_street" type="text" class="form-control o_input" t-att-value="this.state.form.private_street || ''" t-on-input="(ev) => this.onFormInput('private_street', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.private_street or 'Chưa khai báo'"/>
+                                                        <input t-if="this.state.editing" id="tp_mp_street" placeholder="vd: 12 Nguyễn Trãi" type="text" class="form-control o_input" t-att-value="this.state.form.private_street || ''" t-on-input="(ev) => this.onFormInput('private_street', ev)"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.private_street or 'Chưa khai báo'"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_street2" class="o_form_label">Phường / Xã</label></div>
                                                     <div class="o_wrap_input">
-                                                        <input t-if="this.state.editing" id="tp_mp_street2" type="text" class="form-control o_input" t-att-value="this.state.form.private_street2 || ''" t-on-input="(ev) => this.onFormInput('private_street2', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.private_street2 or 'Chưa khai báo'"/>
+                                                        <input t-if="this.state.editing" id="tp_mp_street2" placeholder="Phường / xã nơi ở" type="text" class="form-control o_input" t-att-value="this.state.form.private_street2 || ''" t-on-input="(ev) => this.onFormInput('private_street2', ev)"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.private_street2 or 'Chưa khai báo'"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_city" class="o_form_label">Quận / Huyện / TP</label></div>
                                                     <div class="o_wrap_input">
-                                                        <input t-if="this.state.editing" id="tp_mp_city" type="text" class="form-control o_input" t-att-value="this.state.form.private_city || ''" t-on-input="(ev) => this.onFormInput('private_city', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.private_city or 'Chưa khai báo'"/>
+                                                        <input t-if="this.state.editing" id="tp_mp_city" placeholder="Quận / huyện / thành phố" type="text" class="form-control o_input" t-att-value="this.state.form.private_city || ''" t-on-input="(ev) => this.onFormInput('private_city', ev)"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.private_city or 'Chưa khai báo'"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_priv_country" class="o_form_label">Quốc gia</label></div>
                                                     <div class="o_wrap_input">
-                                                        <select t-if="this.state.editing" id="tp_mp_priv_country" class="form-select o_input" t-att-value="this.state.form.private_country_id || ''" t-on-change="(ev) => this.onPrivateCountryChange(ev)">
-                                                            <option value="">-- Chọn --</option>
-                                                            <option t-foreach="this.state.data.options.countries" t-as="c" t-key="c.id" t-att-value="c.id" t-out="c.name"/>
-                                                        </select>
-                                                        <span t-else="" t-out="this.countryName(this.state.form.private_country_id, this.state.data.values.private_country_name)"/>
+                                                        <TpSearchSelect t-if="this.state.editing" id="'tp_mp_priv_country'" options="this.state.data.options.countries" value="this.state.form.private_country_id" noun="'quốc gia'" onSelect="(option) => this.onPrivateCountryChange(option)"/>
+                                                        <TpProfileValue t-else="" text="this.countryName(this.state.form.private_country_id, this.state.data.values.private_country_name)"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_priv_state" class="o_form_label">Tỉnh / Thành phố</label></div>
                                                     <div class="o_wrap_input">
-                                                        <select t-if="this.state.editing" id="tp_mp_priv_state" class="form-select o_input" t-att-value="this.state.form.private_state_id || ''" t-on-change="(ev) => this.onFormInput('private_state_id', ev)">
-                                                            <option value="">-- Chọn --</option>
-                                                            <option t-foreach="this.state.states" t-as="st" t-key="st.id" t-att-value="st.id" t-out="st.name"/>
-                                                        </select>
-                                                        <span t-else="" t-out="this.stateName(this.state.form.private_state_id, this.state.data.values.private_state_name)"/>
+                                                        <TpSearchSelect t-if="this.state.editing" id="'tp_mp_priv_state'" options="this.state.states" value="this.state.form.private_state_id" noun="'tỉnh / thành phố'" disabled="!this.state.states.length" placeholder="!this.state.form.private_country_id ? 'Chọn quốc gia trước' : (this.state.states.length ? 'Chọn tỉnh / thành phố' : 'Quốc gia này chưa có danh sách tỉnh')" onSelect="(option) => this.onFormSelect('private_state_id', option)"/>
+                                                        <TpProfileValue t-else="" text="this.stateName(this.state.form.private_state_id, this.state.data.values.private_state_name)"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_zip" class="o_form_label">Mã bưu chính</label></div>
                                                     <div class="o_wrap_input">
-                                                        <input t-if="this.state.editing" id="tp_mp_zip" type="text" class="form-control o_input" t-att-value="this.state.form.private_zip || ''" t-on-input="(ev) => this.onFormInput('private_zip', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.private_zip or 'Chưa khai báo'"/>
+                                                        <input t-if="this.state.editing" id="tp_mp_zip" placeholder="vd: 700000" inputmode="numeric" type="text" class="form-control o_input" t-att-value="this.state.form.private_zip || ''" t-on-input="(ev) => this.onFormInput('private_zip', ev)"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.private_zip or 'Chưa khai báo'"/>
                                                     </div>
                                                 </div>
                                             </section>
@@ -338,32 +326,32 @@
                                                             <option value="">-- Chọn --</option>
                                                             <option t-foreach="this.state.data.options.marital" t-as="opt" t-key="opt.value" t-att-value="opt.value" t-out="opt.label"/>
                                                         </select>
-                                                        <span t-else="" t-out="this.state.form.tp_personal_defaults_confirmed ? this.optionLabel('marital', this.state.form.marital) : 'Chưa xác nhận'"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.tp_personal_defaults_confirmed ? this.optionLabel('marital', this.state.form.marital) : 'Chưa xác nhận'"/>
                                                     </div>
 
                                                     <t t-if="this.state.form.marital === 'married' or this.state.form.marital === 'cohabitant'">
                                                         <div class="o_wrap_label"><label for="tp_mp_spouse" class="o_form_label">Họ tên vợ/chồng</label></div>
                                                         <div class="o_wrap_input">
-                                                            <input t-if="this.state.editing" id="tp_mp_spouse" type="text" class="form-control o_input" t-att-value="this.state.form.spouse_complete_name || ''" t-on-input="(ev) => this.onFormInput('spouse_complete_name', ev)"/>
-                                                            <span t-else="" t-out="this.state.form.spouse_complete_name or 'Chưa khai báo'"/>
+                                                            <input t-if="this.state.editing" id="tp_mp_spouse" placeholder="Họ và tên đầy đủ" type="text" class="form-control o_input" t-att-value="this.state.form.spouse_complete_name || ''" t-on-input="(ev) => this.onFormInput('spouse_complete_name', ev)"/>
+                                                            <TpProfileValue t-else="" text="this.state.form.spouse_complete_name or 'Chưa khai báo'"/>
                                                         </div>
                                                         <div class="o_wrap_label"><label for="tp_mp_spouse_bday" class="o_form_label">Ngày sinh vợ/chồng</label></div>
                                                         <div class="o_wrap_input">
-                                                            <input t-if="this.state.editing" id="tp_mp_spouse_bday" type="date" class="form-control o_input" t-att-value="this.state.form.spouse_birthdate || ''" t-on-change="(ev) => this.onFormInput('spouse_birthdate', ev)"/>
-                                                            <span t-else="" t-out="this.state.form.spouse_birthdate or 'Chưa khai báo'"/>
+                                                            <DateTimeInput t-if="this.state.editing" id="'tp_mp_spouse_bday'" type="'date'" format="'dd/MM/yyyy'" class="'form-control'" value="this.dateValue(this.state.form.spouse_birthdate)" placeholder="'Chọn ngày'" maxDate="'today'" onChange="(value) => this.onFormDate('spouse_birthdate', value)"/>
+                                                            <TpProfileValue t-else="" text="this.formatDate(this.state.form.spouse_birthdate)"/>
                                                         </div>
                                                     </t>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_children" class="o_form_label">Số con phụ thuộc</label></div>
                                                     <div class="o_wrap_input">
                                                         <input t-if="this.state.editing" id="tp_mp_children" type="number" min="0" max="30" class="form-control o_input" t-att-value="this.state.form.children ?? ''" t-on-input="(ev) => this.onFormInput('children', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.tp_personal_defaults_confirmed ? this.state.form.children : 'Chưa xác nhận'"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.tp_personal_defaults_confirmed ? this.state.form.children : 'Chưa xác nhận'"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_distance" class="o_form_label">Khoảng cách đi làm (km)</label></div>
                                                     <div class="o_wrap_input">
                                                         <input t-if="this.state.editing" id="tp_mp_distance" type="number" min="0" max="2000" class="form-control o_input" t-att-value="this.state.form.distance_home_work ?? ''" t-on-input="(ev) => this.onFormInput('distance_home_work', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.tp_personal_defaults_confirmed ? (this.state.form.distance_home_work + ' km') : 'Chưa xác nhận'"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.tp_personal_defaults_confirmed ? (this.state.form.distance_home_work + ' km') : 'Chưa xác nhận'"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_cert" class="o_form_label">Trình độ học vấn</label></div>
@@ -372,19 +360,19 @@
                                                             <option value="">-- Chọn --</option>
                                                             <option t-foreach="this.state.data.options.certificate" t-as="opt" t-key="opt.value" t-att-value="opt.value" t-out="opt.label"/>
                                                         </select>
-                                                        <span t-else="" t-out="this.optionLabel('certificate', this.state.form.certificate)"/>
+                                                        <TpProfileValue t-else="" text="this.optionLabel('certificate', this.state.form.certificate)"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_study" class="o_form_label">Chuyên ngành đào tạo</label></div>
                                                     <div class="o_wrap_input">
-                                                        <input t-if="this.state.editing" id="tp_mp_study" type="text" class="form-control o_input" t-att-value="this.state.form.study_field || ''" t-on-input="(ev) => this.onFormInput('study_field', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.study_field or 'Chưa khai báo'"/>
+                                                        <input t-if="this.state.editing" id="tp_mp_study" placeholder="vd: Kế toán doanh nghiệp" type="text" class="form-control o_input" t-att-value="this.state.form.study_field || ''" t-on-input="(ev) => this.onFormInput('study_field', ev)"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.study_field or 'Chưa khai báo'"/>
                                                     </div>
 
                                                     <div class="o_wrap_label"><label for="tp_mp_note" class="o_form_label">Ghi chú cá nhân</label></div>
                                                     <div class="o_wrap_input">
-                                                        <textarea t-if="this.state.editing" id="tp_mp_note" rows="3" class="form-control o_input" t-att-value="this.state.form.additional_note || ''" t-on-input="(ev) => this.onFormInput('additional_note', ev)"/>
-                                                        <span t-else="" t-out="this.state.form.additional_note or 'Chưa có ghi chú'"/>
+                                                        <textarea t-if="this.state.editing" id="tp_mp_note" placeholder="Thông tin thêm bạn muốn bộ phận Nhân sự biết" rows="3" class="form-control o_input" t-att-value="this.state.form.additional_note || ''" t-on-input="(ev) => this.onFormInput('additional_note', ev)"/>
+                                                        <TpProfileValue t-else="" text="this.state.form.additional_note or 'Chưa có ghi chú'"/>
                                                     </div>
                                                 </div>
                                             </section>
@@ -406,7 +394,7 @@
                                                         <div>
                                                             <div class="fw-semibold" t-out="line.name"/>
                                                             <div class="small text-muted">
-                                                                <span t-out="line.line_type_name"/> · <span t-out="line.date_start"/> → <span t-out="line.date_end or 'Hiện tại'"/>
+                                                                <span t-out="line.line_type_name"/> · <span t-out="this.formatDate(line.date_start, '')"/> → <span t-out="line.date_end ? this.formatDate(line.date_end) : 'Hiện tại'"/>
                                                             </div>
                                                             <div t-if="line.description" class="small mt-1" t-out="line.description"/>
                                                         </div>
@@ -450,20 +438,20 @@
                                                     <div class="o_wrap_input"><strong t-out="this.state.data.contracts.employment_kind_label"/></div>
 
                                                     <div class="o_wrap_label"><span class="o_form_label">Có hiệu lực từ</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.contracts.date_version or 'Chưa khai báo'"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.formatDate(this.state.data.contracts.date_version)"/></div>
                                                 </div>
                                             </section>
                                             <section class="o_tp_hr_card">
                                                 <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="calendar_today" aria-hidden="true"/>Thời hạn hợp đồng lao động</h2>
                                                 <div class="o_inner_group">
                                                     <div class="o_wrap_label"><span class="o_form_label">Ngày bắt đầu</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.contracts.contract_date_start or 'Chưa khai báo'"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.formatDate(this.state.data.contracts.contract_date_start)"/></div>
 
                                                     <div class="o_wrap_label"><span class="o_form_label">Ngày kết thúc</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.contracts.contract_date_end or 'Chưa khai báo'"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.formatDate(this.state.data.contracts.contract_date_end)"/></div>
 
                                                     <div class="o_wrap_label"><span class="o_form_label">Xác nhận có thời hạn</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.contracts.fixed_term ? 'Có' : 'Không'"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.state.data.contracts.fixed_term ? 'Có' : 'Không'"/></div>
                                                 </div>
                                             </section>
                                         </div>
@@ -513,10 +501,10 @@
                                                                     <div t-if="doc.note" class="small text-muted" t-out="doc.note"/>
                                                                 </td>
                                                                 <td t-out="doc.kind_label"/>
-                                                                <td t-out="doc.signed_date or '-'"/>
+                                                                <td t-out="this.formatDate(doc.signed_date, '-')"/>
                                                                 <td>
                                                                     <t t-if="doc.kind === 'outsourced' and (doc.service_start or doc.service_end)">
-                                                                        <span t-out="(doc.service_start or '-') + ' → ' + (doc.service_end or '-')"/>
+                                                                        <span t-out="this.formatDate(doc.service_start, '-') + ' → ' + this.formatDate(doc.service_end, '-')"/>
                                                                     </t>
                                                                     <span t-else="">-</span>
                                                                 </td>
@@ -544,13 +532,13 @@
                                                 <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="person" aria-hidden="true"/>Tài khoản đăng nhập</h2>
                                                 <div class="o_inner_group">
                                                     <div class="o_wrap_label"><span class="o_form_label">Tên đăng nhập</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.user_login"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.state.data.header.user_login"/></div>
 
                                                     <div class="o_wrap_label"><span class="o_form_label">Tình trạng</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.account_status_label"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.state.data.header.account_status_label"/></div>
 
                                                     <div class="o_wrap_label"><span class="o_form_label">Công ty</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.company_name"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.state.data.header.company_name"/></div>
                                                 </div>
                                                 <div class="p-3 pt-0">
                                                     <InlineErrors errors="[]" server="this.actionErrorFor('security')" attempt="this.state.actionAttempt"/>
@@ -563,10 +551,10 @@
                                                 <h2 class="o_tp_hr_card_title"><i class="oi" data-icon="verified_user" aria-hidden="true"/>Vai trò và phạm vi</h2>
                                                 <div class="o_inner_group">
                                                     <div class="o_wrap_label"><span class="o_form_label">Vai trò nghiệp vụ</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.business_role or 'Nhân viên'"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.state.data.header.business_role or 'Nhân viên'"/></div>
 
                                                     <div class="o_wrap_label"><span class="o_form_label">Phạm vi quyền</span></div>
-                                                    <div class="o_wrap_input"><span t-out="this.state.data.header.role_scope or this.state.data.header.department_name"/></div>
+                                                    <div class="o_wrap_input"><TpProfileValue text="this.state.data.header.role_scope or this.state.data.header.department_name"/></div>
                                                 </div>
                                             </section>
                                         </div>
@@ -661,11 +649,11 @@
                         <div class="row g-2">
                             <div class="col-6">
                                 <label for="tp_resume_start" class="form-label">Từ ngày<span class="tp_required_mark" title="Thông tin bắt buộc"> *</span></label>
-                                <input id="tp_resume_start" t-att-aria-invalid="this.draftFieldError('tp_resume_start') ? 'true' : 'false'" type="date" class="form-control o_input" t-att-value="this.state.resumeDraft.date_start || ''" t-on-change="(ev) => this.onDraftInput('resumeDraft', 'date_start', ev)"/><div t-if="this.draftFieldError('tp_resume_start')" class="tp_validation_inline" t-out="this.draftFieldError('tp_resume_start')"/>
+                                <DateTimeInput id="'tp_resume_start'" type="'date'" format="'dd/MM/yyyy'" class="this.draftFieldError('tp_resume_start') ? 'form-control tp-mp-date-invalid' : 'form-control'" value="this.dateValue(this.state.resumeDraft.date_start)" placeholder="'Chọn ngày'" onChange="(value) => this.onDraftDate('resumeDraft', 'date_start', value)"/><div t-if="this.draftFieldError('tp_resume_start')" class="tp_validation_inline" t-out="this.draftFieldError('tp_resume_start')"/>
                             </div>
                             <div class="col-6">
                                 <label for="tp_resume_end" class="form-label">Đến ngày</label>
-                                <input id="tp_resume_end" t-att-aria-invalid="this.draftFieldError('tp_resume_end') ? 'true' : 'false'" type="date" class="form-control o_input" t-att-value="this.state.resumeDraft.date_end || ''" t-on-change="(ev) => this.onDraftInput('resumeDraft', 'date_end', ev)"/><div t-if="this.draftFieldError('tp_resume_end')" class="tp_validation_inline" t-out="this.draftFieldError('tp_resume_end')"/>
+                                <DateTimeInput id="'tp_resume_end'" type="'date'" format="'dd/MM/yyyy'" class="this.draftFieldError('tp_resume_end') ? 'form-control tp-mp-date-invalid' : 'form-control'" value="this.dateValue(this.state.resumeDraft.date_end)" placeholder="'Chọn ngày'" onChange="(value) => this.onDraftDate('resumeDraft', 'date_end', value)"/><div t-if="this.draftFieldError('tp_resume_end')" class="tp_validation_inline" t-out="this.draftFieldError('tp_resume_end')"/>
                             </div>
                         </div>
                         <div>
@@ -712,6 +700,59 @@
                         <button type="button" class="btn btn-primary" t-att-disabled="this.state.saving" t-on-click="() => this.saveSkillDraft()">Lưu</button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="tp_hr_workspace.ProfileValue">
+        <span class="tp-mp-value" t-att-class="{'tp-mp-empty': this.empty}" t-out="this.props.text"/>
+    </t>
+
+    <t t-name="tp_hr_workspace.SearchSelect">
+        <div class="o_tp_search_select" t-att-class="{'is-open': this.state.open, 'is-disabled': this.props.disabled, 'has-value': this.selected}">
+            <div class="o_tp_search_select_control">
+                <i class="oi o_tp_search_select_icon" data-icon="search" aria-hidden="true"/>
+                <input type="text" class="o_tp_search_select_input" role="combobox" autocomplete="off" spellcheck="false"
+                    t-att-id="this.props.id"
+                    t-att-value="this.inputValue"
+                    t-att-placeholder="this.placeholderText"
+                    t-att-disabled="this.props.disabled"
+                    aria-autocomplete="list"
+                    t-att-aria-expanded="this.state.open ? 'true' : 'false'"
+                    t-att-aria-controls="this.uid + '_list'"
+                    t-att-aria-activedescendant="this.activeOptionId"
+                    t-on-click="() => this.open()"
+                    t-on-input="(ev) => this.onInput(ev)"
+                    t-on-keydown="(ev) => this.onKeydown(ev)"
+                    t-on-blur="() => this.close()"/>
+                <button t-if="this.selected and !this.state.open and !this.props.disabled" type="button"
+                    class="o_tp_search_select_clear" tabindex="-1" t-att-aria-label="'Bỏ chọn ' + this.noun"
+                    t-att-title="'Bỏ chọn ' + this.noun" t-on-mousedown.prevent="() => this.clear()">
+                    <i class="oi" data-icon="close" aria-hidden="true"/>
+                </button>
+                <button type="button" class="o_tp_search_select_toggle" tabindex="-1" t-att-disabled="this.props.disabled"
+                    t-att-aria-label="(this.state.open ? 'Đóng danh sách ' : 'Mở danh sách ') + this.noun"
+                    t-on-mousedown.prevent="() => this.toggle()">
+                    <i class="oi" t-att-data-icon="this.state.open ? 'expand_less' : 'expand_more'" aria-hidden="true"/>
+                </button>
+            </div>
+            <div t-if="this.state.open" class="o_tp_search_select_menu">
+                <div class="o_tp_search_select_count" role="status" t-out="this.countLabel"/>
+                <ul t-att-id="this.uid + '_list'" class="o_tp_search_select_list" role="listbox"
+                    t-att-aria-label="'Danh sách ' + this.noun" t-ref="this.list">
+                    <li t-foreach="this.filtered" t-as="option" t-key="option.id" role="option" class="o_tp_search_select_option"
+                        t-att-id="this.optionId(option)"
+                        t-att-class="{'is-active': option_index === this.state.active, 'is-selected': option.id === this.selected?.id}"
+                        t-att-aria-selected="option.id === this.selected?.id ? 'true' : 'false'"
+                        t-on-mousedown.prevent="() => this.choose(option)"
+                        t-on-mousemove="() => this.state.active = option_index">
+                        <span t-out="option.name"/>
+                        <i t-if="option.id === this.selected?.id" class="oi" data-icon="check" aria-hidden="true"/>
+                    </li>
+                    <li t-if="!this.filtered.length" class="o_tp_search_select_empty" role="presentation">
+                        Không tìm thấy <t t-out="this.noun"/> phù hợp. Thử gõ tên không dấu, ví dụ "ha noi".
+                    </li>
+                </ul>
             </div>
         </div>
     </t>

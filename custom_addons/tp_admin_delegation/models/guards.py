@@ -463,13 +463,22 @@ class ProtectedGroupsPrivilege(models.Model):
 class ProtectedEmployee(models.Model):
     _inherit = 'hr.employee'
 
+    @api.model
+    def _tp_self_service_fields(self):
+        """Fields an account may change on its own employee record through a server-side path.
+
+        Default: the "Thông tin cá nhân" allow-list. A module that adds its own self-service
+        path (tp_hr_bank: own bank accounts) extends this set; that path still checks ownership.
+        """
+        return _SELF_FIELDS
+
     def _tp_assert_not_original_admin_employee(self, vals=None):
         if _is_trusted_original_or_cli(self.env):
             return
         assert_can_manage_account_targets(self.env, self.sudo().mapped('user_id'), allow_self=True)
         own = self.sudo().filtered(lambda emp: emp.user_id.id == account_actor_uid(self.env)
                                   and account_target_kind(emp.user_id) == 'granted_admin')
-        if own and vals and set(vals) - _SELF_FIELDS:
+        if own and vals and set(vals) - self._tp_self_service_fields():
             raise AccessError(self.env._('Hồ sơ của mình chỉ được sửa thông tin cá nhân trong danh sách cho phép.'))
         if vals:
             _assert_profile_links(self.env, vals)
@@ -499,7 +508,7 @@ class ProtectedEmployee(models.Model):
         # while keeping self-service profile updates (`tp_save_my_profile`) intact.
         if self.env.uid != SUPERUSER_ID and not self.env.user.has_group('hr.group_hr_user'):
             own = self.sudo().filtered(lambda emp: emp.user_id.id == self.env.uid)
-            if own and set(vals) - _SELF_FIELDS:
+            if own and set(vals) - self._tp_self_service_fields():
                 raise AccessError(self.env._('Hồ sơ của mình chỉ được sửa thông tin cá nhân trong danh sách cho phép.'))
             other = self.sudo() - own
             if other:

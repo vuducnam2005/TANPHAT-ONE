@@ -30,7 +30,8 @@
         border: 1px solid #cbd5e1;
         border-radius: 7px;
         padding: 7px 11px;
-        background: #fff;
+        // background-color only: the `background` shorthand would drop the .form-select chevron.
+        background-color: #fff;
         color: #183153;
         font-size: 15px;
 
@@ -43,6 +44,42 @@
 
     textarea.o_input {
         min-height: 82px;
+    }
+
+    input.o_input::placeholder,
+    textarea.o_input::placeholder {
+        color: #94a3b8;
+        opacity: 1;
+    }
+
+    // Card titles that carry an action button: keep the icon apart from the text and let the
+    // button drop under the title on narrow screens instead of squeezing it.
+    .o_tp_hr_card_title.justify-content-between {
+        flex-wrap: wrap;
+        row-gap: 8px;
+
+        > span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        > .btn {
+            white-space: nowrap;
+        }
+    }
+
+    // Read-only values: real data reads first, missing data is visibly a placeholder.
+    .tp-mp-value {
+        color: #0f2744;
+        font-weight: 500;
+    }
+
+    .tp-mp-empty {
+        color: #94a3b8;
+        font-style: italic;
+        font-weight: 400;
     }
 
     .tp-myprofile-avatar-wrap {
@@ -298,6 +335,163 @@
     }
 }
 
+// Searchable choice used for country / province (TpSearchSelect).
+.o_tp_search_select {
+    position: relative;
+    min-width: 0;
+}
+
+.o_tp_search_select_control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: var(--tp-ui-control-h, 40px);
+    padding: 0 4px 0 10px;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+
+    &:focus-within {
+        border-color: #1d5d86;
+        box-shadow: 0 0 0 2px rgba(29, 93, 134, 0.18);
+    }
+
+    .is-disabled & {
+        background: #f1f5f9;
+        cursor: not-allowed;
+    }
+}
+
+.o_tp_search_select_icon {
+    flex: 0 0 auto;
+    color: #94a3b8;
+    font-size: 18px;
+
+    .is-open & {
+        color: #1d5d86;
+    }
+}
+
+// Higher specificity than the profile's generic `input:focus-visible` outline: the control
+// draws the focus ring, the bare input inside it must not draw a second one.
+.o_tp_search_select .o_tp_search_select_control input.o_tp_search_select_input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 7px 0;
+    color: #183153;
+    font-size: 15px;
+    background: transparent;
+    border: 0;
+    text-overflow: ellipsis;
+
+    &,
+    &:focus,
+    &:focus-visible {
+        outline: 0;
+        box-shadow: none;
+    }
+
+    &::placeholder {
+        color: #94a3b8;
+        opacity: 1;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+    }
+}
+
+.o_tp_search_select_clear,
+.o_tp_search_select_toggle {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    color: #64748b;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+
+    &:hover:not(:disabled) {
+        color: #183153;
+        background: #eef2f7;
+    }
+}
+
+.o_tp_search_select_clear {
+    width: 28px;
+    font-size: 16px;
+}
+
+.o_tp_search_select_menu {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    min-width: 220px;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #dce4ef;
+    border-radius: 8px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+}
+
+.o_tp_search_select_count {
+    padding: 7px 12px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    background: #f8fafc;
+    border-bottom: 1px solid #edf1f6;
+}
+
+.o_tp_search_select_list {
+    // libsass cannot evaluate min() over px and vh; pass it through to the browser as CSS.
+    max-height: unquote("min(300px, 45vh)");
+    margin: 0;
+    padding: 4px;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.o_tp_search_select_option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 40px;
+    padding: 6px 10px;
+    color: #183153;
+    border-radius: 6px;
+    cursor: pointer;
+
+    &.is-active {
+        background: #eef4ff;
+    }
+
+    &.is-selected {
+        color: #1d4ed8;
+        font-weight: 600;
+    }
+
+    .oi {
+        flex: 0 0 auto;
+        color: #1d4ed8;
+    }
+}
+
+.o_tp_search_select_empty {
+    padding: 10px;
+    color: #64748b;
+    font-size: 14px;
+}
+
 .tp-myprofile-modal-backdrop {
     position: fixed;
     inset: 0;
@@ -339,5 +533,16 @@
             grid-template-columns: 1fr;
             gap: 2px;
         }
+    }
+}
+
+// Odoo date picker in the profile: full width (an explicit width overrides its inline
+// `field-sizing: content`). The template fixes the format to DD/MM/YYYY, the same as the
+// read-only values, instead of the browser locale used by <input type="date">.
+.o_tp_hr_my_profile input.o_datetime_input {
+    width: 100%;
+
+    &.tp-mp-date-invalid {
+        border-color: #b44339;
     }
 }

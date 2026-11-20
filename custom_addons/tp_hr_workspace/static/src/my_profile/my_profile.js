@@ -1,5 +1,7 @@
-import { Component, onMounted, onWillStart, onWillUnmount, proxy } from "@odoo/owl";
+import { Component, onMounted, onPatched, onWillStart, onWillUnmount, proxy, signal, t, useProps } from "@odoo/owl";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
+import { DateTimeInput } from "@web/core/datetime/datetime_input";
+import { deserializeDate, serializeDate } from "@web/core/l10n/dates";
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { user } from "@web/core/user";
@@ -68,9 +70,211 @@ function cloneEditableValues(values) {
     return out;
 }
 
+/** Lower case without Vietnamese diacritics, for accent-free search: "Hà Nội" → "ha noi". */
+export function foldSearchText(text) {
+    return String(text || "")
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D")
+        .toLowerCase();
+}
+
+/** Server dates arrive as ISO "2026-11-20"; people read "20/11/2026". */
+export function formatDate(iso, fallback = "Chưa khai báo") {
+    if (!iso) {
+        return fallback;
+    }
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso));
+    return match ? `${match[3]}/${match[2]}/${match[1]}` : String(iso);
+}
+
+const EMPTY_VALUE_LABELS = new Set(["", "Chưa khai báo", "Chưa xác nhận", "Chưa có ghi chú"]);
+
+/** One read-only value: real data in strong ink, "Chưa khai báo"-style placeholders muted. */
+export class TpProfileValue extends Component {
+    static template = "tp_hr_workspace.ProfileValue";
+    props = useProps({ text: t.any().optional() });
+
+    get empty() {
+        const text = this.props.text;
+        return text === null || text === undefined || text === false || EMPTY_VALUE_LABELS.has(String(text).trim());
+    }
+}
+
+let nextSearchSelectId = 0;
+
+/**
+ * Searchable single choice (combobox + listbox) for long lists such as countries and provinces.
+ * Matching ignores accents and case; names that start with the query come first.
+ */
+export class TpSearchSelect extends Component {
+    static template = "tp_hr_workspace.SearchSelect";
+    props = useProps({
+        options: t.array(),
+        value: t.any().optional(),
+        onSelect: t.function(),
+        id: t.string().optional(),
+        noun: t.string().optional(),
+        placeholder: t.string().optional(),
+        disabled: t.boolean().optional(),
+    });
+
+    setup() {
+        nextSearchSelectId += 1;
+        this.uid = `o_tp_search_select_${nextSearchSelectId}`;
+        this.list = signal.ref();
+        this.state = proxy({ open: false, query: "", active: 0 });
+        onPatched(() => {
+            const active = this.list()?.querySelector(".is-active");
+            if (active) {
+                active.scrollIntoView({ block: "nearest" });
+            }
+        });
+    }
+
+    get noun() {
+        return this.props.noun || "mục";
+    }
+
+    get selected() {
+        const id = Number(this.props.value || 0);
+        return id ? (this.props.options || []).find((option) => option.id === id) || null : null;
+    }
+
+    get placeholderText() {
+        if (this.state.open) {
+            return `Gõ để tìm ${this.noun}…`;
+        }
+        return this.props.placeholder || `Chọn ${this.noun}`;
+    }
+
+    get inputValue() {
+        if (this.state.open) {
+            return this.state.query;
+        }
+        return this.selected?.name || "";
+    }
+
+    get filtered() {
+        const options = this.props.options || [];
+        const query = foldSearchText(this.state.query).replace(/\s+/g, " ").trim();
+        if (!query) {
+            return options;
+        }
+        const starts = [];
+        const contains = [];
+        for (const option of options) {
+            const name = foldSearchText(option.name);
+            if (name.startsWith(query) || name.split(/[\s(,-]+/).some((word) => word.startsWith(query))) {
+                starts.push(option);
+            } else if (name.includes(query)) {
+                contains.push(option);
+            }
+        }
+        return [...starts, ...contains];
+    }
+
+    get countLabel() {
+        const total = (this.props.options || []).length;
+        const found = this.filtered.length;
+        if (!this.state.query.trim()) {
+            return `${total} ${this.noun}`;
+        }
+        return found ? `Tìm thấy ${found} ${this.noun}` : `Không có ${this.noun} phù hợp`;
+    }
+
+    optionId(option) {
+        return `${this.uid}_opt_${option.id}`;
+    }
+
+    get activeOptionId() {
+        const option = this.state.open ? this.filtered[this.state.active] : null;
+        return option ? this.optionId(option) : "";
+    }
+
+    open() {
+        if (this.props.disabled || this.state.open) {
+            return;
+        }
+        const index = this.selected ? this.filtered.findIndex((option) => option.id === this.selected.id) : 0;
+        Object.assign(this.state, { open: true, query: "", active: Math.max(index, 0) });
+    }
+
+    close() {
+        Object.assign(this.state, { open: false, query: "" });
+    }
+
+    toggle() {
+        if (this.state.open) {
+            this.close();
+        } else {
+            this.open();
+        }
+    }
+
+    choose(option) {
+        this.close();
+        this.props.onSelect(option);
+    }
+
+    clear() {
+        this.close();
+        this.props.onSelect(null);
+    }
+
+    onInput(ev) {
+        Object.assign(this.state, { open: true, query: ev.target.value, active: 0 });
+    }
+
+    onKeydown(ev) {
+        const options = this.filtered;
+        switch (ev.key) {
+            case "ArrowDown":
+            case "ArrowUp": {
+                ev.preventDefault();
+                if (!this.state.open) {
+                    this.open();
+                    return;
+                }
+                const step = ev.key === "ArrowDown" ? 1 : -1;
+                const last = Math.max(options.length - 1, 0);
+                this.state.active = Math.min(Math.max(this.state.active + step, 0), last);
+                return;
+            }
+            case "Home":
+            case "End":
+                if (this.state.open && options.length) {
+                    ev.preventDefault();
+                    this.state.active = ev.key === "Home" ? 0 : options.length - 1;
+                }
+                return;
+            case "Enter":
+                if (this.state.open) {
+                    ev.preventDefault();
+                    const option = options[this.state.active];
+                    if (option) {
+                        this.choose(option);
+                    }
+                }
+                return;
+            case "Escape":
+                if (this.state.open) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    this.close();
+                }
+                return;
+            case "Tab":
+                this.close();
+                return;
+        }
+    }
+}
+
 export class TpHrMyProfile extends Component {
     static template = "tp_hr_workspace.MyProfile";
-    static components = { InlineErrors };
+    static components = { DateTimeInput, InlineErrors, TpProfileValue, TpSearchSelect };
 
     setup() {
         this.orm = useService("orm");
@@ -169,6 +373,25 @@ export class TpHrMyProfile extends Component {
         }
     }
 
+    formatDate(iso, fallback) {
+        return formatDate(iso, fallback);
+    }
+
+    /** Value for the Odoo date picker (shown in the account language format, e.g. 20/11/2026). */
+    dateValue(iso) {
+        return iso ? deserializeDate(iso) : false;
+    }
+
+    onFormDate(field, value) {
+        this.state.form[field] = value ? serializeDate(value) : "";
+    }
+
+    onDraftDate(draftKey, field, value) {
+        if (this.state[draftKey]) {
+            this.state[draftKey][field] = value ? serializeDate(value) : "";
+        }
+    }
+
     optionLabel(group, value) {
         if (!value) {
             return "Chưa khai báo";
@@ -233,8 +456,10 @@ export class TpHrMyProfile extends Component {
                 return false;
             }
             if (!q) return true;
-            const hay = `${doc.number || ""} ${doc.name || ""} ${doc.note || ""} ${doc.signed_date || ""}`.toLowerCase();
-            return hay.includes(q);
+            const hay = foldSearchText(
+                `${doc.number || ""} ${doc.name || ""} ${doc.note || ""} ${doc.signed_date || ""} ${formatDate(doc.signed_date, "")}`
+            );
+            return hay.includes(foldSearchText(q));
         });
     }
 
@@ -261,6 +486,11 @@ export class TpHrMyProfile extends Component {
 
     onFormInput(field, ev) {
         this.state.form[field] = ev.target.value;
+    }
+
+    /** TpSearchSelect callback: the chosen record id, or false when the choice is cleared. */
+    onFormSelect(field, option) {
+        this.state.form[field] = option ? option.id : false;
     }
 
     onDraftInput(draftKey, field, ev) {
@@ -301,8 +531,11 @@ export class TpHrMyProfile extends Component {
         this.state.editing = false;
     }
 
-    async onPrivateCountryChange(ev) {
-        const countryId = ev.target.value ? Number(ev.target.value) : false;
+    async onPrivateCountryChange(option) {
+        const countryId = option ? option.id : false;
+        if (Number(this.state.form.private_country_id || 0) === Number(countryId || 0)) {
+            return;
+        }
         this.state.form.private_country_id = countryId;
         this.state.form.private_state_id = false;
         if (!countryId) {

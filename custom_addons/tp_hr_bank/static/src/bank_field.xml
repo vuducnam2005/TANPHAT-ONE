@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_hr_bank.BankPickerField">
+        <div t-if="this.props.readonly" class="o_tp_bank_field_readonly">
+            <TpBankBadge bank="this.selected" size="'sm'"/>
+            <span t-out="this.label"/>
+        </div>
+        <TpBankPicker t-else="" id="this.props.id" banks="this.state.banks" value="this.value"
+            onSelect="(bank) => this.onSelect(bank)"/>
+    </t>
+
+    <t t-name="tp_hr_bank.BankBadgeField">
+        <TpBankBadge bank="this.bank" size="'sm'"/>
+    </t>
+</templates>

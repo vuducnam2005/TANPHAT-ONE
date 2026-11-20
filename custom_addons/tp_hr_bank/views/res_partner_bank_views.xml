@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- HR opens this form from the employee's "Tài khoản ngân hàng" field: pick the bank from the catalogue. -->
+    <record id="view_partner_bank_form_tp_bank" model="ir.ui.view">
+        <field name="name">res.partner.bank.form.tp.bank</field>
+        <field name="model">res.partner.bank</field>
+        <field name="inherit_id" ref="base.view_partner_bank_form"/>
+        <field name="arch" type="xml">
+            <field name="account_number" position="before">
+                <field name="tp_bank_id" widget="tp_bank_picker" options="{'no_create': True}"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_partner_bank_list_tp_bank" model="ir.ui.view">
+        <field name="name">res.partner.bank.list.tp.bank</field>
+        <field name="model">res.partner.bank</field>
+        <field name="inherit_id" ref="base.view_partner_bank_tree"/>
+        <field name="arch" type="xml">
+            <field name="account_number" position="before">
+                <field name="tp_bank_id" optional="show"/>
+            </field>
+        </field>
+    </record>
+</odoo>

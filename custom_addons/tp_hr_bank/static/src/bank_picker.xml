@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_hr_bank.BankBadge">
+        <span t-if="this.props.bank?.badge" class="o_tp_bank_badge" t-att-class="this.props.size === 'sm' ? 'is-sm' : ''"
+            t-att-style="this.style" aria-hidden="true" t-out="this.props.bank.badge"/>
+        <span t-else="" class="o_tp_bank_badge is-empty" t-att-class="this.props.size === 'sm' ? 'is-sm' : ''" aria-hidden="true">
+            <i class="oi" data-icon="account_balance"/>
+        </span>
+    </t>
+
+    <t t-name="tp_hr_bank.BankPicker">
+        <div class="o_tp_bank_picker" t-att-class="{'is-open': this.state.open, 'is-invalid': this.props.invalid, 'is-disabled': this.props.disabled}">
+            <div class="o_tp_bank_picker_control">
+                <span t-if="this.state.open" class="o_tp_bank_picker_search" aria-hidden="true"><i class="oi" data-icon="search"/></span>
+                <TpBankBadge t-else="" bank="this.selected" size="'sm'"/>
+                <input type="text" class="o_tp_bank_picker_input" role="combobox" autocomplete="off" spellcheck="false"
+                    t-att-id="this.props.id"
+                    t-att-value="this.inputValue"
+                    t-att-placeholder="this.placeholderText"
+                    t-att-aria-describedby="this.selectedHint ? this.uid + '_hint' : false"
+                    t-att-disabled="this.props.disabled"
+                    aria-autocomplete="list"
+                    t-att-aria-expanded="this.state.open ? 'true' : 'false'"
+                    t-att-aria-controls="this.uid + '_list'"
+                    t-att-aria-activedescendant="this.activeOptionId"
+                    t-att-aria-invalid="this.props.invalid ? 'true' : 'false'"
+                    t-on-click="() => this.open()"
+                    t-on-input="(ev) => this.onInput(ev)"
+                    t-on-keydown="(ev) => this.onKeydown(ev)"
+                    t-on-blur="() => this.close()"/>
+                <button type="button" class="o_tp_bank_picker_toggle" tabindex="-1" t-att-disabled="this.props.disabled"
+                    t-att-aria-label="this.state.open ? 'Đóng danh sách ngân hàng' : 'Mở danh sách ngân hàng'"
+                    t-on-mousedown.prevent="() => this.toggle()">
+                    <i class="oi" t-att-data-icon="this.state.open ? 'expand_less' : 'expand_more'" aria-hidden="true"/>
+                </button>
+            </div>
+            <div t-if="!this.state.open and this.selectedHint" t-att-id="this.uid + '_hint'" class="o_tp_bank_picker_hint" t-out="this.selectedHint"/>
+            <div t-if="this.state.open" class="o_tp_bank_picker_menu">
+                <div class="o_tp_bank_picker_count" role="status" t-out="this.countLabel"/>
+                <ul t-att-id="this.uid + '_list'" class="o_tp_bank_picker_list" role="listbox"
+                    aria-label="Danh sách ngân hàng" t-ref="this.list">
+                    <li t-foreach="this.filtered" t-as="bank" t-key="bank.id" role="option" class="o_tp_bank_option"
+                        t-att-id="this.optionId(bank)"
+                        t-att-class="{'is-active': bank_index === this.state.active, 'is-selected': bank.id === this.selected?.id}"
+                        t-att-aria-selected="bank.id === this.selected?.id ? 'true' : 'false'"
+                        t-on-mousedown.prevent="() => this.choose(bank)"
+                        t-on-mousemove="() => this.state.active = bank_index">
+                        <TpBankBadge bank="bank" size="'sm'"/>
+                        <span class="o_tp_bank_option_text">
+                            <strong t-out="bank.short_name"/>
+                            <small t-out="bank.name"/>
+                        </span>
+                        <span t-if="bank.bin" class="o_tp_bank_option_bin" t-out="bank.bin"/>
+                    </li>
+                    <li t-if="!this.filtered.length" class="o_tp_bank_picker_empty" role="presentation">
+                        Không tìm thấy ngân hàng phù hợp. Thử tên viết tắt (VCB, BIDV) hoặc số BIN.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </t>
+</templates>

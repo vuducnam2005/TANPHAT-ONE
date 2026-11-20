@@ -1,0 +1,5 @@
+id,name,model_id,group_id/id,operation,domain
+access_tp_bank_user,TP bank catalogue read,tp.bank,base.group_user,r,
+access_tp_bank_hr_manager,TP bank catalogue HR manager,tp.bank,hr.group_hr_manager,cru,
+access_tp_bank_system,TP bank catalogue admin,tp.bank,base.group_system,crud,
+tp_hr_bank_own_account_read,TP: user reads own bank accounts,res.partner.bank,base.group_user,r,"['|', ('partner_id', '=', user.partner_id.id), ('partner_id', 'in', user.employee_ids.work_contact_id.ids)]"

@@ -1,0 +1,893 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Danh sách ngân hàng theo VietQR/NAPAS (api.vietqr.io/v2/banks, 20/11/2026).
+     noupdate: HR có thể bật/tắt hoặc đổi màu mà nâng cấp module không ghi đè. -->
+<odoo>
+    <data noupdate="1">
+        <record id="tp_bank_icb" model="tp.bank">
+            <field name="sequence">10</field>
+            <field name="code">ICB</field>
+            <field name="bin">970415</field>
+            <field name="short_name">VietinBank</field>
+            <field name="name">Ngân hàng TMCP Công thương Việt Nam</field>
+            <field name="swift">ICBVVNVX</field>
+            <field name="badge">VTB</field>
+            <field name="color">#005B9A</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_vcb" model="tp.bank">
+            <field name="sequence">20</field>
+            <field name="code">VCB</field>
+            <field name="bin">970436</field>
+            <field name="short_name">Vietcombank</field>
+            <field name="name">Ngân hàng TMCP Ngoại Thương Việt Nam</field>
+            <field name="swift">BFTVVNVX</field>
+            <field name="badge">VCB</field>
+            <field name="color">#007B40</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_bidv" model="tp.bank">
+            <field name="sequence">30</field>
+            <field name="code">BIDV</field>
+            <field name="bin">970418</field>
+            <field name="short_name">BIDV</field>
+            <field name="name">Ngân hàng TMCP Đầu tư và Phát triển Việt Nam</field>
+            <field name="swift">BIDVVNVX</field>
+            <field name="badge">BIDV</field>
+            <field name="color">#006D68</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_vba" model="tp.bank">
+            <field name="sequence">40</field>
+            <field name="code">VBA</field>
+            <field name="bin">970405</field>
+            <field name="short_name">Agribank</field>
+            <field name="name">Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam</field>
+            <field name="swift">VBAAVNVX</field>
+            <field name="badge">AGR</field>
+            <field name="color">#A6192E</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_ocb" model="tp.bank">
+            <field name="sequence">50</field>
+            <field name="code">OCB</field>
+            <field name="bin">970448</field>
+            <field name="short_name">OCB</field>
+            <field name="name">Ngân hàng TMCP Phương Đông</field>
+            <field name="swift">ORCOVNVX</field>
+            <field name="badge">OCB</field>
+            <field name="color">#00894A</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_mb" model="tp.bank">
+            <field name="sequence">60</field>
+            <field name="code">MB</field>
+            <field name="bin">970422</field>
+            <field name="short_name">MBBank</field>
+            <field name="name">Ngân hàng TMCP Quân đội</field>
+            <field name="swift">MSCBVNVX</field>
+            <field name="badge">MB</field>
+            <field name="color">#1C3F94</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_tcb" model="tp.bank">
+            <field name="sequence">70</field>
+            <field name="code">TCB</field>
+            <field name="bin">970407</field>
+            <field name="short_name">Techcombank</field>
+            <field name="name">Ngân hàng TMCP Kỹ thương Việt Nam</field>
+            <field name="swift">VTCBVNVX</field>
+            <field name="badge">TCB</field>
+            <field name="color">#E21F26</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_acb" model="tp.bank">
+            <field name="sequence">80</field>
+            <field name="code">ACB</field>
+            <field name="bin">970416</field>
+            <field name="short_name">ACB</field>
+            <field name="name">Ngân hàng TMCP Á Châu</field>
+            <field name="swift">ASCBVNVX</field>
+            <field name="badge">ACB</field>
+            <field name="color">#1A4E9F</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_vpb" model="tp.bank">
+            <field name="sequence">90</field>
+            <field name="code">VPB</field>
+            <field name="bin">970432</field>
+            <field name="short_name">VPBank</field>
+            <field name="name">Ngân hàng TMCP Việt Nam Thịnh Vượng</field>
+            <field name="swift">VPBKVNVX</field>
+            <field name="badge">VPB</field>
+            <field name="color">#00A651</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_tpb" model="tp.bank">
+            <field name="sequence">100</field>
+            <field name="code">TPB</field>
+            <field name="bin">970423</field>
+            <field name="short_name">TPBank</field>
+            <field name="name">Ngân hàng TMCP Tiên Phong</field>
+            <field name="swift">TPBVVNVX</field>
+            <field name="badge">TPB</field>
+            <field name="color">#5E2A84</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_stb" model="tp.bank">
+            <field name="sequence">110</field>
+            <field name="code">STB</field>
+            <field name="bin">970403</field>
+            <field name="short_name">Sacombank</field>
+            <field name="name">Ngân hàng TMCP Sài Gòn Thương Tín</field>
+            <field name="swift">SGTTVNVX</field>
+            <field name="badge">STB</field>
+            <field name="color">#0070BA</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_hdb" model="tp.bank">
+            <field name="sequence">120</field>
+            <field name="code">HDB</field>
+            <field name="bin">970437</field>
+            <field name="short_name">HDBank</field>
+            <field name="name">Ngân hàng TMCP Phát triển Thành phố Hồ Chí Minh</field>
+            <field name="swift">HDBCVNVX</field>
+            <field name="badge">HDB</field>
+            <field name="color">#D7141A</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_vccb" model="tp.bank">
+            <field name="sequence">130</field>
+            <field name="code">VCCB</field>
+            <field name="bin">970454</field>
+            <field name="short_name">VietCapitalBank</field>
+            <field name="name">Ngân hàng TMCP Bản Việt</field>
+            <field name="swift">VCBCVNVX</field>
+            <field name="badge">VCCB</field>
+            <field name="color">#F58220</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_scb" model="tp.bank">
+            <field name="sequence">140</field>
+            <field name="code">SCB</field>
+            <field name="bin">970429</field>
+            <field name="short_name">SCB</field>
+            <field name="name">Ngân hàng TMCP Sài Gòn</field>
+            <field name="swift">SACLVNVX</field>
+            <field name="badge">SCB</field>
+            <field name="color">#003C86</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_vib" model="tp.bank">
+            <field name="sequence">150</field>
+            <field name="code">VIB</field>
+            <field name="bin">970441</field>
+            <field name="short_name">VIB</field>
+            <field name="name">Ngân hàng TMCP Quốc tế Việt Nam</field>
+            <field name="swift">VNIBVNVX</field>
+            <field name="badge">VIB</field>
+            <field name="color">#1A5DAB</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_shb" model="tp.bank">
+            <field name="sequence">160</field>
+            <field name="code">SHB</field>
+            <field name="bin">970443</field>
+            <field name="short_name">SHB</field>
+            <field name="name">Ngân hàng TMCP Sài Gòn - Hà Nội</field>
+            <field name="swift">SHBAVNVX</field>
+            <field name="badge">SHB</field>
+            <field name="color">#F37021</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_eib" model="tp.bank">
+            <field name="sequence">170</field>
+            <field name="code">EIB</field>
+            <field name="bin">970431</field>
+            <field name="short_name">Eximbank</field>
+            <field name="name">Ngân hàng TMCP Xuất Nhập khẩu Việt Nam</field>
+            <field name="swift">EBVIVNVX</field>
+            <field name="badge">EIB</field>
+            <field name="color">#005BAA</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_msb" model="tp.bank">
+            <field name="sequence">180</field>
+            <field name="code">MSB</field>
+            <field name="bin">970426</field>
+            <field name="short_name">MSB</field>
+            <field name="name">Ngân hàng TMCP Hàng Hải</field>
+            <field name="swift">MCOBVNVX</field>
+            <field name="badge">MSB</field>
+            <field name="color">#E2231A</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_cake" model="tp.bank">
+            <field name="sequence">190</field>
+            <field name="code">CAKE</field>
+            <field name="bin">546034</field>
+            <field name="short_name">CAKE</field>
+            <field name="name">TMCP Việt Nam Thịnh Vượng - Ngân hàng số CAKE by VPBank</field>
+            <field name="badge">CAKE</field>
+            <field name="color">#E5007D</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_ubank" model="tp.bank">
+            <field name="sequence">200</field>
+            <field name="code">Ubank</field>
+            <field name="bin">546035</field>
+            <field name="short_name">Ubank</field>
+            <field name="name">TMCP Việt Nam Thịnh Vượng - Ngân hàng số Ubank by VPBank</field>
+            <field name="badge">UBANK</field>
+            <field name="color">#00A3E0</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_timo" model="tp.bank">
+            <field name="sequence">210</field>
+            <field name="code">TIMO</field>
+            <field name="bin">963388</field>
+            <field name="short_name">Timo</field>
+            <field name="name">Ngân hàng số Timo by Ban Viet Bank (Timo by Ban Viet Bank)</field>
+            <field name="badge">TIMO</field>
+            <field name="color">#2E2A5E</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_vtlmoney" model="tp.bank">
+            <field name="sequence">220</field>
+            <field name="code">VTLMONEY</field>
+            <field name="bin">971005</field>
+            <field name="short_name">ViettelMoney</field>
+            <field name="name">Tổng Công ty Dịch vụ số Viettel - Chi nhánh tập đoàn công nghiệp viễn thông Quân Đội</field>
+            <field name="badge">VTM</field>
+            <field name="color">#EE0033</field>
+            <field name="kind">wallet</field>
+            <field name="napas_transfer" eval="False"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="tp_bank_vnptmoney" model="tp.bank">
+            <field name="sequence">230</field>
+            <field name="code">VNPTMONEY</field>
+            <field name="bin">971011</field>
+            <field name="short_name">VNPTMoney</field>
+            <field name="name">Trung tâm dịch vụ tài chính số VNPT- Chi nhánh Tổng công ty truyền thông (VNPT Fintech)</field>
+            <field name="badge">VNPT</field>
+            <field name="color">#0072BC</field>
+            <field name="kind">wallet</field>
+            <field name="napas_transfer" eval="False"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="tp_bank_sgicb" model="tp.bank">
+            <field name="sequence">240</field>
+            <field name="code">SGICB</field>
+            <field name="bin">970400</field>
+            <field name="short_name">SaigonBank</field>
+            <field name="name">Ngân hàng TMCP Sài Gòn Công Thương</field>
+            <field name="swift">SBITVNVX</field>
+            <field name="badge">SGB</field>
+            <field name="color">#0055A5</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_bab" model="tp.bank">
+            <field name="sequence">250</field>
+            <field name="code">BAB</field>
+            <field name="bin">970409</field>
+            <field name="short_name">BacABank</field>
+            <field name="name">Ngân hàng TMCP Bắc Á</field>
+            <field name="swift">NASCVNVX</field>
+            <field name="badge">BAB</field>
+            <field name="color">#0F5AA8</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_pvdb" model="tp.bank">
+            <field name="sequence">260</field>
+            <field name="code">PVDB</field>
+            <field name="bin">971133</field>
+            <field name="short_name">PVcomBank Pay</field>
+            <field name="name">Ngân hàng số PVcomBank</field>
+            <field name="swift">WBVNVNVX</field>
+            <field name="badge">PVPAY</field>
+            <field name="color">#005BAC</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_momo" model="tp.bank">
+            <field name="sequence">270</field>
+            <field name="code">momo</field>
+            <field name="bin">971025</field>
+            <field name="short_name">MoMo</field>
+            <field name="name">CTCP Dịch Vụ Di Động Trực Tuyến</field>
+            <field name="badge">MOMO</field>
+            <field name="color">#A50064</field>
+            <field name="kind">wallet</field>
+            <field name="napas_transfer" eval="True"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="tp_bank_pvcb" model="tp.bank">
+            <field name="sequence">280</field>
+            <field name="code">PVCB</field>
+            <field name="bin">970412</field>
+            <field name="short_name">PVcomBank</field>
+            <field name="name">Ngân hàng TMCP Đại Chúng Việt Nam</field>
+            <field name="swift">WBVNVNVX</field>
+            <field name="badge">PVCB</field>
+            <field name="color">#005BAC</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_mbv" model="tp.bank">
+            <field name="sequence">290</field>
+            <field name="code">MBV</field>
+            <field name="bin">970414</field>
+            <field name="short_name">MBV</field>
+            <field name="name">Ngân hàng TNHH MTV Việt Nam Hiện Đại</field>
+            <field name="swift">OCBKUS3M</field>
+            <field name="badge">MBV</field>
+            <field name="color">#2B4C9B</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_ncb" model="tp.bank">
+            <field name="sequence">300</field>
+            <field name="code">NCB</field>
+            <field name="bin">970419</field>
+            <field name="short_name">NCB</field>
+            <field name="name">Ngân hàng TMCP Quốc Dân</field>
+            <field name="swift">NVBAVNVX</field>
+            <field name="badge">NCB</field>
+            <field name="color">#1B4D89</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_shbvn" model="tp.bank">
+            <field name="sequence">310</field>
+            <field name="code">SHBVN</field>
+            <field name="bin">970424</field>
+            <field name="short_name">ShinhanBank</field>
+            <field name="name">Ngân hàng TNHH MTV Shinhan Việt Nam</field>
+            <field name="swift">SHBKVNVX</field>
+            <field name="badge">SHIN</field>
+            <field name="color">#0046FF</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_abb" model="tp.bank">
+            <field name="sequence">320</field>
+            <field name="code">ABB</field>
+            <field name="bin">970425</field>
+            <field name="short_name">ABBANK</field>
+            <field name="name">Ngân hàng TMCP An Bình</field>
+            <field name="swift">ABBKVNVX</field>
+            <field name="badge">ABB</field>
+            <field name="color">#009A44</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_vab" model="tp.bank">
+            <field name="sequence">330</field>
+            <field name="code">VAB</field>
+            <field name="bin">970427</field>
+            <field name="short_name">VietABank</field>
+            <field name="name">Ngân hàng TMCP Việt Á</field>
+            <field name="swift">VNACVNVX</field>
+            <field name="badge">VAB</field>
+            <field name="color">#00539B</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_nab" model="tp.bank">
+            <field name="sequence">340</field>
+            <field name="code">NAB</field>
+            <field name="bin">970428</field>
+            <field name="short_name">NamABank</field>
+            <field name="name">Ngân hàng TMCP Nam Á</field>
+            <field name="swift">NAMAVNVX</field>
+            <field name="badge">NAB</field>
+            <field name="color">#F26F21</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_pgb" model="tp.bank">
+            <field name="sequence">350</field>
+            <field name="code">PGB</field>
+            <field name="bin">970430</field>
+            <field name="short_name">PGBank</field>
+            <field name="name">Ngân hàng TMCP Thịnh vượng và Phát triển</field>
+            <field name="swift">PGBLVNVX</field>
+            <field name="badge">PGB</field>
+            <field name="color">#005DAA</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_vietbank" model="tp.bank">
+            <field name="sequence">360</field>
+            <field name="code">VIETBANK</field>
+            <field name="bin">970433</field>
+            <field name="short_name">VietBank</field>
+            <field name="name">Ngân hàng TMCP Việt Nam Thương Tín</field>
+            <field name="swift">VNTTVNVX</field>
+            <field name="badge">VBK</field>
+            <field name="color">#E86C1E</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_bvb" model="tp.bank">
+            <field name="sequence">370</field>
+            <field name="code">BVB</field>
+            <field name="bin">970438</field>
+            <field name="short_name">BaoVietBank</field>
+            <field name="name">Ngân hàng TMCP Bảo Việt</field>
+            <field name="swift">BVBVVNVX</field>
+            <field name="badge">BVB</field>
+            <field name="color">#0055A4</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_seab" model="tp.bank">
+            <field name="sequence">380</field>
+            <field name="code">SEAB</field>
+            <field name="bin">970440</field>
+            <field name="short_name">SeABank</field>
+            <field name="name">Ngân hàng TMCP Đông Nam Á</field>
+            <field name="swift">SEAVVNVX</field>
+            <field name="badge">SEAB</field>
+            <field name="color">#D71921</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_coopbank" model="tp.bank">
+            <field name="sequence">390</field>
+            <field name="code">COOPBANK</field>
+            <field name="bin">970446</field>
+            <field name="short_name">COOPBANK</field>
+            <field name="name">Ngân hàng Hợp tác xã Việt Nam</field>
+            <field name="badge">COOP</field>
+            <field name="color">#007A3D</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_lpb" model="tp.bank">
+            <field name="sequence">400</field>
+            <field name="code">LPB</field>
+            <field name="bin">970449</field>
+            <field name="short_name">LPBank</field>
+            <field name="name">Ngân hàng TMCP Lộc Phát Việt Nam</field>
+            <field name="swift">LVBKVNVX</field>
+            <field name="badge">LPB</field>
+            <field name="color">#F26522</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_klb" model="tp.bank">
+            <field name="sequence">410</field>
+            <field name="code">KLB</field>
+            <field name="bin">970452</field>
+            <field name="short_name">KienLongBank</field>
+            <field name="name">Ngân hàng TMCP Kiên Long</field>
+            <field name="swift">KLBKVNVX</field>
+            <field name="badge">KLB</field>
+            <field name="color">#0057A8</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_kbank" model="tp.bank">
+            <field name="sequence">420</field>
+            <field name="code">KBank</field>
+            <field name="bin">668888</field>
+            <field name="short_name">KBank</field>
+            <field name="name">Ngân hàng Đại chúng TNHH Kasikornbank</field>
+            <field name="swift">KASIVNVX</field>
+            <field name="badge">KBANK</field>
+            <field name="color">#138F2D</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_kebhanahcm" model="tp.bank">
+            <field name="sequence">430</field>
+            <field name="code">KEBHANAHCM</field>
+            <field name="bin">970466</field>
+            <field name="short_name">KEBHanaHCM</field>
+            <field name="name">Ngân hàng KEB Hana – Chi nhánh Thành phố Hồ Chí Minh</field>
+            <field name="badge">HANA</field>
+            <field name="color">#009591</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_kebhanahn" model="tp.bank">
+            <field name="sequence">440</field>
+            <field name="code">KEBHANAHN</field>
+            <field name="bin">970467</field>
+            <field name="short_name">KEBHANAHN</field>
+            <field name="name">Ngân hàng KEB Hana – Chi nhánh Hà Nội</field>
+            <field name="badge">HANA</field>
+            <field name="color">#009591</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_mafc" model="tp.bank">
+            <field name="sequence">450</field>
+            <field name="code">MAFC</field>
+            <field name="bin">977777</field>
+            <field name="short_name">MAFC</field>
+            <field name="name">Công ty Tài chính TNHH MTV Mirae Asset (Việt Nam)</field>
+            <field name="badge">MAFC</field>
+            <field name="color">#F58220</field>
+            <field name="kind">finance</field>
+            <field name="napas_transfer" eval="False"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="tp_bank_vbsp" model="tp.bank">
+            <field name="sequence">460</field>
+            <field name="code">VBSP</field>
+            <field name="bin">999888</field>
+            <field name="short_name">VBSP</field>
+            <field name="name">Ngân hàng Chính sách Xã hội</field>
+            <field name="badge">VBSP</field>
+            <field name="color">#0066B3</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_bnp_hn" model="tp.bank">
+            <field name="sequence">470</field>
+            <field name="code">BNP HN</field>
+            <field name="bin">963668</field>
+            <field name="short_name">BNP HN</field>
+            <field name="name">Ngân hàng BNP Paribas – Chi nhánh Hà Nội</field>
+            <field name="badge">BNP</field>
+            <field name="color">#00915A</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_bidc" model="tp.bank">
+            <field name="sequence">480</field>
+            <field name="code">BIDC</field>
+            <field name="bin">555666</field>
+            <field name="short_name">BIDC</field>
+            <field name="name">Ngân hàng Đầu Tư Và Phát Triển Campuchia - Chi nhánh Hà Nội</field>
+            <field name="badge">BIDC</field>
+            <field name="color">#006D68</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_bnp_hcm" model="tp.bank">
+            <field name="sequence">490</field>
+            <field name="code">BNP HCM</field>
+            <field name="bin">963666</field>
+            <field name="short_name">BNP HCM</field>
+            <field name="name">Ngân hàng BNP Paribas – Chi nhánh Thành phố Hồ Chí Minh</field>
+            <field name="badge">BNP</field>
+            <field name="color">#00915A</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_zalopay" model="tp.bank">
+            <field name="sequence">500</field>
+            <field name="code">ZALOPAY</field>
+            <field name="bin">971101</field>
+            <field name="short_name">ZaloPay</field>
+            <field name="name">Ví điện tử ZaloPay</field>
+            <field name="badge">ZLP</field>
+            <field name="color">#0068FF</field>
+            <field name="kind">wallet</field>
+            <field name="napas_transfer" eval="True"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="tp_bank_bochk" model="tp.bank">
+            <field name="sequence">510</field>
+            <field name="code">BOCHK</field>
+            <field name="bin">963688</field>
+            <field name="short_name">BOCHK</field>
+            <field name="name">Ngân hàng Bank of China (Hong Kong) Limited – Chi nhánh Hồ Chí Minh</field>
+            <field name="badge">BOC</field>
+            <field name="color">#B5121B</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_bsp" model="tp.bank">
+            <field name="sequence">520</field>
+            <field name="code">BSP</field>
+            <field name="bin">970465</field>
+            <field name="short_name">BSP</field>
+            <field name="name">Ngân hàng SinoPac - Chi nhánh Thành phố Hồ Chí Minh</field>
+            <field name="badge">BSP</field>
+            <field name="color">#E60012</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_cubhcm" model="tp.bank">
+            <field name="sequence">530</field>
+            <field name="code">CUBHCM</field>
+            <field name="bin">168999</field>
+            <field name="short_name">CUBHCM</field>
+            <field name="name">Ngân hàng Cathay United Bank – Chi nhánh Hồ Chí Minh</field>
+            <field name="badge">CUB</field>
+            <field name="color">#00843D</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_esun" model="tp.bank">
+            <field name="sequence">540</field>
+            <field name="code">ESUN</field>
+            <field name="bin">963686</field>
+            <field name="short_name">ESUN</field>
+            <field name="name">Ngân hàng Thương mại TNHH E.SUN – Chi nhánh Đồng Nai (ESUNBANK)</field>
+            <field name="badge">ESUN</field>
+            <field name="color">#00956C</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_icbc" model="tp.bank">
+            <field name="sequence">550</field>
+            <field name="code">ICBC</field>
+            <field name="bin">963669</field>
+            <field name="short_name">ICBC</field>
+            <field name="name">Ngân hàng Công thương Trung Quốc – Chi nhánh thành phố Hà Nội</field>
+            <field name="badge">ICBC</field>
+            <field name="color">#C7000B</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_mvas" model="tp.bank">
+            <field name="sequence">560</field>
+            <field name="code">MVAS</field>
+            <field name="bin">971032</field>
+            <field name="short_name">MVAS</field>
+            <field name="name">Trung tâm Dịch vụ số Mobifone – Chi nhánh Tổng Công ty viễn thông Mobifone</field>
+            <field name="badge">MOBI</field>
+            <field name="color">#005BAA</field>
+            <field name="kind">wallet</field>
+            <field name="napas_transfer" eval="True"/>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="tp_bank_tnex" model="tp.bank">
+            <field name="sequence">570</field>
+            <field name="code">TNEX</field>
+            <field name="bin">963326</field>
+            <field name="short_name">TNEX</field>
+            <field name="name">TNEX by MSB</field>
+            <field name="badge">TNEX</field>
+            <field name="color">#00A99D</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_hsbc" model="tp.bank">
+            <field name="sequence">580</field>
+            <field name="code">HSBC</field>
+            <field name="bin">458761</field>
+            <field name="short_name">HSBC</field>
+            <field name="name">Ngân hàng TNHH MTV HSBC (Việt Nam)</field>
+            <field name="swift">HSBCVNVX</field>
+            <field name="badge">HSBC</field>
+            <field name="color">#DB0011</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_hlbvn" model="tp.bank">
+            <field name="sequence">590</field>
+            <field name="code">HLBVN</field>
+            <field name="bin">970442</field>
+            <field name="short_name">HongLeong</field>
+            <field name="name">Ngân hàng TNHH MTV Hong Leong Việt Nam</field>
+            <field name="swift">HLBBVNVX</field>
+            <field name="badge">HLB</field>
+            <field name="color">#003DA5</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_ibk_hn" model="tp.bank">
+            <field name="sequence">600</field>
+            <field name="code">IBK - HN</field>
+            <field name="bin">970455</field>
+            <field name="short_name">IBKHN</field>
+            <field name="name">Ngân hàng Công nghiệp Hàn Quốc - Chi nhánh Hà Nội</field>
+            <field name="badge">IBK</field>
+            <field name="color">#0050A0</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_ibk_hcm" model="tp.bank">
+            <field name="sequence">610</field>
+            <field name="code">IBK - HCM</field>
+            <field name="bin">970456</field>
+            <field name="short_name">IBKHCM</field>
+            <field name="name">Ngân hàng Công nghiệp Hàn Quốc - Chi nhánh TP. Hồ Chí Minh</field>
+            <field name="badge">IBK</field>
+            <field name="color">#0050A0</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_ivb" model="tp.bank">
+            <field name="sequence">620</field>
+            <field name="code">IVB</field>
+            <field name="bin">970434</field>
+            <field name="short_name">IndovinaBank</field>
+            <field name="name">Ngân hàng TNHH Indovina</field>
+            <field name="badge">IVB</field>
+            <field name="color">#C8102E</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_vikki" model="tp.bank">
+            <field name="sequence">630</field>
+            <field name="code">Vikki</field>
+            <field name="bin">970406</field>
+            <field name="short_name">Vikki</field>
+            <field name="name">Ngân hàng TNHH Một thành viên số Vikki</field>
+            <field name="swift">EACBVNVX</field>
+            <field name="badge">VIKKI</field>
+            <field name="color">#6A1B9A</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_nhb_hn" model="tp.bank">
+            <field name="sequence">640</field>
+            <field name="code">NHB HN</field>
+            <field name="bin">801011</field>
+            <field name="short_name">Nonghyup</field>
+            <field name="name">Ngân hàng Nonghyup - Chi nhánh Hà Nội</field>
+            <field name="badge">NH</field>
+            <field name="color">#009A44</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_dbs" model="tp.bank">
+            <field name="sequence">650</field>
+            <field name="code">DBS</field>
+            <field name="bin">796500</field>
+            <field name="short_name">DBSBank</field>
+            <field name="name">DBS Bank Ltd - Chi nhánh Thành phố Hồ Chí Minh</field>
+            <field name="swift">DBSSVNVX</field>
+            <field name="badge">DBS</field>
+            <field name="color">#E31837</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_pbvn" model="tp.bank">
+            <field name="sequence">660</field>
+            <field name="code">PBVN</field>
+            <field name="bin">970439</field>
+            <field name="short_name">PublicBank</field>
+            <field name="name">Ngân hàng TNHH MTV Public Việt Nam</field>
+            <field name="swift">VIDPVNVX</field>
+            <field name="badge">PBVN</field>
+            <field name="color">#D2232A</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_scvn" model="tp.bank">
+            <field name="sequence">670</field>
+            <field name="code">SCVN</field>
+            <field name="bin">970410</field>
+            <field name="short_name">StandardChartered</field>
+            <field name="name">Ngân hàng TNHH MTV Standard Chartered Bank Việt Nam</field>
+            <field name="swift">SCBLVNVX</field>
+            <field name="badge">SC</field>
+            <field name="color">#0072AA</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_citibank" model="tp.bank">
+            <field name="sequence">680</field>
+            <field name="code">CITIBANK</field>
+            <field name="bin">533948</field>
+            <field name="short_name">Citibank</field>
+            <field name="name">Ngân hàng Citibank, N.A. - Chi nhánh Hà Nội</field>
+            <field name="badge">CITI</field>
+            <field name="color">#056DAE</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_cimb" model="tp.bank">
+            <field name="sequence">690</field>
+            <field name="code">CIMB</field>
+            <field name="bin">422589</field>
+            <field name="short_name">CIMB</field>
+            <field name="name">Ngân hàng TNHH MTV CIMB Việt Nam</field>
+            <field name="swift">CIBBVNVN</field>
+            <field name="badge">CIMB</field>
+            <field name="color">#EC1C24</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_uob" model="tp.bank">
+            <field name="sequence">700</field>
+            <field name="code">UOB</field>
+            <field name="bin">970458</field>
+            <field name="short_name">UnitedOverseas</field>
+            <field name="name">Ngân hàng United Overseas - Chi nhánh TP. Hồ Chí Minh</field>
+            <field name="badge">UOB</field>
+            <field name="color">#0B3C8C</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_cbb" model="tp.bank">
+            <field name="sequence">710</field>
+            <field name="code">CBB</field>
+            <field name="bin">970444</field>
+            <field name="short_name">CBBank</field>
+            <field name="name">Ngân hàng Thương mại trách nhiệm hữu hạn một thành viên Ngoại thương Công nghệ số (Vietcombank Neo Limited)</field>
+            <field name="swift">GTBAVNVX</field>
+            <field name="badge">CBB</field>
+            <field name="color">#0F7A3E</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_gpb" model="tp.bank">
+            <field name="sequence">720</field>
+            <field name="code">GPB</field>
+            <field name="bin">970408</field>
+            <field name="short_name">GPBank</field>
+            <field name="name">Ngân hàng Thương mại TNHH MTV Dầu Khí Toàn Cầu</field>
+            <field name="swift">GBNKVNVX</field>
+            <field name="badge">GPB</field>
+            <field name="color">#005BAA</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_vrb" model="tp.bank">
+            <field name="sequence">730</field>
+            <field name="code">VRB</field>
+            <field name="bin">970421</field>
+            <field name="short_name">VRB</field>
+            <field name="name">Ngân hàng Liên doanh Việt - Nga</field>
+            <field name="badge">VRB</field>
+            <field name="color">#1C4E9D</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="False"/>
+        </record>
+        <record id="tp_bank_wvn" model="tp.bank">
+            <field name="sequence">740</field>
+            <field name="code">WVN</field>
+            <field name="bin">970457</field>
+            <field name="short_name">Woori</field>
+            <field name="name">Ngân hàng TNHH MTV Woori Việt Nam</field>
+            <field name="badge">WOORI</field>
+            <field name="color">#0067AC</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_kbhn" model="tp.bank">
+            <field name="sequence">750</field>
+            <field name="code">KBHN</field>
+            <field name="bin">970462</field>
+            <field name="short_name">KookminHN</field>
+            <field name="name">Ngân hàng Kookmin - Chi nhánh Hà Nội</field>
+            <field name="badge">KB</field>
+            <field name="color">#FFB300</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+        <record id="tp_bank_kbhcm" model="tp.bank">
+            <field name="sequence">760</field>
+            <field name="code">KBHCM</field>
+            <field name="bin">970463</field>
+            <field name="short_name">KookminHCM</field>
+            <field name="name">Ngân hàng Kookmin - Chi nhánh Thành phố Hồ Chí Minh</field>
+            <field name="badge">KB</field>
+            <field name="color">#FFB300</field>
+            <field name="kind">bank</field>
+            <field name="napas_transfer" eval="True"/>
+        </record>
+    </data>
+</odoo>
