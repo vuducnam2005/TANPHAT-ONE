@@ -106,3 +106,16 @@ DB kiểm thử `tp_tanphat_test` cổng 18079. Không ghi dữ liệu giả và
 - Kiểm hồi quy đạt 10/10: ba thẻ bằng nhau có tooltip và “Xem danh sách”; hover nâng thẻ và vòng focus; bấm Đang làm
   mở hộp thoại có tổng bằng số trên thẻ; Đóng giữ ngày và bộ lọc phòng ban; giảm chuyển động; nhân viên thường cùng
   bố cục, không có xuất; không tràn ở 1440/768/390/320px.
+- PC server (CHG-20261120-007), 20/11/2026 13:09 giờ VN: release từ `f710eeec` (2 file), `tp_hr_attendance` 20.0.3.5.3 →
+  20.0.3.5.4, upgrade exit 0 và 0 ERROR. Nguồn module trên PC khớp commit gốc 81/81 file trước khi áp, khớp release 81/81
+  sau khi áp, không có file lạ. Backup `C:\TANPHAT-backups\enti-attendance002\enti002-dash004b-20261120T130940`.
+- Snapshot nghiệp vụ trước và sau giống hệt, chỉ đổi phiên bản: 39 nhân viên, 32 user, nhóm, roster, 780 ngày công,
+  791 phiên, 780 ngày nguồn, 39 mapping, 5 lô lịch sử, 0 điều chỉnh, 0 kỳ chốt, cron và base_url.
+- Sự cố đã xử lý: sau upgrade bundle CSS công khai vẫn là bản cũ. Gói release ghi thời gian sửa 1970 cho file; lần áp
+  trước cũng thế, nên `dashboard.scss` có cùng URL và cùng thời gian sửa, Odoo coi bundle không đổi. Đã đặt thời gian
+  sửa hiện tại cho đúng 2 file phát hành rồi khởi động lại container Odoo. Lần sau gói release phải mang thời gian sửa
+  thật.
+- Sau đó: bundle công khai CSS `940ffac` có quy tắc thẻ gọn, SHA256 `9dab29dc` khớp bản PC tự phát. Health 200, login 302
+  công khai. Log 0 ERROR kể từ khi Odoo chạy lại; một lỗi websocket “cursor already closed” đúng lúc tắt container.
+  Cron ENTI vẫn chạy (39 nhân viên mỗi lượt).
+- Không đăng nhập tài khoản thật trên PC, nên chưa có ảnh giao diện trên dữ liệu thật. Người dùng cần Ctrl+F5.

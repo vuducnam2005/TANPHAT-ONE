@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-007 — Đã áp thanh ba thẻ gọn lên PC server
+
+- 20/11/2026 13:09 giờ VN; release `f710eeec` (2 file, checksum khớp), `tp_hr_attendance` 20.0.3.5.3 → 20.0.3.5.4, upgrade exit 0/0 ERROR. Backup `C:\TANPHAT-backups\enti-attendance002\enti002-dash004b-20261120T130940` (dump + restore-list, filestore, source, config, SHA256). Nguồn PC 81/81 trước và sau khớp commit; snapshot nghiệp vụ trước/sau giống hệt, chỉ đổi phiên bản.
+- Sau upgrade, bundle CSS công khai vẫn là bản cũ: gói release ghi mtime 1970 cho file, lần trước cũng vậy, mà Odoo tính phiên bản bundle theo URL + thời gian sửa. Đã đặt thời gian sửa hiện tại cho đúng 2 file phát hành và khởi động lại container Odoo. Sau đó bundle công khai CSS `940ffac` (SHA256 `9dab29dc`) khớp PC và có quy tắc thẻ mới. Health 200/login 302 công khai; log 0 ERROR kể từ khi chạy lại (1 lỗi websocket đúng lúc tắt), cron ENTI vẫn chạy 39 nhân viên. Không đăng nhập tài khoản thật trên PC. Lần sau gói release phải mang thời gian sửa thật. [Nghiệm thu §6](demo/ATTENDANCE_DASH_004_ACCEPTANCE.md#6-thanh-ba-thẻ-gọn-hơn-chg-20261120-006).
+
 ## CHG-20261120-006 — Thanh ba thẻ chấm công gọn hơn
 
 - 20/11/2026 theo ảnh và yêu cầu của người dùng “làm gọn lại thanh này”. `tp_hr_attendance` 20.0.3.5.4, chỉ đổi SCSS. Mỗi thẻ còn một hàng thấp: biểu tượng + tên trên “Xem danh sách” ở bên trái, số lớn ở bên phải; thẻ cao 66px trên PC (trước khoảng gấp đôi), 64px trên tablet/điện thoại; điện thoại xếp ba hàng sát nhau. Giữ màu, viền trái, hover, focus, tooltip, bấm mở danh sách và dữ liệu. Kiểm local: 10 kiểm Playwright đạt (ba thẻ bằng nhau, hover/focus, hộp thoại khớp số, Đóng giữ bộ lọc, giảm chuyển động, nhân viên thường, 4 width không tràn), 0 lỗi JS. [Nghiệm thu §6](demo/ATTENDANCE_DASH_004_ACCEPTANCE.md#6-thanh-ba-thẻ-gọn-hơn-chg-20261120-006).
