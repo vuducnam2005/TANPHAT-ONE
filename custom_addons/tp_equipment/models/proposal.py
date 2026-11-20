@@ -425,6 +425,7 @@ class TpEquipmentProposalLine(models.Model):
     estimate_amount_known = fields.Boolean("Đã xác nhận dự toán", help="Bật cả khi dự toán bằng 0; tắt nghĩa là chưa biết.")
     tax_note = fields.Selection(TAX_NOTE, "Thuế", default="unknown", required=True)
     target_employee_id = fields.Many2one("hr.employee", "Người nhận (chuyển máy)", ondelete="restrict")
+    target_employee_name = fields.Char("Snapshot người nhận", readonly=True, copy=False)
     target_department_id = fields.Many2one("hr.department", "Bộ phận nhận (chuyển máy)", ondelete="restrict")
     approved = fields.Boolean("Dòng được duyệt", copy=False,
                               help="Chỉ dùng khi kết quả duyệt là “Duyệt một phần”.")

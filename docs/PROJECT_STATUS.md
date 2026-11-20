@@ -1,5 +1,19 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261120-011 — HR-DELETE-ASSET-RETURN-001 — PC_SERVER_APPLIED.** Tự động thu hồi tài sản công ty về kho và bảo toàn lịch sử bàn giao khi xóa vĩnh viễn nhân viên.
+- Giải quyết dứt điểm lỗi chặn xóa bởi 3 quan hệ trong `tp_equipment`: Dòng phiếu bàn giao (người giữ trước/sau) và Phiếu bàn giao (nhân viên nhận).
+- Module `tp_equipment` **20.0.1.6.0** kế thừa `hr.employee` (`employee_delete.py`), override hook `_tp_delete_plan` và `_tp_permanent_unlink`:
+  - Thiết bị đang cấp phát cá nhân (`tp_custody` in `('employee', 'loan')`): tự động tạo và hoàn tất phiếu `tp.equipment.move` (loại `return` / `loan_return`) về kho của công ty, đưa quyền giữ về kho (`stock`), gỡ người giữ (`tp_employee_id = False`).
+  - Bảo toàn 100% dữ liệu kỹ thuật: mã tài sản, serial, cấu hình, giá trị, tình trạng kỹ thuật (`tp_technical_state`: hỏng vẫn hỏng, tốt vẫn tốt).
+  - Bảo toàn lịch sử bàn giao: lưu snapshot tên, mã NV, phòng ban vào header và line phiếu, đánh dấu `deleted = True`, set NULL foreign key nội bộ bằng `INTERNAL` context; hiển thị kèm nhãn *(Nhân viên đã xóa)*.
+  - Tự động hủy các phiếu bàn giao đang ở trạng thái `pending` hoặc `draft`, giải phóng giữ chỗ cho tài sản.
+  - Xử lý tài sản cá nhân (`personal`): giải phóng quyền sở hữu / trả lại chủ nhân (`retired / returned_owner`), không nhập vào kho công ty.
+  - Toàn bộ thực thi trong 1 transaction Odoo nguyên tử; idempotency key chống bấm đúp/retry.
+- Module `tp_hr_workspace` **20.0.1.20.0**: Thiết kế lại Dialog Xem trước xóa (Preview Dialog) gồm các nhóm A (Bảng tài sản thu hồi + chọn kho nhận), B (Phiếu lịch sử bảo toàn), C (Phân công khác), D (Sẽ xóa), E (Giữ lại), F (Blocker thực sự nếu có). Dòng thông báo xác nhận: *"Xóa vĩnh viễn hồ sơ và thu hồi các tài sản được liệt kê về kho trên hệ thống."*
+- Kiểm thử tự động: `custom_addons/tp_equipment/tests/test_employee_delete_asset_return.py` (6/6 tests PASS, 0 failed, 0 errors); hồi quy `tp_hr_workspace` (3/3 tests PASS).
+- Triển khai PC Server: Backup tại `C:\TANPHAT-backups\hr-delete-asset-return001\` (`tp_tanphat_dev.dump` 10.418.949 bytes, `code-pre.tar.gz` 757.946 bytes). Upgrade exit 0, restart container `tp-odoo`, LAN/Public health 200 OK.
+- Kiểm chứng read-only trên hồ sơ Trần Đức Lương (ID 69, mã TP072): Blocker giảm từ 3 xuống 0, Equipment history: 3 phiếu/dòng được bảo toàn snapshot, Can submit: True. Hồ sơ thật giữ nguyên 100%. [Bản nghiệm thu](demo/HR_DELETE_ASSET_RETURN_001_ACCEPTANCE.md).
+
 **CHG-20261120-010 — HR-EMPLOYEE-CODE-003 mã nhân viên TP + 3 chữ số — PC_SERVER_APPLIED.** App `13fc1283` đã push và áp PC 20/11/2026 15:00 giờ VN: `tp_organization` 20.0.2.3.0, `tp_hr_attendance` 20.0.3.5.5, upgrade exit 0/log 0 ERROR, nguồn 101/101 khớp release.
 - Quy tắc: mã mới TP001–TP999. Mã cũ TP10001–TP10999 chuyển bằng số − 10000 (TP10060 → TP060); mã đã đúng dạng giữ nguyên. Mã ngoài quy tắc, trùng, thiếu, số đã xóa/đã đổi hoặc lệch mã nguồn là xung đột, không ghi. Hết dải thì dừng, không sinh TP1000. [Nghiệm thu](demo/HR_EMPLOYEE_CODE_003_ACCEPTANCE.md), [runbook](../ops/runbooks/HR_EMPLOYEE_CODE_003_DEPLOY_AND_ROLLBACK.md).
 - PC: 40/40 hồ sơ (39 đang dùng, 1 lưu trữ, 1 công ty) chuyển qua correction nội bộ, 0 xung đột. Mỗi hồ sơ có 1 dòng audit `code_correction` (cũ → mới) và 1 ghi chú chatter nội bộ không người nhận; hàng đợi mail 82 → 82, thông báo 0 → 0. TP001/TP009/TP060/TP065 đã có; TP125 chưa có người giữ (số cao nhất 72). Mã cấp tiếp là TP073; TP070/TP071 của hồ sơ đã xóa không cấp lại.
@@ -250,7 +264,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261120-010`
+Last change: `CHG-20261120-011`
 
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.
@@ -1565,3 +1579,4 @@ Lượt AI-001 không sửa Git metadata, không stage hoặc commit và không 
 Lượt BIZ-001 giữ nguyên các thay đổi login chưa commit từ AUTH-001, không commit/push hoặc sửa Git metadata. Hai tài liệu chi tiết BIZ mới được kiểm riêng về liên kết/nội dung; checker hiện dùng danh sách policy cố định, không tự hash mọi Markdown được liên kết.
 
 CTR-001 (`807018b9`, đã push; AUTH-001/BIZ-001 ở `395be562`): grant `financial_read` chỉ superuser cấp đến khi Q2 được chốt; grant admin trong dev chỉ là fixture. Quyền tiền bảo vệ field số tiền, tệp tài chính và tổng; văn bản tự do (tên, mô tả, lý do) không được quét số tiền, nên quy tắc nhập liệu cần cấm ghi giá trị vào các trường đó. Admin/superuser vẫn có khả năng truy cập kỹ thuật. Chưa có view/menu Odoo native cho `tp_contract`; người dùng nghiệp vụ dùng API/React. Exit code `dev.py test` không đáng tin, phải đọc dòng `0 failed, 0 error(s) of N tests` trong log; INFO filestore GC `WinError 5` trên Windows vẫn xuất hiện. Upgrade dev ghi lại mật khẩu dev từ file secrets hiện có (giá trị không đổi). MFA thật chưa kiểm.
+

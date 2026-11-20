@@ -153,13 +153,22 @@ class HrEmployee(models.Model):
                 + ([{'label': text, 'value': '', 'hint': ''} for text in account['block']] if account else []),
                 'lockBlock': account['lock_block'] if account else [],
                 'keepBlock': account['keep_block'] if account else [],
+                'assetsToReturn': entry.get('assets_to_return', []),
+                'equipmentHistory': entry.get('equipment_history', []),
+                'cancelledMoves': entry.get('cancelled_moves', []),
             })
+        first_emp_id = employees.ids[0] if employees.ids else 0
+        available_locs = plan.get('equipment_available_locations', {}).get(first_emp_id, [])
+        default_loc_id = plan.get('equipment_default_location_id', {}).get(first_emp_id, False)
         return {
             'employees': rows,
             'count': len(rows),
             'accountCount': sum(1 for row in rows if row['login']),
             'digest': self._tp_digest(plan),
             'adminLogin': self.env.user.login,
+            'availableLocations': available_locs,
+            'defaultLocationId': default_loc_id,
+            'hasAssetsToReturn': any(bool(row.get('assetsToReturn')) for row in rows),
         }
 
     # ------------------------------------------------------------------
@@ -181,7 +190,7 @@ class HrEmployee(models.Model):
             return WRONG_PASSWORD if attempted else COOLDOWN
         return ''
 
-    def tp_permanent_delete_execute(self, password, reason, lock_accounts, digest, request_id):
+    def tp_permanent_delete_execute(self, password, reason, lock_accounts, digest, request_id, location_id=None):
         """Verify the admin password and delete permanently, all or nothing."""
         employees = self.with_context(active_test=False)
         # 1. Rights and session of the caller (never a client flag).
@@ -276,7 +285,10 @@ class HrEmployee(models.Model):
                     'digest': digest,
                 },
             })
-        partner_results = employees._tp_permanent_unlink(plan, audit_vals)
+        employees_ctx = employees
+        if location_id:
+            employees_ctx = employees.with_context(tp_equipment_return_location_id=location_id)
+        partner_results = employees_ctx._tp_permanent_unlink(plan, audit_vals)
         self.env['tp.kd.department.role']._invalidate_scope()
         self.env.transaction.invalidate_ormcache()
         kept_partners = sum(1 for outcome in partner_results.values() if outcome != 'deleted')

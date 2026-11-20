@@ -273,7 +273,7 @@ export class TpEquipmentSidebar extends Component {
     }
 
     href(leaf) {
-        const href = `/odoo/${leaf.actionPath || "action-" + leaf.actionID}`;
+        const href = router.stateToUrl({ action: leaf.actionPath || leaf.actionID });
         return odoo.debug ? `${href}?debug=${encodeURIComponent(odoo.debug)}` : href;
     }
 

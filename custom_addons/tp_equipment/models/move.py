@@ -108,6 +108,10 @@ class TpEquipmentMove(models.Model):
 
     target_custody = fields.Selection(TARGET_CUSTODY, "Giao cho", default="employee")
     target_employee_id = fields.Many2one("hr.employee", "Nhân viên nhận", tracking=True, ondelete="restrict")
+    target_employee_name = fields.Char("Snapshot nhân viên nhận", readonly=True, copy=False)
+    target_employee_code = fields.Char("Snapshot mã nhân viên nhận", readonly=True, copy=False)
+    target_employee_dept = fields.Char("Snapshot phòng ban nhân viên nhận", readonly=True, copy=False)
+    target_employee_deleted = fields.Boolean("Nhân viên nhận đã xóa", readonly=True, copy=False)
     target_department_id = fields.Many2one("hr.department", "Phòng ban nhận", tracking=True, ondelete="restrict")
     target_location_id = fields.Many2one("tp.equipment.location", "Vị trí / kho", tracking=True, ondelete="restrict")
     target_partner_id = fields.Many2one("res.partner", "Đơn vị bên ngoài", tracking=True, ondelete="restrict",
@@ -180,12 +184,21 @@ class TpEquipmentMove(models.Model):
     def _tp_custody_label(self, custody):
         return dict(CUSTODY).get(custody, custody or "")
 
-    def _tp_holder_text(self, custody, employee, department, location, partner):
-        if custody in ("employee", "loan") and employee:
-            text = employee.name
-            if employee.department_id:
-                text += f" ({employee.department_id.name})"
-            return text
+    def _tp_holder_text(self, custody, employee, department, location, partner,
+                        employee_name=None, employee_code=None, employee_dept=None, is_deleted=False):
+        if custody in ("employee", "loan"):
+            if employee:
+                text = employee.name
+                if employee.department_id:
+                    text += f" ({employee.department_id.name})"
+                return text
+            if employee_name:
+                text = employee_name
+                if employee_dept:
+                    text += f" ({employee_dept})"
+                if is_deleted:
+                    text += " (Nhân viên đã xóa)"
+                return text
         if custody == "department" and department:
             return department.display_name
         if custody == "location" and location:
@@ -715,6 +728,10 @@ class TpEquipmentMoveLine(models.Model):
 
     from_custody = fields.Selection(CUSTODY, "Nơi giữ trước", readonly=True)
     from_employee_id = fields.Many2one("hr.employee", "Người giữ trước", readonly=True, ondelete="restrict")
+    from_employee_name = fields.Char("Snapshot người giữ trước", readonly=True, copy=False)
+    from_employee_code = fields.Char("Snapshot mã người giữ trước", readonly=True, copy=False)
+    from_employee_dept = fields.Char("Snapshot phòng ban trước", readonly=True, copy=False)
+    from_employee_deleted = fields.Boolean("Người giữ trước đã xóa", readonly=True, copy=False)
     from_department_id = fields.Many2one("hr.department", "Phòng ban trước", readonly=True, ondelete="restrict")
     from_location_id = fields.Many2one("tp.equipment.location", "Vị trí trước", readonly=True, ondelete="restrict")
     from_partner_id = fields.Many2one("res.partner", "Đơn vị ngoài trước", readonly=True, ondelete="restrict")
@@ -724,6 +741,10 @@ class TpEquipmentMoveLine(models.Model):
     from_technical_state = fields.Selection(TECH_STATE, "Tình trạng trước", readonly=True)
     to_custody = fields.Selection(CUSTODY, "Nơi giữ sau", readonly=True)
     to_employee_id = fields.Many2one("hr.employee", "Người giữ sau", readonly=True, ondelete="restrict")
+    to_employee_name = fields.Char("Snapshot người giữ sau", readonly=True, copy=False)
+    to_employee_code = fields.Char("Snapshot mã người giữ sau", readonly=True, copy=False)
+    to_employee_dept = fields.Char("Snapshot phòng ban sau", readonly=True, copy=False)
+    to_employee_deleted = fields.Boolean("Người giữ sau đã xóa", readonly=True, copy=False)
     to_department_id = fields.Many2one("hr.department", "Phòng ban sau", readonly=True, ondelete="restrict")
     to_location_id = fields.Many2one("tp.equipment.location", "Vị trí sau", readonly=True, ondelete="restrict")
     to_partner_id = fields.Many2one("res.partner", "Đơn vị ngoài sau", readonly=True, ondelete="restrict")
@@ -741,15 +762,21 @@ class TpEquipmentMoveLine(models.Model):
     def _compute_texts(self):
         Move = self.env["tp.equipment.move"]
         for line in self:
-            line.from_text = Move._tp_holder_text(line.from_custody, line.from_employee_id, line.from_department_id,
-                                                  line.from_location_id, line.from_partner_id)\
-                if line.from_custody else False
+            line.from_text = Move._tp_holder_text(
+                line.from_custody, line.from_employee_id, line.from_department_id,
+                line.from_location_id, line.from_partner_id,
+                employee_name=line.from_employee_name, employee_code=line.from_employee_code,
+                employee_dept=line.from_employee_dept, is_deleted=line.from_employee_deleted,
+            ) if line.from_custody else False
             if line.to_lifecycle == "retired":
                 line.to_text = _("Ngừng quản lý (%s)", dict(RETIRE_REASON).get(line.to_retire_reason, ""))
             else:
-                line.to_text = Move._tp_holder_text(line.to_custody, line.to_employee_id, line.to_department_id,
-                                                    line.to_location_id, line.to_partner_id)\
-                    if line.to_custody else False
+                line.to_text = Move._tp_holder_text(
+                    line.to_custody, line.to_employee_id, line.to_department_id,
+                    line.to_location_id, line.to_partner_id,
+                    employee_name=line.to_employee_name, employee_code=line.to_employee_code,
+                    employee_dept=line.to_employee_dept, is_deleted=line.to_employee_deleted,
+                ) if line.to_custody else False
 
     @api.model_create_multi
     def create(self, vals_list):

@@ -22,6 +22,47 @@
                         </tbody>
                     </table>
                 </div>
+                <section t-if="this.allAssetsToReturn.length" class="o_tp_hr_delete_section o_tp_hr_delete_assets" aria-labelledby="tp_hr_delete_assets">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h3 id="tp_hr_delete_assets" class="m-0">Tài sản công ty sẽ thu hồi về kho</h3>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><t t-out="this.allAssetsToReturn.length"/> tài sản</span>
+                    </div>
+                    <p class="text-muted small mb-2">Hệ thống sẽ tự động tạo và hoàn tất phiếu thu hồi về kho khi xác nhận xóa. Người đang sử dụng được gỡ bỏ; mã tài sản, serial và tình trạng kỹ thuật được giữ nguyên.</p>
+                    <div t-if="this.state.preview.availableLocations and this.state.preview.availableLocations.length > 1" class="o_tp_hr_delete_location_picker mb-2 d-flex align-items-center gap-2">
+                        <label for="tp_hr_delete_warehouse" class="small fw-semibold text-nowrap mb-0">Kho nhận thu hồi:</label>
+                        <select id="tp_hr_delete_warehouse" class="form-select form-select-sm" t-att-value="this.state.locationId" t-on-change="(ev) => this.state.locationId = Number(ev.target.value)" t-att-disabled="this.state.busy">
+                            <option t-foreach="this.state.preview.availableLocations" t-as="loc" t-key="loc.id" t-att-value="loc.id" t-att-selected="loc.id == this.state.locationId">
+                                <t t-out="loc.name"/><t t-if="loc.is_default"> (Mặc định)</t>
+                            </option>
+                        </select>
+                    </div>
+                    <div class="o_tp_hr_delete_table table-responsive mb-0">
+                        <table class="table table-sm table-hover mb-0 align-middle">
+                            <thead><tr><th scope="col">Mã tài sản</th><th scope="col">Tên thiết bị</th><th scope="col">Serial</th><th scope="col">Tình trạng</th><th scope="col">Kho nhận</th><th scope="col">Hành động</th></tr></thead>
+                            <tbody>
+                                <tr t-foreach="this.allAssetsToReturn" t-as="asset" t-key="asset.id">
+                                    <td><strong t-out="asset.code"/></td>
+                                    <td><span t-out="asset.name"/><small t-if="this.state.preview.count > 1" class="text-muted d-block"><t t-out="asset.employeeName"/></small></td>
+                                    <td t-out="asset.serial or '—'"/>
+                                    <td><span class="badge bg-light text-dark border" t-out="asset.tech_state_label"/></td>
+                                    <td><t t-if="asset.is_returnable"><t t-if="this.selectedLocationName"><t t-out="this.selectedLocationName"/></t><t t-else=""><t t-out="asset.location_name"/></t></t><t t-else="">—</t></td>
+                                    <td><span class="text-success fw-semibold" t-out="asset.action_label"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                <section t-if="this.allEquipmentHistory.length" class="o_tp_hr_delete_section o_tp_hr_delete_history" aria-labelledby="tp_hr_delete_history">
+                    <h3 id="tp_hr_delete_history">Phiếu lịch sử bàn giao sẽ được giữ lại</h3>
+                    <p class="text-muted small mb-2">Các phiếu và dòng bàn giao đã hoàn tất được giữ lại; tên, mã nhân viên và phòng ban tại thời điểm bàn giao được lưu snapshot và ghi nhãn <em>(Nhân viên đã xóa)</em>.</p>
+                    <ul>
+                        <li t-foreach="this.allEquipmentHistory" t-as="hist" t-key="hist_index">
+                            <span class="fw-semibold" t-out="hist.label"/>: <strong t-out="hist.count"/> phiếu/dòng
+                            <small class="text-muted ms-2">(<t t-out="hist.details"/>)</small>
+                            <div class="small text-secondary ps-3"><t t-out="hist.snapshot"/></div>
+                        </li>
+                    </ul>
+                </section>
                 <section class="o_tp_hr_delete_section o_tp_hr_delete_remove" aria-labelledby="tp_hr_delete_remove">
                     <h3 id="tp_hr_delete_remove">Sẽ xóa</h3>
                     <ul>
@@ -65,6 +106,9 @@
                             <button type="button" class="o_tp_hr_delete_toggle" t-on-click="() => this.state.visible = !this.state.visible" t-att-aria-pressed="this.state.visible ? 'true' : 'false'" t-att-aria-label="this.state.visible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'" t-att-disabled="this.state.busy"><t t-out="this.state.visible ? 'Ẩn' : 'Hiện'"/></button>
                         </div>
                         <small id="tp_hr_delete_password_help">Nhập lại mật khẩu đăng nhập của chính bạn (<t t-out="this.state.preview.adminLogin"/>) cho mỗi lần xóa. Mật khẩu không được lưu.</small>
+                    </div>
+                    <div t-if="this.allAssetsToReturn.length" class="o_tp_hr_delete_action_note alert alert-info py-2 px-3 small mb-2">
+                        <i class="fa fa-info-circle me-1"/> Xóa vĩnh viễn hồ sơ và thu hồi các tài sản được liệt kê về kho trên hệ thống.
                     </div>
                     <div t-if="this.state.error" class="o_tp_hr_delete_error" role="alert">
                         <span t-out="this.state.error"/>

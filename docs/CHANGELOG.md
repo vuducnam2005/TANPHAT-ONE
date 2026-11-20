@@ -1,5 +1,20 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-011 — HR-DELETE-ASSET-RETURN-001: Tự thu hồi tài sản công ty về kho khi xóa vĩnh viễn nhân viên
+
+- 20/11/2026 (Asia/Saigon). Giải quyết dứt điểm lỗi chặn xóa bởi 3 quan hệ trong `tp_equipment`: Dòng phiếu bàn giao (người giữ trước/sau) và Phiếu bàn giao (nhân viên nhận).
+- Module `tp_equipment` **20.0.1.6.0**: Kế thừa `hr.employee` (`employee_delete.py`), override hook `_tp_delete_plan` và `_tp_permanent_unlink`:
+  - Tự động tạo và hoàn tất phiếu `tp.equipment.move` (loại `return` / `loan_return`) thu hồi tài sản công ty đang được cấp phát cá nhân về kho của công ty, chuyển nơi giữ sang `stock`, gỡ người giữ (`tp_employee_id = False`).
+  - Bảo toàn nguyên vẹn mã tài sản, serial, cấu hình, giá trị và tình trạng kỹ thuật (`tp_technical_state`).
+  - Bảo toàn lịch sử bàn giao: Chụp snapshot thông tin (tên, mã NV, phòng ban) vào các trường chuyên dụng trên header và dòng phiếu, gỡ khóa ngoại FK (`set to NULL`) có kiểm soát bằng context nội bộ `tp_equipment_move_internal=INTERNAL`, hiển thị kèm nhãn *(Nhân viên đã xóa)*.
+  - Tự động hủy các phiếu bàn giao đang ở trạng thái `pending` hoặc `draft`, giải phóng giữ chỗ cho tài sản.
+  - Xử lý tài sản cá nhân (`personal`): giải phóng quyền sở hữu / trả lại chủ nhân (`retired / returned_owner`), không nhập vào kho công ty.
+  - Thực thi trong 1 transaction Odoo nguyên tử, rollback 100% nếu có lỗi; kiểm soát idempotency key.
+- Module `tp_hr_workspace` **20.0.1.20.0**: Thiết kế lại Dialog Xem trước xóa (Preview Dialog) gồm các nhóm A (Bảng tài sản thu hồi + chọn kho nhận), B (Phiếu lịch sử bảo toàn), C (Phân công khác), D (Sẽ xóa), E (Giữ lại), F (Blocker thực sự nếu có). Dòng xác nhận: *"Xóa vĩnh viễn hồ sơ và thu hồi các tài sản được liệt kê về kho trên hệ thống."*
+- Kiểm thử tự động: `custom_addons/tp_equipment/tests/test_employee_delete_asset_return.py` (6/6 tests PASS: 0 failed, 0 errors); hồi quy `tp_hr_workspace` (3/3 tests PASS).
+- Triển khai PC Server: Backup an toàn tại `C:\TANPHAT-backups\hr-delete-asset-return001\` (`tp_tanphat_dev.dump` 10.418.949 bytes, `code-pre.tar.gz` 757.946 bytes). Đồng bộ mã nguồn, upgrade trong container `tp-odoo` exit 0, restart container, LAN và Public health 200 OK.
+- Kiểm chứng read-only trên hồ sơ Trần Đức Lương (ID 69, mã TP072): Blocker giảm từ 3 xuống 0, Equipment history: 3 phiếu/dòng được bảo toàn snapshot, Can submit: True. Hồ sơ thật giữ nguyên 100%. [Bản nghiệm thu](demo/HR_DELETE_ASSET_RETURN_001_ACCEPTANCE.md).
+
 ## CHG-20261120-010 — HR-EMPLOYEE-CODE-003: Mã nhân viên TP + 3 chữ số, chuyển mã cũ có audit
 
 - 20/11/2026 (Asia/Saigon), theo yêu cầu HR-EMPLOYEE-CODE-003. Commit app `13fc1283`: `tp_organization` 20.0.2.3.0, `tp_hr_attendance` 20.0.3.5.5.
@@ -2493,3 +2508,4 @@ Mỗi lượt thay đổi code hoặc quyết định kiến trúc ghi một m�
 - Giới hạn:
 - Next:
 ```
+

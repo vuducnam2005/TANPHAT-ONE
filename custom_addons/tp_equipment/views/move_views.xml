@@ -8,7 +8,9 @@
                 <field name="name" string="Số phiếu" class="tp_eq_strong"/>
                 <field name="date" string="Ngày lập"/>
                 <field name="move_type" string="Loại phiếu"/>
-                <field name="target_employee_id" string="Nhân viên nhận" optional="show"/>
+                <field name="target_employee_id" string="Nhân viên nhận" optional="show" invisible="target_employee_deleted"/>
+                <field name="target_employee_name" string="Nhân viên nhận (Đã xóa)" optional="show" invisible="not target_employee_deleted"/>
+                <field name="target_employee_deleted" column_invisible="True"/>
                 <field name="target_department_id" string="Phòng ban nhận" optional="hide"/>
                 <field name="target_location_id" string="Vị trí" optional="hide"/>
                 <field name="target_partner_id" string="Đơn vị ngoài" optional="hide"/>
@@ -89,7 +91,9 @@
                     <group>
                         <group string="Bên nhận" invisible="move_type not in ('assign', 'transfer', 'loan', 'send_repair', 'rental_return', 'return', 'loan_return', 'repair_return')">
                             <field name="target_custody" widget="radio" options="{'horizontal': true}" invisible="move_type not in ('assign', 'transfer')" required="move_type in ('assign', 'transfer')" readonly="state != 'draft'"/>
-                            <field name="target_employee_id" options="{'no_create': True}" invisible="not (move_type == 'loan' or (move_type in ('assign', 'transfer') and target_custody == 'employee'))" required="move_type == 'loan' or (move_type in ('assign', 'transfer') and target_custody == 'employee')" readonly="state != 'draft'"/>
+                            <field name="target_employee_id" options="{'no_create': True}" invisible="target_employee_deleted or not (move_type == 'loan' or (move_type in ('assign', 'transfer') and target_custody == 'employee'))" required="(move_type == 'loan' or (move_type in ('assign', 'transfer') and target_custody == 'employee')) and not target_employee_deleted" readonly="state != 'draft'"/>
+                            <field name="target_employee_name" string="Nhân viên nhận (Đã xóa)" readonly="1" invisible="not target_employee_deleted"/>
+                            <field name="target_employee_deleted" invisible="1"/>
                             <field name="target_department_id" options="{'no_create': True}" invisible="not (move_type in ('assign', 'transfer') and target_custody == 'department')" required="move_type in ('assign', 'transfer') and target_custody == 'department'" readonly="state != 'draft'"/>
                             <field name="target_location_id" options="{'no_create': True}" string="Vị trí đặt / kho nhận" invisible="move_type not in ('assign', 'transfer', 'return', 'loan_return', 'repair_return')" required="move_type in ('assign', 'transfer') and target_custody == 'location'" readonly="state != 'draft'"/>
                             <field name="target_partner_id" options="{'no_create': True}" invisible="move_type not in ('send_repair', 'rental_return')" required="move_type == 'send_repair'" readonly="state != 'draft'"/>

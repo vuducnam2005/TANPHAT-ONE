@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-20T08:15:46.342507+00:00",
-  "last_change_id": "CHG-20261120-010",
-  "code_digest": "1e6b047d3a80091da17b646212bec074190772651299d84c6dc6b3db3c41acd3",
-  "code_file_count": 745,
+  "updated_at": "2026-11-20T08:26:30.267632+00:00",
+  "last_change_id": "CHG-20261120-011",
+  "code_digest": "4223ae325453f76852912a21176004761d0868277e6b29b8952551db26337792",
+  "code_file_count": 763,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "ee1a8c5691687622916f6d5c8ab9ef4c0687096f5dd205907c9ea4fa6deff674",
-    "docs/CHANGELOG.md": "0a42b34549544911138a77b33a0c58d91f6b4bcdb08429ece8d065011f7416f6",
+    "docs/PROJECT_STATUS.md": "6b8c4ca2f03d50fbef3b820b7b8ad856182403ca98f5b614b51073128f2e2da0",
+    "docs/CHANGELOG.md": "14bffa55ca861db0d1e51ba7ab9bf6b6dc705f52751b1522dd767b3cb5de3e9e",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
     "docs/ROADMAP.md": "eb762826b3aa52ff6c476bcf4a61100e2b1a1ff2c685680a9f0b5771b4b8aeca",
-    "docs/DECISIONS.md": "d9b45e9d689ade4fc5d9c667d3d4dcc72ea5f1f06ea1ea4b01f62435c04390d7",
+    "docs/DECISIONS.md": "f6554f76dfa10accaa81eafb8fa80bab6dbd0b2dbb426edef97e4e3d90b364bd",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,10 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Local tp_tanphat_test on commit 13fc1283 (/tp_organization,/tp_hr_attendance,/tp_hr_workspace): 225 tests, all HR-EMPLOYEE-CODE-003 tests pass; 9 failed + 3 errors, all 12 also fail on befbee7f (listed in docs/demo/HR_EMPLOYEE_CODE_003_ACCEPTANCE.md)",
-    "PC tp_tanphat_dev: deploy-hr-employee-code003.ps1 upgrade exit 0, log 0 ERROR, 101/101 release checksums, 40/40 codes converted, 0 conflicts, sequence next 73, day/correction code copies stale 0, mail queue 82->82, notifications 0->0; before/after snapshot equal outside allowed keys; audit_history flagged by the check's time window, 32 pre-deploy audit rows verified equal by md5",
-    "PC read-only ORM checks (rolled back): plan rerun 40/40 keep, examples TP001/TP009/TP060/TP065 present, HR export 40 new/0 old codes, attendance export 39 new/0 old, screen payloads and code search show only new codes, TP10060 search finds nothing; one ENTI cron cycle after restart: mapping unchanged, 0 duplicate days, 0 old codes, 0 ERROR log",
-    "Browser check on https://tpone.tadic.vn not done: built-in browser pane is not signed in",
-    "deploy script fix: PowerShell parser 0 errors; git diff --check clean"
+    "Odoo tests 6/6 pass, PC server deployed exit 0, read-only preview 0 blockers pass"
   ]
 }

@@ -357,6 +357,7 @@ class TpEquipmentInventoryLine(models.Model):
     expected_custody = fields.Selection(CUSTODY, "Nơi giữ theo sổ", readonly=True)
     expected_employee_id = fields.Many2one("hr.employee", "Người giữ theo sổ", readonly=True, ondelete="restrict",
                                            context={"active_test": False})
+    expected_employee_name = fields.Char("Snapshot người giữ theo sổ", readonly=True, copy=False)
     expected_department_id = fields.Many2one("hr.department", "Phòng ban theo sổ", readonly=True, ondelete="restrict")
     expected_location_id = fields.Many2one("tp.equipment.location", "Vị trí theo sổ", readonly=True,
                                            ondelete="restrict")
@@ -368,6 +369,7 @@ class TpEquipmentInventoryLine(models.Model):
     count_state = fields.Selection(COUNT_STATES, "Kiểm đếm", default="pending", required=True)
     actual_custody = fields.Selection(COUNT_CUSTODY, "Nơi giữ thực tế")
     actual_employee_id = fields.Many2one("hr.employee", "Người giữ thực tế", ondelete="restrict")
+    actual_employee_name = fields.Char("Snapshot người giữ thực tế", readonly=True, copy=False)
     actual_department_id = fields.Many2one("hr.department", "Phòng ban thực tế", ondelete="restrict")
     actual_location_id = fields.Many2one("tp.equipment.location", "Vị trí thực tế", ondelete="restrict")
     actual_state = fields.Selection(ACTUAL_STATE, "Tình trạng thực tế")

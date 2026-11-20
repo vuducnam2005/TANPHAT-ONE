@@ -17,6 +17,22 @@
         p { margin: 6px 0 2px; } }
     .o_tp_hr_delete_remove h3 { color: #912018; }
     .o_tp_hr_delete_keep h3 { color: #087f8c; }
+    .o_tp_hr_delete_assets {
+        border-color: #b8dbf2; background: #fbfdff;
+        h3 { color: #005a9e; }
+        .table { font-size: 13px; th { background: #f0f6fa; color: #335577; } }
+    }
+    .o_tp_hr_delete_history {
+        border-color: #c9e4de; background: #fafffe;
+        h3 { color: #087f8c; }
+    }
+    .o_tp_hr_delete_location_picker {
+        padding: 8px 12px; background: #eef5fa; border-radius: 4px;
+        select { max-width: 280px; }
+    }
+    .o_tp_hr_delete_action_note {
+        border-left: 3px solid #005a9e; background: #f0f6fa; color: #17324d;
+    }
     .o_tp_hr_delete_block { border-color: #f1b8b2; background: #fff6f5; h3 { color: #912018; } }
     .o_tp_hr_delete_owner { font-weight: 600; }
     .o_tp_hr_delete_value { margin-left: 6px; color: #526477; &:empty { display: none; } &::before { content: "· "; } }

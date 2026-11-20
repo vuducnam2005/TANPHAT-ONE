@@ -63,6 +63,7 @@ class MaintenanceRequestTp(models.Model):
     tp_reporter_employee_id = fields.Many2one(
         "hr.employee", "Người báo / yêu cầu", ondelete="restrict", tracking=True, context={"active_test": False},
         help="Thông tin nghiệp vụ: người báo lỗi không được mở Kho thiết bị.")
+    tp_reporter_employee_name = fields.Char("Snapshot người báo", readonly=True, copy=False)
     tp_report_date = fields.Date("Ngày báo", default=fields.Date.context_today, required=True)
     tp_symptom = fields.Text("Hiện tượng / nội dung yêu cầu")
     tp_technician_text = fields.Char(

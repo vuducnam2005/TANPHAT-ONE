@@ -14,4 +14,5 @@ from . import import_batch
 from . import dashboard
 from . import reports
 from . import quick_action
+from . import employee_delete
 from . import company_scope

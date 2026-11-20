@@ -63,6 +63,7 @@ export class EmployeeDelete extends Component {
         this.state = proxy({
             loading: true, loadError: "", preview: null, reason: "", password: "", visible: false,
             lockAccounts: false, busy: false, error: "", errorField: "", stale: false,
+            locationId: null,
         });
         onWillStart(() => this.load());
         onWillDestroy(() => this.clearPassword());
@@ -76,6 +77,29 @@ export class EmployeeDelete extends Component {
     }
     get canSubmit() {
         return !this.state.loading && !this.state.busy && this.state.preview && !this.blockers.length;
+    }
+    get allAssetsToReturn() {
+        const list = [];
+        for (const emp of this.state.preview?.employees || []) {
+            for (const asset of emp.assetsToReturn || []) {
+                list.push({ ...asset, employeeName: emp.name });
+            }
+        }
+        return list;
+    }
+    get allEquipmentHistory() {
+        const list = [];
+        for (const emp of this.state.preview?.employees || []) {
+            for (const hist of emp.equipmentHistory || []) {
+                list.push({ ...hist, employeeName: emp.name });
+            }
+        }
+        return list;
+    }
+    get selectedLocationName() {
+        if (!this.state.locationId) return "";
+        const loc = this.state.preview?.availableLocations?.find((l) => l.id == this.state.locationId);
+        return loc ? loc.name : "";
     }
     section(key) {
         const rows = [];
@@ -106,6 +130,7 @@ export class EmployeeDelete extends Component {
         try {
             this.state.preview = await this.orm.call("hr.employee", "tp_permanent_delete_preview", [this.employeeIds]);
             this.state.stale = false;
+            this.state.locationId = this.state.preview?.defaultLocationId || (this.state.preview?.availableLocations?.[0]?.id ?? null);
         } catch (error) {
             this.state.preview = null;
             this.state.loadError = EXPECTED.includes(error.data?.name) ? error.data.message : "Chưa tải được thông tin hồ sơ. Vui lòng kiểm tra kết nối rồi thử lại.";
@@ -139,7 +164,7 @@ export class EmployeeDelete extends Component {
         let result;
         try {
             result = await this.orm.call("hr.employee", "tp_permanent_delete_execute", [
-                this.employeeIds, password, this.state.reason, this.state.lockAccounts, this.state.preview.digest, this.requestId,
+                this.employeeIds, password, this.state.reason, this.state.lockAccounts, this.state.preview.digest, this.requestId, this.state.locationId,
             ]);
         } catch (error) {
             this.state.busy = false;
