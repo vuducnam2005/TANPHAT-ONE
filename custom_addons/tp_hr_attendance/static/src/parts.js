@@ -43,8 +43,9 @@ export class SourceStrip extends Component {
 export class AttPager extends Component {
     static template = "tp_hr_attendance.Pager";
     props = useProps();
-    setup() {
-        this.sizes = PAGE_SIZES;
+    /** Page sizes offered: ``props.sizes`` when a screen allows fewer (the group dialog: 10/20/50). */
+    get sizes() {
+        return this.props.sizes || PAGE_SIZES;
     }
     get text() {
         return pagerText(this.props.data, this.props.unit || "dòng");

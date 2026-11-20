@@ -56,10 +56,10 @@ const widths = [[1440, 900], [768, 1024], [390, 844], [320, 640]];
         await check('overview: header, filters, KPIs, charts, newest marks render', async () => {
             await open('cham-cong', '.o_tp_att_ov_kpis');
             await page.locator('.o_tp_att_ov_donut canvas').waitFor();
-            assert.equal(await page.locator('.o_tp_att_ov_kpi').count(), 6);
-            assert.ok(await page.locator('.o_tp_att_live').isVisible());
+            // ATTENDANCE-DASH-004: three group cards (Đang làm / Đã về / Chưa đi làm); the sync label left in ADMIN-UI-001.
+            assert.equal(await page.locator('.o_tp_att_ov_group').count(), 3);
             assert.ok(await page.locator('.o_tp_att_ov_export').isVisible());
-            const recent = await page.locator('.o_tp_att_ov_recent_list li').count();
+            const recent = await page.locator('.o_tp_att_ov_recent_table tbody tr').count();
             assert.ok(recent <= 10, 'at most 10 newest marks');
             const grouped = await page.locator('.o_tp_att_ov_when, .o_tp_att_ov_which').evaluateAll((groups) => groups.every((group) => {
                 const items = [...group.children];

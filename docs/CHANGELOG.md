@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-004 — Dashboard chấm công gọn: ba thẻ bấm mở danh sách, bảng chấm gần nhất
+
+- 20/11/2026 Asia/Saigon; prompt hợp nhất của người dùng thay các yêu cầu còn mâu thuẫn (kể cả giữ sáu thẻ). `tp_hr_attendance` 20.0.3.5.3. Ba thẻ Đang làm/Đã về/Chưa đi làm cao bằng nhau, bấm mở hộp thoại danh sách (tab nhóm, tìm không dấu, phòng ban, 10/20/50, trạng thái tải/lỗi/trống, Đóng giữ ngày/bộ lọc/cuộn). Một phân loại backend cho thẻ, donut, biểu đồ và danh sách: mỗi người một nhóm mỗi ngày; chỉ có giờ ra vẫn là Đã về; mất nguồn/chưa ghép mã là Chưa xác định kèm lý do, không bao giờ âm thầm thành Chưa đi làm.
+- Bảng gần nhất thay danh sách thẻ nhiều dòng: Mã NV · Họ và tên · Thời gian · Địa điểm, header dính. Dữ liệu thật hiện là mốc vào đầu/ra cuối (PC 0 sự kiện quẹt, không có địa điểm) nên tiêu đề “Chấm công gần nhất”; giây chỉ hiện khi đồng hồ nguồn có giây. Live bus/polling cập nhật cả hộp thoại đang mở. RPC mới `tp_overview_group` kiểm quyền backend, không trả raw.
+- Kiểm thực local `tp_tanphat_test`: Odoo 98/98, Ruff sạch; Playwright admin và nhân viên thường tổng hợp lần lượt đạt (số thẻ = tổng danh sách, live khi mở hộp thoại 21→20/5→6, 4 width không tràn, 0 lỗi JS). Hai script ENTI cũ cập nhật sang bố cục mới. Delegate browser và thiết bị thật chưa chạy. [Nghiệm thu](demo/ATTENDANCE_DASH_004_ACCEPTANCE.md).
+
 ## CHG-20261120-003 — Đã giao quản trị chấm công và dashboard thu gọn lên PC server
 
 - 20/11/2026 Asia/Saigon; app `053d7691` đã push/deploy PC20.0.3.5.2, source79/79, upgradeexit0/0ERROR. Backup `C:\TANPHAT-backups\enti-attendance002\enti002-adminui003-20261120T101503` có dump/restore-list/filestore/source/config/SHA256. Snapshot nghiệp vụ/quyền trước-sau giống nhau, chỉ đổi version. Local18069 cũ20.0.3.3.0 giữ nguyên.

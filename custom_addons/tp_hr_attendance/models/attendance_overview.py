@@ -7,8 +7,9 @@ every figure (``attendance_figures``); nothing is invented — no 17:00 out, no 
 an unknown late value, and one punch is never an absence.
 """
 import base64
+import json
 from collections import defaultdict
-from datetime import UTC, timedelta
+from datetime import UTC, datetime, time, timedelta
 
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
@@ -26,18 +27,27 @@ from .attendance_export import SOURCE_NAMES, build_attendance_book, person_note
 from .attendance_export import legend as export_legend
 from .attendance_figures import (
     ATTENTION,
+    GROUP_HINTS,
+    GROUP_KEYS,
+    GROUP_LABELS,
     NO_HALF_DAY,
     STATUS_ORDER,
     UNDRAWN,
+    UNKNOWN_REASONS,
     absence_total,
+    class_date,
+    clock_has_seconds,
     daily_late,
+    day_group,
     distribution,
+    fold_text,
+    group_counts,
     late_of,
     late_text,
     late_total,
     no_punch_state,
     parse_hours,
-    recent_people,
+    recent_marks,
     week_of,
 )
 from .attendance_logic import (
@@ -100,6 +110,11 @@ DEFAULT_PLAN_NOTE = ('Chưa có quy tắc ca đã xác nhận: tạm coi Thứ 2
                      'Chủ nhật là ngày nghỉ.')
 STALE_AFTER = 600  # seconds without a successful ENTI read (during polling hours) before the strip warns
 RECENT_LIMIT = 10
+GROUP_PAGE_SIZES = (10, 20, 50)
+RECENT_TITLES = {
+    'events': ('10 lượt chấm công gần nhất', 'Mỗi dòng là một lượt chấm công do nguồn ghi nhận, mới nhất ở trên.'),
+    'daily': ('Chấm công gần nhất', 'Hiển thị các mốc chấm công nguồn hiện cung cấp'),
+}
 
 
 def range_label(start, end):
@@ -116,9 +131,9 @@ def period_title(mode, start, end):
     return range_label(start, end)
 
 
-def _page(rows, params, default_size=20):
+def _page(rows, params, default_size=20, sizes=PAGE_SIZES):
     size = int(params.get('page_size') or default_size)
-    size = size if size in PAGE_SIZES else default_size
+    size = size if size in sizes else default_size
     count = max(1, -(-len(rows) // size))
     page = min(max(1, int(params.get('page') or 1)), count)
     return rows[(page - 1) * size:page * size], {'page': page, 'page_count': count, 'page_size': size, 'total': len(rows)}
@@ -311,7 +326,8 @@ class AttendanceDayOverview(models.Model):
         """``({(employee_id, date): cell}, has_leave_source)``; exactly one main state per person and day.
 
         A cell carries the shown clock times, the canonical day id, the ENTI late/early minutes of that same day
-        (``None`` = unknown) and the UTC first-in/last-out instants used for the "newest marks" list. A day the
+        (``None`` = unknown), the UTC first-in/last-out instants used for the newest marks, ``covered`` (a source
+        answered for that person and day) and, for device events, the ``punches`` themselves. A day the
         sources cover without any punch is absent only when it is a finished scheduled working day inside the
         person's employment and not on approved leave (``no_punch_state``).
         """
@@ -334,7 +350,7 @@ class AttendanceDayOverview(models.Model):
                 ('company_id', '=', company.id), ('employee_id', 'in', ids), ('state', '=', 'mapped'),
                 ('local_date', '>=', start), ('local_date', '<=', end)], order='timestamp'):
             events[event.employee_id.id, event.local_date].append(
-                {'at': event.timestamp, 'direction': event.direction, 'tz': event.tz})
+                {'id': event.id, 'at': event.timestamp, 'direction': event.direction, 'tz': event.tz})
         coverage = self.env['tp.hr.attendance.batch']._tp_coverage(company, start, end)
         plan = self._tp_plan(company, ids, start, end)
         now = utc_to_local(fields.Datetime.now())
@@ -344,7 +360,7 @@ class AttendanceDayOverview(models.Model):
                 key = (employee_id, work_date)
                 scheduled = plan.scheduled(employee_id, work_date)
                 cell = {'in': '', 'out': '', 'source': '', 'day_id': False, 'late': None, 'early': None,
-                        'in_at': None, 'out_at': None, 'scheduled': scheduled}
+                        'in_at': None, 'out_at': None, 'scheduled': scheduled, 'covered': False}
                 day = day_map.get(key)
                 rec = enti.get(key)
                 punched = bool(day and (day.in_time or day.out_time or day.source_kind != 'enti'))
@@ -360,17 +376,19 @@ class AttendanceDayOverview(models.Model):
                     if punches[-1]['direction'] == 'OUT':
                         cell['out'] = utc_to_local(punches[-1]['at'], punches[-1]['tz']).strftime('%H:%M')
                         cell['out_at'] = punches[-1]['at']
-                    cell['source'] = 'api'
+                    cell.update(source='api', covered=True, punches=punches)
                 elif punched:
                     cell.update(state=presence_from_day(day.data_state, day.in_time, day.out_time, work_date == today),
                                 source=day.source_kind or 'excel', day_id=day.id, in_at=day.first_in or None,
-                                out_at=day.last_out or None, **{'in': day.in_time or '', 'out': day.out_time or ''})
+                                out_at=day.last_out or None, covered=True,
+                                **{'in': day.in_time or '', 'out': day.out_time or ''})
                     # ENTI late belongs to ENTI's own first-in; a corrected first-in makes it unknown.
                     if rec and (rec.vao_dau or '') == (day.in_time or ''):
                         cell['late'], cell['early'] = rec.di_muon or 0, rec.ve_som or 0
                 elif day or rec or any(employee_id in people and first <= work_date <= last
                                        for first, last, people in coverage):
                     # A source covers the day and returned no punch at all.
+                    cell['covered'] = True
                     finished = work_date < today or now_hour >= plan.end_hour(employee_id, work_date)
                     cell['state'] = no_punch_state(on_leave=bool(leave) and key in leave, scheduled=scheduled,
                                                    employed=plan.employed(employee_id, work_date), finished=finished)
@@ -459,7 +477,7 @@ class AttendanceDayOverview(models.Model):
         last_success = (live or enti_sources[:1]).last_success_at if enti_sources else False
         return {
             'kind': kind, 'label': SOURCE_LABELS.get(kind, 'Chưa có nguồn'),
-            'auto': bool(live), 'health': health, 'poll_seconds': poll,
+            'connected': bool(enti_sources), 'auto': bool(live), 'health': health, 'poll_seconds': poll,
             'updated_at': stamp(last_success) if last_success else (updated['at'] if updated else ''),
             'updated_ts': _stamp_ms(last_success),
             'error_at': error_at, 'error': error,
@@ -509,29 +527,163 @@ class AttendanceDayOverview(models.Model):
         return departments is not None and bool(departments) and can(self.env, 'review', company, departments)
 
     # ------------------------------------------------------------ overview
+    @staticmethod
+    def _tp_live_ok(strip, day, today):
+        """False only for today while a connected live source is paused, stale or failing: a person without any
+        mark is then "not determined", never "not started"."""
+        return day != today or not strip.get('connected') or (strip['auto'] and strip['health'] == 'ok')
+
     @api.model
-    def _tp_recent(self, people, cells, dates, limit=RECENT_LIMIT):
-        """Newest first-in/last-out marks: at most ``limit`` distinct people, newest punch first."""
-        by_person = {employee_id: [cells[employee_id, day] for day in dates] for employee_id in people}
+    def _tp_group_basis(self, mode, start, end, today):
+        if mode == 'day':
+            return 'day'
+        if start <= today <= end:
+            return 'today'
+        return 'start' if start > today else 'latest'
+
+    @api.model
+    def _tp_groups(self, people, cells, day, today, strip, basis='day'):
+        """Dashboard groups of the people in scope for one classification day (one group per person)."""
+        live_ok = self._tp_live_ok(strip, day, today)
+        counts, reasons, excluded = group_counts([cells[employee_id, day] for employee_id in people
+                                                  if (employee_id, day) in cells], live_ok)
+        notes = {
+            'today': 'Thẻ tính theo hôm nay',
+            'latest': 'Thẻ tính theo ngày gần nhất có chấm công trong kỳ',
+            'start': 'Kỳ chưa đến; thẻ tính theo ngày đầu kỳ',
+        }
+        return {
+            'date': day.isoformat(), 'date_label': day_label(day), 'is_today': day == today, 'basis': basis,
+            'note': notes.get(basis, ''), 'people': len(people), 'total': sum(counts.values()), 'counts': counts,
+            'reasons': {key: value for key, value in reasons.items() if value}, 'reason_labels': UNKNOWN_REASONS,
+            'excluded': excluded, 'live_ok': live_ok, 'labels': GROUP_LABELS, 'hints': GROUP_HINTS,
+        }
+
+    @api.model
+    def _tp_mark_seconds(self, company, employee_ids, day):
+        """``{employee_id: (in has seconds, out has seconds)}`` from the raw source clocks of one day.
+
+        Server side only: the raw payload is read here and never returned. A clock the source gave as ``HH:MM``
+        has no seconds, so none are shown (never an invented ``:00``)."""
+        result = {}
+        if not employee_ids:
+            return result
+        for rec in self.env['tp.hr.attendance.enti.day'].sudo().search_fetch([
+                ('company_id', '=', company.id), ('employee_id', 'in', list(employee_ids)), ('work_date', '=', day),
+                ('state', 'in', ('applied', 'locked_period'))], ['employee_id', 'raw_json']):
+            try:
+                raw = json.loads(rec.raw_json or '{}')
+            except ValueError:
+                raw = {}
+            if isinstance(raw, dict):
+                result[rec.employee_id.id] = (clock_has_seconds(raw.get('vaoDau')), clock_has_seconds(raw.get('raCuoi')))
+        return result
+
+    @api.model
+    def _tp_recent(self, company, people, cells, day, limit=RECENT_LIMIT):
+        """Newest marks of one day, newest first: one row per mark the source really gives — every device punch
+        when punches exist, else the day's first in and last out. Seconds only when the source has them; the
+        place only when a source gives one (none does yet: ``''``). Never sorted by sync/receive times."""
+        order = {employee_id: index for index, employee_id in enumerate(people)}
+        day_cells = {employee_id: cells[employee_id, day] for employee_id in people if (employee_id, day) in cells}
+        seconds = self._tp_mark_seconds(company, [employee_id for employee_id, cell in day_cells.items()
+                                                  if cell['source'] == 'enti' and (cell['in'] or cell['out'])], day)
+        marks = []
+        for employee_id, cell in day_cells.items():
+            if cell['state'] in UNDRAWN:
+                continue
+            if cell.get('punches'):
+                for punch in cell['punches']:
+                    local = utc_to_local(punch['at'], punch['tz'])
+                    marks.append({'key': f"e{punch['id']}", 'employee_id': employee_id, 'event': True,
+                                  'kind': 'in' if punch['direction'] == 'IN' else 'out', 'at': local,
+                                  'time': local.strftime('%H:%M:%S' if local.second else '%H:%M'),
+                                  'order': order[employee_id]})
+                continue
+            exact = seconds.get(employee_id, (False, False)) if cell['source'] == 'enti' else (False, False)
+            for kind, instant, clock, precise in (('in', cell['in_at'], cell['in'], exact[0]),
+                                                  ('out', cell['out_at'], cell['out'], exact[1])):
+                if not clock:
+                    continue
+                local = utc_to_local(instant) if instant else None
+                if not local or local.strftime('%H:%M') != clock:
+                    hour, minute = (int(part) for part in clock.split(':')[:2])
+                    local, precise = datetime.combine(day, time(hour, minute)), False
+                marks.append({'key': f'{employee_id}:{day.isoformat()}:{kind}', 'employee_id': employee_id,
+                              'event': False, 'kind': kind, 'at': local,
+                              'time': local.strftime('%H:%M:%S') if precise else clock, 'order': order[employee_id]})
         rows = []
-        for item in recent_people(by_person, limit):
-            person, cell = people[item['employee_id']], item['cell']
-            work_date = next(day for day in dates if cells[item['employee_id'], day] is cell)
-            rows.append({
-                'employee_id': person['id'], 'name': person['name'], 'code': person['code'],
-                'department': person['department'],
-                'avatar': f"/web/image/hr.employee.public/{person['id']}/avatar_128",
-                'date': work_date.isoformat(), 'day_label': day_label(work_date),
-                'in': cell['in'], 'out': cell['out'], 'kind': item['kind'],
-                'kind_label': 'Ra' if item['kind'] == 'out' else 'Vào',
-                'time': cell['out'] if item['kind'] == 'out' else cell['in'],
-                'state': cell['state'], 'state_label': cell['label'],
-                'missing': '' if cell['out'] else 'Chưa ghi nhận',
-                'late': cell['late'], 'source': cell['source'],
-                'stamp': _stamp_ms(item['at']),
-                'key': f"{person['id']}:{work_date.isoformat()}:{item['kind']}:{_stamp_ms(item['at'])}",
-            })
-        return rows
+        for mark in recent_marks(marks, limit):
+            person = people[mark['employee_id']]
+            rows.append({'key': f"{mark['key']}:{mark['time']}", 'employee_id': person['id'], 'code': person['code'],
+                         'name': person['name'], 'time': mark['time'], 'kind': mark['kind'], 'location': ''})
+        mode = 'events' if marks and all(mark['event'] for mark in marks) else 'daily'
+        title, hint = RECENT_TITLES[mode]
+        return rows, {'mode': mode, 'title': title, 'hint': hint, 'date': day.isoformat(), 'date_label': day_label(day)}
+
+    @api.model
+    def tp_overview_group(self, params=None):
+        """People of one dashboard group (Đang làm / Đã về / Chưa đi làm / Chưa xác định) on the classification day
+        of the dashboard scope, with the dialog's own name/code search, department filter and paging.
+
+        Same read policy, scope and classification as ``tp_overview``: before the dialog's own filters the list
+        total is the card number. Rows never link to HR profiles and carry no private HR data."""
+        self.check_access('read')
+        params = dict(params or {})
+        company = self.env.company
+        mode, _anchor, start, end, today = self._tp_period(params, OVERVIEW_MODES)
+        department_id = int(params.get('department_id') or 0)
+        term = (params.get('search') or '').strip()
+        group = params.get('group') if params.get('group') in GROUP_KEYS else 'working'
+        people = self._tp_people(company, department_id, term)
+        ids = list(people)
+        day = self._tp_parse_date(params.get('class_date'))
+        if not day or not start <= day <= end:
+            span, _has_leave = self._tp_presence(company, ids, start, end, today)
+            marked = {work_date for (_employee_id, work_date), cell in span.items() if cell['in'] or cell['out']}
+            day = class_date(start, end, today, marked)
+        cells, _has_leave = self._tp_presence(company, ids, day, day, today)
+        strip = self._tp_source_strip(company, today)
+        summary = self._tp_groups(people, cells, day, today, strip, self._tp_group_basis(mode, start, end, today))
+        members = []
+        for employee_id in ids:
+            found, reason = day_group(cells[employee_id, day], summary['live_ok'])
+            if found == group:
+                members.append((employee_id, reason))
+        departments = {}
+        for employee_id, _reason in members:
+            person = people[employee_id]
+            key = person['department_id'] or -1
+            entry = departments.setdefault(key, {'id': key, 'name': person['department'] or 'Chưa có phòng ban', 'count': 0})
+            entry['count'] += 1
+        dept = int(params.get('dept') or 0)
+        dept = dept if dept in departments else 0
+        query = fold_text((params.get('q') or '').strip())
+        rows = []
+        for employee_id, reason in members:
+            person, cell = people[employee_id], cells[employee_id, day]
+            if dept and (person['department_id'] or -1) != dept:
+                continue
+            if query and query not in fold_text(person['name']) and query not in fold_text(person['code']):
+                continue
+            if group == 'working':
+                note = 'Chưa ghi nhận giờ ra' if day == today else 'Thiếu giờ ra'
+            elif group == 'done':
+                note = 'Thiếu giờ vào' if not cell['in'] else ('Cần kiểm tra' if cell['state'] == 'review' else '')
+            else:
+                note = UNKNOWN_REASONS.get(reason, '')
+            rows.append({'stt': len(rows) + 1, 'employee_id': employee_id, 'code': person['code'], 'name': person['name'],
+                         'department': person['department'], 'date': day.isoformat(), 'in': cell['in'],
+                         'out': cell['out'], 'note': note})
+        page_rows, pager = _page(rows, params, default_size=20, sizes=GROUP_PAGE_SIZES)
+        return dict({
+            'group': group, 'label': GROUP_LABELS[group], 'hint': GROUP_HINTS[group], 'class_date': day.isoformat(),
+            'date_label': day_label(day), 'is_today': day == today, 'group_total': len(members),
+            'counts': summary['counts'], 'reasons': summary['reasons'], 'live_ok': summary['live_ok'],
+            'departments': sorted(departments.values(), key=lambda entry: (entry['id'] == -1, entry['name'])),
+            'dept': dept, 'q': (params.get('q') or '').strip(), 'rows': page_rows, 'sizes': list(GROUP_PAGE_SIZES),
+            'updated_at': strip['updated_at'], 'health': strip['health'],
+        }, **pager)
 
     @api.model
     def tp_overview(self, params=None):
@@ -551,6 +703,12 @@ class AttendanceDayOverview(models.Model):
         span_start, span_end = min(start, trend_start), max(end, trend_end)
         cells, has_leave = self._tp_presence(company, ids, span_start, span_end, today)
         dates = dates_between(start, end)
+        strip = self._tp_source_strip(company, today)
+        marked = {day for day in dates if any(cells[employee_id, day]['in'] or cells[employee_id, day]['out']
+                                              for employee_id in ids)}
+        group_day = class_date(start, end, today, marked)
+        groups = self._tp_groups(people, cells, group_day, today, strip, self._tp_group_basis(mode, start, end, today))
+        recent, recent_info = self._tp_recent(company, people, cells, group_day)
         scope = [cells[employee_id, day] for employee_id in ids for day in dates]
         drawn = [cell for cell in scope if cell['state'] not in UNDRAWN]
         counts = distribution(drawn)
@@ -586,6 +744,7 @@ class AttendanceDayOverview(models.Model):
             day_drawn = [cell for cell in day_cells if cell['state'] not in UNDRAWN]
             minutes, late_count, complete = daily_late(day_cells)
             day_counts = distribution(day_drawn)
+            day_groups = group_counts(day_cells, self._tp_live_ok(strip, work_date, today))[0]
             trend.append({
                 'date': work_date.isoformat(), 'label': f'{work_date:%d/%m}', 'weekday': WEEKDAY_LABELS[work_date.weekday()],
                 'weekday_full': WEEKDAY_FULL_LABELS[work_date.weekday()], 'future': work_date > today,
@@ -594,6 +753,7 @@ class AttendanceDayOverview(models.Model):
                 'has_out': sum(1 for cell in day_drawn if cell['out']),
                 'attention': day_counts['missing'] + day_counts['review'], 'absent': day_counts['absent'],
                 'late_minutes': minutes, 'late_people': late_count, 'late_complete': complete, 'counts': day_counts,
+                'groups': day_groups, 'group_day': work_date == group_day,
             })
         order = {employee_id: index for index, employee_id in enumerate(ids)}
         rows = []
@@ -621,10 +781,10 @@ class AttendanceDayOverview(models.Model):
             'trend_label': (f'Tuần {range_label(trend_start, trend_end)}' if per_day else period_title(mode, start, end)),
             'future': start > today, 'includes_today': start <= today <= end,
             'department_id': department_id, 'search': term, 'status': status,
-            'kpis': kpis, 'statuses': statuses, 'trend': trend,
-            'recent': self._tp_recent(people, cells, dates),
+            'kpis': kpis, 'statuses': statuses, 'trend': trend, 'groups': groups,
+            'recent': recent, 'recent_info': recent_info,
             'rows': page_rows, 'labels': LABELS, 'has_leave_source': has_leave,
-            'source': self._tp_source_strip(company, today), 'departments': self._tp_departments(company),
+            'source': strip, 'departments': self._tp_departments(company),
         }, **pager, **self._tp_flags(company))
 
     # --------------------------------------------------------------- sheet

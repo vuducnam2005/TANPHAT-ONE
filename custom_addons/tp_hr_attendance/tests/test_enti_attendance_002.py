@@ -8,7 +8,11 @@
 - Excel file import closed: every public write RPC refuses, private helpers are not callable remotely, the
   history stays readable and exportable.
 - Export template ("Bảng chấm công"): layout, time cells, symbols, totals, formula neutralisation; the employee
-  note and the "10 newest marks" helper.
+  note.
+- ATTENDANCE-DASH-004 dashboard: one group per person and day (in only → Đang làm, out → Đã về, nothing on a
+  covered day → Chưa đi làm, no source / source down → Chưa xác định), card number = dialog list total, dialog
+  search / department / paging, the employee read scope, newest marks from the source's real clocks (seconds
+  only when the source has them, no invented place) and the helpers behind them.
 """
 import base64
 import copy
@@ -33,7 +37,14 @@ from odoo.addons.tp_hr_attendance.models.attendance_export import (
     build_attendance_book,
     person_note,
 )
-from odoo.addons.tp_hr_attendance.models.attendance_figures import recent_people
+from odoo.addons.tp_hr_attendance.models.attendance_figures import (
+    class_date,
+    clock_has_seconds,
+    day_group,
+    fold_text,
+    group_counts,
+    recent_marks,
+)
 from odoo.addons.tp_hr_attendance.models.attendance_import import IMPORT_CLOSED
 from odoo.addons.tp_hr_attendance.models.enti_client import (
     EntiAuthError,
@@ -246,11 +257,89 @@ class TestEntiSyncFake(AttendanceCase):
         self.assertEqual(self.notes[0][1], 'ok')
         self.assertLessEqual({D16, D17}, set(self.notes[0][0]))
 
-        # Newest marks on the dashboard: the in-only day shows "Chưa ghi nhận" for the missing out time.
+        # Newest marks on the dashboard: the in-only day gives one "in" mark (internal code, "HH:MM" as the source
+        # gave it, no place) and puts the person in "Đang làm".
         overview = self.env_for(self.manager)['tp.hr.attendance.day'].tp_overview({'mode': 'day', 'date': D17.isoformat()})
         mine = [row for row in overview['recent'] if row['employee_id'] == self.emp_a.id]
-        self.assertEqual([(row['kind'], row['time'], row['missing']) for row in mine], [('in', '08:10', 'Chưa ghi nhận')])
+        self.assertEqual([(row['kind'], row['time'], row['code'], row['location']) for row in mine],
+                         [('in', '08:10', 'TP19901', '')])
         self.assertLessEqual(len(overview['recent']), 10)
+        self.assertEqual((overview['groups']['date'], overview['groups']['counts']['working']), (D17.isoformat(), 1))
+
+    def test_dashboard_groups_match_dialog_lists_and_recent_marks_use_real_clocks(self):
+        rows = [
+            # A: 16/11 out only, 17/11 in only (the source clock carries real seconds), 18/11 nothing on a covered day.
+            enti_row('syn-a', 'Synthetic Người Một', [(D16, None, '2026-11-16T17:02:05', 0),
+                                                      (D17, '2026-11-17T08:10:23', None, 0), (D18, None, None, 0)]),
+            # B: 17/11 in and out as "HH:MM" (no seconds may be invented); nothing at all for 16/11 and 18/11.
+            enti_row('syn-b', 'Synthetic Người Hai', [(D17, '08:05', '17:30', 0)]),
+            enti_row('syn-x', 'Synthetic Nguoi Mot', [(D17, '08:00', '17:00', 0)], code='TP-X'),
+        ]
+        self.assertTrue(self.sync(rows)['success'])
+        Day = self.env_for(self.manager)['tp.hr.attendance.day']
+
+        def scope(work_date, **extra):
+            return dict({'mode': 'day', 'date': work_date.isoformat()}, **extra)
+
+        def listed(work_date, group, **extra):
+            return Day.tp_overview_group(scope(work_date, group=group, class_date=work_date.isoformat(), **extra))
+
+        def members(work_date, group):
+            return {row['employee_id']: row for row in listed(work_date, group, page_size=50)['rows']}
+
+        expected = {D16: {'done': self.emp_a, 'unknown': self.emp_b},
+                    D17: {'working': self.emp_a, 'done': self.emp_b},
+                    D18: {'not_started': self.emp_a, 'unknown': self.emp_b}}
+        for work_date, by_group in expected.items():
+            overview = Day.tp_overview(scope(work_date))
+            groups = overview['groups']
+            self.assertEqual(groups['date'], work_date.isoformat())
+            for group in ('working', 'done', 'not_started', 'unknown'):
+                # On open, the card number is the dialog's list total (same scope, policy and classification).
+                self.assertEqual(listed(work_date, group)['group_total'], groups['counts'][group], (work_date, group))
+            for group, employee in by_group.items():
+                self.assertIn(employee.id, members(work_date, group), (work_date, group))
+        # Unmapped source rows never become anybody; an unknown person is never counted as "Chưa đi làm".
+        self.assertEqual(members(D16, 'unknown')[self.emp_b.id]['note'],
+                         'Chưa có dữ liệu nguồn cho ngày này (chưa ghép mã hoặc nguồn chưa trả)')
+        self.assertNotIn(self.emp_b.id, members(D16, 'not_started'))
+        out_only = members(D16, 'done')[self.emp_a.id]
+        self.assertEqual((out_only['in'], out_only['out'], out_only['note']), ('', '17:02', 'Thiếu giờ vào'))
+        self.assertEqual(members(D17, 'working')[self.emp_a.id]['note'], 'Thiếu giờ ra')
+
+        # Newest marks of 17/11: newest first, one row per mark, real seconds only where the source has them.
+        overview = Day.tp_overview(scope(D17))
+        recent = [(row['employee_id'], row['kind'], row['time'], row['code'], row['location']) for row in overview['recent']]
+        self.assertEqual(recent, [(self.emp_b.id, 'out', '17:30', 'TP19902', ''), (self.emp_a.id, 'in', '08:10:23', 'TP19901', ''),
+                                  (self.emp_b.id, 'in', '08:05', 'TP19902', '')])
+        self.assertEqual(len({row['key'] for row in overview['recent']}), len(overview['recent']))
+        self.assertEqual((overview['recent_info']['mode'], overview['recent_info']['title']), ('daily', 'Chấm công gần nhất'))
+        self.assertNotIn('raw_json', str(overview))
+        # The dialog's own search (accent-free), department filter and page sizes narrow only that group.
+        self.assertEqual([row['employee_id'] for row in listed(D17, 'done', q='nguoi hai')['rows']], [self.emp_b.id])
+        self.assertEqual(listed(D17, 'done', q='TP19901')['total'], 0)
+        other = listed(D17, 'done', dept=self.dept_other.id)
+        self.assertEqual((other['dept'], [row['employee_id'] for row in other['rows']]), (self.dept_other.id, [self.emp_b.id]))
+        # A department with nobody in the group is not offered and falls back to all (e.g. after a live update).
+        stale = listed(D17, 'done', dept=self.dept.id)
+        self.assertEqual((stale['dept'], stale['total'], [entry['id'] for entry in stale['departments']]),
+                         (0, 1, [self.dept_other.id]))
+        self.assertEqual(listed(D17, 'done', page_size=999)['page_size'], 20)
+        self.assertEqual(listed(D17, 'done', page_size=50)['page_size'], 50)
+
+        # An ordinary employee gets the same layout under the current read policy (company attendance days, read
+        # only): counts and lists agree, and the rows carry no private HR data and no link to a profile.
+        own = self.env_for(self.viewer)['tp.hr.attendance.day']
+        mine = own.tp_overview(scope(D17))
+        self.assertEqual(mine['groups']['counts'], overview['groups']['counts'])
+        for group in ('working', 'done', 'not_started', 'unknown'):
+            seen = own.tp_overview_group(scope(D17, group=group, page_size=50))
+            self.assertEqual(seen['group_total'], mine['groups']['counts'][group], group)
+            for row in seen['rows']:
+                self.assertEqual(set(row), {'stt', 'employee_id', 'code', 'name', 'department', 'date', 'in', 'out', 'note'})
+        self.assertEqual(set(mine['recent'][0]), {'key', 'employee_id', 'code', 'name', 'time', 'kind', 'location'})
+        with self.assertRaises(AccessError):
+            self.env(user=self.env.ref('base.public_user'))['tp.hr.attendance.day'].tp_overview_group(scope(D17))
 
     def test_unchanged_poll_writes_nothing_and_wakes_no_screen(self):
         self.sync(self.week_rows())
@@ -481,15 +570,48 @@ class TestExportTemplate(BaseCase):
         self.assertEqual(excel, 'Đi muộn lấy theo tổng kỳ Excel 09–15/11')
         self.assertEqual(person_note({days[3]: cells[days[3]]}, {'state': 'exact', 'source': 'ENTI'}, {'unknown': 0}), '')
 
-    def test_recent_people_newest_first_distinct_and_capped(self):
-        base = datetime(2026, 11, 20, 1, 0)
-        by_person = {pid: [{'in_at': base + timedelta(minutes=pid), 'out_at': None}] for pid in range(1, 13)}
-        by_person[3] = [{'in_at': base, 'out_at': None}, {'in_at': base, 'out_at': base + timedelta(hours=9)}]
-        by_person[20] = [{'in_at': None, 'out_at': None}]
-        rows = recent_people(by_person)
+    def test_day_group_one_group_per_day_and_unknown_is_never_not_started(self):
+        def cell(state='absent', clock_in='', clock_out='', covered=True):
+            return {'state': state, 'in': clock_in, 'out': clock_out, 'covered': covered}
+
+        cases = [
+            (cell('missing', '08:00'), True, ('working', '')),             # in, no out
+            (cell('ok', '08:00', '17:00'), True, ('done', '')),            # in and out
+            (cell('missing', '', '17:00'), True, ('done', '')),            # out only (missing in noted in the list)
+            (cell(), True, ('not_started', '')),                           # covered day, no mark at all
+            (cell('no_data', covered=False), True, ('unknown', 'no_source')),  # unmapped / source never answered
+            (cell(), False, ('unknown', 'source_down')),                   # today while the live source is down
+            (cell('review'), True, ('unknown', 'review')),
+            (cell('future'), True, (None, '')),
+            (cell('off'), True, (None, '')),
+        ]
+        for value, live_ok, expected in cases:
+            self.assertEqual(day_group(value, live_ok), expected, value)
+        # Marks win over a down source: someone who punched in is "Đang làm" even when the source is stale.
+        self.assertEqual(day_group(cell('missing', '08:00'), live_ok=False), ('working', ''))
+        counts, reasons, excluded = group_counts([value for value, _live, _expected in cases])
+        self.assertEqual(counts, {'working': 1, 'done': 2, 'not_started': 2, 'unknown': 2})
+        self.assertEqual((reasons['no_source'], reasons['review'], reasons['source_down'], excluded), (1, 1, 0, 2))
+
+    def test_class_date_seconds_search_and_recent_marks(self):
+        today = date(2026, 11, 20)
+        self.assertEqual(class_date(date(2026, 11, 16), date(2026, 11, 22), today), today)
+        self.assertEqual(class_date(date(2026, 11, 23), date(2026, 11, 29), today), date(2026, 11, 23))
+        self.assertEqual(class_date(D16, D18, today, {D16, D17, date(2026, 11, 1)}), D17)
+        self.assertEqual(class_date(D16, D18, today), D18)
+        for raw, expected in (('2026-11-17T08:10:23', True), ('2026-11-17T08:10:00', True), ('08:10:23', True),
+                              ('08:10', False), ('', False), (None, False), ('2026-11-17T08:10', False)):
+            self.assertEqual(clock_has_seconds(raw), expected, raw)
+        self.assertEqual(fold_text('Đỗ Thị HƯƠNG'), 'do thi huong')
+        self.assertIn(fold_text('huong'), fold_text('Nguyễn Thị Hương'))
+
+        base = datetime(2026, 11, 20, 8, 0)
+        marks = [{'key': f'm{index}', 'at': base + timedelta(minutes=index), 'kind': 'in', 'order': index}
+                 for index in range(12)]
+        marks.append(dict(marks[11]))                                              # the same event twice: kept once
+        marks.append({'key': 'm11-out', 'at': marks[11]['at'], 'kind': 'out', 'order': 11})  # a real second mark
+        rows = recent_marks(marks)
         self.assertEqual(len(rows), 10)
-        self.assertEqual(len({row['employee_id'] for row in rows}), 10)
-        self.assertEqual((rows[0]['employee_id'], rows[0]['kind']), (3, 'out'))
-        self.assertEqual([row['employee_id'] for row in rows[1:]], [12, 11, 10, 9, 8, 7, 6, 5, 4])
+        self.assertEqual([row['key'] for row in rows[:3]], ['m11-out', 'm11', 'm10'])
+        self.assertEqual(len({row['key'] for row in rows}), 10)
         self.assertEqual([row['at'] for row in rows], sorted((row['at'] for row in rows), reverse=True))
-        self.assertNotIn(20, [row['employee_id'] for row in rows])

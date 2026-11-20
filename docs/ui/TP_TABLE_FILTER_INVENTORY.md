@@ -395,3 +395,13 @@ Giữ SearchModel/domain/ACL hiện hành, không thêm filter engine hoặc quy
 | ATT-ADM03 | Quản trị preview5 log, `action_enti_logs` list/search/form | Kết quả thành công/lỗi; tự động/thủ công; thời gian đồng bộ; nhóm kết quả/hình thức/ngày; company+ACL | Native pager/count và form chi tiết chỉ đọc; preview không có message/raw dữ liệu | N/A bộ lọc riêng preview giới hạn5 mới nhất; browser4width |
 | ATT-ADM04 | Xuất bảng công ngay trên quản trị | Tuần/tháng/khoảng ngày và phòng ban; cùng `tp_export_sheet`/dataset/capability hiện hành | Xuất toàn bộ kỳ/phòng hợp lệ, không truyền page/page_size; matrix+Chi tiết chuẩn hiện có | Node range/permission/params/polling PASS; tải thực tuần/tháng/range-phòng, đọc workbook; chi tiết ở acceptance |
 | ATT-ADM05 | Menu/khối nhập Excel chấm công | Loại khỏi luồng quản trị; backend nhập mới đã đóng DEC-063 | Giữ dữ liệu lịch sử trong canonical export, không có upload/compare/history UI | Regression Odoo menu nhập không hiện; backend refuse import giữ nguyên |
+
+## ATTENDANCE-DASH-004 — Danh sách nhóm và bảng chấm gần nhất (20/11/2026)
+
+CHG-20261120-004; [nghiệm thu](../demo/ATTENDANCE_DASH_004_ACCEPTANCE.md).
+Phạm vi luôn là bộ lọc kỳ/phòng ban/nhân viên và quyền của dashboard; không thêm filter engine, domain client hoặc quyền dữ liệu.
+
+| ID | Màn / action | Tiêu chí và phạm vi | Count / trang / xuất | Coverage |
+| --- | --- | --- | --- | --- |
+| ATT-DASH01 | Tổng quan chấm công / hộp thoại nhóm, RPC `tp_overview_group` | Tab Đang làm/Đã về/Chưa đi làm/Chưa xác định; tìm tên hoặc mã không dấu; phòng ban (chỉ phòng có người trong nhóm, kèm số; phòng cũ không hợp lệ quay về tất cả); ngày phân loại theo kỳ; record rule công ty và ACL hiện hành | Tổng nhóm = số thẻ, “Đang hiển thị x / y” khi lọc; 10/20/50 dòng (cỡ khác về 20); không xuất từ hộp thoại | Odoo test số thẻ = tổng danh sách/lọc/phân trang/quyền; Playwright admin + nhân viên thường, live khi đang mở |
+| ATT-DASH02 | Tổng quan chấm công / bảng chấm gần nhất | Ngày phân loại và bộ lọc dashboard; tối đa 10 mốc, mới nhất ở trên theo giờ chấm, loại trùng | Không pager/xuất; N/A tìm riêng vì đã theo bộ lọc dashboard | Odoo test thứ tự/loại trùng/giây thật; Playwright 4 cột, 4 width |

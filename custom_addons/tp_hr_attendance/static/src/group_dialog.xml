@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="tp_hr_attendance.GroupDialog">
+    <Dialog title="this.title" size="'xl'" contentClass="'o_tp_att_dialog o_tp_att_gd'" bodyClass="'o_tp_att_gd_body'">
+        <div class="o_tp_att_gd_tabs" role="tablist" aria-label="Nhóm nhân viên">
+            <button t-foreach="this.tabs" t-as="tab" t-key="tab.key" type="button" role="tab" class="o_tp_att_gd_tab"
+                    t-att-class="'o_' + tab.key + (tab.key === this.state.group ? ' active' : '')"
+                    t-att-aria-selected="tab.key === this.state.group ? 'true' : 'false'" t-on-click="() => this.setGroup(tab.key)">
+                <span class="o_dot" aria-hidden="true"/><t t-out="tab.label"/> <b t-out="tab.count"/>
+            </button>
+        </div>
+
+        <div class="o_tp_att_gd_tools">
+            <label class="o_tp_att_field o_tp_att_gd_search"><span>Tìm nhân viên</span>
+                <input type="search" t-att-value="this.state.q" t-on-input="this.onSearch" placeholder="Tên hoặc mã NV"
+                       aria-label="Tìm theo tên hoặc mã nhân viên trong nhóm" autocomplete="off"/>
+            </label>
+            <label class="o_tp_att_field"><span>Phòng ban</span>
+                <select t-on-change="this.onDept" aria-label="Lọc phòng ban trong nhóm">
+                    <option value="0" t-att-selected="!this.state.dept">Tất cả phòng ban</option>
+                    <option t-foreach="this.data?.departments or []" t-as="dept" t-key="dept.id" t-att-value="dept.id"
+                            t-att-selected="dept.id === this.state.dept"><t t-out="dept.name"/> (<t t-out="dept.count"/>)</option>
+                </select>
+            </label>
+            <p class="o_tp_att_gd_meta o_tp_att_muted" t-if="this.data">
+                Ngày <b t-out="this.data.date_label"/><t t-if="this.data.updated_at"> · cập nhật lúc <t t-out="this.data.updated_at"/></t>
+            </p>
+        </div>
+
+        <div t-if="this.state.error" class="alert alert-danger o_tp_att_gd_error" role="alert">
+            <t t-out="this.state.error"/>
+            <button type="button" class="btn btn-sm btn-outline-danger ms-2" t-on-click="() => this.load()">Thử lại</button>
+        </div>
+        <p t-elif="!this.data" role="status" class="o_tp_att_loading">Đang tải danh sách…</p>
+        <t t-else="">
+            <p t-if="!this.data.live_ok and this.state.group !== 'unknown'" class="o_tp_att_gd_warn" role="status">
+                <i class="oi me-1" data-icon="schedule" aria-hidden="true"/>Chưa nhận được dữ liệu mới từ nguồn chấm công; người chưa có lượt chấm được tính là Chưa xác định.
+            </p>
+            <p class="o_tp_att_gd_count" role="status" aria-live="polite">
+                <t t-if="this.filtered">Đang hiển thị <b t-out="this.data.total"/> / <t t-out="this.data.group_total"/> nhân viên khớp bộ lọc</t>
+                <t t-else=""><b t-out="this.data.group_total"/> nhân viên <t t-out="this.groupLabel.toLowerCase()"/></t>
+            </p>
+            <div class="o_tp_att_table_wrap o_tp_att_gd_wrap" t-att-aria-busy="this.state.loading ? 'true' : 'false'" t-att-class="{'o_busy': this.state.loading}">
+                <table class="o_tp_att_table o_tp_att_gd_table" t-key="this.state.group">
+                    <thead><tr>
+                        <th scope="col" class="o_num o_stt">STT</th>
+                        <th scope="col">Mã NV</th>
+                        <th scope="col">Họ tên</th>
+                        <th scope="col">Phòng ban</th>
+                        <t t-if="this.state.group === 'working' or this.state.group === 'done'">
+                            <th scope="col">Ngày</th>
+                            <th scope="col" class="o_clock">Giờ vào</th>
+                            <th t-if="this.state.group === 'done'" scope="col" class="o_clock">Giờ ra</th>
+                        </t>
+                        <th t-if="this.noteLabel" scope="col" t-out="this.noteLabel"/>
+                    </tr></thead>
+                    <tbody>
+                        <tr t-if="!this.data.rows.length">
+                            <td t-att-colspan="this.colspan" class="o_tp_att_empty">
+                                <t t-if="this.filtered">Không có nhân viên khớp tìm kiếm hoặc phòng ban đã chọn.
+                                    <button type="button" class="btn btn-link btn-sm p-0 ms-1" t-on-click="() => this.clearFilters()">Xóa lọc</button>
+                                </t>
+                                <t t-else="">Không có nhân viên nào ở nhóm <t t-out="this.groupLabel"/> ngày <t t-out="this.formatDate(this.data.class_date)"/>.</t>
+                            </td>
+                        </tr>
+                        <tr t-foreach="this.data.rows" t-as="row" t-key="row.employee_id" t-att-class="{'o_fresh': this.isFresh(row)}">
+                            <td class="o_num o_stt" data-label="STT" t-out="row.stt"/>
+                            <td class="o_code" data-label="Mã NV" t-out="row.code or '—'"/>
+                            <th scope="row" class="o_name" data-label="Họ tên" t-out="row.name"/>
+                            <td data-label="Phòng ban" t-out="row.department or '—'"/>
+                            <t t-if="this.state.group === 'working' or this.state.group === 'done'">
+                                <td data-label="Ngày" t-out="this.formatDate(row.date)"/>
+                                <td class="o_clock" data-label="Giờ vào"><span class="o_time" t-out="row.in or '—'"/></td>
+                                <td t-if="this.state.group === 'done'" class="o_clock" data-label="Giờ ra"><span class="o_time" t-out="row.out or '—'"/></td>
+                            </t>
+                            <td t-if="this.noteLabel" t-att-data-label="this.noteLabel">
+                                <span t-if="row.note" class="o_tp_att_gd_note" t-att-class="'o_' + this.state.group" t-out="row.note"/>
+                                <t t-else="">—</t>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <AttPager t-if="this.data.total" data="this.data" unit="'nhân viên'" sizes="this.sizes"
+                      onPage="(page) => this.setPage(page)" onSize="(size) => this.setSize(size)"/>
+        </t>
+        <t t-set-slot="footer"><button type="button" class="btn btn-secondary" t-on-click="() => this.props.close()">Đóng</button></t>
+    </Dialog>
+</t>
+</templates>

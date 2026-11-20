@@ -8,8 +8,13 @@ number can be unit-tested without a database:
   employed day of the range is known;
 * absence — a whole scheduled working day with no punch at all, finished (past, or today after the end of
   hours), inside employment and not on approved leave; one punch is never an absence;
-* recent — the newest first-in/last-out mark per person (ENTI only gives the first in and the last out).
+* groups — one dashboard group per person for one classification day (ATTENDANCE-DASH-004): ``done`` once an
+  out is recorded, ``working`` with an in but no out, ``not_started`` only when a healthy source covers the day
+  without any mark, else ``unknown`` with the reason; marks are never counted, people are;
+* recent — the newest marks of that day, one row per mark the source really provides (no invented swipes,
+  seconds or places).
 """
+import unicodedata
 from datetime import timedelta
 
 # Exclusive day states, in the order of the donut / legend. 'future' and 'off' (outside employment) are never drawn.
@@ -104,26 +109,99 @@ def distribution(cells):
     return counts
 
 
-def latest_mark(cell):
-    """(UTC datetime, 'in'|'out') of the newest mark of a day cell, or (None, '')."""
-    marks = [(cell.get('out_at'), 'out'), (cell.get('in_at'), 'in')]
-    marks = [mark for mark in marks if mark[0]]
-    return max(marks, key=lambda mark: mark[0]) if marks else (None, '')
+# Dashboard groups: one per person and classification day; 'unknown' is never folded into 'not_started'.
+DAY_GROUPS = ('working', 'done', 'not_started')
+GROUP_KEYS = (*DAY_GROUPS, 'unknown')
+GROUP_LABELS = {'working': 'Đang làm', 'done': 'Đã về', 'not_started': 'Chưa đi làm', 'unknown': 'Chưa xác định'}
+GROUP_HINTS = {
+    'working': 'Đang làm: đã ghi nhận vào, chưa ghi nhận ra.',
+    'done': 'Đã về: đã ghi nhận giờ ra.',
+    'not_started': 'Chưa đi làm: chưa ghi nhận chấm công trong ngày.',
+    'unknown': 'Chưa xác định: nguồn chưa có dữ liệu cho người hoặc ngày này.',
+}
+UNKNOWN_REASONS = {
+    'no_source': 'Chưa có dữ liệu nguồn cho ngày này (chưa ghép mã hoặc nguồn chưa trả)',
+    'source_down': 'Chưa nhận được dữ liệu mới từ nguồn chấm công; chưa xác định được',
+    'review': 'Dữ liệu ngày cần kiểm tra',
+}
 
 
-def recent_people(cells_by_person, limit=10):
-    """Newest marks: at most ``limit`` distinct people, newest punch first (ties: person id)."""
-    best = []
-    for employee_id, cells in cells_by_person.items():
-        newest = None
-        for cell in cells:
-            at, kind = latest_mark(cell)
-            if at and (newest is None or at > newest[0]):
-                newest = (at, kind, cell)
-        if newest:
-            best.append((newest[0], employee_id, newest[1], newest[2]))
-    best.sort(key=lambda item: (item[0], -item[1]), reverse=True)
-    return [{'employee_id': employee_id, 'at': at, 'kind': kind, 'cell': cell} for at, employee_id, kind, cell in best[:limit]]
+def day_group(cell, live_ok=True):
+    """``(group, reason)`` of one person for one day; ``(None, '')`` when the day is not counted (future/off).
+
+    Marks decide first (an out — with or without an in — is ``done``; an in alone is ``working``). Without any
+    mark the person is ``not_started`` only when a source covers that day and, for today, the live source is
+    healthy; otherwise the group is ``unknown`` with the reason, never a silent "not started".
+    """
+    state = cell['state']
+    if state in UNDRAWN:
+        return None, ''
+    if cell.get('out'):
+        return 'done', ''
+    if cell.get('in'):
+        return 'working', ''
+    if state == 'review':
+        return 'unknown', 'review'
+    if not cell.get('covered'):
+        return 'unknown', 'no_source'
+    if not live_ok:
+        return 'unknown', 'source_down'
+    return 'not_started', ''
+
+
+def group_counts(cells, live_ok=True):
+    """``({group: people}, {reason: people}, excluded)`` over the cells of one day (one cell per person)."""
+    counts = dict.fromkeys(GROUP_KEYS, 0)
+    reasons = dict.fromkeys(UNKNOWN_REASONS, 0)
+    excluded = 0
+    for cell in cells:
+        group, reason = day_group(cell, live_ok)
+        if group is None:
+            excluded += 1
+            continue
+        counts[group] += 1
+        if reason:
+            reasons[reason] += 1
+    return counts, reasons, excluded
+
+
+def class_date(start, end, today, marked=()):
+    """The one day the dashboard groups describe: today inside the period, the start of a future period, else
+    the newest day of a past period that has a mark (the end when none has)."""
+    if start <= today <= end:
+        return today
+    if start > today:
+        return start
+    days = [day for day in marked if start <= day <= end]
+    return max(days) if days else end
+
+
+def clock_has_seconds(raw):
+    """True when a raw source clock (``'08:10:23'``, ``'2026-11-20T08:10:23'``) really carries seconds."""
+    text = str(raw or '').strip().replace('T', ' ').split('.')[0]
+    if ' ' in text:
+        text = text.split(' ', 1)[1]
+    parts = text.split(':')
+    return len(parts) >= 3 and parts[2][:2].isdigit()
+
+
+def fold_text(text):
+    """Lower-case text without Vietnamese accents (``'Đỗ Văn'`` → ``'do van'``) for forgiving name search."""
+    text = unicodedata.normalize('NFD', str(text or '').replace('đ', 'd').replace('Đ', 'D'))
+    return ''.join(char for char in text if not unicodedata.combining(char)).casefold()
+
+
+def recent_marks(marks, limit=10):
+    """Newest marks first, at most ``limit``; one row per real mark (the same ``key`` is kept once, real
+    repeats of one person stay). ``marks``: dicts with ``key``, ``at`` (sortable instant) and ``order``."""
+    seen, unique = set(), []
+    for mark in marks:
+        if mark['key'] in seen:
+            continue
+        seen.add(mark['key'])
+        unique.append(mark)
+    unique.sort(key=lambda mark: (mark['at'], mark['kind'] == 'out', -mark['order']), reverse=True)
+    return unique[:limit]
 
 
 def daily_late(cells):

@@ -3,27 +3,29 @@ import { browser } from "@web/core/browser/browser";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { CHART_COLORS, baseOptions, useLiveChart } from "./charts";
-import { STATE_COLORS, STATE_ORDER, attendanceIssue, downloadBase64, formatDate, readStore, rpcError, stepPeriod, writeStore } from "./common";
+import { GROUP_COLORS, GROUP_ORDER, STATE_ORDER, attendanceIssue, downloadBase64, formatDate, readStore, rpcError, stepPeriod, writeStore } from "./common";
+import { GroupDialog } from "./group_dialog";
 import { useAttendanceLive } from "./live";
 import { AttPager, PersonDialog } from "./parts";
 
 /**
- * "Tổng quan chấm công" (ENTI-ATTENDANCE-002). One scope (period, department, name/code) drives the KPIs, the
- * status donut, the daily trend, the newest marks and the table; the status filter only picks the table rows.
- * Data come from one backend call (``tp_overview``); the server syncs ENTI and wakes this screen through the bus
- * (``tp_hr_attendance/updated``), so new punches appear without F5. A slow fallback poll runs only while the tab
- * is visible. Filters survive every automatic refresh; only changed figures and new marks are highlighted.
+ * "Tổng quan chấm công" (ENTI-ATTENDANCE-002, ATTENDANCE-DASH-004). One scope (period, department, name/code)
+ * drives three group cards — Đang làm, Đã về, Chưa đi làm (people, never punches, on one classification day) —
+ * the donut, the daily trend, the compact newest-marks table and the detail table; the status filter only picks
+ * the detail rows. A card opens the group list in a dialog (``GroupDialog``) with the same backend numbers.
+ * Data come from one backend call (``tp_overview``); the server syncs the attendance source and wakes this screen
+ * through the bus (``tp_hr_attendance/updated``), so new marks appear without F5, also in an open group dialog.
+ * A slow fallback poll runs only while the tab is visible. Filters survive every automatic refresh; only changed
+ * figures and new marks are highlighted.
  */
 const STORE_KEY = "tp_hr_attendance.overview.v2";
 const MODES = [["day", "Ngày"], ["week", "Tuần"], ["month", "Tháng"], ["range", "Khoảng ngày"]];
 const HIGHLIGHT_MS = 2400;
-const KPI_KEYS = ["people", "has_in", "has_out", "attention", "late", "absent"];
-function kpiValue(kpis, key) {
-    if (key === "late") {
-        return `${kpis.late.people}|${kpis.late.minutes}`;
-    }
-    return key === "absent" ? kpis.absent.value : kpis[key];
-}
+const GROUP_CARDS = [
+    { key: "working", icon: "login" },
+    { key: "done", icon: "logout" },
+    { key: "not_started", icon: "schedule" },
+];
 
 export class AttendanceDashboard extends Component {
     static template = "tp_hr_attendance.Dashboard";
@@ -44,6 +46,8 @@ export class AttendanceDashboard extends Component {
             loading: true, refreshing: false, exporting: false, error: "", exportError: "", data: null, fresh: {},
         });
         this.modes = MODES;
+        this.groupCards = GROUP_CARDS;
+        this.groupDialogs = new Set();
         this.formatDate = formatDate;
         this.attendanceIssue = attendanceIssue;
         this.request = 0;
@@ -57,6 +61,7 @@ export class AttendanceDashboard extends Component {
         onWillUnmount(() => {
             browser.clearTimeout(this.timers.search);
             browser.clearTimeout(this.timers.highlight);
+            this.closeGroup?.();
             this.request++; // Ignore any answer that arrives after leaving the screen.
         });
     }
@@ -67,6 +72,9 @@ export class AttendanceDashboard extends Component {
     }
     get kpis() {
         return this.state.data?.kpis;
+    }
+    get groups() {
+        return this.state.data?.groups;
     }
     get heading() {
         const data = this.data;
@@ -95,13 +103,27 @@ export class AttendanceDashboard extends Component {
     get unit() {
         return this.data?.mode === "day" ? "người" : "nhân viên-ngày";
     }
-    get donutLabel() {
-        const statuses = this.data.statuses.filter((item) => item.value)
-            .map((item) => `${item.label}: ${item.value} ${this.unit} (${item.percent}%)`);
-        return [`Biểu đồ tình trạng chấm công, tổng ${this.drawnTotal} ${this.unit}`, ...statuses].join(". ");
+    /** Donut legend: the groups of the classification day that have people ("Chưa xác định" in grey). */
+    get legend() {
+        const groups = this.groups;
+        if (!groups?.total) {
+            return [];
+        }
+        return GROUP_ORDER.filter((key) => key !== "unknown" || groups.counts.unknown).map((key) => ({
+            key, label: groups.labels[key], value: groups.counts[key],
+            percent: Math.round((groups.counts[key] * 1000) / groups.total) / 10,
+        }));
     }
-    get drawnTotal() {
-        return (this.data?.statuses || []).reduce((sum, item) => sum + item.value, 0);
+    get donutLabel() {
+        const parts = this.legend.map((item) => `${item.label}: ${item.value} nhân viên (${item.percent}%)`);
+        return [`Biểu đồ tình trạng ngày ${this.groups.date_label}, tổng ${this.groups.total} nhân viên`, ...parts].join(". ");
+    }
+    get unknownText() {
+        const groups = this.groups;
+        const reasons = Object.entries(groups?.reasons || {});
+        // One reason: its label is enough (the count is already in front); several: label and count each.
+        return reasons.map(([key, value]) => (reasons.length > 1 ? `${groups.reason_labels[key]}: ${value}` : groups.reason_labels[key]))
+            .join(" · ");
     }
     get lateKnown() {
         return (this.data?.trend || []).some((day) => day.late_minutes !== null);
@@ -116,28 +138,20 @@ export class AttendanceDashboard extends Component {
     isFresh(key) {
         return Boolean(this.state.fresh[key]);
     }
-    recentTitle(row) {
-        const parts = [`${row.name} · ${row.day_label}`, `Vào ${row.in || "—"}`, `Ra ${row.out || row.missing || "—"}`];
-        if (row.late) {
-            parts.push(`Đi muộn ${row.late} phút (ENTI)`);
-        }
-        return parts.join(" · ");
-    }
 
     // -------------------------------------------------------------------- charts
     donutSpec() {
-        const items = (this.data?.statuses || []).filter((item) => item.value);
+        const items = this.legend.filter((item) => item.value);
         if (!items.length) {
             return null;
         }
-        const unit = this.unit;
         return {
             type: "doughnut",
             data: {
                 labels: items.map((item) => item.label),
                 datasets: [{
                     data: items.map((item) => item.value),
-                    backgroundColor: items.map((item) => STATE_COLORS[item.key]),
+                    backgroundColor: items.map((item) => GROUP_COLORS[item.key]),
                     borderColor: "#ffffff", borderWidth: 2, hoverOffset: 8,
                 }],
             },
@@ -145,15 +159,15 @@ export class AttendanceDashboard extends Component {
                 cutout: "66%",
                 layout: { padding: 8 },
                 interaction: { mode: "nearest", intersect: true },
-                onClick: (_event, elements) => elements.length && this.setStatus(items[elements[0].index].key),
+                onClick: (_event, elements) => elements.length && this.openGroup(items[elements[0].index].key),
                 onHover: (event, elements) => {
                     event.native.target.style.cursor = elements.length ? "pointer" : "default";
                 },
                 plugins: {
                     tooltip: {
                         callbacks: {
-                            label: (context) => ` ${context.label}: ${context.parsed} ${unit} (${items[context.dataIndex].percent}%)`,
-                            footer: () => "Bấm để lọc bảng bên dưới",
+                            label: (context) => ` ${context.label}: ${context.parsed} nhân viên (${items[context.dataIndex].percent}%)`,
+                            footer: () => "Bấm để xem danh sách",
                         },
                     },
                 },
@@ -167,19 +181,15 @@ export class AttendanceDashboard extends Component {
             return null;
         }
         const dim = (color, day) => (this.data.mode === "day" && !day.selected ? `${color}59` : color);
-        const series = [
-            ["has_in", "Có giờ vào", CHART_COLORS.in],
-            ["has_out", "Có giờ ra", CHART_COLORS.out],
-            ["attention", "Thiếu giờ / cần kiểm tra", CHART_COLORS.warn],
-            ["absent", "Vắng theo lịch", CHART_COLORS.danger],
-        ];
+        const labels = this.groups.labels;
+        const series = ["working", "done", "not_started"].map((key) => [key, labels[key], GROUP_COLORS[key]]);
         return {
             type: "bar",
             data: {
                 labels: trend.map((day) => `${day.weekday} ${day.label}`),
                 datasets: series.map(([key, label, color]) => ({
                     label, key,
-                    data: trend.map((day) => (day.future ? null : day[key])),
+                    data: trend.map((day) => (day.future ? null : day.groups[key])),
                     backgroundColor: trend.map((day) => dim(color, day)),
                     borderRadius: 4, maxBarThickness: 18, categoryPercentage: 0.78, barPercentage: 0.9,
                 })),
@@ -201,10 +211,14 @@ export class AttendanceDashboard extends Component {
                                 const day = trend[items[0].dataIndex];
                                 return `${day.weekday_full} ${formatDate(day.date)}`;
                             },
-                            label: (context) => ` ${context.dataset.label}: ${context.parsed.y ?? "—"} người`,
+                            label: (context) => ` ${context.dataset.label}: ${context.parsed.y ?? "—"} nhân viên`,
                             footer: (items) => {
                                 const day = trend[items[0].dataIndex];
-                                return day.future ? "Chưa đến" : `${day.people} người trong phạm vi · bấm để xem ngày này`;
+                                if (day.future) {
+                                    return "Chưa đến";
+                                }
+                                const unknown = day.groups.unknown ? `${labels.unknown}: ${day.groups.unknown} · ` : "";
+                                return `${unknown}bấm để xem ngày này`;
                             },
                         },
                     },
@@ -248,7 +262,7 @@ export class AttendanceDashboard extends Component {
                             },
                             footer: (items) => {
                                 const day = trend[items[0].dataIndex];
-                                return day.late_minutes !== null && !day.late_complete ? "Một số người chưa có số liệu ENTI" : "";
+                                return day.late_minutes !== null && !day.late_complete ? "Một số người chưa có số liệu đi muộn" : "";
                             },
                         },
                     },
@@ -298,6 +312,11 @@ export class AttendanceDashboard extends Component {
             if (sameScope) {
                 this.highlight(before, data);
             }
+            if (silent) {
+                for (const dialog of this.groupDialogs) {
+                    dialog.refresh(); // An open group list follows the same automatic update.
+                }
+            }
             writeStore(STORE_KEY, {
                 mode: data.mode, from: data.mode === "range" ? data.start : "", to: data.mode === "range" ? data.end : "",
                 department: this.state.department, search: this.state.search, status: data.status, pageSize: data.page_size,
@@ -323,9 +342,11 @@ export class AttendanceDashboard extends Component {
                 fresh[row.key] = true;
             }
         }
-        for (const key of KPI_KEYS) {
-            if (kpiValue(before.kpis, key) !== kpiValue(after.kpis, key)) {
-                fresh[`kpi:${key}`] = true;
+        if (before.groups?.date === after.groups?.date) {
+            for (const key of GROUP_ORDER) {
+                if (before.groups.counts[key] !== after.groups.counts[key]) {
+                    fresh[`group:${key}`] = true;
+                }
             }
         }
         if (!Object.keys(fresh).length) {
@@ -436,6 +457,35 @@ export class AttendanceDashboard extends Component {
     }
 
     // ---------------------------------------------------------------- actions
+    /** Scope of the group dialog: exactly what the dashboard shows (period, department, search, classification day). */
+    groupScope() {
+        const data = this.data;
+        return {
+            mode: data.mode, date: data.date, from: data.start, to: data.end,
+            department_id: Number(this.state.department) || 0, search: this.state.search, class_date: data.groups.date,
+        };
+    }
+    /** One group list at a time: opening another card replaces the open dialog (never a hidden combination). */
+    openGroup(group) {
+        if (!this.data?.groups) {
+            return;
+        }
+        this.closeGroup?.();
+        const groups = this.data.groups;
+        const close = this.dialog.add(GroupDialog, {
+            group, labels: groups.labels, counts: groups.counts, count: groups.counts[group], date: groups.date,
+            scope: () => this.groupScope(),
+            register: (dialog) => {
+                this.groupDialogs.add(dialog);
+                return () => this.groupDialogs.delete(dialog);
+            },
+        }, { onClose: () => {
+            if (this.closeGroup === close) {
+                this.closeGroup = null;
+            }
+        } });
+        this.closeGroup = close;
+    }
     openPerson(row) {
         this.dialog.add(PersonDialog, { params: { employee_id: row.employee_id, mode: "week", date: row.date } });
     }

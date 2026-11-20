@@ -15,6 +15,9 @@ export const STATE_COLORS = {
     no_punch: "#94A3B8", rest: "#CBD5E1", leave: "#A78BFA", no_source: "#64748B", future: "#EEF1F5",
 };
 export const TOTAL_COLOR = "#2563EB";
+/** Dashboard groups of one classification day (ATTENDANCE-DASH-004); "unknown" is never folded into another one. */
+export const GROUP_ORDER = ["working", "done", "not_started", "unknown"];
+export const GROUP_COLORS = { working: "#16A34A", done: "#7C3AED", not_started: "#EA580C", unknown: "#94A3B8" };
 export function attendanceIssue(row) {
     if (row.state === "missing") {
         const label = !row.in && !row.out ? "Thiếu giờ vào và ra" : !row.in ? "Thiếu giờ vào" : !row.out ? "Thiếu giờ ra" : "Thiếu lượt chấm công";

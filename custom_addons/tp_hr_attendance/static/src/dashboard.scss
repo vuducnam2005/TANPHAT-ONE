@@ -1,6 +1,11 @@
-// ENTI-ATTENDANCE-002: "Tổng quan chấm công" — bright cards, large Chart.js charts, newest marks. Scoped to
-// .o_tp_att_ov; keeps the attendance tokens (.o_tp_att) and the scroll containment of CHG-20261118-039.
-// Palette: #2563EB main · #0D9488 in · #7C3AED out · #D97706 late/check · #DC2626 absent/error · #64748B no data.
+// ENTI-ATTENDANCE-002 / ATTENDANCE-DASH-004: "Tổng quan chấm công" — three group cards, Chart.js charts, a compact
+// newest-marks table. Scoped to .o_tp_att_ov (+ the group dialog .o_tp_att_gd); keeps the attendance tokens
+// (.o_tp_att) and the scroll containment of CHG-20261118-039.
+// Groups: #16A34A Đang làm · #7C3AED Đã về · #EA580C Chưa đi làm · #94A3B8 Chưa xác định. Others: #2563EB main.
+.o_tp_att_ov, .o_tp_att_gd {
+    --ov-working: #16a34a; --ov-done: #7c3aed; --ov-idle: #ea580c; --ov-unknown: #94a3b8;
+    --ov-head: #eef3fa; --ov-hover: #f1f6ff;
+}
 .o_tp_att_ov {
     --ov-main: #2563eb; --ov-in: #0d9488; --ov-out: #7c3aed; --ov-warn: #d97706; --ov-danger: #dc2626; --ov-none: #64748b;
     --ov-card-shadow: 0 1px 2px rgba(15, 23, 42, .05), 0 1px 1px rgba(15, 23, 42, .03);
@@ -28,34 +33,47 @@
 .o_tp_att_ov_search input { width: 180px; }
 .o_tp_att_ov_range span { color: var(--att-muted); }
 
-// KPIs.
-.o_tp_att_ov_kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+// Group cards: one classification day, three equal cards, then the "not determined" note.
+.o_tp_att_ov_groups { margin-bottom: 14px; }
+.o_tp_att_ov_groups_info { display: flex; flex-wrap: wrap; gap: 4px 0; margin: 0 0 10px; font-size: 13px; color: var(--att-muted);
+    > span + span::before { content: "·"; margin: 0 8px; color: #94a3b8; }
+    b { color: var(--att-navy); font-weight: 600; font-variant-numeric: tabular-nums; } }
+.o_tp_att_ov_kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .o_tp_att_ov_kpi {
     --kpi: var(--ov-main); --kpi-soft: #eaf1ff;
     position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; margin: 0;
-    padding: 16px 16px 14px; text-align: left; color: var(--att-navy); background: var(--att-surface);
+    padding: 14px 16px 12px; text-align: left; color: var(--att-navy); background: var(--att-surface);
     border: 1px solid var(--att-line); border-radius: 12px; box-shadow: var(--ov-card-shadow); overflow: hidden;
-    &::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--kpi); }
-    .o_label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--att-muted);
-        .oi { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; font-size: 16px;
+    &::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--kpi); }
+    .o_label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--att-navy);
+        .oi { display: inline-grid; place-items: center; flex: none; width: 30px; height: 30px; border-radius: 9px; font-size: 18px;
             color: var(--kpi); background: var(--kpi-soft); } }
-    strong { font-size: 30px; line-height: 1.15; font-weight: 700; color: var(--kpi); font-variant-numeric: tabular-nums; }
-    .o_unit { font-size: 14px; font-weight: 600; color: var(--att-muted); }
-    small { font-size: 12px; line-height: 1.35; color: var(--att-muted); }
-    &.o_in { --kpi: var(--ov-in); --kpi-soft: #e6f6f4; }
-    &.o_out { --kpi: var(--ov-out); --kpi-soft: #f1ebfe; }
-    &.o_warn, &.o_late { --kpi: var(--ov-warn); --kpi-soft: #fff4e0; }
-    &.o_absent { --kpi: var(--ov-danger); --kpi-soft: #fdecec; }
+    strong { font-size: 34px; line-height: 1.1; font-weight: 700; color: var(--kpi); font-variant-numeric: tabular-nums; }
+    .o_more { display: inline-flex; align-items: center; gap: 2px; font-size: 12.5px; font-weight: 600; color: var(--kpi);
+        .oi { font-size: 16px; transition: transform 200ms ease; } }
+    &.o_working { --kpi: var(--ov-working); --kpi-soft: #e8f7ee; }
+    &.o_done { --kpi: var(--ov-done); --kpi-soft: #f1ebfe; }
+    &.o_not_started { --kpi: var(--ov-idle); --kpi-soft: #fff1e7; }
 }
 button.o_tp_att_ov_kpi {
-    cursor: pointer;
-    &:hover { border-color: var(--kpi); box-shadow: 0 6px 16px rgba(15, 23, 42, .08); transform: translateY(-1px); }
-    &.active { border-color: var(--kpi); box-shadow: inset 0 0 0 1px var(--kpi); }
+    cursor: pointer; transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease, background-color 200ms ease;
+    &:hover { border-color: var(--kpi); background: linear-gradient(90deg, var(--kpi-soft), var(--att-surface) 70%);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, .09); transform: translateY(-2px);
+        .o_more .oi { transform: translateX(3px); } }
+    &:focus-visible { outline: 3px solid color-mix(in srgb, var(--kpi) 45%, transparent); outline-offset: 2px; border-color: var(--kpi); }
+    &:active { transform: translateY(0); box-shadow: var(--ov-card-shadow); }
 }
-.o_tp_att_ov_kpi .o_tp_att_kpi_na { font-size: 18px; color: var(--att-muted); }
-.o_tp_att_ov_note { color: #92400e !important; }
-.o_tp_att_ov_meter { display: block; width: 100%; height: 6px; margin-top: 2px; border-radius: 99px; background: #eef2f7; overflow: hidden;
-    span { display: block; height: 100%; border-radius: inherit; background: var(--kpi); transition: width 240ms ease; } }
+.o_tp_att_ov_live_warn { margin: 10px 0 0; padding: 8px 12px; border-radius: 10px; font-size: 13px; color: #92400e; background: #fff7e6;
+    border: 1px solid #fde3b0; }
+.o_tp_att_ov_unknown { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; width: 100%; margin-top: 10px; padding: 8px 12px;
+    text-align: left; font-size: 13px; color: #334155; background: #f4f6f9; border: 1px dashed #b6c0cd; border-radius: 10px; cursor: pointer;
+    transition: background-color 200ms ease, border-color 200ms ease;
+    > .oi { font-size: 18px; color: #64748b; }
+    > span:not(.o_more) { flex: 1 1 260px; min-width: 0; }
+    .o_more { display: inline-flex; align-items: center; font-weight: 600; color: #475569; }
+    &:hover { background: #eef2f7; border-color: #94a3b8; }
+    &:focus-visible { outline: 3px solid rgba(100, 116, 139, .4); outline-offset: 2px; }
+    &.o_fresh { animation: o_tp_att_ov_flash 1.6s ease-out; } }
 
 .o_tp_att_ov_grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 14px; margin-bottom: 14px; align-items: stretch; }
 .o_tp_att_ov_main { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
@@ -71,42 +89,54 @@ button.o_tp_att_ov_kpi {
 .o_tp_att_ov_info { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; color: var(--att-muted); cursor: help;
     &:hover, &:focus-visible { background: #eef2f7; color: var(--att-navy); } }
 
-// Status donut.
+// Group donut and its clickable legend.
 .o_tp_att_ov_status { display: flex; flex-direction: column; }
-.o_tp_att_ov_donut_row { flex: 1; display: grid; place-items: center; }
-.o_tp_att_ov_donut { position: relative; width: 100%; max-width: 310px; aspect-ratio: 1; min-width: 0;
+.o_tp_att_ov_donut_row { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 12px 18px; }
+.o_tp_att_ov_donut { position: relative; width: 100%; max-width: 260px; aspect-ratio: 1; min-width: 0; justify-self: center;
     > canvas { position: absolute; inset: 0; } }
 .o_tp_att_ov_donut_center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;
-    strong { font-size: 36px; line-height: 1.1; font-weight: 700; color: var(--att-navy); font-variant-numeric: tabular-nums; }
+    strong { font-size: 34px; line-height: 1.1; font-weight: 700; color: var(--att-navy); font-variant-numeric: tabular-nums; }
     span { font-size: 13px; color: var(--att-muted); } }
+.o_tp_att_ov_legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; min-width: 0;
+    button { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto auto; align-items: center; gap: 8px; width: 100%; min-height: 40px;
+        padding: 6px 10px; text-align: left; color: var(--att-navy); background: transparent; border: 1px solid transparent; border-radius: 10px;
+        cursor: pointer; transition: background-color 200ms ease, border-color 200ms ease;
+        &:hover { background: var(--ov-hover); border-color: #d7e3f5; }
+        &:focus-visible { outline: 3px solid rgba(37, 99, 235, .35); outline-offset: 1px; } }
+    .o_dot { width: 12px; height: 12px; border-radius: 4px; background: var(--dot); }
+    .o_name { min-width: 0; font-size: 13.5px; font-weight: 600; overflow-wrap: anywhere; }
+    b { font-size: 16px; font-variant-numeric: tabular-nums; }
+    small { min-width: 44px; text-align: right; font-size: 12px; color: var(--att-muted); font-variant-numeric: tabular-nums; }
+    .o_working { --dot: var(--ov-working); } .o_done { --dot: var(--ov-done); } .o_not_started { --dot: var(--ov-idle); } .o_unknown { --dot: var(--ov-unknown); } }
 
-// Newest marks.
+// Newest marks: a compact table (Mã NV · Họ và tên · Thời gian · Địa điểm), sticky header, body scroll.
 .o_tp_att_ov_recent { display: flex; flex-direction: column; }
-.o_tp_att_ov_recent_list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; max-height: 372px;
-    overflow-y: auto; overscroll-behavior: contain;
-    li { border-radius: 10px; }
-    li.o_fresh { animation: o_tp_att_ov_flash 1.8s ease-out; }
-    button { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; min-height: 52px;
-        padding: 7px 8px; text-align: left; color: var(--att-navy); background: transparent; border: 0; border-radius: 10px;
-        &:hover { background: #f1f5fb; } }
-    .o_avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #e2e8f0; }
-    .o_who { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere;
-        .o_name { font-weight: 600; }
-        small { font-size: 12px; line-height: 1.35; color: var(--att-muted); }
-        b { color: var(--att-navy); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-        em { font-style: normal; font-weight: 600; color: #b45309; } }
-    .o_mark { display: flex; flex-direction: column; align-items: flex-end; min-width: 58px; padding: 4px 10px; border-radius: 10px;
-        font-size: 11px; font-weight: 600; line-height: 1.2;
-        strong { font-size: 15px; font-variant-numeric: tabular-nums; }
-        &.o_in { background: #e6f6f4; color: var(--ov-in); }
-        &.o_out { background: #f1ebfe; color: var(--ov-out); } } }
+.o_tp_att_ov_recent .o_tp_att_ov_card_head h2 { display: flex; align-items: center; gap: 2px; }
+.o_tp_att_ov_recent_wrap { flex: 1; min-height: 0; max-height: 432px; overflow: auto; overscroll-behavior: contain;
+    border: 1px solid #e3e9f2; border-radius: 10px;
+    &:focus-visible { outline: 3px solid rgba(37, 99, 235, .3); outline-offset: 2px; } }
+.o_tp_att_ov_recent_table { width: 100%; min-width: 300px; margin: 0; border-collapse: separate; border-spacing: 0; font-size: 13.5px;
+    color: var(--att-navy);
+    thead th { position: sticky; top: 0; z-index: 1; padding: 9px 12px; text-align: left; font-size: 12.5px; font-weight: 600;
+        color: #475569; background: var(--ov-head); border-bottom: 1px solid #dde5f0; white-space: nowrap; }
+    td, tbody th { padding: 8px 12px; vertical-align: middle; border-bottom: 1px solid #edf1f6; }
+    tbody tr:last-child > * { border-bottom: 0; }
+    tbody tr { transition: background-color 200ms ease; }
+    tbody tr:hover { background: var(--ov-hover); }
+    tbody tr.o_fresh { animation: o_tp_att_ov_flash 1.8s ease-out; }
+    .o_code { width: 1%; white-space: nowrap; color: #475569; font-variant-numeric: tabular-nums; }
+    .o_name { font-weight: 700; overflow-wrap: anywhere; }
+    .o_clock { width: 1%; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    td.o_clock { font-weight: 600; }
+    .o_place { color: var(--att-muted); overflow-wrap: anywhere; }
+    .o_tp_att_ov_recent_empty { padding: 36px 12px; text-align: center; color: var(--att-muted); background: #f8fafc; } }
 
 // Trend charts.
 .o_tp_att_ov_chart { position: relative; height: 320px; min-width: 0; }
 .o_tp_att_ov_keys { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 0; font-size: 12px; color: var(--att-muted);
     li { display: flex; align-items: center; gap: 6px; }
     span { width: 10px; height: 10px; border-radius: 3px; }
-    .o_in { background: var(--ov-in); } .o_out { background: var(--ov-out); } .o_warn { background: var(--ov-warn); } .o_absent { background: var(--ov-danger); } }
+    .o_working { background: var(--ov-working); } .o_done { background: var(--ov-done); } .o_not_started { background: var(--ov-idle); } }
 
 // Table.
 .o_tp_att_ov_table_card { margin-bottom: 4px; .o_tp_att_table_wrap { max-height: 540px; } }
@@ -119,20 +149,58 @@ button.o_tp_att_ov_kpi {
     &.o_absent { background: #fdecec; color: #b91c1c; }
     &.o_leave { background: #f1ebfe; color: #6d28d9; } }
 
+// Group dialog (one group list; wide on desktop, Odoo makes it full screen on small screens).
+.o_tp_att_gd {
+    .o_tp_att_gd_body { display: flex; flex-direction: column; gap: 10px; }
+    .o_tp_att_gd_tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+    .o_tp_att_gd_tab { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 12px; font-size: 13px; font-weight: 600;
+        color: #334155; background: #f4f6f9; border: 1px solid #dfe5ee; border-radius: 999px; cursor: pointer;
+        transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+        .o_dot { width: 10px; height: 10px; border-radius: 50%; background: var(--dot); }
+        b { font-variant-numeric: tabular-nums; }
+        &:hover { border-color: var(--dot); }
+        &:focus-visible { outline: 3px solid rgba(37, 99, 235, .35); outline-offset: 1px; }
+        &.active { color: #fff; background: var(--dot); border-color: var(--dot); .o_dot { background: #fff; } }
+        &.o_working { --dot: var(--ov-working); } &.o_done { --dot: var(--ov-done); } &.o_not_started { --dot: var(--ov-idle); }
+        &.o_unknown { --dot: #64748b; } }
+    .o_tp_att_gd_tools { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px;
+        .o_tp_att_field { margin: 0; }
+        select, input[type=search] { min-height: 40px; padding: 7px 12px; font-size: 14px; font-weight: 400; color: var(--att-navy);
+            background: var(--att-surface); border: 1px solid var(--att-line); border-radius: 8px; max-width: 100%;
+            &:hover { border-color: var(--att-line-strong); }
+            &:focus { outline: none; border-color: var(--att-accent); box-shadow: 0 0 0 3px rgba(31, 111, 178, .16); } }
+        .o_tp_att_gd_search input { width: 260px; }
+        select { min-width: 200px; max-width: 280px; } }
+    .o_tp_att_gd_meta { margin: 0 0 4px auto; font-size: 12.5px; }
+    .o_tp_att_gd_warn { margin: 0; padding: 7px 12px; border-radius: 10px; font-size: 13px; color: #92400e; background: #fff7e6; }
+    .o_tp_att_gd_count { margin: 0; font-size: 13px; color: var(--att-muted); b { color: var(--att-navy); } }
+    .o_tp_att_gd_error { margin: 0; }
+    .o_tp_att_gd_wrap { max-height: unquote("min(60vh, 560px)"); transition: opacity 200ms ease; &.o_busy { opacity: .55; } }
+    .o_tp_att_gd_table { animation: o_tp_att_gd_in 200ms ease-out;
+        thead th { background: var(--ov-head); }
+        .o_stt { width: 1%; white-space: nowrap; color: var(--att-muted); }
+        .o_code { white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .o_name { font-weight: 700; overflow-wrap: anywhere; }
+        .o_clock { white-space: nowrap; font-variant-numeric: tabular-nums; }
+        tbody tr:hover { background: var(--ov-hover); }
+        tbody tr.o_fresh { animation: o_tp_att_ov_flash 1.8s ease-out; } }
+    .o_tp_att_gd_note { display: inline-flex; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #eef1f5; color: #475569;
+        &.o_working { background: #e8f7ee; color: #15803d; }
+        &.o_done { background: #fff4e0; color: #b45309; } }
+}
+@keyframes o_tp_att_gd_in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
 // Change highlight (automatic refresh only).
 .o_tp_att_ov_kpi.o_fresh { animation: o_tp_att_ov_flash 1.6s ease-out; }
 @keyframes o_tp_att_ov_flash { 0% { background-color: #fff3c4; } 100% { background-color: transparent; } }
 // Breakpoints on the screen's own width (container ``tpov``), so an open or collapsed sidebar is accounted for.
-@container tpov (max-width: 1179.98px) {
-    .o_tp_att_ov_kpi .o_label { min-height: 34px; align-items: flex-start; line-height: 1.3; .oi { flex: none; } }
-}
 @container tpov (max-width: 999.98px) {
-    .o_tp_att_ov_kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .o_tp_att_ov_kpi .o_label { min-height: 0; }
+    .o_tp_att_ov_donut_row { grid-template-columns: minmax(0, 1fr); }
+    .o_tp_att_ov_donut { max-width: 230px; }
 }
 @container tpov (max-width: 879.98px) {
     .o_tp_att_ov_grid { grid-template-columns: minmax(0, 1fr); }
-    .o_tp_att_ov_recent_list { max-height: none; }
+    .o_tp_att_ov_donut_row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 @media (max-width: 767.98px) {
     .o_tp_att_ov { padding: 14px 12px 24px; }
@@ -145,26 +213,42 @@ button.o_tp_att_ov_kpi {
         .o_tp_att_segment { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
         .o_tp_att_field select, .o_tp_att_field input { width: 100%; max-width: none; min-width: 0; }
         .o_tp_att_period { flex-wrap: wrap; input { flex: 1 1 120px; min-width: 0; } } }
-    .o_tp_att_ov_kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-    .o_tp_att_ov_kpi { padding: 12px; strong { font-size: 24px; } }
+    .o_tp_att_ov_kpis { gap: 8px; }
+    .o_tp_att_ov_kpi { padding: 12px 12px 10px; strong { font-size: 28px; } .o_label { font-size: 13px; } }
     .o_tp_att_ov_card { padding: 12px; }
-    .o_tp_att_ov_donut { max-width: 260px; }
     .o_tp_att_ov_chart { height: 260px; }
+    .o_tp_att_ov_recent_wrap { max-height: 380px; }
+}
+// Narrow: the three cards stack as compact rows (icon + name · number · "Xem danh sách").
+@container tpov (max-width: 539.98px) {
+    .o_tp_att_ov_kpis { grid-template-columns: minmax(0, 1fr); }
+    .o_tp_att_ov_kpi { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label value" "more value";
+        align-items: center; gap: 2px 12px; padding: 10px 14px;
+        .o_label { grid-area: label; } strong { grid-area: value; font-size: 28px; } .o_more { grid-area: more; } }
+    .o_tp_att_ov_donut_row { grid-template-columns: minmax(0, 1fr); }
+    .o_tp_att_ov_donut { max-width: 220px; }
+    .o_tp_att_ov_groups_info { gap: 2px 12px; > span + span::before { display: none; } }
 }
 @container tpov (max-width: 419.98px) {
     .o_tp_att_ov_when .o_tp_att_segment { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@container tpov (max-width: 339.98px) {
-    .o_tp_att_ov_kpis { grid-template-columns: minmax(0, 1fr); }
-    .o_tp_att_ov_recent_list button { grid-template-columns: 32px minmax(0, 1fr) auto; gap: 8px; }
-    .o_tp_att_ov_recent_list .o_avatar { width: 32px; height: 32px; }
+@container tpov (max-width: 359.98px) {
+    .o_tp_att_ov_recent_table { min-width: 0; font-size: 13px; td, tbody th, thead th { padding: 7px 6px; } }
+}
+@media (max-width: 575.98px) {
+    .o_tp_att_gd .o_tp_att_gd_tools { > .o_tp_att_field { flex: 1 1 100%; }
+        .o_tp_att_field input, .o_tp_att_field select { width: 100%; min-width: 0; max-width: none; } }
+    .o_tp_att_gd .o_tp_att_gd_meta { margin: 0; }
+    .o_tp_att_gd .o_tp_att_gd_wrap { max-height: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-    .o_tp_att_ov_kpi.o_fresh, .o_tp_att_ov_recent_list li.o_fresh { animation: none !important; }
-    button.o_tp_att_ov_kpi:hover { transform: none; }
-    .o_tp_att_ov_kpi.o_fresh, .o_tp_att_ov_recent_list li.o_fresh { box-shadow: inset 0 0 0 2px #facc15; }
+    .o_tp_att_ov_kpi.o_fresh, .o_tp_att_ov_recent_table tr.o_fresh, .o_tp_att_ov_unknown.o_fresh,
+    .o_tp_att_gd_table, .o_tp_att_gd_table tr.o_fresh { animation: none !important; }
+    button.o_tp_att_ov_kpi, button.o_tp_att_ov_kpi:hover, button.o_tp_att_ov_kpi .o_more .oi { transform: none !important; transition: none; }
+    .o_tp_att_ov_kpi.o_fresh, .o_tp_att_ov_recent_table tr.o_fresh, .o_tp_att_gd_table tr.o_fresh { box-shadow: inset 0 0 0 2px #facc15; }
 }
-.o_tp_hr_reduce_motion .o_tp_att_ov {
-    .o_tp_att_ov_kpi.o_fresh, .o_tp_att_ov_recent_list li.o_fresh { box-shadow: inset 0 0 0 2px #facc15; }
-    button.o_tp_att_ov_kpi:hover { transform: none; }
+.o_tp_hr_reduce_motion {
+    .o_tp_att_ov_kpi.o_fresh, .o_tp_att_ov_recent_table tr.o_fresh, .o_tp_att_gd_table tr.o_fresh { box-shadow: inset 0 0 0 2px #facc15; }
+    button.o_tp_att_ov_kpi, button.o_tp_att_ov_kpi:hover, button.o_tp_att_ov_kpi .o_more .oi { transform: none !important; }
+    .o_tp_att_gd_table { animation: none; }
 }

@@ -1,7 +1,7 @@
 {
     "name": "TANPHAT ONE — Chấm công",
     "summary": "Chấm công tự động, quản trị kết nối và xuất bảng công theo kỳ",
-    "version": "20.0.3.5.2",
+    "version": "20.0.3.5.3",
     "license": "LGPL-3",
     "author": "Tan Phat JSC",
     "depends": ["tp_hr_workspace"],
@@ -28,6 +28,8 @@
             "tp_hr_attendance/static/src/board/board.js",
             "tp_hr_attendance/static/src/board/board.xml",
             "tp_hr_attendance/static/src/charts.js",
+            "tp_hr_attendance/static/src/group_dialog.js",
+            "tp_hr_attendance/static/src/group_dialog.xml",
             "tp_hr_attendance/static/src/dashboard.js",
             "tp_hr_attendance/static/src/dashboard.xml",
             "tp_hr_attendance/static/src/mine.js",
