@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-031 — Sửa đồng bộ nhóm cán bộ chấm công bị guard ủy quyền admin chặn
+
+- 20/11/2026 Asia/Saigon; người dùng chọn “Làm ở đây” cho việc tách ra từ ENTI-ATTENDANCE-002. `tp_hr_attendance` 20.0.3.5.0 → 20.0.3.5.1, không đổi dữ liệu/ACL/view.
+- `_tp_sync_officers` thêm/bỏ nhóm `group_attendance_officer` từ phía tài khoản (`res.users.group_ids`, link/unlink từng người) thay vì ghi `user_ids` của nhóm — đúng đường đổi quyền thường mà guard `tp_admin_delegation` cho HR với tài khoản nhân viên (DEC-054). Không sửa `tp_admin_delegation`: ghi thành viên từ phía nhóm vẫn chỉ Quản trị gốc; tài khoản admin chỉ Quản trị gốc đổi, phân công cho admin bị từ chối cả bản ghi với thông báo “Không cập nhật được quyền Chấm công…”.
+- Test mới `test_officer_sync_keeps_admin_delegation_guard`: HR ghi thành viên nhóm trực tiếp bị chặn; phân công cho admin bị chặn và không để lại bản ghi/thành viên; thêm/gỡ phân công nhân viên thường vẫn đồng bộ nhóm.
+- Kiểm local `tp_tanphat_test`: `-u tp_hr_attendance,tp_admin_delegation` — attendance 96 test 0 failed/0 error (trước đó 1 error); delegation 20 test, 1 test HTTP chỉ trượt vì chạy cổng 18179 trong khi script yêu cầu 18079, chạy lại `TestAdminAccountLockHttp` ở 18079: 2/2 đạt. Ruff sạch. PC hiện 0 phân công/0 thành viên nhóm nên không cần migration; chưa áp PC server.
+
 ## CHG-20261119-030 — Đã áp ENTI-ATTENDANCE-002 lên PC server
 
 - 20/11/2026 03:25 giờ VN: release từ `51e1421b` (51 file, 7 mới, 2 bỏ, checksum khớp), `tp_hr_attendance` 20.0.3.4.1 → 20.0.3.5.0, upgrade exit 0/0 ERROR. Backup `C:\TANPHAT-backups\enti-attendance002\enti002-20261120T032523` (dump + `pg_restore -l`, filestore, source, config, SHA256). Snapshot dữ liệu/quyền trước/sau giống hệt, chỉ đổi phiên bản module và priority cron ENTI 5 → 10; trùng lặp ngày/phiên/ngày ENTI 0.

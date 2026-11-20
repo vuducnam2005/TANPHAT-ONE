@@ -2,7 +2,7 @@
 import hashlib
 import json
 
-from odoo import api, fields, models
+from odoo import Command, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 
 from .attendance_common import HR_MANAGER, OFFICER, can, deny_direct, internal, require
@@ -184,11 +184,25 @@ class AttendanceAssignment(models.Model):
 
     @api.model
     def _tp_sync_officers(self):
-        """The officer group only opens read ACLs on staging/log; it mirrors active assignments exactly."""
+        """The officer group only opens read ACLs on staging/log; it mirrors active assignments exactly.
+
+        Membership changes from the user side (``res.users.group_ids``): that is the ordinary role path
+        account guards check (tp_admin_delegation lets HR change an employee's non-admin groups, keeps admin
+        accounts with the Original Admin). The group's own member list stays reserved to the Original Admin.
+        """
         group = self.env.ref(OFFICER).sudo()
         wanted = self.sudo().search([('active', '=', True)]).user_id
-        if set(group.user_ids.ids) != set(wanted.ids):
-            group.write({'user_ids': [(6, 0, wanted.ids)]})
+        current = group.with_context(active_test=False).user_ids
+        changes = [(user, Command.link(group.id)) for user in (wanted - current).sorted('id')]
+        changes += [(user, Command.unlink(group.id)) for user in (current - wanted).sorted('id')]
+        for user, command in changes:
+            try:
+                user.write({'group_ids': [command]})
+            except AccessError as error:
+                raise AccessError(self.env._(
+                    'Không cập nhật được quyền Chấm công cho %(user)s theo phân công: %(reason)s',
+                    user=user.name, reason=error.args[0],
+                )) from error
 
 
 class AttendancePeriod(models.Model):

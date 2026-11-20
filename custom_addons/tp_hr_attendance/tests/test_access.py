@@ -139,6 +139,32 @@ class TestAttendanceAccess(AttendanceCase):
         self.assertTrue(can(manager_env, 'import', self.company))
         self.assertFalse(can(manager_env, 'review', self.company, self.dept))
 
+    def test_officer_sync_keeps_admin_delegation_guard(self):
+        """Assignments move members from the user side; the group member list and admin accounts stay guarded."""
+        if 'tp.admin.delegation' not in self.env:
+            self.skipTest('tp_admin_delegation is not installed')
+        officer_group = self.env.ref('tp_hr_attendance.group_attendance_officer')
+        with self.assertRaises(AccessError):
+            self.env_for(self.manager)['res.groups'].sudo().browse(officer_group.id).write(
+                {'user_ids': [Command.link(self.officer.id)]})
+        self.assertNotIn(self.officer, officer_group.user_ids)
+        admin = self.env['res.users'].create({
+            'name': 'att001.synthetic.admin', 'login': 'att001.synthetic.admin', 'company_id': self.company.id,
+            'company_ids': [Command.set([self.company.id])],
+            'group_ids': [Command.set([self.env.ref('base.group_user').id, self.env.ref('base.group_system').id])],
+        })
+        Assignment = self.env_for(self.manager)['tp.hr.attendance.assignment']
+        with self.assertRaises(AccessError) as caught:
+            Assignment.create({'user_id': admin.id, 'company_id': self.company.id})
+        self.assertIn('Không cập nhật được quyền Chấm công', str(caught.exception))
+        self.assertFalse(self.env['tp.hr.attendance.assignment'].search([('user_id', '=', admin.id)]))
+        self.assertNotIn(admin, officer_group.user_ids)
+        # Removing a plain employee from the group through the assignment still works for HR.
+        assignment = Assignment.create({'user_id': self.officer.id, 'company_id': self.company.id})
+        self.assertIn(self.officer, officer_group.user_ids)
+        assignment.unlink()
+        self.assertNotIn(self.officer, officer_group.user_ids)
+
     def test_menus_follow_rights(self):
         def visible(user):
             return self.env_for(user)['ir.ui.menu']._visible_menu_ids()

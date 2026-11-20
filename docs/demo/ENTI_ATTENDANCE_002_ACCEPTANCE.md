@@ -25,7 +25,8 @@ và áp PC server ngày 20/11/2026 (mục 6). Đây là nghiệm thu kỹ thuậ
   `test_access.test_assignments_drive_officer_group_and_capabilities`: `attendance_config._tp_sync_officers` ghi thành viên
   nhóm cán bộ chấm công và bị guard `tp_admin_delegation/models/guards.py:418` chặn (“Sửa cấu trúc hoặc thành viên nhóm
   quyền chỉ dành cho Quản trị gốc.”). Lỗi liên module có sẵn, không do thay đổi này; không sửa `tp_admin_delegation`,
-  không che test — tách thành việc riêng.
+  không che test — tách thành việc riêng. **Đã sửa ở CHG-20261119-031** (`tp_hr_attendance` 20.0.3.5.1): đồng bộ đổi
+  quyền từ phía tài khoản (`res.users.group_ids`), guard giữ nguyên, thêm test chứng minh guard vẫn chặn.
 - Test mới `tests/test_enti_attendance_002.py`: client ENTI giả (token lồng, làm mới trước hạn, 401 làm mới một lần, 429/5xx
   chờ có giới hạn, lỗi mạng, phân trang + từ chối bảng thiếu trang); đồng bộ giả (ghép tên đúng, lượt không đổi không ghi/không
   phát bus, lỗi/trả trống không xóa công, kỳ chốt giữ nguyên, ghép cần căn cứ); RPC nhập Excel bị chặn và lịch sử vẫn đọc/xuất

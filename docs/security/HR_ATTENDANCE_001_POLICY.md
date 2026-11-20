@@ -21,6 +21,10 @@ Quy tắc tính công, ca, người duyệt cụ thể vẫn do HR/Ban lãnh đ�
 Không cấp `hr.group_hr_user`/`hr.group_hr_manager` cho mọi người; không patch
 `has_group`/`check_access`. Nhóm duy nhất mới là `tp_hr_attendance.group_attendance_officer`
 (chỉ cấp ACL đọc dữ liệu xử lý), được đồng bộ từ bản ghi phân công.
+Đồng bộ đi từ phía tài khoản (`res.users.group_ids` thêm/bỏ đúng nhóm này), là đường đổi quyền thường
+mà guard `tp_admin_delegation` cho phép HR với tài khoản nhân viên; danh sách thành viên của chính
+nhóm vẫn chỉ Quản trị gốc sửa. Phân công cho tài khoản admin khi người thao tác không phải Quản trị
+gốc bị từ chối cả bản ghi phân công, kèm thông báo “Không cập nhật được quyền Chấm công…” (CHG-20261119-031).
 
 ## 2. Danh bạ — trường chia sẻ
 
