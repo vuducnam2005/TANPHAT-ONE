@@ -18,12 +18,6 @@ const STORE_KEY = "tp_hr_attendance.overview.v2";
 const MODES = [["day", "Ngày"], ["week", "Tuần"], ["month", "Tháng"], ["range", "Khoảng ngày"]];
 const HIGHLIGHT_MS = 2400;
 const KPI_KEYS = ["people", "has_in", "has_out", "attention", "late", "absent"];
-const HEALTH = {
-    ok: { label: "Tự động đồng bộ ENTI", icon: "autorenew" },
-    stale: { label: "Đồng bộ ENTI đang chậm", icon: "schedule" },
-    error: { label: "Đồng bộ ENTI đang lỗi", icon: "error" },
-};
-
 function kpiValue(kpis, key) {
     if (key === "late") {
         return `${kpis.late.people}|${kpis.late.minutes}`;
@@ -84,20 +78,6 @@ export class AttendanceDashboard extends Component {
         }
         return data.mode === "week" ? `Tuần ${data.period_label} (T2–CN)` : data.period_label;
     }
-    get live() {
-        const source = this.data?.source;
-        if (!source) {
-            return null;
-        }
-        const known = source.auto ? HEALTH[source.health] : null;
-        const label = known ? known.label : source.kind === "excel" ? "Chỉ có lịch sử Excel" : "Chưa bật đồng bộ tự động";
-        const poll = source.poll_seconds ? `Máy chủ đọc ENTI khoảng ${source.poll_seconds} giây/lần trong giờ làm việc; ` : "";
-        return {
-            tone: source.auto ? source.health : "off", label, icon: known ? known.icon : "cloud_off",
-            title: `${poll}màn hình tự cập nhật khi có dữ liệu mới. Giờ cập nhật là lúc Odoo nhận dữ liệu từ ENTI, `
-                + "không phải lúc máy chấm công gửi lên ENTI.",
-        };
-    }
     get statusOptions() {
         const data = this.data;
         const options = [["attention", "Cần kiểm tra / thiếu giờ"], ["all", "Tất cả"], ["late", "Có đi muộn"]];
@@ -115,9 +95,10 @@ export class AttendanceDashboard extends Component {
     get unit() {
         return this.data?.mode === "day" ? "người" : "nhân viên-ngày";
     }
-    get legend() {
-        const data = this.data;
-        return (data?.statuses || []).map((item) => ({ ...item, color: STATE_COLORS[item.key] }));
+    get donutLabel() {
+        const statuses = this.data.statuses.filter((item) => item.value)
+            .map((item) => `${item.label}: ${item.value} ${this.unit} (${item.percent}%)`);
+        return [`Biểu đồ tình trạng chấm công, tổng ${this.drawnTotal} ${this.unit}`, ...statuses].join(". ");
     }
     get drawnTotal() {
         return (this.data?.statuses || []).reduce((sum, item) => sum + item.value, 0);
@@ -145,7 +126,7 @@ export class AttendanceDashboard extends Component {
 
     // -------------------------------------------------------------------- charts
     donutSpec() {
-        const items = this.legend.filter((item) => item.value);
+        const items = (this.data?.statuses || []).filter((item) => item.value);
         if (!items.length) {
             return null;
         }
@@ -156,7 +137,7 @@ export class AttendanceDashboard extends Component {
                 labels: items.map((item) => item.label),
                 datasets: [{
                     data: items.map((item) => item.value),
-                    backgroundColor: items.map((item) => item.color),
+                    backgroundColor: items.map((item) => STATE_COLORS[item.key]),
                     borderColor: "#ffffff", borderWidth: 2, hoverOffset: 8,
                 }],
             },

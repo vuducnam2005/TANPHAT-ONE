@@ -1,113 +1,154 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 <t t-name="tp_hr_attendance.Sources">
-<div class="o_tp_att o_tp_att_sources" aria-label="Nguồn dữ liệu chấm công" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
-    <header class="o_tp_att_header">
-        <div>
-            <h1>Nguồn dữ liệu chấm công</h1>
-            <p class="o_tp_att_subtitle">Giờ vào/ra và số phút đi muộn lấy tự động từ ENTI · Giờ làm tham chiếu <strong t-out="this.referenceHours"/></p>
-        </div>
-        <div class="o_tp_att_actions">
-            <button type="button" class="btn btn-outline-secondary" t-on-click="() => this.open('tp_hr_attendance.action_late')">Tổng đi muộn theo kỳ</button>
-        </div>
+<div class="o_tp_att o_tp_att_sources o_tp_att_admin" aria-label="Quản trị chấm công" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
+    <header class="o_tp_att_admin_heading">
+        <h1>Quản trị chấm công</h1>
     </header>
 
-    <div t-if="this.state.error" class="alert alert-danger" role="alert"><t t-out="this.state.error"/> <button class="btn btn-link p-0" t-on-click="this.load">Thử lại</button></div>
+    <div t-if="this.state.error" class="alert alert-danger" role="alert">
+        <t t-out="this.state.error"/>
+        <button type="button" class="btn btn-link p-0" t-on-click="() => this.load()">Thử lại</button>
+    </div>
     <div t-if="this.state.notice" class="alert alert-success d-flex justify-content-between align-items-start gap-2" role="status">
         <span t-out="this.state.notice"/>
         <button type="button" class="btn-close" aria-label="Đóng thông báo" t-on-click="() => this.state.notice = ''"/>
     </div>
-    <p t-if="!this.data and !this.state.error" role="status" class="o_tp_att_loading">Đang tải nguồn dữ liệu…</p>
+    <p t-if="!this.data and !this.state.error" role="status" class="o_tp_att_loading">Đang tải quản trị chấm công…</p>
     <t t-if="this.data">
-        <section class="o_tp_att_source_cards" aria-label="Trạng thái nguồn">
-            <article class="o_tp_att_source_card" t-att-class="this.enti.live ? 'o_ok' : 'o_muted'">
-                <header>
-                    <i class="oi" t-att-data-icon="this.enti.live ? 'cloud_done' : 'cloud_off'" aria-hidden="true"/>
-                    <h2>API chấm công ENTI (enti.vn)</h2>
-                    <span class="o_tp_att_badge" t-att-class="this.enti.live ? 'o_ok' : 'o_muted'" t-out="this.data.api.label"/>
-                </header>
-                <dl>
-                    <div><dt>Đồng bộ</dt><dd t-out="this.enti.live ? 'Tự động' : 'Tắt'"/></div>
-                    <div><dt>Đồng bộ thành công lần cuối</dt><dd t-out="this.enti.last_success_at || '—'"/></div>
-                    <div><dt>Dữ liệu đến ngày</dt><dd t-out="this.enti.data_to || '—'"/></div>
-                    <div><dt>Ngày công đã lấy</dt><dd t-out="this.enti.days_count || 0"/></div>
-                    <div><dt>Đã khớp nhân viên</dt><dd t-out="this.enti.mapped_count || 0"/></div>
-                    <div><dt>Chờ đối chiếu</dt><dd t-out="this.enti.unmapped_count || 0"/></div>
-                </dl>
-                <p t-if="this.enti.last_error" class="text-danger small mb-2">
-                    Lỗi lần trước: <t t-out="this.enti.last_error"/> · Dữ liệu công đã có được giữ nguyên.
-                </p>
-                <p class="o_tp_att_muted">Máy chủ Odoo tự lấy giờ vào đầu tiên và giờ ra cuối cùng mỗi ngày từ ENTI, đối chiếu với hồ sơ nhân viên rồi cập nhật bảng công; màn hình tự làm mới khi có dữ liệu mới.</p>
-                <div class="o_tp_att_actions">
-                    <button t-if="this.data.can_configure" type="button" class="btn btn-primary btn-sm" t-on-click="this.syncEntiNow" t-att-disabled="this.state.syncing">
-                        <i class="oi me-1" data-icon="autorenew" aria-hidden="true"/><t t-out="this.state.syncing ? 'Đang đồng bộ…' : 'Đồng bộ ngay'"/>
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_enti_mapping')">Đối chiếu nhân viên</button>
-                    <button t-if="this.data.can_configure" type="button" class="btn btn-outline-secondary btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_enti_config')">Cấu hình kết nối</button>
-                    <button type="button" class="btn btn-link btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_enti_logs')">Nhật ký đồng bộ</button>
+        <section class="o_tp_att_admin_connection" aria-label="Kết nối chấm công">
+            <div class="o_tp_att_admin_connection_head">
+                <div>
+                    <h2>Kết nối chấm công</h2>
+                    <span class="o_tp_att_admin_health" t-att-class="'o_' + this.health.tone" t-out="this.health.text"/>
                 </div>
-            </article>
-            <article class="o_tp_att_source_card o_muted">
+                <div class="o_tp_att_admin_actions" t-if="this.data.can_configure">
+                    <button type="button" class="btn btn-outline-secondary" t-on-click="() => this.open('tp_hr_attendance.action_enti_config')">Cấu hình kết nối</button>
+                    <button type="button" class="btn btn-primary" t-on-click="this.syncEntiNow" t-att-disabled="this.state.syncing">
+                        <i class="oi me-1" data-icon="autorenew" aria-hidden="true"/>
+                        <t t-out="this.state.syncing ? 'Đang đồng bộ…' : 'Đồng bộ ngay'"/>
+                    </button>
+                </div>
+            </div>
+            <dl class="o_tp_att_admin_metrics">
+                <div><dt>Đồng bộ thành công gần nhất</dt><dd class="o_stamp" t-out="this.enti.last_success_at or 'Chưa có'"/></div>
+                <div><dt>Bản ghi ngày công đã nhận</dt><dd t-out="this.enti.days_count ?? '—'"/></div>
+                <div><dt>Nhân viên đã khớp</dt><dd t-out="this.enti.mapped_count ?? '—'"/></div>
+                <div><dt>Nhân viên cần đối chiếu</dt><dd class="o_attention" t-out="this.enti.unmapped_count ?? '—'"/></div>
+            </dl>
+            <p t-if="this.enti.data_to" class="o_tp_att_admin_data_to">Dữ liệu máy đã nhận đến ngày <strong t-out="this.enti.data_to"/>.</p>
+        </section>
+
+        <section t-if="this.data.can_export" class="o_tp_att_admin_panel o_tp_att_admin_export" aria-labelledby="tp_att_admin_export_title">
+            <header>
+                <div>
+                    <h2 id="tp_att_admin_export_title">Xuất bảng công</h2>
+                    <p>Tải tệp .xlsx gồm bảng giờ vào/ra và chi tiết theo ngày.</p>
+                </div>
+            </header>
+            <form class="o_tp_att_admin_export_fields" t-on-submit.prevent="this.exportSheet">
+                <label class="o_tp_att_field"><span>Kỳ xuất</span>
+                    <select t-on-change="(ev) => this.state.mode = ev.target.value">
+                        <option value="week" t-att-selected="this.state.mode === 'week'">Tuần</option>
+                        <option value="month" t-att-selected="this.state.mode === 'month'">Tháng</option>
+                        <option value="range" t-att-selected="this.state.mode === 'range'">Khoảng ngày</option>
+                    </select>
+                </label>
+                <label class="o_tp_att_field" t-if="this.state.mode === 'month'"><span>Chọn tháng</span>
+                    <input type="month" t-att-value="this.state.date.slice(0, 7)"
+                        t-on-change="(ev) => this.state.date = ev.target.value ? ev.target.value + '-01' : ''"/>
+                </label>
+                <label class="o_tp_att_field" t-elif="this.state.mode === 'week'"><span>Ngày trong tuần cần xuất</span>
+                    <input type="date" t-att-value="this.state.date" t-on-change="(ev) => this.state.date = ev.target.value"/>
+                </label>
+                <t t-else="">
+                    <label class="o_tp_att_field"><span>Từ ngày</span>
+                        <input type="date" t-att-value="this.state.from" t-on-change="(ev) => this.state.from = ev.target.value"/>
+                    </label>
+                    <label class="o_tp_att_field"><span>Đến ngày</span>
+                        <input type="date" t-att-value="this.state.to" t-on-change="(ev) => this.state.to = ev.target.value"/>
+                    </label>
+                </t>
+                <label class="o_tp_att_field"><span>Phòng ban</span>
+                    <select t-on-change="(ev) => this.state.department = ev.target.value">
+                        <option value="" t-att-selected="!this.state.department">Tất cả phòng ban</option>
+                        <option t-foreach="this.data.departments or []" t-as="department" t-key="department.id" t-att-value="department.id"
+                            t-att-selected="'' + department.id === this.state.department" t-out="department.name"/>
+                    </select>
+                </label>
+                <button type="submit" class="btn btn-primary" t-att-disabled="this.state.exporting">
+                    <i class="oi me-1" data-icon="download" aria-hidden="true"/>
+                    <t t-out="this.state.exporting ? 'Đang xuất…' : 'Tải tệp .xlsx'"/>
+                </button>
+            </form>
+            <p t-if="this.state.exportError" class="alert alert-danger mt-3 mb-0" role="alert" t-out="this.state.exportError"/>
+        </section>
+
+        <div class="o_tp_att_admin_grid">
+            <section class="o_tp_att_admin_panel" aria-labelledby="tp_att_unmapped">
                 <header>
-                    <i class="oi" data-icon="description" aria-hidden="true"/>
-                    <h2>Excel máy chấm công</h2>
-                    <span class="o_tp_att_badge o_muted">Đã ngừng nhập · Lịch sử</span>
+                    <div>
+                        <h2 id="tp_att_unmapped">Cần đối chiếu nhân viên</h2>
+                        <p t-if="this.unmapped.length">Hiển thị <t t-out="this.unmapped.length"/> / <t t-out="this.enti.unmapped_count"/> người cần đối chiếu</p>
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary" t-on-click="() => this.open('tp_hr_attendance.action_enti_mapping')">Mở đối chiếu</button>
                 </header>
-                <dl>
-                    <div><dt>Lô đã ghi</dt><dd t-out="this.data.excel.batches"/></div>
-                    <div><dt>Tệp gần nhất</dt><dd class="o_tp_att_source_file" t-att-title="this.data.excel.file" t-out="this.data.excel.file or '—'"/></div>
-                </dl>
-                <p class="o_tp_att_muted" t-out="this.data.excel.note"/>
-            </article>
+                <div class="o_tp_att_admin_actions" t-if="this.enti.unmapped_count">
+                    <button type="button" class="btn btn-light" t-on-click="() => this.open('tp_hr_attendance.action_enti_mapping', {search_default_state_suggested: 1})">
+                        Chờ xác nhận <strong t-out="this.data.mapping?.suggested ?? '—'"/>
+                    </button>
+                    <button type="button" class="btn btn-light" t-on-click="() => this.open('tp_hr_attendance.action_enti_mapping', {search_default_state_unmapped: 1})">
+                        Chưa khớp <strong t-out="this.data.mapping?.unmapped ?? '—'"/>
+                    </button>
+                </div>
+                <p t-if="!this.unmapped.length" class="o_tp_att_admin_empty">Chưa có nhân viên cần đối chiếu.</p>
+                <ul t-else="" class="o_tp_att_admin_rows">
+                    <li t-foreach="this.unmapped" t-as="row" t-key="row.id">
+                        <div class="o_tp_att_admin_row_head">
+                            <strong t-out="row.name or row.code or 'Chưa có tên'"/>
+                            <span class="o_tp_att_badge" t-att-class="row.state === 'suggested' ? 'o_info' : 'o_warn'" t-out="row.state_label"/>
+                        </div>
+                        <p t-if="row.code or row.department"><t t-out="row.code"/><t t-if="row.code and row.department"> · </t><t t-out="row.department"/></p>
+                        <p t-if="row.candidate">Đề xuất <strong t-out="row.candidate"/></p>
+                        <p t-if="row.reason" t-out="row.reason"/>
+                    </li>
+                </ul>
+            </section>
+
+            <section t-if="this.data.can_view_logs" class="o_tp_att_admin_panel" aria-labelledby="tp_att_sync_logs">
+                <header>
+                    <div>
+                        <h2 id="tp_att_sync_logs">Đồng bộ gần đây</h2>
+                        <p t-if="this.data.sync_logs?.length">Hiển thị <t t-out="this.data.sync_logs.length"/> lượt gần nhất</p>
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary" t-on-click="() => this.open('tp_hr_attendance.action_enti_logs')">Mở nhật ký</button>
+                </header>
+                <p t-if="!this.data.sync_logs?.length" class="o_tp_att_admin_empty">Chưa có lượt đồng bộ.</p>
+                <ul t-else="" class="o_tp_att_admin_rows">
+                    <li t-foreach="this.data.sync_logs" t-as="row" t-key="row.id">
+                        <div class="o_tp_att_admin_row_head">
+                            <strong t-out="row.at"/>
+                            <span class="o_tp_att_badge" t-att-class="row.status === 'success' ? 'o_ok' : (row.status === 'error' ? 'o_warn' : 'o_muted')" t-out="row.status_label"/>
+                        </div>
+                        <p>Đã nhận <strong t-out="row.days_received"/> · Đã cập nhật <strong t-out="row.days_applied"/></p>
+                        <p t-if="row.unmapped">Chưa khớp <strong t-out="row.unmapped"/> nhân viên</p>
+                    </li>
+                </ul>
+            </section>
+        </div>
+
+        <section class="o_tp_att_admin_panel" aria-labelledby="tp_att_admin_tasks" t-if="this.data.can_review or this.data.can_lock">
+            <header><h2 id="tp_att_admin_tasks">Xử lý công</h2></header>
+            <div class="o_tp_att_admin_task_grid">
+                <button t-if="this.data.can_review" type="button" class="btn btn-light" t-on-click="() => this.open('tp_hr_attendance.action_review')">
+                    <i class="oi" data-icon="fact_check" aria-hidden="true"/> Xử lý điều chỉnh
+                </button>
+                <button t-if="this.data.can_lock" type="button" class="btn btn-light" t-on-click="() => this.open('tp_hr_attendance.action_periods')">
+                    <i class="oi" data-icon="lock" aria-hidden="true"/> Chốt kỳ
+                </button>
+            </div>
         </section>
 
-        <section class="o_tp_att_panel" aria-labelledby="tp_att_unmapped">
-            <div class="o_tp_att_drill_head">
-                <h2 id="tp_att_unmapped">Nhân viên ENTI chưa ghép với hồ sơ Odoo</h2>
-                <button type="button" class="btn btn-link btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_enti_mapping')">Mở đối chiếu nhân viên</button>
-            </div>
-            <p class="o_tp_att_muted">Chỉ ghép khi có căn cứ (mã nhân viên hoặc họ tên trùng khớp đúng một hồ sơ, hoặc nhân sự xác nhận); không tự ghép theo tên gần giống. Giờ của người chưa ghép không vào bảng công.</p>
-            <div class="o_tp_att_table_wrap">
-                <table class="o_tp_att_table o_tp_att_unmapped">
-                    <thead><tr><th scope="col">Mã ENTI</th><th scope="col">Họ tên bên ENTI</th><th scope="col">Bộ phận ENTI</th><th scope="col">Trạng thái</th><th scope="col">Lý do</th></tr></thead>
-                    <tbody>
-                        <tr t-if="!this.unmapped.length"><td colspan="5" class="o_tp_att_empty">Mọi nhân viên ENTI đã được ghép.</td></tr>
-                        <tr t-foreach="this.unmapped" t-as="row" t-key="row.id">
-                            <th scope="row" data-label="Mã ENTI" t-out="row.code or '—'"/>
-                            <td data-label="Họ tên" t-out="row.name"/>
-                            <td data-label="Bộ phận" t-out="row.department or '—'"/>
-                            <td data-label="Trạng thái"><span class="o_tp_att_badge" t-att-class="row.state === 'suggested' ? 'o_info' : 'o_warn'" t-out="row.state_label"/><t t-if="row.candidate"> · <t t-out="row.candidate"/></t></td>
-                            <td data-label="Lý do" t-out="row.reason or '—'"/>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <p t-if="this.enti.unmapped_count &gt; this.unmapped.length" class="o_tp_att_muted small mt-2">Đang hiện <t t-out="this.unmapped.length"/> / <t t-out="this.enti.unmapped_count"/> người; xem đủ trong Đối chiếu nhân viên.</p>
-        </section>
-
-        <section class="o_tp_att_panel" aria-labelledby="tp_att_history">
-            <div class="o_tp_att_drill_head">
-                <h2 id="tp_att_history">Lịch sử nhập Excel (đã ngừng nhập)</h2>
-                <button type="button" class="btn btn-link btn-sm" t-on-click="() => this.open('tp_hr_attendance.action_import')">Xem tất cả lô nhập</button>
-            </div>
-            <div class="o_tp_att_table_wrap">
-                <table class="o_tp_att_table o_tp_att_history">
-                    <thead><tr><th scope="col">Thời điểm</th><th scope="col">Người nhập</th><th scope="col">Tệp</th><th scope="col">Kỳ</th><th scope="col">Kết quả</th><th scope="col" class="o_num">Cần xem</th></tr></thead>
-                    <tbody>
-                        <tr t-if="!this.data.history.length"><td colspan="6" class="o_tp_att_empty">Chưa có lần nhập nào.</td></tr>
-                        <tr t-foreach="this.data.history" t-as="row" t-key="row.id" class="o_tp_att_click" tabindex="0"
-                            t-on-click="() => this.openBatch(row)" t-on-keydown="(ev) => ev.key === 'Enter' and this.openBatch(row)">
-                            <th scope="row" data-label="Thời điểm" t-out="row.at"/>
-                            <td data-label="Người nhập" t-out="row.user or '—'"/>
-                            <td data-label="Tệp" class="o_tp_att_source_file" t-att-title="row.file" t-out="row.file or '—'"/>
-                            <td data-label="Kỳ" t-out="row.period or '—'"/>
-                            <td data-label="Kết quả"><span class="o_tp_att_badge" t-att-class="row.state === 'applied' ? 'o_ok' : (row.state === 'preview' ? 'o_info' : 'o_muted')" t-out="row.state_label"/> <t t-out="row.result"/></td>
-                            <td data-label="Cần xem" class="o_num" t-out="row.attention or '—'"/>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
     </t>
 </div>
 </t>

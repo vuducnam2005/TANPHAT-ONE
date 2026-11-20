@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-002 — Quản trị chấm công trực quan, bỏ nhập Excel và thu gọn dashboard
+
+- 20/11/2026 Asia/Saigon; người dùng trực tiếp giao triển khai, sau đó đính chính scope và bổ sung hai ảnh `9e79b638`/`219fe92e`. `tp_hr_attendance` 20.0.3.5.2: Quản trị chấm công hiển thị kết nối/số liệu thật, xuất `.xlsx` theo kỳ/phòng, đối chiếu và nhật ký gần nhất; bỏ khối và menu nhập/lịch sử Excel, giữ dữ liệu lịch sử. Form cấu hình, bảng đối chiếu và nhật ký native gọn hơn, có search theo ngày/kết quả/hình thức và chi tiết chỉ đọc.
+- Dashboard bỏ chú giải donut và nhãn đồng bộ/giờ cập nhật; tooltip vẫn có trạng thái/số lượng/tỷ lệ, danh sách gần nhất rộng60% desktop và xuống dòng đọc đủ thông tin. Giữ sáu KPI, màu, biểu đồ dưới, bộ lọc, nguồn, công thức, exporter, Công của tôi, quyền, credential, cron và dữ liệu. Diff phạm vi rộng003 đã lưu riêng/hoàn nguyên, không ship security/migration mới. [Nghiệm thu](demo/ATTENDANCE_ADMIN_UI_001_ACCEPTANCE.md).
+- Kiểm thực ban đầu: Python/Ruff/XML/SCSS/JS/diff PASS, Node hồi quy xuất/lọc/polling PASS; suite Odoo96 có2 test kỳ vọng menu nhập cũ, đã cập nhật và chạy lại2/2 đạt. Admin trước8 ảnh/sau16 ảnh cùng DB/kỳ, 0 lỗi JS; sửa Owl `t-model` không tương thích. XLSX3kỳ đối chiếu0sai lệch, previewHTML đã xem; dashboard4width0overflow, hover đúng thông tin. Delegate/employee ORM đạt nhưng browser login403, visual2role NOT RUN. Kết quả ở acceptance. Local18069 vẫn sealed20.0.3.3.0 khác PC20.0.3.5.1 nên không áp module mới lên local cũ. Workflow snapshot release tách foreign WIP, không finish thay tác vụ khác.
+
 ## CHG-20261120-001 — ATTENDANCE-WORKSPACE-003: hợp nhất ưu tiên giữ sáu thẻ, dashboard chung
 
 - 20/11/2026 Asia/Saigon; phiên điều phối hợp nhất prompt gốc người dùng và bổ sung mới, lấy ảnh `38c53f30-9104-4127-88c9-878af3fad5c6` đã duyệt làm căn cứ hình thức. [Prompt Claude](prompts/CLAUDE_ATTENDANCE_WORKSPACE_003_SHARED_DASHBOARD.md) thay yêu cầu bốn thẻ/35–65 cũ bằng giữ sáu thẻ, màu, donut, recent, biểu đồ dưới và tất cả bộ lọc; căn tên/phòng/giờ, responsive, live và một component mọi vai trò. Công của tôi/XLSX/connector admin/nhãn trung tính vẫn trong scope gốc.

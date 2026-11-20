@@ -1,37 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 <t t-name="tp_hr_attendance.Dashboard">
-<div class="o_tp_att o_tp_att_ov" aria-label="Tổng quan chấm công" t-att-aria-busy="this.state.loading ? 'true' : 'false'"
-     t-att-class="{'o_tp_att_ov_refreshing': this.state.refreshing}">
+<div class="o_tp_att o_tp_att_ov" aria-label="Tổng quan chấm công" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
     <header class="o_tp_att_ov_head">
         <div class="o_tp_att_ov_title">
             <h1>Tổng quan chấm công</h1>
             <p class="o_tp_att_subtitle" t-out="this.heading"/>
         </div>
-        <div class="o_tp_att_ov_meta" t-if="this.data">
-            <span class="o_tp_att_live" t-att-class="'o_' + this.live.tone" t-att-title="this.live.title" role="status">
-                <span class="o_tp_att_live_dot" aria-hidden="true"/>
-                <i class="oi" t-att-data-icon="this.live.icon" aria-hidden="true"/>
-                <t t-out="this.live.label"/>
-            </span>
-            <span class="o_tp_att_ov_updated" t-if="this.data.source.updated_at" t-att-title="this.live.title">
-                Cập nhật <strong t-out="this.data.source.updated_at"/>
-            </span>
-            <button t-if="this.data.can_export" type="button" class="btn btn-primary o_tp_att_ov_export" t-att-disabled="this.state.exporting"
-                    t-on-click="() => this.exportExcel()">
-                <i class="oi me-1" t-att-data-icon="this.state.exporting ? 'hourglass_top' : 'download'" aria-hidden="true"/>
-                <t t-out="this.state.exporting ? 'Đang xuất…' : 'Xuất Excel'"/>
-            </button>
-        </div>
+        <button t-if="this.data?.can_export" type="button" class="btn btn-primary o_tp_att_ov_export" t-att-disabled="this.state.exporting"
+                t-on-click="() => this.exportExcel()">
+            <i class="oi me-1" t-att-data-icon="this.state.exporting ? 'hourglass_top' : 'download'" aria-hidden="true"/>
+            <t t-out="this.state.exporting ? 'Đang xuất…' : 'Xuất Excel'"/>
+        </button>
     </header>
 
     <div t-if="this.state.exportError" class="alert alert-danger o_tp_att_ov_alert" role="alert">
         <strong>Xuất Excel chưa thành công.</strong> <t t-out="this.state.exportError"/>
-    </div>
-    <div t-if="this.data?.source.health === 'error'" class="alert alert-warning o_tp_att_ov_alert" role="alert">
-        <strong>Đồng bộ ENTI đang lỗi<t t-if="this.data.source.error_at"> (từ <t t-out="this.data.source.error_at"/>)</t>.</strong>
-        Dữ liệu đã có được giữ nguyên.
-        <span t-if="this.data.source.error" class="d-block o_tp_att_muted" t-out="this.data.source.error"/>
     </div>
 
     <section class="o_tp_att_ov_filters" aria-label="Kỳ và bộ lọc">
@@ -128,35 +112,24 @@
             </button>
         </section>
 
-        <div class="o_tp_att_ov_grid">
+        <div class="o_tp_att_ov_grid o_tp_att_ov_main">
             <section class="o_tp_att_ov_card o_tp_att_ov_status" aria-labelledby="o_tp_att_ov_status_title">
                 <header class="o_tp_att_ov_card_head">
                     <div>
                         <h2 id="o_tp_att_ov_status_title">Tình trạng chấm công</h2>
-                        <p class="o_tp_att_muted">Mỗi <t t-out="this.data.mode === 'day' ? 'người' : 'nhân viên-ngày'"/> có đúng một tình trạng · bấm để lọc bảng</p>
+                        <p class="o_tp_att_muted">Bấm vào một phần của biểu đồ để lọc bảng</p>
                     </div>
                     <span class="o_tp_att_ov_chip" t-out="this.data.period_label"/>
                 </header>
                 <div t-if="!this.drawnTotal" class="o_tp_att_ov_empty">Chưa có ngày nào đã qua trong phạm vi lọc.</div>
                 <div t-else="" class="o_tp_att_ov_donut_row">
                     <div class="o_tp_att_ov_donut">
-                        <canvas t-ref="this.donut.ref" role="img" t-att-aria-label="'Biểu đồ tình trạng chấm công, tổng ' + this.drawnTotal + ' ' + this.unit"/>
+                        <canvas t-ref="this.donut.ref" role="img" t-att-aria-label="this.donutLabel"/>
                         <div class="o_tp_att_ov_donut_center" aria-hidden="true">
                             <strong t-out="this.drawnTotal"/>
                             <span t-out="this.unit"/>
                         </div>
                     </div>
-                    <ul class="o_tp_att_ov_legend" aria-label="Chú giải tình trạng">
-                        <li t-foreach="this.legend" t-as="item" t-key="item.key">
-                            <button type="button" t-att-class="{'active': this.state.status === item.key, 'o_zero': !item.value}" t-att-aria-pressed="this.state.status === item.key ? 'true' : 'false'"
-                                    t-on-click="() => this.setStatus(item.key)">
-                                <span class="o_swatch" t-att-style="'background:' + item.color" aria-hidden="true"/>
-                                <span class="o_name" t-out="item.label"/>
-                                <strong t-out="item.value"/>
-                                <span class="o_pct"><t t-out="item.percent"/>%</span>
-                            </button>
-                        </li>
-                    </ul>
                 </div>
             </section>
 

@@ -1,5 +1,11 @@
 # ATTENDANCE-WORKSPACE-003 — Giữ dashboard sáu thẻ, dùng chung mọi vai trò
 
+> **Phạm vi đã được người dùng đính chính ở CHG-20261120-002:** chỉ làm lại khu
+> Quản trị chấm công, bỏ giao diện nhập/lịch sử Excel và ưu tiên xuất đúng mẫu.
+> Dashboard chỉ bổ sung bỏ chú giải donut/nhãn đồng bộ/giờ cập nhật, nới10 người
+> gần nhất; giữ sáu KPI và Công của tôi. Không chạy lại phần credential/security/
+> migration/Công của tôi bên dưới. Xem [bàn giao phạm vi cuối](../demo/ATTENDANCE_ADMIN_UI_001_ACCEPTANCE.md).
+
 Ngày chốt yêu cầu: **20/11/2026 Asia/Saigon**. Phiên điều phối: `CHG-20261120-001`.
 Trạng thái: **PROMPT_READY_NOT_IMPLEMENTED**. Đây là prompt hợp nhất để giao Claude triển khai;
 không phải bằng chứng đã sửa ứng dụng, đã kiểm UI hoặc đã nghiệm thu nghiệp vụ.

@@ -14,9 +14,12 @@ from odoo.exceptions import AccessError, UserError, ValidationError
 from .attendance_common import (
     DEFAULT_TZ,
     HR_MANAGER,
+    can,
     deny_direct,
     internal,
+    is_correction_admin,
     is_internal,
+    local_today,
     require,
 )
 from .attendance_logic import CODE_MAX, EventError, fingerprint, normalize_event
@@ -193,11 +196,12 @@ class AttendanceSource(models.Model):
 
     @api.model
     def tp_sources_overview(self, params=None):
-        """"Nguồn dữ liệu" page (HR/import only): ENTI state, ENTI people not yet mapped (with the reason), and the
-        read-only history of the former Excel imports (ENTI-ATTENDANCE-002 closed Excel file import)."""
+        """Administration: connection health, pending mapping, bounded sync log and export scope.
+
+        Existing backend rights and canonical attendance calculations remain authoritative.
+        """
         company = self.env.company
         require(self.env, 'import', company)
-        Batch = self.env['tp.hr.attendance.batch'].sudo()
         Day = self.env['tp.hr.attendance.day']
         tz_env = Day.with_context(tz=self.env.user.tz or DEFAULT_TZ)
 
@@ -207,27 +211,7 @@ class AttendanceSource(models.Model):
         def day(value):
             return value.strftime('%d/%m/%Y') if value else ''
 
-        updated, applied = Day._tp_updated(company)
         states = dict(self._fields['state'].selection)
-        history = []
-        for batch in Batch.search([('company_id', '=', company.id), ('state', '!=', 'draft')], order='id desc', limit=20):
-            if batch.state == 'applied':
-                result = f'Ghi {batch.applied_count} ngày · {batch.late_applied_count} tổng muộn'
-            elif batch.state == 'partial':
-                result = f'Áp một phần ({batch.applied_count} ngày) · Còn khác biệt chờ chọn nguồn'
-            elif batch.state == 'preview':
-                result = 'Đã đọc/Lưu nguồn – Chưa áp dụng'
-            else:
-                result = 'Đã bỏ qua nguồn, không ghi'
-            history.append({
-                'id': batch.id, 'file': batch.file_name or batch.name or '', 'user': (batch.applied_by or batch.create_uid).name or '',
-                'at': stamp(batch.applied_at or batch.create_date), 'period': (
-                    f'{day(batch.period_from)} – {day(batch.period_to)}' if batch.period_from and batch.period_to else ''),
-                'state': batch.state, 'state_label': dict(Batch._fields['state'].selection).get(batch.state, ''),
-                'result': result, 'source': 'Excel máy chấm công',
-                'attention': batch.conflict_count + batch.unmapped_count + batch.name_conflict_count + batch.review_count
-                + batch.late_conflict_count + batch.late_unmapped_count + batch.late_review_count,
-            })
         sources = self.sudo().search([('company_id', '=', company.id)])
         Event = self.env['tp.hr.attendance.event'].sudo()
         Mapping = self.env['tp.hr.attendance.enti.mapping'].sudo()
@@ -255,11 +239,33 @@ class AttendanceSource(models.Model):
         elif sources:
             api_label = f'{len(sources)} nguồn đã khai báo'
 
+        # The administration preview uses the same company and read ACLs as the full native log.
+        Log = self.env['tp.hr.attendance.enti.sync.log']
+        sync_logs = []
+        if Log.has_access('read'):
+            sync_logs = [{
+                'id': log.id, 'at': stamp(log.synced_at), 'status': log.state,
+                'status_label': 'Thành công' if log.state == 'success' else 'Chưa thành công',
+                'days_received': log.days_received, 'days_applied': log.days_applied,
+                'unmapped': log.unmapped_count, 'duration': log.duration_seconds,
+                'from': day(log.start_date), 'to': day(log.end_date),
+            } for log in Log.search([('company_id', '=', company.id)], order='synced_at desc, id desc', limit=5)]
+        today = local_today(DEFAULT_TZ)
+        health = Day._tp_source_strip(company, today)['health']
+
         return {
-            'excel': {'in_use': bool(applied), 'batches': len(applied), 'file': applied[:1].file_name or '' if applied else '',
-                      'updated_at': updated['at'] if updated else '', 'data_to': updated['to'] if updated else '',
-                      'note': ('Đã ngừng nhập tệp Excel: dữ liệu công lấy tự động từ ENTI. Các lần nhập trước được giữ '
-                               'làm lịch sử, vẫn xem và xuất được; điều chỉnh đã duyệt và kỳ đã chốt không bị ghi đè.')},
+            'today': today.isoformat(),
+            'departments': Day._tp_departments(company),
+            'health': health,
+            'mapping': {
+                'suggested': Mapping.search_count([('company_id', '=', company.id), ('state', '=', 'suggested')]),
+                'unmapped': Mapping.search_count([('company_id', '=', company.id), ('state', '=', 'unmapped')]),
+            },
+            'sync_logs': sync_logs,
+            'can_view_logs': Log.has_access('read'),
+            'can_review': is_correction_admin(self.env, company),
+            'can_lock': can(self.env, 'lock', company),
+            'can_export': Day._tp_can_export_shared(company),
             'api': {'label': api_label, 'live': live_active,
                     'events': Event.search_count([('company_id', '=', company.id)]),
                     'unmapped': Event.search_count([('company_id', '=', company.id), ('state', '=', 'unmapped')]),
@@ -280,7 +286,6 @@ class AttendanceSource(models.Model):
                                  'last_success_at': stamp(source.last_success_at), 'latest_event_at': stamp(source.latest_event_at),
                                  'last_error': source.last_error or '', 'codes': len(source.code_ids)} for source in sources]},
             'checklist': [{'key': key, 'label': label} for key, label in VENDOR_CHECKLIST],
-            'history': history,
             'can_configure': self.env.user.has_group(HR_MANAGER),
             'reference_hours': (self.env['ir.config_parameter'].sudo().get_str('tp_hr_attendance.reference_hours') or '08:30-17:00'),
         }

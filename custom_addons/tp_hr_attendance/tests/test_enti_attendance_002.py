@@ -388,9 +388,9 @@ class TestExcelImportClosed(AttendanceCase):
         sources = {row[10] for row in book['Chi tiết'].iter_rows(min_row=4, values_only=True) if row[0]}
         self.assertIn('Excel máy (lịch sử)', sources)
 
-        # Menus: the history list stays for HR, the file matrix entry is gone.
+        # Import and history menu entries are retired; existing records remain readable and exportable.
         menus = self.env['ir.ui.menu'].with_user(self.manager)._visible_menu_ids()
-        self.assertIn(self.env.ref('tp_hr_attendance.menu_import').id, menus)
+        self.assertNotIn(self.env.ref('tp_hr_attendance.menu_import').id, menus)
         self.assertFalse(self.env.ref('tp_hr_attendance.menu_file_matrix', raise_if_not_found=False))
 
     def test_stale_preview_can_still_be_cancelled(self):

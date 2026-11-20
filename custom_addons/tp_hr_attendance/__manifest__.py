@@ -1,7 +1,7 @@
 {
     "name": "TANPHAT ONE — Chấm công",
-    "summary": "Tích hợp chấm công tự động từ API ENTI, nhập Excel dự phòng, bảng công tối giản, tổng quan thời gian thực",
-    "version": "20.0.3.5.1",
+    "summary": "Chấm công tự động, quản trị kết nối và xuất bảng công theo kỳ",
+    "version": "20.0.3.5.2",
     "license": "LGPL-3",
     "author": "Tan Phat JSC",
     "depends": ["tp_hr_workspace"],
@@ -40,6 +40,7 @@
             "tp_hr_attendance/static/src/matrix/matrix.xml",
             "tp_hr_attendance/static/src/attendance.scss",
             "tp_hr_attendance/static/src/dashboard.scss",
+            "tp_hr_attendance/static/src/admin.scss",
             "tp_hr_attendance/static/src/matrix/matrix.scss",
         ],
     },

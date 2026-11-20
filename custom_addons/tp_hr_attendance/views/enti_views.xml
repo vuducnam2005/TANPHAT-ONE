@@ -6,39 +6,33 @@
         <field name="name">tp.hr.attendance.enti.config.wizard.form</field>
         <field name="model">tp.hr.attendance.enti.config.wizard</field>
         <field name="arch" type="xml">
-            <form string="Cấu hình kết nối chấm công ENTI">
+            <form string="Cấu hình kết nối chấm công">
                 <sheet>
-                    <div class="alert alert-info" role="status">
-                        <strong>Tích hợp chấm công ENTI (enti.vn)</strong>: Hệ thống kết nối API trực tiếp từ backend,
-                        tự động đồng bộ giờ vào/ra và đối chiếu nhân sự. Mật khẩu được bảo mật tuyệt đối trên máy chủ và không bao giờ hiển thị lại ra trình duyệt.
-                    </div>
                     <group>
                         <group string="Thông tin tài khoản">
-                            <field name="phone" placeholder="Số điện thoại đăng nhập ENTI"/>
-                            <field name="password" password="True" placeholder="Mật khẩu tài khoản ENTI"/>
-                            <field name="app_key" placeholder="Để trống nếu tự động nhận diện"/>
+                            <field name="phone" string="Số điện thoại" placeholder="Số điện thoại đăng nhập"/>
+                            <field name="password" string="Mật khẩu" password="True"/>
+                            <field name="app_key" string="Khóa ứng dụng" placeholder="Tùy chọn"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
-                        <group string="Trạng thái hiện tại">
-                            <field name="status_display" readonly="1" widget="badge" decoration-success="is_configured" decoration-warning="not is_configured"/>
+                        <group string="Trạng thái kết nối">
+                            <field name="status_display" string="Cấu hình" readonly="1" widget="badge" decoration-success="is_configured" decoration-warning="not is_configured"/>
                             <field name="is_configured" invisible="1"/>
                         </group>
                     </group>
                     <div class="d-flex gap-2 my-2">
                         <button name="action_test_connection" type="object" string="Kiểm tra kết nối" class="btn btn-outline-primary"/>
-                        <button name="action_save_credentials" type="object" string="Lưu cấu hình bảo mật" class="btn btn-primary"/>
+                        <button name="action_save_credentials" type="object" string="Lưu cấu hình" class="btn btn-primary"/>
                     </div>
-                    <field name="last_test_result" readonly="1" class="font-monospace text-wrap border p-2 bg-light rounded" invisible="not last_test_result"/>
-                    <separator string="Đồng bộ thủ công khoảng ngày"/>
-                    <group>
-                        <group>
-                            <field name="date_from"/>
-                            <field name="date_to"/>
-                        </group>
-                        <group class="d-flex align-items-center">
-                            <button name="action_sync_now" type="object" string="Đồng bộ ngay khoảng ngày này" class="btn btn-success"/>
-                        </group>
+                    <group invisible="not last_test_result">
+                        <field name="last_test_result" string="Kết quả kiểm tra" readonly="1"/>
                     </group>
+                    <separator string="Đồng bộ thủ công"/>
+                    <group>
+                        <field name="date_from" string="Từ ngày"/>
+                        <field name="date_to" string="Đến ngày"/>
+                    </group>
+                    <button name="action_sync_now" type="object" string="Đồng bộ khoảng ngày" class="btn btn-outline-primary"/>
                 </sheet>
                 <footer>
                     <button special="cancel" string="Đóng" class="btn btn-secondary"/>
@@ -48,7 +42,7 @@
     </record>
 
     <record id="action_enti_config" model="ir.actions.act_window">
-        <field name="name">Cấu hình kết nối ENTI</field>
+        <field name="name">Cấu hình kết nối</field>
         <field name="res_model">tp.hr.attendance.enti.config.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
@@ -59,15 +53,15 @@
         <field name="name">tp.hr.attendance.enti.mapping.list</field>
         <field name="model">tp.hr.attendance.enti.mapping</field>
         <field name="arch" type="xml">
-            <list string="Đối chiếu nhân viên ENTI - Odoo" js_class="tp_hr_table" default_order="state desc, ten_nv" editable="bottom">
-                <field name="ma_nv" string="Mã ENTI" readonly="1"/>
-                <field name="ten_nv" string="Họ tên bên ENTI" readonly="1"/>
-                <field name="ten_bp" string="Bộ phận ENTI" readonly="1"/>
-                <field name="employee_id" string="Nhân viên Odoo"/>
-                <field name="employee_code" string="Mã Odoo" readonly="1"/>
-                <field name="employee_department" string="Phòng ban Odoo" readonly="1"/>
+            <list string="Đối chiếu nhân viên" js_class="tp_hr_table" default_order="state desc, ten_nv" editable="bottom" open_form_view="1" create="0" delete="0">
+                <field name="ma_nv" string="Mã trên máy" readonly="1"/>
+                <field name="ten_nv" string="Họ tên trên máy" readonly="1"/>
+                <field name="ten_bp" string="Bộ phận trên máy" readonly="1" optional="hide"/>
+                <field name="employee_id" string="Nhân viên trong hệ thống"/>
+                <field name="employee_code" string="Mã nhân viên" readonly="1" optional="hide"/>
+                <field name="employee_department" string="Phòng ban trong hệ thống" readonly="1" optional="hide"/>
                 <field name="state" widget="badge" decoration-success="state == 'mapped'" decoration-warning="state == 'suggested'" decoration-danger="state == 'unmapped'" readonly="1"/>
-                <field name="match_reason" string="Căn cứ đối chiếu" readonly="1"/>
+                <field name="match_reason" string="Căn cứ đối chiếu" readonly="1" optional="hide"/>
                 <button name="action_confirm_mapping" type="object" string="Xác nhận" class="btn btn-sm btn-primary" invisible="state == 'mapped'"/>
                 <button name="action_reject_mapping" type="object" string="Hủy khớp" class="btn btn-sm btn-outline-danger" invisible="state == 'unmapped'"/>
             </list>
@@ -78,7 +72,7 @@
         <field name="name">tp.hr.attendance.enti.mapping.form</field>
         <field name="model">tp.hr.attendance.enti.mapping</field>
         <field name="arch" type="xml">
-            <form string="Đối chiếu nhân viên ENTI">
+            <form string="Đối chiếu nhân viên">
                 <header>
                     <button name="action_confirm_mapping" type="object" string="Xác nhận đối chiếu" class="btn btn-primary" invisible="state == 'mapped'"/>
                     <button name="action_reject_mapping" type="object" string="Hủy ghép nối" class="btn btn-outline-danger" invisible="state == 'unmapped'"/>
@@ -86,19 +80,21 @@
                 </header>
                 <sheet>
                     <group>
-                        <group string="Dữ liệu từ ENTI">
-                            <field name="ma_nv" readonly="1"/>
-                            <field name="ten_nv" readonly="1"/>
-                            <field name="ten_bp" readonly="1"/>
-                            <field name="key_nv" readonly="1"/>
-                            <field name="last_seen_at" readonly="1"/>
+                        <group string="Dữ liệu máy chấm công">
+                            <field name="ma_nv" string="Mã trên máy" readonly="1"/>
+                            <field name="ten_nv" string="Họ tên trên máy" readonly="1"/>
+                            <field name="ten_bp" string="Bộ phận trên máy" readonly="1"/>
+                            <field name="key_nv" string="Định danh trên máy" readonly="1"/>
+                            <field name="last_seen_at" string="Lần đọc gần nhất" readonly="1"/>
                         </group>
-                        <group string="Hồ sơ nhân viên Odoo">
-                            <field name="employee_id"/>
-                            <field name="employee_code" readonly="1"/>
-                            <field name="employee_department" readonly="1"/>
-                            <field name="match_reason" readonly="1"/>
+                        <group string="Hồ sơ trong hệ thống">
+                            <field name="employee_id" string="Nhân viên"/>
+                            <field name="employee_code" string="Mã nhân viên" readonly="1"/>
+                            <field name="employee_department" string="Phòng ban" readonly="1"/>
                         </group>
+                    </group>
+                    <group>
+                        <field name="match_reason" string="Căn cứ đối chiếu" readonly="1"/>
                     </group>
                 </sheet>
             </form>
@@ -120,29 +116,30 @@ records.action_auto_match()
         <field name="name">tp.hr.attendance.enti.mapping.search</field>
         <field name="model">tp.hr.attendance.enti.mapping</field>
         <field name="arch" type="xml">
-            <search string="Đối chiếu nhân viên ENTI">
-                <field name="ten_nv" string="Họ tên ENTI"/>
-                <field name="ma_nv" string="Mã ENTI"/>
-                <field name="employee_id" string="Nhân viên Odoo"/>
+            <search string="Đối chiếu nhân viên">
+                <field name="ten_nv" string="Họ tên trên máy"/>
+                <field name="ma_nv" string="Mã trên máy"/>
+                <field name="ten_bp" string="Bộ phận trên máy"/>
+                <field name="employee_id" string="Nhân viên trong hệ thống"/>
                 <filter name="state_suggested" string="Chờ xác nhận" domain="[('state', '=', 'suggested')]"/>
                 <filter name="state_unmapped" string="Chưa đối chiếu" domain="[('state', '=', 'unmapped')]"/>
                 <filter name="state_mapped" string="Đã khớp" domain="[('state', '=', 'mapped')]"/>
                 <group>
                     <filter name="group_state" string="Trạng thái đối chiếu" context="{'group_by': 'state'}"/>
-                    <filter name="group_dept" string="Bộ phận ENTI" context="{'group_by': 'ten_bp'}"/>
+                    <filter name="group_dept" string="Bộ phận trên máy" context="{'group_by': 'ten_bp'}"/>
                 </group>
             </search>
         </field>
     </record>
 
     <record id="action_enti_mapping" model="ir.actions.act_window">
-        <field name="name">Đối chiếu nhân viên ENTI</field>
+        <field name="name">Đối chiếu nhân viên</field>
         <field name="res_model">tp.hr.attendance.enti.mapping</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="enti_mapping_search"/>
         <field name="context">{'search_default_state_suggested': 1, 'search_default_state_unmapped': 1}</field>
         <field name="help" type="html">
-            <p>Danh sách đối chiếu định danh nhân viên giữa ENTI và Odoo. Xác nhận ghép nối để công được ghi nhận vào hồ sơ nhân viên chuẩn.</p>
+            <p>Xác nhận đối chiếu để ghi nhận giờ công từ máy vào đúng hồ sơ nhân viên.</p>
         </field>
     </record>
 
@@ -151,27 +148,82 @@ records.action_auto_match()
         <field name="name">tp.hr.attendance.enti.sync.log.list</field>
         <field name="model">tp.hr.attendance.enti.sync.log</field>
         <field name="arch" type="xml">
-            <list string="Nhật ký đồng bộ ENTI" create="0" edit="0" delete="0">
+            <list string="Nhật ký đồng bộ" create="0" edit="0" delete="0">
                 <field name="synced_at" string="Thời điểm"/>
-                <field name="start_date" string="Từ ngày"/>
-                <field name="end_date" string="Đến ngày"/>
-                <field name="employee_count" string="Số NV ENTI"/>
-                <field name="mapped_count" string="Đã khớp"/>
-                <field name="unmapped_count" string="Chưa khớp"/>
-                <field name="days_applied" string="Ngày công áp dụng"/>
-                <field name="duration_seconds" string="Thời gian (s)"/>
+                <field name="origin" string="Hình thức" widget="badge"/>
                 <field name="state" widget="badge" decoration-success="state == 'success'" decoration-danger="state == 'error'"/>
-                <field name="message" string="Chi tiết"/>
+                <field name="start_date" string="Từ ngày" optional="hide"/>
+                <field name="end_date" string="Đến ngày" optional="hide"/>
+                <field name="employee_count" string="Số nhân viên" optional="hide"/>
+                <field name="mapped_count" string="Đã khớp" optional="hide"/>
+                <field name="unmapped_count" string="Chưa khớp" optional="hide"/>
+                <field name="days_applied" string="Ngày công cập nhật"/>
+                <field name="duration_seconds" string="Thời lượng (giây)" optional="hide"/>
+                <field name="message" string="Chi tiết" optional="hide"/>
             </list>
         </field>
     </record>
 
+    <record id="enti_sync_log_form" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.enti.sync.log.form</field>
+        <field name="model">tp.hr.attendance.enti.sync.log</field>
+        <field name="arch" type="xml">
+            <form string="Chi tiết đồng bộ" create="0" edit="0" delete="0" duplicate="0">
+                <sheet>
+                    <group>
+                        <group string="Lượt đồng bộ">
+                            <field name="state" widget="badge" decoration-success="state == 'success'" decoration-danger="state == 'error'"/>
+                            <field name="synced_at"/>
+                            <field name="origin" string="Hình thức"/>
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                            <field name="duration_seconds" string="Thời lượng (giây)"/>
+                        </group>
+                        <group string="Dữ liệu ghi nhận">
+                            <field name="employee_count" string="Số nhân viên"/>
+                            <field name="mapped_count" string="Đã khớp"/>
+                            <field name="unmapped_count" string="Chưa khớp"/>
+                            <field name="days_received" string="Ngày công nhận được"/>
+                            <field name="days_applied" string="Ngày công cập nhật"/>
+                            <field name="kept_count" string="Ngày giữ giờ cũ"/>
+                        </group>
+                    </group>
+                    <group invisible="not message">
+                        <field name="message" string="Chi tiết"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="enti_sync_log_search" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.enti.sync.log.search</field>
+        <field name="model">tp.hr.attendance.enti.sync.log</field>
+        <field name="arch" type="xml">
+            <search string="Nhật ký đồng bộ">
+                <filter name="success" string="Thành công" domain="[('state', '=', 'success')]"/>
+                <filter name="error" string="Lỗi" domain="[('state', '=', 'error')]"/>
+                <separator/>
+                <filter name="automatic" string="Tự động" domain="[('origin', '=', 'cron')]"/>
+                <filter name="manual" string="Thủ công" domain="[('origin', '=', 'manual')]"/>
+                <separator/>
+                <filter name="sync_date" string="Ngày đồng bộ" date="synced_at"/>
+                <group>
+                    <filter name="group_result" string="Kết quả" context="{'group_by': 'state'}"/>
+                    <filter name="group_origin" string="Hình thức" context="{'group_by': 'origin'}"/>
+                    <filter name="group_sync_date" string="Ngày đồng bộ" context="{'group_by': 'synced_at:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
     <record id="action_enti_logs" model="ir.actions.act_window">
-        <field name="name">Nhật ký đồng bộ ENTI</field>
+        <field name="name">Nhật ký đồng bộ</field>
         <field name="res_model">tp.hr.attendance.enti.sync.log</field>
-        <field name="view_mode">list</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="enti_sync_log_search"/>
         <field name="help" type="html">
-            <p>Lịch sử các lần hệ thống tự động hoặc thủ công đồng bộ dữ liệu từ ENTI.</p>
+            <p>Chưa có lượt đồng bộ trong phạm vi đang xem.</p>
         </field>
     </record>
 </odoo>

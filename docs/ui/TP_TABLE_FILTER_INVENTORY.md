@@ -382,3 +382,16 @@ Không tạo/sửa bảng dữ liệu: form nhân viên/user và wizard khóa/m�
 - HR-T01 / `action_employees` / `employee_list`: thay search lớn bằng Họ tên tự gợi ý và áp dụng sau250ms; native SearchModel, menu Lọc/Nhóm/Ưa thích, facets/count/pager/export và department grouping giữ. Tên là substring ilike, chọn gợi ý là ID; xóa tên giữ các điều kiện khác.
 - HR-T18 và tab con hồ sơ nhân viên/Thông tin cá nhân: chỉ typography/responsive/scroll; bộ lọc đang có giữ. Không thêm bảng hoặc tiêu chí nghiệp vụ. Popup account/position/credentials là form một bản ghi: N/A bộ lọc bảng, không mở quyền. HR-T02/T03/T04 và KH-KD/reporting giữ search/hành vi cũ.
 - Kiểm thực và phần chưa kiểm: [acceptance](../demo/HR_PROFILE_LIVE_SEARCH_001_ACCEPTANCE.md). Không chuyển coverage của inventory cũ thành chứng minh task này đã nghiệm thu.
+
+## ATTENDANCE-ADMIN-UI-001 — Quản trị chấm công (20/11/2026)
+
+CHG-20261120-002; [nghiệm thu](../demo/ATTENDANCE_ADMIN_UI_001_ACCEPTANCE.md).
+Giữ SearchModel/domain/ACL hiện hành, không thêm filter engine hoặc quyền dữ liệu.
+
+| ID | Màn / action | Tiêu chí và phạm vi | Count / trang / xuất | Coverage |
+| --- | --- | --- | --- | --- |
+| ATT-ADM01 | Quản trị / `action_sources`, preview đối chiếu | Tối đa5 người cần ghép trong company; Chờ xác nhận/Chưa khớp mở action native và reset filter trạng thái còn lại | Hiện số preview/tổng cần ghép; danh sách đầy đủ tại action mapping | N/A bộ lọc riêng cho preview bị chặn5; action đầy đủ dùng SearchModel; browser4width trong acceptance |
+| ATT-ADM02 | `action_enti_mapping`, native list/search/form | Họ tên/mã/bộ phận nguồn/nhân viên trong hệ thống; trạng thái/groupby; domain company và ACL cũ | Native pager/count/export theo quyền có sẵn, cột phụ optional | SearchModel dùng chung; không tạo mapping hoặc xác nhận dữ liệu thật trong smoke |
+| ATT-ADM03 | Quản trị preview5 log, `action_enti_logs` list/search/form | Kết quả thành công/lỗi; tự động/thủ công; thời gian đồng bộ; nhóm kết quả/hình thức/ngày; company+ACL | Native pager/count và form chi tiết chỉ đọc; preview không có message/raw dữ liệu | N/A bộ lọc riêng preview giới hạn5 mới nhất; browser4width |
+| ATT-ADM04 | Xuất bảng công ngay trên quản trị | Tuần/tháng/khoảng ngày và phòng ban; cùng `tp_export_sheet`/dataset/capability hiện hành | Xuất toàn bộ kỳ/phòng hợp lệ, không truyền page/page_size; matrix+Chi tiết chuẩn hiện có | Node range/permission/params/polling PASS; tải thực tuần/tháng/range-phòng, đọc workbook; chi tiết ở acceptance |
+| ATT-ADM05 | Menu/khối nhập Excel chấm công | Loại khỏi luồng quản trị; backend nhập mới đã đóng DEC-063 | Giữ dữ liệu lịch sử trong canonical export, không có upload/compare/history UI | Regression Odoo menu nhập không hiện; backend refuse import giữ nguyên |

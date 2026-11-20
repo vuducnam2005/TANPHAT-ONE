@@ -146,7 +146,7 @@
     </record>
 
     <record id="action_sources" model="ir.actions.client">
-        <field name="name">Nguồn dữ liệu chấm công</field>
+        <field name="name">Quản trị chấm công</field>
         <field name="tag">tp_hr_attendance.sources</field>
         <field name="path">nguon-cham-cong</field>
     </record>

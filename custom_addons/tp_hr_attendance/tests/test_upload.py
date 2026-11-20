@@ -185,8 +185,25 @@ class TestAttendanceUpload(AttendanceCase):
             self.env_for(self.viewer)['tp.hr.attendance.source'].tp_sources_overview({})
         overview = Source.tp_sources_overview({})
         self.assertEqual((overview['api']['label'], overview['api']['live'], overview['api']['events']), ('Chưa cấu hình', False, 0))
+        self.assertNotIn('excel', overview, 'The administration no longer exposes file-import summaries')
+        self.assertNotIn('history', overview)
+        self.assertEqual(overview['health'], 'off')
+        self.assertTrue(overview['can_export'])
+        self.assertFalse(overview['can_review'], 'HR title does not grant correction approval')
+        self.assertEqual(overview['sync_logs'], [])
+        self.assertEqual(overview['mapping'], {'suggested': 0, 'unmapped': 0})
+        self.assertIn(self.dept.id, [item['id'] for item in overview['departments']])
         self.assertTrue(overview['checklist'])
         source = Source.create({'name': 'Synthetic device', 'namespace': 'synthetic-device-1', 'company_id': self.company.id})
+        self.env['tp.hr.attendance.enti.sync.log'].sudo().create([
+            {'source_id': source.id, 'start_date': MONDAY, 'end_date': MONDAY,
+             'state': 'success', 'days_received': value, 'days_applied': value, 'message': 'Private debug details'}
+            for value in range(7)
+        ])
+        log_preview = Source.tp_sources_overview({})['sync_logs']
+        self.assertEqual(len(log_preview), 5)
+        self.assertEqual([item['days_received'] for item in log_preview], [6, 5, 4, 3, 2])
+        self.assertTrue(all('message' not in item for item in log_preview))
         self.assertEqual((source.state, source.live_enabled), ('not_configured', False))
         events = [
             {'external_code': '0042', 'timestamp': '2026-11-09T07:37:00', 'direction': 'IN', 'event_id': 'E-1'},
