@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-003 — Đã giao quản trị chấm công và dashboard thu gọn lên PC server
+
+- 20/11/2026 Asia/Saigon; app `053d7691` đã push/deploy PC20.0.3.5.2, source79/79, upgradeexit0/0ERROR. Backup `C:\TANPHAT-backups\enti-attendance002\enti002-adminui003-20261120T101503` có dump/restore-list/filestore/source/config/SHA256. Snapshot nghiệp vụ/quyền trước-sau giống nhau, chỉ đổi version. Local18069 cũ20.0.3.3.0 giữ nguyên.
+- Health/login200, public JS603526e/CSS c9f02f8 khớp SHA256 server, có nguồn quản trị/xuất mới, dashboard không legend/nhãn đồng bộ; cold asset đầu tiên timeout35s khi sinh bundle, sau đó kiểm lại PASS. Cron thật vẫn đọc15s, log0ERROR. Bộ ảnh admin final16/4width/0JSerror bằng một phiên, dashboard4width0overflow/tooltip thực, XLSX3kỳ khớp và previewHTML rõ. Delegate/employee browser NOT RUN do login403 test, ORMscope đạt; chưa MicrosoftExcel/thiết bị thật/businessacceptance. [Bàn giao](demo/ATTENDANCE_ADMIN_UI_001_ACCEPTANCE.md). Workflow seal release đúng scope PASS, foreign WIP/checkpoint giữ.
+
 ## CHG-20261120-002 — Quản trị chấm công trực quan, bỏ nhập Excel và thu gọn dashboard
 
 - 20/11/2026 Asia/Saigon; người dùng trực tiếp giao triển khai, sau đó đính chính scope và bổ sung hai ảnh `9e79b638`/`219fe92e`. `tp_hr_attendance` 20.0.3.5.2: Quản trị chấm công hiển thị kết nối/số liệu thật, xuất `.xlsx` theo kỳ/phòng, đối chiếu và nhật ký gần nhất; bỏ khối và menu nhập/lịch sử Excel, giữ dữ liệu lịch sử. Form cấu hình, bảng đối chiếu và nhật ký native gọn hơn, có search theo ngày/kết quả/hình thức và chi tiết chỉ đọc.

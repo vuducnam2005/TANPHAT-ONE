@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-20T03:14:11.899989+00:00",
-  "last_change_id": "CHG-20261120-002",
+  "updated_at": "2026-11-20T03:22:10.276050+00:00",
+  "last_change_id": "CHG-20261120-003",
   "code_digest": "40204fcbc6255ef830ab69bc3ce30ab7d2e382f4e13410b92d5e0e4efce181e7",
   "code_file_count": 708,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "d8e8f60d64b5100f8cd9f66097703ceca0c74f852c1692f9afc160e86528b423",
-    "docs/CHANGELOG.md": "d50636787b74ecf2252d2c9eb25058a2b05e082eccf894647b8dfb215db46476",
+    "docs/PROJECT_STATUS.md": "111f836183b6d5043f8c13865b273787aab0b829c5e4fd7f55765ef94ee57102",
+    "docs/CHANGELOG.md": "134a9095aa849f4dd82159123d7943ec753429c99b65fe81160622d8895fe0e8",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,9 +20,9 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Odoo96 tests:94pass+2obsolete menu assertions;2fixed tests rerun0failed0errors on existing tp_tanphat_test18079.",
-    "Admin16 screenshots1440/768/390/320, dashboard4width0overflow and actual hover; original browser only; delegate/employee login403; ORM scope probesPASS.",
-    "Three actual UI XLSX downloads parse correctly; shared reconciler3periods0problems; workbook style HTML preview inspected; no actual MSExcel test.",
-    "Ruff touchedPython;XML/JS/SCSS;Node admin export/polling/filter regression;git diff--checkPASS. Scope snapshot excludes foreign WIP; root checkpoint retained."
+    "PC053d7691 20.0.3.5.2 upgrade0ERROR,79/79 checksum,backed updump/filestore/source/config;business snapshot only module version changed.",
+    "Public health/login200; actual JS603526e/CSS c9f02f8 new code and SHA256 matchPC. Initial cold bundle35s timeout then warm retryPASS.",
+    "Final single-context admin16screens4width0JSerrors;dashboard4width0overflow hoverPASS;3XLSX reconcile; no actualMSExcel/physicaldevice;2otherrolebrowser403.",
+    "Scoped seal excludes foreignWIP,rootcheckpoint preserved; gitdiff--checkPASS."
   ]
 }

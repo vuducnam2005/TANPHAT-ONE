@@ -1,7 +1,8 @@
 # ATTENDANCE-ADMIN-UI-001 — Quản trị chấm công và xuất bảng công
 
 Change `CHG-20261120-002`, ngày 20/11/2026 Asia/Saigon. Addon `tp_hr_attendance` **20.0.3.5.2**.
-Trạng thái: **VERIFIED_RELEASE_READY**. Technical acceptance khác phản hồi hình thức và nghiệm thu nghiệp vụ.
+Trạng thái: **PC_SERVER_APPLIED**, app `053d7691`, giao bản `CHG-20261120-003`.
+Technical acceptance khác phản hồi hình thức và nghiệm thu nghiệp vụ.
 
 ## 1. Phạm vi cuối cùng do người dùng chốt
 
@@ -49,7 +50,7 @@ không tạo DB/cổng mới. Backup đầy đủ dump/restore-list/config/files
 | Node `scripts/tests/test_attendance_admin_ui.cjs` | PASS: quyền xuất, range sai không RPC, đúng params không phân trang, giữ ô đang nhập qua polling, filter đối chiếu độc lập |
 | Odoo `/tp_hr_attendance` |96 test,2 assertion cũ yêu cầu menu nhập; sửa đúng kỳ vọng mới và chạy lại2 test:0 failed/0 errors. Các test còn lại đã đạt. Không nới backend assertion nhập bị chặn. |
 | Ảnh trước |8 ảnh sources/config/mapping/log ×1440/390 tại `.local/attendance-workspace003/admin-before`,0 lỗi JS |
-| Ảnh sau admin |16 ảnh sources/config/mapping/log ×1440/768/390/320 tại `.local/attendance-workspace003/admin-after`,0 lỗi JS |
+| Ảnh sau admin |16 ảnh final sources/config/mapping/log ×1440/768/390/320 tại `.local/attendance-workspace003/admin-final-admin`,0 lỗi JS, thêm ảnh log-detail. Một lượt đồng thời đăng nhập test bị session-ended/insertBefore; chạy lại chỉ một phiên không tái hiện. Không nhận lượt lỗi là PASS. |
 | Dashboard bổ sung |PASS4width, không component/document overflow;10 người gần nhất, đủ6KPI, không legend/badge/timestamp.1440: recent666px/donut444px; hover thực `Đủ giờ vào/ra:5 người (8.5%)`. Evidence `.local/attendance-workspace003/after/results.json` |
 | XLSX tải thật |PASS3 tệp từ UI (week/month/range-dept), đúng params; openpyxl2sheet/freezeF9-D4/kiểu ngày-giờ; reconciler3kỳ `ok:true`,0problems. Chưa mở trực tiếp Microsoft Excel |
 | Vai trò |Odoo shell rollback: delegate được mở nguồn, employee AccessError. Browser2actor test HTTP403 login nên NOT RUN visual; ảnh browser chỉ original. Không đổi auth/quyền để ép test xanh |
@@ -72,5 +73,29 @@ Checkpoint gốc giữ nguyên. Workflow release được kiểm trên snapshot 
 đúng diff batch, không nhận foreign code thành đã nghiệm thu. Workspace tổng thể vẫn
 có thể FAIL checker do WIP của phiên khác; xem kết quả seal và danh sách commit riêng.
 
-Chưa kiểm thiết bị vật lý, chưa người dùng duyệt hình thức hoặc nghiệp vụ. Không
-nhận thay nghiệm thu của HR. Backup/commit/deploy/public smoke sẽ được ghi sau kiểm cuối.
+## 5. PC server đã áp dụng
+
+- Commit ứng dụng: `053d769175275ccb261084f8cd4f91a6617daf87`, đã push `origin/main`.
+  PC20.0.3.5.1 → **20.0.3.5.2**, ngày20/11/2026 10:15–10:16 giờ VN.
+- Runbook `ops/runbooks/deploy-enti-attendance002.ps1`, label `enti002-adminui003`;
+  kiểm baseline/release79/79 file; không đổi module khác. Upgrade exit0,0ERROR.
+- Backup: `C:\TANPHAT-backups\enti-attendance002\enti002-adminui003-20261120T101503`
+  gồm dump10.355.014B +pg_restore-list, filestore/source tar.gz, config, manifest,
+  snapshot và SHA256. Rollback theo runbook: source+DB/filestore đúng bản cùng nhau.
+- Snapshot trước/sau chỉ đổi module version:39employee/32user/nhóm/roster,
+  780ngày công/791phiên/780ngày máy/39đãghép/5lô lịch sử/0điều chỉnh/0kỳ khóa,
+  cron active/priority10/1minute và base_url giữ nguyên. Không ghi hồ sơ/nghiệp vụ thật.
+- Health/login local và public200. Public `/web/bundle/web.assets_web` trả CSS
+  `/web/assets/c9f02f8/web.assets_web.min.css` (1.642.827B,SHA256
+  `94016cd8b727f91c72d7857d9dc87b85e4241e7357a3274234e4604dfad54663`) và JS
+  `/web/assets/603526e/web.assets_web.min.js` (8.520.218B,SHA256
+  `6431cda6c75f5353c5cfd6b6ff8664fc629d28b686f15c8308551d41214a18fb`),
+  cả hai khớp file do server phục vụ. Source quản trị/export mới có, legend/badge
+  dashboard cũ không có. Evidence `.local/attendance-workspace003/public-smoke.json`.
+- Cold JS bundle sinh lần đầu mất khoảng51–58s, request35s timeout; kiểm lại sau
+  sinh bundle đạt. Không sửa timeout ứng dụng hoặc restart tunnel. Cron15s vẫn đọc
+ 39nhân viên, log0ERROR sau deploy. Không đăng nhập tài khoản thật để smoke.
+
+Chưa kiểm thiết bị vật lý/Microsoft Excel trực tiếp, chưa người dùng duyệt hình thức
+hoặc nghiệp vụ. Browser delegate/employee chưa đủ evidence do login403 test; ORM
+đã kiểm scope, không thay quyền/auth. Người dùng Ctrl+F5 để nhận UI mới và nghiệm thu.
