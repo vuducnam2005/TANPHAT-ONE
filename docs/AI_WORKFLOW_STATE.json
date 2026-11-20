@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-20T06:20:00.046931+00:00",
-  "last_change_id": "CHG-20261120-007",
+  "updated_at": "2026-11-20T06:28:02.377317+00:00",
+  "last_change_id": "CHG-20261120-008",
   "code_digest": "691fd3d8546b9aace0e2ec2bdd8f051f6089e92bf15eef03531b1e184a2a2846",
   "code_file_count": 710,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "dc876f397a3101315f87eaf51a8828d2d64b53ab35737cdf851386f81af20adf",
-    "docs/CHANGELOG.md": "dbfa1cb2109afcd3bbe2c4f9543a460e1674721d6da206f5bc636fce24709414",
+    "docs/PROJECT_STATUS.md": "215bd8adac545d3338e4d4bf8da2ffa0b015ae0a921f46cfd2934fde8ad75d72",
+    "docs/CHANGELOG.md": "403738c01f2ee88818c3e0524f2516ece2a4bca9fede227c7b1facbcc1f48119",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,7 +20,7 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC: precheck 81/81 base, deploy upgrade_exit 0 log_errors 0, post 81/81 release, snapshot before/after equal except version",
-    "public: health 200, login 302, CSS bundle 940ffac has compact card rules and SHA256 equals PC-local; 0 ERROR since restart"
+    "deploy script parses with 0 errors (PowerShell 5.1 parser)",
+    "PC temp-folder run of the new block: file extracted from an mtime-0 tarball is 1970-01-01, after stamping it carries the current time; test folder removed"
   ]
 }

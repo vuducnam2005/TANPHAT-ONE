@@ -2,8 +2,9 @@ param([Parameter(Mandatory=$true)][string]$Label)
 # ENTI-ATTENDANCE-002 (CHG-20261119-029): tp_hr_attendance 20.0.3.5.0 on the PC server.
 # Run on the PC after copying the committed release tarball and its manifest into .local\enti-attendance002.
 # Stops on any source drift; snapshots business counts; stops Odoo; backs up DB dump (+ restore list), filestore,
-# module source and config; extracts the release, removes deleted files, verifies every checksum; upgrades the
-# module in a one-off container; always restarts Odoo. Never prints credentials; never touches other modules.
+# module source and config; extracts the release, removes deleted files, verifies every checksum, stamps released
+# files with the deploy time (so Odoo rebuilds CSS/JS bundles); upgrades the module in a one-off container; always
+# restarts Odoo. Never prints credentials; never touches other modules.
 $ErrorActionPreference = 'Stop'
 if ($Label -notmatch '^enti002(-[a-z0-9]+)?$') { throw 'Invalid release label' }
 $root = 'C:\Projects\TANPHAT-ONE'
@@ -66,6 +67,12 @@ try {
     foreach ($file in $manifest.release.PSObject.Properties) {
         if ((FileHash $file.Name) -ne $file.Value) { throw "Release checksum mismatch: $($file.Name)" }
     }
+    # Odoo versions each CSS/JS bundle by file URL + modification time. A release tarball may carry an old or zero
+    # (1970) mtime, which can equal the previous release's and leave browsers on the old bundle. Stamp released files.
+    $stampedAt = Get-Date
+    foreach ($file in $manifest.release.PSObject.Properties) {
+        (Get-Item -LiteralPath (Join-Path $root $file.Name)).LastWriteTime = $stampedAt
+    }
     $argsDocker = @('run','--rm','--name','tp-attendance-upgrade','--network','tanphat-one_default',
         '-v',($root+':/workspace'),'-v',($root+'\docker_data\filestore:/var/lib/odoo/filestore'),'-w','/workspace',
         $container.Config.Image,'python3','odoo-bin','-c','/workspace/docker.odoo.conf','-d','tp_tanphat_dev',
@@ -83,6 +90,6 @@ try {
 }
 docker exec tp-postgres psql -U tp_odoo -d tp_tanphat_dev -Atc $sql | Set-Content -LiteralPath "$base\$Label-after.json" -Encoding UTF8
 $errors = @(Select-String -CaseSensitive -LiteralPath "$base\$Label-upgrade.log" -Pattern ' (ERROR|CRITICAL) ').Count
-[pscustomobject]@{commit=$manifest.commit; backup=$backup; files=@($manifest.release.PSObject.Properties).Count; removed=@($manifest.removed).Count; upgrade_exit=$upgradeExit; log_errors=$errors; version=$manifest.version} | ConvertTo-Json | Set-Content -LiteralPath "$base\$Label-result.json" -Encoding UTF8
+[pscustomobject]@{commit=$manifest.commit; backup=$backup; files=@($manifest.release.PSObject.Properties).Count; removed=@($manifest.removed).Count; upgrade_exit=$upgradeExit; log_errors=$errors; version=$manifest.version; stamped_at=$stampedAt.ToString('s')} | ConvertTo-Json | Set-Content -LiteralPath "$base\$Label-result.json" -Encoding UTF8
 Get-Content -LiteralPath "$base\$Label-result.json"
 if ($errors -gt 0) { throw 'Upgrade logged errors: inspect before accepting' }

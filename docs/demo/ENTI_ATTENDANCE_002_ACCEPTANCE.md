@@ -64,7 +64,8 @@ Script [`ops/runbooks/deploy-enti-attendance002.ps1`](../../ops/runbooks/deploy-
 chép tarball release + manifest (sinh từ commit, chỉ `custom_addons/tp_hr_attendance/`) vào `.local\enti-attendance002`:
 kiểm runtime `tp-odoo`, dừng nếu nguồn trên PC lệch baseline, chụp snapshot số liệu nghiệp vụ/quyền (không in bí mật), dừng
 Odoo, backup dump (+ `pg_restore -l`), filestore, source module, config, giải nén release, xóa file đã bỏ, kiểm checksum từng
-file, upgrade bằng container một lần, luôn khởi động lại Odoo, ghi SHA256 của backup và snapshot sau.
+file, đặt thời gian sửa của file phát hành bằng giờ triển khai (từ CHG-20261120-008, để Odoo dựng lại bundle CSS/JS), upgrade
+bằng container một lần, luôn khởi động lại Odoo, ghi SHA256 của backup và snapshot sau.
 
 Hoàn tác: dừng `tp-odoo`; khôi phục `source.tar.gz` vào `custom_addons/tp_hr_attendance`; `pg_restore --clean` dump vào
 `tp_tanphat_dev` và giải nén `filestore.tar.gz` nếu cần; khởi động lại. Migration `20.0.3.5.0` chỉ đổi priority cron ENTI

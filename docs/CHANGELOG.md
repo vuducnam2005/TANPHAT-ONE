@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-008 — Script áp PC tự đóng dấu thời gian file phát hành
+
+- 20/11/2026, theo yêu cầu “Sửa luôn” sau sự cố CHG-20261120-007. `ops/runbooks/deploy-enti-attendance002.ps1`: sau khi giải nén và kiểm checksum, đặt thời gian sửa của mọi file trong `release` bằng giờ triển khai, trước khi upgrade và khởi động lại Odoo; kết quả JSON thêm `stamped_at`. Odoo tính phiên bản bundle CSS/JS theo URL + thời gian sửa, nên lần áp sau trình duyệt nhận bundle mới mà không cần khởi động lại thêm, kể cả khi tarball mang mtime 1970. Không đổi module hay dữ liệu.
+- Kiểm: script parse 0 lỗi. Trên PC, trong thư mục tạm ngoài dự án, chạy đúng đoạn mã mới: file giải nén từ tarball mtime 0 mang 1970-01-01, sau bước đóng dấu mang giờ hiện tại; thư mục thử đã xóa. Bản script trên PC được thay bằng bản commit và kiểm SHA256.
+
 ## CHG-20261120-007 — Đã áp thanh ba thẻ gọn lên PC server
 
 - 20/11/2026 13:09 giờ VN; release `f710eeec` (2 file, checksum khớp), `tp_hr_attendance` 20.0.3.5.3 → 20.0.3.5.4, upgrade exit 0/0 ERROR. Backup `C:\TANPHAT-backups\enti-attendance002\enti002-dash004b-20261120T130940` (dump + restore-list, filestore, source, config, SHA256). Nguồn PC 81/81 trước và sau khớp commit; snapshot nghiệp vụ trước/sau giống hệt, chỉ đổi phiên bản.
