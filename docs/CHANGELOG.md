@@ -1,5 +1,9 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-006 — Thanh ba thẻ chấm công gọn hơn
+
+- 20/11/2026 theo ảnh và yêu cầu của người dùng “làm gọn lại thanh này”. `tp_hr_attendance` 20.0.3.5.4, chỉ đổi SCSS. Mỗi thẻ còn một hàng thấp: biểu tượng + tên trên “Xem danh sách” ở bên trái, số lớn ở bên phải; thẻ cao 66px trên PC (trước khoảng gấp đôi), 64px trên tablet/điện thoại; điện thoại xếp ba hàng sát nhau. Giữ màu, viền trái, hover, focus, tooltip, bấm mở danh sách và dữ liệu. Kiểm local: 10 kiểm Playwright đạt (ba thẻ bằng nhau, hover/focus, hộp thoại khớp số, Đóng giữ bộ lọc, giảm chuyển động, nhân viên thường, 4 width không tràn), 0 lỗi JS. [Nghiệm thu §6](demo/ATTENDANCE_DASH_004_ACCEPTANCE.md#6-thanh-ba-thẻ-gọn-hơn-chg-20261120-006).
+
 ## CHG-20261120-005 — Đã áp dashboard chấm công gọn lên PC server
 
 - 20/11/2026 11:55 giờ VN; release `162bc409` (11 file, checksum khớp), `tp_hr_attendance` 20.0.3.5.2 → 20.0.3.5.3, upgrade exit 0/0 ERROR. Backup `C:\TANPHAT-backups\enti-attendance002\enti002-dash004-20261120T115540` (dump + restore-list, filestore, source, config, SHA256). Nguồn PC 79/79 trước và 81/81 sau khớp commit; snapshot nghiệp vụ trước/sau giống hệt, chỉ đổi phiên bản.

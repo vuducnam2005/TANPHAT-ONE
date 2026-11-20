@@ -35,22 +35,24 @@
 
 // Group cards: one classification day, three equal cards, then the "not determined" note.
 .o_tp_att_ov_groups { margin-bottom: 14px; }
-.o_tp_att_ov_groups_info { display: flex; flex-wrap: wrap; gap: 4px 0; margin: 0 0 10px; font-size: 13px; color: var(--att-muted);
+.o_tp_att_ov_groups_info { display: flex; flex-wrap: wrap; gap: 4px 0; margin: 0 0 8px; font-size: 13px; color: var(--att-muted);
     > span + span::before { content: "·"; margin: 0 8px; color: #94a3b8; }
     b { color: var(--att-navy); font-weight: 600; font-variant-numeric: tabular-nums; } }
 .o_tp_att_ov_kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+// Compact strip: icon + name over "Xem danh sách" on the left, the number on the right (one short row per card).
 .o_tp_att_ov_kpi {
     --kpi: var(--ov-main); --kpi-soft: #eaf1ff;
-    position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; margin: 0;
-    padding: 14px 16px 12px; text-align: left; color: var(--att-navy); background: var(--att-surface);
-    border: 1px solid var(--att-line); border-radius: 12px; box-shadow: var(--ov-card-shadow); overflow: hidden;
+    position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label value" "more value";
+    align-items: center; gap: 2px 12px; min-width: 0; margin: 0;
+    padding: 9px 18px 9px 16px; text-align: left; color: var(--att-navy); background: var(--att-surface);
+    border: 1px solid var(--att-line); border-radius: 10px; box-shadow: var(--ov-card-shadow); overflow: hidden;
     &::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--kpi); }
-    .o_label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--att-navy);
-        .oi { display: inline-grid; place-items: center; flex: none; width: 30px; height: 30px; border-radius: 9px; font-size: 18px;
+    .o_label { grid-area: label; display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 14px; font-weight: 600; color: var(--att-navy);
+        .oi { display: inline-grid; place-items: center; flex: none; width: 26px; height: 26px; border-radius: 8px; font-size: 16px;
             color: var(--kpi); background: var(--kpi-soft); } }
-    strong { font-size: 34px; line-height: 1.1; font-weight: 700; color: var(--kpi); font-variant-numeric: tabular-nums; }
-    .o_more { display: inline-flex; align-items: center; gap: 2px; font-size: 12.5px; font-weight: 600; color: var(--kpi);
-        .oi { font-size: 16px; transition: transform 200ms ease; } }
+    strong { grid-area: value; font-size: 30px; line-height: 1; font-weight: 700; color: var(--kpi); font-variant-numeric: tabular-nums; }
+    .o_more { grid-area: more; display: inline-flex; align-items: center; gap: 2px; padding-left: 34px; font-size: 12px; font-weight: 600; color: var(--kpi);
+        .oi { font-size: 15px; transition: transform 200ms ease; } }
     &.o_working { --kpi: var(--ov-working); --kpi-soft: #e8f7ee; }
     &.o_done { --kpi: var(--ov-done); --kpi-soft: #f1ebfe; }
     &.o_not_started { --kpi: var(--ov-idle); --kpi-soft: #fff1e7; }
@@ -214,17 +216,14 @@ button.o_tp_att_ov_kpi {
         .o_tp_att_field select, .o_tp_att_field input { width: 100%; max-width: none; min-width: 0; }
         .o_tp_att_period { flex-wrap: wrap; input { flex: 1 1 120px; min-width: 0; } } }
     .o_tp_att_ov_kpis { gap: 8px; }
-    .o_tp_att_ov_kpi { padding: 12px 12px 10px; strong { font-size: 28px; } .o_label { font-size: 13px; } }
+    .o_tp_att_ov_kpi { gap: 2px 8px; padding: 8px 12px 8px 14px; strong { font-size: 26px; } .o_label { font-size: 13px; } }
     .o_tp_att_ov_card { padding: 12px; }
     .o_tp_att_ov_chart { height: 260px; }
     .o_tp_att_ov_recent_wrap { max-height: 380px; }
 }
-// Narrow: the three cards stack as compact rows (icon + name · number · "Xem danh sách").
+// Narrow: the three compact cards stack as rows.
 @container tpov (max-width: 539.98px) {
-    .o_tp_att_ov_kpis { grid-template-columns: minmax(0, 1fr); }
-    .o_tp_att_ov_kpi { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label value" "more value";
-        align-items: center; gap: 2px 12px; padding: 10px 14px;
-        .o_label { grid-area: label; } strong { grid-area: value; font-size: 28px; } .o_more { grid-area: more; } }
+    .o_tp_att_ov_kpis { grid-template-columns: minmax(0, 1fr); gap: 6px; }
     .o_tp_att_ov_donut_row { grid-template-columns: minmax(0, 1fr); }
     .o_tp_att_ov_donut { max-width: 220px; }
     .o_tp_att_ov_groups_info { gap: 2px 12px; > span + span::before { display: none; } }

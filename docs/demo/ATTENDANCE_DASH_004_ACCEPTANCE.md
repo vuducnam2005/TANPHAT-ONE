@@ -91,3 +91,18 @@ DB kiểm thử `tp_tanphat_test` cổng 18079. Không ghi dữ liệu giả và
   có code hộp thoại nhóm và bảng mới, không còn danh sách cũ. Log 0 ERROR; cron ENTI vẫn chạy đúng nhịp (39 nhân viên mỗi lượt).
 - Không đăng nhập tài khoản thật trên PC, nên chưa có ảnh giao diện của dữ liệu thật. Người dùng cần Ctrl+F5 để tải
   bundle mới. Local 18069 không được áp kèm.
+
+## 6. Thanh ba thẻ gọn hơn (CHG-20261120-006)
+
+- Yêu cầu 20/11/2026: người dùng gửi ảnh thanh ba thẻ trên PC và yêu cầu làm gọn lại. `tp_hr_attendance` 20.0.3.5.4,
+  chỉ đổi `dashboard.scss`; markup, dữ liệu, quyền và RPC giữ nguyên.
+- Mỗi thẻ là một hàng thấp: biểu tượng + tên ở trên, “Xem danh sách ›” ở dưới (bên trái), số lớn canh phải. Padding,
+  biểu tượng, cỡ số và bo góc nhỏ lại; dòng thông tin phía trên sát hơn.
+- Đo trên local test DB (Playwright, admin):
+  - 1920 và 1440px: ba thẻ cao 66px bằng nhau (trước đây khoảng gấp đôi), số cách mép phải 19px, không bị cắt;
+  - 768px: ba thẻ ngang nhau, cao 64px;
+  - 390 và 320px: ba thẻ xếp thành ba hàng 64px;
+  - không tràn trang ở mọi độ rộng; 0 lỗi JS.
+- Kiểm hồi quy đạt 10/10: ba thẻ bằng nhau có tooltip và “Xem danh sách”; hover nâng thẻ và vòng focus; bấm Đang làm
+  mở hộp thoại có tổng bằng số trên thẻ; Đóng giữ ngày và bộ lọc phòng ban; giảm chuyển động; nhân viên thường cùng
+  bố cục, không có xuất; không tràn ở 1440/768/390/320px.
