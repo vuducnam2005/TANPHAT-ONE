@@ -1,5 +1,17 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261120-012 — HR-CONFIG-MENU-CLEANUP — PC_SERVER_APPLIED.** Xóa hẳn các tab/menu cấu hình HR không dùng, chỉ giữ duy nhất "Nhãn nhân viên".
+- Thực hiện yêu cầu trực tiếp của người dùng kèm ảnh chụp menu dropdown "Cấu hình HR" (xóa bỏ hoàn toàn khỏi code và database, không dùng ẩn hay group):
+  - Xóa 2 menu trong `tp_hr_workspace` **20.0.1.21.0**: `Loại hồ sơ năng lực` (`tp_hr_workspace.menu_resume_types`) và `Loại kỹ năng và cấp độ` (`tp_hr_workspace.menu_skill_types`). Giữ nguyên duy nhất `Nhãn nhân viên` (`tp_hr_workspace.menu_categories`, sequence 10).
+  - Xóa 4 menu trong `tp_hr_attendance` **20.0.3.5.6**: `Quy tắc công` (`tp_hr_attendance.menu_rules`), `Mã máy chấm công` (`tp_hr_attendance.menu_codes`), `Phân công xử lý công` (`tp_hr_attendance.menu_assignments`), `Nhật ký chấm công` (`tp_hr_attendance.menu_logs`).
+  - Migration scripts chuyên dụng: `custom_addons/tp_hr_workspace/migrations/20.0.1.21.0/post-migrate.py` và `custom_addons/tp_hr_attendance/migrations/20.0.3.5.6/post-migrate.py` thực thi unlink vật lý các bản ghi `ir.ui.menu` và dọn sạch `ir.model.data`.
+  - Cập nhật test suites: `test_access.py` (chuyển kiểm tra quyền sang `menu_enti_config` và assert các menu cũ đã bị gỡ) và `test_directory_readonly.py` (kiểm tra `menu_categories` là menu con duy nhất).
+- Kiểm thử và xác minh:
+  - Local dev `tp_tanphat_dev`: Upgrade exit 0; truy vấn trực tiếp DB xác nhận chỉ còn 1 bản ghi duy nhất `Nhãn nhân viên` (ID 358) dưới `menu_group_config` (ID 355).
+  - Local test `tp_tanphat_test`: `test_menus_follow_rights` PASS 100%, test table filter PASS.
+  - PC Server `192.168.1.73`: Sao lưu đầy đủ tại `C:\TANPHAT-backups\hr-remove-config-menus\20261120T154500\` (`tp_tanphat_dev_pre.dump` 10.425.317 bytes, `code_pre.tar.gz` 1.042.649 bytes). Đồng bộ mã nguồn, upgrade module trong container `tp-odoo` exit 0, restart container.
+  - Kiểm chứng DB PC Server: Truy vấn `ir_ui_menu` trả về đúng 1 bản ghi `Nhãn nhân viên`; `ir_model_data` cho 6 XML ID cũ trả về 0 rows; LAN và Public health check (`https://tpone.tadic.vn/web/health`) trả về HTTP 200 OK.
+
 **CHG-20261120-011 — HR-DELETE-ASSET-RETURN-001 — PC_SERVER_APPLIED.** Tự động thu hồi tài sản công ty về kho và bảo toàn lịch sử bàn giao khi xóa vĩnh viễn nhân viên.
 - Giải quyết dứt điểm lỗi chặn xóa bởi 3 quan hệ trong `tp_equipment`: Dòng phiếu bàn giao (người giữ trước/sau) và Phiếu bàn giao (nhân viên nhận).
 - Module `tp_equipment` **20.0.1.6.0** kế thừa `hr.employee` (`employee_delete.py`), override hook `_tp_delete_plan` và `_tp_permanent_unlink`:
@@ -264,7 +276,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261120-011`
+Last change: `CHG-20261120-012`
 
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.

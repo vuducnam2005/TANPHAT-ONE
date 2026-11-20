@@ -366,6 +366,13 @@ class TestDirectoryReadonly(TransactionCase):
         self.assertTrue(employees.has_access('write'))
         self.assertEqual(employees.browse(self.emp_b.id).identification_id, 'SYN-PRIVATE-B')
 
+    def test_hr_config_menu_only_contains_categories(self):
+        self.assertFalse(self.env.ref('tp_hr_workspace.menu_skill_types', raise_if_not_found=False))
+        self.assertFalse(self.env.ref('tp_hr_workspace.menu_resume_types', raise_if_not_found=False))
+        categories_menu = self.env.ref('tp_hr_workspace.menu_categories', raise_if_not_found=False)
+        self.assertTrue(categories_menu)
+        self.assertEqual(categories_menu.parent_id, self.env.ref('tp_hr_workspace.menu_group_config'))
+
 
 @tagged('post_install', '-at_install', 'tp_unified_readonly_browser')
 class TestUnifiedReadonlyBrowserHttp(HttpCase):

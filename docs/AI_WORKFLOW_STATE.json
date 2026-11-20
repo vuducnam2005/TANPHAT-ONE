@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-20T08:26:30.267632+00:00",
-  "last_change_id": "CHG-20261120-011",
-  "code_digest": "4223ae325453f76852912a21176004761d0868277e6b29b8952551db26337792",
-  "code_file_count": 763,
+  "updated_at": "2026-11-20T08:51:32.311047+00:00",
+  "last_change_id": "CHG-20261120-012",
+  "code_digest": "49e218a6fd247ba463b3fa934199a6de5b9e420b4b8d3e37d8eef8dfdb1de12f",
+  "code_file_count": 766,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "6b8c4ca2f03d50fbef3b820b7b8ad856182403ca98f5b614b51073128f2e2da0",
-    "docs/CHANGELOG.md": "14bffa55ca861db0d1e51ba7ab9bf6b6dc705f52751b1522dd767b3cb5de3e9e",
+    "docs/PROJECT_STATUS.md": "15e030af414549dbe1a468dfa760dc3a6a8c31e6d989958192f317740b84ec21",
+    "docs/CHANGELOG.md": "9c80c45727e7d8b1a7eaabbccae85426e9ab15ccb531229452e017f007667404",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Odoo tests 6/6 pass, PC server deployed exit 0, read-only preview 0 blockers pass"
+    "Odoo test suite tp_hr_attendance test_menus_follow_rights PASS 100%, test_directory_readonly PASS. Local dev tp_tanphat_dev upgrade exit 0, DB verified exactly 1 menu remaining. PC Server backup at C:\\TANPHAT-backups\\hr-remove-config-menus\\20261120T154500 (dump + code), upgrade exit 0, restart tp-odoo, LAN and Public https://tpone.tadic.vn/web/health HTTP 200 OK. DB on PC server confirmed 1 row only."
   ]
 }

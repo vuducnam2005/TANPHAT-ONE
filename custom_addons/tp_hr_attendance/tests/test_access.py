@@ -171,17 +171,22 @@ class TestAttendanceAccess(AttendanceCase):
 
         board = self.env.ref('tp_hr_attendance.menu_board').id
         menu_import = self.env.ref('tp_hr_attendance.menu_import').id
-        config = self.env.ref('tp_hr_attendance.menu_rules').id
+        enti_config = self.env.ref('tp_hr_attendance.menu_enti_config').id
         viewer_menus = visible(self.viewer)
         self.assertNotIn(board, viewer_menus)
         self.assertNotIn(menu_import, viewer_menus)
-        self.assertNotIn(config, viewer_menus)
+        self.assertNotIn(enti_config, viewer_menus)
         manager_menus = visible(self.manager)
         self.assertNotIn(board, manager_menus)
         self.assertNotIn(menu_import, manager_menus)
-        self.assertIn(config, manager_menus)
+        self.assertIn(enti_config, manager_menus)
         # Import UI is removed; historical data remains in the canonical export.
         self.assertFalse(self.env.ref('tp_hr_attendance.menu_file_matrix', raise_if_not_found=False))
+        # Deprecated config submenus are physically unlinked
+        self.assertFalse(self.env.ref('tp_hr_attendance.menu_rules', raise_if_not_found=False))
+        self.assertFalse(self.env.ref('tp_hr_attendance.menu_codes', raise_if_not_found=False))
+        self.assertFalse(self.env.ref('tp_hr_attendance.menu_assignments', raise_if_not_found=False))
+        self.assertFalse(self.env.ref('tp_hr_attendance.menu_logs', raise_if_not_found=False))
 
     def test_rejects_non_excel_and_macro_files(self):
         batch = self.batch(b'not an excel file')

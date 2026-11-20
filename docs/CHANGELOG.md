@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-012 — HR-CONFIG-MENU-CLEANUP: Xóa hẳn các menu cấu hình HR cũ, chỉ giữ duy nhất "Nhãn nhân viên"
+
+- 20/11/2026 (Asia/Saigon). Thực hiện yêu cầu trực tiếp của người dùng kèm ảnh chụp menu dropdown "Cấu hình HR" (xóa bỏ triệt để khỏi code XML và database, không dùng ẩn hay phân nhóm quyền):
+  - `custom_addons/tp_hr_workspace` **20.0.1.21.0**: Xóa thẻ menuitem `Loại hồ sơ năng lực` (`tp_hr_workspace.menu_resume_types`) và `Loại kỹ năng và cấp độ` (`tp_hr_workspace.menu_skill_types`) trong `views/workspace.xml`. Giữ lại duy nhất `Nhãn nhân viên` (`tp_hr_workspace.menu_categories`, sequence 10).
+  - `custom_addons/tp_hr_attendance` **20.0.3.5.6**: Xóa thẻ menuitem `Quy tắc công` (`tp_hr_attendance.menu_rules`), `Mã máy chấm công` (`tp_hr_attendance.menu_codes`), `Phân công xử lý công` (`tp_hr_attendance.menu_assignments`), `Nhật ký chấm công` (`tp_hr_attendance.menu_logs`) trong `views/menus.xml`.
+  - Migration script dọn dẹp database: `custom_addons/tp_hr_workspace/migrations/20.0.1.21.0/post-migrate.py` và `custom_addons/tp_hr_attendance/migrations/20.0.3.5.6/post-migrate.py` thực hiện unlink vật lý các bản ghi `ir.ui.menu` và `ir.model.data` tương ứng.
+  - Cập nhật test suites: `tp_hr_attendance/tests/test_access.py` (chuyển kiểm tra quyền sang `menu_enti_config` và assert các menu cũ đã bị gỡ hoàn toàn) và `tp_hr_workspace/tests/test_directory_readonly.py` (kiểm tra `menu_categories` là menu con duy nhất dưới `menu_group_config`).
+  - Kiểm thử và triển khai: Local dev upgrade exit 0, xác nhận DB local dev chỉ còn 1 bản ghi `Nhãn nhân viên`. PC Server sao lưu đầy đủ (`C:\TANPHAT-backups\hr-remove-config-menus\20261120T154500\`), đồng bộ mã nguồn, upgrade container `tp-odoo` exit 0, restart container. Kiểm chứng DB PC Server trả về đúng 1 bản ghi `Nhãn nhân viên`, LAN và Public health check (`https://tpone.tadic.vn/web/health`) trả về HTTP 200 OK.
+
 ## CHG-20261120-011 — HR-DELETE-ASSET-RETURN-001: Tự thu hồi tài sản công ty về kho khi xóa vĩnh viễn nhân viên
 
 - 20/11/2026 (Asia/Saigon). Giải quyết dứt điểm lỗi chặn xóa bởi 3 quan hệ trong `tp_equipment`: Dòng phiếu bàn giao (người giữ trước/sau) và Phiếu bàn giao (nhân viên nhận).
