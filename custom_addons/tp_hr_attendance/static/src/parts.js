@@ -4,9 +4,9 @@ import { useService } from "@web/core/utils/hooks";
 import { PAGE_SIZES, cellNote, formatDate, lateText, pagerText, rpcError } from "./common";
 
 const HEALTH = {
-    ok: ["Tự động đồng bộ ENTI", "autorenew"],
-    stale: ["Đồng bộ ENTI đang chậm", "schedule"],
-    error: ["Đồng bộ ENTI đang lỗi", "error"],
+    ok: ["Đồng bộ tự động: Hoạt động", "autorenew"],
+    stale: ["Đồng bộ tự động: Đang chậm", "schedule"],
+    error: ["Đồng bộ tự động: Mất kết nối", "error"],
 };
 
 /**
@@ -35,8 +35,8 @@ export class SourceStrip extends Component {
         if (!source.auto) {
             return "";
         }
-        const poll = source.poll_seconds ? `Máy chủ đọc ENTI khoảng ${source.poll_seconds} giây/lần trong giờ làm việc. ` : "";
-        return `${poll}Giờ cập nhật là lúc Odoo nhận dữ liệu từ ENTI, không phải lúc chấm trên máy.`;
+        const poll = source.poll_seconds ? `Máy chủ đồng bộ dữ liệu khoảng ${source.poll_seconds} giây/lần trong giờ làm việc. ` : "";
+        return `${poll}Thời điểm cập nhật là lúc hệ thống nhận dữ liệu thành công.`;
     }
 }
 

@@ -468,7 +468,7 @@ class AttendanceDayOverview(models.Model):
             if error_newer:
                 health = 'error'
                 error_at = stamp(live.last_error_at)
-                error = live.last_error if processor else 'Đồng bộ ENTI đang lỗi; dữ liệu đã có được giữ nguyên.'
+                error = live.last_error if processor else 'Đồng bộ tự động đang gián đoạn; dữ liệu đã có được giữ nguyên.'
             elif not live.last_success_at or (
                     live._tp_fast_hours() and (fields.Datetime.now() - live.last_success_at).total_seconds() > STALE_AFTER):
                 health = 'stale'

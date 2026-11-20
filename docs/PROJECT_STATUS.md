@@ -1,5 +1,31 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261120-014 — ATTENDANCE-FAST-SYNC-001 — PC_SERVER_APPLIED.** Tối ưu tốc độ nhận dữ liệu chấm công thật và cập nhật giao diện trực tiếp thời gian thực.
+- Xác minh và đo lường thực tế 3 chặng độ trễ trên hệ thống thật:
+  - Chặng A (Máy chấm công vật lý → ENTI cloud): Đo lường trực tiếp trên các lượt quẹt thẻ thực tế của nhân viên giờ tan ca ngày 20/11/2026. Mốc giờ chấm trên máy và thời điểm Odoo nhận được từ ENTI chỉ cách nhau 3–4 giây (ví dụ: lượt chấm 17:10:19 VN được Odoo ghi nhận lúc 17:10:22 VN, độ trễ tổng cộng 3 giây), chứng minh máy vật lý gửi lên cloud ENTI gần như tức thì (~1–2 giây).
+  - Chặng B (ENTI cloud → Odoo nhận và lưu):
+    - Tối ưu nhịp fast polling ngày hiện tại (`today`) từ 15 giây xuống **5 giây/lượt** (chu kỳ thực tế đo trên server là 5.24 giây gồm thời gian gọi API ~240ms). Độ trễ giảm từ 0–15s (trung bình 7.5s) xuống còn **0–5s (trung bình 2.5s)**.
+    - Thời gian request API bảng công `/api/attendace/bang-cong`: 0.24s – 0.29s (240ms – 290ms).
+    - Tối ưu loại bỏ việc thừa: Áp dụng cơ chế Lazy Evaluation cho `Mapping._tp_name_index(company)` trong `_tp_enti_apply()`. Khi 100% nhân viên đã đối chiếu (39/39 người), Odoo hoàn toàn không quét lại bảng `hr.employee` trong các chu kỳ fast poll. Chỉ khi phát sinh mã máy mới hoặc nhân viên chưa đối chiếu mới kích hoạt index để ghép nối.
+    - Tái sử dụng phiên HTTP/token và session cookies trong bộ nhớ tiến trình (`_CLIENT_CACHE`). Không đăng nhập lại, không gọi danh sách app mỗi chu kỳ.
+    - Bảo toàn toàn vẹn dữ liệu: So sánh dấu `_digest` (`raw_hash`), chỉ ghi DB khi dữ liệu thực sự thay đổi. Khi không có lượt quẹt mới: 0 bản ghi ghi DB, 0 sự kiện bus phát đi. Bảo toàn ưu tiên: Điều chỉnh đã duyệt > ENTI > Excel, kỳ đã khóa được bảo vệ, in-only/out-only không điền giả giờ ra.
+    - Quản lý tài nguyên Odoo: Chu kỳ cron 50 giây với ngân sách scheduler nghiêm ngặt, `_commit_progress()` sau mỗi lượt poll, tự động re-trigger chỉ mất 18ms để giải phóng tài nguyên cho các job cron khác, không gây đói tài nguyên scheduler.
+  - Chặng C (Odoo lưu → Giao diện người dùng hiển thị):
+    - Xác minh WebSocket: Kết nối WebSocket qua Cloudflare Named Tunnel tại `https://tpone.tadic.vn/websocket` hoạt động 100% ổn định (HTTP 101 Switching Protocols, `Sec-Websocket-Accept` hợp lệ).
+    - Phản ứng WebSocket: Giảm `debounceMs` từ 400ms xuống **250ms**. Ngay sau khi transaction commit và phát `tp_hr_attendance/updated`, giao diện nhận sự kiện và gọi RPC `tp_overview` (thời gian RPC 18ms – 40ms) và render lại DOM trong vòng **~0.35 giây (< 1 giây)**.
+    - Cập nhật đồng thời, nhất quán: Cả 3 thẻ Đang làm / Đã về / Chưa đi làm, Dialog danh sách đang mở (`GroupDialog`), bảng chấm công gần nhất, biểu đồ và Công của tôi đều tự động cập nhật và highlight mốc mới mà không F5, không giật màn hình, giữ nguyên bộ lọc và phân trang.
+    - Cơ chế Polling dự phòng (Fallback Polling) khi WebSocket gián đoạn: Giảm từ 60 giây xuống **4 giây** (dải 3–5 giây theo yêu cầu) khi tab đang hiển thị (`!document.hidden`). Khi tab chuyển từ ẩn sang hiển thị (`visibilitychange`), tự động tải dữ liệu mới ngay nếu đã quá 2 giây từ lần tải cuối.
+- Chuẩn hóa nhãn hiển thị theo Section 7:
+  - Loại bỏ tên nhà cung cấp ("ENTI") trên thanh thông tin chung của nhân viên.
+  - Chuẩn hóa trạng thái kết nối: `Đồng bộ tự động: Hoạt động` / `Đồng bộ tự động: Đang chậm` / `Đồng bộ tự động: Mất kết nối`.
+  - Thông báo lỗi chung: "Đồng bộ tự động đang gián đoạn; dữ liệu đã có được giữ nguyên." Chi tiết kỹ thuật chỉ hiển thị cho HR Manager / Admin.
+- Triển khai và Kiểm chứng PC Server:
+  - Addon `custom_addons/tp_hr_attendance` nâng lên **20.0.3.5.7**.
+  - Unit tests: `scripts/tests/test_enti_pure.py` (6/6 tests PASS: logic fast settings, bounded wait & backoff); `test_enti_sync.py` bổ sung test fast settings defaults, config override (3s), clamping (min 2s) và disabled (0).
+  - Sao lưu PC Server tại `C:\TANPHAT-backups\attendance-fast-sync001\20261120T172034` (DB dump `tp_tanphat_dev_pre.dump` 10.431.911 bytes, source backup `tp_hr_attendance_pre.tar.gz` 716.119 bytes, restore-list.txt, snapshot before/after).
+  - Upgrade container `tp-odoo` exit 0, restart container, LAN và Public health check (`https://tpone.tadic.vn/web/health`) trả về HTTP 200 OK (`{"status": "pass"}`).
+  - Quan sát runtime trên server thật: 10 chu kỳ fast poll liên tiếp đạt nhịp 5.24s/lần, 0 lỗi, re-trigger cron 18ms, CPU và bộ nhớ ổn định.
+
 **CHG-20261120-013 — WEB-RELOAD-BLANK-001 — PC_SERVER_APPLIED.** Sửa lỗi tải lại trang (Reload / F5) làm trắng toàn bộ giao diện trên URL chuẩn hóa toàn hệ thống.
 - Khắc phục triệt để nguyên nhân gốc: Ngoại lệ `TypeError: Failed to set the 'href' property on 'URL': Invalid URL` phát sinh khi script boot-time `@tp_branding/router_patch` gán đường dẫn tương đối (`/app/trang-chu`) vào thuộc tính `.href` của đối tượng native `window.URL`. Ngoại lệ uncaught làm dừng toàn bộ tiến trình tải JavaScript module của Odoo, WebClient không được mount dẫn đến màn hình trắng xám `#f8f9fa`.
 - Module `custom_addons/tp_branding` **20.0.2.1.0**:
@@ -289,7 +315,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261120-013`
+Last change: `CHG-20261120-014`
 
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.

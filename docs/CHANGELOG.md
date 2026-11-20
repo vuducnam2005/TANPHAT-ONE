@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-014 — ATTENDANCE-FAST-SYNC-001: Tối ưu tốc độ nhận dữ liệu chấm công thật và cập nhật giao diện trực tiếp
+
+- 20/11/2026 (Asia/Saigon). Thực hiện nhiệm vụ ATTENDANCE-FAST-SYNC-001 tối ưu tốc độ nhận dữ liệu chấm công từ máy chấm công thật (nhà cung cấp ENTI) và cập nhật phản ứng tức thì trên giao diện người dùng:
+  - Xác minh và đo lường 3 chặng độ trễ: Chặng A (Máy vật lý → Cloud ENTI: ~1–2s, đo thực tế qua lượt chấm tan ca 17:10:19 VN nhận lúc 17:10:22 VN); Chặng B (ENTI → Odoo nhận và lưu: giảm từ 15s xuống 5s/lần, thời gian gọi API 240–290ms, độ trễ nhận 0–5s, trung bình 2.5s); Chặng C (Odoo lưu → Giao diện hiển thị: WebSocket 101 qua Cloudflare Tunnel, debounce 250ms, RPC 18–40ms, render lại DOM trong ~0.35s < 1s; Fallback polling 4s khi mất WebSocket).
+  - Tối ưu backend `custom_addons/tp_hr_attendance` **20.0.3.5.7**: Mặc định fast poll `today` là 5s, hỗ trợ config override tối thiểu 2s; áp dụng Lazy Evaluation cho mapping nhân viên loại bỏ quét bảng `hr.employee` trong các chu kỳ fast poll; so sánh hash digest tránh ghi database và tránh phát bus thừa khi dữ liệu không đổi; ngân sách cron 50s và re-trigger 18ms chống nghẽn scheduler.
+  - Chuẩn hóa giao diện người dùng: Loại bỏ tên nhà cung cấp "ENTI" trên giao diện chung, dùng nhãn "Đồng bộ tự động: Hoạt động / Đang chậm / Mất kết nối"; cập nhật đồng bộ các thẻ trạng thái, popup chi tiết, biểu đồ và Công của tôi.
+  - Kiểm thử & Triển khai PC Server (`192.168.1.73`): Unit tests `scripts/tests/test_enti_pure.py` 6/6 PASS, test case fast sync settings PASS; backup an toàn tại `C:\TANPHAT-backups\attendance-fast-sync001\20261120T172034\`; upgrade container `tp-odoo` exit 0, restart container; LAN và Public health check (`https://tpone.tadic.vn/web/health`) trả về HTTP 200 OK. [Chi tiết trạng thái](PROJECT_STATUS.md).
+
 ## CHG-20261120-013 — WEB-RELOAD-BLANK-001: Sửa lỗi tải lại trang làm trắng toàn bộ giao diện
 
 - 20/11/2026 (Asia/Saigon). Khắc phục sự cố tải lại trang (Reload / F5) làm trắng giao diện trên các URL chuẩn hóa phân cấp:

@@ -1,7 +1,6 @@
 """Pure unit tests for ENTI attendance logic, parsing, and pagination (runs DB-free)."""
 import unittest
 from datetime import date, datetime
-from unittest.mock import MagicMock
 from zoneinfo import ZoneInfo
 
 
@@ -91,6 +90,56 @@ class TestEntiPureLogic(unittest.TestCase):
         out_clock4, _ = _parse_time_str("17:30", date(2026, 11, 18))
         has_full_session4 = bool(in_clock4 and out_clock4 and out_clock4 > in_clock4)
         self.assertTrue(has_full_session4)
+
+    def test_fast_poll_settings_logic(self):
+        # Emulate _tp_fast_settings pure logic
+        default_fast_seconds = 5
+        min_fast_seconds = 2
+        default_fast_window = 50
+        max_fast_window = 100
+
+        def calc_settings(param_interval=None, param_window=None):
+            interval = int(param_interval if param_interval is not None else default_fast_seconds)
+            window = int(param_window if param_window is not None else default_fast_window)
+            if interval <= 0:
+                return 0, 0
+            interval = max(interval, min_fast_seconds)
+            return interval, min(max(window, interval), max_fast_window)
+
+        # Default: 5s interval, 50s window
+        self.assertEqual(calc_settings(), (5, 50))
+        # 3s valid override
+        self.assertEqual(calc_settings(3), (3, 50))
+        # Clamped to min 2s
+        self.assertEqual(calc_settings(1), (2, 50))
+        # Disabled
+        self.assertEqual(calc_settings(0), (0, 0))
+        self.assertEqual(calc_settings(-5), (0, 0))
+        # Window bounds
+        self.assertEqual(calc_settings(5, 120), (5, 100))
+        self.assertEqual(calc_settings(5, 3), (5, 5))
+
+    def test_poll_wait_pacing_and_backoff(self):
+        # Emulate _tp_poll_wait pure logic
+        def poll_wait(poll_time, fails, interval, now):
+            if poll_time is None:
+                return 0.0
+            gap = max(interval, min(15 * 2 ** fails, 120)) if fails else interval
+            return max(0.0, poll_time + gap - now)
+
+        # First round: poll_time is None -> wait 0.0
+        self.assertEqual(poll_wait(None, 0, 5, 100.0), 0.0)
+
+        # Success round: exactly 5s interval minus elapsed request duration
+        self.assertAlmostEqual(poll_wait(100.0, 0, 5, 100.27), 4.73)
+        # If elapsed time exceeds interval: wait 0.0
+        self.assertEqual(poll_wait(100.0, 0, 5, 106.0), 0.0)
+
+        # Error backoff: fail 1 -> 30s, fail 2 -> 60s, fail 3+ -> 120s
+        self.assertAlmostEqual(poll_wait(100.0, 1, 5, 100.5), 29.5)
+        self.assertAlmostEqual(poll_wait(100.0, 2, 5, 100.5), 59.5)
+        self.assertAlmostEqual(poll_wait(100.0, 3, 5, 100.5), 119.5)
+        self.assertAlmostEqual(poll_wait(100.0, 10, 5, 100.5), 119.5)
 
 
 if __name__ == "__main__":

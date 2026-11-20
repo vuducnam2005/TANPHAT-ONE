@@ -17,7 +17,7 @@ export const LIVE_BUS_TYPE = "tp_hr_attendance/updated";
  * ``refresh()`` returns ``false`` when the screen is busy (loading, exporting…); the refresh is then kept pending
  * and ``flush()`` runs it once the screen is free. Call ``loaded()`` after every successful load.
  */
-export function useAttendanceLive({ refresh, relevant = () => true, pollMs = 60000, debounceMs = 400 }) {
+export function useAttendanceLive({ refresh, relevant = () => true, pollMs = 4000, debounceMs = 250 }) {
     let bus = null;
     try {
         bus = useService("bus_service");
@@ -49,7 +49,7 @@ export function useAttendanceLive({ refresh, relevant = () => true, pollMs = 600
         live.debounce = browser.setTimeout(trigger, debounceMs);
     }
     function onVisibility() {
-        if (!document.hidden && (live.pending || Date.now() - live.last > pollMs / 2)) {
+        if (!document.hidden && (live.pending || Date.now() - live.last > 2000)) {
             trigger();
         }
     }

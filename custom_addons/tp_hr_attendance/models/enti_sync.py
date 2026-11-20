@@ -32,8 +32,8 @@ SECRETS_FILE_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "..", ".
 CRON_XMLID = "tp_hr_attendance.ir_cron_enti_attendance_sync"
 PARAM_FAST_SECONDS = "tp_hr_attendance.enti_fast_poll_seconds"
 PARAM_FAST_WINDOW = "tp_hr_attendance.enti_fast_poll_window"
-DEFAULT_FAST_SECONDS = 15
-MIN_FAST_SECONDS = 10
+DEFAULT_FAST_SECONDS = 5
+MIN_FAST_SECONDS = 2
 DEFAULT_FAST_WINDOW = 50
 MAX_FAST_WINDOW = 100
 FAST_HOURS = (5, 22)            # local hours [from, to) polled every few seconds; otherwise once per cron minute
@@ -431,7 +431,14 @@ class AttendanceSourceEnti(models.Model):
         EntiDay = self.env["tp.hr.attendance.enti.day"].sudo()
         tz = self.timezone or DEFAULT_TZ
         now = fields.Datetime.now()
-        index = Mapping._tp_name_index(self.company_id)
+        index = None
+
+        def _get_name_index():
+            nonlocal index
+            if index is None:
+                index = Mapping._tp_name_index(self.company_id)
+            return index
+
         mappings = {m.key_nv: m for m in Mapping.search([("source_id", "=", self.id)])}
 
         if with_directory:
@@ -443,7 +450,7 @@ class AttendanceSourceEnti(models.Model):
             for info in directory:
                 key = (info.get("keyNV") or "").strip()
                 if key:
-                    mappings[key] = Mapping.tp_suggest_mapping(self, info, index=index, existing=mappings.get(key))
+                    mappings[key] = Mapping.tp_suggest_mapping(self, info, index=_get_name_index(), existing=mappings.get(key))
 
         board = client.get_attendance(start_date, end_date)
         rows = board.get("data") or []
@@ -463,7 +470,9 @@ class AttendanceSourceEnti(models.Model):
             key_nv = (row.get("keyNV") or "").strip()
             if not key_nv:
                 continue
-            mapping = Mapping.tp_suggest_mapping(self, row, index=index, existing=mappings.get(key_nv))
+            existing_mapping = mappings.get(key_nv)
+            name_idx = None if (existing_mapping and existing_mapping.state == "mapped" and existing_mapping.employee_id) else _get_name_index()
+            mapping = Mapping.tp_suggest_mapping(self, row, index=name_idx, existing=existing_mapping)
             mappings[key_nv] = mapping
             employee_id = mapping.employee_id.id if mapping.state == "mapped" and mapping.employee_id else False
 

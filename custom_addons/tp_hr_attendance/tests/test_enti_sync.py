@@ -133,3 +133,28 @@ class TestEntiProjection(AttendanceCase):
                                       'work_date': MONDAY + timedelta(days=1), 'vao_dau': '08:00'})
         self.assertFalse(record._tp_project_to_canonical())
         self.assertEqual(record.state, 'pending_map')
+
+    def test_fast_sync_settings_defaults_and_overrides(self):
+        Source = self.env["tp.hr.attendance.source"]
+        Param = self.env["ir.config_parameter"].sudo()
+        # Default fast polling: 5 seconds interval, 50 seconds window
+        interval, window = Source._tp_fast_settings()
+        self.assertEqual((interval, window), (5, 50))
+
+        # Config parameter override to 3 seconds
+        Param.set_param("tp_hr_attendance.enti_fast_poll_seconds", "3")
+        interval, window = Source._tp_fast_settings()
+        self.assertEqual((interval, window), (3, 50))
+
+        # Values below MIN_FAST_SECONDS (2) clamp to 2
+        Param.set_param("tp_hr_attendance.enti_fast_poll_seconds", "1")
+        interval, window = Source._tp_fast_settings()
+        self.assertEqual((interval, window), (2, 50))
+
+        # Setting 0 disables fast polling
+        Param.set_param("tp_hr_attendance.enti_fast_poll_seconds", "0")
+        interval, window = Source._tp_fast_settings()
+        self.assertEqual((interval, window), (0, 0))
+
+        # Clean up
+        Param.search([("key", "=", "tp_hr_attendance.enti_fast_poll_seconds")]).unlink()
