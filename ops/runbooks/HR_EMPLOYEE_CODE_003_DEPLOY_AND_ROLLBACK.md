@@ -64,9 +64,10 @@ xóa hay tạo lại nhân viên. Không đổi tài khoản, login hay mật kh
    - Khác: cron, base URL, hàng đợi mail/thông báo, mọi khóa ngoại tới
      `hr_employee`.
 
-   Chỉ được đổi các key: phiên bản module, mã, dạng mã, audit, sequence, bản sao
-   mã chấm công, ghi chú chatter. Key khác lệch, còn mã ngoài dải hoặc bản sao
-   chưa làm mới thì script báo lỗi để kiểm.
+   Chỉ được đổi các key: phiên bản module, mã, dạng mã, số dòng audit, sequence,
+   bản sao mã chấm công, ghi chú chatter. Lịch sử audit cũ (mọi dòng có trước khi
+   áp) phải giữ nguyên; upgrade chỉ được thêm dòng mới. Key khác lệch, còn mã
+   ngoài dải hoặc bản sao chưa làm mới thì script báo lỗi để kiểm.
 6. **Bằng chứng riêng** (chỉ trên PC, không đưa lên Git): `mapping-applied.txt`
    (ID hồ sơ, mã cũ → mã mới) lấy từ log migration, nằm cùng backup.
 7. **Nghiệm thu trên https://tpone.tadic.vn:**

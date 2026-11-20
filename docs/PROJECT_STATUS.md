@@ -1,5 +1,13 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261120-010 — HR-EMPLOYEE-CODE-003 mã nhân viên TP + 3 chữ số — PC_SERVER_APPLIED.** App `13fc1283` đã push và áp PC 20/11/2026 15:00 giờ VN: `tp_organization` 20.0.2.3.0, `tp_hr_attendance` 20.0.3.5.5, upgrade exit 0/log 0 ERROR, nguồn 101/101 khớp release.
+- Quy tắc: mã mới TP001–TP999. Mã cũ TP10001–TP10999 chuyển bằng số − 10000 (TP10060 → TP060); mã đã đúng dạng giữ nguyên. Mã ngoài quy tắc, trùng, thiếu, số đã xóa/đã đổi hoặc lệch mã nguồn là xung đột, không ghi. Hết dải thì dừng, không sinh TP1000. [Nghiệm thu](demo/HR_EMPLOYEE_CODE_003_ACCEPTANCE.md), [runbook](../ops/runbooks/HR_EMPLOYEE_CODE_003_DEPLOY_AND_ROLLBACK.md).
+- PC: 40/40 hồ sơ (39 đang dùng, 1 lưu trữ, 1 công ty) chuyển qua correction nội bộ, 0 xung đột. Mỗi hồ sơ có 1 dòng audit `code_correction` (cũ → mới) và 1 ghi chú chatter nội bộ không người nhận; hàng đợi mail 82 → 82, thông báo 0 → 0. TP001/TP009/TP060/TP065 đã có; TP125 chưa có người giữ (số cao nhất 72). Mã cấp tiếp là TP073; TP070/TP071 của hồ sơ đã xóa không cấp lại.
+- Giữ nguyên (snapshot trước/sau): ID/danh tính 40 hồ sơ, 32 tài khoản (login + hash mật khẩu), 109 liên kết quyền, roster/phòng/chức danh/quản lý, 780 ngày công (giờ/công/trạng thái), 793 phiên, kỳ/đề nghị, ENTI mapping 39, cron, mọi khóa ngoại tới hồ sơ, 32 dòng audit cũ.
+- Đồng bộ: bản sao mã ở ngày công/đề nghị làm mới theo employee_id + company_id (lệch 0). Sau khởi động lại, chu kỳ ENTI xong lúc 15:05: mapping không đổi, 0 ngày trùng, 0 mã cũ. Quét DB: mã cũ chỉ còn ở audit, chatter và preview wizard tạm. Payload màn hình (danh sách, Hồ sơ của tôi, tổng quan/bảng công/người/Công của tôi, ô tìm “Mã hoặc tên”) và Excel HR (40 mã)/chấm công (39) chỉ có mã mới; tìm TP10060 không ra.
+- Backup `C:\TANPHAT-backups\hr-employee-code003\code003-20261120T150009` (dump + restore-list, filestore, source, config, before/after, mapping riêng, SHA256). Script áp dừng ở key `audit_history` do cửa sổ thời gian của chính phép kiểm. Đã đối chiếu: 32 dòng audit cũ khớp md5; đã sửa script để chỉ so các dòng có trước khi áp.
+- Chưa xem giao diện bằng trình duyệt đã đăng nhập, vì pane chưa đăng nhập (dữ liệu màn hình đã kiểm phía server). Danh sách test local lỗi có sẵn từ trước: xem [nghiệm thu](demo/HR_EMPLOYEE_CODE_003_ACCEPTANCE.md).
+
 **CHG-20261120-009 — SYSTEM-URL-001 — PC_SERVER_APPLIED.** Chuẩn hóa URL có tên rõ ràng theo phân hệ và từng màn hình trên toàn hệ thống TANPHAT ONE (thay thế URL kỹ thuật như `https://tpone.tadic.vn/app/action-528`).
 - Nâng cấp `custom_addons/tp_branding` lên `20.0.2.0.0`:
   - 8 quy tắc vàng URL: Tiếng Việt không dấu (`kebab-case`), phân hệ cố định (`nhan-su`, `khkd`, `thiet-bi`, `bao-cao`, `quan-tri`, `trang-chu`), tên rõ nghiệp vụ, không dùng `action-ID` làm URL chính, chi tiết `/<id>`, tạo mới `/tao-moi`. Phân biệt `/app/khkd/quan-ly-du-an` và `/app/khkd/quan-tri-du-an`.
@@ -242,7 +250,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261120-008`
+Last change: `CHG-20261120-010`
 
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.

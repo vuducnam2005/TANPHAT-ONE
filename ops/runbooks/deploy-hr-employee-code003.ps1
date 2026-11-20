@@ -36,7 +36,8 @@ SELECT 'versions='||count(*)||':'||coalesce(md5(string_agg(id||':'||employee_id|
 SELECT 'users='||count(*)||':'||coalesce(md5(string_agg(id||':'||login||':'||coalesce(password,'')||':'||active||':'||coalesce(company_id,0), ',' ORDER BY id)), '-') FROM res_users;
 SELECT 'groups='||count(*)||':'||coalesce(md5(string_agg(uid||':'||gid, ',' ORDER BY uid, gid)), '-') FROM res_groups_users_rel;
 SELECT 'audit='||count(*)||':'||count(*) FILTER (WHERE action='code_correction') FROM tp_hr_employee_audit;
-SELECT 'audit_history='||coalesce(md5(string_agg(id||':'||action||':'||coalesce(employee_code,'')||':'||coalesce(new_code,''), ',' ORDER BY id)), '-') FROM tp_hr_employee_audit WHERE id <= (SELECT coalesce(max(id),0) FROM tp_hr_employee_audit WHERE create_date < now() - interval '1 minute');
+SELECT 'audit_max='||coalesce(max(id),0) FROM tp_hr_employee_audit;
+SELECT 'audit_history='||coalesce(md5(string_agg(id||':'||action||':'||coalesce(employee_code,'')||':'||coalesce(new_code,''), ',' ORDER BY id)), '-') FROM tp_hr_employee_audit;
 SELECT 'sequence='||padding||':'||prefix||':'||implementation FROM ir_sequence WHERE code='tp.hr.employee.code';
 SELECT format('SELECT %L||last_value||'':''||is_called FROM %I', 'sequence_value=', 'ir_sequence_'||lpad(id::text, 3, '0')) FROM ir_sequence WHERE code='tp.hr.employee.code' \gexec
 SELECT 'days='||count(*)||':'||coalesce(md5(string_agg(id||':'||employee_id||':'||work_date||':'||coalesce(in_time,'')||':'||coalesce(out_time,'')||':'||coalesce(recorded_hours,0)||':'||coalesce(units,0)||':'||units_state||':'||data_state||':'||coalesce(version,0), ',' ORDER BY id)), '-') FROM tp_hr_attendance_day;
@@ -145,6 +146,10 @@ try {
     if ($upgradeExit -ne 0) { throw "Upgrade failed: $upgradeExit; backup: $backup" }
     # Snapshot before Odoo (and the ENTI cron) runs again, so only the upgrade's own changes are compared.
     $after = Snapshot 'after'
+    # Existing audit history must be unchanged: compare only the rows that existed before (the upgrade appends rows).
+    $history = @(& docker @psql -c "SELECT coalesce(md5(string_agg(id||':'||action||':'||coalesce(employee_code,'')||':'||coalesce(new_code,''), ',' ORDER BY id)), '-') FROM tp_hr_employee_audit WHERE id <= $([int]$before['audit_max'])")
+    if ($LASTEXITCODE -ne 0) { throw 'Audit history check failed' }
+    $after['audit_history'] = $history[0]
     Copy-Item -LiteralPath "$base\$Label-after.txt", "$base\$Label-upgrade.log" -Destination $backup
     # Private evidence: the applied mapping (record id, old, new) from the migration log, kept with the backup only.
     Select-String -LiteralPath "$base\$Label-upgrade.log" -Pattern 'employee id \d+: TP\d+ -> TP\d+' |
@@ -156,7 +161,7 @@ try {
     Get-ChildItem -LiteralPath $backup -File | Where-Object { $_.Name -ne 'SHA256SUMS.json' } | ForEach-Object { [pscustomobject]@{file=$_.Name; bytes=$_.Length; sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash} } | ConvertTo-Json | Set-Content -LiteralPath "$backup\SHA256SUMS.json" -Encoding UTF8
 }
 # Keys the conversion may change; everything else (identities, accounts, rights, links, hours, periods, ENTI) must match.
-$expected = @('module:tp_organization', 'module:tp_hr_attendance', 'codes', 'code_forms', 'audit', 'sequence', 'sequence_value',
+$expected = @('module:tp_organization', 'module:tp_hr_attendance', 'codes', 'code_forms', 'audit', 'audit_max', 'sequence', 'sequence_value',
     'day_codes', 'correction_codes', 'day_code_stale', 'correction_code_stale', 'employee_messages')
 $unexpected = @(@($before.Keys) + @($after.Keys) | Sort-Object -Unique | Where-Object { $_ -notin $expected -and $before[$_] -ne $after[$_] })
 $forms = $after['code_forms'].Split(':')

@@ -1,5 +1,16 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-010 — HR-EMPLOYEE-CODE-003: Mã nhân viên TP + 3 chữ số, chuyển mã cũ có audit
+
+- 20/11/2026 (Asia/Saigon), theo yêu cầu HR-EMPLOYEE-CODE-003. Commit app `13fc1283`: `tp_organization` 20.0.2.3.0, `tp_hr_attendance` 20.0.3.5.5.
+  - `code_format`: một bộ định dạng/đọc mã dùng chung cho cấp mã, import roster, ràng buộc và migration. Mã ngoài hai dạng bị báo, không cắt máy móc ba số cuối.
+  - Cấp mã nối tiếp số cao nhất đã cấp (mọi công ty, hồ sơ lưu trữ, audit, cả hai dạng). Không dùng lại số đã xóa/đã đổi; hết dải thì báo và dừng, không sinh TP1000. Import giữ số nguồn đã xác minh; số nguồn trên 999 là xung đột.
+  - Migration 20.0.2.3.0: lập mapping cho mọi hồ sơ; có trùng, mã ngoài quy tắc, thiếu mã, số đã thu hồi hoặc lệch mã nguồn thì dừng, không ghi. Nếu hợp lệ thì đổi qua correction nội bộ dưới advisory lock, mỗi hồ sơ 1 audit + 1 chatter. Chạy lại không đổi gì.
+  - `tp_hr_attendance` 20.0.3.5.5: làm mới bản sao mã trên ngày công/đề nghị theo employee_id + company_id (giờ, công, kỳ giữ nguyên). Ghép ENTI không còn dùng mã ENTI để chọn giữa hai người cùng tên.
+  - Test chỉ dùng dữ liệu giả; script áp có backup, snapshot trước/sau và danh sách key được phép đổi; runbook và tài liệu nghiệm thu.
+- Áp PC 15:00 giờ VN: 40/40 mã chuyển, 0 xung đột, số tiếp theo TP073. ID, tài khoản, mật khẩu, quyền, roster, ngày công, phiên, ENTI mapping và audit cũ giữ nguyên; mail/thông báo không phát sinh. Chu kỳ ENTI sau khởi động lại gắn đúng người, không trùng, không quay về mã cũ. Backup `C:\TANPHAT-backups\hr-employee-code003\code003-20261120T150009`; mapping thật chỉ nằm trong backup trên PC.
+- Script áp dừng ở key `audit_history`: phép kiểm lấy các dòng audit cũ hơn 1 phút tại thời điểm chụp, nên snapshot sau tính cả 40 dòng mới. Đã đối chiếu 32 dòng audit có trước khi áp khớp md5. Script nay chụp `audit_max` khi Odoo dừng và chỉ so các dòng đến mốc đó.
+
 ## CHG-20261120-009 — SYSTEM-URL-001: Chuẩn hóa URL phân hệ và màn hình toàn hệ thống
 
 - 20/11/2026 (Asia/Saigon). Thực hiện chuẩn hóa URL toàn hệ thống theo 8 quy tắc vàng: Tiếng Việt không dấu (`kebab-case`), phân hệ cố định (`nhan-su`, `khkd`, `thiet-bi`, `bao-cao`, `quan-tri`, `trang-chu`), tên rõ nghiệp vụ, không dùng `action-528` hoặc model kỹ thuật làm URL chính, hỗ trợ chi tiết `/<id>` và tạo mới `/tao-moi`. Phân biệt Quản lý dự án (`/app/khkd/quan-ly-du-an`) và Quản trị dự án (`/app/khkd/quan-tri-du-an`).
