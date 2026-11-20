@@ -3,7 +3,7 @@
         <field name="name">TP HR employee code</field>
         <field name="code">tp.hr.employee.code</field>
         <field name="prefix">TP</field>
-        <field name="number_next">10001</field>
-        <field name="padding">5</field>
+        <field name="number_next">1</field>
+        <field name="padding">3</field>
     </record>
 </odoo>

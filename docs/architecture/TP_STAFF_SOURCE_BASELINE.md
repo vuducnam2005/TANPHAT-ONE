@@ -31,8 +31,12 @@ và XML độc lập đối chiếu danh tính khớp, không đổi file; khôn
 
 Số nhóm/người như bảng lịch sử dưới, thứ tự khác. So roster 10/11 có 3 mã đổi
 nhãn chức vụ; bản mới ưu tiên, không suy thành quyết định điều chuyển/hợp đồng.
-Mã hiển thị đề nghị đã được người dùng yêu cầu: TP+(10000+mã nguồn),60 → TP10060;
-PK Odoo không đổi. Chi tiết private `.local/hr-plan-20261111/verified-roster.json`
+Mã hiển thị (HR-EMPLOYEE-CODE-003, thay quy tắc cũ TP+(10000+mã nguồn)): `TP` +
+đúng 3 chữ số theo mã nguồn, 60 → TP060, dải TP001–TP999. Mã cũ TP10001–TP10999
+đã chuyển bằng số − 10000 (TP10060 → TP060), ghi audit cũ/mới; mã ngoài quy tắc
+không cắt số mà báo xung đột. Mã nguồn > 999 bị chặn ở bước nhập, không tự cấp
+số khác. Mã đã xóa/đổi ở cả hai dạng không cấp lại; hết dải thì dừng, không sinh
+TP1000. PK Odoo không đổi. Chi tiết private `.local/hr-plan-20261111/verified-roster.json`
 và runtime/account reconciliation; không đưa danh tính vào tracked files.
 
 Người dùng yêu cầu nạp trong phiên thực thi prompt HR, không phải lệnh nhập

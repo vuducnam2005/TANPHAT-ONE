@@ -14,7 +14,7 @@ MONDAY = date(2026, 11, 9)
 @tagged('post_install', '-at_install', 'attendance_latest')
 class TestLatestFile(AttendanceCase):
     def upload(self, times, late=(0, 0), name='source.xlsx', user=None):
-        raw = report([{'code': '9901', 'name': 'Synthetic Người Một', 'times': times, 'late': late}],
+        raw = report([{'code': '991', 'name': 'Synthetic Người Một', 'times': times, 'late': late}],
                      MONDAY, len(times), late=True)
         result = self.env_for(user or self.manager)['tp.hr.attendance.batch']._tp_upload_files({
             'files': [{'file_name': name, 'data': base64.b64encode(raw).decode()}]})
@@ -54,7 +54,7 @@ class TestLatestFile(AttendanceCase):
     def test_multiple_files_use_upload_order_and_keep_valid_file_on_error(self):
         files = []
         for name, clock in [('first.xlsx', '08:30'), ('last.xlsx', '08:45')]:
-            raw = report([{'code': '9901', 'name': 'Synthetic Người Một', 'times': [(clock, '17:00')]}], MONDAY, 1)
+            raw = report([{'code': '991', 'name': 'Synthetic Người Một', 'times': [(clock, '17:00')]}], MONDAY, 1)
             files.append({'file_name': name, 'data': base64.b64encode(raw).decode()})
         files.insert(1, {'file_name': 'broken.xlsx', 'data': base64.b64encode(b'not a workbook').decode()})
         result = self.env_for(self.manager)['tp.hr.attendance.batch']._tp_upload_files({'files': files})

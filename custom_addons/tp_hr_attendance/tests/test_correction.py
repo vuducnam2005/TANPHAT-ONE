@@ -51,7 +51,7 @@ class TestAttendanceCorrection(AttendanceCase):
         return self.env_for(user)['tp.hr.attendance.correction'].browse(request.id)
 
     def upload(self, clock_in, clock_out):
-        raw = report([{'code': '9901', 'name': 'Synthetic Người Một', 'times': [(clock_in, clock_out)], 'late': (1, 7)}],
+        raw = report([{'code': '991', 'name': 'Synthetic Người Một', 'times': [(clock_in, clock_out)], 'late': (1, 7)}],
                      DAY, 1, late=True)
         result = self.env_for(self.manager)['tp.hr.attendance.batch']._tp_upload_files({
             'files': [{'file_name': 'synthetic.xlsx', 'data': base64.b64encode(raw).decode()}]})
@@ -248,7 +248,7 @@ class TestAttendanceCorrection(AttendanceCase):
             request.unlink()
 
     def test_at06c_self_approval_retry_and_preserved_punch(self):
-        self.run_batch(report([{'code': '9901', 'name': 'Synthetic Người Một', 'times': [('07:37', '17:05')]}], DAY, 1))
+        self.run_batch(report([{'code': '991', 'name': 'Synthetic Người Một', 'times': [('07:37', '17:05')]}], DAY, 1))
         # The Original Admin's own request cannot go to themselves; a second Original Admin handles it.
         self.employee(name='Synthetic Admin Chính', department_id=self.dept_other.id, user_id=self.root.id)
         own = self.request(user=self.root)

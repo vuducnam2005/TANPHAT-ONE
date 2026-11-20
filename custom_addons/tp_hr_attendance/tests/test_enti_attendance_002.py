@@ -262,7 +262,7 @@ class TestEntiSyncFake(AttendanceCase):
         overview = self.env_for(self.manager)['tp.hr.attendance.day'].tp_overview({'mode': 'day', 'date': D17.isoformat()})
         mine = [row for row in overview['recent'] if row['employee_id'] == self.emp_a.id]
         self.assertEqual([(row['kind'], row['time'], row['code'], row['location']) for row in mine],
-                         [('in', '08:10', 'TP19901', '')])
+                         [('in', '08:10', 'TP991', '')])
         self.assertLessEqual(len(overview['recent']), 10)
         self.assertEqual((overview['groups']['date'], overview['groups']['counts']['working']), (D17.isoformat(), 1))
 
@@ -310,14 +310,14 @@ class TestEntiSyncFake(AttendanceCase):
         # Newest marks of 17/11: newest first, one row per mark, real seconds only where the source has them.
         overview = Day.tp_overview(scope(D17))
         recent = [(row['employee_id'], row['kind'], row['time'], row['code'], row['location']) for row in overview['recent']]
-        self.assertEqual(recent, [(self.emp_b.id, 'out', '17:30', 'TP19902', ''), (self.emp_a.id, 'in', '08:10:23', 'TP19901', ''),
-                                  (self.emp_b.id, 'in', '08:05', 'TP19902', '')])
+        self.assertEqual(recent, [(self.emp_b.id, 'out', '17:30', 'TP992', ''), (self.emp_a.id, 'in', '08:10:23', 'TP991', ''),
+                                  (self.emp_b.id, 'in', '08:05', 'TP992', '')])
         self.assertEqual(len({row['key'] for row in overview['recent']}), len(overview['recent']))
         self.assertEqual((overview['recent_info']['mode'], overview['recent_info']['title']), ('daily', 'Chấm công gần nhất'))
         self.assertNotIn('raw_json', str(overview))
         # The dialog's own search (accent-free), department filter and page sizes narrow only that group.
         self.assertEqual([row['employee_id'] for row in listed(D17, 'done', q='nguoi hai')['rows']], [self.emp_b.id])
-        self.assertEqual(listed(D17, 'done', q='TP19901')['total'], 0)
+        self.assertEqual(listed(D17, 'done', q='TP991')['total'], 0)
         other = listed(D17, 'done', dept=self.dept_other.id)
         self.assertEqual((other['dept'], [row['employee_id'] for row in other['rows']]), (self.dept_other.id, [self.emp_b.id]))
         # A department with nobody in the group is not offered and falls back to all (e.g. after a live update).
@@ -433,12 +433,66 @@ class TestEntiSyncFake(AttendanceCase):
         self.assertEqual(self.day(self.emp_b, D16).in_time, '08:00')
         self.assertIn([D16], [note[0] for note in self.notes])
 
+    # HR-EMPLOYEE-CODE-003 -------------------------------------------------------------------------------------
+    def test_enti_code_never_picks_one_of_same_name_employees(self):
+        # ENTI maNV and internal TP codes are separate number spaces: an ENTI code equal to one candidate's
+        # internal code is not evidence, so two same-name employees stay "suggested" for HR.
+        twin = self.env['hr.employee'].with_company(self.company).create({
+            'name': 'Synthetic Người Một', 'company_id': self.company.id, 'tp_employee_code': 'TP993'})
+        self.sync([enti_row('syn-same', 'Synthetic Người Một', [(D16, '08:00', '17:00', 0)], code='TP993')])
+        same = self.mapping('syn-same')
+        self.assertEqual((same.state, same.employee_id.id), ('suggested', False))
+        self.assertIn('Có 2 nhân viên Odoo trùng họ tên', same.match_reason)
+        self.assertFalse(self.day(twin, D16) or self.day(self.emp_a, D16))
+        self.assertEqual((twin.tp_employee_code, self.emp_a.tp_employee_code), ('TP993', 'TP991'))
+
+    def test_code_conversion_refreshes_attendance_copies_only(self):
+        self.sync(self.week_rows())
+        request = self.env_for(self.viewer)['tp.hr.attendance.correction'].create({
+            'work_date': D18, 'requested_in': 8.0, 'requested_out': 17.0, 'reason': 'Synthetic private reason'})
+        period = self.env['tp.hr.attendance.period'].sudo().create({
+            'name': 'Synthetic locked', 'company_id': self.company.id, 'date_from': D16, 'date_to': D16})
+        internal(period).write({'state': 'locked'})
+        Day = self.env['tp.hr.attendance.day'].sudo()
+        days = Day.search([('employee_id', '=', self.emp_a.id)])
+        self.assertEqual(set(days.mapped('employee_code')), {'TP991'})
+
+        def figures():
+            return {d.id: (d.work_date, d.in_time, d.out_time, d.recorded_hours, d.units, d.units_state, d.data_state, d.version)
+                    for d in Day.search([('employee_id', '=', self.emp_a.id)])}
+        before = figures()
+        # The profile and its stored copies as they were before the upgrade (former TP1nnnn form).
+        self.env.cr.execute('UPDATE hr_employee SET tp_employee_code=%s WHERE id=%s', ['TP10991', self.emp_a.id])
+        self.env.cr.execute('UPDATE tp_hr_attendance_day SET employee_code=%s WHERE employee_id=%s', ['TP10991', self.emp_a.id])
+        self.env.cr.execute('UPDATE tp_hr_attendance_correction SET employee_code=%s WHERE id=%s', ['TP10991', request.id])
+        self.env.invalidate_all()
+        # The upgrade path (tp_organization conversion; the attendance override refreshes the copies).
+        result = self.env['hr.employee']._tp_code_format_apply('Synthetic format conversion', self.emp_a | self.emp_b)
+        self.assertEqual(result['changed'], [(self.emp_a.id, 'TP10991', 'TP991')])
+        self.env.invalidate_all()
+        self.assertEqual(set(Day.search([('employee_id', '=', self.emp_a.id)]).mapped('employee_code')), {'TP991'})
+        self.assertEqual(request.sudo().employee_code, 'TP991')
+        self.assertEqual(figures(), before)
+        self.assertEqual(period.state, 'locked')
+        self.assertEqual(result['kept'], 1)
+        self.assertEqual(self.emp_b.tp_employee_code, 'TP992')
+        # The attendance upgrade step finds nothing left to refresh.
+        self.assertEqual(self.env['hr.employee'].search([('company_id', '=', self.company.id)])._tp_sync_attendance_code(), 0)
+        # ENTI keeps its own key: the next cycle lands on the same profile, with no duplicate day and the new code.
+        mapping = self.mapping('syn-a')
+        self.assertTrue(self.sync(self.week_rows())['success'])
+        self.assertEqual((self.mapping('syn-a'), self.mapping('syn-a').employee_id), (mapping, self.emp_a))
+        self.assertEqual(set(figures()), set(before))
+        self.assertFalse(Day.search_count([('employee_code', 'in', ['TP10991', 'TP10992'])]))
+        overview = self.env_for(self.manager)['tp.hr.attendance.day'].tp_overview({'mode': 'day', 'date': D17.isoformat()})
+        self.assertEqual({row['code'] for row in overview['recent'] if row['employee_id'] == self.emp_a.id}, {'TP991'})
+
 
 # ---------------------------------------------------------------------------------------------- Excel import closed
 @tagged('post_install', '-at_install')
 class TestExcelImportClosed(AttendanceCase):
     def test_public_import_paths_refuse_and_history_stays_readable(self):
-        data = report([{'code': '9901', 'name': 'Synthetic Người Một', 'times': [('07:37', '17:05')]}], date(2026, 11, 9), 1)
+        data = report([{'code': '991', 'name': 'Synthetic Người Một', 'times': [('07:37', '17:05')]}], date(2026, 11, 9), 1)
         history = self.run_batch(data)
         self.assertEqual(history.state, 'applied')
         Batch = self.env_for(self.manager)['tp.hr.attendance.batch']
@@ -483,7 +537,7 @@ class TestExcelImportClosed(AttendanceCase):
         self.assertFalse(self.env.ref('tp_hr_attendance.menu_file_matrix', raise_if_not_found=False))
 
     def test_stale_preview_can_still_be_cancelled(self):
-        data = report([{'code': '9901', 'name': 'Synthetic Người Một', 'times': [('07:37', '17:05')]}], date(2026, 11, 9), 1)
+        data = report([{'code': '991', 'name': 'Synthetic Người Một', 'times': [('07:37', '17:05')]}], date(2026, 11, 9), 1)
         Batch = self.env_for(self.manager)['tp.hr.attendance.batch']
         preview = Batch._tp_upload_preview({'file_name': 'synthetic.xlsx', 'data': base64.b64encode(data).decode()})
         self.assertEqual(Batch.tp_upload_cancel(preview['batch_id'])['state'], 'cancelled')

@@ -5,6 +5,8 @@ from io import BytesIO
 
 from openpyxl import load_workbook
 
+from .code_format import format_code
+
 
 def source_code(value):
     try:
@@ -19,7 +21,12 @@ def source_code(value):
 
 
 def employee_code(value):
-    return f'TP{10000 + int(source_code(value))}'
+    """TP code of a verified roster source number: TP + three digits (60 -> TP060).
+
+    A source number above 999 raises ``ValueError``; it is reported as a
+    conflict and never shortened or renumbered.
+    """
+    return format_code(int(source_code(value)))
 
 
 def parse_roster(data):

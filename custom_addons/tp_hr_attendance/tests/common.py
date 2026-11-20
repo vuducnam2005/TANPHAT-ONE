@@ -73,6 +73,10 @@ class AttendanceCase(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        # Explicit synthetic codes move the (non-transactional) TP code sequence: restore it after the class.
+        sequence = cls.env['hr.employee']._tp_code_sequence()
+        cls.cr.execute('SELECT last_value, is_called FROM ir_sequence_%03d' % sequence.id)
+        cls.addClassCleanup(cls._restore_code_sequence, sequence.id, *cls.cr.fetchone())
         cls.company = cls.env['res.company'].create({'name': 'Synthetic Attendance Company'})
         cls.dept = cls.env['hr.department'].create({'name': 'Synthetic Attendance Dept', 'company_id': cls.company.id})
         cls.dept_other = cls.env['hr.department'].create({'name': 'Synthetic Attendance Other', 'company_id': cls.company.id})
@@ -90,9 +94,14 @@ class AttendanceCase(TransactionCase):
         # Source codes are written only through the reviewed roster path (tp_organization guard).
         Employee = cls.env['hr.employee'].with_company(cls.company).with_context(_tp_roster_write=_ROSTER_WRITE)
         cls.emp_a = Employee.create({'name': 'Synthetic Người Một', 'company_id': cls.company.id, 'department_id': cls.dept.id,
-                                     'tp_source_code': '9901', 'tp_employee_code': 'TP19901', 'user_id': cls.viewer.id})
+                                     'tp_source_code': '991', 'tp_employee_code': 'TP991', 'user_id': cls.viewer.id})
         cls.emp_b = Employee.create({'name': 'Synthetic Người Hai', 'company_id': cls.company.id, 'department_id': cls.dept_other.id,
-                                     'tp_source_code': '9902', 'tp_employee_code': 'TP19902', 'user_id': cls.colleague.id})
+                                     'tp_source_code': '992', 'tp_employee_code': 'TP992', 'user_id': cls.colleague.id})
+
+    @classmethod
+    def _restore_code_sequence(cls, sequence_id, last_value, is_called):
+        with cls.registry.cursor() as cr:
+            cr.execute('SELECT setval(%s, %s, %s)', ['ir_sequence_%03d' % sequence_id, last_value, is_called])
 
     def env_for(self, user):
         return self.env(user=user, context=dict(self.env.context, allowed_company_ids=[self.company.id]))

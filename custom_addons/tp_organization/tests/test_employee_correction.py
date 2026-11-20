@@ -1,23 +1,25 @@
-import importlib.util
 from unittest.mock import patch
 
 from odoo import Command
 from odoo.exceptions import AccessError, UserError, ValidationError
-from odoo.modules.module import get_module_path
 from odoo.tests import TransactionCase, tagged
 from odoo.tools import BinaryBytes
 
 from .test_hr_roster import workbook
-from odoo.addons.tp_organization.models.hr_employee import (
+from odoo.addons.tp_organization.models.code_format import (
     CODE_MAX,
     CODE_MIN,
+    code_aliases,
     code_number,
+    convert_legacy,
+    format_code,
+    identity_number,
 )
 
 
 @tagged('post_install', '-at_install')
 class TestEmployeeCorrection(TransactionCase):
-    """HR-CORRECTION-008 TP codes and HR-DELETE-010 permanent deletion core (synthetic data)."""
+    """HR-EMPLOYEE-CODE-003 TP codes, HR-CORRECTION-008 correction and HR-DELETE-010 deletion core (synthetic data)."""
 
     @classmethod
     def setUpClass(cls):
@@ -63,30 +65,50 @@ class TestEmployeeCorrection(TransactionCase):
         return code_number(employee.tp_employee_code)
 
     # ------------------------------------------------------------------
-    # TP codes
+    # TP codes: TP + exactly three digits (HR-EMPLOYEE-CODE-003)
     # ------------------------------------------------------------------
+    def test_code_format_rule(self):
+        # The five reference conversions of HR-EMPLOYEE-CODE-003.
+        for legacy, code in (('TP10001', 'TP001'), ('TP10009', 'TP009'), ('TP10060', 'TP060'),
+                             ('TP10065', 'TP065'), ('TP10125', 'TP125')):
+            self.assertEqual(convert_legacy(legacy), code)
+            self.assertEqual(identity_number(legacy), identity_number(code))
+            self.assertEqual(code_aliases(code), [code, legacy])
+        self.assertEqual((format_code(1), format_code(60), format_code(999)), ('TP001', 'TP060', 'TP999'))
+        for number in (0, 1000, -1, True, '60', 60.0):
+            with self.assertRaises(ValueError):
+                format_code(number)
+        # Outside TP10001-TP10999 nothing is converted or trimmed to its last digits.
+        for value in ('TP10000', 'TP11000', 'TP11142', 'TP19999', 'TP20000', 'TP1', 'TP0001', 'TP000', 'TP1000', 'wrong', '', None):
+            self.assertIsNone(convert_legacy(value), value)
+            self.assertIsNone(code_number(value), value)
+        self.assertEqual(code_number('TP072'), 72)
+
     def test_next_code_follows_highest_valid_code(self):
-        # The upgrade moved the sequence back into the band (never 20000+).
+        # The upgrade moved the sequence into TP001-TP999.
         self.assertTrue(CODE_MIN <= self.Employee._tp_sequence_next(self.sequence) <= CODE_MAX)
         floor = self.Employee._tp_code_floor()
         first = self.manual('Synthetic Next One')
-        self.assertEqual(first.tp_employee_code, f'TP{floor}')
-        self.assertNotEqual(self.number(first), first.id + CODE_MIN)
+        self.assertEqual(first.tp_employee_code, format_code(floor))
+        self.assertRegex(first.tp_employee_code, r'^TP[0-9]{3}$')
+        self.assertNotEqual(self.number(first), first.id)
         second = self.manual('Synthetic Next Two')
         self.assertEqual(self.number(second), floor + 1)
 
     def test_legacy_sequence_value_is_ignored(self):
         floor = self.Employee._tp_code_floor()
-        self.Employee._tp_reset_code_sequence(20000)
-        employee = self.manual('Synthetic Legacy Sequence')
-        self.assertEqual(employee.tp_employee_code, f'TP{floor}')
+        for legacy_next in (20000, 10072):
+            self.Employee._tp_reset_code_sequence(legacy_next)
+            employee = self.manual(f'Synthetic Legacy Sequence {legacy_next}')
+            self.assertEqual(employee.tp_employee_code, format_code(floor))
+            floor += 1
         # A sequence behind the issued codes is moved forward, not reused.
         self.Employee._tp_reset_code_sequence(CODE_MIN)
-        self.assertEqual(self.number(self.manual('Synthetic Behind Sequence')), floor + 1)
+        self.assertEqual(self.number(self.manual('Synthetic Behind Sequence')), floor)
 
     def test_archived_explicit_and_deleted_codes_are_skipped(self):
         floor = self.Employee._tp_code_floor()
-        archived = self.Employee.create({'name': 'Synthetic Archived Code', 'tp_employee_code': f'TP{floor + 4}'})
+        archived = self.Employee.create({'name': 'Synthetic Archived Code', 'tp_employee_code': format_code(floor + 4)})
         archived.active = False
         self.assertEqual(self.number(self.manual('Synthetic After Archived')), floor + 5)
         mistaken = self.manual('Synthetic Deleted Code')
@@ -96,19 +118,35 @@ class TestEmployeeCorrection(TransactionCase):
         self.Employee._tp_reset_code_sequence(code_number(deleted_code))
         self.assertGreater(self.number(self.manual('Synthetic After Deleted')), code_number(deleted_code))
 
-    def test_rollover_band_end_and_string_order(self):
-        if self.Employee._tp_code_floor() <= 10099:
-            self.Employee.create({'name': 'Synthetic TP10099', 'tp_employee_code': 'TP10099'})
-            self.assertEqual(self.manual('Synthetic Rollover').tp_employee_code, 'TP10100')
+    def test_code_deleted_under_former_form_stays_retired(self):
         floor = self.Employee._tp_code_floor()
-        # TP2xxxx and longer codes never count as the highest code (numeric, in band).
-        self.Employee.create([{'name': 'Synthetic Out Of Band', 'tp_employee_code': 'TP990001'},
-                              {'name': 'Synthetic Wrong Band', 'tp_employee_code': 'TP20050'}])
+        retired = floor + 2
+        # A profile deleted before the conversion was recorded as TP1nnnn.
+        self.env['tp.hr.employee.audit']._tp_record([{
+            'action': 'permanent_delete', 'employee_ref': 0, 'employee_name': 'Synthetic Former Deleted',
+            'employee_code': f'TP{10000 + retired}', 'company_id': self.env.company.id, 'reason': 'Synthetic former deletion'}])
+        self.assertEqual(self.Employee._tp_code_floor(), retired + 1)
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            self.Employee.create({'name': 'Synthetic Reused Former Code', 'tp_employee_code': format_code(retired)})
+        self.Employee._tp_reset_code_sequence(floor)
+        codes = [self.manual(f'Synthetic Around Retired {index}').tp_employee_code for index in range(3)]
+        self.assertNotIn(format_code(retired), codes)
+
+    def test_band_end_stops_and_out_of_rule_codes(self):
+        floor = self.Employee._tp_code_floor()
+        # Former, longer or shorter codes are refused, never stored or counted. A fresh company
+        # keeps the unique index out of the way on a database that still holds former codes.
+        company = self.env['res.company'].create({'name': 'Synthetic Invalid Code Company'})
+        for invalid in ('TP10060', 'TP1', 'TP0001', 'TP000', 'TP1000', 'TP20050', 'wrong'):
+            with self.assertRaises(ValidationError), self.cr.savepoint():
+                self.Employee.with_company(company).create({'name': 'Synthetic Invalid Code', 'company_id': company.id,
+                                                            'tp_employee_code': invalid})
         self.assertEqual(self.Employee._tp_code_floor(), floor)
-        self.assertEqual(self.number(self.manual('Synthetic After Out Of Band')), floor)
-        self.Employee.create({'name': 'Synthetic Band End', 'tp_employee_code': f'TP{CODE_MAX}'})
-        with self.assertRaises(UserError), self.cr.savepoint():
+        self.Employee.create({'name': 'Synthetic Band End', 'tp_employee_code': format_code(CODE_MAX)})
+        with self.assertRaises(UserError) as caught, self.cr.savepoint():
             self.manual('Synthetic Exhausted')
+        self.assertIn('TP001–TP999', str(caught.exception))
+        self.assertFalse(self.Employee.search_count([('tp_employee_code', 'in', ['TP1000', 'TP0999', 'TP11000'])]))
 
     def test_rolled_back_allocation_never_reuses_a_code(self):
         with self.assertRaises(UserError), self.cr.savepoint():
@@ -122,17 +160,17 @@ class TestEmployeeCorrection(TransactionCase):
 
     def test_roster_and_manual_codes_do_not_overwrite_each_other(self):
         floor = self.Employee._tp_code_floor()
-        source = floor + 3 - 10000
+        source = floor + 3
         batch = self.env['tp.hr.import.batch'].create({'file_data': BinaryBytes(workbook([[1, source, 'Synthetic Roster In Band', source, '']])),
                                                        'file_name': 'synthetic.xlsx'})
         batch.action_preview()
         batch.action_apply()
         imported = batch.line_ids.employee_id
-        self.assertEqual(imported.tp_employee_code, f'TP{floor + 3}')
+        self.assertEqual(imported.tp_employee_code, format_code(floor + 3))
         # The imported code raised the high-water mark: the next manual code is after it.
         self.assertEqual(self.number(self.manual('Synthetic Manual After Import')), floor + 4)
         manual = self.manual('Synthetic Manual Before Import')
-        clash = self.number(manual) - 10000
+        clash = self.number(manual)
         conflict = self.env['tp.hr.import.batch'].create({'file_data': BinaryBytes(workbook([[1, clash, 'Synthetic Other Identity', clash, '']])),
                                                           'file_name': 'synthetic.xlsx'})
         conflict.action_preview()
@@ -147,38 +185,135 @@ class TestEmployeeCorrection(TransactionCase):
         code = employee.tp_employee_code
         for actor in (self.admin, self.manager):
             with self.assertRaises(UserError):
-                employee.with_user(actor).write({'tp_employee_code': 'TP19998'})
+                employee.with_user(actor).write({'tp_employee_code': 'TP998'})
         with self.assertRaises(UserError):
-            employee.sudo().with_context(_tp_code_correction=True).write({'tp_employee_code': 'TP19998'})
+            employee.sudo().with_context(_tp_code_correction=True).write({'tp_employee_code': 'TP998'})
+        with self.assertRaises(AccessError):
+            self.Employee.with_user(self.admin)._tp_code_format_apply('Synthetic direct call')
         employee.invalidate_recordset()
         self.assertEqual(employee.tp_employee_code, code)
 
-    def test_migration_maps_only_unused_legacy_manual_codes(self):
-        floor = self.Employee._tp_code_floor()
-        untouched = self.manual('Synthetic Band Code')
-        legacy = self.Employee.create({'name': 'Synthetic Legacy Manual', 'tp_employee_code': 'TP20001'})
-        linked = self.Employee.create({'name': 'Synthetic Legacy Linked', 'tp_employee_code': 'TP20002'})
-        report = self.Employee.create({'name': 'Synthetic Legacy Report', 'tp_employee_code': 'TP20003', 'parent_id': linked.id})
-        stranger = self.Employee.create({'name': 'Synthetic Not Legacy', 'tp_employee_code': 'TP29999'})
-        before = {employee.id: employee.tp_employee_code for employee in self.Employee.search([])}
-        self.Employee._tp_reset_code_sequence(20004)  # what the old sequence had issued
-        path = get_module_path('tp_organization') + '/migrations/20.0.2.1.0/post-migrate.py'
-        spec = importlib.util.spec_from_file_location('tp_organization_hr008_migration', path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        module.migrate(self.cr, '20.0.2.0.0')
+    # ------------------------------------------------------------------
+    # TP1nnnn -> TPnnn conversion (synthetic company, records set in SQL
+    # because the former form can no longer be created)
+    # ------------------------------------------------------------------
+    def legacy_company(self):
+        company = self.env['res.company'].create({'name': 'Synthetic Code Format Company'})
+        department = self.env['hr.department'].create({'name': 'Synthetic Format Unit', 'company_id': company.id})
+        return company, department
+
+    def legacy(self, company, department, name, code, source=None):
+        employee = self.Employee.with_company(company).create({'name': name, 'company_id': company.id, 'department_id': department.id})
+        self.cr.execute('UPDATE hr_employee SET tp_employee_code=%s, tp_source_code=%s WHERE id=%s', [code, source, employee.id])
+        employee.invalidate_recordset()
+        return employee
+
+    def password_hash(self, user):
+        self.cr.execute('SELECT login, password FROM res_users WHERE id=%s', [user.id])
+        return self.cr.fetchone()
+
+    def test_conversion_keeps_identity_links_and_is_idempotent(self):
+        company, department = self.legacy_company()
+        examples = {'TP10001': 'TP001', 'TP10009': 'TP009', 'TP10060': 'TP060', 'TP10065': 'TP065', 'TP10125': 'TP125'}
+        employees = self.Employee.browse()
+        for index, legacy in enumerate(examples):
+            source = str(int(legacy[2:]) - 10000) if index % 2 else None
+            employees |= self.legacy(company, department, f'Synthetic Format {index}', legacy, source)
+        kept = self.Employee.with_company(company).create({'name': 'Synthetic Already New', 'company_id': company.id,
+                                                            'tp_employee_code': 'TP130', 'department_id': department.id})
+        employees.sorted('id')[0].parent_id = kept
+        employees.sorted('id')[1].active = False
+        user = self.env['res.users'].create({'name': 'Synthetic Format Account', 'login': 'code003.synthetic.account',
+                                             'company_id': company.id, 'company_ids': [Command.set([company.id])]})
+        employees.sorted('id')[2].sudo().user_id = user
+        before_user = self.password_hash(user)
+        before = {employee.id: (employee.name, employee.department_id, employee.user_id, employee.parent_id, employee.active)
+                  for employee in employees | kept}
+        subset = employees | kept
+        rows = {row['id']: row for row in self.Employee._tp_code_format_plan(subset)}
+        self.assertEqual({rows[e.id]['old']: (rows[e.id]['new'], rows[e.id]['status']) for e in employees},
+                         {old: (new, 'convert') for old, new in examples.items()})
+        self.assertEqual(rows[kept.id]['status'], 'keep')
+        result = self.Employee._tp_code_format_apply('Synthetic format conversion', subset)
         self.Employee.invalidate_model()
-        after = {employee.id: employee.tp_employee_code for employee in self.Employee.search([])}
-        changed = {employee_id: (before[employee_id], code) for employee_id, code in after.items() if before[employee_id] != code}
-        # Only unused manual codes of the issued legacy range move; IDs and links are kept.
-        self.assertEqual(changed, {legacy.id: ('TP20001', f'TP{floor + 1}'), report.id: ('TP20003', f'TP{floor + 2}')})
-        self.assertEqual((linked.tp_employee_code, stranger.tp_employee_code), ('TP20002', 'TP29999'))
-        self.assertEqual(report.parent_id, linked)
-        self.assertEqual(untouched.tp_employee_code, f'TP{floor}')
-        audit = self.env['tp.hr.employee.audit'].search([('employee_ref', '=', legacy.id)])
-        self.assertEqual((audit.action, audit.employee_code, audit.new_code), ('code_correction', 'TP20001', f'TP{floor + 1}'))
+        self.assertEqual(sorted(old for _id, old, _new in result['changed']), sorted(examples))
+        self.assertEqual({e.tp_employee_code for e in employees}, set(examples.values()))
+        self.assertEqual({e.id: (e.name, e.department_id, e.user_id, e.parent_id, e.active) for e in employees | kept}, before)
+        self.assertEqual(kept.tp_employee_code, 'TP130')
+        self.assertEqual(self.password_hash(user), before_user)
+        audit = self.env['tp.hr.employee.audit'].search([('employee_ref', 'in', employees.ids), ('action', '=', 'code_correction')])
+        self.assertEqual({(a.action, a.employee_code, a.new_code) for a in audit},
+                         {('code_correction', old, new) for old, new in examples.items()})
+        self.assertIn('TP10060 → TP060', ' '.join(employees.filtered(lambda e: e.tp_employee_code == 'TP060').message_ids.mapped('body')))
+        # Re-running changes nothing and records nothing.
+        again = self.Employee._tp_code_format_apply('Synthetic format conversion', subset)
+        self.assertEqual(again['changed'], [])
+        self.assertEqual(self.env['tp.hr.employee.audit'].search_count([('employee_ref', 'in', employees.ids), ('action', '=', 'code_correction')]),
+                         len(examples))
+        # The converted numbers are taken: the next code follows them, never a TP1nnnn form.
         self.assertTrue(CODE_MIN <= self.Employee._tp_sequence_next(self.sequence) <= CODE_MAX)
-        self.assertEqual(self.number(self.manual('Synthetic After Migration')), floor + 3)
+        floor = self.Employee._tp_code_floor()
+        self.assertGreater(floor, 130)
+        self.assertEqual(self.manual('Synthetic After Conversion').tp_employee_code, format_code(floor))
+        # A former code can never be issued again in either form.
+        with self.assertRaises(ValidationError), self.cr.savepoint():
+            self.Employee.with_company(company).create({'name': 'Synthetic Former Again', 'company_id': company.id,
+                                                        'tp_employee_code': 'TP10060'})
+
+    def test_conversion_reports_conflicts_without_writing(self):
+        company, department = self.legacy_company()
+        # Clear of the numbers used below (123, 126, 127) and of every issued code.
+        retired = max(self.Employee._tp_code_floor(), 130) + 5
+        self.env['tp.hr.employee.audit']._tp_record([{
+            'action': 'permanent_delete', 'employee_ref': 0, 'employee_name': 'Synthetic Deleted Former',
+            'employee_code': f'TP{10000 + retired}', 'company_id': company.id, 'reason': 'Synthetic deletion'}])
+        cases = {
+            'duplicate_legacy': self.legacy(company, department, 'Synthetic Duplicate Legacy', 'TP10123'),
+            'duplicate_new': self.legacy(company, department, 'Synthetic Duplicate New', 'TP123'),
+            'outside': self.legacy(company, department, 'Synthetic Outside Rule', 'TP11000'),
+            'wrong_band': self.legacy(company, department, 'Synthetic Wrong Band', 'TP20000'),
+            'missing': self.legacy(company, department, 'Synthetic Missing Code', None),
+            'retired': self.legacy(company, department, 'Synthetic Retired Number', f'TP{10000 + retired}'),
+            'source': self.legacy(company, department, 'Synthetic Source Mismatch', 'TP10126', '124'),
+            'valid': self.legacy(company, department, 'Synthetic Valid Row', 'TP10127'),
+        }
+        subset = self.Employee.browse([employee.id for employee in cases.values()])
+        rows = {row['id']: row for row in self.Employee._tp_code_format_plan(subset)}
+        self.assertEqual({key for key, employee in cases.items() if rows[employee.id]['status'] == 'conflict'}, set(cases) - {'valid'})
+        self.assertIn('trùng mã TP123', rows[cases['duplicate_legacy'].id]['issue'])
+        self.assertIn('ngoài quy tắc', rows[cases['outside'].id]['issue'])
+        self.assertIn('thiếu mã', rows[cases['missing'].id]['issue'])
+        self.assertIn('đã xóa', rows[cases['retired'].id]['issue'])
+        self.assertIn('mã nguồn 124', rows[cases['source'].id]['issue'])
+        before = {employee.id: employee.tp_employee_code for employee in subset}
+        with self.assertRaises(UserError) as caught, self.cr.savepoint():
+            self.Employee._tp_code_format_apply('Synthetic conflicting conversion', subset)
+        self.assertIn('ID %s' % cases['outside'].id, str(caught.exception))
+        self.Employee.invalidate_model()
+        self.assertEqual({employee.id: employee.tp_employee_code for employee in subset}, before)
+        self.assertFalse(self.env['tp.hr.employee.audit'].search_count([('action', '=', 'code_correction'), ('employee_ref', 'in', subset.ids)]))
+
+    def test_reimport_after_conversion_keeps_new_code(self):
+        company, department = self.legacy_company()
+        employee = self.legacy(company, department, 'Synthetic Reimport', 'TP10061', '61')
+        self.Employee._tp_code_format_apply('Synthetic format conversion', employee)
+        self.assertEqual(employee.tp_employee_code, 'TP061')
+        batch = self.env['tp.hr.import.batch'].create({'file_data': BinaryBytes(workbook([[1, 61, 'Synthetic Reimport', 61, '']])),
+                                                       'file_name': 'synthetic.xlsx', 'company_id': company.id})
+        batch.action_preview()
+        self.assertEqual(batch.line_ids.employee_id, employee)
+        batch.action_apply()
+        self.assertEqual(self.Employee.search_count([('company_id', '=', company.id), ('tp_source_code', '=', '61')]), 1)
+        self.assertEqual(employee.tp_employee_code, 'TP061')
+        self.assertFalse(self.Employee.search_count([('tp_employee_code', '=', 'TP10061'), ('company_id', '=', company.id)]))
+        # A source number above 999 is a conflict, never shortened or renumbered.
+        large = self.env['tp.hr.import.batch'].create({'file_data': BinaryBytes(workbook([[1, 1060, 'Synthetic Large Source', 1060, '']])),
+                                                       'file_name': 'synthetic.xlsx', 'company_id': company.id})
+        large.action_preview()
+        self.assertEqual(large.line_ids.action, 'conflict')
+        self.assertIn('vượt dải TP001–TP999', large.line_ids.detail)
+        large.action_apply()
+        self.assertFalse(large.line_ids.employee_id)
 
     # ------------------------------------------------------------------
     # HR-DELETE-010: permanent deletion core (password/accounts: tp_hr_workspace)
@@ -236,7 +371,7 @@ class TestEmployeeCorrection(TransactionCase):
     def test_archived_and_imported_profiles_are_deleted_import_trace_kept(self):
         archived = self.manual('Synthetic Archived Permanent')
         archived.action_archive()
-        batch = self.env['tp.hr.import.batch'].create({'file_data': BinaryBytes(workbook([[1, 981201, 'Synthetic Imported Permanent', 981201, '']])),
+        batch = self.env['tp.hr.import.batch'].create({'file_data': BinaryBytes(workbook([[1, 921, 'Synthetic Imported Permanent', 921, '']])),
                                                        'file_name': 'synthetic.xlsx'})
         batch.action_preview()
         batch.action_apply()
@@ -254,7 +389,7 @@ class TestEmployeeCorrection(TransactionCase):
         audit = self.env['tp.hr.employee.audit'].search([('employee_code', '=', code)])
         self.assertEqual((audit.source_code, audit.snapshot['import_lines']), (source, [[line.id, batch.id]]))
         # The same identity in a new file is a conflict, never a silent re-creation.
-        again = self.env['tp.hr.import.batch'].create({'file_data': BinaryBytes(workbook([[1, 981201, 'Synthetic Imported Permanent', 981201, '']])),
+        again = self.env['tp.hr.import.batch'].create({'file_data': BinaryBytes(workbook([[1, 921, 'Synthetic Imported Permanent', 921, '']])),
                                                        'file_name': 'synthetic-again.xlsx'})
         again.action_preview()
         self.assertEqual(again.line_ids.action, 'conflict')

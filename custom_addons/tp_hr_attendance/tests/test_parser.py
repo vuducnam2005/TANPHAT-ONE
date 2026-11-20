@@ -29,13 +29,13 @@ class TestAttendanceParser(BaseCase):
 
     def test_parse_report_kinds_and_dates(self):
         data = report([
-            {'code': '9901', 'name': 'Synthetic A', 'times': [('07:37', '17:05'), ('07:40', None), ('17:00', '08:00')]},
+            {'code': '991', 'name': 'Synthetic A', 'times': [('07:37', '17:05'), ('07:40', None), ('17:00', '08:00')]},
             {'code': '', 'name': 'Synthetic No Code', 'times': [('07:30', '17:00'), (None, None), (None, None)]},
         ], MONDAY, 3)
         [sheet] = parse_attendance(data)
         self.assertEqual(sheet['period'], (MONDAY, date(2026, 11, 11)))
         self.assertEqual(sheet['employees'], 2)
-        kinds = [(event['work_date'], event['kind']) for event in sheet['events'] if event['machine_code'] == '9901']
+        kinds = [(event['work_date'], event['kind']) for event in sheet['events'] if event['machine_code'] == '991']
         self.assertEqual(kinds, [(MONDAY, 'pair'), (date(2026, 11, 10), 'missing_out'), (date(2026, 11, 11), 'reversed')])
         no_code = [event for event in sheet['events'] if not event['machine_code']]
         self.assertEqual([event['kind'] for event in no_code], ['invalid'])

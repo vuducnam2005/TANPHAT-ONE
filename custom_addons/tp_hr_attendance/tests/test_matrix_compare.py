@@ -26,8 +26,8 @@ class TestMatrixAndCompare(AttendanceCase):
 
     def test_history_upload_applies_newest_file_and_stale_preview_discard_keeps_audit(self):
         raw_ok = report([
-            {'code': '9901', 'name': 'Synthetic Người Một', 'times': [('08:20', '17:05'), (None, None)]},
-            {'code': '9902', 'name': 'Synthetic Người Hai', 'times': [(None, None), (None, None)]},
+            {'code': '991', 'name': 'Synthetic Người Một', 'times': [('08:20', '17:05'), (None, None)]},
+            {'code': '992', 'name': 'Synthetic Người Hai', 'times': [(None, None), (None, None)]},
         ], MONDAY, 2)
         importer_env = self.env_for(self.manager)
         Batch = importer_env['tp.hr.attendance.batch']
@@ -58,7 +58,7 @@ class TestMatrixAndCompare(AttendanceCase):
         # Applied history is never discarded; a stale preview that was never applied can be, with its audit record kept.
         with self.assertRaises(UserError):
             Batch.tp_discard_batch(batch_id, 'Không được bỏ lô đã áp dụng')
-        raw_draft = report([{'code': '9901', 'name': 'Synthetic Người Một', 'times': [('08:25', '17:00'), (None, None)]}], MONDAY, 2)
+        raw_draft = report([{'code': '991', 'name': 'Synthetic Người Một', 'times': [('08:25', '17:00'), (None, None)]}], MONDAY, 2)
         preview_id = Batch._tp_upload_preview({'file_name': 'ban_nhap.xlsx', 'data': self._b64(raw_draft)})['batch_id']
         discard = Batch.tp_discard_batch(preview_id, 'Tải nhầm bản nháp cũ')
         self.assertEqual(discard['state'], 'cancelled')
@@ -67,7 +67,7 @@ class TestMatrixAndCompare(AttendanceCase):
         self.assertEqual(sessions.exists(), sessions, 'discarding a preview never touches applied history')
 
     def test_compare_same_provenance_diff_partial_and_resolve_guards(self):
-        # Both files carry machine code 9901, which resolves to emp_a through its reviewed source code (AttendanceCase).
+        # Both files carry machine code 991, which resolves to emp_a through its reviewed source code (AttendanceCase).
         importer_env = self.env_for(self.manager)
         Batch = importer_env['tp.hr.attendance.batch']
 
@@ -76,7 +76,7 @@ class TestMatrixAndCompare(AttendanceCase):
             'start': MONDAY,
             'end': date(2026, 11, 11),
             'rows': [
-                {'stt': 1, 'code': '9901', 'name': 'Synthetic Người Một',
+                {'stt': 1, 'code': '991', 'name': 'Synthetic Người Một',
                  'times': [('08:30', '17:05'), ('08:35', '17:10'), ('08:20', None)],
                  'late': (1, 5)},
                 {'stt': 2, 'code': '9999', 'name': 'Nhân Sự Chưa Mapping',
@@ -89,7 +89,7 @@ class TestMatrixAndCompare(AttendanceCase):
             'start': MONDAY,
             'end': date(2026, 11, 12),
             'rows': [
-                {'stt': 1, 'code': '9901', 'name': 'Synthetic Người Một',
+                {'stt': 1, 'code': '991', 'name': 'Synthetic Người Một',
                  'times': [('08:30', '17:05'), ('08:40', '17:15'), (None, '17:00'), ('08:25', '17:00')],
                  'late': (2, 10)},
                 {'stt': 2, 'code': '8888', 'name': 'Nhân Sự Chưa Mapping',
@@ -187,7 +187,7 @@ class TestMatrixAndCompare(AttendanceCase):
         Batch = importer_env['tp.hr.attendance.batch']
         raw_lock = _build_matrix_xlsx([{
             'title': 'Lock check', 'start': MONDAY, 'end': MONDAY,
-            'rows': [{'stt': 1, 'code': '9901', 'name': 'Synthetic Người Một', 'times': [('08:15', '17:00')], 'late': (0, 0)}],
+            'rows': [{'stt': 1, 'code': '991', 'name': 'Synthetic Người Một', 'times': [('08:15', '17:00')], 'late': (0, 0)}],
         }])
         up = Batch._tp_upload_files({'files': [{'file_name': 'lock.xlsx', 'data': self._b64(raw_lock)}]})
         bid = up['created_ids'][0]
@@ -217,7 +217,7 @@ class TestMatrixAndCompare(AttendanceCase):
         Batch = self.env_for(self.manager)['tp.hr.attendance.batch']
         raw = _build_matrix_xlsx([{
             'title': 'Lost flags', 'start': MONDAY, 'end': MONDAY,
-            'rows': [{'stt': 1, 'code': '9901', 'name': 'Synthetic Người Một', 'times': [('08:15', '17:00')], 'late': (0, 0)}],
+            'rows': [{'stt': 1, 'code': '991', 'name': 'Synthetic Người Một', 'times': [('08:15', '17:00')], 'late': (0, 0)}],
         }])
         bid = Batch._tp_upload_files({'files': [{'file_name': 'lost_flags.xlsx', 'data': self._b64(raw)}]})['created_ids'][0]
         batch = self.env['tp.hr.attendance.batch'].sudo().browse(bid)

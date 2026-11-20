@@ -39,8 +39,10 @@ luồng nhập roster này.
 
 1. Chọn **Mới** trong danh sách hoặc **Thêm nhân viên** trên Tổng quan. Nhập họ
    tên và các dữ liệu có căn cứ; chọn đúng công ty/đơn vị. Mã TP được cấp bởi
-   backend. Ví dụ mã nguồn 60 tương ứng TP10060; không sửa ID Odoo, barcode/PIN
-   hoặc CCCD để thay mã nhân viên.
+   backend theo dạng `TP` + 3 chữ số (TP001–TP999). Ví dụ mã nguồn 60 tương ứng
+   TP060 (mã cũ TP10060 đã được chuyển, HR-EMPLOYEE-CODE-003); không sửa ID
+   Odoo, barcode/PIN hoặc CCCD để thay mã nhân viên. Mã ENTI (maNV) là mã của
+   máy chấm công, không phải mã TP nội bộ.
 2. Bấm điều khiển **Lưu** của form Odoo để ghi; dùng **Hủy bỏ thay đổi** nếu
    không muốn lưu. Khi rời form còn thay đổi, xử lý hộp thoại native trước khi
    chuyển menu. Không dùng đóng trình duyệt làm thao tác lưu.

@@ -4,12 +4,21 @@ import json
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
 
+from .code_format import code_aliases
 from .hr_employee import _ROSTER_WRITE
 from .roster_parser import employee_code, parse_roster
 
 _INTERNAL = object()
 _DEPARTMENT_CONFLICT = 'Nhiều phòng ban trùng tên nguồn. Hãy chọn phòng ban cụ thể.'
 _LEGACY_DEPARTMENT_CONFLICT = 'Multiple departments match the source name. Select an explicit department.'
+
+
+def _tp_code(source):
+    """Three-digit TP code of a source number, or ``False`` when it is outside 1-999."""
+    try:
+        return employee_code(source)
+    except ValueError:
+        return False
 
 
 class HrImportBatch(models.Model):
@@ -71,16 +80,17 @@ class HrImportBatch(models.Model):
 
     def _removed_identity(self, code):
         """Reconciliation note when ``code`` belongs to a permanently deleted profile."""
-        try:
-            tp_code = employee_code(code)
-        except ValueError:
-            tp_code = False
-        removed = self.env['tp.hr.employee.audit']._tp_removed_identities(self.company_id.id, [code], [tp_code])
+        tp_code = _tp_code(code)
+        # A profile deleted under the former code TP1nnnn is the same identity as TPnnn.
+        removed = self.env['tp.hr.employee.audit']._tp_removed_identities(self.company_id.id, [code], code_aliases(tp_code) if tp_code else [])
         if not removed:
             return ''
         # ``source`` is the positional name of Environment._(); use another placeholder.
         return self.env._('Mã nguồn %(source_code)s (mã %(code)s) thuộc hồ sơ đã xóa vĩnh viễn ngày %(date)s. Không tự tạo lại; cần đối chiếu với người phụ trách nhân sự.',
                           source_code=code, code=removed[0].employee_code or tp_code or '-', date=removed[0].create_date.strftime('%d/%m/%Y'))
+
+    def _out_of_range(self, code):
+        return self.env._('Mã nguồn %(source_code)s vượt dải TP001–TP999. Không tự cấp số khác; cần đối chiếu với người phụ trách nhân sự.', source_code=code)
 
     def action_preview(self):
         self.ensure_one()
@@ -97,13 +107,16 @@ class HrImportBatch(models.Model):
         employees = self.env['hr.employee'].with_context(active_test=False)
         for row in parsed['rows']:
             match = employees.search([('company_id', '=', self.company_id.id), ('tp_source_code', '=', row['source_code'])])
-            collision = employees.search([('company_id', '=', self.company_id.id), ('tp_employee_code', '=', employee_code(row['source_code']))])
+            tp_code = _tp_code(row['source_code'])
+            collision = employees.search([('company_id', '=', self.company_id.id), ('tp_employee_code', 'in', code_aliases(tp_code))]) if tp_code else employees.browse()
             department = self.env['hr.department'].with_context(active_test=False).search([
                 ('company_id', '=', self.company_id.id), ('name', '=', row['source_department'])], limit=2)
             if match and (match.tp_source_snapshot or {}).get('source_department') == row['source_department']:
                 department = match.department_id
             action, detail = 'create', ''
-            if collision and collision != match:
+            if not tp_code:
+                action, detail = 'conflict', self._out_of_range(row['source_code'])
+            elif collision and collision != match:
                 action, detail = 'conflict', self.env._('Mã TP đã thuộc về một danh tính khác. Cần đối chiếu, không tự gộp.')
             elif not match and self._removed_identity(row['source_code']):
                 action, detail = 'conflict', self._removed_identity(row['source_code'])
@@ -149,7 +162,9 @@ class HrImportBatch(models.Model):
                         action, detail = 'conflict', self.env._('Thay đổi từ nguồn cần rà soát; các chỉnh sửa thủ công trên hồ sơ được giữ nguyên.')
                     else:
                         action = 'update'
-                elif employees.search_count([('company_id', '=', self.company_id.id), ('tp_employee_code', '=', employee_code(line.source_code))]):
+                elif not _tp_code(line.source_code):
+                    action, detail = 'conflict', self._out_of_range(line.source_code)
+                elif employees.search_count([('company_id', '=', self.company_id.id), ('tp_employee_code', 'in', code_aliases(_tp_code(line.source_code)))]):
                     action, detail = 'conflict', self.env._('Trùng mã TP với hồ sơ khác; cần đối chiếu danh tính trước khi nhập.')
                 elif self._removed_identity(line.source_code):
                     action, detail = 'conflict', self._removed_identity(line.source_code)

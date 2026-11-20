@@ -17,8 +17,8 @@ class TestAttendanceAccess(AttendanceCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.data = report([
-            {'code': '9901', 'name': 'Synthetic Người Một', 'times': [('07:37', '17:05')]},
-            {'code': '9902', 'name': 'Synthetic Người Hai', 'times': [('08:00', '12:00')]},
+            {'code': '991', 'name': 'Synthetic Người Một', 'times': [('07:37', '17:05')]},
+            {'code': '992', 'name': 'Synthetic Người Hai', 'times': [('08:00', '12:00')]},
         ], MONDAY, 1)
 
     def setUp(self):

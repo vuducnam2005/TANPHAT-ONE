@@ -194,9 +194,9 @@ class AttendanceEntiMapping(models.Model):
             return Employee, "suggested", (
                 f"Họ tên trùng “{matches.name}” nhưng nhân viên này đã gắn với một mã ENTI khác; cần quản lý nhân sự kiểm tra."
             )
-        by_code = free.filtered(lambda e: ma_nv and (e.tp_employee_code or "").strip() == ma_nv)
-        if len(by_code) == 1:
-            return by_code, "mapped", f"Khớp chính xác họ tên và mã nhân viên ({by_code.name})."
+        # HR-EMPLOYEE-CODE-003: ENTI maNV and the internal TP code are separate
+        # number spaces (ENTI TP032 may belong to internal TP065), so a code that
+        # looks the same never picks one of several same-name employees.
         return Employee, "suggested", (
             f"Có {len(matches)} nhân viên Odoo trùng họ tên “{ten_nv}”; cần quản lý nhân sự xác nhận đúng người."
         )
@@ -227,7 +227,8 @@ class AttendanceEntiMapping(models.Model):
         Rules:
         - NEVER alter hr.employee codes or names.
         - NEVER match solely on fuzzy name.
-        - Exact unique name, or exact name + same code -> mapped; several candidates -> suggested.
+        - Exact unique name -> mapped; several same-name candidates -> suggested
+          (the ENTI code is never compared with the internal TP code).
         - Otherwise -> unmapped, with the reason shown to HR.
         """
         key_nv = (enti_employee.get("keyNV") or "").strip()

@@ -15,8 +15,8 @@ MONDAY = date(2026, 11, 9)
 SUNDAY = MONDAY + timedelta(days=6)
 WEEK = {'mode': 'range', 'from': '2026-11-09', 'to': '2026-11-15'}
 PEOPLE = [
-    {'code': '9901', 'name': 'Synthetic Người Một', 'times': [('07:37', '17:05'), ('07:50', None)], 'late': (3, 47)},
-    {'code': '9902', 'name': 'SYNTHETIC NGUOI HAI', 'times': [('08:00', '17:30')], 'late': (0, 0)},
+    {'code': '991', 'name': 'Synthetic Người Một', 'times': [('07:37', '17:05'), ('07:50', None)], 'late': (3, 47)},
+    {'code': '992', 'name': 'SYNTHETIC NGUOI HAI', 'times': [('08:00', '17:30')], 'late': (0, 0)},
 ]
 
 
@@ -77,7 +77,7 @@ class TestAttendanceUpload(AttendanceCase):
         changed = report([dict(PEOPLE[0], late=(4, 50)), PEOPLE[1]], MONDAY, 7, late=True)
         conflict = self.Batch._tp_upload_preview(payload(changed, 'synthetic-changed.xlsx'))
         self.assertEqual((conflict['late']['conflict'], conflict['late']['duplicate']), (1, 1))
-        self.assertEqual([row['code'] for row in conflict['late_attention']], ['9901'])
+        self.assertEqual([row['code'] for row in conflict['late_attention']], ['991'])
         self.Batch._tp_upload_apply(conflict['batch_id'])
         kept = self.Late.search([('employee_id', '=', self.emp_a.id), ('state', '=', 'applied')])
         self.assertEqual((kept.late_count, kept.late_minutes, kept.batch_id.id), (4, 50, conflict['batch_id']))

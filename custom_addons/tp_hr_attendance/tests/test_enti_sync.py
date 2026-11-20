@@ -96,7 +96,7 @@ class TestEntiProjection(AttendanceCase):
         self.assertEqual(len(self.sessions(self.emp_a, in_only)), 1)
 
     def test_enti_replaces_excel_session_without_double_counting(self):
-        self.run_batch(report([{'code': '9901', 'name': 'Synthetic Người Một', 'times': [('07:37', '17:05')]}], MONDAY, 1))
+        self.run_batch(report([{'code': '991', 'name': 'Synthetic Người Một', 'times': [('07:37', '17:05')]}], MONDAY, 1))
         excel = self.sessions(self.emp_a, MONDAY)
         self.assertEqual(excel.source, 'import')
         self.enti_day(self.emp_a, MONDAY, '07:40', '17:06')._tp_project_to_canonical()
