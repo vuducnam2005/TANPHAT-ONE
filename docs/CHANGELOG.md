@@ -1,5 +1,15 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-017 — HR-SELF-EDIT-001 + BANK-002: Tự sửa hồ sơ của chính mình trong danh sách nhân viên; tài khoản ngân hàng không cần xác minh
+
+- 20/11/2026 (Asia/Saigon). Yêu cầu trực tiếp của người dùng (DEC-065):
+  - `tp_admin_delegation` (Python, không đổi phiên bản): `models/hr_profile.py` — hồ sơ của chính mình mở từ danh sách nhân viên có thông báo "Đây là hồ sơ của bạn…" và mở khóa đúng các trường tự phục vụ (`_tp_self_service_fields()`); họ tên, phòng ban, chức vụ, mã, tài khoản, quyền và nút quản trị vẫn khóa; hồ sơ admin ủy quyền khác vẫn chỉ đọc. `models/guards.py` — guard `hr.version` nhận `last_modified_date`/`last_modified_uid` (đúng người đang sửa) mà core tự thêm, sửa lỗi có sẵn khiến admin ủy quyền không lưu được địa chỉ, CCCD, hộ chiếu, giới tính, quốc tịch, hôn nhân.
+  - `tp_hr_workspace/static/src/profile/employee_profile.js` (tệp tĩnh): nút "Sửa hồ sơ" hiện trên hồ sơ của chính mình (so `user_id` với người đăng nhập), menu hành động/in vẫn ẩn.
+  - `tp_hr_bank` **20.0.1.1.0**: lưu tài khoản ngân hàng hợp lệ là dùng được ngay cho chi lương, bỏ trạng thái "Chờ Nhân sự xác minh"; migration `20.0.1.1.0/post-migrate.py` bật dùng được cho tài khoản tự khai đang chờ. Người dùng vẫn không tự ghi `allow_out_payment`.
+  - Kiểm: local `/tp_hr_bank,/tp_admin_delegation` 0 failed, 0 error / 31 test, gồm Playwright desktop + di động sửa hồ sơ của mình tại chỗ.
+  - PC Server: commit `538924a8`, backup `C:\TANPHAT-backups\hr-bank002\bank002-20261120T191725`; `-u tp_hr_bank` exit 0, log 0 ERROR, 1 tài khoản đang chờ được bật dùng được (`1:0:1` → `1:1:0`), 19 key snapshot không khác biệt ngoài dự kiến; view hồ sơ đúng cho 5/5 admin ủy quyền; bundle JS dựng được; `https://tpone.tadic.vn/web/health` 200.
+  - Commit code `538924a8` ghi nhầm `CHG-20261120-016` trong tiêu đề (mã đó thuộc HR-ATTENDANCE-ORDER-001); mã đúng của thay đổi này là `CHG-20261120-017`. [Nghiệm thu](demo/HR_BANK_002_SELF_EDIT_ACCEPTANCE.md), [runbook](../ops/runbooks/HR_BANK_002_DEPLOY_AND_ROLLBACK.md).
+
 ## CHG-20261120-016 — HR-ATTENDANCE-ORDER-001: Đảo ngược thứ tự ngày chấm công (mới nhất/hôm nay lên đầu, cuộn xuống là ngày cũ)
 
 - 20/11/2026 (Asia/Saigon). Thực hiện yêu cầu trực tiếp của người dùng đảo ngược thứ tự bảng giờ vào/ra trong mục Chấm công ("Công của tôi" và popup xem chi tiết nhân viên):

@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-20T12:10:29.361449+00:00",
-  "last_change_id": "CHG-20261120-016",
-  "code_digest": "e456d4877acb8ad8b0a84ee3d43bce81651d344dd633bfa7f82f4f14e9eeb2fa",
+  "updated_at": "2026-11-20T12:22:32.957485+00:00",
+  "last_change_id": "CHG-20261120-017",
+  "code_digest": "d7a09075744e27dbdab5e3985f676dee649b0afaea2a7e973954ccedf293e812",
   "code_file_count": 768,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "e1122b82a2991537f54027ed56cf9b6b1646faa2849660ded9ed93b256814e83",
-    "docs/CHANGELOG.md": "68d0705ccc8400fa8b2d71707e22f72b0dc69b494a89a5d79ad738e1452a8700",
+    "docs/PROJECT_STATUS.md": "a3cdb91c15c6fc365dff4eb5f848c4b0421d13d3f01e96a3c6d7bf3eed9da8c1",
+    "docs/CHANGELOG.md": "1f2d218961a3e0e7c9554403a9f8b0c0ad3fbe6a72a4fe2e5a5ff7195c2291f4",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
     "docs/ROADMAP.md": "eb762826b3aa52ff6c476bcf4a61100e2b1a1ff2c685680a9f0b5771b4b8aeca",
-    "docs/DECISIONS.md": "e8e6812a9a2b1fb8bc9d56d83af734bdff68c18f2f906169c1e5312b8f415335",
+    "docs/DECISIONS.md": "e1de85e4cc8daa3832751699e400cd3dc6eb2bab5e708ceda3e7787154476ea4",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
     "docs/architecture/TP_DATABASE_DESIGN.md": "a5f098aa502f1cac3e0e9465c692c6cfed643dce869753eecea3b4d0ed99526a",
@@ -20,6 +20,9 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Server python verification: Row 1 is 2026-11-20 (Thứ 6, is_today=True), upgrade tp_hr_attendance 20.0.3.5.8 exit 0, LAN & Public health pass"
+    "Local -u tp_hr_bank,tp_admin_delegation --test-tags /tp_hr_bank,/tp_admin_delegation: 0 failed, 0 error of 31 tests (Playwright desktop+mobile own-profile edit and bank card)",
+    "PC deploy-hr-bank002.ps1 commit 538924a8: upgrade exit 0, 0 ERROR, 1 waiting account trusted, 0 unexpected snapshot diffs, backup C:\\TANPHAT-backups\\hr-bank002\\bank002-20261120T191725",
+    "PC read-only verify: 5/5 granted admins own-profile notice and personal fields editable, name locked; web.assets_web JS builds with new employee_profile.js; public health 200",
+    "Not run: /tp_hr_workspace full suite (known pre-existing failures); logged-in browser check on PC (no test accounts on server)"
   ]
 }

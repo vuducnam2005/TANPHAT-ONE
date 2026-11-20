@@ -1,5 +1,11 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261120-017 — HR-SELF-EDIT-001 + BANK-002 — PC_SERVER_APPLIED.** Tài khoản nào đăng nhập thì sửa được thông tin cá nhân của chính mình ngay khi mở hồ sơ của mình từ danh sách nhân viên; tài khoản ngân hàng lưu là dùng được, không chờ Nhân sự xác minh (DEC-065).
+- `tp_admin_delegation` (`hr_profile.py`, `guards.py`) + `tp_hr_workspace` `employee_profile.js`: mở khóa đúng các trường tự phục vụ trên hồ sơ của mình; họ tên, phòng ban, chức vụ, mã, tài khoản, quyền vẫn do admin gốc đổi. Sửa kèm lỗi có sẵn: admin ủy quyền không lưu được các trường Odoo lưu ở `hr.version` (địa chỉ, CCCD, hộ chiếu, giới tính, quốc tịch, hôn nhân).
+- `tp_hr_bank` 20.0.1.1.0: bỏ trạng thái xác minh; migration bật dùng được cho tài khoản tự khai đang chờ.
+- Local: `/tp_hr_bank,/tp_admin_delegation` 0 failed, 0 error / 31 test (Playwright desktop + di động). PC: commit `538924a8`, backup `C:\TANPHAT-backups\hr-bank002\bank002-20261120T191725`, nâng cấp exit 0, 0 ERROR, 1 tài khoản đang chờ đã dùng được, 0 khác biệt ngoài dự kiến, health 200. [Nghiệm thu](demo/HR_BANK_002_SELF_EDIT_ACCEPTANCE.md).
+- Còn lại: chưa xem trên PC bằng trình duyệt đã đăng nhập (không tạo tài khoản thử trên server); người dùng mở hồ sơ của mình từ danh sách nhân viên để xác nhận.
+
 **CHG-20261120-016 — HR-ATTENDANCE-ORDER-001 — PC_SERVER_APPLIED.** Đảo ngược thứ tự ngày chấm công cá nhân ("Công của tôi" & xem chi tiết cá nhân) theo chiều nghịch đảo thời gian (mới nhất/hôm nay lên đầu, cuộn xuống là ngày cũ).
 - Thực hiện yêu cầu trực tiếp của người dùng: Trước đây, bảng giờ vào/ra trong mục Chấm công ("Công của tôi") hiển thị ngày tăng dần từ ngày 01 đến ngày 30, nhân viên muốn xem ngày hôm nay (ví dụ: ngày 20) phải cuộn chuột xuống đáy bảng. Yêu cầu đảo ngược để ngày hôm nay (ngày 20) nằm ngay trên đầu bảng, cuộn xuống dưới là các ngày cũ hơn.
 - Module `custom_addons/tp_hr_attendance` **20.0.3.5.8**:
@@ -333,7 +339,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261120-016`
+Last change: `CHG-20261120-017`
 
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.
