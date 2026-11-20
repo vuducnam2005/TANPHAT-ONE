@@ -465,11 +465,14 @@ export function registerActionId(id, xmlId) {
  * Read session_info mapping if available.
  */
 function syncFromSession() {
-    const info = session.tp_action_routes || window.odoo?.session_info?.tp_action_routes;
+    const info =
+        session?.tp_action_routes ||
+        window.odoo?.session_info?.tp_action_routes ||
+        window.odoo?.__session_info__?.tp_action_routes;
     if (info) {
         if (info.id_to_xml) {
             for (const [idStr, xmlId] of Object.entries(info.id_to_xml)) {
-                registerActionId(parseInt(idStr), xmlId);
+                registerActionId(parseInt(idStr, 10), xmlId);
             }
         }
         if (info.xml_to_id) {

@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-013 — WEB-RELOAD-BLANK-001: Sửa lỗi tải lại trang làm trắng toàn bộ giao diện
+
+- 20/11/2026 (Asia/Saigon). Khắc phục sự cố tải lại trang (Reload / F5) làm trắng giao diện trên các URL chuẩn hóa phân cấp:
+  - Khắc phục triệt để nguyên nhân gốc `TypeError: Failed to set the 'href' property on 'URL': Invalid URL` do gán đường dẫn tương đối vào thuộc tính `.href` của `window.URL` tại top-level loader `@tp_branding/router_patch`.
+  - `custom_addons/tp_branding` **20.0.2.1.0**: Cập nhật `brand_urls.js` bảo đảm `brandHref` luôn trả về URL tuyệt đối hợp lệ khi có `origin`; bọc `try ... catch` an toàn khi gán `urlObj.href` và khi khởi tạo `router.replaceState`; nâng cấp `brand_routes.js` đồng bộ `session_info` từ nhiều namespace; bổ sung cơ chế Fallback và Tự phục hồi trong `webclient_patch.js` (fallback về Trang chủ, post-boot check 500ms, emergency recovery overlay sau 8 giây).
+  - Kiểm thử và nghiệm thu: Unit test `TestBrandUrls` 12/12 PASS; Playwright trên máy chủ PC Server thật (`192.168.1.73:8069`) xác thực thành công thao tác F5 trong cùng tab trên `/app/trang-chu`, `/app/nhan-su/nhan-vien`, `/app/thiet-bi/danh-sach` với 0 console/page error.
+  - Triển khai PC Server: Backup tại `C:\TANPHAT-backups\web-reload-blank001\20261120T162405\`, nâng cấp module `tp_branding` trong container `tp-odoo` exit 0, restart container, LAN và Public health check (`https://tpone.tadic.vn/web/health`) trả về HTTP 200 OK. [Bản nghiệm thu](demo/WEB_RELOAD_BLANK_001_ACCEPTANCE.md).
+
+
 ## CHG-20261120-012 — HR-CONFIG-MENU-CLEANUP: Xóa hẳn các menu cấu hình HR cũ, chỉ giữ duy nhất "Nhãn nhân viên"
 
 - 20/11/2026 (Asia/Saigon). Thực hiện yêu cầu trực tiếp của người dùng kèm ảnh chụp menu dropdown "Cấu hình HR" (xóa bỏ triệt để khỏi code XML và database, không dùng ẩn hay phân nhóm quyền):

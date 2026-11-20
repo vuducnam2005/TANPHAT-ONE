@@ -158,18 +158,29 @@ patch(router, {
             nativeDepth--;
         }
 
-        if (fromApp || target.href !== before) {
-            // Keep URL in address bar canonical and branded
-            const parsed = parseBrandedUrl(pathname);
-            if (parsed.canonicalUrl) {
-                const searchAndHash = (urlObj.search || "") + (urlObj.hash || "");
-                urlObj.href = brandHref(
-                    parsed.canonicalUrl + searchAndHash,
-                    browser.location.origin
-                );
-            } else {
-                urlObj.href = brandHref(target.href, browser.location.origin);
+        try {
+            if (fromApp || target.href !== before) {
+                // Keep URL in address bar canonical and branded
+                const parsed = parseBrandedUrl(pathname);
+                const origin = browser.location.origin || "";
+                if (parsed.canonicalUrl) {
+                    const searchAndHash = (urlObj.search || "") + (urlObj.hash || "");
+                    const brandedHref = brandHref(
+                        parsed.canonicalUrl + searchAndHash,
+                        origin
+                    );
+                    if (brandedHref) {
+                        urlObj.href = brandedHref;
+                    }
+                } else {
+                    const brandedHref = brandHref(target.href, origin);
+                    if (brandedHref) {
+                        urlObj.href = brandedHref;
+                    }
+                }
             }
+        } catch (error) {
+            console.warn("TANPHAT ONE: urlObj.href branding skipped:", error);
         }
         return state;
     },
@@ -253,6 +264,13 @@ browser.addEventListener("click", (ev) => {
 // Boot: re-read the URL with the patched parser before the webclient mounts
 // (the router parsed `/app/...` with the native parser at import time).
 if (isAppPath(browser.location.pathname)) {
-    const url = new URL(browser.location.href);
-    router.replaceState(router.urlToState(url), { replace: true, sync: true });
+    try {
+        const url = new URL(browser.location.href);
+        const parsedState = router.urlToState(url);
+        if (parsedState && (parsedState.action || parsedState.model || parsedState.actionStack?.length)) {
+            router.replaceState(parsedState, { replace: true, sync: true });
+        }
+    } catch (error) {
+        console.error("TANPHAT ONE: router boot sync failed:", error);
+    }
 }

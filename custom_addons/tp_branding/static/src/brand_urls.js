@@ -92,10 +92,19 @@ export function nativeUrl(url) {
 
 /** Brand an absolute URL of this origin, anything else unchanged. */
 export function brandHref(href, origin) {
-    if (typeof href !== "string" || !origin || !href.startsWith(origin + "/")) {
-        return brandUrl(href);
+    if (typeof href !== "string") {
+        return href;
     }
-    return origin + brandUrl(href.slice(origin.length));
+    if (origin) {
+        if (href.startsWith(origin + "/")) {
+            return origin + brandUrl(href.slice(origin.length));
+        }
+        if (href.startsWith("/")) {
+            return origin + brandUrl(href);
+        }
+        return origin + brandUrl("/" + href);
+    }
+    return brandUrl(href);
 }
 
 /** `"<page> | TANPHAT ONE"`, never doubled, `TANPHAT ONE` when empty. */

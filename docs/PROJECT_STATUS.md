@@ -1,5 +1,18 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261120-013 — WEB-RELOAD-BLANK-001 — PC_SERVER_APPLIED.** Sửa lỗi tải lại trang (Reload / F5) làm trắng toàn bộ giao diện trên URL chuẩn hóa toàn hệ thống.
+- Khắc phục triệt để nguyên nhân gốc: Ngoại lệ `TypeError: Failed to set the 'href' property on 'URL': Invalid URL` phát sinh khi script boot-time `@tp_branding/router_patch` gán đường dẫn tương đối (`/app/trang-chu`) vào thuộc tính `.href` của đối tượng native `window.URL`. Ngoại lệ uncaught làm dừng toàn bộ tiến trình tải JavaScript module của Odoo, WebClient không được mount dẫn đến màn hình trắng xám `#f8f9fa`.
+- Module `custom_addons/tp_branding` **20.0.2.1.0**:
+  - `brand_urls.js`: Chuẩn hóa `brandHref(href, origin)` luôn sinh URL tuyệt đối hợp lệ khi có `origin`.
+  - `router_patch.js`: Bọc `try ... catch` an toàn và kiểm tra hợp lệ khi gán `urlObj.href`; bọc an toàn khối boot-time `router.replaceState`.
+  - `brand_routes.js`: Hỗ trợ `session_info` đa nguồn (`session.tp_action_routes`, `window.odoo.session_info`, `window.odoo.__session_info__`).
+  - `webclient_patch.js`: Cơ chế Fallback & Tự phục hồi: `loadRouterState()` tự động fallback về Trang chủ `tp_web_home.action_home` nếu router lỗi; kiểm tra hậu khởi động (500ms) nếu action manager rỗng; Emergency recovery banner cứu hộ sau 8 giây kèm 3 nút (Tải lại, Về trang chủ, Đăng nhập lại).
+- Kiểm thử và xác minh:
+  - Unit tests `TestBrandUrls`: 12/12 tests PASS 100%.
+  - Playwright browser test trên máy chủ PC Server thật (`192.168.1.73:8069`): Kiểm thử truy cập và F5 trong cùng tab trên `/app/trang-chu`, `/app/nhan-su/nhan-vien`, `/app/thiet-bi/danh-sach` đạt 100% thành công, 0 page errors, navbar và action manager mount đầy đủ. [Bản nghiệm thu](demo/WEB_RELOAD_BLANK_001_ACCEPTANCE.md).
+- Triển khai PC Server: Backup tại `C:\TANPHAT-backups\web-reload-blank001\20261120T162405\` (`tp_tanphat_dev_pre.dump` 10.427.007 bytes, `tp_branding_pre.tar.gz` 72.472 bytes). Đồng bộ mã nguồn, touch LastWriteTime toàn bộ assets, upgrade module `tp_branding` trong container `tp-odoo` exit 0, restart container, LAN và Public health check (`https://tpone.tadic.vn/web/health`) đạt HTTP 200 OK (`{"status": "pass"}`).
+
+
 **CHG-20261120-012 — HR-CONFIG-MENU-CLEANUP — PC_SERVER_APPLIED.** Xóa hẳn các tab/menu cấu hình HR không dùng, chỉ giữ duy nhất "Nhãn nhân viên".
 - Thực hiện yêu cầu trực tiếp của người dùng kèm ảnh chụp menu dropdown "Cấu hình HR" (xóa bỏ hoàn toàn khỏi code và database, không dùng ẩn hay group):
   - Xóa 2 menu trong `tp_hr_workspace` **20.0.1.21.0**: `Loại hồ sơ năng lực` (`tp_hr_workspace.menu_resume_types`) và `Loại kỹ năng và cấp độ` (`tp_hr_workspace.menu_skill_types`). Giữ nguyên duy nhất `Nhãn nhân viên` (`tp_hr_workspace.menu_categories`, sequence 10).
@@ -276,7 +289,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261120-012`
+Last change: `CHG-20261120-013`
 
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.
