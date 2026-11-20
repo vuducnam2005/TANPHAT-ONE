@@ -841,7 +841,11 @@ class AttendanceDayOverview(models.Model):
         absence_note = self._tp_absence_note(company, start, end)
         absence = self._tp_absences([person['id']], cells, start, end, absence_note == RULE_NOTE)[person['id']]
         rows = []
-        for work_date in dates_between(start, end):
+        ordered_dates = sorted(
+            dates_between(start, end),
+            key=lambda d: (d > today, -d.toordinal() if d <= today else d.toordinal()),
+        )
+        for work_date in ordered_dates:
             cell = cells[person['id'], work_date]
             rows.append({'date': work_date.isoformat(), 'day_label': day_label(work_date), 'in': cell['in'], 'out': cell['out'],
                          'state': cell['state'], 'state_label': cell['label'], 'weekend': work_date.weekday() >= 5,
@@ -901,7 +905,11 @@ class AttendanceDayOverview(models.Model):
         locked_ranges = Period._tp_locked_ranges([company.id])
         tz_ctx = self.with_context(tz=self.env.user.tz or DEFAULT_TZ)
         all_rows = []
-        for work_date in dates_between(start, end):
+        ordered_dates = sorted(
+            dates_between(start, end),
+            key=lambda d: (d > today, -d.toordinal() if d <= today else d.toordinal()),
+        )
+        for work_date in ordered_dates:
             cell = cells[employee.id, work_date]
             record = day_records.get(cell.get('day_id'))
             locked = Period._tp_is_locked(company.id, work_date, locked_ranges)

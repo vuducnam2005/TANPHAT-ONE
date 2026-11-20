@@ -178,6 +178,17 @@ class TestAttendanceUpload(AttendanceCase):
                    if month_grid.cell(row, 5).value == 'Vào']
         self.assertIn('—', partial, 'a month holding only a weekly file never shows a split or zero late total')
 
+    def test_mine_rows_reverse_chronological(self):
+        self.import_week()
+        Mine = self.env_for(self.viewer)['tp.hr.attendance.day']
+        mine = Mine.tp_mine(WEEK)
+        dates = [row['date'] for row in mine['rows']]
+        today = mine['today']
+        elapsed = [d for d in dates if d <= today]
+        self.assertEqual(elapsed, sorted(elapsed, reverse=True))
+        if elapsed:
+            self.assertEqual(elapsed[0], mine['rows'][0]['date'])
+
     def test_api_staging_dedupes_maps_by_namespace_and_stays_offline(self):
         env = self.env_for(self.manager)
         Source = env['tp.hr.attendance.source']

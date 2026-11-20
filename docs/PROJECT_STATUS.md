@@ -1,5 +1,17 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261120-016 — HR-ATTENDANCE-ORDER-001 — PC_SERVER_APPLIED.** Đảo ngược thứ tự ngày chấm công cá nhân ("Công của tôi" & xem chi tiết cá nhân) theo chiều nghịch đảo thời gian (mới nhất/hôm nay lên đầu, cuộn xuống là ngày cũ).
+- Thực hiện yêu cầu trực tiếp của người dùng: Trước đây, bảng giờ vào/ra trong mục Chấm công ("Công của tôi") hiển thị ngày tăng dần từ ngày 01 đến ngày 30, nhân viên muốn xem ngày hôm nay (ví dụ: ngày 20) phải cuộn chuột xuống đáy bảng. Yêu cầu đảo ngược để ngày hôm nay (ngày 20) nằm ngay trên đầu bảng, cuộn xuống dưới là các ngày cũ hơn.
+- Module `custom_addons/tp_hr_attendance` **20.0.3.5.8**:
+  - `attendance_overview.py`: Cập nhật logic sắp xếp `ordered_dates = sorted(dates_between(start, end), key=lambda d: (d > today, -d.toordinal() if d <= today else d.toordinal()))` trong cả `_tp_mine_dataset` (Công của tôi) và `_tp_person_data` (Popup xem chi tiết nhân viên).
+  - Ngày đã qua và hôm nay (`work_date <= today`): Sắp xếp giảm dần (`-d.toordinal()`), ngày mới nhất (Hôm nay) luôn đứng ở Row 1; cuộn chuột xuống là các ngày cũ (19, 18, 17... lùi về 01).
+  - Ngày tương lai (`work_date > today`): Nằm ở cuối bảng theo thứ tự thời gian tới (21, 22... 30) với nhãn *"Chưa đến"*.
+  - Tháng đã qua (ví dụ tháng 10): Toàn bộ ngày đã qua, ngày cuối tháng (31/10) đứng đầu, cuộn xuống lùi dần về 01/10.
+  - Bổ sung unit test `test_mine_rows_reverse_chronological` trong `test_upload.py`.
+- Kiểm chứng và triển khai:
+  - Kiểm chứng backend PC Server (`192.168.1.73`): Truy vấn dữ liệu thực tế của nhân viên TP001 (Trần Phương Đông): Row 1 là ngày `2026-11-20` (Hôm nay, is_today = True, status: Chờ ghi nhận giờ ra); Row 2 là ngày `2026-11-19`; ... Row 20 là ngày `2026-11-01`; Row 21 là ngày `2026-11-21` (Chưa đến).
+  - Triển khai PC Server: Backup tại `C:\TANPHAT-backups\hr-attendance-sort-order\20261120T190555\` (`tp_tanphat_dev_pre.dump`, `tp_hr_attendance_pre.tar.gz`). Đồng bộ mã nguồn, nâng cấp module exit 0, restart container `tp-odoo`, LAN và Public health check (`https://tpone.tadic.vn/web/health`) trả về HTTP 200 OK (`{"status": "pass"}`). [Bản nghiệm thu](demo/HR_ATTENDANCE_ORDER_001_ACCEPTANCE.md).
+
 **CHG-20261120-015 — BANK-001 — PC_SERVER_APPLIED.** Tài khoản ngân hàng trong "Thông tin cá nhân" của mọi tài khoản, và rà soát giao diện "Hồ sơ của tôi".
 - Module mới `tp_hr_bank` 20.0.1.0.0: danh mục 76 ngân hàng/tổ chức NAPAS-VietQR có biểu tượng (chữ viết tắt + màu, không dùng logo chính thức), ô chọn có tìm kiếm, thẻ thêm/sửa/gỡ tài khoản, trạng thái xác minh do HR quyết định. Hook `_tp_self_service_fields()` trong `tp_admin_delegation` chỉ mở thêm `bank_account_ids`.
 - "Hồ sơ của tôi": ô tìm kiếm quốc gia/tỉnh, ngày DD/MM/YYYY thống nhất, giá trị trống dễ phân biệt, sửa mũi tên ô chọn và viền đôi.
@@ -321,7 +333,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261120-015`
+Last change: `CHG-20261120-016`
 
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.

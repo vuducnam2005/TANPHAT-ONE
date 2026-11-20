@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-016 — HR-ATTENDANCE-ORDER-001: Đảo ngược thứ tự ngày chấm công (mới nhất/hôm nay lên đầu, cuộn xuống là ngày cũ)
+
+- 20/11/2026 (Asia/Saigon). Thực hiện yêu cầu trực tiếp của người dùng đảo ngược thứ tự bảng giờ vào/ra trong mục Chấm công ("Công của tôi" và popup xem chi tiết nhân viên):
+  - `custom_addons/tp_hr_attendance` **20.0.3.5.8**: Sửa `models/attendance_overview.py` (`_tp_mine_dataset` và `_tp_person_data`) áp dụng quy tắc sắp xếp `ordered_dates`: các ngày đã qua và ngày hiện tại (`work_date <= today`) sắp xếp giảm dần (`-d.toordinal()`), ngày mới nhất (Hôm nay/ngày 20) luôn đứng ở dòng đầu tiên (Row 1), cuộn xuống dưới là các ngày cũ hơn (19, 18, 17... lùi về 01); các ngày tương lai trong kỳ (`work_date > today`) nằm ở cuối bảng (21..30).
+  - Bổ sung unit test `test_mine_rows_reverse_chronological` trong `tests/test_upload.py`.
+  - Triển khai PC Server: Backup tại `C:\TANPHAT-backups\hr-attendance-sort-order\20261120T190555\`, nâng cấp module exit 0, restart container `tp-odoo`, kiểm chứng trực tiếp trên tài khoản nhân viên TP001 (Row 1 hiển thị đúng ngày 20/11/2026 kèm giờ vào và badge "Hôm nay"), LAN/Public health HTTP 200 OK (`{"status": "pass"}`). [Bản nghiệm thu](demo/HR_ATTENDANCE_ORDER_001_ACCEPTANCE.md).
+
 ## CHG-20261120-015 — BANK-001: Tài khoản ngân hàng trong "Thông tin cá nhân" và rà soát giao diện hồ sơ
 
 - 20/11/2026 (Asia/Saigon). Mọi tài khoản tự khai tài khoản ngân hàng nhận lương trong "Hồ sơ của tôi → Thông tin cá nhân", chọn ngân hàng từ danh mục chuẩn có biểu tượng:
