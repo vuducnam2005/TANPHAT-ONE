@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-015 — BANK-001: Tài khoản ngân hàng trong "Thông tin cá nhân" và rà soát giao diện hồ sơ
+
+- 20/11/2026 (Asia/Saigon). Mọi tài khoản tự khai tài khoản ngân hàng nhận lương trong "Hồ sơ của tôi → Thông tin cá nhân", chọn ngân hàng từ danh mục chuẩn có biểu tượng:
+  - Module mới `custom_addons/tp_hr_bank` **20.0.1.0.0**: danh mục `tp.bank` 76 tổ chức theo NAPAS 247/VietQR (70 đang dùng; mã, BIN, tên viết tắt, tên đầy đủ, SWIFT, biểu tượng chữ + màu nhận diện, `noupdate`); menu "Danh mục ngân hàng" cho Quản lý Nhân sự; thẻ "Tài khoản ngân hàng" thêm/sửa/gỡ, số tài khoản nhóm 4 số, trạng thái "Chờ Nhân sự xác minh"/"Nhân sự đã xác minh"; ô chọn ngân hàng tìm không dấu theo tên/viết tắt/mã/BIN, đếm kết quả, bàn phím; form tài khoản ngân hàng của HR có ô chọn và đồng bộ `bank_name`/`bank_bic`.
+  - An toàn: ghi qua `tp_save_my_bank_account`/`tp_remove_my_bank_account` có kiểm chủ sở hữu; người dùng chỉ đọc tài khoản của chính mình; `allow_out_payment` chỉ HR bật và tự tắt khi đổi ngân hàng/số; chatter chỉ hiện 4 số cuối. `tp_admin_delegation/models/guards.py` thêm hook `_tp_self_service_fields()` để mở đúng một trường `bank_account_ids`; trường HR khác vẫn bị chặn.
+  - Rà soát "Hồ sơ của tôi" (`tp_hr_workspace`, chỉ tệp giao diện tĩnh): ô tìm kiếm cho quốc gia, quốc tịch, quốc gia nơi sinh, tỉnh/thành phố ("viet", "ha noi"); ngày dùng bộ chọn của Odoo cố định DD/MM/YYYY ở cả xem và sửa (ô ngày trình duyệt từng hiện MM/DD); giá trị trống nghiêng xám; gợi ý mẫu cho ô nhập; sửa mất mũi tên ô chọn và viền đôi khi chọn ô tìm kiếm.
+  - Kiểm thử: `/tp_hr_bank` 9/9 PASS, gồm Playwright desktop + di động (0 lỗi console) và kiểm SCSS biên dịch được (bắt lỗi libsass `min(px, vh)` trước khi áp). Lỗi `/tp_hr_workspace` còn lại là nhóm có sẵn trước thay đổi.
+  - PC Server: commit `b594f26f`, backup `C:\TANPHAT-backups\hr-bank001\bank001-20261120T182500`; `-i tp_hr_bank` exit 0, log 0 ERROR, danh mục 76:70:76, 18 key snapshot không khác biệt ngoài dự kiến; CSS/JS `web.assets_web` trên PC dựng được 0 lỗi; `https://tpone.tadic.vn/web/health` 200. [Bản nghiệm thu](demo/HR_BANK_001_ACCEPTANCE.md), [runbook](../ops/runbooks/HR_BANK_001_DEPLOY_AND_ROLLBACK.md).
+
 ## CHG-20261120-014 — ATTENDANCE-FAST-SYNC-001: Tối ưu tốc độ nhận dữ liệu chấm công thật và cập nhật giao diện trực tiếp
 
 - 20/11/2026 (Asia/Saigon). Thực hiện nhiệm vụ ATTENDANCE-FAST-SYNC-001 tối ưu tốc độ nhận dữ liệu chấm công từ máy chấm công thật (nhà cung cấp ENTI) và cập nhật phản ứng tức thì trên giao diện người dùng:

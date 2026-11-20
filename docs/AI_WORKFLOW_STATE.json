@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-20T10:27:26.643344+00:00",
-  "last_change_id": "CHG-20261120-014",
-  "code_digest": "37dfdc5b1f3cab7dd92a0106f632f9331a4901bd27992e7921cfaa047f330a5f",
+  "updated_at": "2026-11-20T11:34:18.711940+00:00",
+  "last_change_id": "CHG-20261120-015",
+  "code_digest": "1779f842160e1e37790d54eeb7b85c9097c1aa9023034dc96b67d58ec9320782",
   "code_file_count": 767,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "ae32456c4b62986277e537bc215e9ad8de117dd68049abc5f6b97e127d329548",
-    "docs/CHANGELOG.md": "cc9e8c8549af1b64c24efbe8de9008cf0b1c0e714e3e2e6379071e594d8a79f5",
+    "docs/PROJECT_STATUS.md": "ad9bd52a25ba79fc6a49b05f2010dfc1691405c8825d668dbfbe382f1b61cf80",
+    "docs/CHANGELOG.md": "dfdda03c41004be1ca416ea7ee61a508eff773db447f775cf0c2435ae04a3824",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "scripts/tests/test_enti_pure.py 6/6 PASS; deploy PC server 192.168.1.73 exit 0; LAN/Public health 200 OK; cron 5.24s observed"
+    "tp_hr_bank 9/9 PASS incl. Playwright desktop+mobile (0 console errors) and SCSS compile; tp_hr_workspace failures = known pre-existing set; PC b594f26f install exit 0, 0 log ERROR, tp_bank 76:70:76, 0 unexpected diffs, PC CSS/JS bundle 0 errors, health 200"
   ]
 }

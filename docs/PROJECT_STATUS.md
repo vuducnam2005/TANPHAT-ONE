@@ -1,5 +1,11 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261120-015 — BANK-001 — PC_SERVER_APPLIED.** Tài khoản ngân hàng trong "Thông tin cá nhân" của mọi tài khoản, và rà soát giao diện "Hồ sơ của tôi".
+- Module mới `tp_hr_bank` 20.0.1.0.0: danh mục 76 ngân hàng/tổ chức NAPAS-VietQR có biểu tượng (chữ viết tắt + màu, không dùng logo chính thức), ô chọn có tìm kiếm, thẻ thêm/sửa/gỡ tài khoản, trạng thái xác minh do HR quyết định. Hook `_tp_self_service_fields()` trong `tp_admin_delegation` chỉ mở thêm `bank_account_ids`.
+- "Hồ sơ của tôi": ô tìm kiếm quốc gia/tỉnh, ngày DD/MM/YYYY thống nhất, giá trị trống dễ phân biệt, sửa mũi tên ô chọn và viền đôi.
+- Local: `/tp_hr_bank` 9/9 PASS (Playwright desktop + di động). PC: commit `b594f26f`, backup `C:\TANPHAT-backups\hr-bank001\bank001-20261120T182500`, cài exit 0, 0 ERROR, 0 khác biệt ngoài dự kiến, health 200. [Nghiệm thu](demo/HR_BANK_001_ACCEPTANCE.md).
+- Còn lại: chưa xem trên PC bằng trình duyệt đã đăng nhập (không tạo tài khoản thử trên server); người dùng mở "Hồ sơ của tôi → Thông tin cá nhân" để xác nhận. Nhân sự xác minh từng tài khoản trước khi dùng chi lương.
+
 **CHG-20261120-014 — ATTENDANCE-FAST-SYNC-001 — PC_SERVER_APPLIED.** Tối ưu tốc độ nhận dữ liệu chấm công thật và cập nhật giao diện trực tiếp thời gian thực.
 - Xác minh và đo lường thực tế 3 chặng độ trễ trên hệ thống thật:
   - Chặng A (Máy chấm công vật lý → ENTI cloud): Đo lường trực tiếp trên các lượt quẹt thẻ thực tế của nhân viên giờ tan ca ngày 20/11/2026. Mốc giờ chấm trên máy và thời điểm Odoo nhận được từ ENTI chỉ cách nhau 3–4 giây (ví dụ: lượt chấm 17:10:19 VN được Odoo ghi nhận lúc 17:10:22 VN, độ trễ tổng cộng 3 giây), chứng minh máy vật lý gửi lên cloud ENTI gần như tức thì (~1–2 giây).
@@ -315,7 +321,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261120-014`
+Last change: `CHG-20261120-015`
 
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.
