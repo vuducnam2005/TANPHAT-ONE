@@ -42,10 +42,17 @@ class ScopedHrEmployee(models.Model):
         result = super().get_view(view_id, view_type, **options)
         if view_type == 'form':
             arch = etree.fromstring(result['arch'])
+            # HR-SELF-EDIT-001: an admin opening their own record from the employee list edits the
+            # same personal fields as "Hồ sơ của tôi" in place (the guard allows exactly these on
+            # one's own record); work, account and permission fields and buttons stay locked.
+            self_fields = self._tp_self_service_fields()
             # Apply only to this employee, never embedded records belonging to another model.
             for node in arch.xpath("//field[not(ancestor::field)]"):
                 previous = node.get('readonly', 'False')
-                node.set('readonly', f'({previous}) or tp_account_profile_readonly')
+                if node.get('name') in self_fields:
+                    node.set('readonly', f'({previous}) or (tp_account_profile_readonly and user_id != uid)')
+                else:
+                    node.set('readonly', f'({previous}) or tp_account_profile_readonly')
             for node in arch.xpath("//button[@type='object'][not(ancestor::field)]"):
                 previous = node.get('invisible', 'False')
                 node.set('invisible', f'({previous}) or tp_account_profile_readonly')
@@ -57,6 +64,12 @@ class ScopedHrEmployee(models.Model):
                     'invisible': 'not tp_account_profile_readonly or user_id == uid'})
                 notice.text = 'Chỉ admin gốc được thay đổi tài khoản hoặc hồ sơ của admin ủy quyền khác.'
                 sheet.insert(1, notice)
+                own = etree.Element('div', {'class': 'alert alert-info o_tp_own_profile_notice', 'role': 'status',
+                    'invisible': 'not tp_account_profile_readonly or user_id != uid'})
+                own.text = ('Đây là hồ sơ của bạn. Bấm "Sửa hồ sơ" để cập nhật thông tin cá nhân, ảnh, email, '
+                            'số điện thoại và tài khoản ngân hàng. Họ tên, phòng ban, chức vụ, tài khoản và quyền '
+                            'do admin gốc thay đổi.')
+                sheet.insert(2, own)
             result['arch'] = etree.tostring(arch, encoding='unicode')
             result['models'] = {**result['models'], self._name: (
                 set(result['models'].get(self._name, ())) | {'tp_account_profile_readonly'}

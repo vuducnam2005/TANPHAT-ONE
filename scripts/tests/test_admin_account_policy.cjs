@@ -68,6 +68,26 @@ async function run() {
                 assert.equal(await page.locator('.o_form_button_edit:visible, .o_form_button_save:visible, .o_cp_action_menus:visible').count(), 0);
                 await page.screenshot({ path: path.join(f.output, `${f.mode}-${size}-user-readonly.png`) });
                 checks.push(`${size}: native peer user form readonly with no edit/save/action menu`);
+                // HR-SELF-EDIT-001: one's own record from the employee list edits personal fields in place.
+                await open(f.ownEmployeeId);
+                await page.locator('.o_tp_own_profile_notice').waitFor();
+                assert.equal(await page.getByText('Chỉ admin gốc được thay đổi tài khoản hoặc hồ sơ của admin ủy quyền khác.', { exact: true }).count(), 0);
+                for (const name of ['Đổi tên đăng nhập', 'Đặt lại mật khẩu', 'Khóa / mở tài khoản']) {
+                    assert.equal(await page.getByRole('button', { name, exact: true }).count(), 0);
+                }
+                await page.locator('.o_tp_hr_edit:visible').first().click();
+                await page.locator('[role="tab"][name="personal_information"]').click();
+                const phone = size === 'desktop' ? '0900000101' : '0900000102';
+                await page.locator('.o_form_view [name="private_phone"] input').fill(phone);
+                for (const name of ['name', 'job_title', 'department_id']) {
+                    assert.equal(await page.locator(`.o_form_view [name="${name}"] input`).count(), 0, `${size}: own ${name} must stay read-only`);
+                }
+                await page.screenshot({ path: path.join(f.output, `${f.mode}-${size}-own-edit.png`) });
+                await page.locator('.o_tp_hr_save:visible').first().click();
+                await page.locator('.o_tp_hr_edit:visible').first().waitFor();
+                assert.equal(await page.locator('.o_notification.border-danger, .o_error_dialog').count(), 0);
+                assert((await page.locator('.o_form_view [name="private_phone"]').innerText()).includes(phone));
+                checks.push(`${size}: own record opens with own-profile notice; personal phone saved in place; name/job/department read-only`);
             }
         }
         assert.deepEqual(errors, []);

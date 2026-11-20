@@ -4,6 +4,8 @@ import os
 import subprocess
 from pathlib import Path
 
+from lxml import etree
+
 from odoo import Command
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import HttpCase, get_db_name, tagged
@@ -163,6 +165,40 @@ class TestAdminAccountPolicy(DelegationCase):
             self.denied(lambda: self.env['tp.admin.delegation'].with_user(self.actor_user).sudo()._change(
                 target, self.company, operation, 'Forbidden peer provision'))
 
+    def test_own_record_personal_fields_editable_in_place(self):
+        """HR-SELF-EDIT-001: a granted admin edits their own personal data from the employee list form."""
+        own = self.employees[0].with_user(self.actor_user)
+        self.assertTrue(own.tp_account_profile_readonly)
+        own.write({'private_phone': '0912000111', 'private_email': 'synthetic.self@example.invalid',
+                   'emergency_contact': 'Synthetic Contact', 'marital': 'married'})
+        self.assertEqual((self.employees[0].private_phone, self.employees[0].marital), ('0912000111', 'married'))
+        # Fields Odoo stores on hr.version (address, ID, sex) save too, from the form and from "Thông tin cá nhân".
+        own.write({'private_street': 'Synthetic Street 1', 'identification_id': 'SYN000111', 'sex': 'female'})
+        self.env['res.users'].with_user(self.actor_user).tp_save_my_profile({'private_city': 'Synthetic City'})
+        self.assertEqual((self.employees[0].private_street, self.employees[0].identification_id,
+                          self.employees[0].private_city), ('Synthetic Street 1', 'SYN000111', 'Synthetic City'))
+        self.assertEqual(self.employees[0].version_id.last_modified_uid, self.actor_user)
+        for vals in ({'name': 'Forbidden self rename'}, {'job_title': 'Forbidden self title'},
+                     {'department_id': self.departments[1].id}, {'barcode': 'SYN-SELF-001'}):
+            self.denied(lambda: own.write(vals))
+        version = self.employees[0].version_id.with_user(self.actor_user)
+        self.denied(lambda: version.write({'marital': 'single', 'last_modified_uid': self.admin.id}))
+        self.denied(lambda: version.write({'wage': 1}))
+        self.assertEqual(self.employees[0].marital, 'married')
+        self.assertEqual(self.employees[0].name, self.users[0].name)
+        # The peer's record stays fully protected, personal fields included.
+        self.denied(lambda: self.peer_employee.with_user(self.actor_user).write({'private_phone': '0912000222'}))
+
+        arch = etree.fromstring(own.get_views([(False, 'form')])['views']['form']['arch'])
+        fields_by_name = {node.get('name'): node for node in arch.xpath('//field[not(ancestor::field)]')}
+        for name in ('private_phone', 'private_email', 'marital'):
+            self.assertIn('tp_account_profile_readonly and user_id != uid', fields_by_name[name].get('readonly'))
+        for name in ('name', 'job_title', 'department_id'):
+            readonly = fields_by_name[name].get('readonly')
+            self.assertTrue(readonly.endswith(' or tp_account_profile_readonly'), readonly)
+        notice = arch.xpath("//div[contains(@class, 'o_tp_own_profile_notice')]")
+        self.assertEqual(notice[0].get('invisible'), 'not tp_account_profile_readonly or user_id != uid')
+
     def test_original_can_lock_another_original_but_not_self_or_system(self):
         other = self.normal.with_user(self.admin)
         other.write({'group_ids': [
@@ -216,7 +252,8 @@ class TestAdminAccountLockHttp(HttpCase):
                         'base': self.base_url(), 'mode': mode, 'employeeId': employees[2].id,
                         'targetUserId': users[2].id,
                         'employeeName': employees[2].name, 'originalEmployeeId': employees[0].id,
-                        'normalEmployeeId': employees[3].id, 'output': str(output), 'cookies': [
+                        'normalEmployeeId': employees[3].id, 'ownEmployeeId': employees[1].id,
+                        'output': str(output), 'cookies': [
                             {'name': 'session_id', 'value': self.session.sid, 'url': self.base_url(), 'httpOnly': True},
                             {'name': 'test_request_key', 'value': self.http_request_key, 'url': self.base_url()},
                         ],
@@ -227,6 +264,10 @@ class TestAdminAccountLockHttp(HttpCase):
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             finally:
                 fixture_path.unlink(missing_ok=True)
+        # Peer mode saved the granted admin's own phone from the native form (desktop, then mobile).
+        employees[1].invalidate_recordset()
+        self.assertEqual(employees[1].private_phone, '0900000102')
+        self.assertEqual(employees[1].name, users[1].name)
         users[2].invalidate_recordset()
         self.assertTrue(users[2].active)
         self.assertTrue(users[2]._tp_has_live_admin_grant())

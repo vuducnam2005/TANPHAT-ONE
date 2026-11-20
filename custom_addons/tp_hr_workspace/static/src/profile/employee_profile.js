@@ -3,6 +3,7 @@ import { FormController } from "@web/views/form/form_controller";
 import { formView } from "@web/views/form/form_view";
 import { FormCompiler } from "@web/views/form/form_compiler";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
+import { user } from "@web/core/user";
 import { useDialogOpener } from "@tp_web_login/js/identitycheck";
 
 export class HrProfileCompiler extends FormCompiler {
@@ -54,15 +55,26 @@ export class HrProfileController extends FormController {
         if (this.props.resId && !this.props.state?.modelState) params.config.mode = this.props.context?.form_view_initial_mode || "readonly";
         return params;
     }
-    get isReadonlyProfile() {
+    /** Protected admin record (another admin's, or one's own): no action/print menu. */
+    get isProtectedProfile() {
         return Boolean(
             this.model.root.data.tp_account_profile_readonly ||
             this.props.resModel === "hr.employee.public"
         );
     }
+    /** HR-SELF-EDIT-001: the logged-in account's own employee record (real user link, never the name). */
+    get isOwnProfile() {
+        const value = this.model.root.data.user_id;
+        const userId = Array.isArray(value) ? value[0] : value?.id;
+        return this.props.resModel === "hr.employee" && Boolean(userId) && userId === user.userId;
+    }
+    /** Own record stays editable; the view keeps every non-personal field read-only on it. */
+    get isReadonlyProfile() {
+        return this.isProtectedProfile && !this.isOwnProfile;
+    }
     get actionMenuItems() {
         const items = super.actionMenuItems;
-        return this.isReadonlyProfile ? {...items, action: [], print: []} : items;
+        return this.isProtectedProfile ? {...items, action: [], print: []} : items;
     }
     async editProfile() {
         if (this.isReadonlyProfile) return;

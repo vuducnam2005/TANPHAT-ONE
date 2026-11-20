@@ -281,21 +281,6 @@
     letter-spacing: 0.03em;
 }
 
-.o_tp_bank_status {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: 2px;
-
-    &.is-verified {
-        color: #15803d;
-    }
-
-    &.is-pending {
-        color: #a16207;
-    }
-}
-
 .o_tp_bank_number_input {
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.04em;

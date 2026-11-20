@@ -27,6 +27,7 @@ _PROFILE_CREATE = object()
 _SETTINGS_EXEC = object()
 
 _SELF_FIELDS = set(SELF_EDITABLE_SCALAR_FIELDS) | set(SELF_EDITABLE_MANY2ONE_FIELDS)
+_VERSION_EDIT_STAMPS = frozenset({'last_modified_date', 'last_modified_uid'})
 _PROTECTED_ADMIN_GROUP_XMLIDS = (
     'tp_admin_delegation.group_original_admin',
     'tp_admin_delegation.group_full_admin',
@@ -715,7 +716,12 @@ class ProtectedHrVersion(models.Model):
         if not _is_trusted_original_or_cli(self.env):
             own = self.sudo().filtered(lambda r: r.employee_id.user_id.id == account_actor_uid(self.env)
                                       and account_target_kind(r.employee_id.user_id) == 'granted_admin')
-            if own and set(vals) - _SELF_FIELDS:
+            # hr.employee.write adds these when it forwards version fields (address, ID, marital...);
+            # accept them only when they name the caller, so they cannot forge another author.
+            stamps = set()
+            if vals.get('last_modified_uid', self.env.uid) in (self.env.uid, account_actor_uid(self.env)):
+                stamps = _VERSION_EDIT_STAMPS
+            if own and set(vals) - _SELF_FIELDS - stamps:
                 raise AccessError(self.env._('Hồ sơ của mình chỉ được sửa thông tin cá nhân trong danh sách cho phép.'))
         if not _is_trusted_original_or_cli(self.env):
             _assert_profile_links(self.env, vals)

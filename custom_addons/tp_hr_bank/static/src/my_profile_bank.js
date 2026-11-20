@@ -55,7 +55,6 @@ patch(TpHrMyProfile.prototype, {
                 bank_id: account?.bank?.id || false,
                 account_number: account?.account_number || "",
                 holder_name: account?.holder_name || this.bankInfo?.default_holder || "",
-                trusted: Boolean(account?.trusted),
             },
         });
     },
@@ -131,7 +130,7 @@ patch(TpHrMyProfile.prototype, {
             this.applyProfilePayload(payload);
             this.state.bankDraft = null;
             this.notification.add(
-                draft.id ? _t("Đã cập nhật tài khoản ngân hàng.") : _t("Đã thêm tài khoản ngân hàng. Bộ phận Nhân sự sẽ xác minh."),
+                draft.id ? _t("Đã cập nhật tài khoản ngân hàng.") : _t("Đã thêm tài khoản ngân hàng."),
                 { type: "success" }
             );
         } catch (err) {

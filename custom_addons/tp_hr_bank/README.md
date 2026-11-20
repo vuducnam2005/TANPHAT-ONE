@@ -1,4 +1,4 @@
-# tp_hr_bank — Tài khoản ngân hàng (BANK-001)
+# tp_hr_bank — Tài khoản ngân hàng (BANK-001, BANK-002)
 
 Mỗi tài khoản đăng nhập tự khai báo tài khoản ngân hàng nhận lương ngay trong
 **Thông tin cá nhân**, chọn ngân hàng từ danh mục chuẩn có biểu tượng.
@@ -13,8 +13,8 @@ Mỗi tài khoản đăng nhập tự khai báo tài khoản ngân hàng nhận 
   sự). Dữ liệu nạp với `noupdate="1"`, nên nâng cấp module không ghi đè phần
   HR đã sửa (tên, màu, ẩn/hiện).
 - **Thông tin cá nhân**: thẻ "Tài khoản ngân hàng" gồm thêm, sửa, gỡ, ô tìm
-  ngân hàng không dấu (bàn phím, màn hình đọc), số tài khoản nhóm 4 số và
-  trạng thái "Nhân sự đã xác minh" hoặc "Chờ Nhân sự xác minh".
+  ngân hàng không dấu (bàn phím, màn hình đọc) và số tài khoản nhóm 4 số.
+  Từ BANK-002 không còn trạng thái xác minh: lưu đủ thông tin là dùng được.
 - **Nhân viên**: tài khoản gắn vào hồ sơ nhân viên (`bank_account_ids`, liên
   hệ công việc). HR và bảng lương dùng chính danh sách này.
 - **Tài khoản không có hồ sơ nhân viên**: tài khoản gắn vào liên hệ của chính
@@ -34,12 +34,20 @@ Mỗi tài khoản đăng nhập tự khai báo tài khoản ngân hàng nhận 
   một trường `bank_account_ids`; các trường HR khác vẫn bị chặn.
   Các trường cho phép: `bank_id`, `account_number`, `holder_name`. Gửi trường
   khác, hoặc id tài khoản của người khác, thì bị từ chối (`AccessError`).
-- `allow_out_payment` (đã xác minh, được chi lương) chỉ HR bật. Tài khoản mới
-  luôn ở trạng thái chưa xác minh. Đổi ngân hàng hoặc số tài khoản sẽ tắt xác
-  minh; chỉ sửa tên chủ tài khoản thì giữ nguyên.
-- Gỡ tài khoản: bỏ liên kết khỏi hồ sơ, rồi lưu trữ (không xóa cứng) nếu
-  không còn nhân viên nào dùng. Thêm lại cùng số thì dùng lại bản ghi cũ và
-  cần xác minh lại.
+- BANK-002 (DEC-065): không có bước HR xác minh. Chủ tài khoản lưu một tài
+  khoản hợp lệ (ngân hàng trong danh mục, số 6–20 chữ số, tên chủ tài khoản)
+  thì tài khoản dùng được ngay cho chi lương (`allow_out_payment` bật trong
+  `tp_save_my_bank_account`). Đổi ngân hàng hoặc số cũng có hiệu lực ngay.
+  Người dùng vẫn không tự ghi được `allow_out_payment` (gửi trường này bị từ
+  chối); mọi lần thêm, sửa, gỡ đều ghi chatter trên hồ sơ nhân viên.
+- Nâng cấp lên 20.0.1.1.0 (`migrations/20.0.1.1.0/post-migrate.py`): tài
+  khoản tự khai còn đang chờ xác minh (có ngân hàng trong danh mục, gắn hồ sơ
+  nhân viên hoặc liên hệ của người dùng, đang hoạt động) được bật dùng được.
+  Tài khoản của đối tác khác, tài khoản không chọn ngân hàng trong danh mục và
+  tài khoản đã gỡ giữ nguyên. Log chỉ ghi số lượng.
+- Gỡ tài khoản: bỏ liên kết khỏi hồ sơ, tắt chi lương, rồi lưu trữ (không xóa
+  cứng) nếu không còn nhân viên nào dùng. Thêm lại cùng số thì dùng lại bản
+  ghi cũ và dùng được ngay.
 - Ghi chú chatter trên hồ sơ nhân viên chỉ hiện 4 số cuối (`••••1234`).
 - Mỗi người tối đa 5 tài khoản. Số tài khoản 6–20 chữ số. Tên chủ tài khoản
   viết hoa không dấu.

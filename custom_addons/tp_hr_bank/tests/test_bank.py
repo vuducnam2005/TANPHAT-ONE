@@ -104,27 +104,32 @@ class TestTpHrBank(HttpCase):
             'bank_id': self.vcb.id, 'account_number': '0123 456.789', 'holder_name': 'Đặng  thị synthetic',
         })
         [card] = profile['bank']['accounts']
-        self.assertEqual((card['account_number'], card['holder_name'], card['trusted']), ('0123456789', 'DANG THI SYNTHETIC', False))
+        # BANK-002: a complete account the owner saves is ready for payroll at once, no HR step.
+        self.assertEqual((card['account_number'], card['holder_name'], card['trusted']), ('0123456789', 'DANG THI SYNTHETIC', True))
         self.assertEqual(card['bank']['short_name'], 'Vietcombank')
         account = self.env['res.partner.bank'].browse(card['id'])
         self.assertEqual(account.partner_id, self.staff_employee.work_contact_id)
         self.assertEqual(self.staff_employee.bank_account_ids, account)
         self.assertEqual((account.bank_name, account.bank_bic), ('Vietcombank', '970436'))
 
-        account.allow_out_payment = True  # HR verifies
+        self.assertTrue(account.allow_out_payment)
         profile = self.rpc_ok('tp_save_my_bank_account', account.id, {
             'bank_id': self.vcb.id, 'account_number': '0123456789', 'holder_name': 'DANG THI SYNTHETIC A',
         })
-        self.assertTrue(account.allow_out_payment, 'holder name only: stays verified')
+        self.assertTrue(account.allow_out_payment, 'holder name only: still usable')
+        # Bank and number of a usable account: the owner's own save is enough, nothing to re-verify.
         self.rpc_ok('tp_save_my_bank_account', account.id, {
-            'bank_id': self.bidv.id, 'account_number': '0123456789', 'holder_name': 'DANG THI SYNTHETIC A',
+            'bank_id': self.bidv.id, 'account_number': '1122334455', 'holder_name': 'DANG THI SYNTHETIC A',
         })
-        self.assertFalse(account.allow_out_payment, 'bank changed: HR verifies again')
-        self.assertEqual((account.bank_name, account.bank_bic), ('BIDV', '970418'))
+        self.assertTrue(account.allow_out_payment, 'bank and number changed: usable at once')
+        self.assertEqual((account.account_number, account.bank_name, account.bank_bic), ('1122334455', 'BIDV', '970418'))
 
         bodies = ' '.join(self.notes(self.staff_employee).mapped('body'))
         self.assertIn('••••6789', bodies)
+        self.assertIn('••••4455', bodies)
         self.assertNotIn('0123456789', bodies)
+        self.assertNotIn('1122334455', bodies)
+        self.assertNotIn('xác minh', bodies)
 
         profile = self.rpc_ok('tp_remove_my_bank_account', account.id)
         self.assertEqual(profile['bank']['accounts'], [])
@@ -132,12 +137,14 @@ class TestTpHrBank(HttpCase):
         self.assertTrue(account.exists())
         self.assertFalse(account.active)
 
+        self.assertFalse(account.allow_out_payment, 'removed: no longer used for payroll')
+
         profile = self.rpc_ok('tp_save_my_bank_account', False, {
-            'bank_id': self.vcb.id, 'account_number': '0123456789', 'holder_name': '',
+            'bank_id': self.vcb.id, 'account_number': '1122334455', 'holder_name': '',
         })
         self.assertEqual(profile['bank']['accounts'][0]['id'], account.id, 'same number reuses the archived record')
         self.assertTrue(account.active)
-        self.assertFalse(account.allow_out_payment)
+        self.assertTrue(account.allow_out_payment)
         self.assertEqual(self.staff_employee.bank_account_ids, account)
 
     def test_account_without_employee_profile(self):
@@ -209,8 +216,11 @@ class TestTpHrBank(HttpCase):
         self.as_user(own, self.staff).check_access('read')
         with self.assertRaises(AccessError):
             self.as_user(foreign, self.staff).check_access('read')
-        with self.assertRaises(AccessError):
+        with self.assertRaises(AccessError):  # no write access to res.partner.bank at all
+            self.as_user(own, self.staff).write({'holder_name': 'FORGED HOLDER'})
+        with self.assertRaises(UserError):  # usable account: the account module also locks the number
             self.as_user(own, self.staff).write({'account_number': '99999999'})
+        self.assertEqual((own.account_number, own.holder_name), ('12345678', 'SYNTHETIC'))
         with self.assertRaises(UserError):  # base: only trusted roles may verify accounts
             self.as_user(own, self.staff).write({'allow_out_payment': True})
         self.as_user(own | foreign, self.hr_user).check_access('read')
@@ -219,6 +229,33 @@ class TestTpHrBank(HttpCase):
             self.as_user(self.staff_employee, self.staff).sudo().write({'barcode': 'SYN-BANK-001'})
         self.assertIn('bank_account_ids', self.env['hr.employee']._tp_self_service_fields())
         self.assertNotIn('barcode', self.env['hr.employee']._tp_self_service_fields())
+
+    def test_upgrade_trusts_self_declared_accounts(self):
+        """BANK-002 upgrade: accounts left waiting for HR become usable; unrelated accounts stay as they are."""
+        import importlib.util
+        Account = self.env['res.partner.bank']
+        waiting = Account.create({
+            'partner_id': self.staff_employee.work_contact_id.id, 'account_number': '31313131', 'tp_bank_id': self.vcb.id,
+        })
+        self.staff_employee.bank_account_ids = [Command.link(waiting.id)]
+        removed = Account.create({
+            'partner_id': self.other_employee.work_contact_id.id, 'account_number': '32323232',
+            'tp_bank_id': self.vcb.id, 'active': False,
+        })
+        self.other_employee.bank_account_ids = [Command.link(removed.id)]
+        stranger = self.env['res.partner'].create({'name': 'Synthetic Supplier'})
+        supplier = Account.create({'partner_id': stranger.id, 'account_number': '33333333', 'tp_bank_id': self.vcb.id})
+        no_catalogue = Account.create({'partner_id': self.other.partner_id.id, 'account_number': '34343434'})
+        accounts = waiting | removed | supplier | no_catalogue
+        accounts.allow_out_payment = False
+        path = Path(__file__).resolve().parents[1] / 'migrations/20.0.1.1.0/post-migrate.py'
+        spec = importlib.util.spec_from_file_location('tp_hr_bank_bank002_migrate', path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        self.env.flush_all()
+        module.migrate(self.env.cr, '20.0.1.0.0')
+        self.env.invalidate_all()
+        self.assertEqual(accounts.filtered('allow_out_payment'), waiting)
 
     def test_web_styles_compile(self):
         """A SCSS error here would put the whole database on the "style compilation failed" fallback."""

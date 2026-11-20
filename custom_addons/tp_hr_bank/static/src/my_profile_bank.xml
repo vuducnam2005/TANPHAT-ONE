@@ -25,12 +25,6 @@
                                 </div>
                                 <div class="o_tp_bank_number" t-out="this.formatAccountNumber(acc.account_number)"/>
                                 <div class="o_tp_bank_holder" t-out="acc.holder_name"/>
-                                <div t-if="acc.trusted" class="o_tp_bank_status is-verified small">
-                                    <i class="oi" data-icon="verified" aria-hidden="true"/> Nhân sự đã xác minh
-                                </div>
-                                <div t-else="" class="o_tp_bank_status is-pending small">
-                                    <i class="oi" data-icon="schedule" aria-hidden="true"/> Chờ Nhân sự xác minh
-                                </div>
                             </div>
                         </div>
                         <div class="o_tp_bank_account_actions">
@@ -42,7 +36,7 @@
                     </div>
                     <p class="o_tp_bank_note">
                         <i class="oi" data-icon="info" aria-hidden="true"/>
-                        <span>Tài khoản mới, hoặc vừa đổi ngân hàng/số tài khoản, cần bộ phận Nhân sự xác minh trước khi dùng để chi lương.</span>
+                        <span>Kiểm tra kỹ ngân hàng, số tài khoản và tên chủ tài khoản trước khi lưu. Tài khoản có hiệu lực ngay khi lưu, không cần chờ xác nhận.</span>
                     </p>
                 </t>
             </div>
@@ -84,9 +78,6 @@
                             t-on-change="(ev) => this.onBankHolderChange(ev)"/>
                         <small id="tp_bank_holder_name_help" class="form-text">Viết hoa không dấu, đúng tên ngân hàng đăng ký, ví dụ NGUYEN VAN AN.</small>
                         <div t-if="this.bankFieldError('tp_bank_holder_name')" class="tp_validation_inline" t-out="this.bankFieldError('tp_bank_holder_name')"/>
-                    </div>
-                    <div t-if="this.state.bankDraft.trusted" class="alert alert-info small mb-0" role="note">
-                        Nếu đổi ngân hàng hoặc số tài khoản, tài khoản sẽ chờ Nhân sự xác minh lại.
                     </div>
                 </div>
                 <div class="card-footer d-flex justify-content-end gap-2">

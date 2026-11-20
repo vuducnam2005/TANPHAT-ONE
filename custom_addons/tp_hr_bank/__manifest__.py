@@ -1,7 +1,7 @@
 {
     "name": "TANPHAT ONE — Tài khoản ngân hàng cá nhân",
     "summary": "Danh mục ngân hàng chuẩn NAPAS/VietQR và tự khai báo tài khoản nhận lương trong Thông tin cá nhân",
-    "version": "20.0.1.0.0",
+    "version": "20.0.1.1.0",
     "license": "LGPL-3",
     "author": "Tan Phat JSC",
     "depends": ["tp_hr_workspace", "tp_admin_delegation"],

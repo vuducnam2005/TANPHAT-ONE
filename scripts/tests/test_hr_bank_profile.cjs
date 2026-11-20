@@ -59,9 +59,12 @@ async function run() {
             const row = card.locator('.o_tp_bank_account').first();
             await row.waitFor();
             const rowText = await row.innerText();
-            for (const text of ['Vietcombank', '0123 4567 89', f.holderName, 'Chờ Nhân sự xác minh']) {
+            for (const text of ['Vietcombank', '0123 4567 89', f.holderName]) {
                 assert(rowText.includes(text), `${size}: account row is missing "${text}": ${rowText}`);
             }
+            // BANK-002: no HR verification step, so no pending/verified status on the card.
+            assert(!rowText.includes('xác minh'), `${size}: account row still shows a verification status: ${rowText}`);
+            assert.equal(await card.locator('.o_tp_bank_status').count(), 0);
             assert.equal(await row.locator('.o_tp_bank_badge').innerText(), 'VCB');
             // Styles really applied (a failed SCSS compile serves an old bundle and a "Style error" toast).
             assert.equal(await row.locator('.o_tp_bank_badge').evaluate((el) => getComputedStyle(el).width), '44px');
@@ -103,7 +106,7 @@ async function run() {
             await modal.getByRole('button', { name: 'Hủy', exact: true }).click();
             await modal.waitFor({ state: 'detached' });
             assert.equal(await card.locator('.o_tp_bank_account').count(), 1);
-            checks.push(`${size}: card, badge, masked number, pending status; modal search by mouse and keyboard; cancel`);
+            checks.push(`${size}: card, badge, masked number, no verification status; modal search by mouse and keyboard; cancel`);
         }
         // Review captures: every tab on a tall viewport so the whole screen is in one image.
         for (const [size, width, height] of [['desktop', 1440, 2600], ['mobile', 390, 4200]]) {

@@ -4,6 +4,10 @@ Every account works on its own records only: an employee on the accounts linked 
 employee profile in the current company (the ones HR and payroll use), an account without an
 employee profile on the bank accounts of its own contact. Writes run under a scoped sudo after
 the ownership check; the user never gets write access to ``res.partner.bank`` itself.
+
+BANK-002: no HR verification step. A complete, valid account the owner saves is ready for
+payroll at once (``allow_out_payment`` set); every add/change/removal is logged on the
+employee with the last four digits only.
 """
 import re
 
@@ -194,27 +198,24 @@ class ResUsersBankProfile(models.Model):
                 changes['holder_name'] = holder
             if not changes:
                 return self.tp_get_my_profile()
-            reverify = bool({'tp_bank_id', 'account_number'} & set(changes)) and account.allow_out_payment
-            if {'tp_bank_id', 'account_number'} & set(changes):
-                changes['allow_out_payment'] = False
+            if not account.allow_out_payment:
+                changes['allow_out_payment'] = True
             account.write(changes)
             message = self.env._('Nhân viên tự cập nhật tài khoản ngân hàng: %(bank)s %(number)s.',
                                  bank=bank.short_name, number=mask_number(number))
-            if reverify:
-                message += ' ' + self.env._('Ngân hàng hoặc số tài khoản đã đổi nên cần HR xác minh lại.')
         else:
             if len(accounts) >= MAX_ACCOUNTS:
                 raise ValidationError(self.env._('Mỗi người khai báo tối đa %s tài khoản ngân hàng.', MAX_ACCOUNTS))
             values = {'tp_bank_id': bank.id, 'account_number': number, 'holder_name': holder}
             if same_number:
-                # Same number declared before (removed or not linked yet): reuse that record, re-verify.
+                # Same number declared before (removed or not linked yet): reuse that record.
                 account = same_number
-                account.write(dict(values, active=True, allow_out_payment=False))
+                account.write(dict(values, active=True, allow_out_payment=True))
             else:
-                account = Account.create(dict(values, partner_id=partner.id, allow_out_payment=False))
+                account = Account.create(dict(values, partner_id=partner.id, allow_out_payment=True))
             if employee:
                 employee.write({'bank_account_ids': [Command.link(account.id)]})
-            message = self.env._('Nhân viên tự thêm tài khoản ngân hàng: %(bank)s %(number)s (chờ HR xác minh).',
+            message = self.env._('Nhân viên tự thêm tài khoản ngân hàng: %(bank)s %(number)s.',
                                  bank=bank.short_name, number=mask_number(number))
         self._tp_bank_note(employee, message)
         return self.tp_get_my_profile()

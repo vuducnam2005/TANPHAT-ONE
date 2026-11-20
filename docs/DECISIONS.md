@@ -1,5 +1,11 @@
 # TANPHAT ONE — Sổ quyết định
 
+## DEC-065 — Tự sửa hồ sơ của chính mình ngay trong danh sách nhân viên; tài khoản ngân hàng không cần HR xác minh (20/11/2026)
+
+**Người dùng yêu cầu trực tiếp** (HR-SELF-EDIT-001 + BANK-002), làm rõ DEC-062 và thay quy tắc xác minh của BANK-001. Tài khoản nào đăng nhập thì sửa được thông tin cá nhân của chính mình ngay khi mở hồ sơ của mình từ danh sách nhân viên, không phải vào "Hồ sơ của tôi" ở góc dưới bên trái. Trên hồ sơ của chính mình, form chỉ mở đúng các trường tự phục vụ mà guard đã cho phép (`_tp_self_service_fields()`: ảnh, email, điện thoại, địa chỉ, ngày sinh, giấy tờ, liên hệ khẩn cấp, gia đình, học vấn, tài khoản ngân hàng); họ tên, phòng ban, chức vụ, tài khoản đăng nhập, quyền và nút quản trị tài khoản vẫn khóa và do admin gốc thay đổi. Hồ sơ của admin ủy quyền khác vẫn chỉ đọc như DEC-062; guard vẫn kiểm từng trường. Sửa kèm: guard `hr.version` chấp nhận hai dấu ghi nhận core tự thêm (`last_modified_date`, `last_modified_uid` đúng người đang sửa), để admin ủy quyền lưu được các trường Odoo lưu ở phiên bản hồ sơ (địa chỉ, CCCD, hộ chiếu, giới tính, quốc tịch, hôn nhân) trên cả form lẫn "Hồ sơ của tôi"; ghi trường hợp đồng/lương hoặc gán người sửa khác vẫn bị chặn.
+
+Tài khoản ngân hàng: chủ tài khoản lưu đủ thông tin hợp lệ (ngân hàng trong danh mục, số 6–20 chữ số, tên chủ tài khoản) là dùng được ngay cho chi lương, không còn trạng thái "Chờ Nhân sự xác minh"; đổi ngân hàng hoặc số cũng có hiệu lực ngay. Người dùng vẫn không tự ghi được cờ `allow_out_payment` hay tài khoản của người khác; mọi lần thêm/sửa/gỡ ghi chatter hồ sơ nhân viên, chỉ 4 số cuối. Nâng cấp bật dùng được cho tài khoản tự khai đang chờ. [Nghiệm thu](demo/HR_BANK_002_SELF_EDIT_ACCEPTANCE.md).
+
 ## DEC-064 — Tự thu hồi tài sản công ty về kho và bảo toàn lịch sử bàn giao khi xóa vĩnh viễn nhân viên (20/11/2026)
 
 **Người dùng yêu cầu trực tiếp** (HR-DELETE-ASSET-RETURN-001): Khi xóa vĩnh viễn nhân viên, không chặn bởi các liên kết phiếu bàn giao thiết bị lịch sử và không bắt admin mở từng phiếu gỡ thủ công.
