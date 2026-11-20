@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261119-032 — Đã áp sửa đồng bộ nhóm cán bộ chấm công lên PC server
+
+- 20/11/2026 08:38 giờ VN, theo yêu cầu “Áp lên PC”: release từ `3bc55406` (3 file, checksum khớp), `tp_hr_attendance` 20.0.3.5.0 → 20.0.3.5.1, upgrade exit 0/0 ERROR. Backup `C:\TANPHAT-backups\enti-attendance002\enti002-officer031-20261120T083838` (dump + `pg_restore -l`, filestore, source, config, SHA256). Snapshot trước/sau giống hệt, chỉ đổi phiên bản; nguồn module PC khớp commit 78/78 file trước và sau.
+- Kiểm guard trên dữ liệu thật bằng transaction rollback: HR manager không phải Quản trị gốc bị chặn khi ghi thành viên từ phía nhóm, thêm/gỡ phân công nhân viên thường đồng bộ đúng nhóm, phân công cho admin bị chặn kèm thông báo; không ghi gì vào DB.
+- Health 200/login 302 cục bộ và công khai, log container 0 ERROR. Lần đầu quan sát được nhịp 15 giây trên PC: 9 lượt đọc hôm nay thành công liên tiếp 08:41:55–08:43:58, lượt không đổi không ghi DB, trùng lặp 0. [Nghiệm thu §7](demo/ENTI_ATTENDANCE_002_ACCEPTANCE.md#7-pc-server--sửa-đồng-bộ-nhóm-cán-bộ-chg-20261119-032).
+
 ## CHG-20261119-031 — Sửa đồng bộ nhóm cán bộ chấm công bị guard ủy quyền admin chặn
 
 - 20/11/2026 Asia/Saigon; người dùng chọn “Làm ở đây” cho việc tách ra từ ENTI-ATTENDANCE-002. `tp_hr_attendance` 20.0.3.5.0 → 20.0.3.5.1, không đổi dữ liệu/ACL/view.

@@ -1,7 +1,7 @@
 # ENTI-ATTENDANCE-002 — Nghiệm thu kỹ thuật
 
-Change: `CHG-20261119-029` (code) · `CHG-20261119-030` (áp PC server) · Quyết định: [DEC-063](../DECISIONS.md)
-· Module `tp_hr_attendance` `20.0.3.5.0` · Kế thừa [ENTI-LIVE-001](ENTI_LIVE_001_ACCEPTANCE.md) (`CHG-20261119-025/026`).
+Change: `CHG-20261119-029` (code) · `CHG-20261119-030` (áp PC server) · `CHG-20261119-031/032` (sửa đồng bộ nhóm
+cán bộ, áp PC) · Quyết định: [DEC-063](../DECISIONS.md) · Module `tp_hr_attendance` `20.0.3.5.1` · Kế thừa [ENTI-LIVE-001](ENTI_LIVE_001_ACCEPTANCE.md) (`CHG-20261119-025/026`).
 
 Trạng thái: **MAIN_AND_PC_SERVER_APPLIED**. Kiểm kỹ thuật trên DB kiểm thử cục bộ `tp_tanphat_test` (cổng 18179, mục 2–4)
 và áp PC server ngày 20/11/2026 (mục 6). Đây là nghiệm thu kỹ thuật, chưa phải nghiệm thu nghiệp vụ của phòng nhân sự.
@@ -125,4 +125,24 @@ vào hồ sơ này (trạng thái *đã ghép*, lý do: người dùng xác nh�
 ví dụ chỉ chấm một lần lúc 18:08 → ENTI tính muộn 488 phút. Odoo hiển thị đúng như ENTI tính; cần nhân sự quyết định các
 ngày này là đi muộn, nghỉ nửa buổi hay quên chấm.
 
-**Chưa làm.** Xem giao diện trên PC bằng tài khoản thật; quan sát nhịp 15 giây trong giờ làm trên PC; nghiệm thu nghiệp vụ.
+**Chưa làm.** Xem giao diện trên PC bằng tài khoản thật; nghiệm thu nghiệp vụ. Nhịp 15 giây trong giờ làm đã quan sát
+trên PC ở mục 7.
+
+## 7. PC server — sửa đồng bộ nhóm cán bộ (`CHG-20261119-032`)
+
+- 20/11/2026 08:38 giờ VN: release từ `3bc55406` (CHG-20261119-031) bằng `ops/runbooks/deploy-enti-attendance002.ps1`, nhãn
+  `enti002-officer031`; 3 file, 0 bỏ, checksum tarball khớp hai đầu. Kiểm trước: nguồn module trên PC khớp `c94e29b2` 78/78 file,
+  script trên PC khớp bản commit, 106 GB trống, `tp_admin_delegation` 20.0.2.1.0 đã cài, 0 phân công/0 thành viên nhóm cán bộ.
+- `tp_hr_attendance` 20.0.3.5.0 → 20.0.3.5.1, upgrade exit 0, log 0 ERROR. Backup
+  `C:\TANPHAT-backups\enti-attendance002\enti002-officer031-20261120T083838`: dump (+ `pg_restore -l`), filestore, source,
+  config, manifest, snapshot trước, SHA256. Snapshot trước/sau giống hệt (39 nhân viên, 32 user, nhóm quyền, roster, 780 ngày
+  công, 788 phiên, 780 ngày ENTI, 39 người đã ghép, 5 lô cũ, 0 điều chỉnh, 0 kỳ chốt, cron, `base_url`), chỉ đổi phiên bản.
+  Sau upgrade nguồn module khớp `3bc55406` 78/78 file.
+- Kiểm guard trên dữ liệu thật trong một transaction rồi rollback (không ghi gì): người thao tác là HR manager không phải Quản
+  trị gốc; ghi thành viên nhóm từ phía nhóm bị chặn; phân công nhân viên thường thêm rồi gỡ đúng nhóm; phân công cho tài khoản
+  admin bị chặn với thông báo “Không cập nhật được quyền Chấm công…”; số thành viên nhóm trước/sau 0.
+- Odoo khởi động lại 08:40:13; health 200, login 302 (cục bộ và URL công khai); tunnel tự khởi động lại lúc Odoo dừng, URL giữ
+  nguyên. Log container sau khởi động 0 ERROR. Đồng bộ ENTI: lượt cửa sổ 08:41:55 rồi đọc hôm nay mỗi ~15 giây — 9 lượt thành
+  công liên tiếp 08:41:55–08:43:58, 0 lỗi, lượt không đổi không ghi ngày công/nhật ký, trùng lặp 0. Độ trễ vẫn chỉ đo ENTI →
+  Odoo, không đo máy chấm công → ENTI. Không đăng nhập tài khoản thật trên giao diện PC.
+

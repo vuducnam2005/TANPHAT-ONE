@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-20T01:10:07.948068+00:00",
-  "last_change_id": "CHG-20261119-031",
+  "updated_at": "2026-11-20T01:49:05.566058+00:00",
+  "last_change_id": "CHG-20261119-032",
   "code_digest": "32ab7af3a274974e4fdea6c01b50c82d622835c6b08b2122a0c33a9263d53ba8",
   "code_file_count": 708,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "5a9ec451abbac3c0fd236f0fcc47aac97b3b39774d2e6de883a8cb26886e5b7d",
-    "docs/CHANGELOG.md": "68372e097905a55e1071582cc76787bfb762d46634e5755ac9ecd06518b4022d",
+    "docs/PROJECT_STATUS.md": "397cf33f6dd87a50d4ce224ef6da7d60e0a40892173b42bc3798053f18713a69",
+    "docs/CHANGELOG.md": "63d9c0e66b509478b7c9a9119e2be1882eb5edc8b9133fd0e48443ae433b6972",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,9 +20,9 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "tp_tanphat_test: odoo -u tp_hr_attendance,tp_admin_delegation --test-tags /tp_hr_attendance,/tp_admin_delegation: tp_hr_attendance 96 tests 0 failed 0 errors (pre-existing officer-sync error gone, new guard regression test passes)",
-    "tp_admin_delegation 20 tests: only test_browser_original_lock_unlock_and_peer_readonly_desktop_mobile failed on port guard (script requires 18079, run used 18179); rerun TestAdminAccountLockHttp on 18079: 2/2 pass",
-    "ruff check tp_hr_attendance: clean",
-    "tp_admin_delegation unchanged; PC server not applied in this change (PC has 0 assignments, 0 officer members)"
+    "PC server tp_tanphat_dev: deploy-enti-attendance002.ps1 label enti002-officer031 from 3bc55406, 3 files checksum OK, upgrade 20.0.3.5.0 -> 20.0.3.5.1 exit 0, 0 ERROR; backup enti002-officer031-20261120T083838 with SHA256",
+    "PC module source matches c94e29b2 78/78 before and 3bc55406 78/78 after; snapshot before/after identical except module version",
+    "PC guard check in a rolled-back transaction: group-side member write blocked, employee assignment links/unlinks officer group, admin assignment blocked with message; nothing written",
+    "PC health 200, login 302 local and public; container log 0 ERROR; ENTI today poll every ~15s: 9 consecutive successes 08:41:55-08:43:58 VN, unchanged polls write nothing, duplicates 0"
   ]
 }
