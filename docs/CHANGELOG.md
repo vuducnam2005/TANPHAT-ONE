@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261120-001 — ATTENDANCE-WORKSPACE-003: hợp nhất ưu tiên giữ sáu thẻ, dashboard chung
+
+- 20/11/2026 Asia/Saigon; phiên điều phối hợp nhất prompt gốc người dùng và bổ sung mới, lấy ảnh `38c53f30-9104-4127-88c9-878af3fad5c6` đã duyệt làm căn cứ hình thức. [Prompt Claude](prompts/CLAUDE_ATTENDANCE_WORKSPACE_003_SHARED_DASHBOARD.md) thay yêu cầu bốn thẻ/35–65 cũ bằng giữ sáu thẻ, màu, donut, recent, biểu đồ dưới và tất cả bộ lọc; căn tên/phòng/giờ, responsive, live và một component mọi vai trò. Công của tôi/XLSX/connector admin/nhãn trung tính vẫn trong scope gốc.
+- Audit source ghi rõ phần đã có và delta: một dashboard hiện có; ellipsis gây cắt thông tin; gate cấu hình/manual sync/mapping/log còn HR/system, phải dùng original/live delegate đúng công ty và kiểm RPC; secret scope/lưu không side effect; live pending race cần tái hiện. Giữ capability chốt/xuất hiện hành, DEC-054/061/062/063 và dữ liệu thật. Không sửa application code, DB, quyền, credential hoặc runtime.
+- Kiểm thực: đọc ảnh và source/callers/test; `dev.py status` local Odoo/PostgreSQL đang nghe; Node test dashboard lỗi harness `AttPager is not defined` có sẵn; `ai_workflow.py check` FAIL trước sửa vì foreign WIP. Chạy `start`, giữ checkpoint và AI_WORKFLOW_STATE cũ; không finish nhận thay foreign source. Kiểm nội dung/link và `git diff --check` cho tài liệu. Chưa browser ba vai trò/4 viewport/XLSX mới; đây là prompt sẵn giao, không nghiệm thu tính năng hoặc triển khai UI.
+
 ## CHG-20261119-032 — Đã áp sửa đồng bộ nhóm cán bộ chấm công lên PC server
 
 - 20/11/2026 08:38 giờ VN, theo yêu cầu “Áp lên PC”: release từ `3bc55406` (3 file, checksum khớp), `tp_hr_attendance` 20.0.3.5.0 → 20.0.3.5.1, upgrade exit 0/0 ERROR. Backup `C:\TANPHAT-backups\enti-attendance002\enti002-officer031-20261120T083838` (dump + `pg_restore -l`, filestore, source, config, SHA256). Snapshot trước/sau giống hệt, chỉ đổi phiên bản; nguồn module PC khớp commit 78/78 file trước và sau.
