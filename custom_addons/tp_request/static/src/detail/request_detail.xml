@@ -1,0 +1,856 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_request.Detail">
+        <div class="tp_req_page tp_req_detail_page">
+            <!-- Top Back & Header Bar -->
+            <div class="tp_req_detail_topbar">
+                <button type="button" class="tp_req_btn tp_req_btn_ghost" t-on-click="goBack">
+                    <i class="oi" data-icon="arrow_back" aria-hidden="true"/>
+                    <span>Quay lại danh sách</span>
+                </button>
+                <div class="tp_req_topbar_right" t-if="state.data">
+                    <button type="button" class="tp_req_btn tp_req_btn_ghost" t-on-click="() => this.load()" t-att-disabled="state.loading">
+                        <i class="oi" data-icon="refresh" aria-hidden="true"/>
+                        <span>Tải lại</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="tp_req_loading" t-if="state.loading">
+                <span class="tp_req_spinner"/> Đang tải hồ sơ đề nghị...
+            </div>
+
+            <div class="tp_req_alert is-danger" t-elif="state.error">
+                <i class="oi" data-icon="gpp_maybe" aria-hidden="true"/>
+                <div>
+                    <strong>Không thể mở hồ sơ</strong>
+                    <div><t t-esc="state.error"/></div>
+                </div>
+            </div>
+
+            <t t-elif="state.data">
+                <t t-set="d" t-value="state.data"/>
+                <t t-set="ap" t-value="APPROVAL_BADGE[d.approval_state] || {}"/>
+                <t t-set="ex" t-value="EXEC_BADGE[d.execution_state] || {}"/>
+                <t t-set="pr" t-value="PRIORITY_BADGE[d.priority] || {}"/>
+
+                <div class="tp_req_alert is-success" t-if="state.bannerMessage">
+                    <i class="oi" data-icon="check_circle" aria-hidden="true"/>
+                    <span><t t-esc="state.bannerMessage"/></span>
+                </div>
+
+                <!-- Summary Header Card -->
+                <div class="tp_req_card tp_req_detail_hero">
+                    <div class="tp_req_hero_top">
+                        <div class="tp_req_hero_badges">
+                            <span class="tp_req_code_pill"><t t-esc="d.code"/></span>
+                            <span class="tp_req_type_chip" t-attf-style="border-color: #{d.type_color}40; color: #{d.type_color}; background: #{d.type_color}12">
+                                <i class="oi" t-att-data-icon="d.type_icon || 'assignment'" aria-hidden="true"/>
+                                <t t-esc="d.type_name"/>
+                            </span>
+                            <span t-attf-class="tp_req_badge #{ap.cls}">
+                                <i class="oi" t-att-data-icon="ap.icon || 'info'" aria-hidden="true"/>
+                                <t t-esc="d.approval_state_label"/>
+                            </span>
+                            <span t-if="d.requires_execution and d.execution_state !== 'not_applicable'"
+                                  t-attf-class="tp_req_badge #{ex.cls}">
+                                <i class="oi" t-att-data-icon="ex.icon || 'task'" aria-hidden="true"/>
+                                <t t-esc="d.execution_state_label"/>
+                            </span>
+                            <span t-attf-class="tp_req_prio #{pr.cls}"><t t-esc="d.priority_label"/></span>
+                            <span class="tp_req_overdue_pill" t-if="d.is_overdue">
+                                <i class="oi" data-icon="warning" aria-hidden="true"/> Quá hạn
+                            </span>
+                        </div>
+                        <div class="tp_req_hero_version">Phiên bản v<t t-esc="d.version"/></div>
+                    </div>
+
+                    <h1 class="tp_req_detail_title"><t t-esc="d.title"/></h1>
+
+                    <!-- Owner Quick Action Bar -->
+                    <div class="tp_req_owner_actions" t-if="d.permissions.can_edit or d.permissions.can_withdraw or d.permissions.can_clone">
+                        <t t-if="d.permissions.can_edit and !state.editing">
+                            <button type="button" class="tp_req_btn tp_req_btn_secondary" t-on-click="startEdit" t-att-disabled="state.busy">
+                                <i class="oi" data-icon="edit" aria-hidden="true"/>
+                                <span>Chỉnh sửa hồ sơ</span>
+                            </button>
+                            <button type="button" class="tp_req_btn tp_req_btn_primary"
+                                    t-on-click="submitDirectly"
+                                    t-att-disabled="state.busy or (d.route_preview and !d.route_preview.can_submit)">
+                                <i class="oi" data-icon="send" aria-hidden="true"/>
+                                <span><t t-esc="d.approval_state === 'returned' ? 'Gửi duyệt lại' : 'Gửi phê duyệt'"/></span>
+                            </button>
+                        </t>
+                        <button type="button" class="tp_req_btn tp_req_btn_ghost is-danger-text"
+                                t-if="d.permissions.can_withdraw and !state.editing"
+                                t-on-click="() => { state.showWithdraw = !state.showWithdraw; }"
+                                t-att-disabled="state.busy">
+                            <i class="oi" data-icon="undo" aria-hidden="true"/>
+                            <span>Rút / hủy đề nghị</span>
+                        </button>
+                        <button type="button" class="tp_req_btn tp_req_btn_primary"
+                                t-if="d.permissions.can_clone"
+                                t-on-click="cloneFromRejected"
+                                t-att-disabled="state.busy">
+                            <i class="oi" data-icon="content_copy" aria-hidden="true"/>
+                            <span>Tạo bản đề nghị mới từ hồ sơ này</span>
+                        </button>
+                    </div>
+
+                    <!-- Withdraw confirmation box -->
+                    <div class="tp_req_inline_box is-warning" t-if="state.showWithdraw">
+                        <label class="tp_req_label">Lý do rút / hủy đề nghị (tùy chọn)</label>
+                        <input type="text" class="tp_req_input" placeholder="Nhập lý do nếu cần..."
+                               t-att-value="state.withdrawReason"
+                               t-on-input="(ev) => { state.withdrawReason = ev.target.value; }"/>
+                        <div class="tp_req_inline_box_actions">
+                            <button type="button" class="tp_req_btn tp_req_btn_ghost" t-on-click="() => { state.showWithdraw = false; }">Hủy</button>
+                            <button type="button" class="tp_req_btn tp_req_btn_danger" t-on-click="confirmWithdraw" t-att-disabled="state.busy">
+                                Xác nhận rút đề nghị
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Returned / Rejected / Withdrawn reason banners -->
+                    <div class="tp_req_alert is-warning" t-if="d.approval_state === 'returned' and d.return_reason">
+                        <i class="oi" data-icon="assignment_return" aria-hidden="true"/>
+                        <div>
+                            <strong>Yêu cầu bổ sung từ người duyệt:</strong>
+                            <div><t t-esc="d.return_reason"/></div>
+                        </div>
+                    </div>
+                    <div class="tp_req_alert is-danger" t-if="d.approval_state === 'rejected' and d.reject_reason">
+                        <i class="oi" data-icon="cancel" aria-hidden="true"/>
+                        <div>
+                            <strong>Lý do từ chối:</strong>
+                            <div><t t-esc="d.reject_reason"/></div>
+                        </div>
+                    </div>
+                    <div class="tp_req_alert is-info" t-if="d.source_request_id">
+                        <i class="oi" data-icon="link" aria-hidden="true"/>
+                        <span>
+                            Tạo lại từ hồ sơ trước đó:
+                            <a href="#" t-on-click.prevent="() => this.openRelatedRequest(d.source_request_id)">
+                                <t t-esc="d.source_request_code"/>
+                            </a>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 2-Column Main Detail Layout -->
+                <div class="tp_req_detail_grid">
+                    <!-- LEFT COLUMN: Requester + Content + Attachments + Comments/History -->
+                    <div class="tp_req_detail_main">
+                        <!-- Requester Snapshot Card -->
+                        <div class="tp_req_card">
+                            <div class="tp_req_card_head"><h3>Thông tin người gửi</h3></div>
+                            <div class="tp_req_requester_box">
+                                <img class="tp_req_avatar" t-att-src="d.requester.avatar_url" alt=""/>
+                                <div class="tp_req_requester_meta">
+                                    <div class="tp_req_req_name">
+                                        <t t-esc="d.requester.name"/>
+                                        <span class="tp_req_code_sub" t-if="d.requester.employee_code">· <t t-esc="d.requester.employee_code"/></span>
+                                    </div>
+                                    <div class="tp_req_req_sub">
+                                        <span>Phòng ban: <strong><t t-esc="d.requester.department_name || '—'"/></strong></span>
+                                        <span t-if="d.submitted_at">· Gửi lúc: <strong><t t-esc="d.submitted_at"/></strong></span>
+                                        <span t-else="">· Tạo lúc: <strong><t t-esc="d.created_at"/></strong></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Content Card (Read OR Inline Edit) -->
+                        <div class="tp_req_card">
+                            <div class="tp_req_card_head">
+                                <h3>Nội dung đề nghị</h3>
+                                <span class="tp_req_hint_pill" t-if="d.needed_date_display">Cần đáp ứng: <t t-esc="d.needed_date_display"/></span>
+                            </div>
+
+                            <!-- INLINE EDIT FORM -->
+                            <t t-if="state.editing and state.editForm">
+                                <InlineErrors errors="state.editFieldErrors" server="state.editServerError" attempt="state.editAttempt"/>
+                                <div class="tp_req_form_grid">
+                                    <div class="tp_req_field is-full">
+                                        <label class="tp_req_label">Tiêu đề đề nghị <span class="tp_req_star">*</span></label>
+                                        <input id="req_title" type="text" class="tp_req_input"
+                                               t-att-value="state.editForm.title"
+                                               t-on-input="(ev) => this.onEditField('title', ev)"/>
+                                    </div>
+
+                                    <!-- Attendance correction edit fields -->
+                                    <t t-if="d.handler_kind === 'attendance_correction'">
+                                        <div class="tp_req_field">
+                                            <label class="tp_req_label">Ngày công <span class="tp_req_star">*</span></label>
+                                            <input id="req_att_work_date" type="date" class="tp_req_input"
+                                                   t-att-value="state.editForm.att_work_date"
+                                                   t-on-input="(ev) => this.onEditField('att_work_date', ev)"/>
+                                        </div>
+                                        <div class="tp_req_field">
+                                            <label class="tp_req_label">Giờ vào đúng (HH:MM) <span class="tp_req_star">*</span></label>
+                                            <input id="req_att_in" type="time" class="tp_req_input"
+                                                   t-att-value="state.editForm.att_requested_in"
+                                                   t-on-input="(ev) => this.onEditField('att_requested_in', ev)"/>
+                                        </div>
+                                        <div class="tp_req_field">
+                                            <label class="tp_req_label">Giờ ra đúng (HH:MM) <span class="tp_req_star">*</span></label>
+                                            <input id="req_att_out" type="time" class="tp_req_input"
+                                                   t-att-value="state.editForm.att_requested_out"
+                                                   t-on-input="(ev) => this.onEditField('att_requested_out', ev)"/>
+                                        </div>
+                                    </t>
+
+                                    <!-- Equipment swap / repair edit fields -->
+                                    <t t-if="d.handler_kind === 'equipment_swap' or d.handler_kind === 'equipment_repair'">
+                                        <div class="tp_req_field is-full">
+                                            <label class="tp_req_label">Thiết bị đang sử dụng <span class="tp_req_star">*</span></label>
+                                            <select id="req_equipment_id" class="tp_req_select"
+                                                    t-att-value="state.editForm.equipment_id"
+                                                    t-on-change="(ev) => this.onEditField('equipment_id', ev)">
+                                                <option value="">-- Chọn thiết bị đang giao cho bạn --</option>
+                                                <t t-foreach="state.bootstrap?.my_equipment || []" t-as="eq" t-key="eq.id">
+                                                    <option t-att-value="eq.id"><t t-esc="eq.display_name"/></option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                    </t>
+
+                                    <t t-if="d.handler_kind === 'equipment_assign' or d.handler_kind === 'equipment_purchase'">
+                                        <div class="tp_req_field">
+                                            <label class="tp_req_label">Loại thiết bị</label>
+                                            <select id="req_equip_category" class="tp_req_select"
+                                                    t-att-value="state.editForm.equipment_category_id"
+                                                    t-on-change="(ev) => this.onEditField('equipment_category_id', ev)">
+                                                <option value="">-- Chọn danh mục thiết bị --</option>
+                                                <t t-foreach="state.bootstrap?.equipment_categories || []" t-as="cat" t-key="cat.id">
+                                                    <option t-att-value="cat.id"><t t-esc="cat.name"/></option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                        <div class="tp_req_field" t-if="d.handler_kind === 'equipment_purchase'">
+                                            <label class="tp_req_label">Số lượng</label>
+                                            <input id="req_equip_qty" type="number" min="1" class="tp_req_input"
+                                                   t-att-value="state.editForm.equipment_quantity"
+                                                   t-on-input="(ev) => this.onEditField('equipment_quantity', ev)"/>
+                                        </div>
+                                        <div class="tp_req_field is-full">
+                                            <label class="tp_req_label">Cấu hình / yêu cầu kỹ thuật</label>
+                                            <input type="text" class="tp_req_input"
+                                                   t-att-value="state.editForm.equipment_desired_spec"
+                                                   t-on-input="(ev) => this.onEditField('equipment_desired_spec', ev)"/>
+                                        </div>
+                                    </t>
+
+                                    <div class="tp_req_field is-full" t-if="d.handler_kind === 'equipment_repair'">
+                                        <label class="tp_req_label">Mô tả hiện tượng / lỗi <span class="tp_req_star">*</span></label>
+                                        <textarea id="req_equip_issue" rows="3" class="tp_req_textarea"
+                                                  t-att-value="state.editForm.equipment_issue_detail"
+                                                  t-on-input="(ev) => this.onEditField('equipment_issue_detail', ev)"/>
+                                    </div>
+
+                                    <t t-if="d.handler_kind === 'it_support'">
+                                        <div class="tp_req_field">
+                                            <label class="tp_req_label">Nhóm hỗ trợ IT <span class="tp_req_star">*</span></label>
+                                            <select id="req_it_category" class="tp_req_select"
+                                                    t-att-value="state.editForm.it_category"
+                                                    t-on-change="(ev) => this.onEditField('it_category', ev)">
+                                                <option value="">-- Chọn nhóm hỗ trợ --</option>
+                                                <t t-foreach="state.bootstrap?.it_categories || []" t-as="itc" t-key="itc.key">
+                                                    <option t-att-value="itc.key"><t t-esc="itc.label"/></option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                        <div class="tp_req_field">
+                                            <label class="tp_req_label">Mức ảnh hưởng</label>
+                                            <select class="tp_req_select"
+                                                    t-att-value="state.editForm.it_urgency_impact"
+                                                    t-on-change="(ev) => this.onEditField('it_urgency_impact', ev)">
+                                                <t t-foreach="state.bootstrap?.it_impacts || []" t-as="imp" t-key="imp.key">
+                                                    <option t-att-value="imp.key"><t t-esc="imp.label"/></option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                    </t>
+
+                                    <div class="tp_req_field">
+                                        <label class="tp_req_label">Mức độ ưu tiên</label>
+                                        <select class="tp_req_select"
+                                                t-att-value="state.editForm.priority"
+                                                t-on-change="(ev) => this.onEditField('priority', ev)">
+                                            <option value="normal">Bình thường</option>
+                                            <option value="high">Cao</option>
+                                            <option value="urgent">Khẩn cấp</option>
+                                        </select>
+                                    </div>
+                                    <div class="tp_req_field">
+                                        <label class="tp_req_label">Ngày cần đáp ứng</label>
+                                        <input id="req_needed_date" type="date" class="tp_req_input"
+                                               t-att-value="state.editForm.needed_date"
+                                               t-on-input="(ev) => this.onEditField('needed_date', ev)"/>
+                                    </div>
+
+                                    <div class="tp_req_field is-full">
+                                        <label class="tp_req_label">Nội dung / lý do chi tiết</label>
+                                        <textarea id="req_description" rows="4" class="tp_req_textarea"
+                                                  t-att-value="state.editForm.description"
+                                                  t-on-input="(ev) => this.onEditField('description', ev)"/>
+                                    </div>
+                                </div>
+                                <div class="tp_req_edit_actions">
+                                    <button type="button" class="tp_req_btn tp_req_btn_ghost" t-on-click="cancelEdit" t-att-disabled="state.busy">Hủy</button>
+                                    <button type="button" class="tp_req_btn tp_req_btn_secondary" t-on-click="() => this.saveEdit(false)" t-att-disabled="state.busy">
+                                        Lưu nháp
+                                    </button>
+                                    <button type="button" class="tp_req_btn tp_req_btn_primary" t-on-click="() => this.saveEdit(true)" t-att-disabled="state.busy">
+                                        <i class="oi" data-icon="send" aria-hidden="true"/>
+                                        <span>Lưu &amp; gửi phê duyệt</span>
+                                    </button>
+                                </div>
+                            </t>
+
+                            <!-- READ-ONLY STRUCTURED CONTENT -->
+                            <t t-else="">
+                                <!-- Attendance details -->
+                                <div class="tp_req_meta_grid" t-if="d.handler_kind === 'attendance_correction'">
+                                    <div class="tp_req_meta_item">
+                                        <span class="tp_req_meta_k">Ngày công cần điều chỉnh</span>
+                                        <strong class="tp_req_meta_v"><t t-esc="d.attendance.work_date_display || '—'"/></strong>
+                                    </div>
+                                    <div class="tp_req_meta_item">
+                                        <span class="tp_req_meta_k">Giờ gốc trên máy chấm công</span>
+                                        <span class="tp_req_meta_v"><t t-esc="d.attendance.current_in"/> → <t t-esc="d.attendance.current_out"/></span>
+                                    </div>
+                                    <div class="tp_req_meta_item">
+                                        <span class="tp_req_meta_k">Giờ đề nghị điều chỉnh</span>
+                                        <strong class="tp_req_meta_v is-highlight"><t t-esc="d.attendance.requested_in"/> → <t t-esc="d.attendance.requested_out"/></strong>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.attendance.correction_code">
+                                        <span class="tp_req_meta_k">Mã phiếu chấm công nguồn</span>
+                                        <strong class="tp_req_meta_v"><t t-esc="d.attendance.correction_code"/></strong>
+                                    </div>
+                                </div>
+
+                                <!-- Equipment details -->
+                                <div class="tp_req_meta_grid" t-if="d.handler_kind.startsWith('equipment_')">
+                                    <div class="tp_req_meta_item" t-if="d.equipment.equipment_name">
+                                        <span class="tp_req_meta_k">Thiết bị liên quan</span>
+                                        <strong class="tp_req_meta_v"><t t-esc="d.equipment.equipment_name"/></strong>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.equipment.category_name">
+                                        <span class="tp_req_meta_k">Danh mục thiết bị</span>
+                                        <strong class="tp_req_meta_v"><t t-esc="d.equipment.category_name"/></strong>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.handler_kind === 'equipment_purchase'">
+                                        <span class="tp_req_meta_k">Số lượng đề xuất</span>
+                                        <strong class="tp_req_meta_v"><t t-esc="d.equipment.quantity"/></strong>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.equipment.desired_spec">
+                                        <span class="tp_req_meta_k">Cấu hình / yêu cầu kỹ thuật</span>
+                                        <span class="tp_req_meta_v"><t t-esc="d.equipment.desired_spec"/></span>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.equipment.issue_detail">
+                                        <span class="tp_req_meta_k">Hiện tượng / mô tả sự cố</span>
+                                        <span class="tp_req_meta_v"><t t-esc="d.equipment.issue_detail"/></span>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.equipment.fulfilled_equipment_name">
+                                        <span class="tp_req_meta_k">Thiết bị đã cấp phát / đổi mới</span>
+                                        <strong class="tp_req_meta_v is-highlight"><t t-esc="d.equipment.fulfilled_equipment_name"/></strong>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.equipment.old_equipment_condition_label">
+                                        <span class="tp_req_meta_k">Tình trạng thiết bị cũ khi thu hồi</span>
+                                        <span class="tp_req_meta_v"><t t-esc="d.equipment.old_equipment_condition_label"/></span>
+                                    </div>
+                                </div>
+
+                                <!-- IT support details -->
+                                <div class="tp_req_meta_grid" t-if="d.handler_kind === 'it_support'">
+                                    <div class="tp_req_meta_item">
+                                        <span class="tp_req_meta_k">Nhóm hỗ trợ IT</span>
+                                        <strong class="tp_req_meta_v"><t t-esc="d.it_support.category_label || '—'"/></strong>
+                                    </div>
+                                    <div class="tp_req_meta_item">
+                                        <span class="tp_req_meta_k">Mức ảnh hưởng</span>
+                                        <strong class="tp_req_meta_v"><t t-esc="d.it_support.impact_label"/></strong>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.it_support.device_name">
+                                        <span class="tp_req_meta_k">Thiết bị gặp sự cố</span>
+                                        <strong class="tp_req_meta_v"><t t-esc="d.it_support.device_name"/></strong>
+                                    </div>
+                                </div>
+
+                                <!-- Project & Followers -->
+                                <div class="tp_req_meta_grid" t-if="d.project_display or d.followers.length">
+                                    <div class="tp_req_meta_item" t-if="d.project_display">
+                                        <span class="tp_req_meta_k">Dự án liên quan</span>
+                                        <strong class="tp_req_meta_v"><t t-esc="d.project_display"/></strong>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.followers.length">
+                                        <span class="tp_req_meta_k">Người theo dõi</span>
+                                        <span class="tp_req_meta_v">
+                                            <t t-esc="d.followers.map((f) => f.name).join(', ')"/>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="tp_req_desc_box">
+                                    <div class="tp_req_meta_k">Nội dung / lý do</div>
+                                    <div class="tp_req_desc_text"><t t-esc="d.description || 'Không có mô tả bổ sung.'"/></div>
+                                </div>
+
+                                <!-- Execution result summary if done/cancelled -->
+                                <div class="tp_req_result_box is-done" t-if="d.execution_state === 'done' and d.execution_result">
+                                    <div class="tp_req_result_head">
+                                        <i class="oi" data-icon="task_alt" aria-hidden="true"/>
+                                        <strong>Kết quả thực hiện</strong>
+                                        <span class="tp_req_muted">· <t t-esc="d.assigned_executor"/> (<t t-esc="d.execution_done_at"/>)</span>
+                                    </div>
+                                    <div><t t-esc="d.execution_result"/></div>
+                                </div>
+                                <div class="tp_req_result_box is-cancelled" t-if="d.execution_state === 'cancelled' and d.execution_cancel_reason">
+                                    <div class="tp_req_result_head">
+                                        <i class="oi" data-icon="block" aria-hidden="true"/>
+                                        <strong>Lý do không thể thực hiện</strong>
+                                    </div>
+                                    <div><t t-esc="d.execution_cancel_reason"/></div>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Attachments Card -->
+                        <div class="tp_req_card">
+                            <div class="tp_req_card_head">
+                                <h3>Tệp đính kèm (<t t-esc="d.attachments.length"/>)</h3>
+                                <label class="tp_req_btn tp_req_btn_secondary tp_req_btn_sm tp_req_upload_label"
+                                       t-if="d.permissions.can_upload_attachment">
+                                    <i class="oi" data-icon="upload_file" aria-hidden="true"/>
+                                    <span><t t-esc="state.uploading ? 'Đang tải...' : 'Thêm tệp'"/></span>
+                                    <input type="file" multiple="multiple" class="tp_req_hidden_input"
+                                           t-on-change="onUploadAttachment" t-att-disabled="state.uploading"/>
+                                </label>
+                            </div>
+                            <div class="tp_req_muted" t-if="!d.attachments.length">Chưa có tệp đính kèm nào.</div>
+                            <ul class="tp_req_att_list" t-else="">
+                                <li t-foreach="d.attachments" t-as="att" t-key="att.id" class="tp_req_att_item">
+                                    <i class="oi tp_req_att_ico" data-icon="attach_file" aria-hidden="true"/>
+                                    <div class="tp_req_att_info">
+                                        <a t-att-href="att.download_url" target="_blank" rel="noopener" class="tp_req_att_link">
+                                            <t t-esc="att.name"/>
+                                        </a>
+                                        <div class="tp_req_att_meta">
+                                            <t t-esc="formatFileSize(att.file_size)"/> · <t t-esc="att.uploader"/> · <t t-esc="att.created_at"/>
+                                        </div>
+                                    </div>
+                                    <a t-att-href="att.download_url" target="_blank" rel="noopener" class="tp_req_icon_btn" title="Tải xuống">
+                                        <i class="oi" data-icon="download" aria-hidden="true"/>
+                                    </a>
+                                    <button type="button" class="tp_req_icon_btn is-danger" t-if="att.can_delete"
+                                            t-on-click="() => this.deleteAttachment(att)" title="Xóa tệp">
+                                        <i class="oi" data-icon="delete" aria-hidden="true"/>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Linked Business Records Card -->
+                        <div class="tp_req_card" t-if="d.linked_records.length">
+                            <div class="tp_req_card_head"><h3>Hồ sơ nghiệp vụ liên kết</h3></div>
+                            <div class="tp_req_linked_list">
+                                <div t-foreach="d.linked_records" t-as="lr" t-key="lr_index" class="tp_req_linked_item">
+                                    <i class="oi" data-icon="link" aria-hidden="true"/>
+                                    <div class="tp_req_linked_body">
+                                        <div class="tp_req_linked_label"><t t-esc="lr.label"/></div>
+                                        <div class="tp_req_linked_status">Trạng thái nguồn: <strong><t t-esc="lr.status"/></strong></div>
+                                    </div>
+                                    <button type="button" class="tp_req_btn tp_req_btn_secondary tp_req_btn_sm"
+                                            t-if="lr.url" t-on-click="() => this.openInternalUrl(lr.url)">
+                                        Mở hồ sơ nguồn
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Separated Discussion Comments vs Immutable System Audit History -->
+                        <div class="tp_req_card">
+                            <div class="tp_req_subtabs">
+                                <button type="button"
+                                        t-attf-class="tp_req_subtab #{state.activeBottomTab === 'comments' ? 'is-active' : ''}"
+                                        t-on-click="() => { state.activeBottomTab = 'comments'; }">
+                                    <i class="oi" data-icon="forum" aria-hidden="true"/>
+                                    <span>Trao đổi (<t t-esc="d.comments.length"/>)</span>
+                                </button>
+                                <button type="button"
+                                        t-attf-class="tp_req_subtab #{state.activeBottomTab === 'history' ? 'is-active' : ''}"
+                                        t-on-click="() => { state.activeBottomTab = 'history'; }">
+                                    <i class="oi" data-icon="history" aria-hidden="true"/>
+                                    <span>Lịch sử hệ thống (<t t-esc="d.history.length"/>)</span>
+                                </button>
+                            </div>
+
+                            <!-- Comments tab -->
+                            <div t-if="state.activeBottomTab === 'comments'" class="tp_req_comments_wrap">
+                                <div class="tp_req_muted tp_req_note_small">
+                                    Trao đổi chỉ phục vụ làm rõ nội dung; không tự động thay đổi trạng thái phê duyệt hoặc thực hiện.
+                                </div>
+                                <div class="tp_req_comment_list" t-if="d.comments.length">
+                                    <div t-foreach="d.comments" t-as="cm" t-key="cm.id" class="tp_req_comment_item">
+                                        <div class="tp_req_comment_head">
+                                            <strong><t t-esc="cm.author"/></strong>
+                                            <span class="tp_req_muted"><t t-esc="cm.date"/></span>
+                                        </div>
+                                        <div class="tp_req_comment_body" t-out="cm.body"/>
+                                    </div>
+                                </div>
+                                <div class="tp_req_muted" t-else="">Chưa có trao đổi nào trên hồ sơ này.</div>
+
+                                <div class="tp_req_alert is-danger" t-if="state.commentError">
+                                    <i class="oi" data-icon="error" aria-hidden="true"/>
+                                    <span><t t-esc="state.commentError"/></span>
+                                </div>
+                                <div class="tp_req_comment_compose">
+                                    <textarea rows="2" class="tp_req_textarea" placeholder="Nhập nội dung trao đổi..."
+                                              t-att-value="state.commentBody"
+                                              t-on-input="(ev) => { state.commentBody = ev.target.value; }"/>
+                                    <button type="button" class="tp_req_btn tp_req_btn_secondary"
+                                            t-on-click="postComment" t-att-disabled="state.commentBusy">
+                                        <i class="oi" data-icon="send" aria-hidden="true"/>
+                                        <span>Gửi trao đổi</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Immutable Audit History tab -->
+                            <div t-else="" class="tp_req_history_wrap">
+                                <div class="tp_req_muted tp_req_note_small">
+                                    Nhật ký hệ thống tự động ghi nhận mọi thay đổi trạng thái, chuyển giao và thực hiện; không thể chỉnh sửa hoặc xóa.
+                                </div>
+                                <ul class="tp_req_timeline">
+                                    <li t-foreach="d.history" t-as="h" t-key="h.id" class="tp_req_timeline_item">
+                                        <div class="tp_req_tl_dot"/>
+                                        <div class="tp_req_tl_body">
+                                            <div class="tp_req_tl_top">
+                                                <strong><t t-esc="h.action_label"/></strong>
+                                                <span class="tp_req_tl_actor">bởi <t t-esc="h.actor_name"/></span>
+                                                <span class="tp_req_tl_time"><t t-esc="h.created_at"/></span>
+                                            </div>
+                                            <div class="tp_req_tl_meta" t-if="h.state_before or h.state_after or h.step_name">
+                                                <span t-if="h.step_name">Bước: <strong><t t-esc="h.step_name"/></strong> · </span>
+                                                <span t-if="h.state_before and h.state_after"><t t-esc="h.state_before"/> → <strong><t t-esc="h.state_after"/></strong></span>
+                                                <span t-elif="h.state_after">Trạng thái: <strong><t t-esc="h.state_after"/></strong></span>
+                                                <span t-if="h.result_ref"> · Chứng từ: <strong><t t-esc="h.result_ref"/></strong></span>
+                                            </div>
+                                            <div class="tp_req_tl_note" t-if="h.note"><t t-esc="h.note"/></div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT SIDEBAR: Action Panels (Approver / Executor / Transfer) + Sequential Route -->
+                    <div class="tp_req_detail_side">
+                        <!-- Approver Action Panel -->
+                        <div class="tp_req_card tp_req_action_card is-approve" t-if="d.permissions.can_approve or d.permissions.can_return or d.permissions.can_reject">
+                            <div class="tp_req_card_head">
+                                <h3>Xử lý phê duyệt</h3>
+                                <span class="tp_req_badge is-pending" t-if="d.current_step_name"><t t-esc="d.current_step_name"/></span>
+                            </div>
+
+                            <div class="tp_req_alert is-warning" t-if="d.handler_kind === 'attendance_correction' and d.attendance.period_locked">
+                                <i class="oi" data-icon="lock" aria-hidden="true"/>
+                                <span>Kỳ công chứa ngày này đã chốt. Chỉ Admin có thẩm quyền điều chỉnh sau chốt mới có thể phê duyệt.</span>
+                            </div>
+
+                            <div class="tp_req_alert is-danger" t-if="state.decisionError">
+                                <i class="oi" data-icon="error" aria-hidden="true"/>
+                                <span><t t-esc="state.decisionError"/></span>
+                            </div>
+
+                            <div class="tp_req_field">
+                                <label class="tp_req_label">Nhận xét / lý do <span class="tp_req_muted">(bắt buộc khi Trả lại hoặc Từ chối)</span></label>
+                                <textarea rows="3" class="tp_req_textarea" placeholder="Nhập ý kiến phê duyệt hoặc lý do trả lại / từ chối..."
+                                          t-att-value="state.decisionNote"
+                                          t-on-input="(ev) => { state.decisionNote = ev.target.value; state.decisionError = ''; }"/>
+                            </div>
+
+                            <div class="tp_req_decision_btns">
+                                <button type="button" class="tp_req_btn tp_req_btn_success"
+                                        t-if="d.permissions.can_approve"
+                                        t-on-click="doApprove" t-att-disabled="state.busy">
+                                    <i class="oi" data-icon="check_circle" aria-hidden="true"/>
+                                    <span>Chấp thuận</span>
+                                </button>
+                                <button type="button" class="tp_req_btn tp_req_btn_warning"
+                                        t-if="d.permissions.can_return"
+                                        t-on-click="doReturn" t-att-disabled="state.busy">
+                                    <i class="oi" data-icon="undo" aria-hidden="true"/>
+                                    <span>Trả lại bổ sung</span>
+                                </button>
+                                <button type="button" class="tp_req_btn tp_req_btn_danger"
+                                        t-if="d.permissions.can_reject"
+                                        t-on-click="doReject" t-att-disabled="state.busy">
+                                    <i class="oi" data-icon="cancel" aria-hidden="true"/>
+                                    <span>Từ chối</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- General decision error (e.g. submit/withdraw/clone error) -->
+                        <div class="tp_req_alert is-danger" t-if="state.decisionError and !(d.permissions.can_approve or d.permissions.can_return or d.permissions.can_reject)">
+                            <i class="oi" data-icon="error" aria-hidden="true"/>
+                            <span><t t-esc="state.decisionError"/></span>
+                        </div>
+
+                        <!-- Executor Action Panel -->
+                        <div class="tp_req_card tp_req_action_card is-execute" t-if="d.permissions.can_execute">
+                            <div class="tp_req_card_head">
+                                <h3>Thực hiện sau duyệt</h3>
+                                <span t-attf-class="tp_req_badge #{ex.cls}"><t t-esc="d.execution_state_label"/></span>
+                            </div>
+
+                            <div class="tp_req_alert is-danger" t-if="state.execError">
+                                <i class="oi" data-icon="error" aria-hidden="true"/>
+                                <span><t t-esc="state.execError"/></span>
+                            </div>
+
+                            <!-- Step 1: Start / update progress -->
+                            <div class="tp_req_exec_block" t-if="d.execution_state === 'pending'">
+                                <button type="button" class="tp_req_btn tp_req_btn_primary is-full-btn"
+                                        t-on-click="startExecution" t-att-disabled="state.busy">
+                                    <i class="oi" data-icon="play_arrow" aria-hidden="true"/>
+                                    <span>Nhận việc &amp; bắt đầu thực hiện</span>
+                                </button>
+                            </div>
+
+                            <!-- Equipment-specific backend action buttons -->
+                            <div class="tp_req_exec_block" t-if="d.handler_kind === 'equipment_repair' and !d.equipment.has_repair and d.permissions.is_equipment_admin">
+                                <button type="button" class="tp_req_btn tp_req_btn_secondary is-full-btn"
+                                        t-on-click="createRepairRecord" t-att-disabled="state.busy">
+                                    <i class="oi" data-icon="build" aria-hidden="true"/>
+                                    <span>Tạo phiếu sửa chữa trong Kho thiết bị</span>
+                                </button>
+                            </div>
+
+                            <div class="tp_req_exec_block" t-if="d.handler_kind === 'equipment_purchase' and !d.equipment.has_proposal and d.permissions.is_equipment_admin">
+                                <button type="button" class="tp_req_btn tp_req_btn_secondary is-full-btn"
+                                        t-on-click="createPurchaseProposal" t-att-disabled="state.busy">
+                                    <i class="oi" data-icon="shopping_cart" aria-hidden="true"/>
+                                    <span>Lập đề xuất mua sắm trong Kho thiết bị</span>
+                                </button>
+                                <div class="tp_req_note_small tp_req_muted">
+                                    Phê duyệt mua chỉ lập đề xuất mua sắm, không tự tạo tài sản tồn kho trước khi mua và nhập kho thực tế.
+                                </div>
+                            </div>
+
+                            <!-- Progress update -->
+                            <div class="tp_req_exec_block">
+                                <label class="tp_req_label">Cập nhật tiến độ xử lý</label>
+                                <div class="tp_req_inline_row">
+                                    <input type="text" class="tp_req_input" placeholder="Ghi nhận bước đang xử lý..."
+                                           t-att-value="state.execProgressNote"
+                                           t-on-input="(ev) => { state.execProgressNote = ev.target.value; }"/>
+                                    <button type="button" class="tp_req_btn tp_req_btn_secondary tp_req_btn_sm"
+                                            t-on-click="updateProgress" t-att-disabled="state.busy">Lưu</button>
+                                </div>
+                            </div>
+
+                            <hr class="tp_req_divider"/>
+
+                            <!-- Complete execution section -->
+                            <div class="tp_req_exec_block">
+                                <!-- Equipment stock picker for Assign / Swap -->
+                                <t t-if="d.handler_kind === 'equipment_assign' or d.handler_kind === 'equipment_swap'">
+                                    <div class="tp_req_field">
+                                        <label class="tp_req_label">
+                                            <t t-esc="d.handler_kind === 'equipment_swap' ? 'Thiết bị mới trong kho để đổi' : 'Thiết bị trong kho để cấp phát'"/>
+                                            <span class="tp_req_star">*</span>
+                                        </label>
+                                        <div class="tp_req_alert is-warning" t-if="!d.equipment.eligible_stock.length">
+                                            <i class="oi" data-icon="inventory_2" aria-hidden="true"/>
+                                            <span>Hiện không có thiết bị rảnh, hoạt động tốt trong kho đủ điều kiện bàn giao.</span>
+                                        </div>
+                                        <select t-else="" class="tp_req_select"
+                                                t-att-value="state.execFulfilledEquipId"
+                                                t-on-change="(ev) => { state.execFulfilledEquipId = ev.target.value; state.execError = ''; }">
+                                            <option value="">-- Chọn thiết bị đủ điều kiện trong kho --</option>
+                                            <t t-foreach="d.equipment.eligible_stock" t-as="st" t-key="st.id">
+                                                <option t-att-value="st.id">
+                                                    <t t-esc="st.matches_category ? '★ ' : ''"/><t t-esc="st.display_name"/>
+                                                    (<t t-esc="st.category_name || 'Chưa phân loại'"/> · <t t-esc="st.technical_state_label"/>)
+                                                </option>
+                                            </t>
+                                        </select>
+                                    </div>
+                                </t>
+
+                                <!-- Mandatory old equipment condition for Swap -->
+                                <div class="tp_req_field" t-if="d.handler_kind === 'equipment_swap'">
+                                    <label class="tp_req_label">Tình trạng thực tế thiết bị cũ khi thu hồi <span class="tp_req_star">*</span></label>
+                                    <select class="tp_req_select"
+                                            t-att-value="state.execOldCondition"
+                                            t-on-change="(ev) => { state.execOldCondition = ev.target.value; state.execError = ''; }">
+                                        <option value="">-- Xác nhận tình trạng máy cũ --</option>
+                                        <t t-foreach="d.equipment.old_conditions" t-as="cond" t-key="cond.key">
+                                            <option t-att-value="cond.key"><t t-esc="cond.label"/></option>
+                                        </t>
+                                    </select>
+                                </div>
+
+                                <div class="tp_req_field">
+                                    <label class="tp_req_label">Kết quả thực hiện / biên bản xử lý <span class="tp_req_star">*</span></label>
+                                    <textarea rows="3" class="tp_req_textarea" placeholder="Nhập kết quả bàn giao / khắc phục / xử lý..."
+                                              t-att-value="state.execResultNote"
+                                              t-on-input="(ev) => { state.execResultNote = ev.target.value; state.execError = ''; }"/>
+                                </div>
+
+                                <div class="tp_req_decision_btns">
+                                    <button type="button" class="tp_req_btn tp_req_btn_success"
+                                            t-on-click="completeExecution" t-att-disabled="state.busy">
+                                        <i class="oi" data-icon="task_alt" aria-hidden="true"/>
+                                        <span>Xác nhận hoàn thành</span>
+                                    </button>
+                                    <button type="button" class="tp_req_btn tp_req_btn_ghost is-danger-text"
+                                            t-on-click="() => { state.showExecCancel = !state.showExecCancel; }" t-att-disabled="state.busy">
+                                        Không thể thực hiện
+                                    </button>
+                                </div>
+
+                                <div class="tp_req_inline_box is-danger" t-if="state.showExecCancel">
+                                    <label class="tp_req_label">Lý do không thể thực hiện <span class="tp_req_star">*</span></label>
+                                    <input type="text" class="tp_req_input" placeholder="Nhập lý do cụ thể..."
+                                           t-att-value="state.execCancelReason"
+                                           t-on-input="(ev) => { state.execCancelReason = ev.target.value; }"/>
+                                    <div class="tp_req_inline_box_actions">
+                                        <button type="button" class="tp_req_btn tp_req_btn_ghost" t-on-click="() => { state.showExecCancel = false; }">Đóng</button>
+                                        <button type="button" class="tp_req_btn tp_req_btn_danger" t-on-click="cancelExecution" t-att-disabled="state.busy">
+                                            Xác nhận hủy thực hiện
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sequential Approval Route Card -->
+                        <div class="tp_req_card">
+                            <div class="tp_req_card_head">
+                                <h3>Tuyến phê duyệt tuần tự</h3>
+                                <button type="button" class="tp_req_btn tp_req_btn_ghost tp_req_btn_sm"
+                                        t-if="d.permissions.can_transfer"
+                                        t-on-click="() => { state.showTransfer = !state.showTransfer; }">
+                                    <i class="oi" data-icon="swap_horiz" aria-hidden="true"/>
+                                    <span>Chuyển giao</span>
+                                </button>
+                            </div>
+
+                            <!-- Manager Transfer Approver Inline Box -->
+                            <div class="tp_req_inline_box is-info" t-if="state.showTransfer and d.permissions.can_transfer">
+                                <div class="tp_req_label">Chọn người duyệt thay thế (bước hiện tại)</div>
+                                <div class="tp_req_alert is-danger" t-if="state.transferError">
+                                    <span><t t-esc="state.transferError"/></span>
+                                </div>
+                                <div class="tp_req_checklist">
+                                    <label t-foreach="d.transfer_candidates" t-as="cand" t-key="cand.id" class="tp_req_check_item">
+                                        <input type="checkbox"
+                                               t-att-checked="state.transferUserIds.includes(cand.id)"
+                                               t-on-change="(ev) => this.toggleTransferUser(cand.id, ev)"/>
+                                        <span><t t-esc="cand.name"/></span>
+                                    </label>
+                                </div>
+                                <input type="text" class="tp_req_input" placeholder="Lý do chuyển giao (bắt buộc)..."
+                                       t-att-value="state.transferReason"
+                                       t-on-input="(ev) => { state.transferReason = ev.target.value; }"/>
+                                <div class="tp_req_inline_box_actions">
+                                    <button type="button" class="tp_req_btn tp_req_btn_ghost" t-on-click="() => { state.showTransfer = false; }">Hủy</button>
+                                    <button type="button" class="tp_req_btn tp_req_btn_primary tp_req_btn_sm" t-on-click="submitTransfer" t-att-disabled="state.busy">
+                                        Xác nhận chuyển giao
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Draft / Returned route preview -->
+                            <t t-if="d.permissions.can_edit and d.route_preview">
+                                <div class="tp_req_alert is-warning" t-if="!d.route_preview.can_submit">
+                                    <i class="oi" data-icon="warning" aria-hidden="true"/>
+                                    <div>
+                                        <strong>Chưa thể gửi do thiếu cấu hình:</strong>
+                                        <ul class="tp_req_warn_list">
+                                            <li t-foreach="d.route_preview.missing_reasons" t-as="mr" t-key="mr_index"><t t-esc="mr"/></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <ol class="tp_req_route_steps">
+                                    <li t-foreach="d.route_preview.steps" t-as="st" t-key="st.order"
+                                        t-attf-class="tp_req_route_step #{!st.ready ? 'is-missing' : 'is-waiting'}">
+                                        <div class="tp_req_rs_title">
+                                            <strong>Bước <t t-esc="st_index + 1"/>: <t t-esc="st.name"/></strong>
+                                            <span class="tp_req_rs_policy" t-if="st.approvers.length > 1">Một người duyệt là đủ</span>
+                                        </div>
+                                        <div class="tp_req_rs_users" t-if="st.approvers.length">
+                                            <t t-esc="st.approvers.map((u) => u.name).join(', ')"/>
+                                        </div>
+                                        <div class="tp_req_rs_missing" t-else="">
+                                            <t t-esc="st.missing_reason || 'Chưa xác định người duyệt'"/>
+                                        </div>
+                                    </li>
+                                </ol>
+                            </t>
+
+                            <!-- Frozen route steps after submit -->
+                            <ol class="tp_req_route_steps" t-elif="latestSteps.length">
+                                <li t-foreach="latestSteps" t-as="st" t-key="st.id"
+                                    t-attf-class="tp_req_route_step is-#{st.state}">
+                                    <div class="tp_req_rs_title">
+                                        <strong><t t-esc="st.name"/></strong>
+                                        <span class="tp_req_rs_state"><t t-esc="st.state_label"/></span>
+                                    </div>
+                                    <div class="tp_req_rs_policy" t-if="st.eligible_users.length > 1">
+                                        <t t-esc="st.approval_policy_label || 'Một người duyệt là đủ'"/>
+                                        <span t-if="st.transferred"> · Đã chuyển giao</span>
+                                    </div>
+                                    <div class="tp_req_rs_users">
+                                        Người duyệt: <t t-esc="st.eligible_users.map((u) => u.name).join(', ') || '—'"/>
+                                    </div>
+                                    <div class="tp_req_rs_decided" t-if="st.decided_by">
+                                        Đã xử lý bởi <strong><t t-esc="st.decided_by"/></strong> · <t t-esc="st.decided_at"/>
+                                        <div class="tp_req_rs_note" t-if="st.decision_note">“<t t-esc="st.decision_note"/>”</div>
+                                    </div>
+                                    <div class="tp_req_rs_due" t-elif="st.state === 'pending' and st.due_at">
+                                        Hạn xử lý: <t t-esc="st.due_at"/>
+                                    </div>
+                                </li>
+                            </ol>
+
+                            <!-- Post-approval execution summary -->
+                            <div class="tp_req_exec_summary" t-if="d.requires_execution">
+                                <div class="tp_req_rs_title">
+                                    <strong>Thực hiện sau phê duyệt</strong>
+                                    <span t-attf-class="tp_req_badge #{ex.cls}"><t t-esc="d.execution_state_label"/></span>
+                                </div>
+                                <div class="tp_req_rs_users" t-if="d.assigned_executor">
+                                    Người phụ trách: <strong><t t-esc="d.assigned_executor"/></strong>
+                                </div>
+                                <div class="tp_req_rs_users" t-elif="d.executors.length">
+                                    Bộ phận / người thực hiện: <t t-esc="d.executors.map((u) => u.name).join(', ')"/>
+                                </div>
+                                <div class="tp_req_rs_due" t-if="d.execution_due_at and (d.execution_state === 'pending' or d.execution_state === 'in_progress')">
+                                    Hạn thực hiện: <t t-esc="d.execution_due_at"/>
+                                </div>
+                            </div>
+
+                            <!-- Archived route versions from previous submissions -->
+                            <details class="tp_req_archived_steps" t-if="archivedSteps.length">
+                                <summary>Lịch sử tuyến duyệt các phiên bản trước (<t t-esc="archivedSteps.length"/> bước)</summary>
+                                <ul>
+                                    <li t-foreach="archivedSteps" t-as="ast" t-key="ast.id">
+                                        <strong>v<t t-esc="ast.request_version"/> · <t t-esc="ast.name"/></strong>
+                                        — <t t-esc="ast.state_label"/>
+                                        <t t-if="ast.decided_by"> (<t t-esc="ast.decided_by"/> · <t t-esc="ast.decided_at"/>)</t>
+                                    </li>
+                                </ul>
+                            </details>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

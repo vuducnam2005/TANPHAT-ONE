@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_request.Admin">
+        <div class="tp_req_page tp_req_admin_page">
+            <div class="tp_req_header">
+                <div>
+                    <h1 class="tp_req_title">Quản trị Đề nghị &amp; Phê duyệt</h1>
+                    <p class="tp_req_subtitle">
+                        Cấu hình danh mục loại đề nghị, tuyến phê duyệt tuần tự, người thực hiện sau duyệt và theo dõi toàn bộ hồ sơ công ty.
+                    </p>
+                </div>
+                <div class="tp_req_header_actions" t-if="state.data and state.activeTab === 'types'">
+                    <button type="button" class="tp_req_btn tp_req_btn_primary" t-on-click="openCreateType">
+                        <i class="oi" data-icon="add" aria-hidden="true"/>
+                        <span>Thêm loại đề nghị</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="tp_req_loading" t-if="state.loading">
+                <span class="tp_req_spinner"/> Đang tải cấu hình quản trị...
+            </div>
+
+            <div class="tp_req_alert is-danger" t-elif="state.error">
+                <i class="oi" data-icon="gpp_maybe" aria-hidden="true"/>
+                <div>
+                    <strong>Không có quyền quản trị</strong>
+                    <div><t t-esc="state.error"/></div>
+                </div>
+            </div>
+
+            <t t-elif="state.data">
+                <!-- Admin Top Tabs -->
+                <div class="tp_req_tabs">
+                    <button type="button"
+                            t-attf-class="tp_req_tab #{state.activeTab === 'types' ? 'is-active' : ''}"
+                            t-on-click="() => { state.activeTab = 'types'; }">
+                        <span>Danh mục loại đề nghị &amp; tuyến duyệt</span>
+                        <span class="tp_req_tab_cnt"><t t-esc="state.data.types.length"/></span>
+                    </button>
+                    <button type="button"
+                            t-attf-class="tp_req_tab #{state.activeTab === 'all_requests' ? 'is-active' : ''}"
+                            t-on-click="() => { state.activeTab = 'all_requests'; }">
+                        <span>Toàn bộ hồ sơ công ty</span>
+                    </button>
+                </div>
+
+                <!-- TAB 1: REQUEST TYPES & APPROVAL ROUTES -->
+                <t t-if="state.activeTab === 'types'">
+                    <div class="tp_req_alert is-warning" t-if="missingConfigTypes.length">
+                        <i class="oi" data-icon="tune" aria-hidden="true"/>
+                        <div>
+                            <strong>Có <t t-esc="missingConfigTypes.length"/> loại đề nghị cần hoàn thiện cấu hình người duyệt / trưởng phòng:</strong>
+                            <ul class="tp_req_warn_list">
+                                <li t-foreach="missingConfigTypes" t-as="mt" t-key="mt.id">
+                                    <strong><t t-esc="mt.name"/></strong>:
+                                    <t t-esc="mt.warnings.join(' · ')"/>
+                                    <button type="button" class="tp_req_link_btn" t-on-click="() => this.openEditType(mt)">Cấu hình ngay</button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="tp_req_card tp_req_filter_card">
+                        <div class="tp_req_filter_row">
+                            <div class="tp_req_search_box">
+                                <i class="oi" data-icon="search" aria-hidden="true"/>
+                                <input type="text" class="tp_req_input" placeholder="Tìm theo mã, tên hoặc mô tả loại đề nghị..."
+                                       t-att-value="state.searchText"
+                                       t-on-input="(ev) => { state.searchText = ev.target.value; }"/>
+                            </div>
+                            <select class="tp_req_select" t-att-value="state.statusFilter"
+                                    t-on-change="(ev) => { state.statusFilter = ev.target.value; }">
+                                <option value="all">Tất cả trạng thái</option>
+                                <option value="active">Đang hoạt động</option>
+                                <option value="missing">Cần hoàn thiện cấu hình</option>
+                                <option value="inactive">Đã ngừng sử dụng</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="tp_req_card tp_req_table_card">
+                        <div class="tp_req_table_scroll">
+                            <table class="tp_req_table">
+                                <thead>
+                                    <tr>
+                                        <th>Loại đề nghị</th>
+                                        <th>Nhóm nghiệp vụ</th>
+                                        <th>Tuyến phê duyệt</th>
+                                        <th>Thực hiện sau duyệt</th>
+                                        <th>Trạng thái</th>
+                                        <th class="is-num">Hồ sơ</th>
+                                        <th class="is-right">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="filteredTypes" t-as="t" t-key="t.id">
+                                        <td>
+                                            <div class="tp_req_type_cell">
+                                                <span class="tp_req_type_icon_sm" t-attf-style="background: #{t.color}18; color: #{t.color}">
+                                                    <i class="oi" t-att-data-icon="t.icon || 'assignment'" aria-hidden="true"/>
+                                                </span>
+                                                <div>
+                                                    <div class="tp_req_cell_title">
+                                                        <t t-esc="t.name"/>
+                                                        <span class="tp_req_code_sub">· <t t-esc="t.code"/> · v<t t-esc="t.config_version"/></span>
+                                                    </div>
+                                                    <div class="tp_req_cell_sub" t-if="t.description"><t t-esc="t.description"/></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><t t-esc="t.handler_label"/></td>
+                                        <td>
+                                            <div t-if="t.handler_kind === 'attendance_correction'" class="tp_req_muted">
+                                                Theo quy tắc chấm công (Admin gốc / ủy quyền)
+                                            </div>
+                                            <div t-elif="t.steps.length">
+                                                <div t-foreach="t.steps" t-as="s" t-key="s.id" class="tp_req_step_mini">
+                                                    <strong>B<t t-esc="s_index + 1"/>:</strong> <t t-esc="s.name"/>
+                                                </div>
+                                            </div>
+                                            <span class="tp_req_warn_txt" t-else="">Chưa có bước duyệt</span>
+                                        </td>
+                                        <td>
+                                            <span t-if="!t.requires_execution" class="tp_req_muted">Không cần</span>
+                                            <span t-elif="t.executor_mode === 'admin_group'">Nhóm Quản trị (Admin)</span>
+                                            <span t-elif="t.executor_mode === 'specific_users'">
+                                                <t t-esc="userNamesFromIds(t.executor_user_ids) || 'Chưa chọn người'"/>
+                                            </span>
+                                            <span t-elif="t.executor_mode === 'department'">Theo phòng ban</span>
+                                            <span t-else="" class="tp_req_warn_txt">Chưa cấu hình</span>
+                                        </td>
+                                        <td>
+                                            <span class="tp_req_badge is-withdrawn" t-if="!t.active">Ngừng dùng</span>
+                                            <span class="tp_req_badge is-approved" t-elif="t.is_config_ready">Sẵn sàng</span>
+                                            <span class="tp_req_badge is-returned" t-else="" t-att-title="t.warnings.join('; ')">
+                                                Thiếu cấu hình
+                                            </span>
+                                        </td>
+                                        <td class="is-num"><t t-esc="t.request_count"/></td>
+                                        <td class="is-right">
+                                            <div class="tp_req_row_actions">
+                                                <button type="button" class="tp_req_btn tp_req_btn_secondary tp_req_btn_sm"
+                                                        t-on-click="() => this.openEditType(t)">
+                                                    Cấu hình
+                                                </button>
+                                                <button type="button" class="tp_req_btn tp_req_btn_ghost tp_req_btn_sm"
+                                                        t-on-click="() => this.toggleActive(t)">
+                                                    <t t-esc="t.active ? 'Ngừng dùng' : 'Kích hoạt'"/>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr t-if="!filteredTypes.length">
+                                        <td colspan="7" class="tp_req_empty_cell">Không có loại đề nghị nào khớp bộ lọc.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- TAB 2: ALL COMPANY REQUESTS (REUSES TpRequestList) -->
+                <t t-else="">
+                    <TpRequestList mode="'admin_all'" embedded="true"/>
+                </t>
+            </t>
+
+            <!-- TYPE CONFIGURATION MODAL -->
+            <div class="tp_req_modal_backdrop" t-if="state.showEditor and state.form">
+                <div class="tp_req_modal is-wide" role="dialog" aria-modal="true">
+                    <div class="tp_req_modal_head">
+                        <div>
+                            <h2><t t-esc="state.form.id ? 'Cấu hình loại đề nghị' : 'Thêm loại đề nghị mới'"/></h2>
+                            <p class="tp_req_muted">
+                                Thay đổi cấu hình chỉ áp dụng cho hồ sơ mới; hồ sơ đã gửi giữ nguyên phiên bản tuyến duyệt tại thời điểm gửi.
+                            </p>
+                        </div>
+                        <button type="button" class="tp_req_icon_btn" t-on-click="closeEditor" title="Đóng">
+                            <i class="oi" data-icon="close" aria-hidden="true"/>
+                        </button>
+                    </div>
+
+                    <div class="tp_req_modal_body">
+                        <InlineErrors errors="state.fieldErrors" server="state.serverError" attempt="state.editAttempt"/>
+
+                        <div class="tp_req_section_title">1. Thông tin cơ bản &amp; giao diện</div>
+                        <div class="tp_req_form_grid">
+                            <div class="tp_req_field">
+                                <label class="tp_req_label">Mã loại đề nghị <span class="tp_req_star">*</span></label>
+                                <input id="adm_type_code" type="text" class="tp_req_input" placeholder="VD: INTERNAL_OFFICE"
+                                       t-att-value="state.form.code"
+                                       t-on-input="(ev) => this.onFormInput('code', ev)"/>
+                            </div>
+                            <div class="tp_req_field">
+                                <label class="tp_req_label">Tên loại đề nghị <span class="tp_req_star">*</span></label>
+                                <input id="adm_type_name" type="text" class="tp_req_input" placeholder="VD: Đề nghị văn phòng phẩm"
+                                       t-att-value="state.form.name"
+                                       t-on-input="(ev) => this.onFormInput('name', ev)"/>
+                            </div>
+                            <div class="tp_req_field">
+                                <label class="tp_req_label">Nhóm nghiệp vụ tích hợp</label>
+                                <select class="tp_req_select" t-att-value="state.form.handler_kind"
+                                        t-on-change="(ev) => this.onFormInput('handler_kind', ev)">
+                                    <t t-foreach="state.data.handler_kinds" t-as="hk" t-key="hk.key">
+                                        <option t-att-value="hk.key"><t t-esc="hk.label"/></option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="tp_req_field">
+                                <label class="tp_req_label">Thời hạn mặc định (giờ làm việc)</label>
+                                <input type="number" min="1" class="tp_req_input"
+                                       t-att-value="state.form.sla_hours"
+                                       t-on-input="(ev) => this.onFormInput('sla_hours', ev)"/>
+                            </div>
+                            <div class="tp_req_field">
+                                <label class="tp_req_label">Biểu tượng</label>
+                                <div class="tp_req_icon_picker">
+                                    <button t-foreach="ICON_CHOICES" t-as="ic" t-key="ic.key" type="button"
+                                            t-attf-class="tp_req_icon_pick #{state.form.icon === ic.key ? 'is-selected' : ''}"
+                                            t-on-click="() => { state.form.icon = ic.key; }" t-att-title="ic.label">
+                                        <i class="oi" t-att-data-icon="ic.key" aria-hidden="true"/>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="tp_req_field">
+                                <label class="tp_req_label">Màu nhận diện</label>
+                                <div class="tp_req_color_picker">
+                                    <button t-foreach="COLOR_CHOICES" t-as="col" t-key="col" type="button"
+                                            t-attf-class="tp_req_color_dot #{state.form.color === col ? 'is-selected' : ''}"
+                                            t-attf-style="background: #{col}"
+                                            t-on-click="() => { state.form.color = col; }"/>
+                                </div>
+                            </div>
+                            <div class="tp_req_field is-full">
+                                <label class="tp_req_label">Mô tả mục đích</label>
+                                <input type="text" class="tp_req_input" t-att-value="state.form.description"
+                                       t-on-input="(ev) => this.onFormInput('description', ev)"/>
+                            </div>
+                            <div class="tp_req_field is-full">
+                                <label class="tp_req_label">Hướng dẫn điền cho nhân viên</label>
+                                <textarea rows="2" class="tp_req_textarea" t-att-value="state.form.guidance"
+                                          t-on-input="(ev) => this.onFormInput('guidance', ev)"/>
+                            </div>
+                        </div>
+
+                        <div class="tp_req_section_title">2. Phạm vi người gửi &amp; quy tắc biểu mẫu</div>
+                        <div class="tp_req_form_grid">
+                            <div class="tp_req_field">
+                                <label class="tp_req_label">Người được phép gửi</label>
+                                <select class="tp_req_select" t-att-value="state.form.submitter_scope"
+                                        t-on-change="(ev) => this.onFormInput('submitter_scope', ev)">
+                                    <t t-foreach="state.data.submitter_scopes" t-as="sc" t-key="sc.key">
+                                        <option t-att-value="sc.key"><t t-esc="sc.label"/></option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="tp_req_field">
+                                <label class="tp_req_label">Độ ưu tiên mặc định</label>
+                                <select class="tp_req_select" t-att-value="state.form.default_priority"
+                                        t-on-change="(ev) => this.onFormInput('default_priority', ev)">
+                                    <t t-foreach="state.data.priorities" t-as="pr" t-key="pr.key">
+                                        <option t-att-value="pr.key"><t t-esc="pr.label"/></option>
+                                    </t>
+                                </select>
+                            </div>
+
+                            <div class="tp_req_field is-full" t-if="state.form.submitter_scope === 'departments'">
+                                <label class="tp_req_label">Chọn phòng ban được phép gửi</label>
+                                <div class="tp_req_checklist is-cols">
+                                    <label t-foreach="state.data.departments" t-as="dep" t-key="dep.id" class="tp_req_check_item">
+                                        <input type="checkbox"
+                                               t-att-checked="state.form.allowed_department_ids.includes(dep.id)"
+                                               t-on-change="(ev) => this.toggleIdInList('allowed_department_ids', dep.id, ev)"/>
+                                        <span><t t-esc="dep.name"/></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="tp_req_field is-full" t-if="state.form.submitter_scope === 'specific_users'">
+                                <label class="tp_req_label">Chọn nhân sự được phép gửi</label>
+                                <div class="tp_req_checklist is-cols">
+                                    <label t-foreach="state.data.users" t-as="u" t-key="u.id" class="tp_req_check_item">
+                                        <input type="checkbox"
+                                               t-att-checked="state.form.allowed_user_ids.includes(u.id)"
+                                               t-on-change="(ev) => this.toggleIdInList('allowed_user_ids', u.id, ev)"/>
+                                        <span><t t-esc="u.name"/></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="tp_req_field is-full tp_req_toggles">
+                                <label class="tp_req_check_item">
+                                    <input type="checkbox" t-att-checked="state.form.require_reason" t-on-change="(ev) => this.onFormInput('require_reason', ev)"/>
+                                    <span>Bắt buộc nội dung / lý do</span>
+                                </label>
+                                <label class="tp_req_check_item">
+                                    <input type="checkbox" t-att-checked="state.form.require_attachment" t-on-change="(ev) => this.onFormInput('require_attachment', ev)"/>
+                                    <span>Bắt buộc tệp đính kèm</span>
+                                </label>
+                                <label class="tp_req_check_item">
+                                    <input type="checkbox" t-att-checked="state.form.require_needed_date" t-on-change="(ev) => this.onFormInput('require_needed_date', ev)"/>
+                                    <span>Bắt buộc ngày cần đáp ứng</span>
+                                </label>
+                                <label class="tp_req_check_item">
+                                    <input type="checkbox" t-att-checked="state.form.show_project_field" t-on-change="(ev) => this.onFormInput('show_project_field', ev)"/>
+                                    <span>Hiện trường Dự án</span>
+                                </label>
+                                <label class="tp_req_check_item">
+                                    <input type="checkbox" t-att-checked="state.form.allow_return" t-on-change="(ev) => this.onFormInput('allow_return', ev)"/>
+                                    <span>Cho phép trả lại bổ sung</span>
+                                </label>
+                                <label class="tp_req_check_item">
+                                    <input type="checkbox" t-att-checked="state.form.allow_reject" t-on-change="(ev) => this.onFormInput('allow_reject', ev)"/>
+                                    <span>Cho phép từ chối</span>
+                                </label>
+                                <label class="tp_req_check_item">
+                                    <input type="checkbox" t-att-checked="state.form.allow_withdraw" t-on-change="(ev) => this.onFormInput('allow_withdraw', ev)"/>
+                                    <span>Cho phép người gửi rút hồ sơ</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="tp_req_section_title">
+                            <span>3. Tuyến phê duyệt tuần tự</span>
+                            <button type="button" class="tp_req_btn tp_req_btn_secondary tp_req_btn_sm"
+                                    t-if="state.form.handler_kind !== 'attendance_correction'"
+                                    t-on-click="addStep">
+                                <i class="oi" data-icon="add" aria-hidden="true"/> Thêm bước duyệt
+                            </button>
+                        </div>
+
+                        <div class="tp_req_alert is-info" t-if="state.form.handler_kind === 'attendance_correction'">
+                            <i class="oi" data-icon="verified_user" aria-hidden="true"/>
+                            <span>Loại Điều chỉnh công dùng đúng tuyến phê duyệt backend hiện hành của Chấm công (Admin gốc / Admin ủy quyền hợp lệ, chặn tự duyệt, tôn trọng chốt kỳ).</span>
+                        </div>
+
+                        <div class="tp_req_steps_builder" t-else="">
+                            <div class="tp_req_muted tp_req_note_small" t-if="!state.form.steps.length">
+                                Chưa có bước duyệt nào. Nhân viên vẫn có thể lưu nháp nhưng hệ thống sẽ chặn gửi cho đến khi cấu hình đủ người duyệt.
+                            </div>
+                            <div t-foreach="state.form.steps" t-as="st" t-key="st_index" class="tp_req_step_card">
+                                <div class="tp_req_step_card_head">
+                                    <strong>Bước <t t-esc="st_index + 1"/></strong>
+                                    <span class="tp_req_muted">Cơ chế: Một người duyệt là đủ</span>
+                                    <div class="tp_req_step_card_tools">
+                                        <button type="button" class="tp_req_icon_btn" t-on-click="() => this.moveStep(st_index, -1)" t-att-disabled="st_index === 0" title="Lên">
+                                            <i class="oi" data-icon="arrow_upward" aria-hidden="true"/>
+                                        </button>
+                                        <button type="button" class="tp_req_icon_btn" t-on-click="() => this.moveStep(st_index, 1)" t-att-disabled="st_index === state.form.steps.length - 1" title="Xuống">
+                                            <i class="oi" data-icon="arrow_downward" aria-hidden="true"/>
+                                        </button>
+                                        <button type="button" class="tp_req_icon_btn is-danger" t-on-click="() => this.removeStep(st_index)" title="Xóa bước">
+                                            <i class="oi" data-icon="delete" aria-hidden="true"/>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="tp_req_form_grid">
+                                    <div class="tp_req_field">
+                                        <label class="tp_req_label">Tên bước duyệt <span class="tp_req_star">*</span></label>
+                                        <input t-attf-id="adm_step_name_#{st_index}" type="text" class="tp_req_input"
+                                               t-att-value="st.name"
+                                               t-on-input="(ev) => this.onStepInput(st_index, 'name', ev)"/>
+                                    </div>
+                                    <div class="tp_req_field">
+                                        <label class="tp_req_label">Quy tắc xác định người duyệt</label>
+                                        <select class="tp_req_select" t-att-value="st.approver_rule"
+                                                t-on-change="(ev) => this.onStepInput(st_index, 'approver_rule', ev)">
+                                            <t t-foreach="state.data.approver_rules" t-as="ar" t-key="ar.key">
+                                                <option t-att-value="ar.key"><t t-esc="ar.label"/></option>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="tp_req_field">
+                                        <label class="tp_req_label">Hạn bước (giờ làm việc)</label>
+                                        <input type="number" min="1" class="tp_req_input"
+                                               t-att-value="st.sla_hours"
+                                               t-on-input="(ev) => this.onStepInput(st_index, 'sla_hours', ev)"/>
+                                    </div>
+                                    <div class="tp_req_field tp_req_toggles">
+                                        <label class="tp_req_check_item">
+                                            <input type="checkbox" t-att-checked="st.can_return" t-on-change="(ev) => this.onStepInput(st_index, 'can_return', ev)"/>
+                                            <span>Cho trả lại</span>
+                                        </label>
+                                        <label class="tp_req_check_item">
+                                            <input type="checkbox" t-att-checked="st.can_reject" t-on-change="(ev) => this.onStepInput(st_index, 'can_reject', ev)"/>
+                                            <span>Cho từ chối</span>
+                                        </label>
+                                    </div>
+                                    <div class="tp_req_field is-full" t-if="st.approver_rule === 'specific_users'">
+                                        <label class="tp_req_label">Chọn người duyệt cụ thể</label>
+                                        <div class="tp_req_checklist is-cols">
+                                            <label t-foreach="state.data.users" t-as="u" t-key="u.id" class="tp_req_check_item">
+                                                <input type="checkbox"
+                                                       t-att-checked="st.approver_user_ids.includes(u.id)"
+                                                       t-on-change="(ev) => this.toggleStepUser(st_index, u.id, ev)"/>
+                                                <span><t t-esc="u.name"/></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tp_req_section_title">4. Thực hiện sau khi phê duyệt</div>
+                        <div class="tp_req_form_grid">
+                            <div class="tp_req_field is-full">
+                                <label class="tp_req_check_item">
+                                    <input type="checkbox" t-att-checked="state.form.requires_execution"
+                                           t-on-change="(ev) => this.onFormInput('requires_execution', ev)"/>
+                                    <span>Có bước thực hiện công việc sau khi phê duyệt hoàn tất</span>
+                                </label>
+                            </div>
+                            <t t-if="state.form.requires_execution">
+                                <div class="tp_req_field">
+                                    <label class="tp_req_label">Cách phân công người thực hiện</label>
+                                    <select class="tp_req_select" t-att-value="state.form.executor_mode"
+                                            t-on-change="(ev) => this.onFormInput('executor_mode', ev)">
+                                        <t t-foreach="state.data.executor_modes" t-as="em" t-key="em.key">
+                                            <option t-att-value="em.key"><t t-esc="em.label"/></option>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div class="tp_req_field" t-if="state.form.executor_mode === 'department'">
+                                    <label class="tp_req_label">Phòng ban thực hiện</label>
+                                    <select class="tp_req_select" t-att-value="state.form.executor_department_id"
+                                            t-on-change="(ev) => this.onFormInput('executor_department_id', ev)">
+                                        <option value="">-- Chọn phòng ban --</option>
+                                        <t t-foreach="state.data.departments" t-as="dep" t-key="dep.id">
+                                            <option t-att-value="dep.id"><t t-esc="dep.name"/></option>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div class="tp_req_field is-full" t-if="state.form.executor_mode === 'specific_users'">
+                                    <label class="tp_req_label">Chọn người thực hiện</label>
+                                    <div class="tp_req_checklist is-cols">
+                                        <label t-foreach="state.data.users" t-as="u" t-key="u.id" class="tp_req_check_item">
+                                            <input type="checkbox"
+                                                   t-att-checked="state.form.executor_user_ids.includes(u.id)"
+                                                   t-on-change="(ev) => this.toggleIdInList('executor_user_ids', u.id, ev)"/>
+                                            <span><t t-esc="u.name"/></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <div class="tp_req_modal_foot">
+                        <button type="button" class="tp_req_btn tp_req_btn_ghost" t-on-click="closeEditor" t-att-disabled="state.saving">Hủy</button>
+                        <button type="button" class="tp_req_btn tp_req_btn_primary" t-on-click="saveType" t-att-disabled="state.saving">
+                            <i class="oi" data-icon="save" aria-hidden="true"/>
+                            <span><t t-esc="state.saving ? 'Đang lưu...' : 'Lưu cấu hình'"/></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

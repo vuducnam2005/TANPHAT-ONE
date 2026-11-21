@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-20T12:22:32.957485+00:00",
-  "last_change_id": "CHG-20261120-017",
-  "code_digest": "d7a09075744e27dbdab5e3985f676dee649b0afaea2a7e973954ccedf293e812",
-  "code_file_count": 768,
+  "updated_at": "2026-11-21T04:07:54.867129+00:00",
+  "last_change_id": "CHG-20261121-001",
+  "code_digest": "d8d22eaa998aa4bf4df8c48b223471c8a7cba0925c6e7422b60bfc5c78d2afc5",
+  "code_file_count": 804,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "a3cdb91c15c6fc365dff4eb5f848c4b0421d13d3f01e96a3c6d7bf3eed9da8c1",
-    "docs/CHANGELOG.md": "1f2d218961a3e0e7c9554403a9f8b0c0ad3fbe6a72a4fe2e5a5ff7195c2291f4",
+    "docs/PROJECT_STATUS.md": "4cd5718f80613b34250cfea297320a6ccdc138a226d5ffbdbf6f6ebba2361516",
+    "docs/CHANGELOG.md": "b4af0475ceea623983ec8e6d622483860a00beef613b2befbf01e0820082d63f",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,9 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Local -u tp_hr_bank,tp_admin_delegation --test-tags /tp_hr_bank,/tp_admin_delegation: 0 failed, 0 error of 31 tests (Playwright desktop+mobile own-profile edit and bank card)",
-    "PC deploy-hr-bank002.ps1 commit 538924a8: upgrade exit 0, 0 ERROR, 1 waiting account trusted, 0 unexpected snapshot diffs, backup C:\\TANPHAT-backups\\hr-bank002\\bank002-20261120T191725",
-    "PC read-only verify: 5/5 granted admins own-profile notice and personal fields editable, name locked; web.assets_web JS builds with new employee_profile.js; public health 200",
-    "Not run: /tp_hr_workspace full suite (known pre-existing failures); logged-in browser check on PC (no test accounts on server)"
+    "py_compile 12/12 + XML 13/13 + JS 10/10 + Odoo tests /tp_request 12/12 PASS, /tp_branding 33/33 PASS, /tp_admin_delegation 37/37 PASS on tp_tanphat_test"
   ]
 }

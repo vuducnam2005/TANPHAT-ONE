@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_request.List">
+        <div class="tp_req_page" t-att-class="{'is-embedded': this.isEmbedded}" t-ref="this.scrollRef">
+            <header t-if="!this.isEmbedded" class="tp_req_header">
+                <div>
+                    <h1 class="tp_req_title" t-out="this.meta.title"/>
+                    <p class="tp_req_subtitle" t-out="this.meta.subtitle"/>
+                </div>
+                <div class="tp_req_header_actions">
+                    <button type="button" class="tp_req_btn_outline" t-on-click="this.exportExcel">
+                        <i class="oi" data-icon="download" aria-hidden="true"/>
+                        <span>Xuất Excel</span>
+                    </button>
+                    <button type="button" class="tp_req_btn_primary" t-on-click="() => (this.state.showCreate = true)">
+                        <i class="oi" data-icon="add" aria-hidden="true"/>
+                        <span>Tạo đề nghị</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Status Tabs -->
+            <div class="tp_req_tabs" role="tablist">
+                <button t-foreach="this.meta.tabs" t-as="tb" t-key="tb.key"
+                        type="button" role="tab" class="tp_req_tab"
+                        t-att-class="{'is-active': this.state.tab === tb.key}"
+                        t-att-aria-selected="this.state.tab === tb.key ? 'true' : 'false'"
+                        t-on-click="() => this.selectTab(tb.key)">
+                    <span t-out="tb.label"/>
+                    <span class="tp_req_tab_cnt" t-out="this.state.data?.tab_counts?.[tb.key] ?? 0"/>
+                </button>
+            </div>
+
+            <!-- Filter Bar (TP_TABLE_FILTER_STANDARD DEC-044) -->
+            <section class="tp_req_filter_card" aria-label="Tìm kiếm và bộ lọc">
+                <div class="tp_req_filter_row">
+                    <div class="tp_req_search_box">
+                        <i class="oi" data-icon="search" aria-hidden="true"/>
+                        <input type="text" class="tp_req_input"
+                               placeholder="Tìm theo mã, tiêu đề hoặc người gửi..."
+                               aria-label="Tìm kiếm đề nghị"
+                               t-att-value="this.state.draft.search"
+                               t-on-input="(ev) => this.onDraftInput('search', ev)"
+                               t-on-keydown="this.onSearchKeydown"/>
+                    </div>
+                    <select class="tp_req_input" aria-label="Lọc loại đề nghị"
+                            t-att-value="this.state.draft.type_id"
+                            t-on-change="(ev) => this.onDraftInput('type_id', ev)">
+                        <option value="">Tất cả loại đề nghị</option>
+                        <option t-foreach="this.state.data?.options?.types || []" t-as="opt" t-key="opt.id"
+                                t-att-value="opt.id" t-out="opt.name"/>
+                    </select>
+                    <select t-if="this.state.mode !== 'mine'" class="tp_req_input" aria-label="Lọc phòng ban"
+                            t-att-value="this.state.draft.department_id"
+                            t-on-change="(ev) => this.onDraftInput('department_id', ev)">
+                        <option value="">Tất cả phòng ban</option>
+                        <option t-foreach="this.state.data?.options?.departments || []" t-as="d" t-key="d.id"
+                                t-att-value="d.id" t-out="d.name"/>
+                    </select>
+                    <select t-if="this.state.mode !== 'mine'" class="tp_req_input" aria-label="Lọc người gửi"
+                            t-att-value="this.state.draft.requester_user_id"
+                            t-on-change="(ev) => this.onDraftInput('requester_user_id', ev)">
+                        <option value="">Tất cả người gửi</option>
+                        <option t-foreach="this.state.data?.options?.requesters || []" t-as="u" t-key="u.id"
+                                t-att-value="u.id" t-out="u.name"/>
+                    </select>
+                    <select class="tp_req_input" aria-label="Lọc ưu tiên"
+                            t-att-value="this.state.draft.priority"
+                            t-on-change="(ev) => this.onDraftInput('priority', ev)">
+                        <option value="">Mọi độ ưu tiên</option>
+                        <option t-foreach="this.state.data?.options?.priorities || []" t-as="p" t-key="p.key"
+                                t-att-value="p.key" t-out="p.label"/>
+                    </select>
+                </div>
+
+                <div class="tp_req_filter_row_sub">
+                    <div class="tp_req_date_pair">
+                        <label>Từ ngày</label>
+                        <input type="date" class="tp_req_input tp_req_input_sm"
+                               t-att-value="this.state.draft.date_from"
+                               t-on-change="(ev) => this.onDraftInput('date_from', ev)"/>
+                        <label>Đến ngày</label>
+                        <input type="date" class="tp_req_input tp_req_input_sm"
+                               t-att-value="this.state.draft.date_to"
+                               t-on-change="(ev) => this.onDraftInput('date_to', ev)"/>
+                    </div>
+                    <label class="tp_req_check_inline">
+                        <input type="checkbox" t-att-checked="this.state.draft.overdue_only"
+                               t-on-change="(ev) => this.onDraftInput('overdue_only', ev)"/>
+                        <span>Chỉ quá hạn</span>
+                    </label>
+                    <div class="tp_req_filter_btns">
+                        <button type="button" class="tp_req_btn_primary tp_req_btn_sm" t-on-click="this.applyFilters">Áp dụng</button>
+                        <button type="button" class="tp_req_btn_outline tp_req_btn_sm" t-on-click="this.clearFilters">Xóa bộ lọc</button>
+                    </div>
+                </div>
+
+                <div t-if="this.appliedChips.length" class="tp_req_chips_bar">
+                    <span class="tp_req_meta_label">Đang lọc:</span>
+                    <button t-foreach="this.appliedChips" t-as="ch" t-key="ch.key"
+                            type="button" class="tp_req_chip" t-on-click="() => this.removeChip(ch.key)">
+                        <span t-out="ch.label"/> ×
+                    </button>
+                </div>
+            </section>
+
+            <div t-if="this.state.error" class="tp_req_error_banner" role="alert">
+                <span t-out="this.state.error"/>
+                <button type="button" class="tp_req_btn_outline" t-on-click="() => this.load()">Thử lại</button>
+            </div>
+
+            <!-- Table Card -->
+            <section class="tp_req_card">
+                <div class="tp_req_table_meta">
+                    <span t-out="'Tổng cộng: ' + (this.state.data?.total ?? 0) + ' hồ sơ'"/>
+                    <div class="tp_req_pager_controls">
+                        <label>Hiển thị</label>
+                        <select class="tp_req_input tp_req_input_xs" aria-label="Số dòng mỗi trang"
+                                t-att-value="this.state.pageSize" t-on-change="this.onPageSizeChange">
+                            <option value="10" t-att-selected="this.state.pageSize === 10">10</option>
+                            <option value="20" t-att-selected="this.state.pageSize === 20">20</option>
+                            <option value="50" t-att-selected="this.state.pageSize === 50">50</option>
+                        </select>
+                        <button type="button" class="tp_req_btn_xs"
+                                t-att-disabled="this.state.page &lt;= 1"
+                                t-on-click="() => this.setPage(this.state.page - 1)">Trước</button>
+                        <span class="tp_req_page_info"
+                              t-out="'Trang ' + this.state.page + ' / ' + (this.state.data?.max_page || 1)"/>
+                        <button type="button" class="tp_req_btn_xs"
+                                t-att-disabled="this.state.page &gt;= (this.state.data?.max_page || 1)"
+                                t-on-click="() => this.setPage(this.state.page + 1)">Sau</button>
+                    </div>
+                </div>
+
+                <div t-if="this.state.loading" class="tp_req_table_skeleton">
+                    <div class="tp_req_skel_row"/><div class="tp_req_skel_row"/><div class="tp_req_skel_row"/><div class="tp_req_skel_row"/>
+                </div>
+                <div t-elif="(this.state.data?.rows || []).length" class="tp_req_table_scroll">
+                    <table class="tp_req_table">
+                        <thead>
+                            <tr>
+                                <th>Mã / Tiêu đề</th>
+                                <th>Loại đề nghị</th>
+                                <th>Người gửi / Phòng ban</th>
+                                <th>Ngày gửi</th>
+                                <th>Bước duyệt</th>
+                                <th>Hạn xử lý</th>
+                                <th>Ưu tiên</th>
+                                <th>Trạng thái</th>
+                                <th class="text-end">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="this.state.data.rows" t-as="row" t-key="row.id"
+                                class="tp_req_row_click" t-on-click="() => this.openDetail(row)">
+                                <td>
+                                    <div class="tp_req_cell_main">
+                                        <span class="tp_req_code" t-out="row.code"/>
+                                        <span class="tp_req_cell_title" t-out="row.title"/>
+                                    </div>
+                                </td>
+                                <td><span class="tp_req_type_tag" t-out="row.type_name"/></td>
+                                <td>
+                                    <div class="tp_req_cell_person" t-out="row.requester_name"/>
+                                    <div class="tp_req_cell_sub" t-out="row.department_name || '—'"/>
+                                </td>
+                                <td t-out="row.submitted_at || row.created_at || '—'"/>
+                                <td>
+                                    <div t-out="row.current_step_name || (row.approval_state === 'approved' and row.requires_execution ? row.execution_state_label : '—')"/>
+                                    <div t-if="row.current_approvers.length" class="tp_req_cell_sub"
+                                         t-out="row.current_approvers.join(', ')"/>
+                                </td>
+                                <td>
+                                    <span t-out="row.due_at || '—'"/>
+                                    <span t-if="row.is_overdue" class="tp_req_badge is-overdue">Quá hạn</span>
+                                </td>
+                                <td>
+                                    <span class="tp_req_prio" t-att-class="this.PRIORITY_BADGE[row.priority]?.cls"
+                                          t-out="row.priority_label"/>
+                                </td>
+                                <td>
+                                    <div class="tp_req_status_stack">
+                                        <span class="tp_req_badge" t-att-class="this.APPROVAL_BADGE[row.approval_state]?.cls"
+                                              t-out="row.approval_state_label"/>
+                                        <span t-if="row.approval_state === 'approved' and row.requires_execution"
+                                              class="tp_req_badge" t-att-class="this.EXEC_BADGE[row.execution_state]?.cls"
+                                              t-out="row.execution_state_label"/>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="tp_req_btn_sm" t-on-click.stop="() => this.openDetail(row)">
+                                        Xem
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div t-else="" class="tp_req_empty_state">
+                    <i class="oi tp_req_empty_ico" data-icon="inbox" aria-hidden="true"/>
+                    <h4>Không có hồ sơ phù hợp</h4>
+                    <p t-if="this.appliedChips.length">Thử xóa bớt tiêu chí lọc hoặc đổi khoảng thời gian để xem thêm hồ sơ.</p>
+                    <p t-else="">Chưa có đề nghị nào trong danh sách này.</p>
+                    <button t-if="this.appliedChips.length" type="button" class="tp_req_btn_outline" t-on-click="this.clearFilters">
+                        Xóa bộ lọc
+                    </button>
+                </div>
+            </section>
+
+            <TpRequestCreateModal t-if="this.state.showCreate"
+                                  onClose="() => (this.state.showCreate = false)"
+                                  onCreated="(res) => this.onCreated(res)"/>
+        </div>
+    </t>
+</templates>

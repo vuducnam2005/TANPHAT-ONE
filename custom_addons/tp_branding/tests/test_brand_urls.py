@@ -100,8 +100,8 @@ class TestBrandUrls(BaseCase):
             self.assertNotIn(url, seen_urls, f"Duplicate canonical URL: {url}")
             seen_urls.add(url)
 
-            # Check module prefix rule: khkd, nhan-su, thiet-bi, bao-cao, quan-tri, trang-chu
-            valid_prefixes = ('/app/trang-chu', '/app/nhan-su', '/app/khkd', '/app/thiet-bi', '/app/bao-cao', '/app/quan-tri')
+            # Check module prefix rule: khkd, nhan-su, thiet-bi, de-nghi, bao-cao, quan-tri, trang-chu
+            valid_prefixes = ('/app/trang-chu', '/app/nhan-su', '/app/khkd', '/app/thiet-bi', '/app/de-nghi', '/app/bao-cao', '/app/quan-tri')
             self.assertTrue(
                 url.startswith(valid_prefixes),
                 f"URL {url} must start with one of {valid_prefixes}"

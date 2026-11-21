@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Client Actions for the 6 sidebar screens + detail page -->
+    <record id="action_overview" model="ir.actions.client">
+        <field name="name">Tổng quan Đề nghị &amp; Phê duyệt</field>
+        <field name="tag">tp_request.dashboard</field>
+        <field name="path">de-nghi-tong-quan</field>
+    </record>
+
+    <record id="action_mine" model="ir.actions.client">
+        <field name="name">Đề nghị của tôi</field>
+        <field name="tag">tp_request.list</field>
+        <field name="path">de-nghi-cua-toi</field>
+        <field name="params" eval="{'mode': 'mine'}"/>
+    </record>
+
+    <record id="action_to_approve" model="ir.actions.client">
+        <field name="name">Cần tôi duyệt</field>
+        <field name="tag">tp_request.list</field>
+        <field name="path">de-nghi-can-duyet</field>
+        <field name="params" eval="{'mode': 'to_approve'}"/>
+    </record>
+
+    <record id="action_to_execute" model="ir.actions.client">
+        <field name="name">Cần thực hiện</field>
+        <field name="tag">tp_request.list</field>
+        <field name="path">de-nghi-can-thuc-hien</field>
+        <field name="params" eval="{'mode': 'to_execute'}"/>
+    </record>
+
+    <record id="action_watching" model="ir.actions.client">
+        <field name="name">Theo dõi</field>
+        <field name="tag">tp_request.list</field>
+        <field name="path">de-nghi-theo-doi</field>
+        <field name="params" eval="{'mode': 'watching'}"/>
+    </record>
+
+    <record id="action_admin" model="ir.actions.client">
+        <field name="name">Quản trị Đề nghị &amp; Phê duyệt</field>
+        <field name="tag">tp_request.admin</field>
+        <field name="path">de-nghi-quan-tri</field>
+    </record>
+
+    <record id="action_detail" model="ir.actions.client">
+        <field name="name">Chi tiết hồ sơ đề nghị</field>
+        <field name="tag">tp_request.detail</field>
+        <field name="path">de-nghi-ho-so</field>
+    </record>
+
+    <!-- Root app menu + exactly 6 clean sidebar items -->
+    <menuitem id="menu_root"
+              name="Đề nghị &amp; Phê duyệt"
+              sequence="35"
+              action="action_overview"
+              groups="base.group_user"/>
+
+    <menuitem id="menu_overview"
+              name="Tổng quan"
+              parent="menu_root"
+              action="action_overview"
+              sequence="10"
+              groups="base.group_user"/>
+
+    <menuitem id="menu_mine"
+              name="Đề nghị của tôi"
+              parent="menu_root"
+              action="action_mine"
+              sequence="20"
+              groups="base.group_user"/>
+
+    <menuitem id="menu_to_approve"
+              name="Cần tôi duyệt"
+              parent="menu_root"
+              action="action_to_approve"
+              sequence="30"
+              groups="base.group_user"/>
+
+    <menuitem id="menu_to_execute"
+              name="Cần thực hiện"
+              parent="menu_root"
+              action="action_to_execute"
+              sequence="40"
+              groups="base.group_user"/>
+
+    <menuitem id="menu_watching"
+              name="Theo dõi"
+              parent="menu_root"
+              action="action_watching"
+              sequence="50"
+              groups="base.group_user"/>
+
+    <menuitem id="menu_admin"
+              name="Quản trị"
+              parent="menu_root"
+              action="action_admin"
+              sequence="60"
+              groups="tp_request.group_request_manager,tp_admin_delegation.group_original_admin,tp_admin_delegation.group_full_admin,base.group_system"/>
+</odoo>

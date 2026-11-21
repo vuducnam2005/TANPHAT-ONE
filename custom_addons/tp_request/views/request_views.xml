@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Native fallback views for tp.request (admin inspection / deep search) -->
+    <record id="view_tp_request_list" model="ir.ui.view">
+        <field name="name">tp.request.list</field>
+        <field name="model">tp.request</field>
+        <field name="arch" type="xml">
+            <list string="Đề nghị &amp; Phê duyệt" create="0" edit="0" delete="0">
+                <field name="code"/>
+                <field name="title"/>
+                <field name="type_id"/>
+                <field name="requester_name_snap" string="Người gửi"/>
+                <field name="department_name_snap" string="Phòng ban"/>
+                <field name="submitted_at"/>
+                <field name="current_step_name"/>
+                <field name="due_at"/>
+                <field name="priority" widget="badge"/>
+                <field name="approval_state" widget="badge"/>
+                <field name="execution_state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tp_request_form" model="ir.ui.view">
+        <field name="name">tp.request.form</field>
+        <field name="model">tp.request</field>
+        <field name="arch" type="xml">
+            <form string="Hồ sơ đề nghị" create="0" delete="0">
+                <header>
+                    <field name="approval_state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="code"/> — <field name="title"/></h1>
+                    </div>
+                    <group>
+                        <group string="Thông tin chung">
+                            <field name="type_id" readonly="1"/>
+                            <field name="requester_user_id"/>
+                            <field name="requester_code_snap"/>
+                            <field name="department_id"/>
+                            <field name="priority"/>
+                            <field name="needed_date"/>
+                        </group>
+                        <group string="Trạng thái">
+                            <field name="submitted_at"/>
+                            <field name="current_step_name"/>
+                            <field name="due_at"/>
+                            <field name="execution_state"/>
+                            <field name="assigned_executor_id"/>
+                            <field name="version"/>
+                        </group>
+                    </group>
+                    <group string="Nội dung / lý do">
+                        <field name="description" nolabel="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Tuyến duyệt">
+                            <field name="step_ids" readonly="1">
+                                <list>
+                                    <field name="request_version"/>
+                                    <field name="sequence"/>
+                                    <field name="name"/>
+                                    <field name="state"/>
+                                    <field name="decided_by_id"/>
+                                    <field name="decided_at"/>
+                                    <field name="decision_note"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Lịch sử hệ thống">
+                            <field name="history_ids" readonly="1">
+                                <list>
+                                    <field name="created_at"/>
+                                    <field name="actor_name"/>
+                                    <field name="action"/>
+                                    <field name="state_before"/>
+                                    <field name="state_after"/>
+                                    <field name="step_name"/>
+                                    <field name="note"/>
+                                    <field name="result_ref"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tp_request_search" model="ir.ui.view">
+        <field name="name">tp.request.search</field>
+        <field name="model">tp.request</field>
+        <field name="arch" type="xml">
+            <search string="Tìm hồ sơ đề nghị">
+                <field name="code"/>
+                <field name="title"/>
+                <field name="requester_name_snap" string="Người gửi"/>
+                <field name="type_id"/>
+                <field name="department_id"/>
+                <filter name="f_pending" string="Chờ duyệt" domain="[('approval_state', '=', 'pending')]"/>
+                <filter name="f_returned" string="Trả lại" domain="[('approval_state', '=', 'returned')]"/>
+                <filter name="f_approved" string="Đã duyệt" domain="[('approval_state', '=', 'approved')]"/>
+                <filter name="f_overdue" string="Quá hạn" domain="[('is_overdue', '=', True)]"/>
+                <group>
+                    <filter name="g_type" string="Loại đề nghị" context="{'group_by': 'type_id'}"/>
+                    <filter name="g_state" string="Trạng thái duyệt" context="{'group_by': 'approval_state'}"/>
+                    <filter name="g_dept" string="Phòng ban" context="{'group_by': 'department_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Native fallback views for tp.request.type -->
+    <record id="view_tp_request_type_list" model="ir.ui.view">
+        <field name="name">tp.request.type.list</field>
+        <field name="model">tp.request.type</field>
+        <field name="arch" type="xml">
+            <list string="Danh mục loại đề nghị" delete="0">
+                <field name="sequence" widget="handle"/>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="handler_kind"/>
+                <field name="sla_hours"/>
+                <field name="requires_execution"/>
+                <field name="config_version"/>
+                <field name="is_config_ready"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tp_request_type_search" model="ir.ui.view">
+        <field name="name">tp.request.type.search</field>
+        <field name="model">tp.request.type</field>
+        <field name="arch" type="xml">
+            <search string="Tìm loại đề nghị">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="handler_kind"/>
+                <filter name="f_active" string="Đang hoạt động" domain="[('active', '=', True)]"/>
+                <filter name="f_inactive" string="Ngừng sử dụng" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+</odoo>

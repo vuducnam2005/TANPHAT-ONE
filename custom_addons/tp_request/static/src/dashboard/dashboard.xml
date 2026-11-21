@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_request.Dashboard">
+        <div class="tp_req_page">
+            <!-- Header -->
+            <header class="tp_req_header">
+                <div>
+                    <h1 class="tp_req_title">Đề nghị &amp; Phê duyệt</h1>
+                    <p class="tp_req_subtitle">
+                        Gửi đề nghị, phê duyệt theo tuyến và theo dõi tiến độ thực hiện thống nhất trên TANPHAT ONE.
+                    </p>
+                </div>
+                <div class="tp_req_header_actions">
+                    <button type="button" class="tp_req_btn_primary tp_req_btn_lg" t-on-click="this.openCreate">
+                        <i class="oi" data-icon="add" aria-hidden="true"/>
+                        <span>Tạo đề nghị</span>
+                    </button>
+                </div>
+            </header>
+
+            <div t-if="this.state.error" class="tp_req_error_banner" role="alert">
+                <span t-out="this.state.error"/>
+                <button type="button" class="tp_req_btn_outline" t-on-click="() => this.load()">Thử lại</button>
+            </div>
+
+            <!-- KPI Cards (clickable, opening exact filtered lists) -->
+            <section class="tp_req_kpi_grid" aria-label="Tổng hợp nhanh theo vai trò">
+                <button type="button" class="tp_req_kpi_card is-blue"
+                        t-on-click="() => this.openFilteredList('to_approve')">
+                    <span class="tp_req_kpi_label">Cần tôi duyệt</span>
+                    <strong class="tp_req_kpi_val" t-out="this.counts.to_approve"/>
+                    <span class="tp_req_kpi_hint">Hồ sơ đang đến lượt bạn</span>
+                </button>
+                <button type="button" class="tp_req_kpi_card is-indigo"
+                        t-on-click="() => this.openFilteredList('mine', { tab: 'pending' })">
+                    <span class="tp_req_kpi_label">Đề nghị đang chờ của tôi</span>
+                    <strong class="tp_req_kpi_val" t-out="this.counts.mine_pending"/>
+                    <span class="tp_req_kpi_hint">Đang trong tuyến phê duyệt</span>
+                </button>
+                <button type="button" class="tp_req_kpi_card is-amber"
+                        t-on-click="() => this.openFilteredList('mine', { tab: 'returned' })">
+                    <span class="tp_req_kpi_label">Bị trả lại cần bổ sung</span>
+                    <strong class="tp_req_kpi_val" t-out="this.counts.mine_returned"/>
+                    <span class="tp_req_kpi_hint">Chỉnh sửa và gửi duyệt lại</span>
+                </button>
+                <button type="button" class="tp_req_kpi_card is-teal"
+                        t-on-click="() => this.openFilteredList('to_execute')">
+                    <span class="tp_req_kpi_label">Cần thực hiện</span>
+                    <strong class="tp_req_kpi_val" t-out="this.counts.to_execute"/>
+                    <span class="tp_req_kpi_hint">Đã duyệt, chờ triển khai</span>
+                </button>
+                <button type="button" class="tp_req_kpi_card is-red"
+                        t-on-click="() => this.openFilteredList('to_approve', { tab: 'overdue', overdue_only: true })">
+                    <span class="tp_req_kpi_label">Quá hạn</span>
+                    <strong class="tp_req_kpi_val" t-out="this.counts.overdue"/>
+                    <span class="tp_req_kpi_hint">Cần ưu tiên xử lý sớm</span>
+                </button>
+            </section>
+
+            <!-- Charts Section (placed prominently above the work queue, real data only) -->
+            <section class="tp_req_charts_bar">
+                <div class="tp_req_charts_filter">
+                    <span class="tp_req_meta_label">Phạm vi thống kê:</span>
+                    <select class="tp_req_input tp_req_input_sm" aria-label="Lọc theo loại đề nghị"
+                            t-att-value="this.state.filterTypeId"
+                            t-on-change="(ev) => this.onFilterChange('filterTypeId', ev)">
+                        <option value="">Tất cả loại đề nghị</option>
+                        <option t-foreach="this.state.data?.type_options || []" t-as="opt" t-key="opt.id"
+                                t-att-value="opt.id" t-out="opt.name"/>
+                    </select>
+                    <input type="date" class="tp_req_input tp_req_input_sm" aria-label="Từ ngày"
+                           t-att-value="this.state.dateFrom"
+                           t-on-change="(ev) => this.onFilterChange('dateFrom', ev)"/>
+                    <input type="date" class="tp_req_input tp_req_input_sm" aria-label="Đến ngày"
+                           t-att-value="this.state.dateTo"
+                           t-on-change="(ev) => this.onFilterChange('dateTo', ev)"/>
+                    <button t-if="this.state.filterTypeId || this.state.dateFrom || this.state.dateTo"
+                            type="button" class="tp_req_btn_link" t-on-click="this.clearDateFilter">Xóa lọc</button>
+                </div>
+
+                <div class="tp_req_charts_grid">
+                    <div class="tp_req_card tp_req_chart_card">
+                        <div class="tp_req_card_head">
+                            <h3>Cơ cấu trạng thái đề nghị</h3>
+                            <span class="tp_req_card_sub" t-out="(this.state.data?.total_accessible || 0) + ' hồ sơ trong phạm vi'"/>
+                        </div>
+                        <div t-if="this.state.loading" class="tp_req_chart_skeleton"/>
+                        <div t-elif="(this.state.data?.status_chart || []).length" class="tp_req_chart_wrap">
+                            <div class="tp_req_chart_canvas_box">
+                                <canvas t-ref="this.statusChart.ref"/>
+                            </div>
+                            <ul class="tp_req_chart_legend">
+                                <li t-foreach="this.state.data.status_chart" t-as="item" t-key="item.key"
+                                    t-on-click="() => this.openFilteredList('watching', { tab: item.key, approval_state: item.key })">
+                                    <span class="tp_req_dot" t-att-style="'background:' + item.color"/>
+                                    <span class="tp_req_leg_label" t-out="item.label"/>
+                                    <strong t-out="item.count"/>
+                                    <span class="tp_req_leg_pct" t-out="'(' + item.percent + '%)'"/>
+                                </li>
+                            </ul>
+                        </div>
+                        <div t-else="" class="tp_req_empty_chart">
+                            <p>Chưa có hồ sơ đề nghị nào trong phạm vi hiển thị.</p>
+                            <button type="button" class="tp_req_btn_outline" t-on-click="this.openCreate">Tạo đề nghị đầu tiên</button>
+                        </div>
+                    </div>
+
+                    <div class="tp_req_card tp_req_chart_card">
+                        <div class="tp_req_card_head">
+                            <h3>Số đề nghị theo loại</h3>
+                            <span class="tp_req_card_sub">Bấm vào cột để lọc danh sách</span>
+                        </div>
+                        <div t-if="this.state.loading" class="tp_req_chart_skeleton"/>
+                        <div t-elif="(this.state.data?.type_chart || []).length" class="tp_req_chart_canvas_box is-bar">
+                            <canvas t-ref="this.typeChart.ref"/>
+                        </div>
+                        <div t-else="" class="tp_req_empty_chart">
+                            <p>Biểu đồ sẽ tự động hiển thị khi có đề nghị phát sinh.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Immediate Action Queue Table -->
+            <section class="tp_req_card tp_req_queue_card">
+                <div class="tp_req_card_head">
+                    <div>
+                        <h3>Công việc cần tôi xử lý</h3>
+                        <p class="tp_req_card_sub">Gồm hồ sơ đến lượt duyệt, việc cần thực hiện và đề nghị bị trả lại cần bổ sung.</p>
+                    </div>
+                    <button type="button" class="tp_req_btn_outline"
+                            t-on-click="() => this.openFilteredList('to_approve')">Xem tất cả cần duyệt</button>
+                </div>
+
+                <div t-if="this.state.loading" class="tp_req_table_skeleton">
+                    <div class="tp_req_skel_row"/><div class="tp_req_skel_row"/><div class="tp_req_skel_row"/>
+                </div>
+                <div t-elif="(this.state.data?.queue || []).length" class="tp_req_table_scroll">
+                    <table class="tp_req_table">
+                        <thead>
+                            <tr>
+                                <th>Vai trò</th>
+                                <th>Mã / Tiêu đề</th>
+                                <th>Loại đề nghị</th>
+                                <th>Người gửi / Phòng ban</th>
+                                <th>Bước hiện tại</th>
+                                <th>Hạn xử lý</th>
+                                <th>Ưu tiên</th>
+                                <th>Trạng thái</th>
+                                <th class="text-end">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="this.state.data.queue" t-as="row" t-key="row.id"
+                                class="tp_req_row_click" t-on-click="() => this.openDetail(row)">
+                                <td>
+                                    <span class="tp_req_role_tag" t-att-class="'is-' + row.queue_role" t-out="row.queue_role_label"/>
+                                </td>
+                                <td>
+                                    <div class="tp_req_cell_main">
+                                        <span class="tp_req_code" t-out="row.code"/>
+                                        <span class="tp_req_cell_title" t-out="row.title"/>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="tp_req_type_tag" t-out="row.type_name"/>
+                                </td>
+                                <td>
+                                    <div class="tp_req_cell_person" t-out="row.requester_name"/>
+                                    <div class="tp_req_cell_sub" t-out="row.department_name || '—'"/>
+                                </td>
+                                <td t-out="row.current_step_name || (row.queue_role === 'execute' ? 'Thực hiện sau duyệt' : '—')"/>
+                                <td>
+                                    <span t-out="row.due_at || '—'"/>
+                                    <span t-if="row.is_overdue" class="tp_req_badge is-overdue">Quá hạn</span>
+                                </td>
+                                <td>
+                                    <span class="tp_req_prio" t-att-class="this.PRIORITY_BADGE[row.priority]?.cls" t-out="row.priority_label"/>
+                                </td>
+                                <td>
+                                    <span class="tp_req_badge" t-att-class="this.APPROVAL_BADGE[row.approval_state]?.cls"
+                                          t-out="row.approval_state_label"/>
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="tp_req_btn_sm" t-on-click.stop="() => this.openDetail(row)">
+                                        Xem &amp; xử lý
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div t-else="" class="tp_req_empty_state">
+                    <i class="oi tp_req_empty_ico" data-icon="task_alt" aria-hidden="true"/>
+                    <h4>Hiện không có hồ sơ nào chờ bạn xử lý</h4>
+                    <p>Mọi đề nghị đến lượt duyệt hoặc cần thực hiện sẽ tự động xuất hiện ngay tại đây.</p>
+                    <button type="button" class="tp_req_btn_primary" t-on-click="this.openCreate">Tạo đề nghị mới</button>
+                </div>
+            </section>
+
+            <TpRequestCreateModal t-if="this.state.showCreate"
+                                  onClose="() => (this.state.showCreate = false)"
+                                  onCreated="(res) => this.onCreated(res)"/>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Capability groups separated from HR titles and admin provisioning (DEC-054/062).
+             Do not mutate base.group_user or base.group_system; ACL rows grant base.group_user
+             for normal employee participation and base.group_system + group_request_manager for config. -->
+        <record id="group_request_executor" model="res.groups">
+            <field name="name">Đề nghị &amp; Phê duyệt — Người thực hiện</field>
+            <field name="comment">Nhận và cập nhật tiến độ thực hiện các đề nghị sau khi đã được phê duyệt.</field>
+        </record>
+
+        <record id="group_request_manager" model="res.groups">
+            <field name="name">Đề nghị &amp; Phê duyệt — Quản trị cấu hình</field>
+            <field name="comment">Cấu hình loại đề nghị, tuyến duyệt và theo dõi hồ sơ đề nghị trong phạm vi công ty. Không cấp quyền quản trị hệ thống.</field>
+            <field name="implied_ids" eval="[(4, ref('tp_request.group_request_executor'))]"/>
+        </record>
+    </data>
+</odoo>

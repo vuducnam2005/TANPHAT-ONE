@@ -121,6 +121,20 @@ Hệ thống TANPHAT ONE bao gồm 6 nhóm phân hệ nghiệp vụ chính và p
 
 ---
 
+### 2.8. Phân hệ Đề nghị & Phê duyệt (`de-nghi` — `tp_request` 20.0.1.0.0)
+
+| STT | Tên hiển thị | Phân hệ | Menu XML ID | Action XML ID / Tag | URL cũ / Alias | URL chuẩn mới | Quyền truy cập | Trang con / Biến thể |
+| :---: | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 47 | **Tổng quan Đề nghị** | Đề nghị & Phê duyệt | `tp_request.menu_overview` | `tp_request.action_overview`<br>*(tag: `tp_request.dashboard`)* | `/app/de-nghi`, `/app/de-nghi-tong-quan` | `/app/de-nghi/tong-quan` | `base.group_user` | KPI vai trò, biểu đồ Chart.js dữ liệu thật, hàng đợi cần xử lý |
+| 48 | **Đề nghị của tôi** | Đề nghị & Phê duyệt | `tp_request.menu_mine` | `tp_request.action_mine`<br>*(tag: `tp_request.list`)* | `/app/de-nghi-cua-toi` | `/app/de-nghi/cua-toi` | `base.group_user` | Tab trạng thái, lọc đa tiêu chí, xuất Excel đúng quyền |
+| 49 | **Cần tôi duyệt** | Đề nghị & Phê duyệt | `tp_request.menu_to_approve` | `tp_request.action_to_approve`<br>*(tag: `tp_request.list`)* | `/app/de-nghi-can-duyet` | `/app/de-nghi/can-duyet` | `base.group_user` | Hồ sơ đang đến lượt người đăng nhập phê duyệt |
+| 50 | **Cần thực hiện** | Đề nghị & Phê duyệt | `tp_request.menu_to_execute` | `tp_request.action_to_execute`<br>*(tag: `tp_request.list`)* | `/app/de-nghi-can-thuc-hien` | `/app/de-nghi/can-thuc-hien` | `base.group_user` | Hồ sơ đã duyệt chờ người thực hiện triển khai |
+| 51 | **Theo dõi** | Đề nghị & Phê duyệt | `tp_request.menu_watching` | `tp_request.action_watching`<br>*(tag: `tp_request.list`)* | `/app/de-nghi-theo-doi` | `/app/de-nghi/theo-doi` | `base.group_user` | Hồ sơ được cấp quyền theo dõi hoặc đã tham gia duyệt/thực hiện |
+| 52 | **Quản trị Đề nghị** | Đề nghị & Phê duyệt | `tp_request.menu_admin` | `tp_request.action_admin`<br>*(tag: `tp_request.admin`)* | `/app/de-nghi-quan-tri` | `/app/de-nghi/quan-tri` | `group_request_manager`, `group_original_admin`, `group_full_admin`, `base.group_system` | Danh mục loại đề nghị & tuyến duyệt + Toàn bộ hồ sơ công ty |
+| 53 | **Chi tiết hồ sơ đề nghị** | Đề nghị & Phê duyệt | *(Mở từ danh sách / thông báo)* | `tp_request.action_detail`<br>*(tag: `tp_request.detail`)* | `/app/de-nghi-ho-so/<id>` | `/app/de-nghi/ho-so/<id>` | Theo quyền từng hồ sơ (`tp.request` read) | Chi tiết 2 cột, tuyến tuần tự, phê duyệt, thực hiện, trao đổi, lịch sử bất biến |
+
+---
+
 ## 3. Quy tắc ánh xạ tương thích ngược (Backward Compatibility Mapping)
 
 Để đảm bảo người dùng mở các bookmark cũ, liên kết trong email hoặc chatter không gặp lỗi, hệ thống tự động nhận diện và chuẩn hoá các định danh cũ:

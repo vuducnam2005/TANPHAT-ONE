@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-inherit="web.WebClient" t-inherit-mode="extension">
+        <xpath expr="//NavBar" position="after">
+            <TpRequestSidebar/>
+        </xpath>
+    </t>
+
+    <t t-name="tp_request.Sidebar">
+        <t t-if="this.app()">
+            <div t-if="this.mode() === 'mobile'" class="o_tp_req_mobilebar">
+                <button type="button" class="o_tp_req_menu_toggle"
+                        aria-controls="tp_req_sidebar"
+                        t-att-aria-expanded="this.state.drawer ? 'true' : 'false'"
+                        t-on-click="this.openDrawer">
+                    <i class="oi" data-icon="menu" aria-hidden="true"/>
+                    <span>Menu Đề nghị</span>
+                </button>
+                <span class="o_tp_req_mobilebar_title" t-out="this.activeLabel()"/>
+            </div>
+
+            <div t-if="this.state.drawer" class="o_tp_req_backdrop" aria-hidden="true" t-on-click="this.closeDrawer"/>
+
+            <aside id="tp_req_sidebar"
+                   class="o_tp_req_sidebar"
+                   t-att-class="{
+                       'is-rail': this.rail(),
+                       'is-drawer': this.state.drawer,
+                       'is-hidden': this.mode() === 'mobile' and !this.state.drawer,
+                   }"
+                   aria-label="Điều hướng Đề nghị &amp; Phê duyệt"
+                   t-ref="this.panel">
+                <div class="o_tp_req_sb_head">
+                    <span class="o_tp_req_sb_mark" aria-hidden="true">ĐN</span>
+                    <span class="o_tp_req_sb_title">Đề nghị &amp; Phê duyệt</span>
+                    <button t-if="this.state.drawer" type="button" class="o_tp_req_sb_icon"
+                            title="Đóng menu" aria-label="Đóng menu" t-on-click="this.closeDrawer">
+                        <i class="oi" data-icon="close" aria-hidden="true"/>
+                    </button>
+                    <button t-elif="this.mode() === 'desktop'" type="button" class="o_tp_req_sb_icon"
+                            t-att-title="this.rail() ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'"
+                            t-att-aria-label="this.rail() ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'"
+                            t-on-click="this.toggleCollapse">
+                        <i class="oi" t-att-data-icon="this.rail() ? 'left_panel_open' : 'left_panel_close'" aria-hidden="true"/>
+                    </button>
+                </div>
+
+                <nav class="o_tp_req_sb_nav" aria-label="Danh mục Đề nghị &amp; Phê duyệt">
+                    <ul class="o_tp_req_sb_list">
+                        <li t-foreach="this.leaves()" t-as="leaf" t-key="leaf.id">
+                            <a class="o_tp_req_sb_leaf"
+                               t-att-class="{'is-active': leaf.id === this.state.active}"
+                               t-att-href="this.href(leaf)"
+                               t-att-title="this.rail() ? leaf.name : null"
+                               t-att-aria-current="leaf.id === this.state.active ? 'page' : null"
+                               t-on-click="(ev) => this.onLeafClick(ev, leaf)">
+                                <i class="oi o_tp_req_sb_ico" t-att-data-icon="leaf.icon" aria-hidden="true"/>
+                                <span class="o_tp_req_sb_label" t-out="leaf.name"/>
+                                <span t-if="this.badgeFor(leaf) > 0 and !this.rail()"
+                                      class="o_tp_req_sb_badge"
+                                      t-att-class="this.badgeKind(leaf)"
+                                      t-out="this.badgeFor(leaf)"/>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="o_tp_req_sb_foot">
+                    <TpUserAccountMenu collapsed="this.rail()"
+                                       onBeforeOpenProfile="() => this.closeDrawer()"
+                                       onBeforeLogout="() => this.closeDrawer()"/>
+                </div>
+            </aside>
+        </t>
+    </t>
+</templates>

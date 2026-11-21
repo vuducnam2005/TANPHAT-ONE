@@ -1,0 +1,22 @@
+id,name,model_id,group_id/id,operation,domain
+access_tp_req_type_user,Request types read,tp.request.type,base.group_user,r,
+access_tp_req_type_manager,Request types manager,tp.request.type,tp_request.group_request_manager,cru,
+access_tp_req_type_orig_admin,Request types original admin,tp.request.type,tp_admin_delegation.group_original_admin,cru,
+access_tp_req_type_full_admin,Request types delegated admin,tp.request.type,tp_admin_delegation.group_full_admin,cru,
+access_tp_req_type_system,Request types system admin,tp.request.type,base.group_system,cru,
+rule_tp_req_type_company,Request types company scope,tp.request.type,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_tp_req_type_step_user,Request type steps read,tp.request.type.step,base.group_user,r,
+access_tp_req_type_step_manager,Request type steps manager,tp.request.type.step,tp_request.group_request_manager,crud,
+access_tp_req_type_step_orig_admin,Request type steps original admin,tp.request.type.step,tp_admin_delegation.group_original_admin,crud,
+access_tp_req_type_step_full_admin,Request type steps delegated admin,tp.request.type.step,tp_admin_delegation.group_full_admin,crud,
+access_tp_req_type_step_system,Request type steps system admin,tp.request.type.step,base.group_system,crud,
+access_tp_req_own,Requests own CRUD,tp.request,base.group_user,crud,"[('requester_user_id', '=', user.id)]"
+access_tp_req_participant_read,Requests approver/executor/follower read,tp.request,base.group_user,r,"['|', '&', ('approval_state', '!=', 'draft'), ('all_approver_ids', 'in', [user.id]), '|', '&', ('approval_state', '=', 'approved'), '|', ('executor_user_ids', 'in', [user.id]), ('assigned_executor_id', '=', user.id), '&', ('approval_state', '!=', 'draft'), ('follower_user_ids', 'in', [user.id])]"
+access_tp_req_hr_att_read,Requests HR manager attendance read,tp.request,hr.group_hr_manager,r,"[('handler_kind', '=', 'attendance_correction'), ('approval_state', '!=', 'draft')]"
+access_tp_req_manager_read,Requests manager read non-draft,tp.request,tp_request.group_request_manager,r,"[('approval_state', '!=', 'draft')]"
+access_tp_req_orig_admin_read,Requests original admin read non-draft,tp.request,tp_admin_delegation.group_original_admin,r,"[('approval_state', '!=', 'draft')]"
+access_tp_req_full_admin_read,Requests delegated admin read non-draft,tp.request,tp_admin_delegation.group_full_admin,r,"[('approval_state', '!=', 'draft')]"
+access_tp_req_system_read,Requests system admin read non-draft,tp.request,base.group_system,r,"[('approval_state', '!=', 'draft')]"
+rule_tp_req_company,Requests company scope,tp.request,,crud,"[('company_id', 'in', company_ids)]"
+access_tp_req_step_user,Request steps read,tp.request.step,base.group_user,r,"[('request_id', 'access', 'read')]"
+access_tp_req_history_user,Request history read,tp.request.history,base.group_user,r,"[('request_id', 'access', 'read')]"

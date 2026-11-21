@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_request.CreateModal">
+        <div class="tp_req_modal_backdrop" role="dialog" aria-modal="true" aria-label="Tạo đề nghị mới">
+            <div class="tp_req_modal">
+                <div class="tp_req_modal_head">
+                    <div>
+                        <h2 class="tp_req_modal_title">
+                            <t t-if="this.state.step === 'pick'">Tạo đề nghị mới</t>
+                            <t t-else="">
+                                <button type="button" class="tp_req_link_back" t-on-click="this.backToPick">
+                                    <i class="oi" data-icon="arrow_back" aria-hidden="true"/> Chọn loại khác
+                                </button>
+                                <span class="tp_req_modal_type_name" t-out="this.state.selectedType?.name"/>
+                            </t>
+                        </h2>
+                        <p class="tp_req_modal_sub" t-if="this.state.step === 'pick'">
+                            Chọn đúng loại đề nghị để hệ thống hiển thị biểu mẫu và tuyến phê duyệt tương ứng.
+                        </p>
+                    </div>
+                    <button type="button" class="tp_req_icon_btn" title="Đóng" aria-label="Đóng" t-on-click="this.close">
+                        <i class="oi" data-icon="close" aria-hidden="true"/>
+                    </button>
+                </div>
+
+                <div class="tp_req_modal_body">
+                    <InlineErrors errors="this.state.fieldErrors"
+                                  server="this.state.serverError"
+                                  attempt="this.state.attempt"/>
+
+                    <div t-if="this.state.loading" class="tp_req_loading">
+                        <div class="tp_req_skeleton_grid">
+                            <div class="tp_req_skeleton_card"/>
+                            <div class="tp_req_skeleton_card"/>
+                            <div class="tp_req_skeleton_card"/>
+                            <div class="tp_req_skeleton_card"/>
+                        </div>
+                    </div>
+
+                    <!-- STEP 1: TYPE PICKER CARDS -->
+                    <div t-elif="this.state.step === 'pick'" class="tp_req_type_grid">
+                        <t t-foreach="this.state.bootstrap?.types || []" t-as="tcard" t-key="tcard.id">
+                            <button type="button" class="tp_req_type_card" t-on-click="() => this.selectType(tcard)">
+                                <div class="tp_req_type_card_top">
+                                    <span class="tp_req_type_icon" t-att-style="'background:' + tcard.color + '18; color:' + tcard.color">
+                                        <i class="oi" t-att-data-icon="tcard.icon" aria-hidden="true"/>
+                                    </span>
+                                    <span t-if="!tcard.can_submit_now" class="tp_req_pill is-warn">
+                                        Thiếu người duyệt
+                                    </span>
+                                    <span t-else="" class="tp_req_pill is-ready">Sẵn sàng</span>
+                                </div>
+                                <h3 class="tp_req_type_card_name" t-out="tcard.name"/>
+                                <p class="tp_req_type_card_desc" t-out="tcard.description"/>
+                                <div class="tp_req_type_card_meta">
+                                    <span t-out="tcard.code"/>
+                                    <span t-if="tcard.requires_execution">· Có thực hiện sau duyệt</span>
+                                </div>
+                            </button>
+                        </t>
+                    </div>
+
+                    <!-- STEP 2: TAILORED FORM + LIVE ROUTE PREVIEW -->
+                    <div t-else="" class="tp_req_create_layout">
+                        <div class="tp_req_create_form">
+                            <!-- Auto-filled requester summary -->
+                            <div class="tp_req_requester_strip">
+                                <div>
+                                    <span class="tp_req_meta_label">Người gửi</span>
+                                    <strong t-out="this.state.bootstrap?.requester?.name"/>
+                                    <span t-if="this.state.bootstrap?.requester?.employee_code" class="tp_req_code_tag"
+                                          t-out="this.state.bootstrap.requester.employee_code"/>
+                                </div>
+                                <div>
+                                    <span class="tp_req_meta_label">Phòng ban</span>
+                                    <strong t-out="this.state.bootstrap?.requester?.department_name"/>
+                                </div>
+                            </div>
+
+                            <div t-if="this.state.selectedType?.guidance" class="tp_req_guidance_box">
+                                <i class="oi" data-icon="info" aria-hidden="true"/>
+                                <span t-out="this.state.selectedType.guidance"/>
+                            </div>
+
+                            <!-- Common fields -->
+                            <div class="tp_req_field" t-att-class="{'has-error': this.hasError('req_title')}">
+                                <label for="req_title">Tiêu đề đề nghị <span class="req_star">*</span></label>
+                                <input id="req_title" type="text" class="tp_req_input"
+                                       placeholder="Ví dụ: Đề nghị cấp màn hình phụ phục vụ thiết kế"
+                                       t-att-value="this.state.form.title"
+                                       t-on-input="(ev) => this.onFieldInput('title', ev)"/>
+                                <p t-if="this.hasError('req_title')" class="tp_req_field_err" t-out="this.errorMessage('req_title')"/>
+                            </div>
+
+                            <div class="tp_req_row_2">
+                                <div class="tp_req_field">
+                                    <label for="req_priority">Độ ưu tiên</label>
+                                    <select id="req_priority" class="tp_req_input"
+                                            t-att-value="this.state.form.priority"
+                                            t-on-change="(ev) => this.onFieldInput('priority', ev)">
+                                        <option t-foreach="this.state.bootstrap?.priorities || []" t-as="p" t-key="p.key"
+                                                t-att-value="p.key" t-att-selected="this.state.form.priority === p.key"
+                                                t-out="p.label"/>
+                                    </select>
+                                </div>
+                                <div t-if="this.state.selectedType?.handler_kind !== 'attendance_correction'"
+                                     class="tp_req_field" t-att-class="{'has-error': this.hasError('req_needed_date')}">
+                                    <label for="req_needed_date">
+                                        Ngày cần đáp ứng
+                                        <span t-if="this.state.selectedType?.require_needed_date" class="req_star">*</span>
+                                    </label>
+                                    <input id="req_needed_date" type="date" class="tp_req_input"
+                                           t-att-value="this.state.form.needed_date"
+                                           t-on-input="(ev) => this.onFieldInput('needed_date', ev)"/>
+                                    <p t-if="this.hasError('req_needed_date')" class="tp_req_field_err" t-out="this.errorMessage('req_needed_date')"/>
+                                </div>
+                            </div>
+
+                            <!-- ATTENDANCE CORRECTION SPECIFIC FIELDS -->
+                            <div t-if="this.state.selectedType?.handler_kind === 'attendance_correction'" class="tp_req_section_box">
+                                <h4 class="tp_req_section_title">Thông tin điều chỉnh công (đồng bộ trực tiếp với Công của tôi)</h4>
+                                <div class="tp_req_row_3">
+                                    <div class="tp_req_field" t-att-class="{'has-error': this.hasError('req_att_work_date')}">
+                                        <label for="req_att_work_date">Ngày công <span class="req_star">*</span></label>
+                                        <input id="req_att_work_date" type="date" class="tp_req_input"
+                                               t-att-value="this.state.form.att_work_date"
+                                               t-on-input="(ev) => this.onFieldInput('att_work_date', ev)"/>
+                                        <p t-if="this.hasError('req_att_work_date')" class="tp_req_field_err" t-out="this.errorMessage('req_att_work_date')"/>
+                                    </div>
+                                    <div class="tp_req_field" t-att-class="{'has-error': this.hasError('req_att_in')}">
+                                        <label for="req_att_in">Giờ vào đúng (HH:MM) <span class="req_star">*</span></label>
+                                        <input id="req_att_in" type="time" class="tp_req_input"
+                                               t-att-value="this.state.form.att_requested_in"
+                                               t-on-input="(ev) => this.onFieldInput('att_requested_in', ev)"/>
+                                        <p t-if="this.hasError('req_att_in')" class="tp_req_field_err" t-out="this.errorMessage('req_att_in')"/>
+                                    </div>
+                                    <div class="tp_req_field" t-att-class="{'has-error': this.hasError('req_att_out')}">
+                                        <label for="req_att_out">Giờ ra đúng (HH:MM) <span class="req_star">*</span></label>
+                                        <input id="req_att_out" type="time" class="tp_req_input"
+                                               t-att-value="this.state.form.att_requested_out"
+                                               t-on-input="(ev) => this.onFieldInput('att_requested_out', ev)"/>
+                                        <p t-if="this.hasError('req_att_out')" class="tp_req_field_err" t-out="this.errorMessage('req_att_out')"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- EQUIPMENT SWAP / REPAIR: OWN ASSIGNED EQUIPMENT PICKER -->
+                            <div t-if="['equipment_swap', 'equipment_repair'].includes(this.state.selectedType?.handler_kind)" class="tp_req_section_box">
+                                <h4 class="tp_req_section_title">Thiết bị hiện đang được bàn giao cho bạn</h4>
+                                <div class="tp_req_field" t-att-class="{'has-error': this.hasError('req_equipment_id')}">
+                                    <label for="req_equipment_id">Chọn thiết bị liên quan <span class="req_star">*</span></label>
+                                    <select id="req_equipment_id" class="tp_req_input"
+                                            t-att-value="this.state.form.equipment_id"
+                                            t-on-change="(ev) => this.onFieldInput('equipment_id', ev)">
+                                        <option value="">-- Chọn thiết bị đang sử dụng --</option>
+                                        <option t-foreach="this.state.bootstrap?.my_equipment || []" t-as="eq" t-key="eq.id"
+                                                t-att-value="eq.id"
+                                                t-out="eq.display_name + (eq.category_name ? ' (' + eq.category_name + ')' : '')"/>
+                                    </select>
+                                    <p t-if="!(this.state.bootstrap?.my_equipment || []).length" class="tp_req_hint">
+                                        Hệ thống chưa ghi nhận thiết bị nào đang giao trực tiếp cho tài khoản của bạn.
+                                    </p>
+                                    <p t-if="this.hasError('req_equipment_id')" class="tp_req_field_err" t-out="this.errorMessage('req_equipment_id')"/>
+                                </div>
+                                <div t-if="this.state.selectedType?.handler_kind === 'equipment_repair'"
+                                     class="tp_req_field" t-att-class="{'has-error': this.hasError('req_equip_issue')}">
+                                    <label for="req_equip_issue">Mô tả hiện tượng / lỗi <span class="req_star">*</span></label>
+                                    <textarea id="req_equip_issue" rows="3" class="tp_req_input"
+                                              placeholder="Mô tả chi tiết lỗi phát sinh, thời điểm gặp sự cố..."
+                                              t-att-value="this.state.form.equipment_issue_detail"
+                                              t-on-input="(ev) => this.onFieldInput('equipment_issue_detail', ev)"/>
+                                    <p t-if="this.hasError('req_equip_issue')" class="tp_req_field_err" t-out="this.errorMessage('req_equip_issue')"/>
+                                </div>
+                                <div t-if="this.state.selectedType?.handler_kind === 'equipment_swap'" class="tp_req_field">
+                                    <label for="req_equip_spec_swap">Yêu cầu thiết bị thay thế</label>
+                                    <textarea id="req_equip_spec_swap" rows="2" class="tp_req_input"
+                                              placeholder="Ghi rõ cấu hình hoặc loại thiết bị mong muốn đổi sang..."
+                                              t-att-value="this.state.form.equipment_desired_spec"
+                                              t-on-input="(ev) => this.onFieldInput('equipment_desired_spec', ev)"/>
+                                </div>
+                            </div>
+
+                            <!-- EQUIPMENT ASSIGN / PURCHASE -->
+                            <div t-if="['equipment_assign', 'equipment_purchase'].includes(this.state.selectedType?.handler_kind)" class="tp_req_section_box">
+                                <h4 class="tp_req_section_title">
+                                    <t t-if="this.state.selectedType?.handler_kind === 'equipment_assign'">Thông tin thiết bị cần cấp</t>
+                                    <t t-else="">Thông tin đề xuất mua bổ sung</t>
+                                </h4>
+                                <div class="tp_req_row_2">
+                                    <div class="tp_req_field" t-att-class="{'has-error': this.hasError('req_equip_category')}">
+                                        <label for="req_equip_category">Loại thiết bị <span class="req_star">*</span></label>
+                                        <select id="req_equip_category" class="tp_req_input"
+                                                t-att-value="this.state.form.equipment_category_id"
+                                                t-on-change="(ev) => this.onFieldInput('equipment_category_id', ev)">
+                                            <option value="">-- Chọn loại thiết bị --</option>
+                                            <option t-foreach="this.state.bootstrap?.equipment_categories || []" t-as="cat" t-key="cat.id"
+                                                    t-att-value="cat.id" t-out="cat.name"/>
+                                        </select>
+                                        <p t-if="this.hasError('req_equip_category')" class="tp_req_field_err" t-out="this.errorMessage('req_equip_category')"/>
+                                    </div>
+                                    <div t-if="this.state.selectedType?.handler_kind === 'equipment_purchase'"
+                                         class="tp_req_field" t-att-class="{'has-error': this.hasError('req_equip_qty')}">
+                                        <label for="req_equip_qty">Số lượng <span class="req_star">*</span></label>
+                                        <input id="req_equip_qty" type="number" min="1" class="tp_req_input"
+                                               t-att-value="this.state.form.equipment_quantity"
+                                               t-on-input="(ev) => this.onFieldInput('equipment_quantity', ev)"/>
+                                        <p t-if="this.hasError('req_equip_qty')" class="tp_req_field_err" t-out="this.errorMessage('req_equip_qty')"/>
+                                    </div>
+                                </div>
+                                <div class="tp_req_field">
+                                    <label for="req_equip_spec">Cấu hình / yêu cầu kỹ thuật</label>
+                                    <textarea id="req_equip_spec" rows="2" class="tp_req_input"
+                                              placeholder="Ví dụ: RAM 16GB, màn hình 24 inch, phục vụ chạy AutoCAD/Civil 3D..."
+                                              t-att-value="this.state.form.equipment_desired_spec"
+                                              t-on-input="(ev) => this.onFieldInput('equipment_desired_spec', ev)"/>
+                                </div>
+                            </div>
+
+                            <!-- IT SUPPORT SPECIFIC FIELDS -->
+                            <div t-if="this.state.selectedType?.handler_kind === 'it_support'" class="tp_req_section_box">
+                                <h4 class="tp_req_section_title">Chi tiết yêu cầu hỗ trợ IT</h4>
+                                <div class="tp_req_row_2">
+                                    <div class="tp_req_field" t-att-class="{'has-error': this.hasError('req_it_category')}">
+                                        <label for="req_it_category">Nhóm hỗ trợ IT <span class="req_star">*</span></label>
+                                        <select id="req_it_category" class="tp_req_input"
+                                                t-att-value="this.state.form.it_category"
+                                                t-on-change="(ev) => this.onFieldInput('it_category', ev)">
+                                            <option value="">-- Chọn nhóm hỗ trợ --</option>
+                                            <option t-foreach="this.state.bootstrap?.it_categories || []" t-as="itc" t-key="itc.key"
+                                                    t-att-value="itc.key" t-out="itc.label"/>
+                                        </select>
+                                        <p t-if="this.hasError('req_it_category')" class="tp_req_field_err" t-out="this.errorMessage('req_it_category')"/>
+                                    </div>
+                                    <div class="tp_req_field">
+                                        <label for="req_it_impact">Mức độ ảnh hưởng</label>
+                                        <select id="req_it_impact" class="tp_req_input"
+                                                t-att-value="this.state.form.it_urgency_impact"
+                                                t-on-change="(ev) => this.onFieldInput('it_urgency_impact', ev)">
+                                            <option t-foreach="this.state.bootstrap?.it_impacts || []" t-as="imp" t-key="imp.key"
+                                                    t-att-value="imp.key" t-out="imp.label"/>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div t-if="(this.state.bootstrap?.my_equipment || []).length" class="tp_req_field">
+                                    <label for="req_it_device">Thiết bị gặp sự cố (nếu có)</label>
+                                    <select id="req_it_device" class="tp_req_input"
+                                            t-att-value="this.state.form.it_device_id"
+                                            t-on-change="(ev) => this.onFieldInput('it_device_id', ev)">
+                                        <option value="">-- Không chọn thiết bị cụ thể --</option>
+                                        <option t-foreach="this.state.bootstrap?.my_equipment || []" t-as="eq" t-key="eq.id"
+                                                t-att-value="eq.id" t-out="eq.display_name"/>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Optional Project link (only when type enables it and user has accessible projects) -->
+                            <div t-if="this.state.selectedType?.show_project_field and (this.state.bootstrap?.projects || []).length"
+                                 class="tp_req_field">
+                                <label for="req_project_id">Dự án liên quan</label>
+                                <select id="req_project_id" class="tp_req_input"
+                                        t-att-value="this.state.form.project_id"
+                                        t-on-change="(ev) => this.onFieldInput('project_id', ev)">
+                                    <option value="">-- Không gắn dự án --</option>
+                                    <option t-foreach="this.state.bootstrap?.projects || []" t-as="pr" t-key="pr.id"
+                                            t-att-value="pr.id" t-out="pr.name"/>
+                                </select>
+                            </div>
+
+                            <!-- Reason / Description -->
+                            <div class="tp_req_field" t-att-class="{'has-error': this.hasError('req_description')}">
+                                <label for="req_description">
+                                    Nội dung / giải trình lý do
+                                    <span t-if="this.state.selectedType?.require_reason" class="req_star">*</span>
+                                </label>
+                                <textarea id="req_description" rows="4" class="tp_req_input"
+                                          placeholder="Trình bày cụ thể lý do và thông tin phục vụ phê duyệt..."
+                                          t-att-value="this.state.form.description"
+                                          t-on-input="(ev) => this.onFieldInput('description', ev)"/>
+                                <p t-if="this.hasError('req_description')" class="tp_req_field_err" t-out="this.errorMessage('req_description')"/>
+                            </div>
+
+                            <!-- Attachments -->
+                            <div t-if="this.state.selectedType?.allow_attachment" class="tp_req_field"
+                                 t-att-class="{'has-error': this.hasError('req_attachments')}">
+                                <label>
+                                    Tệp đính kèm / minh chứng
+                                    <span t-if="this.state.selectedType?.require_attachment" class="req_star">*</span>
+                                </label>
+                                <div class="tp_req_upload_zone">
+                                    <label class="tp_req_btn_secondary" for="req_attachments">
+                                        <i class="oi" data-icon="attach_file" aria-hidden="true"/>
+                                        <span t-out="this.state.uploading ? 'Đang tải lên...' : 'Chọn tệp đính kèm'"/>
+                                    </label>
+                                    <input id="req_attachments" type="file" multiple="1" class="d-none"
+                                           t-on-change="this.onFileSelected"/>
+                                    <span class="tp_req_hint">Hỗ trợ ảnh, PDF, Word, Excel (tối đa 15 MB/tệp).</span>
+                                </div>
+                                <ul t-if="this.state.attachments.length" class="tp_req_att_list">
+                                    <li t-foreach="this.state.attachments" t-as="att" t-key="att.id">
+                                        <span class="tp_req_att_name" t-out="att.name"/>
+                                        <span class="tp_req_att_size" t-out="this.formatFileSize(att.file_size)"/>
+                                        <button type="button" class="tp_req_att_del" t-on-click="() => this.removeAttachment(att)">Gỡ</button>
+                                    </li>
+                                </ul>
+                                <p t-if="this.hasError('req_attachments')" class="tp_req_field_err" t-out="this.errorMessage('req_attachments')"/>
+                            </div>
+
+                            <!-- Followers (optional, not for private attendance corrections) -->
+                            <div t-if="this.state.selectedType?.handler_kind !== 'attendance_correction' and (this.state.bootstrap?.followers || []).length"
+                                 class="tp_req_field">
+                                <label>Người theo dõi (chỉ xem tiến trình, không có quyền duyệt)</label>
+                                <div class="tp_req_chip_picker">
+                                    <button t-foreach="this.state.bootstrap.followers" t-as="fl" t-key="fl.id"
+                                            type="button" class="tp_req_pick_chip"
+                                            t-att-class="{'is-selected': this.isFollowerSelected(fl.id)}"
+                                            t-on-click="() => this.toggleFollower(fl.id)">
+                                        <span t-out="fl.name"/>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LIVE ROUTE PREVIEW SIDE PANEL -->
+                        <aside class="tp_req_route_preview">
+                            <h4 class="tp_req_preview_title">Xem trước tuyến phê duyệt</h4>
+                            <div t-if="this.state.previewLoading" class="tp_req_hint">Đang kiểm tra tuyến duyệt...</div>
+                            <t t-elif="this.state.preview">
+                                <div t-if="!this.state.preview.can_submit" class="tp_req_alert_warn">
+                                    <strong>Chưa thể gửi đề nghị ngay</strong>
+                                    <p>Bạn vẫn có thể <strong>Lưu nháp</strong>. Các bước sau đang thiếu cấu hình người duyệt/thực hiện:</p>
+                                    <ul>
+                                        <li t-foreach="this.state.preview.missing_reasons" t-as="mr" t-key="mr_index" t-out="mr"/>
+                                    </ul>
+                                </div>
+                                <ol class="tp_req_step_list">
+                                    <li t-foreach="this.state.preview.steps" t-as="st" t-key="st.order"
+                                        class="tp_req_step_item" t-att-class="{'is-missing': !st.ready}">
+                                        <div class="tp_req_step_head">
+                                            <span class="tp_req_step_num" t-out="'Bước ' + st.order"/>
+                                            <strong t-out="st.name"/>
+                                        </div>
+                                        <div class="tp_req_step_meta">
+                                            <span t-out="st.approver_rule_label"/>
+                                            <span t-if="st.approvers.length > 1"> · Một người duyệt là đủ</span>
+                                        </div>
+                                        <div t-if="st.ready" class="tp_req_step_people">
+                                            <span t-foreach="st.approvers" t-as="ap" t-key="ap.id" class="tp_req_person_chip" t-out="ap.name"/>
+                                        </div>
+                                        <div t-else="" class="tp_req_step_err" t-out="st.missing_reason"/>
+                                    </li>
+                                </ol>
+                                <div t-if="this.state.preview.requires_execution" class="tp_req_exec_preview">
+                                    <div class="tp_req_step_head">
+                                        <span class="tp_req_step_num is-exec">Sau duyệt</span>
+                                        <strong>Thực hiện công việc</strong>
+                                    </div>
+                                    <div t-if="this.state.preview.executors.length" class="tp_req_step_people">
+                                        <span t-foreach="this.state.preview.executors" t-as="ex" t-key="ex.id" class="tp_req_person_chip" t-out="ex.name"/>
+                                    </div>
+                                    <div t-elif="this.state.preview.executor_missing" class="tp_req_step_err" t-out="this.state.preview.executor_missing"/>
+                                </div>
+                            </t>
+                        </aside>
+                    </div>
+                </div>
+
+                <div t-if="this.state.step === 'form'" class="tp_req_modal_foot">
+                    <button type="button" class="tp_req_btn_secondary" t-att-disabled="this.state.submitting" t-on-click="this.close">
+                        Hủy
+                    </button>
+                    <div class="tp_req_modal_foot_right">
+                        <button type="button" class="tp_req_btn_outline"
+                                t-att-disabled="this.state.submitting"
+                                t-on-click="() => this.save(false)">
+                            Lưu nháp
+                        </button>
+                        <button type="button" class="tp_req_btn_primary"
+                                t-att-disabled="this.state.submitting || (this.state.preview and !this.state.preview.can_submit)"
+                                t-att-title="(this.state.preview and !this.state.preview.can_submit) ? 'Cần hoàn thiện cấu hình người duyệt trước khi gửi' : null"
+                                t-on-click="() => this.save(true)">
+                            <t t-if="this.state.submitting">Đang gửi...</t>
+                            <t t-else="">Gửi phê duyệt</t>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

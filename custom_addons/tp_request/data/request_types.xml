@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- 1. Điều chỉnh công — tích hợp 1-1 với tp.hr.attendance.correction (DEC-061) -->
+        <record id="type_attendance_correction" model="tp.request.type">
+            <field name="code">ATT_CORRECTION</field>
+            <field name="name">Điều chỉnh công</field>
+            <field name="description">Đề nghị điều chỉnh giờ vào/ra cho ngày công bị thiếu hoặc sai lệch; tự động đồng bộ với Công của tôi và bảng chấm công.</field>
+            <field name="guidance">Chọn ngày công cần điều chỉnh (không chọn ngày tương lai), nhập giờ vào/ra thực tế, giải trình rõ lý do và đính kèm minh chứng nếu có.</field>
+            <field name="icon">schedule</field>
+            <field name="color">#2563EB</field>
+            <field name="sequence">10</field>
+            <field name="handler_kind">attendance_correction</field>
+            <field name="submitter_scope">all_internal</field>
+            <field name="require_reason" eval="True"/>
+            <field name="require_attachment" eval="False"/>
+            <field name="allow_attachment" eval="True"/>
+            <field name="require_needed_date" eval="False"/>
+            <field name="show_project_field" eval="False"/>
+            <field name="allow_reject" eval="False"/>
+            <field name="allow_return" eval="True"/>
+            <field name="allow_withdraw" eval="True"/>
+            <field name="sla_hours">24.0</field>
+            <field name="default_priority">normal</field>
+            <field name="requires_execution" eval="False"/>
+            <field name="executor_mode">none</field>
+        </record>
+        <record id="step_att_correction_1" model="tp.request.type.step">
+            <field name="type_id" ref="type_attendance_correction"/>
+            <field name="sequence">10</field>
+            <field name="name">Quản trị hệ thống phê duyệt</field>
+            <field name="approver_rule">admin_group</field>
+            <field name="approval_policy">any_one</field>
+            <field name="sla_hours">24.0</field>
+            <field name="can_return" eval="True"/>
+            <field name="can_reject" eval="False"/>
+        </record>
+
+        <!-- 2. Cấp phát thiết bị -->
+        <record id="type_equipment_assign" model="tp.request.type">
+            <field name="code">EQUIP_ASSIGN</field>
+            <field name="name">Cấp thiết bị</field>
+            <field name="description">Đề nghị cấp mới thiết bị văn phòng (máy tính, màn hình, phụ kiện...) từ Kho thiết bị.</field>
+            <field name="guidance">Chọn loại thiết bị cần cấp, mô tả nhu cầu công việc, cấu hình mong muốn và ngày cần sử dụng.</field>
+            <field name="icon">laptop_mac</field>
+            <field name="color">#0D9488</field>
+            <field name="sequence">20</field>
+            <field name="handler_kind">equipment_assign</field>
+            <field name="submitter_scope">all_internal</field>
+            <field name="require_reason" eval="True"/>
+            <field name="require_attachment" eval="False"/>
+            <field name="allow_attachment" eval="True"/>
+            <field name="require_needed_date" eval="False"/>
+            <field name="show_project_field" eval="True"/>
+            <field name="allow_reject" eval="True"/>
+            <field name="allow_return" eval="True"/>
+            <field name="allow_withdraw" eval="True"/>
+            <field name="sla_hours">24.0</field>
+            <field name="default_priority">normal</field>
+            <field name="requires_execution" eval="True"/>
+            <field name="executor_mode">admin_group</field>
+        </record>
+        <record id="step_equip_assign_1" model="tp.request.type.step">
+            <field name="type_id" ref="type_equipment_assign"/>
+            <field name="sequence">10</field>
+            <field name="name">Quản trị phê duyệt cấp phát</field>
+            <field name="approver_rule">admin_group</field>
+            <field name="approval_policy">any_one</field>
+            <field name="sla_hours">24.0</field>
+            <field name="can_return" eval="True"/>
+            <field name="can_reject" eval="True"/>
+        </record>
+
+        <!-- 3. Đổi thiết bị -->
+        <record id="type_equipment_swap" model="tp.request.type">
+            <field name="code">EQUIP_SWAP</field>
+            <field name="name">Đổi thiết bị</field>
+            <field name="description">Đề nghị đổi thiết bị đang sử dụng sang thiết bị khác đáp ứng công việc.</field>
+            <field name="guidance">Chọn thiết bị hiện đang được giao cho bạn, nêu rõ lý do cần đổi và yêu cầu đối với thiết bị thay thế.</field>
+            <field name="icon">swap_horiz</field>
+            <field name="color">#0284C7</field>
+            <field name="sequence">30</field>
+            <field name="handler_kind">equipment_swap</field>
+            <field name="submitter_scope">all_internal</field>
+            <field name="require_reason" eval="True"/>
+            <field name="require_attachment" eval="False"/>
+            <field name="allow_attachment" eval="True"/>
+            <field name="require_needed_date" eval="False"/>
+            <field name="show_project_field" eval="False"/>
+            <field name="allow_reject" eval="True"/>
+            <field name="allow_return" eval="True"/>
+            <field name="allow_withdraw" eval="True"/>
+            <field name="sla_hours">24.0</field>
+            <field name="default_priority">normal</field>
+            <field name="requires_execution" eval="True"/>
+            <field name="executor_mode">admin_group</field>
+        </record>
+        <record id="step_equip_swap_1" model="tp.request.type.step">
+            <field name="type_id" ref="type_equipment_swap"/>
+            <field name="sequence">10</field>
+            <field name="name">Quản trị phê duyệt đổi thiết bị</field>
+            <field name="approver_rule">admin_group</field>
+            <field name="approval_policy">any_one</field>
+            <field name="sla_hours">24.0</field>
+            <field name="can_return" eval="True"/>
+            <field name="can_reject" eval="True"/>
+        </record>
+
+        <!-- 4. Sửa chữa / báo hỏng thiết bị -->
+        <record id="type_equipment_repair" model="tp.request.type">
+            <field name="code">EQUIP_REPAIR</field>
+            <field name="name">Sửa chữa / báo hỏng thiết bị</field>
+            <field name="description">Báo hỏng, yêu cầu kiểm tra, bảo trì hoặc nâng cấp thiết bị đang sử dụng.</field>
+            <field name="guidance">Chọn thiết bị gặp sự cố đang được giao, mô tả rõ hiện tượng lỗi và đính kèm ảnh chụp nếu có.</field>
+            <field name="icon">build</field>
+            <field name="color">#D97706</field>
+            <field name="sequence">40</field>
+            <field name="handler_kind">equipment_repair</field>
+            <field name="submitter_scope">all_internal</field>
+            <field name="require_reason" eval="True"/>
+            <field name="require_attachment" eval="False"/>
+            <field name="allow_attachment" eval="True"/>
+            <field name="require_needed_date" eval="False"/>
+            <field name="show_project_field" eval="False"/>
+            <field name="allow_reject" eval="True"/>
+            <field name="allow_return" eval="True"/>
+            <field name="allow_withdraw" eval="True"/>
+            <field name="sla_hours">16.0</field>
+            <field name="default_priority">high</field>
+            <field name="requires_execution" eval="True"/>
+            <field name="executor_mode">admin_group</field>
+        </record>
+        <record id="step_equip_repair_1" model="tp.request.type.step">
+            <field name="type_id" ref="type_equipment_repair"/>
+            <field name="sequence">10</field>
+            <field name="name">Tiếp nhận &amp; duyệt sửa chữa</field>
+            <field name="approver_rule">admin_group</field>
+            <field name="approval_policy">any_one</field>
+            <field name="sla_hours">16.0</field>
+            <field name="can_return" eval="True"/>
+            <field name="can_reject" eval="True"/>
+        </record>
+
+        <!-- 5. Mua bổ sung thiết bị (2 bước: Trưởng phòng -> Quản trị; minh bạch nếu phòng chưa gắn Trưởng phòng) -->
+        <record id="type_equipment_purchase" model="tp.request.type">
+            <field name="code">EQUIP_PURCHASE</field>
+            <field name="name">Mua bổ sung thiết bị</field>
+            <field name="description">Đề xuất mua mới thiết bị khi kho chưa có sẵn; phê duyệt mua không tự nhập kho tài sản.</field>
+            <field name="guidance">Chọn loại thiết bị, số lượng, cấu hình đề xuất, lý do nhu cầu và đính kèm báo giá / thông số tham khảo nếu có.</field>
+            <field name="icon">shopping_cart</field>
+            <field name="color">#7C3AED</field>
+            <field name="sequence">50</field>
+            <field name="handler_kind">equipment_purchase</field>
+            <field name="submitter_scope">all_internal</field>
+            <field name="require_reason" eval="True"/>
+            <field name="require_attachment" eval="False"/>
+            <field name="allow_attachment" eval="True"/>
+            <field name="require_needed_date" eval="True"/>
+            <field name="show_project_field" eval="True"/>
+            <field name="allow_reject" eval="True"/>
+            <field name="allow_return" eval="True"/>
+            <field name="allow_withdraw" eval="True"/>
+            <field name="sla_hours">48.0</field>
+            <field name="default_priority">normal</field>
+            <field name="requires_execution" eval="True"/>
+            <field name="executor_mode">admin_group</field>
+        </record>
+        <record id="step_equip_purchase_1" model="tp.request.type.step">
+            <field name="type_id" ref="type_equipment_purchase"/>
+            <field name="sequence">10</field>
+            <field name="name">Trưởng phòng xác nhận nhu cầu</field>
+            <field name="approver_rule">department_manager</field>
+            <field name="approval_policy">any_one</field>
+            <field name="sla_hours">24.0</field>
+            <field name="can_return" eval="True"/>
+            <field name="can_reject" eval="True"/>
+        </record>
+        <record id="step_equip_purchase_2" model="tp.request.type.step">
+            <field name="type_id" ref="type_equipment_purchase"/>
+            <field name="sequence">20</field>
+            <field name="name">Quản trị duyệt chủ trương mua sắm</field>
+            <field name="approver_rule">admin_group</field>
+            <field name="approval_policy">any_one</field>
+            <field name="sla_hours">48.0</field>
+            <field name="can_return" eval="True"/>
+            <field name="can_reject" eval="True"/>
+        </record>
+
+        <!-- 6. Hỗ trợ IT -->
+        <record id="type_it_support" model="tp.request.type">
+            <field name="code">IT_SUPPORT</field>
+            <field name="name">Hỗ trợ IT</field>
+            <field name="description">Yêu cầu cài đặt phần mềm, hỗ trợ tài khoản, mạng, VPN, máy in hoặc khắc phục sự cố CNTT.</field>
+            <field name="guidance">Chọn nhóm vấn đề IT, mức độ ảnh hưởng, chọn thiết bị liên quan (nếu có) và mô tả chi tiết lỗi hoặc ảnh chụp màn hình.</field>
+            <field name="icon">support_agent</field>
+            <field name="color">#059669</field>
+            <field name="sequence">60</field>
+            <field name="handler_kind">it_support</field>
+            <field name="submitter_scope">all_internal</field>
+            <field name="require_reason" eval="True"/>
+            <field name="require_attachment" eval="False"/>
+            <field name="allow_attachment" eval="True"/>
+            <field name="require_needed_date" eval="False"/>
+            <field name="show_project_field" eval="False"/>
+            <field name="allow_reject" eval="True"/>
+            <field name="allow_return" eval="True"/>
+            <field name="allow_withdraw" eval="True"/>
+            <field name="sla_hours">8.0</field>
+            <field name="default_priority">normal</field>
+            <field name="requires_execution" eval="True"/>
+            <field name="executor_mode">admin_group</field>
+        </record>
+        <record id="step_it_support_1" model="tp.request.type.step">
+            <field name="type_id" ref="type_it_support"/>
+            <field name="sequence">10</field>
+            <field name="name">Duyệt yêu cầu hỗ trợ IT</field>
+            <field name="approver_rule">admin_group</field>
+            <field name="approval_policy">any_one</field>
+            <field name="sla_hours">8.0</field>
+            <field name="can_return" eval="True"/>
+            <field name="can_reject" eval="True"/>
+        </record>
+
+        <!-- 7. Đề nghị nội bộ chung (chờ Quản trị cấu hình người duyệt cụ thể - không tự chọn người thật) -->
+        <record id="type_internal_general" model="tp.request.type">
+            <field name="code">INTERNAL_GENERAL</field>
+            <field name="name">Đề nghị nội bộ chung</field>
+            <field name="description">Các đề nghị hành chính, phối hợp nội bộ có người duyệt và người thực hiện được cấu hình bởi Quản trị.</field>
+            <field name="guidance">Nhập tiêu đề rõ ràng, trình bày đầy đủ nội dung/lý do, ngày cần đáp ứng và tệp đính kèm liên quan. Lưu ý: cần Quản trị cấu hình người duyệt trước khi gửi.</field>
+            <field name="icon">assignment</field>
+            <field name="color">#475569</field>
+            <field name="sequence">70</field>
+            <field name="handler_kind">general</field>
+            <field name="submitter_scope">all_internal</field>
+            <field name="require_reason" eval="True"/>
+            <field name="require_attachment" eval="False"/>
+            <field name="allow_attachment" eval="True"/>
+            <field name="require_needed_date" eval="False"/>
+            <field name="show_project_field" eval="True"/>
+            <field name="allow_reject" eval="True"/>
+            <field name="allow_return" eval="True"/>
+            <field name="allow_withdraw" eval="True"/>
+            <field name="sla_hours">24.0</field>
+            <field name="default_priority">normal</field>
+            <field name="requires_execution" eval="True"/>
+            <field name="executor_mode">specific_users</field>
+        </record>
+        <record id="step_internal_general_1" model="tp.request.type.step">
+            <field name="type_id" ref="type_internal_general"/>
+            <field name="sequence">10</field>
+            <field name="name">Người duyệt theo cấu hình</field>
+            <field name="approver_rule">specific_users</field>
+            <field name="approval_policy">any_one</field>
+            <field name="sla_hours">24.0</field>
+            <field name="can_return" eval="True"/>
+            <field name="can_reject" eval="True"/>
+        </record>
+    </data>
+</odoo>
