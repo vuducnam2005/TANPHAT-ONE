@@ -90,6 +90,10 @@ class EmployeeIdentity(models.Model):
 class UserIdentity(models.Model):
     _inherit = 'res.users'
 
+    @api.model
+    def action_get(self):
+        return self.env.ref('tp_web_login.action_account_security').sudo().read()[0]
+
     def _get_employee_fields_to_sync(self):
         # Native only copies photos to empty employees and lets preferences rename HR.
         return [f for f in super()._get_employee_fields_to_sync() if f not in {'name', 'image_1920'}]

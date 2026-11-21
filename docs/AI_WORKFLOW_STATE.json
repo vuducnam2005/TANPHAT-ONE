@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-21T04:51:46.451871+00:00",
-  "last_change_id": "CHG-20261121-003",
-  "code_digest": "87912d5ed5c127115ea5f9cde4ef610b845e270547891bfda2898b97875d842c",
-  "code_file_count": 804,
+  "updated_at": "2026-11-21T06:23:34.028778+00:00",
+  "last_change_id": "CHG-20261121-004",
+  "code_digest": "ff404a07302109977ac6805b67df933260a1c102b096e47fcc41c59b7dd1defa",
+  "code_file_count": 805,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "751b777373a23cfb31354c0d9565e2658577aa57511cab5f44360355da593483",
-    "docs/CHANGELOG.md": "d500d6f1c952cdc9b13f6e07294df65893c6b010906e82ac0cc143e75b40888e",
+    "docs/PROJECT_STATUS.md": "9bdb186b36701aa4bc394a7cbb19339c0c142ad5426361ce1bebae008034af4b",
+    "docs/CHANGELOG.md": "27a6e636758dc5c5ea92fe71ba5ef99c13c6dbdf6db3113add647b3723bf327b",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "eb762826b3aa52ff6c476bcf4a61100e2b1a1ff2c685680a9f0b5771b4b8aeca",
+    "docs/ROADMAP.md": "94d80e67a9a67acf82a35cf7bce4d78cbeb2a3e00cd1bac71204ecb6a29c853e",
     "docs/DECISIONS.md": "e1de85e4cc8daa3832751699e400cd3dc6eb2bab5e708ceda3e7787154476ea4",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
@@ -20,6 +20,9 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Odoo /tp_request 12/12 PASS (incl. overdue==0), OWL 3 audit 100/100 handlers clean"
+    "42/42 Odoo role/route tests PASS including native own TOTP counter guard; browser employee/delegate 2FA+API 8/8 PASS",
+    "Browser desktop1440/mobile390, password identity verification, cancel, F5, session filter, new login replaces old: PASS",
+    "Ruff new Python files and XML/AST PASS; old HttpCase login has read-only TestCursor limitation, not declared passing",
+    "Seal uses HEAD plus this scoped release; unrelated dirty reporting/sidebar/tooling files excluded"
   ]
 }

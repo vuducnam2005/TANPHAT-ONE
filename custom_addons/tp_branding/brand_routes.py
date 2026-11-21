@@ -17,6 +17,16 @@ Shared specification between backend and frontend.
 #   has_detail: True if screen supports /<id> and /tao-moi
 #   aliases: Legacy or shorthand URLs that canonicalize to this URL
 ROUTE_DEFINITIONS = [
+    {
+        "url": "/app/tai-khoan/bao-mat",
+        "action_xml_id": "tp_web_login.action_account_security",
+        "action_tag": "tp_web_login.account_security",
+        "native_slug": "tai-khoan-bao-mat",
+        "name": "Tài khoản & Bảo mật",
+        "module": "tp_web_login",
+        "has_detail": False,
+        "aliases": [],
+    },
     # ------------------------------------------------------------------
     # 1. Trang chủ
     # ------------------------------------------------------------------

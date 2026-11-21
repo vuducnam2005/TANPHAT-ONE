@@ -65,7 +65,7 @@ export async function performNativeLogout({ notification, pwa } = {}) {
 
 /**
  * Open the user's self-service personal profile via a registered workspace handler
- * (e.g. TP HR full profile) or fall back cleanly to native res.users preferences.
+ * (e.g. TP HR full profile) or fall back to the TANPHAT ONE account workspace.
  */
 export async function openPersonalProfileAction(env) {
     const action = env.services?.action;
@@ -80,9 +80,7 @@ export async function openPersonalProfileAction(env) {
             return await handler(env);
         }
         if (orm && action && user.userId) {
-            const actionDescription = await orm.call("res.users", "action_get", []);
-            actionDescription.res_id = user.userId;
-            return await action.doAction(actionDescription);
+            return await action.doAction("tp_web_login.action_account_security");
         }
         return false;
     } catch {

@@ -1,0 +1,21 @@
+<odoo>
+    <record id="passkey_create_branded" model="ir.ui.view">
+        <field name="name">TANPHAT ONE — Thêm khóa truy cập</field><field name="model">auth.passkey.key.create</field><field name="inherit_id" ref="auth_passkey.auth_passkey_key_create_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="attributes"><attribute name="class" add="tp-security-wizard" separator=" "/><attribute name="string">Thêm khóa truy cập</attribute></xpath>
+            <xpath expr="//group" position="before"><h3>Đăng nhập thuận tiện và an toàn</h3><p>Đặt tên để nhận diện thiết bị, sau đó xác nhận bằng chức năng bảo mật trên thiết bị của bạn.</p></xpath>
+            <xpath expr="//field[@name='name']" position="attributes"><attribute name="string">Tên khóa truy cập</attribute><attribute name="placeholder">Ví dụ: Máy tính văn phòng</attribute></xpath>
+            <xpath expr="//button[@name='make_key']" position="attributes"><attribute name="string">Thêm khóa truy cập</attribute></xpath>
+            <xpath expr="//button[@special='cancel']" position="attributes"><attribute name="string">Hủy</attribute></xpath>
+        </field>
+    </record>
+    <record id="passkey_rename_branded" model="ir.ui.view">
+        <field name="name">TANPHAT ONE — Đổi tên khóa truy cập</field><field name="model">auth.passkey.key</field><field name="inherit_id" ref="auth_passkey.auth_passkey_key_rename"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="attributes"><attribute name="class" add="tp-security-wizard" separator=" "/><attribute name="string">Đổi tên khóa truy cập</attribute></xpath>
+            <xpath expr="//field[@name='name']" position="attributes"><attribute name="string">Tên khóa truy cập</attribute></xpath>
+            <xpath expr="//button[@special='save']" position="attributes"><attribute name="string">Lưu tên</attribute></xpath>
+            <xpath expr="//button[@special='cancel']" position="attributes"><attribute name="string">Hủy</attribute></xpath>
+        </field>
+    </record>
+</odoo>

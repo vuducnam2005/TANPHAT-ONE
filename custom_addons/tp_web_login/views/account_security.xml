@@ -1,0 +1,49 @@
+<odoo>
+    <record id="action_account_security" model="ir.actions.client">
+        <field name="name">Tài khoản &amp; Bảo mật</field>
+        <field name="tag">tp_web_login.account_security</field>
+        <field name="path">tai-khoan-bao-mat</field>
+    </record>
+    <record id="password_own_branded" model="ir.ui.view">
+        <field name="name">TANPHAT ONE — Đổi mật khẩu cá nhân</field><field name="model">change.password.own</field><field name="inherit_id" ref="base.change_password_own_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="attributes"><attribute name="class" add="tp-security-wizard" separator=" "/><attribute name="string">Đổi mật khẩu</attribute></xpath>
+            <xpath expr="//group" position="before"><h3>Bảo vệ tài khoản của bạn</h3><p>Nhập mật khẩu mới và xác nhận lại. Không chia sẻ mật khẩu với người khác.</p></xpath>
+            <xpath expr="//field[@name='new_password']" position="attributes"><attribute name="string">Mật khẩu mới</attribute><attribute name="placeholder">Nhập mật khẩu mới</attribute></xpath>
+            <xpath expr="//field[@name='confirm_password']" position="attributes"><attribute name="string">Xác nhận mật khẩu mới</attribute><attribute name="placeholder">Nhập lại mật khẩu mới</attribute></xpath>
+            <xpath expr="//button[@name='change_password']" position="attributes"><attribute name="string">Đổi mật khẩu</attribute></xpath>
+            <xpath expr="//button[@special='cancel']" position="attributes"><attribute name="string">Hủy</attribute></xpath>
+        </field>
+    </record>
+    <record id="totp_branded" model="ir.ui.view">
+        <field name="name">TANPHAT ONE — Thiết lập xác thực hai bước</field><field name="model">auth_totp.wizard</field><field name="inherit_id" ref="auth_totp.view_totp_wizard"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="attributes"><attribute name="class" add="tp-security-wizard" separator=" "/></xpath>
+            <xpath expr="//h3[contains(@class, 'd-none')]" position="replace"><h3 class="fw-bold d-none d-md-block">Quét mã bằng ứng dụng xác thực</h3></xpath>
+            <xpath expr="//h3[a]" position="replace"><h3><a data-bs-toggle="collapse" href="#collapseTotpSecret" role="button" aria-expanded="false" aria-controls="collapseTotpSecret">Không quét được mã?</a></h3></xpath>
+            <xpath expr="//h3[contains(@class, 'd-md-none')]" position="replace"><h3 class="fw-bold d-block d-md-none">Thêm khóa này vào ứng dụng xác thực</h3></xpath>
+            <xpath expr="//h3[normalize-space(.)='Write the code given by your app']" position="replace"><h3>Nhập mã từ ứng dụng xác thực</h3></xpath>
+            <xpath expr="//field[@name='code']" position="attributes"><attribute name="placeholder">Mã xác thực</attribute><attribute name="string">Mã xác thực</attribute></xpath>
+            <xpath expr="//button[@name='enable']" position="attributes"><attribute name="string">Bật xác thực hai bước</attribute></xpath>
+            <xpath expr="//button[@special='cancel']" position="attributes"><attribute name="string">Hủy</attribute></xpath>
+        </field>
+    </record>
+    <record id="api_description_branded" model="ir.ui.view">
+        <field name="name">TANPHAT ONE — Tạo khóa API</field><field name="model">res.users.apikeys.description</field><field name="inherit_id" ref="base.form_res_users_key_description"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="attributes"><attribute name="class" add="tp-security-wizard" separator=" "/></xpath>
+            <xpath expr="//field[@name='name']" position="attributes"><attribute name="string">Tên khóa để nhận diện dịch vụ sử dụng</attribute><attribute name="placeholder">Ví dụ: Kết nối báo cáo</attribute></xpath>
+            <xpath expr="//field[@name='duration']" position="attributes"><attribute name="string">Thời hạn sử dụng</attribute></xpath>
+            <xpath expr="//button[@name='make_key']" position="attributes"><attribute name="string">Tạo khóa API</attribute></xpath>
+            <xpath expr="//button[@special='cancel']" position="attributes"><attribute name="string">Hủy</attribute></xpath>
+        </field>
+    </record>
+    <record id="api_show_branded" model="ir.ui.view">
+        <field name="name">TANPHAT ONE — Khóa API mới</field><field name="model">res.users.apikeys.show</field><field name="inherit_id" ref="base.form_res_users_key_show"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="attributes"><attribute name="class" add="tp-security-wizard" separator=" "/></xpath>
+            <xpath expr="//h3" position="replace"><h3>Lưu khóa API của bạn</h3></xpath>
+            <xpath expr="//p" position="replace"><p>Khóa chỉ hiển thị một lần. Sao chép và lưu an toàn; khóa cho phép truy cập bằng quyền tài khoản của bạn.</p></xpath>
+        </field>
+    </record>
+</odoo>

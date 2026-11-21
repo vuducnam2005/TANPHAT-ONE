@@ -3,9 +3,9 @@
     'summary': 'Native Home: admin 7-item layout and user workspace (UI-HOME-004)',
     'description': 'Native Odoo home page for TANPHAT ONE (UI-HOME-004). See README.md.',
     'author': 'Tan Phat JSC',
-    'version': '20.0.1.11.0',
+    'version': '20.0.1.11.1',
     'license': 'LGPL-3',
-    'depends': ['web'],
+    'depends': ['web', 'tp_web_login'],
     'data': [
         'views/tp_web_home_menus.xml',
         'views/tp_web_home_templates.xml',

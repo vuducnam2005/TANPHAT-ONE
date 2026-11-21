@@ -52,9 +52,10 @@ describe("UI-SHELL-UNIFY-001 identity and logout menu", () => {
         await animationFrame();
         expect(".tp-shell-user-heading").toHaveCount(0);
         expect(".dropdown-divider").toHaveCount(0);
-        expect(".o-dropdown--menu .dropdown-item").toHaveCount(2);
+        expect(".o-dropdown--menu .dropdown-item").toHaveCount(3);
         expect(queryAllTexts(".o-dropdown--menu .dropdown-item")).toEqual([
             "Thông tin cá nhân",
+            "Tài khoản & Bảo mật",
             "Đăng xuất",
         ]);
         // Underlying registry stays untouched for other services/features.
@@ -78,14 +79,15 @@ describe("UI-SHELL-UNIFY-001 identity and logout menu", () => {
 
         await contains(".tp-sb-user-btn").click();
         await animationFrame();
-        expect(".tp-logout-dropdown-menu .dropdown-item").toHaveCount(2);
+        expect(".tp-logout-dropdown-menu .dropdown-item").toHaveCount(3);
         expect(queryAllTexts(".tp-logout-dropdown-menu .dropdown-item")).toEqual([
             "Thông tin cá nhân",
+            "Tài khoản & Bảo mật",
             "Đăng xuất",
         ]);
     });
 
-    test("collapsed sidebar hides name label but keeps accessible name and 2-item dropdown", async () => {
+    test("collapsed sidebar hides name label but keeps accessible name and 3-item dropdown", async () => {
         patchWithCleanup(user, { partnerId: null, name: "Nguyễn Văn Rất Dài Tên" });
         await mountWithCleanup(TpUserAccountMenu, { props: { collapsed: true } });
 
@@ -98,6 +100,7 @@ describe("UI-SHELL-UNIFY-001 identity and logout menu", () => {
         await animationFrame();
         expect(queryAllTexts(".tp-logout-dropdown-menu .dropdown-item")).toEqual([
             "Thông tin cá nhân",
+            "Tài khoản & Bảo mật",
             "Đăng xuất",
         ]);
     });

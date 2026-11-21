@@ -53,10 +53,10 @@
                             <div class="p-3">
                                 <InlineErrors errors="[]" server="this.actionErrorFor('security')" attempt="this.state.actionAttempt"/>
                                 <div class="alert alert-info mb-3">
-                                    Tài khoản này chưa gắn với hồ sơ nhân viên trong công ty hiện tại. Bạn vẫn có thể cập nhật ảnh đại diện, ngôn ngữ, mật khẩu và bảo mật tài khoản qua hộp thoại Tùy chọn tài khoản.
+                                    Tài khoản này chưa có hồ sơ nhân viên trong công ty hiện tại. Bạn vẫn có thể quản lý đăng nhập và bảo mật tại trang Tài khoản &amp; Bảo mật.
                                 </div>
                                 <button type="button" class="btn btn-primary" t-on-click="() => this.openAccountSecurityPreferences()">
-                                    Mở Tùy chọn &amp; Đổi mật khẩu
+                                    Tài khoản &amp; Bảo mật
                                 </button>
                             </div>
                         </t>
@@ -543,7 +543,7 @@
                                                 <div class="p-3 pt-0">
                                                     <InlineErrors errors="[]" server="this.actionErrorFor('security')" attempt="this.state.actionAttempt"/>
                                                     <button type="button" class="btn btn-outline-primary" t-on-click="() => this.openAccountSecurityPreferences()">
-                                                        Đổi mật khẩu &amp; Tùy chọn tài khoản
+                                                        Tài khoản &amp; Bảo mật
                                                     </button>
                                                 </div>
                                             </section>

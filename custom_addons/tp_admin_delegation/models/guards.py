@@ -25,6 +25,7 @@ _ACCOUNT = object()
 _PROFILE = object()
 _PROFILE_CREATE = object()
 _SETTINGS_EXEC = object()
+_MFA_COUNTER = object()
 
 _SELF_FIELDS = set(SELF_EDITABLE_SCALAR_FIELDS) | set(SELF_EDITABLE_MANY2ONE_FIELDS)
 _VERSION_EDIT_STAMPS = frozenset({'last_modified_date', 'last_modified_uid'})
@@ -224,6 +225,11 @@ class ProtectedUser(models.Model):
     def write(self, vals):
         if not self:
             return super().write(vals)
+        # The public MFA route writes the counter only AFTER native OTP verification.
+        # An object sentinel cannot be forged through JSON/RPC context.
+        if (set(vals) == {'totp_last_counter'} and self.env.context.get('_tp_native_mfa') is _MFA_COUNTER
+                and request and not request.session.uid and self.ids == [request.session.get('pre_uid')]):
+            return super().write(vals)
         trusted = _is_trusted_original_or_cli(self.env)
         protected_groups = _protected_admin_groups(self.env)
         targets = self.sudo().with_context(active_test=False)
@@ -247,7 +253,7 @@ class ProtectedUser(models.Model):
                 if target.id == account_actor_uid(self.env) and account_target_kind(target) == 'granted_admin':
                     allowed = {'email', 'phone', 'mobile', 'lang', 'tz', 'signature', 'password', 'new_password',
                                'image_1920', 'image_1024', 'image_512', 'image_256', 'image_128',
-                               'totp_secret', 'totp_trusted_device_ids'}
+                               'totp_secret', 'totp_last_counter', 'totp_trusted_device_ids', 'auth_passkey_key_ids'}
                     if set(vals) - allowed:
                         raise AccessError(self.env._('Tài khoản của mình chỉ được sửa qua chức năng cá nhân được phép.'))
                 _dir, eff = target._tp_admin_group_state(protected_groups)
@@ -368,6 +374,16 @@ class ProtectedChangePasswordUser(models.TransientModel):
 class ProtectedApiKeys(models.Model):
     _inherit = 'res.users.apikeys'
 
+    def unlink(self):
+        assert_can_manage_account_targets(self.env, self.sudo().user_id, allow_self=True)
+        return super().unlink()
+
+    def write(self, vals):
+        assert_can_manage_account_targets(self.env, self.sudo().user_id, allow_self=True)
+        if vals.get('user_id'):
+            assert_can_manage_account_targets(self.env, self.env['res.users'].browse(vals['user_id']), allow_self=True)
+        return super().write(vals)
+
     def _remove(self):
         if not _is_trusted_original_or_cli(self.env):
             for key in self.sudo():
@@ -378,6 +394,10 @@ class ProtectedApiKeys(models.Model):
 
 class ProtectedTotpDevice(models.Model):
     _inherit = 'auth_totp.device'
+
+    def unlink(self):
+        assert_can_manage_account_targets(self.env, self.sudo().user_id, allow_self=True)
+        return super().unlink()
 
     def _remove(self):
         if not _is_trusted_original_or_cli(self.env):
@@ -471,7 +491,8 @@ class ProtectedEmployee(models.Model):
         Default: the "Thông tin cá nhân" allow-list. A module that adds its own self-service
         path (tp_hr_bank: own bank accounts) extends this set; that path still checks ownership.
         """
-        return _SELF_FIELDS
+        # Native user preferences synchronise timezone to the linked employee.
+        return _SELF_FIELDS | {'tz'}
 
     def _tp_assert_not_original_admin_employee(self, vals=None):
         if _is_trusted_original_or_cli(self.env):
@@ -721,7 +742,7 @@ class ProtectedHrVersion(models.Model):
             stamps = set()
             if vals.get('last_modified_uid', self.env.uid) in (self.env.uid, account_actor_uid(self.env)):
                 stamps = _VERSION_EDIT_STAMPS
-            if own and set(vals) - _SELF_FIELDS - stamps:
+            if own and set(vals) - _SELF_FIELDS - {'tz'} - stamps:
                 raise AccessError(self.env._('Hồ sơ của mình chỉ được sửa thông tin cá nhân trong danh sách cho phép.'))
         if not _is_trusted_original_or_cli(self.env):
             _assert_profile_links(self.env, vals)

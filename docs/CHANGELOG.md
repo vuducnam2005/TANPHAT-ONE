@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261121-004 — ACCOUNT-SECURITY-001: Giao diện bảo mật và ranh giới tài khoản
+
+- Người dùng giao triển khai và kiểm tra các vai trò. Thay modal tùy chọn bằng workspace sáng, responsive; giữ backend xác thực native và bước xác minh danh tính, thêm URL có nghĩa và lối vào từ avatar.
+- Siết backend thu hồi phiên, thao tác trực tiếp API key, thiết bị TOTP và passkey để giữ DEC-062; không dùng quyền admin kỹ thuật để vượt ranh giới peer-admin. Cho phép tùy chọn múi giờ cá nhân đồng bộ qua employee/version.
+- Kiểm thử: 42/42 ca phân quyền/route PASS. Trình duyệt thực: desktop1440/mobile390, đổi mật khẩu qua xác minh, hủy, F5, bộ lọc phiên, phiên mới vô hiệu hóa phiên cũ PASS. Hai HttpCase cũ của tp_web_login bị lỗi TestCursor read-only; không nhận là toàn bộ suite login PASS.
+- Server đọc-only trước thay đổi: admin gốc chưa bật 2FA, 154 bản ghi phiên chưa marked revoked; URL gốc `http://tpone.tadic.vn`, freeze false. Khóa tên log có tồn tại, chưa xác định mục đích; không xóa. Chưa có bằng chứng tài khoản bị xâm nhập.
+- Tìm và sửa lỗi native cập nhật bộ đếm TOTP cho admin ủy quyền khi thiết lập và trong bước MFA chưa có session.uid; chỉ cho luồng native đã kiểm mã đi qua sentinel server-side, không nhận sentinel từ RPC. Extended browser 8/8 PASS cho nhân viên/admin ủy quyền.
+- Chưa deploy tại mốc tạo bản phát hành; receipt sẽ ghi sau khi áp server.
+
 ## CHG-20261121-003 — TP-REQUEST-001: Sửa OWL 3 trên màn chi tiết & quản trị đề nghị và bộ đếm Quá hạn
 
 - 21/11/2026 (Asia/Saigon). Sửa lỗi runtime khi bấm **Xem** chi tiết hồ sơ (`Cannot read properties of undefined (reading 'data')`): chuyển `request_detail.xml` và `request_admin.xml` sang chuẩn OWL 3 (`this.*`, `t-out`), bổ sung `markup()` cho nội dung trao đổi trong `request_detail.js`; sửa `_search_is_overdue` trong `request_record.py` hỗ trợ toán tử `'in'/'not in'` chuẩn hóa bởi Odoo 20 Domain; bổ sung kiểm thử `overdue == 0` trong `test_tp_request.py` (`/tp_request` 12/12 PASS); đồng bộ lên PC Server `192.168.1.73`, restart `tp-odoo` và xác minh `https://tpone.tadic.vn/web/health` 200.
@@ -1029,14 +1038,14 @@
 - Ngày: 14/11/2026 (Asia/Saigon).
 - Phạm vi: `tp_hr_workspace` (`models/hr_ui.py`, `views/workspace.xml`, `static/src/profile/employee_profile.scss`, `tests/test_hr_ui.py`), tài liệu (`PROJECT_STATUS.md`, `CHANGELOG.md`, `UI_SHELL_UNIFY_001_ACCEPTANCE.md`, `custom_addons/tp_hr_workspace/README.md`).
 - Nội dung: Thiết kế lại tab `Thông tin cá nhân` của form `hr.employee` thành 8 thẻ `.o_tp_hr_card` xếp lưới 2 cột (`.o_tp_hr_personal_grid`, mobile 1 cột) đồng bộ phong cách tab `Tổng quan`; bỏ `o_address_format` gây khoảng trắng dọc và thay bằng 6 dòng địa chỉ tách bạch; xử lý fallback `"Chưa có tệp"` cho trường nhị phân trống ở chế độ chỉ đọc (thay cho `"false"`/tên giả định chưa tải); Việt hóa 100% nhãn, tooltip (`help`) và selection (`sex`, `marital`, `certificate`) qua `HrVersion` & `Employee` trong `hr_ui.py`, đồng bộ nhất quán với màn hình tự phục vụ `Thông tin cá nhân`.
-- Kiểm thử: `ruff check` (`0` lỗi), XML (`14` file), `git diff --check`, Odoo tests `--test-tags /tp_hr_workspace,/tp_web_home` (`67/67` pass trên `18079`), HOOT `tp_hr_workspace` (`41/41` — `197` assertions trên `18079`), Playwright `verify_personal_tab.cjs` trên `18079`; backup `backup-main-v3` (`tp_tanphat_dev.dump` `8.534.446` bytes + `728` filestore files), upgrade `tp_hr_workspace` + `verify-post` (khớp 7 bảng) + `smoke_main.cjs` & `smoke_main_personal_tab.cjs` read-only pass trên `18069`.
+- Kiểm thử: `ruff check` (`0` lỗi), XML (`14` file), `git diff --check`, Odoo tests `--test-tags /tp_hr_workspace,/tp_web_home` (`67/67` pass trên `18079`), HOOT `tp_hr_workspace` (`42/42` — `197` assertions trên `18079`), Playwright `verify_personal_tab.cjs` trên `18079`; backup `backup-main-v3` (`tp_tanphat_dev.dump` `8.534.446` bytes + `728` filestore files), upgrade `tp_hr_workspace` + `verify-post` (khớp 7 bảng) + `smoke_main.cjs` & `smoke_main_personal_tab.cjs` read-only pass trên `18069`.
 
 ## CHG-20261114-002 — UI-SHELL-UNIFY-001 (hoàn thiện theo xác nhận người dùng): Menu người dùng 2 mục & Thông tin cá nhân tự phục vụ đồng bộ HR (kèm CHG-20261114-001)
 
 - Ngày: 14/11/2026 (Asia/Saigon). Quyết định: `DEC-043`.
 - Phạm vi: `tp_web_home`, `tp_hr_workspace`, `tp_kd_workspace`, tài liệu (`UI_SHELL_UNIFY_001_ACCEPTANCE.md`, `UI_HOME_003_DESIGN.md`, `UI_HOME_004_ADMIN_DESIGN.md`, `UI_SHELL_AUTH_001_DESIGN.md`, `ROADMAP.md`, `DECISIONS.md`, `PROJECT_STATUS.md`, README 3 addon).
 - Nội dung: Thống nhất Trang chủ thành một layout `#tp-unified-home` dùng chung (giữ lọc menu server + `user.isSystem`, bỏ fallback `hr.menu_hr_root` ở mục Quản lý nhân sự); tạo dịch vụ/component dùng chung `tp_identity` + `<TpUserAccountMenu>` tại `tp_web_home/static/src/identity/` (hỗ trợ live `tp.identity/changed`, fallback chữ cái, mở hồ sơ cá nhân qua registry `tp_personal_profile`, logout native); cập nhật `UserMenu`, `BurgerUserMenu` và sidebar HR/KH-KD còn đúng 2 mục **`Thông tin cá nhân`** và **`Đăng xuất`**; bổ sung màn hình tự phục vụ `tp_hr_workspace.action_my_profile` (`/odoo/my-profile`, `models/my_profile.py`, `controllers/my_profile.py`, `static/src/my_profile/`) giữ 6 tab đồng bộ trực tiếp allowlist thông tin cá nhân + ảnh đại diện về `hr.employee` của HR Admin, cho xem/tải hợp đồng của chính mình (`/tp_hr/my_contract/...`) và khóa chặt trường tổ chức/chức vụ/hợp đồng/ACL; thay `"Tài khoản"` cuối sidebar HR/KH-KD bằng `[Avatar] Họ tên` và ẩn `.o_user_menu`/`.o_mobile_menu_toggle` ở navbar khi mở workspace có sidebar; xóa `tp_hr_workspace/static/src/identity_navbar.js`.
-- Kiểm thử: `ruff check` (`0` lỗi), XML (`44` file), `git diff --check`, Odoo tests (`80/80` pass trên `18079`, gồm 5 test `TestHrSelfProfile`), HOOT (`35/35` + `41/41` + `22/22` pass trên `18079`), Playwright `verify_test.cjs` + `verify_extra.cjs` trên `18079` (bao gồm E2E tự sửa hồ sơ cá nhân -> kiểm tra đồng bộ ngay bên Admin HR + RPC `AccessError`); backup mới `backup-main-v2` (`tp_tanphat_dev.dump` `8.528.298` bytes + `722` filestore files), upgrade + `verify-post` (khớp 7 bảng) + Playwright `smoke_main.cjs` read-only pass trên `18069`.
+- Kiểm thử: `ruff check` (`0` lỗi), XML (`44` file), `git diff --check`, Odoo tests (`80/80` pass trên `18079`, gồm 5 test `TestHrSelfProfile`), HOOT (`35/35` + `42/42` + `22/22` pass trên `18079`), Playwright `verify_test.cjs` + `verify_extra.cjs` trên `18079` (bao gồm E2E tự sửa hồ sơ cá nhân -> kiểm tra đồng bộ ngay bên Admin HR + RPC `AccessError`); backup mới `backup-main-v2` (`tp_tanphat_dev.dump` `8.528.298` bytes + `722` filestore files), upgrade + `verify-post` (khớp 7 bảng) + Playwright `smoke_main.cjs` read-only pass trên `18069`.
 
 ## CHG-20261113-009 — UI-INPUT-001: Chuẩn hóa ô nhập/chọn/ngày và avatar trong Danh sách nhân viên
 - Phạm vi: chỉ giao diện; quyền, readonly, xác thực, guard và dữ liệu giữ nguyên.
@@ -1971,7 +1980,7 @@ Mỗi lượt thay đổi code hoặc quyết định kiến trúc ghi một m�
 - Không đổi state key, XML ID, domain, dữ liệu, React hay quyền.
 - Test trên DB tạm `tp_tanphat_demo_vi002_test`, đã drop sau khi chạy:
   - Cài với vi_VN, chạy `/tp_demo_workspace,/tp_contract`: 0 failed, 0 error trên 74 test.
-  - 41/41 nhãn vi_VN khớp catalog. Không view demo nào còn chữ lọc cũ. Ruff đạt.
+  - 42/42 nhãn vi_VN khớp catalog. Không view demo nào còn chữ lọc cũ. Ruff đạt.
 - Không chạm demo18109, dev hay `tp_tanphat_data002_test`. Không commit/push.
 
 ## CHG-20261102-009 — Việt hóa giao diện Odoo native và addon TP (VI-001)

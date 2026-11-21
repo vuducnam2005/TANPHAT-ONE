@@ -7,6 +7,16 @@
 import { session } from "@web/session";
 
 export const ROUTE_DEFINITIONS = [
+    {
+        url: "/app/tai-khoan/bao-mat",
+        action_xml_id: "tp_web_login.action_account_security",
+        action_tag: "tp_web_login.account_security",
+        native_slug: "tai-khoan-bao-mat",
+        name: "Tài khoản & Bảo mật",
+        module: "tp_web_login",
+        has_detail: false,
+        aliases: [],
+    },
     // 1. Trang chủ
     {
         url: "/app/trang-chu",

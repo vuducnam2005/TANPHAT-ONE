@@ -1,0 +1,81 @@
+<templates xml:space="preserve">
+    <t t-name="tp_web_login.AccountSecurity">
+        <main class="tp-account-security" t-att-aria-busy="this.state.busy">
+            <div class="tp-security-heading">
+                <div><h1>Tài khoản &amp; Bảo mật</h1><p>Quản lý cách đăng nhập và bảo vệ tài khoản của bạn.</p></div>
+                <button class="btn btn-outline-secondary" t-on-click="this.back">Quay lại</button>
+            </div>
+            <div t-if="this.state.error" class="alert alert-danger" role="alert"><t t-out="this.state.error"/> <button class="btn btn-link" t-on-click="this.load">Thử tải lại</button></div>
+            <t t-if="this.state.data">
+                <div class="tp-security-identity">
+                    <img t-att-src="'/web/image/res.users/' + this.state.data.user_id + '/avatar_128?v=' + this.state.avatarVersion" alt="Ảnh đại diện"/>
+                    <div><h2 t-out="this.state.data.name"/><span t-out="this.state.data.login"/></div>
+                    <span class="tp-security-chip">Tài khoản của bạn</span>
+                </div>
+                <div class="tp-security-layout">
+                    <div>
+                        <section class="tp-security-section">
+                            <div class="tp-security-section-title"><span class="material-symbols-outlined tp-security-symbol" aria-hidden="true">lock</span><div><h2>Mật khẩu</h2><p>Đổi mật khẩu khi cần. Mật khẩu hiện tại luôn được giữ bí mật.</p></div></div>
+                            <button class="btn btn-primary" t-att-disabled="this.state.busy" t-on-click="() => this.run('password')">Đổi mật khẩu</button>
+                        </section>
+                        <section class="tp-security-section">
+                            <div class="tp-security-section-title"><span class="material-symbols-outlined tp-security-symbol" aria-hidden="true">shield</span><div><h2>Xác thực hai bước</h2><p>Thêm mã từ ứng dụng xác thực khi đăng nhập.</p></div></div>
+                            <div class="tp-security-actions">
+                                <span t-att-class="'tp-security-chip ' + (this.state.data.totp_enabled ? 'is-enabled' : 'is-warning')" t-out="this.state.data.totp_enabled ? 'Đã bật' : 'Chưa bật'"/>
+                                <button t-if="!this.state.data.totp_enabled" class="btn btn-primary" t-att-disabled="this.state.busy" t-on-click="() => this.run('totp_enable')">Bật xác thực hai bước</button>
+                                <button t-else="" class="btn btn-outline-danger" t-att-disabled="this.state.busy" t-on-click="() => this.confirm('totp_disable', null, 'Tắt xác thực hai bước sẽ bỏ lớp mã xác thực khi đăng nhập. Bạn muốn tiếp tục?')">Tắt xác thực hai bước</button>
+                            </div>
+                        </section>
+                        <section t-if="this.state.data.passkey_supported" class="tp-security-section">
+                            <div class="tp-security-section-title"><span class="material-symbols-outlined tp-security-symbol" aria-hidden="true">key</span><div><h2>Khóa truy cập</h2><p>Đăng nhập bằng vân tay, khuôn mặt hoặc khóa bảo mật trên thiết bị hỗ trợ.</p></div></div>
+                            <p t-if="!this.state.data.passkeys.length" class="tp-security-muted">Bạn chưa có khóa truy cập.</p>
+                            <div t-foreach="this.state.data.passkeys" t-as="key" t-key="key.id" class="tp-security-record">
+                                <strong t-out="key.name"/><div class="tp-security-actions"><button class="btn btn-outline-secondary" t-att-disabled="this.state.busy" t-on-click="() => this.run('passkey_rename', key.id)">Đổi tên</button><button class="btn btn-outline-danger" t-att-disabled="this.state.busy" t-on-click="() => this.confirm('passkey_remove', key.id, 'Thu hồi khóa truy cập này? Thiết bị sử dụng khóa sẽ không thể đăng nhập bằng khóa đó.')">Thu hồi</button></div>
+                            </div>
+                            <button class="btn btn-outline-primary" t-att-disabled="this.state.busy" t-on-click="() => this.run('passkey_create')">Thêm khóa truy cập</button>
+                        </section>
+                    </div>
+                    <aside class="tp-security-note"><span class="material-symbols-outlined tp-security-symbol" aria-hidden="true">info</span><h2>Mỗi tài khoản, một phiên làm việc</h2><p>Khi đăng nhập trên thiết bị khác, phiên trước sẽ kết thúc theo chính sách hệ thống.</p><p>Danh sách bên dưới là các phiên đã ghi nhận. Số bản ghi lịch sử không phải số thiết bị đang đăng nhập.</p></aside>
+                </div>
+                <section class="tp-security-section tp-security-sessions">
+                    <div class="tp-security-section-title"><span class="material-symbols-outlined tp-security-symbol" aria-hidden="true">desktop_windows</span><div><h2>Phiên đăng nhập</h2><p>Nhận diện phiên hiện tại và kiểm tra lịch sử hoạt động của tài khoản.</p></div></div>
+                    <div class="tp-security-toolbar">
+                        <label>Hiển thị<select name="status" class="form-select" t-att-value="this.state.status" t-on-change="this.filter"><option value="all">Tất cả phiên đã ghi nhận</option><option value="current">Phiên hiện tại</option><option value="revoked">Đã thu hồi</option></select></label>
+                        <label>Số dòng<select name="limit" class="form-select" t-att-value="this.state.limit" t-on-change="this.filter"><option value="10">10</option><option value="20">20</option><option value="50">50</option></select></label>
+                        <button class="btn btn-outline-danger" t-att-disabled="this.state.busy" t-on-click="() => this.confirm('sessions_revoke', null, 'Đăng xuất tất cả các phiên khác? Phiên bạn đang sử dụng được giữ lại.')">Đăng xuất các phiên khác</button>
+                    </div>
+                    <div class="tp-security-table-wrap"><table class="tp-security-table"><thead><tr><th>Trình duyệt / Thiết bị</th><th>Hoạt động gần nhất</th><th>Ghi nhận</th><th>Thao tác</th></tr></thead><tbody>
+                        <tr t-foreach="this.state.data.sessions" t-as="row" t-key="row.id">
+                            <td><strong t-out="row.name"/></td><td t-out="this.date(row.last_activity)"/>
+                            <td><span t-att-class="'tp-security-chip ' + (row.is_current ? 'is-enabled' : '')" t-out="row.is_current ? 'Phiên hiện tại' : (row.revoked ? 'Đã thu hồi' : 'Lịch sử phiên')"/></td>
+                            <td><button t-if="!row.is_current &amp;&amp; !row.revoked" class="btn btn-sm btn-outline-danger" t-att-disabled="this.state.busy" t-on-click="() => this.confirm('session_revoke', row.id, 'Thu hồi phiên đã chọn?')">Thu hồi</button><span t-else="">—</span></td>
+                        </tr>
+                        <tr t-if="!this.state.data.sessions.length"><td colspan="4">Không có phiên phù hợp với bộ lọc.</td></tr>
+                    </tbody></table></div>
+                    <div class="tp-security-pagination"><span><t t-out="this.state.data.session_count"/> bản ghi</span><button class="btn btn-outline-secondary" t-att-disabled="this.state.offset === 0" t-on-click="() => this.page(-1)">Trước</button><span>Trang <t t-out="Math.floor(this.state.offset / this.state.limit) + 1"/></span><button class="btn btn-outline-secondary" t-att-disabled="this.state.offset + this.state.limit >= this.state.data.session_count" t-on-click="() => this.page(1)">Sau</button></div>
+                </section>
+                <details class="tp-security-section tp-security-advanced">
+                    <summary>Tích hợp &amp; khóa API <span class="tp-security-muted">Tùy chọn nâng cao</span></summary>
+                    <p>Khóa API cho phép dịch vụ kết nối bằng quyền của tài khoản bạn. Chỉ tạo khi có nhu cầu tích hợp; không chia sẻ khóa.</p>
+                    <p t-if="!this.state.data.keys.length">Bạn chưa có khóa API.</p>
+                    <article t-foreach="this.state.data.keys" t-as="key" t-key="key.id" class="tp-security-record">
+                        <div><strong t-out="key.name"/><p>Tạo: <t t-out="this.date(key.created)"/> · Hết hạn: <t t-out="this.date(key.expires)"/></p><span t-if="key.expired" class="tp-security-chip is-warning">Đã hết hạn</span></div>
+                        <button class="btn btn-outline-danger" t-att-disabled="this.state.busy" t-on-click="() => this.confirm('api_remove', key.id, 'Thu hồi khóa API này? Dịch vụ đang sử dụng khóa sẽ mất quyền kết nối.')">Thu hồi</button>
+                    </article>
+                    <button class="btn btn-outline-primary" t-att-disabled="this.state.busy" t-on-click="() => this.run('api_create')">Tạo khóa API</button>
+                </details>
+                <details class="tp-security-section tp-security-advanced">
+                    <summary>Tùy chọn cá nhân</summary>
+                    <div class="tp-security-toolbar">
+                        <label>Ngôn ngữ<select name="lang" class="form-select" t-att-value="this.state.lang" t-on-change="this.preference"><option t-foreach="this.state.data.languages" t-as="lang" t-key="lang[0]" t-att-value="lang[0]" t-out="lang[1]"/></select></label>
+                        <label>Múi giờ<select name="tz" class="form-select" t-att-value="this.state.tz" t-on-change="this.preference"><option t-foreach="this.state.data.timezones" t-as="tz" t-key="tz" t-att-value="tz" t-out="tz"/></select></label>
+                        <button class="btn btn-primary" t-att-disabled="this.state.busy" t-on-click="() => this.savePreferences()">Lưu tùy chọn</button>
+                    </div>
+                    <label class="form-label" for="tp-security-avatar">Đổi ảnh đại diện (tối đa 5 MB)</label><input id="tp-security-avatar" type="file" accept="image/*" class="form-control" t-att-disabled="this.state.busy" t-on-change="this.avatar"/>
+                    <p t-if="this.state.saved" class="text-success mt-2" role="status">Đã lưu. Tải lại trang để áp dụng ngôn ngữ hoặc múi giờ mới.</p>
+                </details>
+            </t>
+            <p t-elif="!this.state.error" role="status">Đang tải thông tin bảo mật…</p>
+        </main>
+    </t>
+</templates>

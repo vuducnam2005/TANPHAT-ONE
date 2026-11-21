@@ -10,6 +10,7 @@ patch(UserMenu.prototype, {
     setup() {
         super.setup();
         this.tpIdentity = useService("tp_identity");
+        this.tpAccountAction = useService("action");
     },
 
     get userName() {
@@ -46,6 +47,10 @@ patch(UserMenu.prototype, {
                 sequence: 10,
             },
         ];
+        items.push({
+            type: "item", id: "account_security", description: _t("Tài khoản & Bảo mật"),
+            callback: () => this.tpAccountAction.doAction("tp_web_login.action_account_security"), sequence: 20,
+        });
         const logout = super.getElements().find((el) => el.id === "logout");
         if (logout) {
             items.push({

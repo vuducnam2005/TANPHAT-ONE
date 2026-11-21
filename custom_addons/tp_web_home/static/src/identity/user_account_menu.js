@@ -41,6 +41,7 @@ export class TpUserAccountMenu extends Component {
         });
         this.identity = useService("tp_identity");
         this.dropdown = useDropdownState();
+        this.action = useService("action");
     }
 
     async onOpenProfile() {
@@ -57,5 +58,10 @@ export class TpUserAccountMenu extends Component {
             this.props.onBeforeLogout();
         }
         await this.identity.logout();
+    }
+
+    async onOpenSecurity() {
+        this.dropdown.close();
+        await this.action.doAction("tp_web_login.action_account_security");
     }
 }

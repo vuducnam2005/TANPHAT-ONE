@@ -1,11 +1,14 @@
 {
     'name': 'TANPHAT ONE Login',
     'author': 'Tan Phat JSC',
-    'version': '20.0.2.0.1',
+    'version': '20.0.2.1.0',
     'license': 'LGPL-3',
     'depends': ['web', 'auth_totp', 'auth_signup', 'bus'],
     'assets': {
         'web.assets_backend': [
+            'tp_web_login/static/src/security/account_security.js',
+            'tp_web_login/static/src/security/account_security.xml',
+            'tp_web_login/static/src/security/account_security.scss',
             'tp_web_login/static/src/css/identitycheck.scss',
             'tp_web_login/static/src/js/identitycheck.js',
             'tp_web_login/static/src/css/session_guard.scss',
@@ -23,5 +26,6 @@
     'data': [
         'views/login_templates.xml',
         'views/identitycheck.xml',
+        'views/account_security.xml',
     ],
 }

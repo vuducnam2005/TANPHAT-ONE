@@ -820,9 +820,7 @@ export class TpHrMyProfile extends Component {
     async openAccountSecurityPreferences() {
         this.state.actionError = null;
         try {
-            const actionDescription = await this.orm.call("res.users", "action_get", []);
-            actionDescription.res_id = user.userId;
-            await this.action.doAction(actionDescription);
+            await this.action.doAction("tp_web_login.action_account_security");
         } catch (err) {
             this.showActionError("security", err, {
                 verb: "mở cài đặt bảo mật", write: false, note: "Tài khoản chưa thay đổi.",

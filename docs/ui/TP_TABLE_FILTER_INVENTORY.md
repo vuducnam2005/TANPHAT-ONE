@@ -403,3 +403,12 @@ Ngày 21/11/2026; [nghiệm thu](../demo/TP_REQUEST_001_GUIDE_AND_ACCEPTANCE.md)
 | REQ-T05 | Quản trị → Toàn bộ hồ sơ công ty / `tp_request.action_admin` (`mode=admin_all`, `/app/de-nghi/quan-tri`) | Bắt buộc `is_request_manager`; toàn bộ hồ sơ không nháp trong công ty + nháp của chính mình; dùng chung `TpRequestList` | Server total; 10/20/50; xuất Excel toàn phạm vi lọc | Odoo tests PASS (chặn non-manager, bảo toàn DEC-054/062) |
 | REQ-T06 | Quản trị → Danh mục loại đề nghị / `tp_request.action_admin` (`activeTab=types`) | Tìm không dấu theo mã/tên/mô tả + lọc trạng thái (Hoạt động / Thiếu cấu hình / Ngừng dùng); tập danh mục hữu hạn nhỏ (N/A phân trang lớn) | Đếm tổng trên tab; cảnh báo loại thiếu cấu hình người duyệt | Odoo tests PASS |
 | REQ-T07 | Tổng quan → Công việc cần tôi xử lý / `tp_request.action_overview` (`/app/de-nghi/tong-quan`) | Top 20 hồ sơ cần duyệt/thực hiện/bổ sung ưu tiên quá hạn, theo phạm vi quyền; nút drill-down mở danh sách đầy đủ REQ-T01..T03 | Đếm KPI & biểu đồ Chart.js dữ liệu thật đồng bộ backend | Odoo tests PASS |
+
+
+## ACCOUNT-SECURITY-001 — Phiên của tôi
+
+| ID | Vị trí | Scope | Lọc | Phân trang/count/export | Kiểm |
+| --- | --- | --- | --- | --- | --- |
+| SEC-SESSION-01 | `/app/tai-khoan/bao-mat`, res.session | user_id = session uid, không nhận owner từ client | Tất cả / phiên hiện tại / đã thu hồi | 10/20/50, count cùng domain; export N/A: lịch sử bảo mật tự phục vụ, không xuất identifier/token | Backend negative + browser current-filter/mobile PASS |
+
+API keys/passkeys là danh sách credential của chính mình trong khu vực nâng cao; không export secret, không tạo bảng tổng hợp người khác.
