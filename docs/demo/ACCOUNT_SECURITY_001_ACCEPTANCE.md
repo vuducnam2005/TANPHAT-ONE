@@ -32,4 +32,4 @@ Bản chức năng `2bad1f45` đã áp PC server; nâng 5 module đúng phiên b
 
 Fingerprint trước/sau cho tài khoản, credential, quyền, ledger, nhân sự, thiết bị, đề xuất và công giữ nguyên. Chỉ chuẩn hóa URL công khai sang HTTPS và freeze. Probe ORM chỉ đọc đủ 30 tài khoản nội bộ, gồm 1 gốc, 4 ủy quyền, 25 nhân viên/hệ thống: 0 lỗi. Public health 200. 2FA của admin gốc chưa bật; không tự thay đổi.
 
-Icon SVG và browser bản cuối đã kiểm trên DB test. Phiên bản receipt/static tiếp theo cần kiểm checksum và public bundle sau đồng bộ. Bộ kiểm này không chứng minh không còn lỗ hổng ngoài phạm vi đã rà soát.
+Icon SVG và browser bản cuối đã kiểm trên DB test. Static `3461a34a` đã đồng bộ 6/6 tệp checksum khớp; bundle public JS/CSS đã tải và xác nhận workspace/security action mới. Health200, login200, deep link bảo mật chuyển đúng login. Hai actor thử đã thu grant và khóa trên DB test. Bộ kiểm này không chứng minh không còn lỗ hổng ngoài phạm vi đã rà soát.

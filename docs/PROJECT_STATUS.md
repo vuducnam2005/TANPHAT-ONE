@@ -1,6 +1,8 @@
 # TANPHAT ONE — Trạng thái dự án
 
-**CHG-20261121-005 — ACCOUNT-SECURITY-001 — RELEASE_READY_STATIC_RECEIPT.** Chốt icon SVG không phụ thuộc font và bản ghi triển khai bảo mật. Browser bản cuối desktop/mobile PASS, không pageErrors; chuẩn bị đồng bộ 2 static asset và receipt lên PC server. Không đổi schema/quyền/credential.
+**CHG-20261121-006 — ACCOUNT-SECURITY-001 — PC_SERVER_APPLIED.** Hoàn tất source `2bad1f45` + static `3461a34a`, push/deploy PC server và kiểm subdomain. Public asset JS/CSS có workspace mới, checksum/6 tệp static khớp; health/login/deep link PASS. Backend regression 42/42, browser responsive/session 8/8 và employee/delegate TOTP+API 8/8 PASS. Probe chỉ đọc 30 tài khoản không lỗi. Không đổi credential/quyền người thật; admin gốc chưa bật 2FA. Chưa xác minh sinh trắc học trên phần cứng thật; không phải pentest toàn hệ thống. [Nghiệm thu](demo/ACCOUNT_SECURITY_001_ACCEPTANCE.md).
+
+**CHG-20261121-005 — ACCOUNT-SECURITY-001 — PC_SERVER_APPLIED_STATIC_RECEIPT.** Chốt icon SVG không phụ thuộc font và bản ghi triển khai bảo mật. Browser bản cuối desktop/mobile PASS, không pageErrors; đã đồng bộ 2 static asset và receipt lên PC server; public bundle xác nhận nội dung mới. Không đổi schema/quyền/credential.
 
 **CHG-20261121-004 — ACCOUNT-SECURITY-001 — PC_SERVER_APPLIED.** Thay hộp tùy chọn tài khoản bằng workspace Tài khoản & Bảo mật tại `/app/tai-khoan/bao-mat`; các điểm mở Hồ sơ/Avatar dùng chung; hỗ trợ mật khẩu, TOTP, passkey, API key và lịch sử phiên bằng backend native. Chặn admin ủy quyền tác động phiên/passkey/API key của admin khác qua cả action và thao tác trực tiếp. Giữ bảo vệ admin gốc, không tự bật 2FA hoặc xóa khóa thật. Kiểm phân quyền + route: 42/42 PASS; browser desktop/mobile, xác minh mật khẩu, F5 và single-session PASS. Đã push/deploy commit `2bad1f45`, upgrade 0 lỗi; fingerprint tài khoản/quyền/HR/thiết bị/công giữ nguyên. Probe chỉ đọc 30 tài khoản (1 gốc, 4 ủy quyền) không lỗi. URL HTTPS được cố định; admin gốc vẫn chưa bật 2FA. [Bằng chứng và giới hạn](demo/ACCOUNT_SECURITY_001_ACCEPTANCE.md).
 
@@ -359,7 +361,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261121-005`
+Last change: `CHG-20261121-006`
 
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.
