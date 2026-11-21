@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-21T09:17:26.363204+00:00",
-  "last_change_id": "CHG-20261121-009",
+  "updated_at": "2026-11-21T09:25:10.958484+00:00",
+  "last_change_id": "CHG-20261121-010",
   "code_digest": "62e48049e36f6b3e78bbe315710e07c2ea2e51fcc530539a12bd4138ed1c8b0a",
   "code_file_count": 812,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "1ac129da1e222d892da80d5db02362a740059747e7202736839b8e4e71e2b580",
-    "docs/CHANGELOG.md": "7a268bfb717024fc4ca6e268047b0e9fa79bb220b5283eb6c20fcdff585fba48",
+    "docs/PROJECT_STATUS.md": "4ce99d1ca44069bb1d503a32958aff8712cbc15cd9a59da7518bc93f10ba9876",
+    "docs/CHANGELOG.md": "7e4c10c8e706aad4968e032300373e2ac66ef6093300f043b7adbfa76ea13d60",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,9 +20,8 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Final release: /tp_web_login + TestPasskeyRoles/TestAccountSecurity/TestAdminAccountLockHttp 35 run, 33 PASS; only the 2 pre-existing test_native_login readonly-TestCursor failures",
-    "Passkey register/login/revoke PASS for employee, delegated admin, original admin; delegate blocked on original/peer keys",
-    "Playwright + CDP virtual authenticator e2e employee 29/29, delegate 29/29, original 27/27, 0 pageErrors; ruff/XML/JS syntax PASS",
-    "Seal uses pushed base plus this scoped release; unrelated reporting/sidebar/branding/tooling WIP excluded; real biometric hardware not claimed"
+    "PC server commit 4c106904: preflight 25/25 baseline, backup + pg_restore list, 25/25 SHA256, -u tp_web_login exit 0, 0 ERROR/CRITICAL, DRIFT_COUNT=0",
+    "Public tpone.tadic.vn 7/7 PASS: health, login button/hint/aria-live/password form, new frontend+backend bundles, start-auth rpId tpone.tadic.vn UV required, client-event enum whitelist",
+    "Docs-only receipt; no real account, credential or passkey touched; physical biometric device not claimed"
   ]
 }

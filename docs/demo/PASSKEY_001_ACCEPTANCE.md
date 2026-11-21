@@ -92,4 +92,27 @@ Khóa tạo trên `localhost` hoặc trên địa chỉ trycloudflare cũ **khô
 
 ## 6. Triển khai
 
-Xem [runbook](../../ops/runbooks/PASSKEY_001_DEPLOY_AND_ROLLBACK.md). Kết quả triển khai ghi ở mục dưới sau khi áp PC server.
+Xem [runbook](../../ops/runbooks/PASSKEY_001_DEPLOY_AND_ROLLBACK.md).
+
+**Kết quả áp PC server** (`192.168.1.73`, DB `tp_tanphat_dev`, commit `4c106904`, 21/11/2026 16:18 Asia/Saigon):
+
+- Preflight: 25/25 tệp trên server khớp commit nền `6130456c`; `auth_passkey` đã cài.
+- Backup tại `C:\TANPHAT-backups\passkey001\pk001-20261121T161846`, có `SHA256SUMS.json`:
+  - `tp_tanphat_dev.dump` 10.669.229 bytes, `pg_restore -l` 16.313 dòng;
+  - `filestore.tar.gz` 39.697.658 bytes (668 mục);
+  - `source-pre.tar.gz` và `docker.odoo.conf`.
+- 25/25 tệp khớp SHA256. `-u tp_web_login` exit 0, log nâng cấp 0 `ERROR`/`CRITICAL`, `tp_web_login` = 20.0.2.3.0.
+- Fingerprint chụp khi Odoo đang dừng, trước và sau nâng cấp: **DRIFT_COUNT=0**.
+  - Phạm vi: users/mật khẩu băm, trạng thái khóa, nhóm, công ty, nhân viên, sổ ủy quyền, API key, TOTP, passkey (`id/name/create_uid/sign_count`/md5 credential), `web.base.url=https://tpone.tadic.vn` + freeze.
+  - Không tạo, xóa hay thu hồi khóa nào; không đổi cấu hình.
+- Public `https://tpone.tadic.vn`, không đăng nhập: **7/7 PASS**.
+  - Health 200.
+  - `/dang-nhap`: 200, `cf-cache-status: DYNAMIC`, `no-cache`. Có nút “Đăng nhập bằng khóa truy cập”, gợi ý, vùng `aria-live` và form mật khẩu; không có “Đăng nhập thất bại”. `/web/login` trả 302.
+  - Bundle frontend `/web/assets/757bed7/web.assets_frontend_lazy.min.js` có mã thông báo mới, route client-event và thông điệp tiếng Việt.
+  - Bundle backend `/web/assets/d892caf/web.assets_web.min.js` có `tp_passkey_create` và thông điệp đăng ký tiếng Việt.
+  - `start-auth`: `rpId=tpone.tadic.vn`, `userVerification=required`, timeout 60 s.
+  - Client-event nhận enum hợp lệ và từ chối chuỗi tự do. Log server chỉ ghi enum.
+- Log `tp-odoo` 15 phút sau khởi động lại: 0 `ERROR`/`CRITICAL`.
+- Cookie phiên public là `HttpOnly`, chưa có `Secure`. Đây là hành vi native, ghi nhận để cân nhắc siết riêng; không ảnh hưởng passkey cùng origin.
+
+Rollback theo runbook nếu cần. Chưa có bằng chứng trên thiết bị thật; người dùng kiểm theo mục 5.

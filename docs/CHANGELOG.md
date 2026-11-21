@@ -1,5 +1,15 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261121-010 — PASSKEY-001: Biên bản triển khai PC server
+
+- Commit `4c106904` đã push và áp PC server (`192.168.1.73`, `tp_tanphat_dev`).
+  - Preflight: 25/25 tệp khớp nền `6130456c`.
+  - Backup tại `C:\TANPHAT-backups\passkey001\pk001-20261121T161846`: dump 10.669.229 bytes, `pg_restore -l` 16.313 dòng, filestore 39.697.658 bytes.
+  - 25/25 tệp khớp SHA256. `-u tp_web_login` exit 0, 0 `ERROR`/`CRITICAL`, version 20.0.2.3.0.
+- Fingerprint tài khoản, mật khẩu băm, khóa tài khoản, nhóm, nhân viên, ủy quyền, API key, TOTP, passkey và base URL: `DRIFT_COUNT=0`.
+- Public `https://tpone.tadic.vn` 7/7 PASS: health 200; trang đăng nhập có nút, gợi ý, vùng `aria-live` và form mật khẩu; bundle frontend `757bed7` và backend `d892caf` chứa mã mới; `start-auth` trả `rpId=tpone.tadic.vn`, UV bắt buộc; client-event chỉ nhận enum.
+- Không thao tác khóa, credential hay tài khoản thật. Chưa kiểm trên thiết bị sinh trắc học thật. Đồng bộ biên bản này không cần restart. [Nghiệm thu](demo/PASSKEY_001_ACCEPTANCE.md).
+
 ## CHG-20261121-009 — PASSKEY-001: Hoàn thiện đăng ký và đăng nhập bằng khóa truy cập trên tpone.tadic.vn
 
 - 21/11/2026 (Asia/Saigon). Người dùng báo bấm “đăng nhập bằng khóa”, quét vân tay xong nhưng không vào được hệ thống.
