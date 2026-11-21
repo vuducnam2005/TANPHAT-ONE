@@ -28,4 +28,8 @@ Ngày 21/11/2026. Phạm vi: source native, các vai trò nhân viên/admin ủy
 
 ## Triển khai
 
-Bản đầu ở trạng thái release-ready. Receipt sẽ bổ sung sau backup/upgrade và probe read-only server/public.
+Bản chức năng `2bad1f45` đã áp PC server; nâng 5 module đúng phiên bản, 0 lỗi upgrade, 34 tệp khớp checksum. Backup: `C:\TANPHAT-backups\account-security001\account-security004-20261121T132517`, DB dump 10.650.657 bytes và filestore 36.756.042 bytes; kiểm danh sách restore 16.313 dòng.
+
+Fingerprint trước/sau cho tài khoản, credential, quyền, ledger, nhân sự, thiết bị, đề xuất và công giữ nguyên. Chỉ chuẩn hóa URL công khai sang HTTPS và freeze. Probe ORM chỉ đọc đủ 30 tài khoản nội bộ, gồm 1 gốc, 4 ủy quyền, 25 nhân viên/hệ thống: 0 lỗi. Public health 200. 2FA của admin gốc chưa bật; không tự thay đổi.
+
+Icon SVG và browser bản cuối đã kiểm trên DB test. Phiên bản receipt/static tiếp theo cần kiểm checksum và public bundle sau đồng bộ. Bộ kiểm này không chứng minh không còn lỗ hổng ngoài phạm vi đã rà soát.

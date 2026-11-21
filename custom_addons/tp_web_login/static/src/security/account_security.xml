@@ -15,11 +15,11 @@
                 <div class="tp-security-layout">
                     <div>
                         <section class="tp-security-section">
-                            <div class="tp-security-section-title"><span class="material-symbols-outlined tp-security-symbol" aria-hidden="true">lock</span><div><h2>Mật khẩu</h2><p>Đổi mật khẩu khi cần. Mật khẩu hiện tại luôn được giữ bí mật.</p></div></div>
+                            <div class="tp-security-section-title"><svg class="tp-security-symbol" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 10h14v11H5z M8 10V7a4 4 0 0 1 8 0v3 M12 14v3"/></svg><div><h2>Mật khẩu</h2><p>Đổi mật khẩu khi cần. Mật khẩu hiện tại luôn được giữ bí mật.</p></div></div>
                             <button class="btn btn-primary" t-att-disabled="this.state.busy" t-on-click="() => this.run('password')">Đổi mật khẩu</button>
                         </section>
                         <section class="tp-security-section">
-                            <div class="tp-security-section-title"><span class="material-symbols-outlined tp-security-symbol" aria-hidden="true">shield</span><div><h2>Xác thực hai bước</h2><p>Thêm mã từ ứng dụng xác thực khi đăng nhập.</p></div></div>
+                            <div class="tp-security-section-title"><svg class="tp-security-symbol" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 7v5c0 5 9 9 9 9s9-4 9-9V7z M8 12l3 3 5-6"/></svg><div><h2>Xác thực hai bước</h2><p>Thêm mã từ ứng dụng xác thực khi đăng nhập.</p></div></div>
                             <div class="tp-security-actions">
                                 <span t-att-class="'tp-security-chip ' + (this.state.data.totp_enabled ? 'is-enabled' : 'is-warning')" t-out="this.state.data.totp_enabled ? 'Đã bật' : 'Chưa bật'"/>
                                 <button t-if="!this.state.data.totp_enabled" class="btn btn-primary" t-att-disabled="this.state.busy" t-on-click="() => this.run('totp_enable')">Bật xác thực hai bước</button>
@@ -27,7 +27,7 @@
                             </div>
                         </section>
                         <section t-if="this.state.data.passkey_supported" class="tp-security-section">
-                            <div class="tp-security-section-title"><span class="material-symbols-outlined tp-security-symbol" aria-hidden="true">key</span><div><h2>Khóa truy cập</h2><p>Đăng nhập bằng vân tay, khuôn mặt hoặc khóa bảo mật trên thiết bị hỗ trợ.</p></div></div>
+                            <div class="tp-security-section-title"><svg class="tp-security-symbol" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 8a5 5 0 1 1-4 8l-6 6H1v-3l6-6a5 5 0 0 1 7-5z"/></svg><div><h2>Khóa truy cập</h2><p>Đăng nhập bằng vân tay, khuôn mặt hoặc khóa bảo mật trên thiết bị hỗ trợ.</p></div></div>
                             <p t-if="!this.state.data.passkeys.length" class="tp-security-muted">Bạn chưa có khóa truy cập.</p>
                             <div t-foreach="this.state.data.passkeys" t-as="key" t-key="key.id" class="tp-security-record">
                                 <strong t-out="key.name"/><div class="tp-security-actions"><button class="btn btn-outline-secondary" t-att-disabled="this.state.busy" t-on-click="() => this.run('passkey_rename', key.id)">Đổi tên</button><button class="btn btn-outline-danger" t-att-disabled="this.state.busy" t-on-click="() => this.confirm('passkey_remove', key.id, 'Thu hồi khóa truy cập này? Thiết bị sử dụng khóa sẽ không thể đăng nhập bằng khóa đó.')">Thu hồi</button></div>
@@ -35,10 +35,10 @@
                             <button class="btn btn-outline-primary" t-att-disabled="this.state.busy" t-on-click="() => this.run('passkey_create')">Thêm khóa truy cập</button>
                         </section>
                     </div>
-                    <aside class="tp-security-note"><span class="material-symbols-outlined tp-security-symbol" aria-hidden="true">info</span><h2>Mỗi tài khoản, một phiên làm việc</h2><p>Khi đăng nhập trên thiết bị khác, phiên trước sẽ kết thúc theo chính sách hệ thống.</p><p>Danh sách bên dưới là các phiên đã ghi nhận. Số bản ghi lịch sử không phải số thiết bị đang đăng nhập.</p></aside>
+                    <aside class="tp-security-note"><svg class="tp-security-symbol" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 10v7 M12 7v.1 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0"/></svg><h2>Mỗi tài khoản, một phiên làm việc</h2><p>Khi đăng nhập trên thiết bị khác, phiên trước sẽ kết thúc theo chính sách hệ thống.</p><p>Danh sách bên dưới là các phiên đã ghi nhận. Số bản ghi lịch sử không phải số thiết bị đang đăng nhập.</p></aside>
                 </div>
                 <section class="tp-security-section tp-security-sessions">
-                    <div class="tp-security-section-title"><span class="material-symbols-outlined tp-security-symbol" aria-hidden="true">desktop_windows</span><div><h2>Phiên đăng nhập</h2><p>Nhận diện phiên hiện tại và kiểm tra lịch sử hoạt động của tài khoản.</p></div></div>
+                    <div class="tp-security-section-title"><svg class="tp-security-symbol" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h18v14H3z M12 17v4 M7 21h10"/></svg><div><h2>Phiên đăng nhập</h2><p>Nhận diện phiên hiện tại và kiểm tra lịch sử hoạt động của tài khoản.</p></div></div>
                     <div class="tp-security-toolbar">
                         <label>Hiển thị<select name="status" class="form-select" t-att-value="this.state.status" t-on-change="this.filter"><option value="all">Tất cả phiên đã ghi nhận</option><option value="current">Phiên hiện tại</option><option value="revoked">Đã thu hồi</option></select></label>
                         <label>Số dòng<select name="limit" class="form-select" t-att-value="this.state.limit" t-on-change="this.filter"><option value="10">10</option><option value="20">20</option><option value="50">50</option></select></label>

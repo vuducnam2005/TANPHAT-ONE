@@ -16,7 +16,7 @@
     .tp-security-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; align-items: start; gap: 22px; }
     .tp-security-section { background: white; border: 1px solid #d9e3ee; border-radius: 10px; padding: 22px; margin-bottom: 18px; min-width: 0; }
     .tp-security-section-title { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px;
-        > .tp-security-symbol { width: 36px; height: 36px; display: grid; place-items: center; flex-shrink: 0; color: #2365a7; background: #eaf2fc; border-radius: 8px; font-size: 19px; }
+        > .tp-security-symbol { width: 36px; height: 36px; padding: 8px; display: grid; place-items: center; flex-shrink: 0; color: #2365a7; background: #eaf2fc; border-radius: 8px; font-size: 19px; }
     }
     .tp-security-note { padding: 22px 4px; border-top: 3px solid #227f83; > .tp-security-symbol { color: #227f83; font-size: 22px; margin-bottom: 12px; } }
     .tp-security-chip { display: inline-block; font-size: 12px; font-weight: 650; padding: 5px 10px; border-radius: 6px; background: #edf1f6; color: #40546a; white-space: nowrap;

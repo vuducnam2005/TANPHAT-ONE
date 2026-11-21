@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261121-005 — ACCOUNT-SECURITY-001: Icon SVG và biên bản triển khai
+
+- Đổi icon sang SVG để không phụ thuộc font/ligature; browser desktop/mobile, xác minh mật khẩu, F5 và single-session PASS sau thay đổi.
+- Bản chức năng `2bad1f45` đã push và áp PC server: 34 tệp checksum khớp, upgrade exit 0, 0 ERROR/CRITICAL; backup `C:\TANPHAT-backups\account-security001\account-security004-20261121T132517`, dump 10.650.657 bytes, filestore 36.756.042 bytes, pg_restore list 16.313 dòng.
+- Fingerprint tài khoản/credential/quyền, roster, thiết bị, đề nghị và ngày công không đổi. Sửa có chủ đích `web.base.url=https://tpone.tadic.vn`, freeze=True. Probe 30 tài khoản nội bộ (1 admin gốc, 4 ủy quyền, 25 nhân viên/hệ thống) không lỗi; không đăng nhập đè phiên thật. Public health 200.
+- Đồng bộ static/receipt không thay schema; chờ xác minh asset public cuối. Không nhận là audit độc lập hoặc pentest toàn hệ thống.
+
 ## CHG-20261121-004 — ACCOUNT-SECURITY-001: Giao diện bảo mật và ranh giới tài khoản
 
 - Người dùng giao triển khai và kiểm tra các vai trò. Thay modal tùy chọn bằng workspace sáng, responsive; giữ backend xác thực native và bước xác minh danh tính, thêm URL có nghĩa và lối vào từ avatar.

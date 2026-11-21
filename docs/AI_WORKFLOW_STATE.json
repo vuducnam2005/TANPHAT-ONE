@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-21T06:23:34.028778+00:00",
-  "last_change_id": "CHG-20261121-004",
-  "code_digest": "ff404a07302109977ac6805b67df933260a1c102b096e47fcc41c59b7dd1defa",
+  "updated_at": "2026-11-21T06:31:20.763127+00:00",
+  "last_change_id": "CHG-20261121-005",
+  "code_digest": "647f6403c73b65a20d0b835a4a21b6ca0308a84f75f20baa21eb0ba55f7bbf8f",
   "code_file_count": 805,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "9bdb186b36701aa4bc394a7cbb19339c0c142ad5426361ce1bebae008034af4b",
-    "docs/CHANGELOG.md": "27a6e636758dc5c5ea92fe71ba5ef99c13c6dbdf6db3113add647b3723bf327b",
+    "docs/PROJECT_STATUS.md": "5e383cc954a2c7570899aaa21d1434074609d5b451f74f236880fd7cab0fee68",
+    "docs/CHANGELOG.md": "7304abac83a32c6464a52cffd099ad5b9660615255eeb896a311a8b4673cae77",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,9 +20,8 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "42/42 Odoo role/route tests PASS including native own TOTP counter guard; browser employee/delegate 2FA+API 8/8 PASS",
-    "Browser desktop1440/mobile390, password identity verification, cancel, F5, session filter, new login replaces old: PASS",
-    "Ruff new Python files and XML/AST PASS; old HttpCase login has read-only TestCursor limitation, not declared passing",
-    "Seal uses HEAD plus this scoped release; unrelated dirty reporting/sidebar/tooling files excluded"
+    "42/42 regression PASS; browser final 8/8, extended employee/delegate 2FA/API 8/8 PASS",
+    "PC server release004 upgrade0/log0, immutable business fingerprints, 30-account read-only probe0 failures, public health200",
+    "SVG static final browser desktop/mobile PASS; receipt/static sync pending checksum/public bundle verification"
   ]
 }
