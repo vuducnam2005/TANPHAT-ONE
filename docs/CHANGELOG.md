@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261121-008 — ACCOUNT-SECURITY-002 Hotfix: Sửa lỗi icon khiên phóng to trong menu tài khoản sidebar
+
+- 21/11/2026 (Asia/Saigon). Sửa lỗi mục **Tài khoản & Bảo mật** trong dropdown tài khoản sidebar (`custom_addons/tp_web_home/static/src/identity/user_account_menu.xml`) bị thiếu `class="'tp-profile-menu-item'"` và `width/height` khiến icon SVG khiên phóng to chiếm toàn bộ menu và đẩy chữ sang phải:
+  - Thêm `class="'tp-profile-menu-item'"` và `width="17" height="17"` cho các icon trong `user_account_menu.xml`.
+  - Đồng bộ icon khiên 17×17px cho `account_security` trong `shell_navbar.xml` (`web.UserMenu` và `web.BurgerUserMenu`).
+  - Cập nhật `user_account_menu.scss` (`min-width: 214px; width: max-content;` và cố định `.tp-profile-icon`/`.tp-logout-icon` `17px × 17px`).
+  - Kiểm XML/libsass SCSS 0 lỗi, commit/push, backup static cũ, đồng bộ PC Server `192.168.1.73`, đóng dấu `LastWriteTime`, restart `tp-odoo` và xác minh public bundle `https://tpone.tadic.vn`.
+
 ## CHG-20261121-007 — ACCOUNT-SECURITY-002: Hoàn thiện vai trò backend, đổi mật khẩu inline, sửa lọc phiên Đã thu hồi và Việt hóa luồng 2FA/API key
 
 - 21/11/2026 (Asia/Saigon). Nâng cấp `tp_web_login` **20.0.2.2.0** và `tp_admin_delegation` **20.0.2.3.0**:

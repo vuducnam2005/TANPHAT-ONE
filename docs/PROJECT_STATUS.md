@@ -1,5 +1,7 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261121-008 — ACCOUNT-SECURITY-002 Hotfix — PC_SERVER_APPLIED.** Sửa lỗi vỡ icon khiên SVG khổng lồ ở mục “Tài khoản & Bảo mật” trong menu tài khoản sidebar (`tp_web_home/static/src/identity/user_account_menu.xml`): bổ sung `class="'tp-profile-menu-item'"` và `width="17" height="17"` cho icon khiên, đồng bộ icon cho `web.UserMenu` + `web.BurgerUserMenu` (`shell_navbar.xml`) và mở rộng `min-width: 214px; width: max-content;` trong `user_account_menu.scss`.
+
 **CHG-20261121-007 — ACCOUNT-SECURITY-002 — PC_SERVER_APPLIED.** Hoàn thiện bản vá và nâng cấp giao diện + backend **Tài khoản & Bảo mật** (`tp_web_login` **20.0.2.2.0**, `tp_admin_delegation` **20.0.2.3.0**), commit app `c74460b8`:
 - **Header vai trò thật từ backend:** bổ sung `_tp_account_role_label()` (`Quản trị gốc` / `Quản trị viên ủy quyền` / `Quản lý nhân sự` / `Nhân viên nội bộ`) theo DEC-053/054/062 (không suy Admin gốc từ `base.group_system`), hiển thị avatar vừa phải kèm fallback monogram.
 - **Đổi mật khẩu trực tiếp trong thẻ Mật khẩu (`tp_change_my_password`):** biểu mẫu 3 ô (Mật khẩu hiện tại / Mật khẩu mới / Xác nhận mật khẩu mới), nút hiện/ẩn có `aria-label`/`aria-pressed`, báo lỗi tại từng trường, giữ nguyên xác thực mật khẩu hiện tại, rate-limit `_assert_can_auth`, hash PBKDF2 native, thu hồi thiết bị tin cậy TOTP và làm mới session token phiên hiện tại.

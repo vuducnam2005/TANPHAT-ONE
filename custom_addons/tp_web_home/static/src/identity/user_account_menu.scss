@@ -97,8 +97,8 @@
 // Compact logout-only dropdown shared by navbar UserMenu and sidebar TpUserAccountMenu.
 .o-dropdown--menu.tp-logout-dropdown-menu,
 .o-dropdown--menu:has(.tp-logout-menu-item) {
-    min-width: 190px;
-    width: 204px;
+    min-width: 214px;
+    width: max-content;
     max-width: calc(100vw - 16px);
     padding: 6px;
     background: #fff;
@@ -107,6 +107,13 @@
     box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14), 0 2px 6px rgba(15, 23, 42, 0.06);
     animation: tp-logout-dropdown-in 140ms ease-out;
     z-index: 1080;
+
+    .tp-profile-icon,
+    .tp-logout-icon {
+        width: 17px;
+        height: 17px;
+        flex-shrink: 0;
+    }
 }
 
 .o-popover:has(.tp-logout-dropdown-menu),

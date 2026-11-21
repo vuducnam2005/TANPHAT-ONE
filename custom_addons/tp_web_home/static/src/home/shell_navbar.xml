@@ -43,8 +43,9 @@
             <attribute name="class">element.id === 'logout' ? 'tp-shell-user-item tp-logout-menu-item' : 'tp-shell-user-item tp-profile-menu-item'</attribute>
         </xpath>
         <xpath expr="//t[@t-out='element.description']" position="replace">
-            <svg t-if="element.id === 'personal_profile'" class="tp-profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
-            <svg t-elif="element.id === 'logout'" class="tp-logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+            <svg t-if="element.id === 'personal_profile'" class="tp-profile-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+            <svg t-elif="element.id === 'account_security'" class="tp-profile-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 7v5c0 5 9 9 9 9s9-4 9-9V7z"/></svg>
+            <svg t-elif="element.id === 'logout'" class="tp-logout-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
             <span t-out="element.description"/>
         </xpath>
     </t>
@@ -52,12 +53,13 @@
         <xpath expr="//a[@t-out='element.description']" position="replace">
             <a t-if="element.type == 'item'"
                class="d-flex align-items-center gap-2 py-2 tp-burger-logout-item"
-               t-att-class="{ 'tp-burger-profile-item': element.id === 'personal_profile', 'text-body': element.id !== 'logout' }"
+               t-att-class="{ 'tp-burger-profile-item': element.id === 'personal_profile' || element.id === 'account_security', 'text-body': element.id !== 'logout' }"
                t-att-data-menu="element.id"
                t-att-href="element.href or ''"
                t-on-click.stop.prevent="this._onItemClicked(element.callback)">
-                <svg t-if="element.id === 'personal_profile'" class="tp-profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
-                <svg t-elif="element.id === 'logout'" class="tp-logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                <svg t-if="element.id === 'personal_profile'" class="tp-profile-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+                <svg t-elif="element.id === 'account_security'" class="tp-profile-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 7v5c0 5 9 9 9 9s9-4 9-9V7z"/></svg>
+                <svg t-elif="element.id === 'logout'" class="tp-logout-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
                 <span t-out="element.description"/>
             </a>
         </xpath>
