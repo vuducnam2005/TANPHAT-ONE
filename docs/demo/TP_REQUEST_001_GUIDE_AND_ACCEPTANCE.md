@@ -112,3 +112,17 @@
   - `tp_branding`: **33/33 tests PASS** (gồm parity Python↔JS của 7 route `/app/de-nghi/...` và HTTP deep-link/redirect).
   - `tp_admin_delegation`: **37/37 tests PASS** (0 hồi quy DEC-053/054/061/062).
   - Asset bundles Odoo 20: JS Assets biên dịch sạch (3.27s), CSS/SCSS Assets biên dịch sạch (1.55s).
+
+---
+
+## 7. Kết quả triển khai PC Server & Kiểm tra Public (21/11/2026)
+
+- **Máy chủ đích:** `192.168.1.73` (`tp-odoo`, DB `tp_tanphat_dev`, URL public `https://tpone.tadic.vn`).
+- **Commit phát hành:** `83e0d217` + bản vá libsass `request.scss` (`max-width` thay `min(px, 100%)`).
+- **Sao lưu trước triển khai:** `C:\TANPHAT-backups\tp-request001\req001-20261121T113004` (`tp_tanphat_dev.dump` đã kiểm chứng `pg_restore -l`, `filestore.tar.gz`, `source.tar.gz`, `docker.odoo.conf`, `before.txt`, `after.txt`, `upgrade.log`).
+- **Kết quả cài đặt/nâng cấp:** 42/42 tệp khớp SHA256, `UPGRADE_EXIT=0`, `UPGRADE_ERRORS=0`, `tp_request=20.0.1.0.0:installed`, `tp_branding=20.0.2.2.0:installed`, `TP_REQUEST_TYPES=7`, `TP_REQUEST_RECORDS=0`, `DRIFT_COUNT=0` (bảo toàn 100% nhân viên, tài khoản, nhóm quyền, thiết bị, đề xuất thiết bị cũ và chấm công).
+- **Biên dịch tài nguyên trên container thật:** `web.assets_backend.min.js` (8.795.200 bytes, chứa đầy đủ thành phần `tp_request`), `web.assets_backend.min.css` (1.696.919 bytes, `HAS_ERROR=False`).
+- **Kiểm tra truy cập trực tiếp:**
+  - `https://tpone.tadic.vn/web/health` và `http://192.168.1.73:8069/web/health`: HTTP `200 {"status": "pass"}`.
+  - 7/7 đường dẫn `/app/de-nghi/{tong-quan,cua-toi,can-duyet,can-thuc-hien,theo-doi,quan-tri,ho-so/1}`: HTTP `303 -> https://tpone.tadic.vn/dang-nhap?redirect=...`.
+  - `/tp_request/attachment/1` (chưa đăng nhập): HTTP `303` (không lộ tệp đính kèm).

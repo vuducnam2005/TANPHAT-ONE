@@ -947,7 +947,8 @@
 .tp_req_modal {
     background: #ffffff;
     border-radius: 14px;
-    width: min(980px, 100%);
+    width: 100%;
+    max-width: 980px;
     max-height: 92vh;
     display: flex;
     flex-direction: column;
@@ -955,7 +956,7 @@
     overflow: hidden;
 
     &.is-wide {
-        width: min(1040px, 100%);
+        max-width: 1040px;
     }
 }
 

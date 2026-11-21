@@ -24,7 +24,7 @@ function FileHash([string]$relative) {
 $psql = @('exec','tp-postgres','psql','-X','-v','ON_ERROR_STOP=1','-U','tp_odoo','-d','tp_tanphat_dev','-At')
 $snapshotSql = @'
 SELECT 'module:'||name||'='||coalesce(latest_version,'')||':'||state FROM ir_module_module WHERE name IN ('tp_request','tp_branding','tp_admin_delegation','tp_equipment','tp_hr_attendance') ORDER BY name;
-SELECT 'employees='||count(*)||':'||coalesce(md5(string_agg(id||':'||coalesce(name,'')||':'||coalesce(user_id,0)||':'||coalesce(department_id,0)||':'||active||':'||company_id, ',' ORDER BY id)), '-') FROM hr_employee;
+SELECT 'employees='||count(*)||':'||coalesce(md5(string_agg(id||':'||coalesce(name,'')||':'||coalesce(user_id,0)||':'||coalesce(work_contact_id,0)||':'||active||':'||company_id, ',' ORDER BY id)), '-') FROM hr_employee;
 SELECT 'users='||count(*)||':'||coalesce(md5(string_agg(id||':'||login||':'||coalesce(password,'')||':'||active||':'||coalesce(company_id,0), ',' ORDER BY id)), '-') FROM res_users;
 SELECT 'groups='||count(*)||':'||coalesce(md5(string_agg(uid||':'||gid, ',' ORDER BY uid, gid)), '-') FROM res_groups_users_rel;
 SELECT 'equipment='||count(*)||':'||coalesce(md5(string_agg(id||':'||coalesce(tp_code,'')||':'||coalesce(tp_employee_id,0)||':'||coalesce(tp_custody,'')||':'||coalesce(tp_lifecycle,'')||':'||coalesce(tp_technical_state,''), ',' ORDER BY id)), '-') FROM maintenance_equipment;

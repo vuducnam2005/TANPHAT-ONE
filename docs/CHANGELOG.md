@@ -1,11 +1,16 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261121-002 — TP-REQUEST-001: Vá tương thích libsass `request.scss` và ghi nhận triển khai PC Server
+
+- 21/11/2026 (Asia/Saigon). Đổi `width: min(980px/1040px, 100%)` thành `width: 100%; max-width: 980px/1040px;` trong `custom_addons/tp_request/static/src/styles/request.scss` để biên dịch sạch qua libsass trên container `tp-odoo` (`web.assets_backend.min.css` 1.696.919 bytes, `HAS_ERROR=False`); sửa cột snapshot `hr_employee` trong `ops/runbooks/deploy-tp-request001.ps1`; cập nhật kết quả deploy PC Server (`backup req001-20261121T113004`, `UPGRADE_EXIT=0`, `DRIFT_COUNT=0`, `https://tpone.tadic.vn/web/health` 200).
+
 ## CHG-20261121-001 — TP-REQUEST-001: Xây dựng module Đề nghị & Phê duyệt (`tp_request` 20.0.1.0.0) và chuẩn hóa đường dẫn `/app/de-nghi/...`
 
 - 21/11/2026 (Asia/Saigon). Xây dựng hoàn chỉnh phân hệ **Đề nghị & Phê duyệt** dùng chung toàn công ty trên nền Odoo 20 native (OWL/QWeb/SCSS):
   - Module mới `custom_addons/tp_request` **20.0.1.0.0**: khung loại đề nghị & tuyến duyệt tuần tự theo phiên bản (`tp.request.type`, `tp.request.type.step`, `tp.request`, `tp.request.step`), nhật ký hệ thống bất biến (`tp.request.history`) tách biệt trao đổi (`mail.message`), guard tệp đính kèm riêng tư (`ir.attachment` + `/tp_request/attachment/*`), xuất Excel chuẩn bộ lọc (`/tp_request/export.xlsx`), cron cảnh báo quá hạn (không tự duyệt), tích hợp 1-1 Điều chỉnh công (`attendance_bridge.py` với `tp.hr.attendance.correction`) và thực hiện Thiết bị/IT (`equipment_bridge.py` với `tp_equipment`: cấp phát có lock chống cấp trùng, đổi máy nguyên tử bắt buộc tình trạng máy cũ, sửa chữa `maintenance.request`, mua sắm `tp.equipment.proposal` không tự tạo tồn kho), bảo toàn DEC-053/054/061/062.
   - Nâng cấp `custom_addons/tp_branding` **20.0.2.2.0**: bổ sung 7 đường dẫn chuẩn `/app/de-nghi/{tong-quan,cua-toi,can-duyet,can-thuc-hien,theo-doi,quan-tri,ho-so/<id>}` hỗ trợ mở trực tiếp, F5 và Back/Forward; cập nhật `test_brand_urls.py`.
   - Kiểm thử: cú pháp Python (12/12), XML (13/13), JS (10/10); Odoo automated tests trên `tp_tanphat_test`: `/tp_request` 12/12 PASS (18 tình huống), `/tp_branding` 33/33 PASS, hồi quy `/tp_admin_delegation` 37/37 PASS, biên dịch JS/CSS assets 0 lỗi. Cập nhật `TP_TABLE_FILTER_INVENTORY.md`, `TP_URL_ROUTE_INVENTORY.md`, [Hướng dẫn & Nghiệm thu](demo/TP_REQUEST_001_GUIDE_AND_ACCEPTANCE.md), [Runbook](../ops/runbooks/TP_REQUEST_001_DEPLOY_AND_ROLLBACK.md).
+  - Triển khai PC Server (`192.168.1.73`, `tp_tanphat_dev`): commit `83e0d217` + vá `request.scss` tương thích libsass (`max-width` thay `min(px, 100%)`), backup `C:\TANPHAT-backups\tp-request001\req001-20261121T113004`, 42/42 tệp khớp SHA256, `-i tp_request -u tp_branding` exit 0, `0 ERROR/CRITICAL`, `DRIFT_COUNT=0`, 7 loại đề nghị sẵn có, 0 bản ghi giả; biên dịch `web.assets_backend.min.js`/`min.css` 0 lỗi; `https://tpone.tadic.vn/web/health` HTTP 200 và 7/7 route `/app/de-nghi/...` phản hồi `303 -> /dang-nhap?redirect=...`.
 
 ## CHG-20261120-017 — HR-SELF-EDIT-001 + BANK-002: Tự sửa hồ sơ của chính mình trong danh sách nhân viên; tài khoản ngân hàng không cần xác minh
 
