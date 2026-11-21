@@ -586,8 +586,12 @@ class TestTpRequestWorkflow(TransactionCase):
         dash = self.env['tp.request'].with_user(self.user_emp).tp_dashboard_data()
         lst = self.env['tp.request'].with_user(self.user_emp).tp_list_data('mine', {'priority': 'urgent'})
         self.assertGreaterEqual(dash['counts']['mine_pending'], 1)
+        self.assertEqual(dash['counts']['overdue'], 0)
         self.assertEqual(lst['total'], len(lst['rows']))
         self.assertTrue(all(r['priority'] == 'urgent' for r in lst['rows']))
+        # Verify overdue search accurately distinguishes future vs past due_at (Odoo 20 Domain 'in' operator)
+        to_app_lst = self.env['tp.request'].with_user(self.admin).tp_list_data('to_approve', {})
+        self.assertEqual(to_app_lst['tab_counts']['overdue'], 0)
 
         # Branded route resolution check (tp_branding)
         for path, xmlid in [

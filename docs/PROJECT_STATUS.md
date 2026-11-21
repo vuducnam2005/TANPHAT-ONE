@@ -1,5 +1,10 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261121-003 — TP-REQUEST-001 Hotfix — PC_SERVER_APPLIED.** Sửa 2 lỗi phát sinh sau khi vận hành thực tế trên `tp_request`:
+- `detail/request_detail.xml`, `detail/request_detail.js`, `admin/request_admin.xml`: chuyển toàn bộ template sang chuẩn OWL 3 của Odoo 20 (`this.*` cho state/handler/getter, `t-out` thay `t-esc`, `markup()` cho nội dung trao đổi), khắc phục lỗi `Cannot read properties of undefined (reading 'data')` khi bấm **Xem** chi tiết hồ sơ.
+- `models/request_record.py` (`_search_is_overdue`): hỗ trợ toán tử `'in'/'not in'` do Odoo 20 chuẩn hóa domain Boolean, khắc phục hiển thị sai `Quá hạn 1` đối với hồ sơ còn hạn xử lý.
+- Kiểm: `/tp_request` 12/12 PASS (gồm assertion `overdue == 0`), cập nhật trực tiếp PC Server `192.168.1.73`, restart `tp-odoo`, `https://tpone.tadic.vn/web/health` HTTP 200.
+
 **CHG-20261121-001 — TP-REQUEST-001 — PC_SERVER_APPLIED.** Xây dựng, kiểm thử và triển khai hoàn chỉnh module **“Đề nghị & Phê duyệt”** (`custom_addons/tp_request` **20.0.1.0.0** + `custom_addons/tp_branding` **20.0.2.2.0**), triển khai trực tiếp trên nền Odoo/OWL/QWeb/SCSS của TANPHAT ONE, liên kết dữ liệu nguồn HR/Chấm công/Kho thiết bị/Dự án và giữ nguyên chính sách Admin gốc/ủy quyền (DEC-053/054/061/062).
 - **Khung Đề nghị & Phê duyệt (`tp_request` 20.0.1.0.0):** 7 loại đề nghị cấu hình sẵn (`ATT_CORRECTION`, `EQUIP_ASSIGN`, `EQUIP_SWAP`, `EQUIP_REPAIR`, `EQUIP_PURCHASE`, `IT_SUPPORT`, `INTERNAL_GENERAL`), tuyến duyệt tuần tự đóng băng theo phiên bản khi gửi, cơ chế “một người duyệt là đủ” có khóa dòng chống duyệt trùng/đồng thời, chuyển giao người duyệt có lý do & audit, tách biệt **Trao đổi** và **Lịch sử hệ thống bất biến** (`tp.request.history`), tệp đính kèm riêng tư chặn công khai/token, thông báo nội bộ qua `mail.message` (noemail) + `bus.bus`, cron cảnh báo quá hạn (không bao giờ tự duyệt).
 - **Tích hợp nghiệp vụ nguồn 1-1:**
@@ -350,7 +355,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261121-002`
+Last change: `CHG-20261121-003`
 
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.

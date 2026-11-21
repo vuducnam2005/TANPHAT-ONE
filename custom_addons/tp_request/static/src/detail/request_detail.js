@@ -1,5 +1,5 @@
 /** @odoo-module **/
-import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
+import { Component, markup, onWillStart, proxy, useProps } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
 import { router } from "@web/core/browser/router";
 import { registry } from "@web/core/registry";
@@ -670,6 +670,10 @@ export class TpRequestDetail extends Component {
         } finally {
             this.state.commentBusy = false;
         }
+    }
+
+    renderComment(body) {
+        return markup(String(body || ""));
     }
 
     get latestSteps() {

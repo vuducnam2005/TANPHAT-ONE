@@ -1,5 +1,9 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261121-003 — TP-REQUEST-001: Sửa OWL 3 trên màn chi tiết & quản trị đề nghị và bộ đếm Quá hạn
+
+- 21/11/2026 (Asia/Saigon). Sửa lỗi runtime khi bấm **Xem** chi tiết hồ sơ (`Cannot read properties of undefined (reading 'data')`): chuyển `request_detail.xml` và `request_admin.xml` sang chuẩn OWL 3 (`this.*`, `t-out`), bổ sung `markup()` cho nội dung trao đổi trong `request_detail.js`; sửa `_search_is_overdue` trong `request_record.py` hỗ trợ toán tử `'in'/'not in'` chuẩn hóa bởi Odoo 20 Domain; bổ sung kiểm thử `overdue == 0` trong `test_tp_request.py` (`/tp_request` 12/12 PASS); đồng bộ lên PC Server `192.168.1.73`, restart `tp-odoo` và xác minh `https://tpone.tadic.vn/web/health` 200.
+
 ## CHG-20261121-002 — TP-REQUEST-001: Vá tương thích libsass `request.scss` và ghi nhận triển khai PC Server
 
 - 21/11/2026 (Asia/Saigon). Đổi `width: min(980px/1040px, 100%)` thành `width: 100%; max-width: 980px/1040px;` trong `custom_addons/tp_request/static/src/styles/request.scss` để biên dịch sạch qua libsass trên container `tp-odoo` (`web.assets_backend.min.css` 1.696.919 bytes, `HAS_ERROR=False`); sửa cột snapshot `hr_employee` trong `ops/runbooks/deploy-tp-request001.ps1`; cập nhật kết quả deploy PC Server (`backup req001-20261121T113004`, `UPGRADE_EXIT=0`, `DRIFT_COUNT=0`, `https://tpone.tadic.vn/web/health` 200).

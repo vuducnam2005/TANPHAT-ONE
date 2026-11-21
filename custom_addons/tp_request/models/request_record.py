@@ -294,7 +294,15 @@ class TpRequest(models.Model):
             '&', ('approval_state', '=', 'approved'),
             '&', ('execution_state', 'in', ('pending', 'in_progress')), ('execution_due_at', '<', now),
         ]
-        want_true = (operator == '=' and bool(value)) or (operator == '!=' and not bool(value))
+        if operator in ('in', 'not in'):
+            vals = {bool(v) for v in (value or [])}
+            if vals == {True, False}:
+                return Domain.TRUE if operator == 'in' else Domain.FALSE
+            if not vals:
+                return Domain.FALSE if operator == 'in' else Domain.TRUE
+            want_true = (True in vals) if operator == 'in' else (True not in vals)
+        else:
+            want_true = (operator == '=' and bool(value)) or (operator == '!=' and not bool(value))
         return over_dom if want_true else ['!'] + over_dom
 
     # ------------------------------------------------------------------ Helpers
