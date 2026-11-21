@@ -29,6 +29,16 @@ def check_session_targets(records):
 class ProtectedUserSessions(models.Model):
     _inherit = 'res.users'
 
+    def _tp_account_role_label(self):
+        self.ensure_one()
+        if self.has_group('tp_admin_delegation.group_original_admin'):
+            return 'original_admin', 'Quản trị gốc'
+        if self._tp_has_live_admin_grant():
+            return 'granted_admin', 'Quản trị viên ủy quyền'
+        if self.has_group('hr.group_hr_manager'):
+            return 'hr_manager', 'Quản lý nhân sự'
+        return super()._tp_account_role_label()
+
     def _check_credentials(self, credential, env):
         if (request and not request.session.uid and self.ids == [request.session.get('pre_uid')]
                 and credential.get('type') == 'totp'):
@@ -45,7 +55,20 @@ class ProtectedSessions(models.Model):
 
     def _revoke(self):
         check_session_targets(self.sudo().user_id.with_env(self.env))
-        return super()._revoke()
+        revoking_current = bool(self.filtered('is_current'))
+        winner_snapshot = None
+        if revoking_current and request and getattr(request, 'session', None):
+            sess = request.session
+            winner_snapshot = (
+                sess.get('tp_session_uid') or self.env.uid,
+                sess.get('tp_session_gen'),
+                sess.get('tp_session_nonce'),
+            )
+        res = super()._revoke()
+        if winner_snapshot:
+            from odoo.addons.tp_web_login.models.session_guard import compare_and_clear_winner_in_cr
+            compare_and_clear_winner_in_cr(self.env.cr, *winner_snapshot)
+        return res
 
 
 class ProtectedPasskeys(models.Model):

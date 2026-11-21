@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261121-007 — ACCOUNT-SECURITY-002: Hoàn thiện vai trò backend, đổi mật khẩu inline, sửa lọc phiên Đã thu hồi và Việt hóa luồng 2FA/API key
+
+- 21/11/2026 (Asia/Saigon). Nâng cấp `tp_web_login` **20.0.2.2.0** và `tp_admin_delegation` **20.0.2.3.0**:
+  - Header hiển thị nhãn vai trò lấy từ backend (`_tp_account_role_label`: `Quản trị gốc`, `Quản trị viên ủy quyền`, `Quản lý nhân sự`, `Nhân viên nội bộ`) và avatar 52px có monogram fallback.
+  - Mục **Mật khẩu**: bổ sung biểu mẫu đổi mật khẩu trực tiếp trong trang (`tp_change_my_password`) với 3 ô (hiện tại / mới / xác nhận), nút hiện/ẩn có `aria-label` và `aria-pressed`, báo lỗi đúng từng trường, giữ nguyên xác thực native `_check_credentials` + `_assert_can_auth` + `auth_totp._revoke_all_devices()` và làm mới session token phiên hiện tại.
+  - Mục **Phiên đăng nhập**: sửa lỗi bộ lọc `Đã thu hồi` luôn trả 0 bản ghi (do `res.session` SQL view lọc `revoked IS NOT TRUE`); truy vấn khử trùng trên `res_device_log` theo đúng `self.env.uid`, tách rõ **Phiên hiện tại** (`Thiết bị này · Đang hoạt động`), **Các phiên còn hiệu lực khác** (`0 phiên hoạt động`), và **Lịch sử phiên** (`all` / `current` / `uncleaned` / `revoked`) kèm cột Trình duyệt & Nền tảng; đồng bộ dọn winner trong `ProtectedSessions._revoke()`.
+  - Việt hóa toàn bộ thông báo 2FA (`auth_totp.wizard.enable`, `action_totp_disable`), nhãn thời hạn khóa API (`_selection_duration`, giữ nguyên kiểm quyền nhóm), hộp thoại hiển thị khóa API một lần (`res.users.apikeys.show`, bỏ snippet tiếng Anh `ODOO_MCP_KEY`), thêm kiểm quyền `api_keys_allowed` và trạng thái `Còn hiệu lực` / `Đã hết hạn`.
+  - Kiểm thử: `/tp_admin_delegation,/tp_branding:TestBrandUrls` **46/46 PASS** (0 failed, 0 error); Playwright v2 **12/12 checks PASS, 0 pageErrors** (desktop 1440px, mobile 390px, eye toggle, field errors, wrong current password, session filters, F5, reduced-motion, single-session); libsass SCSS biên dịch sạch 0 lỗi.
+
 ## CHG-20261121-006 — ACCOUNT-SECURITY-001: Xác nhận public và bàn giao
 
 - Bản source `2bad1f45` và static `3461a34a` đã push/deploy; static005 6 tệp khớp, backup source trước static tại `C:\TANPHAT-backups\account-security001\static005-before.tar.gz`.

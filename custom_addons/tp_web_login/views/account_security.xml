@@ -41,9 +41,18 @@
     <record id="api_show_branded" model="ir.ui.view">
         <field name="name">TANPHAT ONE — Khóa API mới</field><field name="model">res.users.apikeys.show</field><field name="inherit_id" ref="base.form_res_users_key_show"/>
         <field name="arch" type="xml">
-            <xpath expr="//form" position="attributes"><attribute name="class" add="tp-security-wizard" separator=" "/></xpath>
+            <xpath expr="//form" position="attributes"><attribute name="class" add="tp-security-wizard" separator=" "/><attribute name="string">Lưu khóa API</attribute></xpath>
             <xpath expr="//h3" position="replace"><h3>Lưu khóa API của bạn</h3></xpath>
-            <xpath expr="//p" position="replace"><p>Khóa chỉ hiển thị một lần. Sao chép và lưu an toàn; khóa cho phép truy cập bằng quyền tài khoản của bạn.</p></xpath>
+            <xpath expr="//p" position="replace"><p>Khóa chỉ hiển thị một lần duy nhất. Hãy sao chép và cất giữ an toàn; khóa cho phép kết nối bằng quyền tài khoản của bạn.</p></xpath>
+            <xpath expr="//div[@id='rpc_key_card']" position="replace">
+                <div id="rpc_key_card" class="card mt-2">
+                    <div class="card-header"><strong>Ghi chú tích hợp</strong></div>
+                    <div class="card-body">
+                        <p class="mb-0">Lưu khóa trong biến môi trường hoặc kho bí mật của dịch vụ tích hợp; không dán vào mã nguồn, tài liệu hay tin nhắn. Nếu bị lộ, hãy thu hồi khóa ngay tại mục <strong>Tích hợp &amp; khóa API</strong>.</p>
+                    </div>
+                </div>
+            </xpath>
+            <xpath expr="//footer//button[@special='cancel']" position="attributes"><attribute name="string">Tôi đã lưu khóa, đóng lại</attribute></xpath>
         </field>
     </record>
 </odoo>

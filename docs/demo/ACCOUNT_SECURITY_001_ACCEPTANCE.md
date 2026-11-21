@@ -33,3 +33,11 @@ Bản chức năng `2bad1f45` đã áp PC server; nâng 5 module đúng phiên b
 Fingerprint trước/sau cho tài khoản, credential, quyền, ledger, nhân sự, thiết bị, đề xuất và công giữ nguyên. Chỉ chuẩn hóa URL công khai sang HTTPS và freeze. Probe ORM chỉ đọc đủ 30 tài khoản nội bộ, gồm 1 gốc, 4 ủy quyền, 25 nhân viên/hệ thống: 0 lỗi. Public health 200. 2FA của admin gốc chưa bật; không tự thay đổi.
 
 Icon SVG và browser bản cuối đã kiểm trên DB test. Static `3461a34a` đã đồng bộ 6/6 tệp checksum khớp; bundle public JS/CSS đã tải và xác nhận workspace/security action mới. Health200, login200, deep link bảo mật chuyển đúng login. Hai actor thử đã thu grant và khóa trên DB test. Bộ kiểm này không chứng minh không còn lỗ hổng ngoài phạm vi đã rà soát.
+
+## Bổ sung hoàn thiện (CHG-20261121-007 — `tp_web_login` 20.0.2.2.0, `tp_admin_delegation` 20.0.2.3.0)
+
+- Sửa lỗi bộ lọc phiên `Đã thu hồi` luôn trả 0 bản ghi (truy vấn `res_device_log` khử trùng theo `session_identifier` cho `self.env.uid`, tách rõ **Phiên hiện tại**, **Các phiên còn hiệu lực khác** và **Lịch sử phiên**, không trả `session_identifier`/nonce/cookie/token).
+- Bổ sung nhãn vai trò thật từ backend ở Header (`Quản trị gốc`, `Quản trị viên ủy quyền`, `Quản lý nhân sự`, `Nhân viên nội bộ`), avatar 52px có fallback monogram.
+- Bổ sung biểu mẫu đổi mật khẩu inline (`tp_change_my_password`) gồm 3 ô nhập, nút hiện/ẩn có `aria-label`/`aria-pressed`, báo lỗi từng trường, gọi native `change_password` dưới `_assert_can_auth` và làm mới `session_token` phiên hiện tại.
+- Việt hóa thông báo bật/tắt 2FA, thời hạn tạo khóa API (giữ nguyên quyền theo nhóm), hộp thoại hiển thị khóa API một lần (bỏ snippet tiếng Anh `ODOO_MCP_KEY`), hiển thị trạng thái `Còn hiệu lực` / `Đã hết hạn` và kiểm quyền `api_keys_allowed`.
+- Kiểm thử: `/tp_admin_delegation,/tp_branding:TestBrandUrls` **46/46 PASS** (0 failed, 0 error); Playwright v2 **12/12 checks PASS, 0 pageErrors** (desktop 1440px + mobile 390px, không tràn ngang, tôn trọng `prefers-reduced-motion`).

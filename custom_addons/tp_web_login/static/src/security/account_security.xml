@@ -1,78 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="tp_web_login.AccountSecurity">
-        <main class="tp-account-security" t-att-aria-busy="this.state.busy">
+        <main class="tp-account-security" t-att-aria-busy="(this.state.busy || this.state.pwBusy) ? 'true' : 'false'">
             <div class="tp-security-heading">
-                <div><h1>Tài khoản &amp; Bảo mật</h1><p>Quản lý cách đăng nhập và bảo vệ tài khoản của bạn.</p></div>
-                <button class="btn btn-outline-secondary" t-on-click="this.back">Quay lại</button>
+                <div>
+                    <h1>Tài khoản &amp; Bảo mật</h1>
+                    <p>Quản lý mật khẩu, xác thực hai bước, khóa truy cập và phiên đăng nhập của bạn trên TANPHAT ONE.</p>
+                </div>
+                <button type="button" class="btn btn-outline-secondary" t-on-click="this.back">Quay lại</button>
             </div>
-            <div t-if="this.state.error" class="alert alert-danger" role="alert"><t t-out="this.state.error"/> <button class="btn btn-link" t-on-click="this.load">Thử tải lại</button></div>
+
+            <div t-if="this.state.error" class="alert alert-danger tp-security-banner" role="alert">
+                <span t-out="this.state.error"/>
+                <button type="button" class="btn btn-link p-0" t-on-click="this.load">Thử tải lại</button>
+            </div>
+            <div t-if="this.state.notice" class="alert alert-success tp-security-banner" role="status">
+                <span t-out="this.state.notice"/>
+            </div>
+
             <t t-if="this.state.data">
-                <div class="tp-security-identity">
-                    <img t-att-src="'/web/image/res.users/' + this.state.data.user_id + '/avatar_128?v=' + this.state.avatarVersion" alt="Ảnh đại diện"/>
-                    <div><h2 t-out="this.state.data.name"/><span t-out="this.state.data.login"/></div>
-                    <span class="tp-security-chip">Tài khoản của bạn</span>
-                </div>
+                <header class="tp-security-identity">
+                    <div class="tp-security-avatar">
+                        <img t-if="!this.state.avatarFailed"
+                             t-att-src="'/web/image/res.users/' + this.state.data.user_id + '/avatar_128?v=' + this.state.avatarVersion"
+                             t-att-alt="'Ảnh đại diện của ' + this.state.data.name"
+                             t-on-error="this.onAvatarError"/>
+                        <span t-else="" class="tp-security-avatar-fallback" aria-hidden="true" t-out="this.initials"/>
+                    </div>
+                    <div class="tp-security-identity-meta">
+                        <h2 t-out="this.state.data.name"/>
+                        <span class="tp-security-login" t-out="this.state.data.login"/>
+                    </div>
+                    <span t-att-class="this.roleChipClass(this.state.data.role_code)" t-out="this.state.data.role_label"/>
+                </header>
+
                 <div class="tp-security-layout">
-                    <div>
-                        <section class="tp-security-section">
-                            <div class="tp-security-section-title"><svg class="tp-security-symbol" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 10h14v11H5z M8 10V7a4 4 0 0 1 8 0v3 M12 14v3"/></svg><div><h2>Mật khẩu</h2><p>Đổi mật khẩu khi cần. Mật khẩu hiện tại luôn được giữ bí mật.</p></div></div>
-                            <button class="btn btn-primary" t-att-disabled="this.state.busy" t-on-click="() => this.run('password')">Đổi mật khẩu</button>
+                    <div class="tp-security-main-col">
+                        <!-- A. Mật khẩu -->
+                        <section class="tp-security-section" aria-labelledby="tp-sec-password-title">
+                            <div class="tp-security-section-header">
+                                <div class="tp-security-section-title">
+                                    <svg class="tp-security-symbol" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 10h14v11H5z M8 10V7a4 4 0 0 1 8 0v3 M12 14v3"/></svg>
+                                    <div>
+                                        <h2 id="tp-sec-password-title">Mật khẩu</h2>
+                                        <p>Cập nhật mật khẩu định kỳ để bảo vệ tài khoản. Mật khẩu đang lưu không bao giờ được hiển thị.</p>
+                                    </div>
+                                </div>
+                                <button type="button"
+                                        t-att-class="this.state.pwOpen ? 'btn btn-outline-secondary' : 'btn btn-primary'"
+                                        t-att-disabled="this.state.busy || this.state.pwBusy"
+                                        t-att-aria-expanded="this.state.pwOpen ? 'true' : 'false'"
+                                        t-on-click="this.togglePasswordForm"
+                                        t-out="this.state.pwOpen ? 'Đóng biểu mẫu' : 'Đổi mật khẩu'"/>
+                            </div>
+
+                            <div t-if="this.state.pwSuccess" class="alert alert-success tp-security-inline-msg" role="status" t-out="this.state.pwSuccess"/>
+
+                            <form t-if="this.state.pwOpen" class="tp-password-form" novalidate="novalidate" t-on-submit="this.submitPasswordChange">
+                                <div t-if="this.state.pwServerError" class="alert alert-danger tp-security-inline-msg" role="alert" t-out="this.state.pwServerError"/>
+
+                                <div class="tp-field-group">
+                                    <label class="tp-field-label" for="tp-pw-current">Mật khẩu hiện tại</label>
+                                    <div class="tp-password-input-wrap">
+                                        <input id="tp-pw-current"
+                                               t-att-type="this.state.pwShowCurrent ? 'text' : 'password'"
+                                               class="form-control tp-field-input"
+                                               t-att-class="{ 'is-invalid': !!this.state.pwErrors.current }"
+                                               autocomplete="current-password"
+                                               placeholder="Nhập mật khẩu hiện tại"
+                                               t-att-value="this.state.pwCurrent"
+                                               t-att-disabled="this.state.pwBusy"
+                                               t-att-aria-invalid="this.state.pwErrors.current ? 'true' : 'false'"
+                                               t-att-aria-describedby="this.state.pwErrors.current ? 'tp-pw-current-err' : undefined"
+                                               t-on-input="(ev) => this.onPasswordInput('current', ev)"/>
+                                        <button type="button"
+                                                class="tp-eye-btn"
+                                                t-att-aria-label="this.state.pwShowCurrent ? 'Ẩn mật khẩu hiện tại' : 'Hiện mật khẩu hiện tại'"
+                                                t-att-aria-pressed="this.state.pwShowCurrent ? 'true' : 'false'"
+                                                t-on-click="() => this.togglePasswordVisibility('current')">
+                                            <svg t-if="!this.state.pwShowCurrent" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                                            <svg t-else="" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-6.5 0-10-7-10-7a21.77 21.77 0 0 1 5.06-5.94"/><path d="M9.9 4.24A10.94 10.94 0 0 1 12 5c6.5 0 10 7 10 7a21.8 21.8 0 0 1-3.17 4.35"/><path d="M1 1l22 22"/></svg>
+                                        </button>
+                                    </div>
+                                    <p t-if="this.state.pwErrors.current" id="tp-pw-current-err" class="tp-field-error" role="alert" t-out="this.state.pwErrors.current"/>
+                                </div>
+
+                                <div class="tp-field-grid">
+                                    <div class="tp-field-group">
+                                        <label class="tp-field-label" for="tp-pw-new">Mật khẩu mới</label>
+                                        <div class="tp-password-input-wrap">
+                                            <input id="tp-pw-new"
+                                                   t-att-type="this.state.pwShowNew ? 'text' : 'password'"
+                                                   class="form-control tp-field-input"
+                                                   t-att-class="{ 'is-invalid': !!this.state.pwErrors.next }"
+                                                   autocomplete="new-password"
+                                                   placeholder="Nhập mật khẩu mới"
+                                                   t-att-value="this.state.pwNew"
+                                                   t-att-disabled="this.state.pwBusy"
+                                                   t-att-aria-invalid="this.state.pwErrors.next ? 'true' : 'false'"
+                                                   t-att-aria-describedby="this.state.pwErrors.next ? 'tp-pw-new-err' : undefined"
+                                                   t-on-input="(ev) => this.onPasswordInput('next', ev)"/>
+                                            <button type="button"
+                                                    class="tp-eye-btn"
+                                                    t-att-aria-label="this.state.pwShowNew ? 'Ẩn mật khẩu mới' : 'Hiện mật khẩu mới'"
+                                                    t-att-aria-pressed="this.state.pwShowNew ? 'true' : 'false'"
+                                                    t-on-click="() => this.togglePasswordVisibility('next')">
+                                                <svg t-if="!this.state.pwShowNew" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                <svg t-else="" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-6.5 0-10-7-10-7a21.77 21.77 0 0 1 5.06-5.94"/><path d="M9.9 4.24A10.94 10.94 0 0 1 12 5c6.5 0 10 7 10 7a21.8 21.8 0 0 1-3.17 4.35"/><path d="M1 1l22 22"/></svg>
+                                            </button>
+                                        </div>
+                                        <p t-if="this.state.pwErrors.next" id="tp-pw-new-err" class="tp-field-error" role="alert" t-out="this.state.pwErrors.next"/>
+                                    </div>
+
+                                    <div class="tp-field-group">
+                                        <label class="tp-field-label" for="tp-pw-confirm">Xác nhận mật khẩu mới</label>
+                                        <div class="tp-password-input-wrap">
+                                            <input id="tp-pw-confirm"
+                                                   t-att-type="this.state.pwShowConfirm ? 'text' : 'password'"
+                                                   class="form-control tp-field-input"
+                                                   t-att-class="{ 'is-invalid': !!this.state.pwErrors.confirm }"
+                                                   autocomplete="new-password"
+                                                   placeholder="Nhập lại mật khẩu mới"
+                                                   t-att-value="this.state.pwConfirm"
+                                                   t-att-disabled="this.state.pwBusy"
+                                                   t-att-aria-invalid="this.state.pwErrors.confirm ? 'true' : 'false'"
+                                                   t-att-aria-describedby="this.state.pwErrors.confirm ? 'tp-pw-confirm-err' : undefined"
+                                                   t-on-input="(ev) => this.onPasswordInput('confirm', ev)"/>
+                                            <button type="button"
+                                                    class="tp-eye-btn"
+                                                    t-att-aria-label="this.state.pwShowConfirm ? 'Ẩn xác nhận mật khẩu mới' : 'Hiện xác nhận mật khẩu mới'"
+                                                    t-att-aria-pressed="this.state.pwShowConfirm ? 'true' : 'false'"
+                                                    t-on-click="() => this.togglePasswordVisibility('confirm')">
+                                                <svg t-if="!this.state.pwShowConfirm" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                <svg t-else="" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-6.5 0-10-7-10-7a21.77 21.77 0 0 1 5.06-5.94"/><path d="M9.9 4.24A10.94 10.94 0 0 1 12 5c6.5 0 10 7 10 7a21.8 21.8 0 0 1-3.17 4.35"/><path d="M1 1l22 22"/></svg>
+                                            </button>
+                                        </div>
+                                        <p t-if="this.state.pwErrors.confirm" id="tp-pw-confirm-err" class="tp-field-error" role="alert" t-out="this.state.pwErrors.confirm"/>
+                                    </div>
+                                </div>
+
+                                <div class="tp-password-form-actions">
+                                    <button type="submit" class="btn btn-primary" t-att-disabled="this.state.pwBusy">
+                                        <t t-out="this.state.pwBusy ? 'Đang cập nhật…' : 'Lưu mật khẩu mới'"/>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" t-att-disabled="this.state.pwBusy" t-on-click="this.togglePasswordForm">Hủy</button>
+                                </div>
+                            </form>
                         </section>
-                        <section class="tp-security-section">
-                            <div class="tp-security-section-title"><svg class="tp-security-symbol" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 7v5c0 5 9 9 9 9s9-4 9-9V7z M8 12l3 3 5-6"/></svg><div><h2>Xác thực hai bước</h2><p>Thêm mã từ ứng dụng xác thực khi đăng nhập.</p></div></div>
+
+                        <!-- B. Xác thực hai bước -->
+                        <section class="tp-security-section" aria-labelledby="tp-sec-totp-title">
+                            <div class="tp-security-section-title">
+                                <svg class="tp-security-symbol" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 7v5c0 5 9 9 9 9s9-4 9-9V7z M8 12l3 3 5-6"/></svg>
+                                <div>
+                                    <h2 id="tp-sec-totp-title">Xác thực hai bước (2FA)</h2>
+                                    <p>Yêu cầu thêm mã 6 số từ ứng dụng xác thực (Google Authenticator, Microsoft Authenticator…) khi đăng nhập.</p>
+                                </div>
+                            </div>
                             <div class="tp-security-actions">
-                                <span t-att-class="'tp-security-chip ' + (this.state.data.totp_enabled ? 'is-enabled' : 'is-warning')" t-out="this.state.data.totp_enabled ? 'Đã bật' : 'Chưa bật'"/>
-                                <button t-if="!this.state.data.totp_enabled" class="btn btn-primary" t-att-disabled="this.state.busy" t-on-click="() => this.run('totp_enable')">Bật xác thực hai bước</button>
-                                <button t-else="" class="btn btn-outline-danger" t-att-disabled="this.state.busy" t-on-click="() => this.confirm('totp_disable', null, 'Tắt xác thực hai bước sẽ bỏ lớp mã xác thực khi đăng nhập. Bạn muốn tiếp tục?')">Tắt xác thực hai bước</button>
+                                <span t-att-class="'tp-security-chip ' + (this.state.data.totp_enabled ? 'is-enabled' : 'is-warning')"
+                                      t-out="this.state.data.totp_enabled ? 'Đã bật' : 'Chưa bật'"/>
+                                <button t-if="!this.state.data.totp_enabled"
+                                        type="button"
+                                        class="btn btn-primary"
+                                        t-att-disabled="this.state.busy"
+                                        t-on-click="() => this.run('totp_enable')">Bật xác thực hai bước</button>
+                                <button t-else=""
+                                        type="button"
+                                        class="btn btn-outline-danger"
+                                        t-att-disabled="this.state.busy"
+                                        t-on-click="() => this.confirm('totp_disable', null, 'Tắt xác thực hai bước sẽ bỏ lớp mã xác thực khi đăng nhập và hủy các thiết bị tin cậy. Bạn muốn tiếp tục?')">Tắt xác thực hai bước</button>
                             </div>
                         </section>
-                        <section t-if="this.state.data.passkey_supported" class="tp-security-section">
-                            <div class="tp-security-section-title"><svg class="tp-security-symbol" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 8a5 5 0 1 1-4 8l-6 6H1v-3l6-6a5 5 0 0 1 7-5z"/></svg><div><h2>Khóa truy cập</h2><p>Đăng nhập bằng vân tay, khuôn mặt hoặc khóa bảo mật trên thiết bị hỗ trợ.</p></div></div>
-                            <p t-if="!this.state.data.passkeys.length" class="tp-security-muted">Bạn chưa có khóa truy cập.</p>
+
+                        <!-- D. Khóa truy cập (Passkey) -->
+                        <section t-if="this.state.data.passkey_supported" class="tp-security-section" aria-labelledby="tp-sec-passkey-title">
+                            <div class="tp-security-section-title">
+                                <svg class="tp-security-symbol" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 8a5 5 0 1 1-4 8l-6 6H1v-3l6-6a5 5 0 0 1 7-5z"/></svg>
+                                <div>
+                                    <h2 id="tp-sec-passkey-title">Khóa truy cập (Passkey)</h2>
+                                    <p>Đăng nhập nhanh bằng vân tay, khuôn mặt, mã PIN thiết bị hoặc khóa bảo mật WebAuthn trên trình duyệt hỗ trợ.</p>
+                                </div>
+                            </div>
+                            <p t-if="!this.state.data.passkeys.length" class="tp-security-muted">Bạn chưa đăng ký khóa truy cập nào.</p>
                             <div t-foreach="this.state.data.passkeys" t-as="key" t-key="key.id" class="tp-security-record">
-                                <strong t-out="key.name"/><div class="tp-security-actions"><button class="btn btn-outline-secondary" t-att-disabled="this.state.busy" t-on-click="() => this.run('passkey_rename', key.id)">Đổi tên</button><button class="btn btn-outline-danger" t-att-disabled="this.state.busy" t-on-click="() => this.confirm('passkey_remove', key.id, 'Thu hồi khóa truy cập này? Thiết bị sử dụng khóa sẽ không thể đăng nhập bằng khóa đó.')">Thu hồi</button></div>
+                                <div>
+                                    <strong t-out="key.name"/>
+                                    <p t-if="key.created" class="mb-0">Tạo lúc: <t t-out="this.dateOrDash(key.created)"/></p>
+                                </div>
+                                <div class="tp-security-actions">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" t-att-disabled="this.state.busy" t-on-click="() => this.run('passkey_rename', key.id)">Đổi tên</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" t-att-disabled="this.state.busy" t-on-click="() => this.confirm('passkey_remove', key.id, 'Thu hồi khóa truy cập này? Thiết bị sử dụng khóa sẽ không thể đăng nhập bằng khóa đó.', 'Đã thu hồi khóa truy cập.')">Thu hồi</button>
+                                </div>
                             </div>
-                            <button class="btn btn-outline-primary" t-att-disabled="this.state.busy" t-on-click="() => this.run('passkey_create')">Thêm khóa truy cập</button>
+                            <button type="button" class="btn btn-outline-primary mt-2" t-att-disabled="this.state.busy" t-on-click="() => this.run('passkey_create')">Thêm khóa truy cập</button>
                         </section>
                     </div>
-                    <aside class="tp-security-note"><svg class="tp-security-symbol" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 10v7 M12 7v.1 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0"/></svg><h2>Mỗi tài khoản, một phiên làm việc</h2><p>Khi đăng nhập trên thiết bị khác, phiên trước sẽ kết thúc theo chính sách hệ thống.</p><p>Danh sách bên dưới là các phiên đã ghi nhận. Số bản ghi lịch sử không phải số thiết bị đang đăng nhập.</p></aside>
+
+                    <aside class="tp-security-note">
+                        <svg class="tp-security-symbol" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 10v7 M12 7v.1 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0"/></svg>
+                        <h2>Chính sách một phiên đăng nhập</h2>
+                        <p>Mỗi tài khoản chỉ duy trì <strong>01 phiên web/PWA đang hoạt động</strong> tại một thời điểm. Khi đăng nhập ở thiết bị khác, phiên cũ bị vô hiệu hóa ở máy chủ.</p>
+                        <p>Bảng bên dưới tách riêng <strong>Phiên hiện tại</strong> và <strong>Lịch sử phiên</strong>; các bản ghi lịch sử chưa được hệ thống dọn định kỳ không phải thiết bị đang đăng nhập đồng thời.</p>
+                    </aside>
                 </div>
-                <section class="tp-security-section tp-security-sessions">
-                    <div class="tp-security-section-title"><svg class="tp-security-symbol" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h18v14H3z M12 17v4 M7 21h10"/></svg><div><h2>Phiên đăng nhập</h2><p>Nhận diện phiên hiện tại và kiểm tra lịch sử hoạt động của tài khoản.</p></div></div>
-                    <div class="tp-security-toolbar">
-                        <label>Hiển thị<select name="status" class="form-select" t-att-value="this.state.status" t-on-change="this.filter"><option value="all">Tất cả phiên đã ghi nhận</option><option value="current">Phiên hiện tại</option><option value="revoked">Đã thu hồi</option></select></label>
-                        <label>Số dòng<select name="limit" class="form-select" t-att-value="this.state.limit" t-on-change="this.filter"><option value="10">10</option><option value="20">20</option><option value="50">50</option></select></label>
-                        <button class="btn btn-outline-danger" t-att-disabled="this.state.busy" t-on-click="() => this.confirm('sessions_revoke', null, 'Đăng xuất tất cả các phiên khác? Phiên bạn đang sử dụng được giữ lại.')">Đăng xuất các phiên khác</button>
+
+                <!-- C. Phiên đăng nhập -->
+                <section class="tp-security-section tp-security-sessions" aria-labelledby="tp-sec-sessions-title">
+                    <div class="tp-security-section-title">
+                        <svg class="tp-security-symbol" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h18v14H3z M12 17v4 M7 21h10"/></svg>
+                        <div>
+                            <h2 id="tp-sec-sessions-title">Phiên đăng nhập</h2>
+                            <p>Theo dõi phiên đang hoạt động trên thiết bị này, các phiên khác và lịch sử phiên của tài khoản.</p>
+                        </div>
                     </div>
-                    <div class="tp-security-table-wrap"><table class="tp-security-table"><thead><tr><th>Trình duyệt / Thiết bị</th><th>Hoạt động gần nhất</th><th>Ghi nhận</th><th>Thao tác</th></tr></thead><tbody>
-                        <tr t-foreach="this.state.data.sessions" t-as="row" t-key="row.id">
-                            <td><strong t-out="row.name"/></td><td t-out="this.date(row.last_activity)"/>
-                            <td><span t-att-class="'tp-security-chip ' + (row.is_current ? 'is-enabled' : '')" t-out="row.is_current ? 'Phiên hiện tại' : (row.revoked ? 'Đã thu hồi' : 'Lịch sử phiên')"/></td>
-                            <td><button t-if="!row.is_current &amp;&amp; !row.revoked" class="btn btn-sm btn-outline-danger" t-att-disabled="this.state.busy" t-on-click="() => this.confirm('session_revoke', row.id, 'Thu hồi phiên đã chọn?')">Thu hồi</button><span t-else="">—</span></td>
-                        </tr>
-                        <tr t-if="!this.state.data.sessions.length"><td colspan="4">Không có phiên phù hợp với bộ lọc.</td></tr>
-                    </tbody></table></div>
-                    <div class="tp-security-pagination"><span><t t-out="this.state.data.session_count"/> bản ghi</span><button class="btn btn-outline-secondary" t-att-disabled="this.state.offset === 0" t-on-click="() => this.page(-1)">Trước</button><span>Trang <t t-out="Math.floor(this.state.offset / this.state.limit) + 1"/></span><button class="btn btn-outline-secondary" t-att-disabled="this.state.offset + this.state.limit >= this.state.data.session_count" t-on-click="() => this.page(1)">Sau</button></div>
+
+                    <div class="tp-session-overview-grid">
+                        <div class="tp-session-card is-current-card">
+                            <div class="tp-session-card-head">
+                                <h3>Phiên hiện tại</h3>
+                                <span class="tp-security-chip is-enabled">Thiết bị này · Đang hoạt động</span>
+                            </div>
+                            <t t-if="this.state.data.current_session">
+                                <p class="tp-session-card-device">
+                                    <strong t-out="this.state.data.current_session.browser"/> · <span t-out="this.state.data.current_session.platform"/>
+                                </p>
+                                <p class="tp-security-muted mb-0">
+                                    Hoạt động gần nhất: <t t-out="this.dateOrDash(this.state.data.current_session.last_activity)"/>
+                                </p>
+                            </t>
+                            <p t-else="" class="tp-security-muted mb-0">Phiên hiện tại đang hoạt động.</p>
+                            <p class="tp-session-card-hint">Để kết thúc phiên hiện tại trên thiết bị này, hãy chọn <strong>Đăng xuất</strong> ở menu tài khoản (thao tác sẽ đăng xuất ngay lập tức).</p>
+                        </div>
+
+                        <div class="tp-session-card">
+                            <div class="tp-session-card-head">
+                                <h3>Các phiên còn hiệu lực khác</h3>
+                                <span class="tp-security-chip">0 phiên hoạt động</span>
+                            </div>
+                            <p class="mb-2">Không có phiên web/PWA nào khác đang hoạt động đồng thời (chính sách một phiên được thực thi tại máy chủ).</p>
+                            <t t-if="this.state.data.session_summary.uncleaned_other_count > 0">
+                                <p class="tp-security-muted mb-2">
+                                    Còn <strong t-out="this.state.data.session_summary.uncleaned_other_count"/> bản ghi phiên cũ chưa gắn cờ thu hồi.
+                                </p>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger"
+                                        t-att-disabled="this.state.busy"
+                                        t-on-click="() => this.confirm('sessions_revoke', null, 'Thu hồi toàn bộ các bản ghi phiên khác chưa dọn? Phiên hiện tại trên thiết bị này được giữ nguyên.', 'Đã thu hồi các phiên khác.')">
+                                    Thu hồi các phiên khác
+                                </button>
+                            </t>
+                            <p t-else="" class="tp-security-muted mb-0">Không còn bản ghi phiên cũ nào cần thu hồi.</p>
+                        </div>
+                    </div>
+
+                    <div class="tp-session-history-block">
+                        <div class="tp-session-history-head">
+                            <div>
+                                <h3>Lịch sử phiên</h3>
+                                <p class="tp-security-muted mb-0">
+                                    Tổng <strong t-out="this.state.data.session_summary.total_history_count"/> phiên đã ghi nhận
+                                    (chưa dọn: <t t-out="this.state.data.session_summary.uncleaned_other_count"/> · đã thu hồi: <t t-out="this.state.data.session_summary.revoked_history_count"/>).
+                                </p>
+                            </div>
+                            <div class="tp-security-toolbar">
+                                <label>
+                                    Hiển thị
+                                    <select name="status" class="form-select" t-att-value="this.state.status" t-on-change="this.filter">
+                                        <option value="all">Tất cả lịch sử phiên</option>
+                                        <option value="current">Phiên hiện tại</option>
+                                        <option value="uncleaned">Đã kết thúc (chưa dọn)</option>
+                                        <option value="revoked">Đã thu hồi</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Số dòng
+                                    <select name="limit" class="form-select" t-att-value="this.state.limit" t-on-change="this.filter">
+                                        <option value="10">10</option>
+                                        <option value="20">20</option>
+                                        <option value="50">50</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="tp-security-table-wrap">
+                            <table class="tp-security-table">
+                                <thead>
+                                    <tr>
+                                        <th>Trình duyệt &amp; Nền tảng</th>
+                                        <th>Hoạt động gần nhất</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="this.state.data.sessions" t-as="row" t-key="row.id">
+                                        <td>
+                                            <div class="tp-session-device-cell">
+                                                <strong t-out="row.browser"/>
+                                                <span class="tp-security-muted" t-out="row.platform"/>
+                                            </div>
+                                        </td>
+                                        <td t-out="this.dateOrDash(row.last_activity)"/>
+                                        <td>
+                                            <span t-att-class="this.sessionChipClass(row)" t-out="row.state_label"/>
+                                        </td>
+                                        <td>
+                                            <button t-if="row.can_revoke"
+                                                    type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    t-att-disabled="this.state.busy"
+                                                    t-on-click="() => this.confirm('session_revoke', row.id, 'Thu hồi bản ghi phiên này và xóa tệp phiên trên máy chủ? Phiên hiện tại của bạn không bị ảnh hưởng.', 'Đã thu hồi phiên đã chọn.')">Thu hồi</button>
+                                            <span t-else="" class="tp-security-muted">—</span>
+                                        </td>
+                                    </tr>
+                                    <tr t-if="!this.state.data.sessions.length">
+                                        <td colspan="4" class="tp-security-muted">Không có bản ghi phiên phù hợp với bộ lọc hiện tại.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="tp-security-pagination">
+                            <span><t t-out="this.state.data.session_count"/> bản ghi</span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" t-att-disabled="this.state.offset === 0" t-on-click="() => this.page(-1)">Trước</button>
+                            <span>Trang <t t-out="this.currentPage"/> / <t t-out="this.totalPages"/></span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" t-att-disabled="this.state.offset + this.state.limit >= this.state.data.session_count" t-on-click="() => this.page(1)">Sau</button>
+                        </div>
+                    </div>
                 </section>
-                <details class="tp-security-section tp-security-advanced">
-                    <summary>Tích hợp &amp; khóa API <span class="tp-security-muted">Tùy chọn nâng cao</span></summary>
-                    <p>Khóa API cho phép dịch vụ kết nối bằng quyền của tài khoản bạn. Chỉ tạo khi có nhu cầu tích hợp; không chia sẻ khóa.</p>
-                    <p t-if="!this.state.data.keys.length">Bạn chưa có khóa API.</p>
+
+                <!-- E. Tích hợp & khóa API -->
+                <details t-if="this.state.data.api_keys_allowed" class="tp-security-section tp-security-advanced">
+                    <summary>Tích hợp &amp; khóa API <span class="tp-security-muted">Khu vực nâng cao</span></summary>
+                    <p>Khóa API cho phép ứng dụng hoặc dịch vụ bên ngoài kết nối bằng quyền của tài khoản bạn. Giá trị khóa chỉ hiển thị một lần khi tạo và không bao giờ xem lại được.</p>
+                    <p t-if="!this.state.data.keys.length" class="tp-security-muted">Bạn chưa có khóa API nào.</p>
                     <article t-foreach="this.state.data.keys" t-as="key" t-key="key.id" class="tp-security-record">
-                        <div><strong t-out="key.name"/><p>Tạo: <t t-out="this.date(key.created)"/> · Hết hạn: <t t-out="this.date(key.expires)"/></p><span t-if="key.expired" class="tp-security-chip is-warning">Đã hết hạn</span></div>
-                        <button class="btn btn-outline-danger" t-att-disabled="this.state.busy" t-on-click="() => this.confirm('api_remove', key.id, 'Thu hồi khóa API này? Dịch vụ đang sử dụng khóa sẽ mất quyền kết nối.')">Thu hồi</button>
+                        <div>
+                            <div class="tp-key-title-row">
+                                <strong t-out="key.name"/>
+                                <span t-att-class="'tp-security-chip ' + (key.expired ? 'is-warning' : 'is-enabled')" t-out="key.status_label"/>
+                                <span class="tp-security-chip" t-out="key.scope_label"/>
+                            </div>
+                            <p class="mb-0">Ngày tạo: <t t-out="this.dateOrDash(key.created)"/> · Hạn dùng: <t t-out="this.date(key.expires)"/></p>
+                        </div>
+                        <button type="button"
+                                class="btn btn-sm btn-outline-danger"
+                                t-att-disabled="this.state.busy"
+                                t-on-click="() => this.confirm('api_remove', key.id, 'Thu hồi khóa API «' + key.name + '»? Dịch vụ đang sử dụng khóa này sẽ mất quyền kết nối ngay lập tức.', 'Đã thu hồi khóa API.')">Thu hồi</button>
                     </article>
-                    <button class="btn btn-outline-primary" t-att-disabled="this.state.busy" t-on-click="() => this.run('api_create')">Tạo khóa API</button>
+                    <button type="button" class="btn btn-outline-primary mt-2" t-att-disabled="this.state.busy" t-on-click="() => this.run('api_create')">Tạo khóa API</button>
                 </details>
+
+                <!-- F. Tùy chọn cá nhân -->
                 <details class="tp-security-section tp-security-advanced">
-                    <summary>Tùy chọn cá nhân</summary>
+                    <summary>Tùy chọn cá nhân <span class="tp-security-muted">Ngôn ngữ, múi giờ, ảnh đại diện</span></summary>
                     <div class="tp-security-toolbar">
-                        <label>Ngôn ngữ<select name="lang" class="form-select" t-att-value="this.state.lang" t-on-change="this.preference"><option t-foreach="this.state.data.languages" t-as="lang" t-key="lang[0]" t-att-value="lang[0]" t-out="lang[1]"/></select></label>
-                        <label>Múi giờ<select name="tz" class="form-select" t-att-value="this.state.tz" t-on-change="this.preference"><option t-foreach="this.state.data.timezones" t-as="tz" t-key="tz" t-att-value="tz" t-out="tz"/></select></label>
-                        <button class="btn btn-primary" t-att-disabled="this.state.busy" t-on-click="() => this.savePreferences()">Lưu tùy chọn</button>
+                        <label>
+                            Ngôn ngữ hiển thị
+                            <select name="lang" class="form-select" t-att-value="this.state.lang" t-on-change="this.preference">
+                                <option t-foreach="this.state.data.languages" t-as="lang" t-key="lang[0]" t-att-value="lang[0]" t-out="lang[1]"/>
+                            </select>
+                        </label>
+                        <label>
+                            Múi giờ
+                            <select name="tz" class="form-select" t-att-value="this.state.tz" t-on-change="this.preference">
+                                <option t-foreach="this.state.data.timezones" t-as="tz" t-key="tz" t-att-value="tz" t-out="tz"/>
+                            </select>
+                        </label>
+                        <button type="button" class="btn btn-primary" t-att-disabled="this.state.busy" t-on-click="() => this.savePreferences()">Lưu tùy chọn</button>
                     </div>
-                    <label class="form-label" for="tp-security-avatar">Đổi ảnh đại diện (tối đa 5 MB)</label><input id="tp-security-avatar" type="file" accept="image/*" class="form-control" t-att-disabled="this.state.busy" t-on-change="this.avatar"/>
-                    <p t-if="this.state.saved" class="text-success mt-2" role="status">Đã lưu. Tải lại trang để áp dụng ngôn ngữ hoặc múi giờ mới.</p>
+                    <div class="tp-avatar-upload">
+                        <label class="tp-field-label" for="tp-security-avatar">Đổi ảnh đại diện (PNG/JPG, tối đa 5 MB)</label>
+                        <input id="tp-security-avatar" type="file" accept="image/*" class="form-control tp-field-input" t-att-disabled="this.state.busy" t-on-change="this.avatar"/>
+                    </div>
+                    <p t-if="this.state.saved" class="text-success mt-2 mb-0" role="status">Đã lưu tùy chọn cá nhân. Tải lại trang để áp dụng ngôn ngữ hoặc múi giờ mới.</p>
                 </details>
             </t>
             <p t-elif="!this.state.error" role="status">Đang tải thông tin bảo mật…</p>

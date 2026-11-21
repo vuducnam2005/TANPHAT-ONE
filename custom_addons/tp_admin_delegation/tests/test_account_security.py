@@ -3,7 +3,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from odoo import fields
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import AccessDenied, AccessError, UserError
 from odoo.tests import tagged
 
 from .test_delegation import DelegationCase
@@ -30,7 +30,79 @@ class TestAccountSecurity(DelegationCase):
             for row in payload['sessions']:
                 self.assertNotIn('session_identifier', row)
             self.assertEqual(set(payload['keys'][0]) if payload['keys'] else set(),
-                             {'id', 'name', 'created', 'expires', 'expired'} if payload['keys'] else set())
+                             {'id', 'name', 'scope', 'scope_label', 'created', 'expires', 'expired', 'status_label'} if payload['keys'] else set())
+
+    def test_role_labels_from_backend_match_authority_policy(self):
+        orig = self.env['res.users'].with_user(self.admin).tp_my_security()
+        granted = self.env['res.users'].with_user(self.actor_user).tp_my_security()
+        emp = self.env['res.users'].with_user(self.normal).tp_my_security()
+        self.assertEqual((orig['role_code'], orig['role_label']), ('original_admin', 'Quản trị gốc'))
+        self.assertEqual((granted['role_code'], granted['role_label']), ('granted_admin', 'Quản trị viên ủy quyền'))
+        self.assertEqual((emp['role_code'], emp['role_label']), ('employee', 'Nhân viên nội bộ'))
+
+    def test_session_history_separates_uncleaned_and_revoked_without_leaking_ids(self):
+        now = fields.Datetime.now()
+        self.env['res.device.log'].sudo().create([
+            {
+                'user_id': self.normal.id, 'session_identifier': 'synth-uncleaned-001',
+                'ip_address': '127.0.0.1',
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/131.0.0.0 Safari/537.36',
+                'first_activity': now, 'last_activity': now, 'revoked': False,
+            },
+            {
+                'user_id': self.normal.id, 'session_identifier': 'synth-revoked-002',
+                'ip_address': '127.0.0.1',
+                'user_agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15',
+                'first_activity': now, 'last_activity': now, 'revoked': True,
+            },
+            {
+                'user_id': self.peer.id, 'session_identifier': 'synth-peer-secret-003',
+                'ip_address': '127.0.0.1', 'user_agent': 'Mozilla/5.0 Firefox/130.0',
+                'first_activity': now, 'last_activity': now, 'revoked': True,
+            },
+        ])
+        svc = self.env['res.users'].with_user(self.normal)
+        all_data = svc.tp_my_security(status='all', limit=10, offset=0)
+        revoked_data = svc.tp_my_security(status='revoked', limit=10, offset=0)
+        uncleaned_data = svc.tp_my_security(status='uncleaned', limit=10, offset=0)
+
+        self.assertEqual(all_data['other_active_session_count'], 0)
+        self.assertTrue(all_data['single_session_policy'])
+        self.assertGreaterEqual(revoked_data['session_count'], 1)
+        self.assertTrue(all(r['state'] == 'revoked' and not r['can_revoke'] for r in revoked_data['sessions']))
+        self.assertGreaterEqual(uncleaned_data['session_count'], 1)
+        self.assertTrue(all(r['state'] == 'ended_uncleaned' and r['can_revoke'] for r in uncleaned_data['sessions']))
+        for dataset in (all_data, revoked_data, uncleaned_data):
+            for row in dataset['sessions']:
+                self.assertNotIn('session_identifier', row)
+                self.assertIn('browser', row)
+                self.assertIn('platform', row)
+                self.assertNotIn('synth-peer-secret-003', str(row))
+
+    def test_inline_change_own_password_enforces_current_password_and_confirmation(self):
+        for user in (self.normal, self.actor_user):
+            user.sudo().password = 'SynthOldPass#2026'
+            svc = self.env['res.users'].with_user(user)
+            with self.assertRaises(UserError), self.env.cr.savepoint():
+                svc.tp_change_my_password('', 'SynthNewPass#2026', 'SynthNewPass#2026')
+            with self.assertRaises(UserError), self.env.cr.savepoint():
+                svc.tp_change_my_password('SynthOldPass#2026', 'SynthNewPass#2026', 'Mismatch#2026')
+            with self.assertRaises(AccessDenied), self.env.cr.savepoint():
+                svc.tp_change_my_password('WrongCurrentPass', 'SynthNewPass#2026', 'SynthNewPass#2026')
+            self.assertTrue(svc.tp_change_my_password('SynthOldPass#2026', 'SynthNewPass#2026', 'SynthNewPass#2026'))
+            # New password authenticates; old password is rejected.
+            res = svc._check_credentials({'type': 'password', 'login': user.login, 'password': 'SynthNewPass#2026'}, {'interactive': True})
+            self.assertEqual(res['uid'], user.id)
+            with self.assertRaises(AccessDenied), self.env.cr.savepoint():
+                svc._check_credentials({'type': 'password', 'login': user.login, 'password': 'SynthOldPass#2026'}, {'interactive': True})
+
+    def test_api_key_duration_vietnamese_labels_preserve_permissions(self):
+        admin_sel = dict(self.env['res.users.apikeys.description'].with_user(self.admin)._selection_duration())
+        normal_sel = dict(self.env['res.users.apikeys.description'].with_user(self.normal)._selection_duration())
+        self.assertEqual(admin_sel.get('0'), 'Không giới hạn')
+        self.assertEqual(admin_sel.get('30'), '1 tháng')
+        self.assertNotIn('0', normal_sel)
+        self.assertEqual(normal_sel.get('1'), '1 ngày')
 
     def test_preferences_reject_identity_and_privilege_injection(self):
         for user in (self.actor_user, self.normal):
