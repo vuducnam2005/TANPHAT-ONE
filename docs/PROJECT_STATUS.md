@@ -1,5 +1,11 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261121-009 — PASSKEY-001 — RELEASE_READY.** Hoàn thiện đăng ký và đăng nhập bằng khóa truy cập (`tp_web_login` **20.0.2.3.0**).
+- Nguyên nhân có bằng chứng: trình duyệt không bao giờ gửi assertion về `/dang-nhap` (hủy, hết giờ, hoặc không có khóa trên thiết bị/hồ sơ đó) và JS native nuốt lỗi. Cấu hình domain/RP ID/challenge trên server đúng.
+- Đã sửa: lỗi tiếng Việt theo nguyên nhân ở cả trình duyệt và backend; trạng thái đang xử lý và chống bấm đúp; xác minh danh tính bằng khóa; form bị ẩn; quản lý khóa (tên, đổi tên, thu hồi) chỉ báo thành công sau khi backend xác nhận.
+- 3 vai trò PASS bằng virtual authenticator: đăng ký → đăng nhập đúng danh tính/quyền → thu hồi → bị từ chối. Admin ủy quyền không đụng được khóa của admin gốc hoặc peer.
+- Còn lại: kiểm trên thiết bị thật theo [nghiệm thu](demo/PASSKEY_001_ACCEPTANCE.md).
+
 **CHG-20261121-008 — ACCOUNT-SECURITY-002 Hotfix — PC_SERVER_APPLIED.** Sửa lỗi vỡ icon khiên SVG khổng lồ ở mục “Tài khoản & Bảo mật” trong menu tài khoản sidebar (`tp_web_home/static/src/identity/user_account_menu.xml`): bổ sung `class="'tp-profile-menu-item'"` và `width="17" height="17"` cho icon khiên, đồng bộ icon cho `web.UserMenu` + `web.BurgerUserMenu` (`shell_navbar.xml`) và mở rộng `min-width: 214px; width: max-content;` trong `user_account_menu.scss`.
 
 **CHG-20261121-007 — ACCOUNT-SECURITY-002 — PC_SERVER_APPLIED.** Hoàn thiện bản vá và nâng cấp giao diện + backend **Tài khoản & Bảo mật** (`tp_web_login` **20.0.2.2.0**, `tp_admin_delegation` **20.0.2.3.0**), commit app `c74460b8`:
@@ -371,7 +377,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261121-006`
+Last change: `CHG-20261121-009`
 
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.

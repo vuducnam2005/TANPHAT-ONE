@@ -170,7 +170,12 @@
             <div class="tp-auth-divider" t-translation="off"><span>Hoặc</span></div>
         </xpath>
         <xpath expr="//span[@t-out=&quot;p['body']&quot;]" position="replace">
-            <span class="mx-auto" t-out="'Đăng nhập bằng khóa truy cập' if str(p.get('body', '')).strip() == 'Use a Passkey' else p.get('body')"/>
+            <!-- Match the native passkey item by its class: its body is already translated here. -->
+            <span class="mx-auto" t-out="'Đăng nhập bằng khóa truy cập' if p.get('list_item_class') == 'passkey_login_link' else p.get('body')"/>
+        </xpath>
+        <xpath expr="//div[hasclass('list-group')]" position="after">
+            <p class="tp-passkey-hint" t-translation="off">Dùng khóa truy cập đã đăng ký cho tài khoản trên thiết bị hoặc trình quản lý mật khẩu của bạn.</p>
+            <div class="tp-passkey-feedback" aria-live="polite"/>
         </xpath>
     </template>
 

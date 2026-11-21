@@ -1,5 +1,25 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261121-009 — PASSKEY-001: Hoàn thiện đăng ký và đăng nhập bằng khóa truy cập trên tpone.tadic.vn
+
+- 21/11/2026 (Asia/Saigon). Người dùng báo bấm “đăng nhập bằng khóa”, quét vân tay xong nhưng không vào được hệ thống.
+  - Bằng chứng server (chỉ đọc): cấu hình đúng (`web.base.url=https://tpone.tadic.vn`, `rpId=tpone.tadic.vn`, UV bắt buộc); có 1 khóa đã đăng ký với `sign_count=0`.
+  - Các lần thử chỉ gọi `start-auth` và **không có `POST /dang-nhap` nào kèm assertion**. Cloudflare `DYNAMIC`/`no-cache`.
+  - Kết luận: ceremony phía trình duyệt không trả kết quả (hủy, hết giờ, hoặc thiết bị/hồ sơ không có khóa) và JS native nuốt lỗi. Backend native vẫn đúng.
+- `tp_web_login` **20.0.2.3.0** (phụ thuộc thêm `auth_passkey`), dùng lại WebAuthn native và không nới kiểm origin/RP ID/challenge/chữ ký/UV:
+  - Trang đăng nhập có nút “Đăng nhập bằng khóa truy cập” và gợi ý tiếng Việt.
+  - Lỗi trình duyệt được phân loại và hiển thị dưới nút (`aria-live`), có trạng thái đang xử lý, chống bấm đúp và trở lại sau lỗi. Không còn “Đăng nhập thất bại” chung chung.
+  - Thêm route chẩn đoán `/tp_web_login/passkey/client-event` chỉ nhận enum whitelist, không ghi challenge/credential/cookie.
+  - Backend trả thông điệp tiếng Việt theo nguyên nhân: khóa lạ/đã thu hồi, challenge hết hạn hoặc dùng lại, sai địa chỉ, thiếu UV, bộ đếm lùi, cooldown, chữ ký/payload hỏng. Payload hỏng không còn gây 500. Trạng thái khóa tài khoản chỉ được báo sau khi assertion hợp lệ.
+  - Sửa xác minh danh tính bằng khóa (trước đây nút không gọi WebAuthn).
+  - Sửa form bị `d-none` che lỗi khi có ≥2 tài khoản ghi nhớ.
+  - Trang Tài khoản & Bảo mật: thêm, đổi tên, thu hồi khóa; báo thành công chỉ sau khi backend xác nhận.
+- Kiểm thử (DB `tp_tanphat_test`, tài khoản thử, virtual/software authenticator; origin/RP ID giả lập `https://tpone.tadic.vn`):
+  - `/tp_web_login` 18/20: cả 10 test passkey mới PASS; 2 lỗi `test_native_login` đã có từ trước trên HEAD (TestCursor readonly).
+  - `TestPasskeyRoles` (mới) + `TestAccountSecurity` 15/15 PASS cho nhân viên, admin ủy quyền và admin gốc. `TestAdminAccountLockHttp` 2/2 PASS.
+  - E2E Playwright + CDP virtual authenticator: 29/29, 29/29, 27/27, 0 pageErrors.
+- Chưa chứng minh trên sinh trắc học phần cứng thật. Không tạo, xóa hay thu hồi khóa và không đổi credential/quyền của tài khoản thật. WIP reporting/sidebar/branding của phiên khác để ngoài release. [Nghiệm thu](demo/PASSKEY_001_ACCEPTANCE.md), [runbook](../ops/runbooks/PASSKEY_001_DEPLOY_AND_ROLLBACK.md).
+
 ## CHG-20261121-008 — ACCOUNT-SECURITY-002 Hotfix: Sửa lỗi icon khiên phóng to trong menu tài khoản sidebar
 
 - 21/11/2026 (Asia/Saigon). Sửa lỗi mục **Tài khoản & Bảo mật** trong dropdown tài khoản sidebar (`custom_addons/tp_web_home/static/src/identity/user_account_menu.xml`) bị thiếu `class="'tp-profile-menu-item'"` và `width/height` khiến icon SVG khiên phóng to chiếm toàn bộ menu và đẩy chữ sang phải:

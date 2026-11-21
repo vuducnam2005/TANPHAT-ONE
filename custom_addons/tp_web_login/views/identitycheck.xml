@@ -9,8 +9,29 @@
             <xpath expr="//field[@name='password']" position="attributes"><attribute name="string">Mật khẩu của bạn</attribute><attribute name="placeholder">Nhập mật khẩu của bạn</attribute><attribute name="class">o_field_highlight w-100 px-0</attribute></xpath>
             <xpath expr="//field[@name='password']" position="before"><label for="password" string="Mật khẩu của bạn"/></xpath>
             <xpath expr="//a[@href='/web/reset_password/']" position="replace"><a href="/web/reset_password/" class="btn btn-link ps-0" role="button">Quên mật khẩu của bạn?</a></xpath>
-            <xpath expr="//button[@name='run_check']" position="attributes"><attribute name="string">Xác nhận danh tính</attribute></xpath>
+            <xpath expr="//button[@id='password_confirm']" position="attributes"><attribute name="string">Xác nhận danh tính</attribute></xpath>
             <xpath expr="//button[@special='cancel']" position="attributes"><attribute name="string">Hủy</attribute></xpath>
+            <!-- Native auth_passkey branch (users with a passkey default to it). -->
+            <xpath expr="//div[@invisible=&quot;auth_method != 'webauthn'&quot;]" position="replace">
+                <div invisible="auth_method != 'webauthn'">
+                    <h3 class="fw-semibold">Xác nhận bằng khóa truy cập</h3>
+                    <p>Bấm <strong>Dùng khóa truy cập</strong>, rồi xác minh bằng vân tay, khuôn mặt, mã PIN thiết bị hoặc trình quản lý mật khẩu đang lưu khóa của tài khoản này.</p>
+                    <p class="mb-0 mt-3">Khóa nằm ở thiết bị khác?</p>
+                    <button type="object" name="action_use_password" class="btn btn-link ps-0">Dùng mật khẩu</button>
+                </div>
+            </xpath>
+            <xpath expr="//button[@name='run_check'][@invisible=&quot;auth_method != 'webauthn'&quot;]" position="attributes"><attribute name="string">Dùng khóa truy cập</attribute></xpath>
+        </field>
+    </record>
+
+    <!-- Labels and help come from tp_admin_delegation (security_passkeys.xml); this view only
+         swaps the controller so registration errors are shown in Vietnamese instead of the console. -->
+    <record id="passkey_create_vi" model="ir.ui.view">
+        <field name="name">TANPHAT ONE — Tạo khóa truy cập (bộ điều khiển)</field>
+        <field name="model">auth.passkey.key.create</field>
+        <field name="inherit_id" ref="auth_passkey.auth_passkey_key_create_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="attributes"><attribute name="js_class">tp_passkey_create</attribute></xpath>
         </field>
     </record>
 </odoo>

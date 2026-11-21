@@ -182,6 +182,11 @@
                                     <p>Đăng nhập nhanh bằng vân tay, khuôn mặt, mã PIN thiết bị hoặc khóa bảo mật WebAuthn trên trình duyệt hỗ trợ.</p>
                                 </div>
                             </div>
+                            <ol class="tp-security-steps">
+                                <li>Bấm <strong>Thêm khóa truy cập</strong>, xác nhận danh tính rồi xác minh trên thiết bị (vân tay, khuôn mặt hoặc mã PIN).</li>
+                                <li>Khi đăng nhập lần sau, chọn <strong>Đăng nhập bằng khóa truy cập</strong> trên trang đăng nhập.</li>
+                            </ol>
+                            <p class="tp-security-muted">Khóa chỉ dùng được trên thiết bị hoặc trình quản lý mật khẩu đã lưu nó, và chỉ tại địa chỉ hệ thống hiện tại. Khóa tạo ở địa chỉ cũ (ví dụ localhost hoặc trycloudflare) không dùng được ở đây: hãy đăng nhập bằng mật khẩu và thêm khóa mới. Bạn luôn có thể đăng nhập bằng mật khẩu.</p>
                             <p t-if="!this.state.data.passkeys.length" class="tp-security-muted">Bạn chưa đăng ký khóa truy cập nào.</p>
                             <div t-foreach="this.state.data.passkeys" t-as="key" t-key="key.id" class="tp-security-record">
                                 <div>

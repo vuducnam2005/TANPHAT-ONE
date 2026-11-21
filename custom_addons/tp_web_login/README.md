@@ -49,3 +49,13 @@ lock, avoiding stale Odoo REPEATABLE READ snapshots. The lock lasts through the
 business commit. Termination hides the document and navigates to the standalone,
 server-validated `/tp/session-ended` page, disposing the old webclient and its
 pending callbacks. Cached history documents remain hidden until authenticated reload.
+
+PASSKEY-001 (`20.0.2.3.0`) keeps native `auth_passkey`/WebAuthn and its origin,
+RP ID, challenge, signature, counter and user-verification checks. The login
+button shows a busy state, sends one `start-auth`, and explains browser errors in
+Vietnamese below it (cancel/timeout/no key share one message because
+`NotAllowedError` cannot tell them apart). Backend rejections map to cause-specific
+Vietnamese messages; a lock is reported only after a valid assertion. The
+identity check runs the native passkey branch, and the account page renames and
+revokes only the session user's own keys. `/tp_web_login/passkey/client-event`
+accepts whitelisted enum codes only (no challenge, credential or cookie).

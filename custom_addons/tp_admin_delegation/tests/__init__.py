@@ -6,5 +6,6 @@ from . import (
     test_equipment_scope,
     test_guards_review,
     test_hr_profile,
+    test_passkey_roles,
     test_reporting_scope,
 )

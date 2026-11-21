@@ -239,6 +239,32 @@ export class AccountSecurity extends Component {
         await this.load();
     }
 
+    passkeySnapshot() {
+        return new Map((this.state.data?.passkeys || []).map((key) => [key.id, key.name]));
+    }
+
+    /** Passkey success is reported only when the reloaded server list shows the change. */
+    passkeyNotice(operation, recordId, before) {
+        const after = this.state.data?.passkeys || [];
+        if (operation === "passkey_create") {
+            const added = after.find((key) => !before.has(key.id));
+            return added
+                ? `Đã thêm khóa truy cập “${added.name}”. Để dùng: đăng xuất, trên trang đăng nhập chọn “Đăng nhập bằng khóa truy cập” rồi xác thực trên thiết bị đã lưu khóa.`
+                : "";
+        }
+        if (operation === "passkey_remove") {
+            const removed = before.has(recordId) && !after.some((key) => key.id === recordId);
+            return removed ? `Đã thu hồi khóa truy cập “${before.get(recordId)}”. Khóa này không còn dùng để đăng nhập được.` : "";
+        }
+        if (operation === "passkey_rename") {
+            const renamed = after.find((key) => key.id === recordId);
+            return renamed && before.has(recordId) && renamed.name !== before.get(recordId)
+                ? `Đã đổi tên khóa truy cập thành “${renamed.name}”.`
+                : "";
+        }
+        return "";
+    }
+
     async run(operation, recordId = null, successMessage = "") {
         if (this.state.busy) {
             return;
@@ -246,14 +272,28 @@ export class AccountSecurity extends Component {
         this.state.busy = true;
         this.state.error = "";
         this.state.notice = "";
+        const isPasskey = operation.startsWith("passkey_");
+        const before = this.passkeySnapshot();
+        const confirmPasskey = async () => {
+            await this.load();
+            const notice = this.passkeyNotice(operation, recordId, before);
+            if (notice) {
+                this.state.notice = notice;
+            }
+        };
         try {
             const result = await this.orm.call("res.users", "tp_security_action", [operation, recordId]);
             if (result && typeof result === "object" && result.type) {
-                await this.action.doAction(result, { onClose: () => this.load() });
-            } else if (successMessage) {
-                this.state.notice = successMessage;
+                await this.action.doAction(result, { onClose: () => (isPasskey ? confirmPasskey() : this.load()) });
+                await this.load();
+            } else if (isPasskey) {
+                await confirmPasskey();
+            } else {
+                if (successMessage) {
+                    this.state.notice = successMessage;
+                }
+                await this.load();
             }
-            await this.load();
         } catch (error) {
             this.state.error = error.data?.message || "Thao tác chưa hoàn tất. Vui lòng thử lại.";
         } finally {

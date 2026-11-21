@@ -1,16 +1,18 @@
 {
     'name': 'TANPHAT ONE Login',
     'author': 'Tan Phat JSC',
-    'version': '20.0.2.2.0',
+    'version': '20.0.2.3.0',
     'license': 'LGPL-3',
-    'depends': ['web', 'auth_totp', 'auth_signup', 'bus'],
+    'depends': ['web', 'auth_totp', 'auth_signup', 'auth_passkey', 'bus'],
     'assets': {
         'web.assets_backend': [
             'tp_web_login/static/src/security/account_security.js',
             'tp_web_login/static/src/security/account_security.xml',
             'tp_web_login/static/src/security/account_security.scss',
             'tp_web_login/static/src/css/identitycheck.scss',
+            'tp_web_login/static/src/js/passkey_errors.js',
             'tp_web_login/static/src/js/identitycheck.js',
+            'tp_web_login/static/src/js/passkey_create.js',
             'tp_web_login/static/src/css/session_guard.scss',
             'tp_web_login/static/src/xml/session_guard.xml',
             'tp_web_login/static/src/js/session_guard.js',
@@ -20,6 +22,8 @@
         ],
         'web.assets_frontend': [
             'tp_web_login/static/src/js/auth_ui.js',
+            'tp_web_login/static/src/js/passkey_errors.js',
+            'tp_web_login/static/src/js/passkey_login.js',
             'tp_web_login/static/src/xml/user_switch.xml',
         ],
     },
