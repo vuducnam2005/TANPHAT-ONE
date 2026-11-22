@@ -1,5 +1,13 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261122-002 — HR-AUDIT-CLEANUP-001: Khôi phục kết nối và áp PC server
+
+- Người dùng chạy installer public key trên PAC-PC/Admin. SSH laptop dùng khóa mới ở D:\TANPHAT-SSH, host fingerprint khớp; không đổi tên miền/tunnel/credential ứng dụng. Không đưa private key hoặc cấu hình SSH vào Git.
+- Commit `76d2d504` đã push/deploy, 15/15 tệp checksum khớp, `-u tp_hr_workspace` exit0, 0 ERROR/CRITICAL; version20.0.1.22.0. Backup `C:\TANPHAT-backups\audit-cleanup001\audit-cleanup001-20261122T211031`, dump custom/pg_restore-list16.313 dòng, filestore638 mục, source/config.
+- Fingerprint dữ liệu nghiệp vụ/tài khoản/quyền/audit trước-sau không đổi; 83/83 dòng audit còn active, không dọn dữ liệu thật. Probe read-only6/6 PASS, 24 dòng lý do kỹ thuật diễn giải được.
+- Kiểm public bằng bundle thực: CSS `/web/assets/5623af7/web.assets_web.min.css`, JS `/web/assets/4622a0e/web.assets_web.min.js` có tiêu đề/hướng dẫn mới; health200. Backend7/7 + browser/HTTP password-confirmed cleanup trên synthetic test PASS. Không thử dọn log thật.
+- Bàn giao docs-only; không restart lại chỉ để cập nhật biên bản. Checkpoint cũ/WIP báo cáo-sidebar giữ nguyên, workflow check chỉ xác nhận snapshot phát hành có phạm vi.
+
 ## CHG-20261122-001 — HR-AUDIT-CLEANUP-001: Diễn giải nhật ký và dọn danh sách bằng mật khẩu
 
 - Yêu cầu trực tiếp ngày 22/11: giải thích lý do kỹ thuật và cho admin dọn nhật ký. Cột mới `reason_display` dịch nội dung tự sinh từ snapshot, không viết lại bằng chứng gốc. Bổ sung mã TP/mã nguồn cho audit thay đổi mới; tiêu đề bảng có ý nghĩa.

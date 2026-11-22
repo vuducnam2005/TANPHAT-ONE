@@ -1,6 +1,6 @@
 # HR-AUDIT-CLEANUP-001
 
-Ngày 22/11/2026. Trạng thái: đã sửa và kiểm local test, chưa áp PC server.
+Ngày 22/11/2026. Trạng thái: đã kiểm local test và áp PC server ngày22/11/2026.
 
 ## Giao diện và cách dùng
 
@@ -27,3 +27,12 @@ Admin gốc hoặc admin ủy quyền còn hiệu lực, trong công ty được
 ## Deploy
 
 SSH trực tiếp tới 192.168.1.73 có phản hồi, nhưng mất alias/khóa cũ và authentication bị từ chối. Người dùng đã chạy script cài public key trên PC server; SSH PAC-PC/Admin khôi phục và fingerprint khớp. Chưa backup/upgrade/deploy trên server; không tuyên bố public thay đổi. Khi có kết nối, dùng scope release manifest, backup DB/filestore/source, -u tp_hr_workspace, restart, checksum asset và so audit count/active_count trước-sau (upgrade không tự ẩn dòng).
+
+
+## Receipt PC server — CHG-20261122-002
+
+SSH mới PAC-PC/Admin đã xác minh fingerprint và đăng nhập được. Commit `76d2d504` push/deploy; 15 tệp khớp SHA256; upgrade HR20.0.1.22.0 exit0/log0. Backup tại `C:\TANPHAT-backups\audit-cleanup001\audit-cleanup001-20261122T211031`; pg_restore list16.313 dòng, filestore638 mục.
+
+Fingerprint tài khoản/quyền/nhân viên/thiết bị/công/audit không đổi. Probe6/6 PASS:83/83 audit active,24 lý do kỹ thuật được diễn giải; wizard password store=False, bulk action và cột đúng. Không tự gỡ bất kỳ dòng thật. Public health200; JS/CSS actual bundle có tiêu đề/hướng dẫn mới. Không đăng nhập đè phiên admin thật.
+
+Người dùng: mở `/app/nhan-su/nhat-ky-ho-so`, chọn dòng → Tác vụ → Xóa nhật ký khỏi danh sách → nhập mật khẩu của mình. Đây là gỡ khỏi danh sách, không xóa vật lý bằng chứng mã đã dùng.
