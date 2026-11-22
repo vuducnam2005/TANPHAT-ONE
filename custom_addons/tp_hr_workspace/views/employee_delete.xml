@@ -29,7 +29,7 @@
                 <field name="source_code" optional="show"/>
                 <field name="employee_ref" optional="hide"/>
                 <field name="account_action" optional="show"/>
-                <field name="reason"/>
+                <field name="reason_display"/>
                 <field name="actor_name"/>
                 <field name="request_id" optional="hide"/>
                 <field name="company_id" groups="base.group_multi_company" optional="hide"/>
@@ -46,7 +46,8 @@
                         <group><field name="action"/><field name="employee_name"/><field name="employee_code"/><field name="source_code" invisible="not source_code"/><field name="new_code" invisible="not new_code"/><field name="employee_ref"/></group>
                         <group><field name="create_date" string="Thời điểm"/><field name="actor_name"/><field name="verification" invisible="not verification"/><field name="account_action" invisible="not account_action"/><field name="account_login" invisible="not account_login"/><field name="request_id" invisible="not request_id"/><field name="company_id" groups="base.group_multi_company"/></group>
                     </group>
-                    <group><field name="reason"/></group>
+                    <group><field name="reason_display"/></group>
+                    <button name="action_hide_from_list" type="object" string="Xóa khỏi danh sách" class="btn-outline-danger" groups="base.group_system"/>
                     <details><summary>Dữ liệu tại thời điểm thực hiện</summary><field name="snapshot" nolabel="1"/></details>
                 </sheet>
             </form>
@@ -60,4 +61,25 @@
         <field name="help" type="html"><p>Chưa có thao tác xóa vĩnh viễn, xóa hồ sơ nhập nhầm hoặc sửa mã nhân viên.</p></field>
     </record>
     <menuitem id="menu_employee_audit" name="Nhật ký xóa hồ sơ và sửa mã" parent="menu_group_employees" action="action_employee_audit" sequence="50" groups="base.group_system"/>
+    <record id="action_cleanup_employee_audit" model="ir.actions.server">
+        <field name="name">Xóa nhật ký khỏi danh sách</field>
+        <field name="model_id" ref="tp_organization.model_tp_hr_employee_audit"/>
+        <field name="binding_model_id" ref="tp_organization.model_tp_hr_employee_audit"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>
+        <field name="state">code</field>
+        <field name="code">action = records.action_hide_from_list()</field>
+    </record>
+    <record id="audit_cleanup_form" model="ir.ui.view">
+        <field name="name">tp.hr.audit.cleanup.form</field>
+        <field name="model">tp.hr.audit.cleanup</field>
+        <field name="arch" type="xml">
+            <form string="Xóa nhật ký khỏi danh sách" class="o_tp_identity_check">
+                <h3>Xác nhận dọn nhật ký</h3>
+                <p>Chỉ các dòng bạn đã chọn được gỡ khỏi danh sách. Nhân viên, tài khoản, thiết bị và dữ liệu nghiệp vụ không bị xóa. Dấu vết kỹ thuật được giữ để tránh cấp lại mã hoặc nhập lại nhân viên đã xóa.</p>
+                <group><field name="count"/><field name="audit_ids" invisible="1"/><field name="password" password="True" required="1" placeholder="Nhập mật khẩu của tài khoản đang đăng nhập"/></group>
+                <footer><button name="action_confirm" type="object" string="Xóa khỏi danh sách" class="btn-danger" context="{'password': password}"/><button special="cancel" string="Hủy" class="btn-secondary"/></footer>
+            </form>
+        </field>
+    </record>
 </odoo>

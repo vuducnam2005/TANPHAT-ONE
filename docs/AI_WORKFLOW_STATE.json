@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-21T09:25:10.958484+00:00",
-  "last_change_id": "CHG-20261121-010",
-  "code_digest": "62e48049e36f6b3e78bbe315710e07c2ea2e51fcc530539a12bd4138ed1c8b0a",
-  "code_file_count": 812,
+  "updated_at": "2026-11-22T14:09:23.433192+00:00",
+  "last_change_id": "CHG-20261122-001",
+  "code_digest": "6168bcacb0e91eb3b6d58a2d5325495351a9055818cc892356712f65618d715f",
+  "code_file_count": 814,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "4ce99d1ca44069bb1d503a32958aff8712cbc15cd9a59da7518bc93f10ba9876",
-    "docs/CHANGELOG.md": "7e4c10c8e706aad4968e032300373e2ac66ef6093300f043b7adbfa76ea13d60",
+    "docs/PROJECT_STATUS.md": "57dffa07b923b0c560e20eca759d182ef6e94c79084f9b4539539e6b8a01bc39",
+    "docs/CHANGELOG.md": "e41e1dfbb10268583811d7878ecc102b11e7ad5c227535e3c90f4e01963f147f",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,8 +20,9 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC server commit 4c106904: preflight 25/25 baseline, backup + pg_restore list, 25/25 SHA256, -u tp_web_login exit 0, 0 ERROR/CRITICAL, DRIFT_COUNT=0",
-    "Public tpone.tadic.vn 7/7 PASS: health, login button/hint/aria-live/password form, new frontend+backend bundles, start-auth rpId tpone.tadic.vn UV required, client-event enum whitelist",
-    "Docs-only receipt; no real account, credential or passkey touched; physical biometric device not claimed"
+    "7/7 Odoo TestAuditCleanup + TestEmployeeDeleteEntry PASS; Ruff and AST/XML PASS",
+    "Browser list/selection/password dialog/cancel/mobile: 5 checks,0 pageErrors; real HTTP password confirmation hides synthetic row PASS",
+    "Immutable write/unlink,revoked admin,password errors,hidden tombstone prevent reimport: PASS",
+    "Scoped release excludes unrelated WIP and preserves previous checkpoint; SSH reconnected with new D: key, matching host fingerprint"
   ]
 }

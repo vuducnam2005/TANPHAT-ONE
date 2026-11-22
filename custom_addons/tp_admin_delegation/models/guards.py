@@ -646,6 +646,8 @@ def _record_profile_audit(records, vals, before):
         rows.append({
             'action': 'account_profile_change', 'employee_ref': employees[:1].id or 0,
             'employee_name': employees[:1].name if employees else '',
+            'employee_code': employees[:1].tp_employee_code if employees else False,
+            'source_code': employees[:1].tp_source_code if employees else False,
             'company_id': company.id, 'actor_id': actor.id, 'actor_name': actor.name,
             'account_ref': user.id or 0, 'account_login': user.login if user else '',
             'reason': records.env._('Cập nhật tài khoản/hồ sơ qua %(model)s #%(id)s', model=record._name, id=record.id),

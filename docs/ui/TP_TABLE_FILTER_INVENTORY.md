@@ -412,3 +412,8 @@ Ngày 21/11/2026; [nghiệm thu](../demo/TP_REQUEST_001_GUIDE_AND_ACCEPTANCE.md)
 | SEC-SESSION-01 | `/app/tai-khoan/bao-mat`, res.session | user_id = session uid, không nhận owner từ client | Tất cả / phiên hiện tại / đã thu hồi | 10/20/50, count cùng domain; export N/A: lịch sử bảo mật tự phục vụ, không xuất identifier/token | Backend negative + browser current-filter/mobile PASS |
 
 API keys/passkeys là danh sách credential của chính mình trong khu vực nâng cao; không export secret, không tạo bảng tổng hợp người khác.
+
+
+## HR-AUDIT-CLEANUP-001
+
+Bảng audit giữ bộ lọc mã/hành động/tài khoản/người thực hiện/thời điểm, pager/count/domain hiện có. Default active=True gỡ dòng đã dọn nhất quán khỏi list/count/export; reason_display chỉ là trường diễn giải, snapshot/nguồn không đổi. Wizard count + mật khẩu không phải bảng độc lập (N/A). Browser chọn dòng/action/cancel/mobile PASS. Không export mật khẩu.

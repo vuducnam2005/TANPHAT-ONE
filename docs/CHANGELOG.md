@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261122-001 — HR-AUDIT-CLEANUP-001: Diễn giải nhật ký và dọn danh sách bằng mật khẩu
+
+- Yêu cầu trực tiếp ngày 22/11: giải thích lý do kỹ thuật và cho admin dọn nhật ký. Cột mới `reason_display` dịch nội dung tự sinh từ snapshot, không viết lại bằng chứng gốc. Bổ sung mã TP/mã nguồn cho audit thay đổi mới; tiêu đề bảng có ý nghĩa.
+- Thêm action chọn nhiều dòng/form → wizard count + mật khẩu không lưu. Admin gốc/ủy quyền còn hiệu lực và công ty hợp lệ mới được xác nhận; kiểm danh tính qua password helper native/rate limit ở mỗi lần. RPC write/unlink trực tiếp audit vẫn bị chặn. Wizard chỉ thao tác hồ sơ do chính actor tạo.
+- Gỡ là `active=False` kèm hidden_by/hidden_at. Giữ tombstone trong cùng bảng vì cấp mã dùng SQL lịch sử và import dùng `_tp_removed_identities`; không cho gỡ làm cấp lại mã hoặc tái tạo nhân viên. Retry xóa nhân viên tìm cả dòng đã gỡ.
+- Backend 7/7 PASS; browser list/chọn/action/password/cancel/mobile và HTTP xác nhận mật khẩu → gỡ đúng một dòng synthetic PASS. Bằng chứng `.local/audit-cleanup001/`, không tạo dữ liệu thật trên server.
+- Deploy bị chặn: không có `.ssh/config`, khóa id_ed25519/id_rsa hay ssh-agent identity. `192.168.1.73:22` trả SSH, nhưng `vuduc` bị từ chối publickey/password. Không đoán mật khẩu, không đổi cấu hình máy chủ hoặc credential thật.
+- Giữ nguyên WIP reporting/sidebar và checkpoint của phiên trước. Seal phát hành chỉ HEAD + scope này, không nhận đã verify toàn workspace.
+
 ## CHG-20261121-010 — PASSKEY-001: Biên bản triển khai PC server
 
 - Commit `4c106904` đã push và áp PC server (`192.168.1.73`, `tp_tanphat_dev`).

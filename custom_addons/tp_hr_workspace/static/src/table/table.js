@@ -589,6 +589,12 @@ export class HrListRenderer extends ListRenderer {
 }
 
 const TABLE_CONTENT = {
+    "tp.hr.employee.audit": [
+        "Nhật ký hồ sơ và tài khoản",
+        "Theo dõi thay đổi nhân viên và tài khoản. Chọn các dòng cần dọn, mở Tác vụ → Xóa nhật ký khỏi danh sách.",
+        "",
+        "Chưa có nhật ký",
+    ],
     "hr.employee": [
         "Danh sách nhân viên",
         "Thông tin công việc, liên hệ và tài khoản trong phạm vi được xem.",

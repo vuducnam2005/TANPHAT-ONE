@@ -198,7 +198,7 @@ class HrEmployee(models.Model):
             raise AccessError(self.env._('Phiên đăng nhập không hợp lệ. Hãy đăng nhập lại rồi thử lại.'))
         if not isinstance(request_id, str) or not _REQUEST_ID.fullmatch(request_id):
             raise UserError(self.env._('Yêu cầu không hợp lệ. Hãy đóng hộp thoại và thử lại.'))
-        done = self.env['tp.hr.employee.audit'].sudo().search([('request_id', '=', request_id)])
+        done = self.env['tp.hr.employee.audit'].sudo().with_context(active_test=False).search([('request_id', '=', request_id)])
         if done and done.actor_id != self.env.user:
             raise AccessError(self.env._('Yêu cầu không hợp lệ.'))
         if not done:

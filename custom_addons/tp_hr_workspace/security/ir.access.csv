@@ -1,4 +1,5 @@
 id,name,model_id,group_id/id,operation,domain
+access_tp_hr_audit_cleanup_admin,Audit list cleanup,tp.hr.audit.cleanup,base.group_system,crud,
 access_tp_hr_account_wizard_user,TP HR account wizard,tp.hr.account.wizard,hr.group_hr_user,crud,
 access_tp_hr_role_wizard_admin,TP HR role command,tp.hr.role.wizard,base.group_system,crud,
 access_tp_hr_identity_wizard_admin,TP identity reconciliation,tp.hr.identity.wizard,base.group_system,crud,
