@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261123-006 — ATTENDANCE-EXPORT-REPORT-001: Biên bản áp PC server
+
+- Commit `2795fd7e` (`tp_hr_attendance` `20.0.3.7.0`) đã áp lên PC server (`192.168.1.73`, `tp_tanphat_dev`).
+- Backup tại `C:\TANPHAT-backups\attendance-export001\exp001-20261123T110111\` (`tp_tanphat_dev.dump`, `restore-list.txt`, `filestore.tar.gz`, `source-config.tar.gz`).
+- SHA256 84/84 tệp khớp; `-u tp_hr_attendance` exit 0, 0 ERROR/CRITICAL; snapshot 39 nhân viên / 32 tài khoản / 897 ngày công / 840 phiên / 35 mã máy / base URL giữ nguyên 100%.
+- Đối chiếu chỉ đọc trên dữ liệu thật của server (`enti_att002_export_check.py`): 3 kỳ (1 tuần, 2 tuần, 1 tháng; 39 nhân viên) đạt `{"ok": true}` với 0 vấn đề; public `https://tpone.tadic.vn/web/health` HTTP 200 và `/app/nhan-su/cham-cong/tong-quan` 303 về `/dang-nhap`. Bản ghi docs-only, không restart lại Odoo.
+
 ## CHG-20261123-005 — ATTENDANCE-EXPORT-REPORT-001: Thiết kế lại file Excel xuất chấm công theo mẫu Report
 
 - `custom_addons/tp_hr_attendance` **20.0.3.7.0**:

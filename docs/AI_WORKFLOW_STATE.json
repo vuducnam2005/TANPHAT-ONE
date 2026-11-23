@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-23T03:56:33.256649+00:00",
-  "last_change_id": "CHG-20261123-005",
+  "updated_at": "2026-11-23T04:06:55.207905+00:00",
+  "last_change_id": "CHG-20261123-006",
   "code_digest": "940bad8b68c35b9567e3bebffbd25cd176e6d7a0142fb70665f8f7b48dd51fdd",
   "code_file_count": 823,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "bb6589f576f2a9173a464c6f0388fed4dec126d602799e948cd4f0c28b86ebfe",
-    "docs/CHANGELOG.md": "9a692398142c1f98965b4000af54ca24021fa5adac57890ef6f9f9faf2fc3c1e",
+    "docs/PROJECT_STATUS.md": "1431d495b6103b6a6710fb1ec83473ace1050aead7e380bd0ca360f271a307ba",
+    "docs/CHANGELOG.md": "5fe39f9e2de6993315b6014c4e9af88a73406b1b88e158ea1260daef02d4a626",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "py_compile+ruff+node+xml+diff PASS; Odoo TestAttendanceUpload+TestExportTemplate+TestExcelImportClosed 15/15 PASS & TestAttendanceAccess+TestDirectoryPrivacy+TestLogic 11/11 PASS on tp_tanphat_test; enti_att002_export_check 3 periods ok=true; Playwright desktop+mobile export 0 pageErrors"
+    "PC server deploy 2795fd7e tp_hr_attendance 20.0.3.7.0 exit 0, 0 errors, 84/84 SHA256 match, snapshot invariant, enti_att002_export_check 3 periods ok=true on real server DB, public /web/health 200"
   ]
 }
