@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-23T01:45:55.173564+00:00",
-  "last_change_id": "CHG-20261123-001",
+  "updated_at": "2026-11-23T01:59:57.669839+00:00",
+  "last_change_id": "CHG-20261123-002",
   "code_digest": "6e944184cc39249fc6715497e21ee515e759638ef48ffd5a1f22781dd0c029a9",
   "code_file_count": 815,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "e627ef0813f247621a94ea2bfbd3fc1672acd5f05c65ad6013990d1e4a12f439",
-    "docs/CHANGELOG.md": "4822f7a2a511750521bc49748d32749d90c0cdd596a3358e5f1b813a06239583",
+    "docs/PROJECT_STATUS.md": "e90b1c15bd4535551a99c99d7d52f1d7f268edb8d1b746a84908febf5ad23d35",
+    "docs/CHANGELOG.md": "dd4e98ca181a1f8a5b0de65a9e1cd4211298fbccbc7012ca8330a9e98c2e95f2",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,9 +20,9 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Python py_compile selected backend/tests: PASS",
-    "Node --check selected OWL/JS: PASS",
-    "lxml XML parse selected templates: PASS",
-    "git diff --check: PASS; authenticated browser and PC server deploy pending at handoff"
+    "PC server backup verified: dump/restore-list/filestore/source-config present",
+    "44/44 release checksums; 8 addon upgrade exit0; upgrade log0 ERROR/CRITICAL",
+    "Public health200 and attendance route redirect verified; authenticated browser pending due missing usable session",
+    "Pre-snapshot SQL query had a syntax typo; post-deploy read-only snapshot recorded and limitation documented"
   ]
 }

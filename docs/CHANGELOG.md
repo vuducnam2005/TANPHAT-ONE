@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261123-002 — ATTENDANCE-SHEET-001 + TABLE-PAGE-100: Biên bản áp PC server
+
+- Commit `71f9b8db` đã push/deploy; backup `C:\TANPHAT-backups\attendance-sheet001\attendance-sheet001-20261123T085039`; 44/44 checksum, upgrade 8 addon exit0, log0 ERROR/CRITICAL. Public health200 và route bảng công chuyển hướng đăng nhập sạch. Post-deploy fingerprint read-only giữ 39 nhân viên, 32 users, 897 ngày công/ENTI, 839 phiên, 35 mã máy và group hash. Pre-snapshot SQL bị lỗi dấu ngoặc thừa nên không dùng làm bằng chứng trước-sau tuyệt đối; backup/restore-list đã xác nhận. Browser authenticated chưa chạy. [Receipt](../.local/attendance-sheet001/deploy-result.json).
+
+
 ## CHG-20261123-001 — ATTENDANCE-SHEET-001 + TABLE-PAGE-100: Bảng công theo ma trận Excel và mặc định 100 mục
 
 - Bảng quản trị chấm công dùng cùng dữ liệu canonical/ENTI hiện có, hiển thị theo nhóm phòng ban với STT, Mã nhân viên, Tên nhân viên, ID máy, Chức vụ, hai dòng Vào/Ra, ngày + thứ, Đi muộn (Lần/Phút) và Vắng mặt (Vắng). Xuất Excel thêm ID máy và giữ nhóm/hai dòng.
