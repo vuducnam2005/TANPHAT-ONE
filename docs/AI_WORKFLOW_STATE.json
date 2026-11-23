@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-22T14:16:42.560360+00:00",
-  "last_change_id": "CHG-20261122-002",
-  "code_digest": "6168bcacb0e91eb3b6d58a2d5325495351a9055818cc892356712f65618d715f",
-  "code_file_count": 814,
+  "updated_at": "2026-11-23T01:45:55.173564+00:00",
+  "last_change_id": "CHG-20261123-001",
+  "code_digest": "6e944184cc39249fc6715497e21ee515e759638ef48ffd5a1f22781dd0c029a9",
+  "code_file_count": 815,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "36df1fbe1594a6f15d8e7bf7ad24de7fdec88be157912362faf6ef78cded9c0b",
-    "docs/CHANGELOG.md": "4406f934e4f1f68fd14bcedb5050be4fb7b83ca7f222cbe0f166da655be110f4",
+    "docs/PROJECT_STATUS.md": "e627ef0813f247621a94ea2bfbd3fc1672acd5f05c65ad6013990d1e4a12f439",
+    "docs/CHANGELOG.md": "4822f7a2a511750521bc49748d32749d90c0cdd596a3358e5f1b813a06239583",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,9 +20,9 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "7/7 Odoo regression PASS; browser/HTTP fresh-password synthetic cleanup PASS",
-    "PC server deploy checksums15/15 upgrade0/log0 and business fingerprints unchanged",
-    "Server read-only6/6 PASS:83/83 logs untouched,24 technical reasons readable; public actual JS/CSS and health200 PASS",
-    "Previous root checkpoint/WIP preserved; seal is scoped HEAD+this release"
+    "Python py_compile selected backend/tests: PASS",
+    "Node --check selected OWL/JS: PASS",
+    "lxml XML parse selected templates: PASS",
+    "git diff --check: PASS; authenticated browser and PC server deploy pending at handoff"
   ]
 }

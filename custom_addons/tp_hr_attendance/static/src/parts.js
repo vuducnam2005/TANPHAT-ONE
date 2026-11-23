@@ -107,7 +107,7 @@ export class LateDialog extends Component {
     setup() {
         this.orm = useService("orm");
         this.dialog = useService("dialog");
-        this.state = proxy({ data: null, error: "", page: 1, pageSize: 20 });
+        this.state = proxy({ data: null, error: "", page: 1, pageSize: 100 });
         onWillStart(() => this.load());
     }
     async load() {

@@ -116,7 +116,7 @@ export class TpRequestList extends Component {
                 overdue_only: Boolean(saved.overdue_only),
             },
             page: saved.page || 1,
-            pageSize: saved.page_size || 20,
+            pageSize: saved.page_size || 100,
             savedScrollTop: saved.scrollTop || 0,
         });
 
@@ -287,7 +287,7 @@ export class TpRequestList extends Component {
     }
 
     onPageSizeChange(ev) {
-        this.state.pageSize = Number(ev.target.value) || 20;
+        this.state.pageSize = Number(ev.target.value) || 100;
         this.state.page = 1;
         this.load();
     }

@@ -147,7 +147,7 @@ export class KdReportCenter extends Component {
 
         const restored = readReportState();
         const initialFilters = restored?.applied ? { ...defaultFilterValues(), ...restored.applied } : defaultFilterValues();
-        const initialPageSize = PAGE_SIZE_OPTIONS.includes(Number(restored?.pageSize)) ? Number(restored.pageSize) : 20;
+        const initialPageSize = PAGE_SIZE_OPTIONS.includes(Number(restored?.pageSize)) ? Number(restored.pageSize) : 100;
 
         this.state = proxy({
             reportKey: restored?.reportKey || "R01",

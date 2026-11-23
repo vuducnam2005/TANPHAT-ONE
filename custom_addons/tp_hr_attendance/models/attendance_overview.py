@@ -110,7 +110,7 @@ DEFAULT_PLAN_NOTE = ('Chưa có quy tắc ca đã xác nhận: tạm coi Thứ 2
                      'Chủ nhật là ngày nghỉ.')
 STALE_AFTER = 600  # seconds without a successful ENTI read (during polling hours) before the strip warns
 RECENT_LIMIT = 10
-GROUP_PAGE_SIZES = (10, 20, 50)
+GROUP_PAGE_SIZES = (10, 20, 50, 100)
 RECENT_TITLES = {
     'events': ('10 lượt chấm công gần nhất', 'Mỗi dòng là một lượt chấm công do nguồn ghi nhận, mới nhất ở trên.'),
     'daily': ('Chấm công gần nhất', 'Hiển thị các mốc chấm công nguồn hiện cung cấp'),
@@ -131,7 +131,7 @@ def period_title(mode, start, end):
     return range_label(start, end)
 
 
-def _page(rows, params, default_size=20, sizes=PAGE_SIZES):
+def _page(rows, params, default_size=100, sizes=PAGE_SIZES):
     size = int(params.get('page_size') or default_size)
     size = size if size in sizes else default_size
     count = max(1, -(-len(rows) // size))
@@ -675,7 +675,7 @@ class AttendanceDayOverview(models.Model):
             rows.append({'stt': len(rows) + 1, 'employee_id': employee_id, 'code': person['code'], 'name': person['name'],
                          'department': person['department'], 'date': day.isoformat(), 'in': cell['in'],
                          'out': cell['out'], 'note': note})
-        page_rows, pager = _page(rows, params, default_size=20, sizes=GROUP_PAGE_SIZES)
+        page_rows, pager = _page(rows, params, default_size=100, sizes=GROUP_PAGE_SIZES)
         return dict({
             'group': group, 'label': GROUP_LABELS[group], 'hint': GROUP_HINTS[group], 'class_date': day.isoformat(),
             'date_label': day_label(day), 'is_today': day == today, 'group_total': len(members),
@@ -774,7 +774,7 @@ class AttendanceDayOverview(models.Model):
                              'day_label': day_label(work_date), 'in': cell['in'], 'out': cell['out'],
                              'state': cell['state'], 'state_label': cell['label'], 'late': cell['late'],
                              'source': cell['source'], 'order': order[employee_id]})
-        page_rows, pager = _page(rows, params, default_size=10)
+        page_rows, pager = _page(rows, params, default_size=100)
         return dict({
             'mode': mode, 'date': anchor.isoformat(), 'start': start.isoformat(), 'end': end.isoformat(),
             'today': today.isoformat(), 'period_label': period_title(mode, start, end), 'unit': unit,
@@ -789,8 +789,18 @@ class AttendanceDayOverview(models.Model):
 
     # --------------------------------------------------------------- sheet
     @api.model
+    def _tp_sheet_codes(self, company, employee_ids):
+        # Only device IDs for an already-authorized employee scope, never raw ENTI identities.
+        codes = defaultdict(list)
+        for code in self.env['tp.hr.attendance.code'].sudo().search([
+            ('company_id', '=', company.id), ('employee_id', 'in', employee_ids),
+        ]):
+            codes[code.employee_id.id].append(code.machine_code)
+        return {employee_id: ' / '.join(values) for employee_id, values in codes.items()}
+
+    @api.model
     def tp_sheet(self, params=None):
-        """Sheet: day → name/department/in/out/late; week/month/range → late and absence totals per person."""
+        """Canonical Vào/Ra matrix, paginated by employee after applying the full server-side filter."""
         self.check_access('read')
         params = dict(params or {})
         company = self.env.company
@@ -831,6 +841,23 @@ class AttendanceDayOverview(models.Model):
                           is_file_period=any(item['from'] == start.isoformat() and item['to'] == end.isoformat()
                                              for item in result['file_periods']))
         page_rows, pager = _page(rows, params)
+        days = dates_between(start, end)
+        views = self._tp_late_views(company, list(people), cells, start, end) if mode == 'day' else views
+        absence_note = self._tp_absence_note(company, start, end)
+        absences = self._tp_absences(list(people), cells, start, end, absence_note == RULE_NOTE) if mode == 'day' else absences
+        codes = self._tp_sheet_codes(company, [row['id'] for row in page_rows])
+        serials = defaultdict(int)
+        for row in rows:
+            serials[row['department_id']] += 1
+            row['stt'] = serials[row['department_id']]
+        for row in page_rows:
+            row.update(machine_code=codes.get(row['id'], ''), late=views[row['id']], absent=absences[row['id']],
+                       cells=[{'date': day.isoformat(), **{key: cells[row['id'], day][key]
+                                                          for key in ('in', 'out', 'state', 'label', 'late')}}
+                              for day in days])
+        result.update(day_columns=[{'date': day.isoformat(), 'label': str(day.day),
+                                    'weekday': WEEKDAY_LABELS[day.weekday()], 'weekend': day.weekday() >= 5}
+                                   for day in days], absence_note=absence_note)
         result.update(rows=page_rows, **pager)
         return result
 
@@ -976,7 +1003,7 @@ class AttendanceDayOverview(models.Model):
                     'message': self.env._('Tài khoản chưa gắn hồ sơ nhân viên trong công ty đang chọn; cần admin/HR gắn hồ sơ.')}
         dataset = self._tp_mine_dataset(company, employee, params)
         start, end = dataset['start'], dataset['end']
-        page_rows, pager = _page(dataset['filtered_rows'], params, default_size=50)
+        page_rows, pager = _page(dataset['filtered_rows'], params, default_size=100)
         return dict({
             'has_employee': True,
             'employee': {
@@ -1016,6 +1043,7 @@ class AttendanceDayOverview(models.Model):
         absence_note = self._tp_absence_note(company, start, end)
         absences = self._tp_absences(ids, cells, start, end, absence_note == RULE_NOTE)
         days = dates_between(start, end)
+        codes = self._tp_sheet_codes(company, ids)
         groups, by_department = [], {}
         for person in people:
             key = person['department_id'] or 0
@@ -1027,6 +1055,7 @@ class AttendanceDayOverview(models.Model):
             exact = view['state'] == 'exact'
             by_department[key]['people'].append({
                 'code': person['code'], 'name': person['name'], 'job': person.get('job') or '',
+                'machine_code': codes.get(person['id'], ''),
                 'cells': person_cells, 'absent': absence['days'],
                 'late': {'count': view['count'] if exact else None, 'minutes': view['minutes'] if exact else None},
                 'note': person_note(person_cells, view, absence, person.get('archived', False)),

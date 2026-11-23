@@ -53,42 +53,58 @@
     <div t-if="this.state.error" class="alert alert-danger" role="alert"><t t-out="this.state.error"/> <button class="btn btn-link p-0" t-on-click="this.load">Thử lại</button></div>
     <p t-elif="!this.data" role="status" class="o_tp_att_loading">Đang tải bảng chấm công…</p>
     <t t-else="">
-        <t t-if="this.isDay">
-            <div class="o_tp_att_note_row">
-                <span class="o_tp_att_muted">Giờ làm tham chiếu <t t-out="this.data.reference_hours.replace('-', '–')"/>. Ô trống là chưa có ghi nhận, không phải nghỉ.</span>
-                <span t-if="this.data.late_note" class="o_tp_att_late_hint"><t t-out="this.data.late_note"/>
-                    <button t-foreach="this.dayPeriods" t-as="item" t-key="item.from + item.to" type="button" class="btn btn-link btn-sm" t-on-click="() => this.openLate(item)">Xem tổng kỳ <t t-out="item.label"/></button>
-                </span>
-            </div>
-            <div class="o_tp_att_table_wrap">
-                <table class="o_tp_att_table o_tp_att_day_table">
-                    <thead><tr><th scope="col">Nhân viên</th><th scope="col">Phòng ban</th><th scope="col">Thứ/ngày</th><th scope="col">Giờ vào</th><th scope="col">Giờ ra</th></tr></thead>
-                    <tbody>
-                        <tr t-if="!this.data.rows.length"><td colspan="5" class="o_tp_att_empty">Không có nhân viên trong phạm vi lọc.</td></tr>
-                        <tr t-foreach="this.data.rows" t-as="row" t-key="row.id" class="o_tp_att_click" tabindex="0" t-att-title="row.state_label"
-                            t-on-click="() => this.openPerson(row)" t-on-keydown="(ev) => ev.key === 'Enter' and this.openPerson(row)">
-                            <th scope="row" data-label="Nhân viên"><span class="o_tp_att_name" t-out="row.name"/><small t-out="row.code or 'Chưa có mã'"/></th>
-                            <td data-label="Phòng ban" t-out="row.department or '—'"/>
-                            <td data-label="Thứ/ngày" t-out="row.day_label"/>
-                            <td data-label="Giờ vào"><span class="o_time" t-out="row.in or '—'"/><small t-if="this.cellNote(row, 'in')" class="o_tp_att_cell_note" t-att-class="'o_' + row.state" t-out="this.cellNote(row, 'in')"/></td>
-                            <td data-label="Giờ ra"><span class="o_time" t-out="row.out or '—'"/><small t-if="this.cellNote(row, 'out')" class="o_tp_att_cell_note" t-att-class="'o_' + row.state" t-out="this.cellNote(row, 'out')"/></td>
+        <div class="o_tp_att_note_row">
+            <span class="o_tp_att_muted">Giờ làm tham chiếu <t t-out="this.data.reference_hours.replace('-', '–')"/>. Ô trống là chưa có ghi nhận, không phải nghỉ. Rê chuột vào ô để xem tình trạng.</span>
+            <span t-if="this.data.late_source or this.data.late_note" class="o_tp_att_source_note" t-out="this.data.late_source or this.data.late_note"/>
+            <button t-foreach="this.dayPeriods" t-as="item" t-key="item.from + item.to" type="button" class="btn btn-link btn-sm" t-on-click="() => this.openLate(item)">Xem tổng kỳ <t t-out="item.label"/></button>
+            <button t-foreach="this.overlapPeriods" t-as="item" t-key="item.from + item.to" type="button" class="btn btn-link btn-sm" t-on-click="() => this.openFilePeriod(item)">Kỳ nguồn <t t-out="item.label"/></button>
+        </div>
+        <div class="o_tp_att_matrix_wrap o_mobile_table_on o_tp_att_sheet_wrap" tabindex="0" role="region" aria-label="Bảng chấm công Vào/Ra, cuộn ngang để xem các ngày">
+            <table class="o_tp_att_matrix_table o_tp_att_sheet_table">
+                <caption class="visually-hidden">Bảng chấm công theo phòng ban. Mỗi nhân viên gồm hai dòng Vào và Ra.</caption>
+                <thead>
+                    <tr class="o_head_tier1">
+                        <th rowspan="2" scope="col" class="o_sticky_col o_col_stt">STT</th>
+                        <th rowspan="2" scope="col" class="o_sticky_col o_col_code">Mã nhân viên</th>
+                        <th rowspan="2" scope="col" class="o_sticky_col o_col_name">Tên nhân viên</th>
+                        <th rowspan="2" scope="col" class="o_col_machine" title="ID máy chấm công đã đối chiếu với hồ sơ HR">ID</th>
+                        <th rowspan="2" scope="col" class="o_col_title">Chức vụ</th>
+                        <th rowspan="2" scope="col" class="o_col_io"><span class="visually-hidden">Vào/Ra</span></th>
+                        <th t-foreach="this.data.day_columns" t-as="day" t-key="day.date" scope="col" class="o_col_day" t-att-class="{'o_weekend': day.weekend}" t-att-title="this.formatDate(day.date)" t-out="day.label"/>
+                        <th colspan="2" scope="colgroup">Đi muộn</th>
+                        <th scope="col">Vắng mặt</th>
+                    </tr>
+                    <tr class="o_head_tier2">
+                        <th t-foreach="this.data.day_columns" t-as="day" t-key="day.date" scope="col" class="o_col_day" t-att-class="{'o_weekend': day.weekend}" t-out="day.weekday"/>
+                        <th scope="col" class="o_col_late_group">Lần</th>
+                        <th scope="col" class="o_col_late_group">Phút</th>
+                        <th scope="col" class="o_col_late_group">Vắng</th>
+                    </tr>
+                </thead>
+                <tbody t-if="!this.data.rows.length"><tr><td t-att-colspan="9 + this.data.day_columns.length" class="o_tp_att_empty">Không có nhân viên trong phạm vi lọc.</td></tr></tbody>
+                <t t-foreach="this.groups" t-as="group" t-key="group.id">
+                    <tbody class="o_tp_att_group_band"><tr><th scope="rowgroup" t-att-colspan="9 + this.data.day_columns.length"><span t-out="group.name"/></th></tr></tbody>
+                    <tbody t-foreach="group.rows" t-as="row" t-key="row.id" class="o_person_pair">
+                        <tr class="o_person_row o_person_vao">
+                            <td rowspan="2" class="o_sticky_col o_col_stt" t-out="row.stt"/>
+                            <td rowspan="2" class="o_sticky_col o_col_code" t-out="row.code or '—'"/>
+                            <th rowspan="2" scope="rowgroup" class="o_sticky_col o_col_name"><button type="button" class="o_person_name_btn" t-on-click="() => this.openPerson(row)"><span class="o_tp_att_name" t-out="row.name"/></button><small t-if="row.archived" class="d-block o_tp_att_muted">Đã lưu trữ</small></th>
+                            <td rowspan="2" class="o_col_machine" t-out="row.machine_code or '—'"/>
+                            <td rowspan="2" class="o_col_title" t-out="row.job or '—'"/>
+                            <th scope="row" class="o_col_io o_io_vao">Vào</th>
+                            <td t-foreach="row.cells" t-as="cell" t-key="cell.date" class="o_matrix_cell" t-att-class="{'o_weekend': this.data.day_columns[cell_index].weekend, 'o_sheet_attention': cell.state === 'missing' or cell.state === 'review', 'o_sheet_absent': cell.state === 'absent', 'o_sheet_late': cell.late > 0}" t-att-title="this.cellTitle(cell)" t-att-aria-label="this.cellTitle(cell) + ', Vào ' + (cell.in or 'chưa có giờ')"><span class="o_time" t-out="cell.in"/></td>
+                            <td rowspan="2" class="o_matrix_late" t-att-title="row.late.note or row.late.text" t-out="row.late.count === null ? '—' : row.late.count"/>
+                            <td rowspan="2" class="o_matrix_late" t-att-title="row.late.note or row.late.text" t-out="row.late.minutes === null ? '—' : row.late.minutes"/>
+                            <td rowspan="2" class="o_matrix_absent" t-att-title="this.data.absence_note"><t t-out="row.absent.days"/><small t-if="row.absent.unknown" class="d-block o_tp_att_muted" t-att-title="row.absent.unknown + ' ngày chưa có dữ liệu, không tính vắng'">Chưa đủ</small></td>
+                        </tr>
+                        <tr class="o_person_row o_person_ra">
+                            <th scope="row" class="o_col_io o_io_ra">Ra</th>
+                            <td t-foreach="row.cells" t-as="cell" t-key="cell.date" class="o_matrix_cell" t-att-class="{'o_weekend': this.data.day_columns[cell_index].weekend, 'o_sheet_attention': cell.state === 'missing' or cell.state === 'review', 'o_sheet_absent': cell.state === 'absent'}" t-att-title="this.cellTitle(cell)" t-att-aria-label="this.cellTitle(cell) + ', Ra ' + (cell.out or 'chưa có giờ')"><span class="o_time" t-out="cell.out"/></td>
                         </tr>
                     </tbody>
-                </table>
-            </div>
-        </t>
-        <t t-else="">
-            <div class="o_tp_att_note_row">
-                <span t-if="this.data.late_source" class="o_tp_att_source_note"><t t-out="this.data.late_source"/></span>
-                <span t-else="" class="o_tp_att_muted">Chưa có tổng đi muộn đúng kỳ <t t-out="this.data.period_label"/>; không chia hoặc cộng số của kỳ khác.</span>
-                <span t-if="this.data.late_summary" class="o_tp_att_badge o_info"><t t-out="this.data.late_summary.people"/> người có số liệu · <t t-out="this.data.late_summary.count"/> lần · <t t-out="this.data.late_summary.minutes"/> phút</span>
-                <t t-if="this.overlapPeriods.length">
-                    <span class="o_tp_att_muted">Xem đúng kỳ nguồn:</span>
-                    <button t-foreach="this.overlapPeriods" t-as="item" t-key="item.from + item.to" type="button" class="btn btn-link btn-sm" t-on-click="() => this.openFilePeriod(item)" t-out="item.label"/>
                 </t>
-            </div>
-            <PeriodTable rows="this.data.rows" onPerson="(row) => this.openPerson(row)"/>
-        </t>
+            </table>
+        </div>
         <AttPager data="this.data" unit="'nhân viên'" onPage="(page) => this.setPage(page)" onSize="(size) => this.setSize(size)"/>
     </t>
 </div>

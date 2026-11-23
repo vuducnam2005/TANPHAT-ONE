@@ -38,8 +38,8 @@ LEFT = Alignment(horizontal='left', vertical='center')
 LEFT_WRAP = Alignment(horizontal='left', vertical='center', wrap_text=True)
 
 HEADER_ROW = 7             # rows 7-8: two header rows; data from row 9
-IDENTITY = ('STT', 'Mã NV', 'Họ và tên', 'Chức vụ', 'Vào / Ra')
-IDENTITY_WIDTHS = (5, 10, 25, 16, 7)
+IDENTITY = ('STT', 'Mã nhân viên', 'Tên nhân viên', 'ID', 'Chức vụ', 'Vào / Ra')
+IDENTITY_WIDTHS = (5, 14, 25, 8, 16, 7)
 DAY_WIDTH = 7
 NOTE_WIDTH = 44
 DAYS_PER_PAGE = 16         # print: a month spreads over two landscape pages instead of shrinking to one
@@ -159,15 +159,16 @@ def _matrix(sheet, report):
                font=_font(True, '1E3A8A', 10), fill=DEPARTMENT, align=LEFT)
         sheet.row_dimensions[row].height = 17
         row += 1
-        for person in group['people']:
+        for group_serial, person in enumerate(group['people'], 1):
             serial += 1
             stripe = STRIPE if serial % 2 == 0 else None
             body = _font()
-            for column, value in enumerate((serial, person['code'] or MISSING, person['name'], person['job'] or MISSING), 1):
+            for column, value in enumerate((group_serial, person['code'] or MISSING, person['name'],
+                                             person.get('machine_code') or MISSING, person['job'] or MISSING), 1):
                 _merge(sheet, row, column, row + 1, column, value, font=body, fill=stripe,
-                       align=LEFT_WRAP if column in (3, 4) else CENTER_WRAP)
-            _put(sheet, row, 5, 'Vào', font=_font(True, '0F766E'), fill=stripe)
-            _put(sheet, row + 1, 5, 'Ra', font=_font(True, '6D28D9'), fill=stripe)
+                       align=LEFT_WRAP if column in (3, 5) else CENTER_WRAP)
+            _put(sheet, row, len(IDENTITY), 'Vào', font=_font(True, '0F766E'), fill=stripe)
+            _put(sheet, row + 1, len(IDENTITY), 'Ra', font=_font(True, '6D28D9'), fill=stripe)
             for offset, day in enumerate(days):
                 column = first_day + offset
                 cell = person['cells'].get(day, {})

@@ -29,7 +29,7 @@ export class AccountSecurity extends Component {
             notice: "",
             busy: false,
             status: "all",
-            limit: 10,
+            limit: 100,
             offset: 0,
             lang: "",
             tz: "",

@@ -229,10 +229,10 @@ class AccountSecurity(models.Model):
         }
 
     @api.model
-    def tp_my_security(self, status='all', limit=10, offset=0):
+    def tp_my_security(self, status='all', limit=100, offset=0):
         if self.env.user.share:
             raise AccessError(self.env._('Chức năng dành cho tài khoản nội bộ.'))
-        if status not in ('all', 'current', 'uncleaned', 'revoked') or type(limit) is not int or limit not in (10, 20, 50):
+        if status not in ('all', 'current', 'uncleaned', 'revoked') or type(limit) is not int or limit not in (10, 20, 50, 100):
             raise UserError(self.env._('Bộ lọc phiên không hợp lệ.'))
         if type(offset) is not int or offset < 0:
             raise UserError(self.env._('Trang dữ liệu không hợp lệ.'))

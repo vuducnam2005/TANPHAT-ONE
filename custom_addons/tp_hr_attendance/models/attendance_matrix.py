@@ -1026,8 +1026,8 @@ class AttendanceBatchMatrix(models.Model):
                 elif st in summary_counts:
                     summary_counts[st] += 1
 
-        size = int(params.get('page_size') or 20)
-        size = size if size in MATRIX_PAGE_SIZES else 20
+        size = int(params.get('page_size') or 100)
+        size = size if size in MATRIX_PAGE_SIZES else 100
         total = len(matched)
         page_count = max(1, -(-total // size))
         page = min(max(1, int(params.get('page') or 1)), page_count)

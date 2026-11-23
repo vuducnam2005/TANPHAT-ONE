@@ -39,7 +39,7 @@ export class ReportingListController extends ListController {
  static components={...ListController.components,ReportTableTools,TpTableFilterBar};
  get className(){return `${super.className || ""} tp_reporting_list`;}
  setup(){super.setup();useSetupAction({getGlobalState:()=>({tpReportList:{limit:this.model.root.limit,offset:this.model.root.offset,orderBy:this.model.root.orderBy.map(x=>({...x}))}})});}
- get modelParams(){const p=super.modelParams;if(this.props.state?.modelState)return p;const saved=this.props.globalState?.tpReportList;return saved&&[10,20,50,100].includes(saved.limit)?{...p,config:{...p.config,...saved}}:{...p,limit:20};}
+ get modelParams(){const p=super.modelParams;if(this.props.state?.modelState)return p;const saved=this.props.globalState?.tpReportList;return saved&&[10,20,50,100].includes(saved.limit)?{...p,config:{...p.config,...saved}}:{...p,limit:100};}
  clearReportFilters(){this.env.searchModel.clearQuery();}
  advancedReportFilters(){this.rootRef?.()?.querySelector(".o_searchview_dropdown_toggler")?.click();}
 }

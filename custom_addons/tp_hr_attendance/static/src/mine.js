@@ -63,7 +63,7 @@ export class MyAttendance extends Component {
         this.action = useService("action");
         const saved = readStore(STORE_KEY);
         const savedMode = MODES.some(([key]) => key === saved.mode) ? saved.mode : "month";
-        const savedPageSize = PAGE_SIZES.includes(Number(saved.pageSize)) ? Number(saved.pageSize) : 50;
+        const savedPageSize = PAGE_SIZES.includes(Number(saved.pageSize)) ? Number(saved.pageSize) : 100;
         this.state = proxy({
             mode: savedMode,
             date: "",

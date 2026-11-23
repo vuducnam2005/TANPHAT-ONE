@@ -46,7 +46,7 @@ export class AttendanceCompare extends Component {
             workDate: "",
             search: "",
             page: 1,
-            pageSize: 20,
+            pageSize: 100,
             mobileView: "cards",
             loading: true,
             error: "",

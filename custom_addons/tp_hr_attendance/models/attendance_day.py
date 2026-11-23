@@ -473,8 +473,8 @@ class AttendanceDay(models.Model):
         lock = params.get('lock') or ''
         if lock in ('locked', 'open'):
             cells = [row for row in cells if row['lock'] == lock]
-        size = int(params.get('page_size') or 20)
-        size = size if size in (10, 20, 50, 100) else 20
+        size = int(params.get('page_size') or 100)
+        size = size if size in (10, 20, 50, 100) else 100
         pages = max(1, -(-len(cells) // size))
         page = min(max(1, int(params.get('page') or 1)), pages)
         result.update(rows=cells[(page - 1) * size:page * size], detail_total=len(cells), page=page, page_count=pages, page_size=size,
@@ -546,8 +546,8 @@ class AttendanceDay(models.Model):
             rows = [row for row in rows if any(item['state'] == state_filter for item in row['cells'])]
         if lock_filter:
             rows = [row for row in rows if any(item['lock'] == lock_filter and item.get('day_id') for item in row['cells'])]
-        page_size = int(params.get('page_size') or 20)
-        page_size = page_size if page_size in (10, 20, 50, 100) else 20
+        page_size = int(params.get('page_size') or 100)
+        page_size = page_size if page_size in (10, 20, 50, 100) else 100
         page_count = max(1, -(-len(rows) // page_size))
         page = min(max(1, int(params.get('page') or 1)), page_count)
         updated, applied = self._tp_updated(company)

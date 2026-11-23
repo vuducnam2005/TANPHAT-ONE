@@ -30,7 +30,8 @@ const EXPECTED = ["odoo.exceptions.UserError", "odoo.exceptions.ValidationError"
 
 export function readStore(key) {
     try {
-        return JSON.parse(browser.sessionStorage.getItem(key) || "{}") || {};
+        const saved = JSON.parse(browser.sessionStorage.getItem(key) || "{}") || {};
+        return saved.pageSizeVersion === 2 ? saved : { ...saved, pageSize: 100 };
     } catch {
         return {}; // Private window / blocked storage: start from defaults.
     }
@@ -38,7 +39,7 @@ export function readStore(key) {
 
 export function writeStore(key, value) {
     try {
-        browser.sessionStorage.setItem(key, JSON.stringify(value));
+        browser.sessionStorage.setItem(key, JSON.stringify({ ...value, pageSizeVersion: 2 }));
     } catch {
         // Storage unavailable: the screen still works, it just forgets the filters.
     }

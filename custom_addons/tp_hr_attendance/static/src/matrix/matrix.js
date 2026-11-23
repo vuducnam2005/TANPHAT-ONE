@@ -90,7 +90,7 @@ export class AttendanceFileMatrix extends Component {
             search: "",
             status: "",
             page: 1,
-            pageSize: [10, 20, 50, 100].includes(saved.pageSize) ? saved.pageSize : 20,
+            pageSize: [10, 20, 50, 100].includes(saved.pageSize) ? saved.pageSize : 100,
             // Optional columns & UI toggles (default ID, Chức vụ, Vắng mặt ON to match machine attendance sheet)
             cols: {
                 machineId: initialCols.machineId !== undefined ? Boolean(initialCols.machineId) : true,

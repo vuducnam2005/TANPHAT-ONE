@@ -67,11 +67,12 @@ function listStateKey(mode) {
 }
 
 export function readListState(mode) {
-    return readJson(browser.sessionStorage, listStateKey(mode), null);
+    const saved = readJson(browser.sessionStorage, listStateKey(mode), null);
+    return saved?.pageSizeVersion === 2 ? saved : { ...saved, page_size: 100 };
 }
 
 export function writeListState(mode, state) {
-    writeJson(browser.sessionStorage, listStateKey(mode), state);
+    writeJson(browser.sessionStorage, listStateKey(mode), { ...state, pageSizeVersion: 2 });
 }
 
 export function writeLastListMode(mode) {

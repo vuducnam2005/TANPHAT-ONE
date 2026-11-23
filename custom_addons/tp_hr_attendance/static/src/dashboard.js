@@ -42,7 +42,7 @@ export class AttendanceDashboard extends Component {
         this.state = proxy({
             mode: mode === "range" && !range ? "day" : mode, date: "", from: range ? saved.from : "", to: range ? saved.to : "",
             department: saved.department || "", search: saved.search || "", status: saved.status || "attention",
-            page: 1, pageSize: saved.pageSize || 10,
+            page: 1, pageSize: saved.pageSize || 100,
             loading: true, refreshing: false, exporting: false, error: "", exportError: "", data: null, fresh: {},
         });
         this.modes = MODES;

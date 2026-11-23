@@ -12,7 +12,7 @@ import { AttPager } from "./parts";
  * paging here only narrow that group. The dashboard calls ``refresh()`` after each automatic update, which keeps
  * the group, filters, page and scroll and highlights only rows that are new. Rows never open an HR profile.
  */
-const SIZES = [10, 20, 50];
+const SIZES = [10, 20, 50, 100];
 const HIGHLIGHT_MS = 2400;
 const NOTE_LABELS = { working: "Trạng thái", done: "Ghi chú", unknown: "Lý do" };
 
@@ -26,7 +26,7 @@ export class GroupDialog extends Component {
         this.sizes = SIZES;
         this.formatDate = formatDate;
         this.state = proxy({
-            group: this.props.group, q: "", dept: 0, page: 1, pageSize: 20,
+            group: this.props.group, q: "", dept: 0, page: 1, pageSize: 100,
             data: null, loading: true, error: "", fresh: {},
         });
         this.request = 0;

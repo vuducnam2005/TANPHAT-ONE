@@ -380,6 +380,14 @@ Giữ SearchModel/domain/ACL hiện hành, không thêm filter engine hoặc quy
 | ATT-ADM04 | Xuất bảng công ngay trên quản trị | Tuần/tháng/khoảng ngày và phòng ban; cùng `tp_export_sheet`/dataset/capability hiện hành | Xuất toàn bộ kỳ/phòng hợp lệ, không truyền page/page_size; matrix+Chi tiết chuẩn hiện có | Node range/permission/params/polling PASS; tải thực tuần/tháng/range-phòng, đọc workbook; chi tiết ở acceptance |
 | ATT-ADM05 | Menu/khối nhập Excel chấm công | Loại khỏi luồng quản trị; backend nhập mới đã đóng DEC-063 | Giữ dữ liệu lịch sử trong canonical export, không có upload/compare/history UI | Regression Odoo menu nhập không hiện; backend refuse import giữ nguyên |
 
+## ATTENDANCE-SHEET-001 — Ma trận bảng công theo mẫu Excel (23/11/2026)
+
+Bảng `action_board` / RPC `tp_sheet` giữ bộ lọc phòng ban, nhân viên, tình trạng và kỳ; lọc, đếm, phân trang và xuất vẫn ở backend theo quyền. Ma trận hiển thị hai dòng Vào/Ra, cột ngày + thứ, ID máy, Đi muộn và Vắng mặt; nhóm phòng ban là trình bày theo tập dòng đã lọc.
+
+| ID | Màn / action | Tiêu chí lọc & phạm vi bắt buộc | Count / phân trang / xuất | Coverage |
+| --- | --- | --- | --- | --- |
+| ATT-SHEET01 | Bảng chấm công / `action_board` (`/app/nhan-su/cham-cong/bang-cong`) | Kỳ ngày/tuần/tháng/khoảng ngày; phòng ban ID; tên/mã nhân viên; tình trạng ngày; phạm vi company + ACL/record rule backend | Lọc toàn tập trước phân trang; 10/20/50/100, mặc định 100; Xuất Excel dùng đúng bộ lọc và toàn kỳ | Python compile/JS syntax/XML parse PASS; browser authenticated + PC server deploy pending |
+
 ## ATTENDANCE-DASH-004 — Danh sách nhóm và bảng chấm gần nhất (20/11/2026)
 
 CHG-20261120-004; [nghiệm thu](../demo/ATTENDANCE_DASH_004_ACCEPTANCE.md).
@@ -387,12 +395,12 @@ Phạm vi luôn là bộ lọc kỳ/phòng ban/nhân viên và quyền của das
 
 | ID | Màn / action | Tiêu chí và phạm vi | Count / trang / xuất | Coverage |
 | --- | --- | --- | --- | --- |
-| ATT-DASH01 | Tổng quan chấm công / hộp thoại nhóm, RPC `tp_overview_group` | Tab Đang làm/Đã về/Chưa đi làm/Chưa xác định; tìm tên hoặc mã không dấu; phòng ban (chỉ phòng có người trong nhóm, kèm số; phòng cũ không hợp lệ quay về tất cả); ngày phân loại theo kỳ; record rule công ty và ACL hiện hành | Tổng nhóm = số thẻ, “Đang hiển thị x / y” khi lọc; 10/20/50 dòng (cỡ khác về 20); không xuất từ hộp thoại | Odoo test số thẻ = tổng danh sách/lọc/phân trang/quyền; Playwright admin + nhân viên thường, live khi đang mở |
+| ATT-DASH01 | Tổng quan chấm công / hộp thoại nhóm, RPC `tp_overview_group` | Tab Đang làm/Đã về/Chưa đi làm/Chưa xác định; tìm tên hoặc mã không dấu; phòng ban (chỉ phòng có người trong nhóm, kèm số; phòng cũ không hợp lệ quay về tất cả); ngày phân loại theo kỳ; record rule công ty và ACL hiện hành | Tổng nhóm = số thẻ, “Đang hiển thị x / y” khi lọc; 10/20/50/100 dòng (mặc định 100); không xuất từ hộp thoại | Odoo test số thẻ = tổng danh sách/lọc/phân trang/quyền; Playwright admin + nhân viên thường, live khi đang mở |
 | ATT-DASH02 | Tổng quan chấm công / bảng chấm gần nhất | Ngày phân loại và bộ lọc dashboard; tối đa 10 mốc, mới nhất ở trên theo giờ chấm, loại trùng | Không pager/xuất; N/A tìm riêng vì đã theo bộ lọc dashboard | Odoo test thứ tự/loại trùng/giây thật; Playwright 4 cột, 4 width |
 
 ## TP-REQUEST-001 — Đề nghị & Phê duyệt (CHG-20261121-001)
 
-Ngày 21/11/2026; [nghiệm thu](../demo/TP_REQUEST_001_GUIDE_AND_ACCEPTANCE.md). Mọi bảng danh sách trong `tp_request` (`TpRequestList` + RPC `tp_list_data` + `/tp_request/export.xlsx`) áp dụng đầy đủ chuẩn DEC-044: tách bộ lọc nháp vs đang áp, chip xóa từng tiêu chí, giữ domain công ty & ACL/record rule backend, phân trang server 10/20/50, đếm tổng nhất quán với xuất Excel, khôi phục bộ lọc/trang/vị trí cuộn khi Quay lại.
+Ngày 21/11/2026; [nghiệm thu](../demo/TP_REQUEST_001_GUIDE_AND_ACCEPTANCE.md). Mọi bảng danh sách trong `tp_request` (`TpRequestList` + RPC `tp_list_data` + `/tp_request/export.xlsx`) áp dụng đầy đủ chuẩn DEC-044: tách bộ lọc nháp vs đang áp, chip xóa từng tiêu chí, giữ domain công ty & ACL/record rule backend, phân trang server 10/20/50/100, mặc định 100, đếm tổng nhất quán với xuất Excel, khôi phục bộ lọc/trang/vị trí cuộn khi Quay lại.
 
 | ID | Màn / action / URL | Tiêu chí lọc & phạm vi bắt buộc | Count / phân trang / xuất Excel | Coverage |
 | --- | --- | --- | --- | --- |

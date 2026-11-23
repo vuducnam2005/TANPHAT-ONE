@@ -2729,11 +2729,11 @@ class KdReportCenter(models.TransientModel):
         sort_by=None,
         sort_dir="asc",
         page=1,
-        page_size=20,
+        page_size=100,
         search="",
     ):
         try:
-            page_size = int(page_size or 20)
+            page_size = int(page_size or 100)
         except (TypeError, ValueError) as err:
             raise ValidationError(_("Số dòng mỗi trang không hợp lệ.")) from err
         if page_size not in PAGE_SIZES:

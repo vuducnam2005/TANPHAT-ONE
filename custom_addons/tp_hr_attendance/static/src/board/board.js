@@ -4,7 +4,7 @@ import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { cellNote, downloadBase64, formatDate, readStore, rpcError, stepPeriod, writeStore } from "../common";
 import { useAttendanceLive } from "../live";
-import { AttPager, LateDialog, PeriodTable, PersonDialog, SourceStrip } from "../parts";
+import { AttPager, LateDialog, PersonDialog, SourceStrip } from "../parts";
 
 /**
  * "Bảng chấm công" (HR-ATTENDANCE-SIMPLE-002). Day: Nhân viên · Phòng ban · Thứ/ngày · Giờ vào · Giờ ra.
@@ -22,7 +22,7 @@ const DAY_STATES = [
 
 export class AttendanceBoard extends Component {
     static template = "tp_hr_attendance.Board";
-    static components = { AttPager, PeriodTable, SourceStrip };
+    static components = { AttPager, SourceStrip };
     props = useProps();
 
     setup() {
@@ -34,7 +34,7 @@ export class AttendanceBoard extends Component {
         const period = params.from && params.to ? { mode: "range", from: params.from, to: params.to } : {};
         this.state = proxy({
             mode: ["day", "week", "month"].includes(saved.mode) ? saved.mode : "day", date: "", from: "", to: "",
-            department: saved.department || "", search: "", dayState: "", page: 1, pageSize: saved.pageSize || 20,
+            department: saved.department || "", search: "", dayState: "", page: 1, pageSize: saved.pageSize || 100,
             ...period, loading: true, error: "", data: null,
         });
         this.modes = MODES;
@@ -62,6 +62,20 @@ export class AttendanceBoard extends Component {
 
     get data() {
         return this.state.data;
+    }
+    get groups() {
+        const groups = new Map();
+        for (const row of this.data?.rows || []) {
+            const key = row.department_id || 0;
+            if (!groups.has(key)) {
+                groups.set(key, { id: key, name: row.department || "Chưa có phòng ban", rows: [] });
+            }
+            groups.get(key).rows.push(row);
+        }
+        return [...groups.values()];
+    }
+    cellTitle(cell) {
+        return `${this.formatDate(cell.date)} · ${cell.label || ""}`;
     }
     /** Follows the loaded data, so a mode switch never renders day rows in the period table (or back). */
     get isDay() {

@@ -63,7 +63,7 @@ class ProjectPerspective(models.TransientModel):
         return domain
 
     @api.model
-    def get_perspective(self, mode, project_id=False, limit=20, offset=0):
+    def get_perspective(self, mode, project_id=False, limit=100, offset=0):
         self.check_access("read")
         if (
             mode not in ("management", "governance")

@@ -705,7 +705,7 @@ class AttendanceBatchCompare(models.Model):
         batch_a = self._tp_accessible_batch(batch_a_id) if batch_a_id else (batches[:1])
         batch_b = self._tp_accessible_batch(batch_b_id) if batch_b_id else self.browse()
         if not batch_a:
-            return {'has_batches': False, 'batches': [], 'rows': [], 'total': 0, 'page': 1, 'page_size': 20, 'page_count': 1}
+            return {'has_batches': False, 'batches': [], 'rows': [], 'total': 0, 'page': 1, 'page_size': 100, 'page_count': 1}
 
         ctx = self._tp_build_compare_context(batch_a, sheet_a_index, batch_b, sheet_b_index)
 
@@ -781,8 +781,8 @@ class AttendanceBatchCompare(models.Model):
                     aligned_days.append(dict(d_item, matches_filter=vcol['date'] in match_set))
             filtered.append(dict(p, days=aligned_days, late_items=visible_lates))
 
-        size = int(params.get('page_size') or 20)
-        size = size if size in MATRIX_PAGE_SIZES else 20
+        size = int(params.get('page_size') or 100)
+        size = size if size in MATRIX_PAGE_SIZES else 100
         total = len(filtered)
         page_count = max(1, -(-total // size))
         page = min(max(1, int(params.get('page') or 1)), page_count)

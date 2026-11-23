@@ -18,7 +18,7 @@ export class ProjectPerspective extends Component {
         this.mode = this.props.context?.tp_perspective || 'management';
         let selected = this.props.context?.default_project_id || false;
         if (!selected) { try { selected = Number(browser.sessionStorage.getItem(projectKey())) || false; } catch {} }
-        this.state = proxy({ project: selected, limit: 20, offset: 0, busy: false, error: '', data: null });
+        this.state = proxy({ project: selected, limit: 100, offset: 0, busy: false, error: '', data: null });
         this.sequence = 0;
         onWillStart(() => this.load());
         useEffect(() => {

@@ -120,6 +120,7 @@
                             <option value="10" t-att-selected="this.state.pageSize === 10">10</option>
                             <option value="20" t-att-selected="this.state.pageSize === 20">20</option>
                             <option value="50" t-att-selected="this.state.pageSize === 50">50</option>
+                            <option value="100" t-att-selected="this.state.pageSize === 100">100</option>
                         </select>
                         <button type="button" class="tp_req_btn_xs"
                                 t-att-disabled="this.state.page &lt;= 1"

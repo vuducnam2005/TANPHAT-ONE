@@ -1,7 +1,7 @@
 {
     'name': 'TANPHAT ONE – Trung tâm Báo cáo',
     'summary': 'Mục tiêu quý, kế hoạch tháng/tuần và báo cáo có phiên bản theo quyền',
-    'version': '20.0.1.1.0',
+    'version': '20.0.1.2.0',
     'author': 'Tan Phat JSC',
     'license': 'LGPL-3',
     'depends': ['hr', 'project', 'tp_web_home', 'tp_organization', 'tp_hr_workspace'],

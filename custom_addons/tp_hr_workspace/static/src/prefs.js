@@ -21,8 +21,8 @@ function load() { try { return sanitize(JSON.parse(browser.localStorage.getItem(
 export const hrPrefs = proxy(load());
 export function savePrefs(changes={}) { Object.assign(hrPrefs,sanitize({...hrPrefs,...changes})); try { browser.localStorage.setItem(storageKey(),JSON.stringify(hrPrefs)); } catch { /* unavailable storage keeps this tab usable */ } }
 export function resetPrefs() { try {browser.localStorage.removeItem(storageKey());} catch { /* unavailable */ } Object.assign(hrPrefs,defaults()); }
-export function tablePageKey(model,action,view) { return `tp_hr_page:v1:${identity()}:${model}:${action || ''}:${view || ''}`; }
-export function readPageSize(key) { try { const value=Number(browser.localStorage.getItem(key)); return PAGE_SIZE_OPTIONS.includes(value) ? value : 20; } catch {return 20;} }
+export function tablePageKey(model,action,view) { return `tp_hr_page:v2:${identity()}:${model}:${action || ''}:${view || ''}`; }
+export function readPageSize(key) { try { const value=Number(browser.localStorage.getItem(key)); return PAGE_SIZE_OPTIONS.includes(value) ? value : 100; } catch {return 100;} }
 export function writePageSize(key,value) { if (!PAGE_SIZE_OPTIONS.includes(value)) return; try {browser.localStorage.setItem(key,String(value));} catch { /* unavailable */ } }
 export function fold(text) { return (text || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase().trim(); }
 export function isModifiedClick(ev) {return ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey || ev.button !== 0;}

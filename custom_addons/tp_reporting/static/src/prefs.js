@@ -87,14 +87,14 @@ export const ALL_ROWS_LIMIT = 1000;
 
 // Only the page length is persisted; no record IDs, domains or search text.
 export function tablePageKey(model, action, view) {
-    return `tp_reporting_page:v1:${session.db || ""}:${user.userId || 0}:${model}:${action || ""}:${view || ""}`;
+    return `tp_reporting_page:v2:${session.db || ""}:${user.userId || 0}:${model}:${action || ""}:${view || ""}`;
 }
 export function readPageSize(key) {
     try {
         const value = Number(browser.localStorage.getItem(key));
-        return PAGE_SIZES.includes(value) ? value : 20;
+        return PAGE_SIZES.includes(value) ? value : 100;
     } catch {
-        return 20;
+        return 100;
     }
 }
 export function writePageSize(key, value) {

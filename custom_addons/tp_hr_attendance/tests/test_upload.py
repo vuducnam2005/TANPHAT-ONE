@@ -150,7 +150,7 @@ class TestAttendanceUpload(AttendanceCase):
         own = load_workbook(BytesIO(base64.b64decode(Mine.tp_export_mine(WEEK)['data'])))
         self.assertEqual(own.sheetnames, sheets)
         self.assertEqual([own['Bảng chấm công'].cell(row, 3).value for row in range(9, own['Bảng chấm công'].max_row + 1)
-                          if own['Bảng chấm công'].cell(row, 5).value == 'Vào'], [self.emp_a.name])
+                          if own['Bảng chấm công'].cell(row, 6).value == 'Vào'], [self.emp_a.name])
         self.assertEqual({row[2] for row in own['Chi tiết'].iter_rows(min_row=4, values_only=True) if row[0]}, {self.emp_a.name})
         own_filtered = load_workbook(BytesIO(base64.b64decode(Mine.tp_export_mine(dict(WEEK, state='missing_out', page=1, page_size=10))['data'])))
         self.assertEqual(own_filtered.sheetnames, sheets)
@@ -167,15 +167,15 @@ class TestAttendanceUpload(AttendanceCase):
         book = load_workbook(BytesIO(base64.b64decode(shared['data'])))
         self.assertEqual(book.sheetnames, sheets)
         grid = book['Bảng chấm công']
-        blocks = [row for row in range(9, grid.max_row + 1) if grid.cell(row, 5).value == 'Vào']
-        self.assertEqual(sorted(grid.cell(row, 6 + 7).value for row in blocks), [0, 3])
+        blocks = [row for row in range(9, grid.max_row + 1) if grid.cell(row, 6).value == 'Vào']
+        self.assertEqual(sorted(grid.cell(row, 7 + 7).value for row in blocks), [0, 3])
         month = self.env_for(self.manager)['tp.hr.attendance.day'].tp_export_sheet({'mode': 'month', 'date': '2026-11-09'})
         month_book = load_workbook(BytesIO(base64.b64decode(month['data'])))
         self.assertEqual(month_book.sheetnames, sheets)
         month_grid = month_book['Bảng chấm công']
-        late_col = 6 + 30
+        late_col = 7 + 30
         partial = [month_grid.cell(row, late_col).value for row in range(9, month_grid.max_row + 1)
-                   if month_grid.cell(row, 5).value == 'Vào']
+                   if month_grid.cell(row, 6).value == 'Vào']
         self.assertIn('—', partial, 'a month holding only a weekly file never shows a split or zero late total')
 
     def test_mine_rows_reverse_chronological(self):

@@ -181,7 +181,7 @@ export class TpRequestDashboard extends Component {
             date_to: this.state.dateTo || "",
             overdue_only: Boolean(filters.overdue_only),
             page: 1,
-            page_size: 20,
+            page_size: 100,
             scrollTop: 0,
         });
         this.action.doAction(MODE_TO_ACTION[mode] || "tp_request.action_mine");

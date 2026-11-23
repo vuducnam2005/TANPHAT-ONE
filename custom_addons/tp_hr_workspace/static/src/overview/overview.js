@@ -36,7 +36,7 @@ export class HrOverview extends Component {
     static template = "tp_hr_workspace.Overview";
     setup() {
         this.orm = useService("orm"); this.action = useService("action");
-        this.state = proxy({loading: true, error: "", data: null, department: "", job: "", status: "active", employment: "", catalog: [], jobs: [], search: "", page: 1, pageSize: 10, highlight: null, tooltip: null});
+        this.state = proxy({loading: true, error: "", data: null, department: "", job: "", status: "active", employment: "", catalog: [], jobs: [], search: "", page: 1, pageSize: 100, highlight: null, tooltip: null});
         this.request = 0; this.loadedFilters = null;
         onWillStart(() => this.load());
     }

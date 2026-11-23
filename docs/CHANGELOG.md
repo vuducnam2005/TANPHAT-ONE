@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261123-001 — ATTENDANCE-SHEET-001 + TABLE-PAGE-100: Bảng công theo ma trận Excel và mặc định 100 mục
+
+- Bảng quản trị chấm công dùng cùng dữ liệu canonical/ENTI hiện có, hiển thị theo nhóm phòng ban với STT, Mã nhân viên, Tên nhân viên, ID máy, Chức vụ, hai dòng Vào/Ra, ngày + thứ, Đi muộn (Lần/Phút) và Vắng mặt (Vắng). Xuất Excel thêm ID máy và giữ nhóm/hai dòng.
+- Mặc định phân trang 100 cho native list/group và các màn TP HR, TP Projects, TP Equipment, TP Reporting, TP Request, Chấm công; khóa lưu cũ được đổi phiên bản. Không đổi quyền, domain, nguồn hay công thức vắng/đi muộn.
+- Kiểm kỹ thuật: Python compile PASS; Node `--check` PASS; XML parse PASS; `git diff --check` PASS. Browser authenticated và PC server deploy chưa chạy trong checkpoint này.
+
 ## CHG-20261122-002 — HR-AUDIT-CLEANUP-001: Khôi phục kết nối và áp PC server
 
 - Người dùng chạy installer public key trên PAC-PC/Admin. SSH laptop dùng khóa mới ở D:\TANPHAT-SSH, host fingerprint khớp; không đổi tên miền/tunnel/credential ứng dụng. Không đưa private key hoặc cấu hình SSH vào Git.

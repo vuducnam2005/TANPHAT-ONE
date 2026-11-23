@@ -28,7 +28,7 @@ export function defaults() {
         motion: "auto",
         groups: null, // null: every group open; otherwise the list of open group XML IDs
         columns: COLUMN_KEYS.filter((k) => k !== "department"),
-        pageSize: 10,
+        pageSize: 100,
     };
 }
 
@@ -57,7 +57,7 @@ function sanitize(raw) {
         const columns = COLUMN_KEYS.filter((k) => raw.columns.includes(k));
         value.columns = columns;
     }
-    if (PAGE_SIZES.includes(raw.pageSize)) {
+    if (raw.pageSizeVersion === 2 && PAGE_SIZES.includes(raw.pageSize)) {
         value.pageSize = raw.pageSize;
     }
     return value;
@@ -76,7 +76,7 @@ export const kdPrefs = proxy(load());
 export function savePrefs(changes = {}) {
     Object.assign(kdPrefs, sanitize({ ...kdPrefs, ...changes }));
     try {
-        browser.localStorage.setItem(storageKey(), JSON.stringify(kdPrefs));
+        browser.localStorage.setItem(storageKey(), JSON.stringify({ ...kdPrefs, pageSizeVersion: 2 }));
     } catch {
         // Private mode or full storage: keep the in-memory value for this tab only.
     }
@@ -114,14 +114,14 @@ export const PAGE_SIZE_OPTIONS = PAGE_SIZES;
 
 // Only page length is persisted; no record IDs, domains or search text.
 export function tablePageKey(model, action, view) {
-    return `tp_kd_page:v1:${session.db || ""}:${user.userId || 0}:${model}:${action || ""}:${view || ""}`;
+    return `tp_kd_page:v2:${session.db || ""}:${user.userId || 0}:${model}:${action || ""}:${view || ""}`;
 }
 export function readPageSize(key) {
     try {
         const value = Number(browser.localStorage.getItem(key));
-        return PAGE_SIZES.includes(value) ? value : 20;
+        return PAGE_SIZES.includes(value) ? value : 100;
     } catch {
-        return 20;
+        return 100;
     }
 }
 export function writePageSize(key, value) {

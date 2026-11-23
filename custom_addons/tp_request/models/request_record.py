@@ -1467,9 +1467,9 @@ class TpRequest(models.Model):
         dom = self._tp_build_filter_domain(mode, params)
         total = self.search_count(dom)
 
-        page_size = int(params.get('page_size') or 20)
-        if page_size not in (10, 20, 50):
-            page_size = 20
+        page_size = int(params.get('page_size') or 100)
+        if page_size not in (10, 20, 50, 100):
+            page_size = 100
         page = max(int(params.get('page') or 1), 1)
         max_page = max((total + page_size - 1) // page_size, 1)
         if page > max_page:

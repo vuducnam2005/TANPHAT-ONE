@@ -739,3 +739,34 @@ tbody.o_person_pair:hover tr.o_person_row th {
     transition: none !important;
     animation: none !important;
 }
+
+/* Live canonical sheet uses the same Excel matrix geometry as the historical source viewer. */
+.o_tp_att_board .o_tp_att_sheet_wrap {
+    max-height: calc(100vh - 350px);
+    min-height: 160px;
+    --tp-att-border: #cbd5e1;
+}
+
+.o_tp_att_board .o_tp_att_sheet_table {
+    min-width: 0;
+
+    .o_col_name { width: 210px; min-width: 210px; max-width: 210px; }
+    .o_col_stt { width: 46px; }
+    .o_col_code { width: 96px; white-space: nowrap; }
+    .o_col_title { max-width: 160px; }
+    .o_matrix_cell { height: 25px; padding: 2px 7px; }
+    .o_tp_att_group_band th {
+        background: #ccf7f7;
+        padding: 5px 10px;
+        text-align: left;
+        font-style: italic;
+    }
+    .o_sheet_attention { background: #fff3cd; }
+    .o_sheet_absent { background: #fee2e2; }
+    .o_sheet_late .o_time { color: #a64200; }
+    .o_tp_att_name { white-space: normal; }
+}
+
+@media (max-width: 767.98px) {
+    .o_tp_att_board .o_tp_att_sheet_wrap { max-height: 65vh; }
+}
