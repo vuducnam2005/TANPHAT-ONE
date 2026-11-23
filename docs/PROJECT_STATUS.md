@@ -1,5 +1,17 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261123-007 — ATTENDANCE-CORRECTION-002 — RELEASE_READY.** Thiết kế lại toàn bộ logic **Đề nghị điều chỉnh công** (`tp_hr_attendance` **20.0.3.8.0**, `tp_request`):
+- **Luồng trạng thái & Backend (`attendance_correction.py`, `attendance_overview.py`, `attendance_bridge.py`, `request_record.py`):**
+  - Bổ sung trạng thái `withdrawn` (**Đã thu hồi**) cùng `withdrawn_by_id`, `withdrawn_at`, `withdraw_reason`, `tp_can_withdraw`. Luồng chuẩn: `draft → submitted → approved/returned`, `submitted → withdrawn`, `withdrawn → draft` (hoặc tạo đề nghị mới), `draft/returned → cancelled`.
+  - `tp_save_and_submit`: tạo/cập nhật và chuyển thẳng `submitted` trong một giao dịch nguyên tử; lỗi kiểm tra sẽ rollback hoàn toàn, không để lại nháp rác; giữ nguyên ràng buộc 1 phiếu `submitted` duy nhất cho mỗi `(employee_id, work_date)`.
+  - `action_withdraw(reason)`: chỉ người tạo được thu hồi khi đang `submitted` và kỳ công chưa chốt (`tp.hr.attendance.period` != `locked`); chặn admin và người khác thu hồi thay (`AccessError`); không chạm vào `tp.hr.attendance.day`/`session`; ghi log bất biến `correction_withdraw`.
+  - `action_reopen_draft`: mở lại phiếu `withdrawn` về `draft` (`correction_reopen`).
+  - Phát bus `tp_hr_attendance/correction_updated` (và `tp_hr_attendance/updated` khi duyệt) tới người tạo và admin công ty để cập nhật tức thì cả màn hình người dùng lẫn hàng đợi admin.
+- **Giao diện người dùng & Hàng đợi admin (`mine.js`, `mine.xml`, `correction_views.xml`, `ir.access.csv`):**
+  - Trong **Công của tôi**: bấm **Đề nghị điều chỉnh ngày này** mở `CorrectionFormDialog` với nút chính **Gửi duyệt** (lưu + gửi 1 lần, thông báo `"Đã gửi đề nghị điều chỉnh cho admin"`), nút phụ **Lưu nháp**; phiếu `submitted` hiển thị **Chờ admin duyệt** + nút **Thu hồi đề nghị** (`WithdrawDialog` có lý do không bắt buộc, thông báo `"Đã thu hồi"`); phiếu `withdrawn` có **Mở lại nháp** và **Tạo đề nghị mới**; phiếu `returned`/`draft` có **Sửa & Gửi duyệt**; phiếu `approved` không có nút thu hồi.
+  - Trong **Quản trị chấm công → Xử lý điều chỉnh**: `action_review` chỉ hiển thị `[('state', '=', 'submitted')]` (`draft`/`withdrawn` không xuất hiện), `HrListController` lắng nghe bus `tp_hr_attendance/correction_updated` tự tải lại danh sách khi có phiếu gửi mới hoặc bị thu hồi.
+- **Kiểm thử local (`tp_tanphat_test` / 18079):** `py_compile`, `node --check`, XML parse, `git diff --check` PASS; Odoo `/tp_hr_attendance:TestAttendanceCorrection,/tp_request` **22/22 tests PASS** (`tp_hr_attendance` 14 tests, `tp_request` 12 tests, `web` 6 tests; asset JS/CSS biên dịch 0 lỗi); `/tp_hr_attendance:TestAttendanceAccess` **8/8 tests PASS**. Next: commit/push đúng phạm vi và deploy lên PC server (`192.168.1.73`).
+
 **CHG-20261123-006 — ATTENDANCE-EXPORT-REPORT-001 — PC_SERVER_APPLIED.** Đã triển khai commit `2795fd7e` (`tp_hr_attendance` **20.0.3.7.0**) lên PC server (`192.168.1.73`, DB `tp_tanphat_dev`):
 - Backup trước áp tại `C:\TANPHAT-backups\attendance-export001\exp001-20261123T110111\` (`tp_tanphat_dev.dump`, `restore-list.txt`, `filestore.tar.gz`, `source-config.tar.gz`, manifest, release tarball, snapshot trước).
 - Đối chiếu SHA256 (LF): **84/84** tệp khớp; nâng cấp `-u tp_hr_attendance` exit `0`, **0** `ERROR/CRITICAL`.
@@ -415,7 +427,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261123-006`
+Last change: `CHG-20261123-007`
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.
 - **Kiểm thực:** `-u` exit 0/0 ERROR; ruff file đã đổi, compileall, 23 XML, ACL CSV, 13 JS syntax, `git diff --check` đạt; Playwright `verify_simple003.mjs` (mở/Hủy, không xác nhận) và probe RPC từ chối; DB 18 bảng giữ count/hash, `tp_equipment_move` chỉ thêm 2 cột NULL. Mức từng mục ở [acceptance](demo/EQUIP_001_ACCEPTANCE.md).

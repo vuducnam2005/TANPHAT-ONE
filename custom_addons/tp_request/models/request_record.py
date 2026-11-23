@@ -888,7 +888,10 @@ class TpRequest(models.Model):
             raise UserError(_('Hồ sơ đã có quyết định cuối cùng hoặc đã chuyển thực hiện nên không thể rút.'))
 
         if self.handler_kind == 'attendance_correction' and self.attendance_correction_id:
-            self.attendance_correction_id.action_cancel()
+            if self.attendance_correction_id.state == 'submitted':
+                self.attendance_correction_id.action_withdraw(reason=reason)
+            else:
+                self.attendance_correction_id.action_cancel()
             self.invalidate_recordset()
             return True
 

@@ -930,7 +930,15 @@ class AttendanceDayOverview(models.Model):
             by_date_requests[req.work_date].append({
                 'id': req.id, 'name': req.name, 'state': req.state, 'state_label': request_states[req.state],
                 'requested_in': clock_label(req.requested_in), 'requested_out': clock_label(req.requested_out),
+                'requested_in_float': req.requested_in, 'requested_out_float': req.requested_out,
+                'reason': req.reason or '', 'evidence_name': req.evidence_name or '',
+                'has_evidence': bool(req.evidence_file),
                 'review_note': req.review_note or '', 'is_amendment': req.is_amendment,
+                'withdraw_reason': req.withdraw_reason or '',
+                'withdrawn_at': fields.Datetime.context_timestamp(
+                    self.with_context(tz=self.env.user.tz or DEFAULT_TZ), req.withdrawn_at,
+                ).strftime('%d/%m/%Y %H:%M') if req.withdrawn_at else '',
+                'can_withdraw': req.tp_can_withdraw,
             })
         Period = self.env['tp.hr.attendance.period']
         locked_ranges = Period._tp_locked_ranges([company.id])

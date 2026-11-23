@@ -30,6 +30,7 @@ access_att_correction_admin,Attendance corrections admins (Original + delegated)
 access_att_correction_manager,Attendance corrections HR manager,tp.hr.attendance.correction,hr.group_hr_manager,r,"[('state', '!=', 'draft')]"
 rule_att_correction_company,Attendance corrections company,tp.hr.attendance.correction,,crud,"[('company_id', 'in', company_ids)]"
 access_att_review_wizard_user,Attendance review dialog,tp.hr.attendance.review.wizard,base.group_user,crud,
+access_att_withdraw_wizard_user,Attendance withdraw dialog,tp.hr.attendance.withdraw.wizard,base.group_user,crud,
 access_att_period_wizard_manager,Attendance period dialog HR manager,tp.hr.attendance.period.wizard,hr.group_hr_manager,crud,
 access_att_period_wizard_officer,Attendance period dialog officer,tp.hr.attendance.period.wizard,tp_hr_attendance.group_attendance_officer,crud,
 access_att_late_manager,Attendance machine late totals HR manager,tp.hr.attendance.late,hr.group_hr_manager,r,

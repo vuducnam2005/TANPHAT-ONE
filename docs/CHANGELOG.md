@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261123-007 — ATTENDANCE-CORRECTION-002: Thiết kế lại luồng Đề nghị điều chỉnh công (gửi 1 chạm & thu hồi)
+
+- `custom_addons/tp_hr_attendance` **20.0.3.8.0** (`models/attendance_correction.py`, `models/attendance_overview.py`, `views/correction_views.xml`, `security/ir.access.csv`, `static/src/mine.js`, `static/src/mine.xml`, `tests/test_correction.py`):
+  - Bổ sung trạng thái `withdrawn` (**Đã thu hồi**), các trường `withdrawn_by_id`, `withdrawn_at`, `withdraw_reason`, `tp_can_withdraw`, RPC `tp_save_and_submit` (lưu + gửi duyệt trong 1 giao dịch), `action_withdraw`, `action_reopen_draft`, wizard `tp.hr.attendance.withdraw.wizard` và bus `tp_hr_attendance/correction_updated`.
+  - Cập nhật **Công của tôi** với `CorrectionFormDialog` (nút chính **Gửi duyệt**, nút phụ **Lưu nháp**), `WithdrawDialog`, nút **Thu hồi đề nghị** / **Mở lại nháp** / **Tạo đề nghị mới** / **Sửa & Gửi duyệt** và tự động cập nhật qua bus.
+  - Giới hạn hàng đợi **Xử lý điều chỉnh** (`action_review`) chỉ hiển thị `[('state', '=', 'submitted')]` và tự cập nhật danh sách qua bus khi người dùng gửi/thu hồi.
+- `custom_addons/tp_request` (`models/attendance_bridge.py`, `models/request_record.py`): đồng bộ trạng thái `withdrawn`, `action_withdraw`, `action_reopen_draft` qua cầu nối 1-1.
+- Kiểm thử (`tp_tanphat_test` / 18079): `py_compile`, `node --check`, XML parse, `git diff --check` PASS; `/tp_hr_attendance:TestAttendanceCorrection,/tp_request` 22/22 PASS; `/tp_hr_attendance:TestAttendanceAccess` 8/8 PASS.
+
 ## CHG-20261123-006 — ATTENDANCE-EXPORT-REPORT-001: Biên bản áp PC server
 
 - Commit `2795fd7e` (`tp_hr_attendance` `20.0.3.7.0`) đã áp lên PC server (`192.168.1.73`, `tp_tanphat_dev`).

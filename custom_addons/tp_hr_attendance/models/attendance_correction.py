@@ -29,9 +29,10 @@ from .attendance_common import (
 from .attendance_import import ADVISORY_KEY
 
 STATES = [
-    ('draft', 'Nháp'), ('submitted', 'Chờ admin duyệt'), ('approved', 'Đã duyệt'),
-    ('returned', 'Trả lại'), ('cancelled', 'Đã hủy'),
+    ('draft', 'Nháp'), ('submitted', 'Chờ admin duyệt'), ('withdrawn', 'Đã thu hồi'),
+    ('approved', 'Đã duyệt'), ('returned', 'Trả lại'), ('cancelled', 'Đã hủy'),
 ]
+CORRECTION_BUS_TYPE = 'tp_hr_attendance/correction_updated'
 OWNER_FIELDS = {'work_date', 'requested_in', 'requested_out', 'reason', 'evidence_file', 'evidence_name'}
 # Derived on create from the session user's employee; client values are recomputed, never trusted.
 DERIVED_FIELDS = {'employee_id', 'company_id', 'department_id', 'employee_code', 'employee_name'}
@@ -90,6 +91,9 @@ class AttendanceCorrection(models.Model):
     evidence_name = fields.Char('Tên tệp minh chứng', copy=False)
     state = fields.Selection(STATES, 'Trạng thái', default='draft', required=True, readonly=True, index=True, copy=False)
     submitted_at = fields.Datetime('Gửi lúc', readonly=True, copy=False)
+    withdrawn_by_id = fields.Many2one('res.users', 'Người thu hồi', readonly=True, copy=False)
+    withdrawn_at = fields.Datetime('Thu hồi lúc', readonly=True, copy=False)
+    withdraw_reason = fields.Text('Lý do thu hồi', readonly=True, copy=False)
     reviewer_id = fields.Many2one('res.users', 'Người xử lý', readonly=True, copy=False)
     reviewed_at = fields.Datetime('Xử lý lúc', readonly=True, copy=False)
     review_note = fields.Text('Ý kiến người xử lý', readonly=True, copy=False)
@@ -104,6 +108,7 @@ class AttendanceCorrection(models.Model):
 
     tp_is_owner = fields.Boolean(compute='_compute_tp_flags')
     tp_can_review = fields.Boolean(compute='_compute_tp_flags')
+    tp_can_withdraw = fields.Boolean(compute='_compute_tp_flags')
     tp_period_locked = fields.Boolean('Ngày thuộc kỳ đã chốt', compute='_compute_tp_flags')
     tp_has_reviewer = fields.Boolean(compute='_compute_tp_flags')
 
@@ -125,6 +130,7 @@ class AttendanceCorrection(models.Model):
                 record.state == 'submitted' and owner != self.env.user
                 and company in self.env.companies and self.env.user in admins[company.id]
                 and (not locked or can(self.env, 'lock', company)))
+            record.tp_can_withdraw = bool(owner == self.env.user and record.state == 'submitted' and not locked)
             record.tp_has_reviewer = bool(admins[company.id] - owner)
 
     @api.depends('name', 'employee_name', 'work_date')
@@ -200,6 +206,30 @@ class AttendanceCorrection(models.Model):
                 'request': record.name, 'work_date': record.work_date, 'requested_in': clock_label(record.requested_in),
                 'requested_out': clock_label(record.requested_out), 'state': record.state, 'version': record.version}, **detail))
 
+    def _tp_notify_bus(self, event):
+        """Notify owner and company admins via bus without leaking private reason/evidence."""
+        Bus = self.env['bus.bus'].sudo()
+        for record in self.sudo():
+            owner = record.employee_id.user_id
+            admins = self._tp_reviewers_for(record.company_id, record.department_id, owner)
+            recipients = (owner | admins).filtered(lambda u: u.active)
+            payload = {
+                'correction_id': record.id,
+                'name': record.name or '',
+                'state': record.state,
+                'work_date': record.work_date.isoformat() if record.work_date else '',
+                'event': event,
+            }
+            for user in recipients:
+                Bus._sendone(user, CORRECTION_BUS_TYPE, payload)
+            if event == 'approve' and record.work_date:
+                group = self.env.ref('base.group_user', raise_if_not_found=False)
+                if group:
+                    Bus._sendone(group, 'tp_hr_attendance/updated', {
+                        'at': fields.Datetime.now().isoformat(),
+                        'dates': [record.work_date.isoformat()],
+                    })
+
     # --------------------------------------------------------------- CRUD
     @api.model_create_multi
     def create(self, vals_list):
@@ -256,6 +286,26 @@ class AttendanceCorrection(models.Model):
         return super().export_data(fields_to_export)
 
     # -------------------------------------------------------- transitions
+    @api.model
+    def tp_save_and_submit(self, vals, correction_id=False, submit=True):
+        """Create or update owner's correction and optionally submit in one atomic transaction."""
+        clean_vals = {k: v for k, v in dict(vals or {}).items() if k in OWNER_FIELDS}
+        if correction_id:
+            record = self.browse(int(correction_id))
+            if not record.exists():
+                raise UserError(self.env._('Không tìm thấy đề nghị điều chỉnh công.'))
+            record.write(clean_vals)
+        else:
+            record = self.create(clean_vals)
+        if submit:
+            record.action_submit()
+        return {
+            'id': record.id,
+            'name': record.name,
+            'state': record.state,
+            'work_date': record.work_date.isoformat() if record.work_date else '',
+        }
+
     def action_submit(self):
         self.check_access('read')
         self._tp_check_owner()
@@ -272,7 +322,7 @@ class AttendanceCorrection(models.Model):
                 raise UserError(self.env._(NO_REVIEWER))
             if self.sudo().search_count([('id', '!=', record.id), ('employee_id', '=', record.employee_id.id),
                                          ('work_date', '=', record.work_date), ('state', '=', 'submitted')]):
-                raise UserError(self.env._('Ngày này đã có phiếu đang chờ duyệt; chờ kết quả hoặc hủy phiếu đó.'))
+                raise UserError(self.env._('Ngày này đã có phiếu đang chờ duyệt; chờ kết quả hoặc thu hồi phiếu đó.'))
             day = self.env['tp.hr.attendance.day'].sudo().search(
                 [('employee_id', '=', record.employee_id.id), ('work_date', '=', record.work_date)], limit=1)
             internal(record).write({
@@ -281,6 +331,43 @@ class AttendanceCorrection(models.Model):
                 'reviewer_user_ids': [(6, 0, reviewers.ids)], 'reviewer_id': False, 'reviewed_at': False, 'review_note': False,
             })
             record._tp_log('correction_submit', reviewers=reviewers.ids)
+            record._tp_notify_bus('submit')
+        return True
+
+    def action_withdraw(self, reason=None):
+        """Owner withdraws a submitted request before admin review; never allowed if approved or period locked."""
+        self.check_access('read')
+        self._tp_check_owner()
+        self._tp_lock_rows()
+        Period = self.env['tp.hr.attendance.period'].sudo()
+        clean_reason = (reason or '').strip()
+        for record in self:
+            if record.state != 'submitted':
+                raise UserError(self.env._('Chỉ thu hồi được phiếu %(name)s khi đang chờ admin duyệt.', name=record.name))
+            if record.work_date and Period._tp_is_locked(record.company_id.id, record.work_date):
+                raise UserError(self.env._('Không thể thu hồi đề nghị vì kỳ công đã chốt.'))
+            internal(record).write({
+                'state': 'withdrawn',
+                'withdrawn_by_id': self.env.user.id,
+                'withdrawn_at': fields.Datetime.now(),
+                'withdraw_reason': clean_reason or False,
+                'version': record.version + 1,
+            })
+            record._tp_log('correction_withdraw', reason=clean_reason)
+            record._tp_notify_bus('withdraw')
+        return True
+
+    def action_reopen_draft(self):
+        """Owner reopens a withdrawn request back to draft for editing and resubmission."""
+        self.check_access('read')
+        self._tp_check_owner()
+        self._tp_lock_rows()
+        for record in self:
+            if record.state != 'withdrawn':
+                raise UserError(self.env._('Chỉ mở lại thành nháp được phiếu đã thu hồi.'))
+            internal(record).write({'state': 'draft', 'version': record.version + 1})
+            record._tp_log('correction_reopen')
+            record._tp_notify_bus('reopen')
         return True
 
     def action_cancel(self):
@@ -288,10 +375,11 @@ class AttendanceCorrection(models.Model):
         self._tp_check_owner()
         self._tp_lock_rows()
         for record in self:
-            if record.state not in ('draft', 'submitted', 'returned'):
-                raise UserError(self.env._('Phiếu %(name)s đã xử lý xong, không hủy được.', name=record.name))
+            if record.state not in ('draft', 'returned'):
+                raise UserError(self.env._('Phiếu %(name)s đang chờ duyệt hoặc đã xử lý; dùng Thu hồi đề nghị nếu muốn rút lại.', name=record.name))
             internal(record).write({'state': 'cancelled', 'version': record.version + 1})
             record._tp_log('correction_cancel')
+            record._tp_notify_bus('cancel')
         return True
 
     def _tp_check_reviewer(self):
@@ -314,6 +402,7 @@ class AttendanceCorrection(models.Model):
                               'review_note': note.strip(), 'version': self.version + 1})
         self._tp_sync_reviewers()
         self._tp_log('correction_return')
+        self._tp_notify_bus('return')
         return True
 
     def action_approve(self, note=None):
@@ -380,6 +469,7 @@ class AttendanceCorrection(models.Model):
         internal(self).write(vals)
         self._tp_sync_reviewers()
         self._tp_log('correction_approve', original=original, issues_closed=len(issues), amendment=bool(period))
+        self._tp_notify_bus('approve')
         return True
 
     # ------------------------------------------------------------ dialogs
@@ -398,6 +488,33 @@ class AttendanceCorrection(models.Model):
 
     def action_open_return(self):
         return self._tp_wizard('return')
+
+    def action_open_withdraw(self):
+        self.ensure_one()
+        self._tp_check_owner()
+        return {
+            'type': 'ir.actions.act_window', 'name': self.env._('Thu hồi đề nghị'),
+            'res_model': 'tp.hr.attendance.withdraw.wizard', 'view_mode': 'form',
+            'views': [[False, 'form']], 'target': 'new',
+            'context': {'default_correction_id': self.id},
+        }
+
+
+class AttendanceWithdrawWizard(models.TransientModel):
+    _name = 'tp.hr.attendance.withdraw.wizard'
+    _description = 'Thu hồi đề nghị điều chỉnh công'
+
+    correction_id = fields.Many2one('tp.hr.attendance.correction', 'Phiếu', required=True, readonly=True, ondelete='cascade')
+    reason = fields.Text('Lý do thu hồi (không bắt buộc)')
+
+    def action_confirm(self):
+        self.ensure_one()
+        self.correction_id.action_withdraw(reason=self.reason)
+        return {
+            'type': 'ir.actions.client', 'tag': 'display_notification',
+            'params': {'type': 'success', 'message': self.env._('Đã thu hồi'), 'sticky': False,
+                       'next': {'type': 'ir.actions.act_window_close'}},
+        }
 
 
 class AttendanceReviewWizard(models.TransientModel):

@@ -22,6 +22,7 @@ from .request_common import (
 CORR_TO_REQ_STATE = {
     'draft': 'draft',
     'submitted': 'pending',
+    'withdrawn': 'withdrawn',
     'approved': 'approved',
     'returned': 'returned',
     'cancelled': 'withdrawn',
@@ -87,6 +88,7 @@ class AttendanceCorrectionBridge(models.Model):
                 'approved_at': corr.reviewed_at if target_state == 'approved' else False,
                 'due_at': due,
                 'return_reason': corr.review_note if target_state == 'returned' else False,
+                'withdraw_reason': corr.withdraw_reason if corr.state == 'withdrawn' else False,
                 'attendance_correction_id': corr.id,
                 'att_work_date': corr.work_date,
                 'att_requested_in': corr.requested_in,
@@ -215,6 +217,16 @@ class AttendanceCorrectionBridge(models.Model):
     def action_return(self, note=None):
         res = super().action_return(note=note)
         self._tp_sync_to_request(action_event='return', note=note or '')
+        return res
+
+    def action_withdraw(self, reason=None):
+        res = super().action_withdraw(reason=reason)
+        self._tp_sync_to_request(action_event='withdraw', note=(reason or '').strip())
+        return res
+
+    def action_reopen_draft(self):
+        res = super().action_reopen_draft()
+        self._tp_sync_to_request()
         return res
 
     def action_cancel(self):

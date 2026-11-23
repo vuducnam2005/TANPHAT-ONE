@@ -385,9 +385,28 @@
                                             <ul class="o_tp_mine_req_list">
                                                 <li t-foreach="row.requests" t-as="req" t-key="req.id">
                                                     <strong t-out="req.name"/>
-                                                    <span class="o_tp_mine_req_state" t-out="req.state_label"/>
+                                                    <span class="o_tp_mine_req_state" t-att-class="'o_state_' + req.state" t-out="req.state_label"/>
                                                     <span>Đề nghị: <t t-out="req.requested_in"/> – <t t-out="req.requested_out"/></span>
                                                     <span t-if="req.review_note" class="o_tp_mine_req_note">Ghi chú: <t t-out="req.review_note"/></span>
+                                                    <span t-if="req.state === 'withdrawn' and req.withdraw_reason" class="o_tp_mine_req_note">Lý do thu hồi: <t t-out="req.withdraw_reason"/></span>
+                                                    <div class="o_tp_mine_req_actions ms-auto d-flex gap-2">
+                                                        <button t-if="req.state === 'submitted' and req.can_withdraw" type="button"
+                                                            class="btn btn-sm btn-outline-danger" t-on-click="() => this.openWithdraw(req)">
+                                                            Thu hồi đề nghị
+                                                        </button>
+                                                        <button t-if="req.state === 'withdrawn'" type="button"
+                                                            class="btn btn-sm btn-outline-secondary" t-on-click="() => this.reopenDraft(req, row.date)">
+                                                            Mở lại nháp
+                                                        </button>
+                                                        <button t-if="req.state === 'withdrawn' and row.lock_state !== 'locked' and !row.future" type="button"
+                                                            class="btn btn-sm btn-outline-primary" t-on-click="() => this.openRequest(row.date)">
+                                                            Tạo đề nghị mới
+                                                        </button>
+                                                        <button t-if="req.state === 'returned' or req.state === 'draft'" type="button"
+                                                            class="btn btn-sm btn-primary" t-on-click="() => this.openEditRequest(req, row.date)">
+                                                            Sửa &amp; Gửi duyệt
+                                                        </button>
+                                                    </div>
                                                 </li>
                                             </ul>
                                         </div>
@@ -416,5 +435,78 @@
         <SourceStrip source="this.data.source"/>
     </t>
 </section>
+</t>
+
+<t t-name="tp_hr_attendance.CorrectionFormDialog">
+    <Dialog title="this.title" size="'md'">
+        <div class="o_tp_att_dialog">
+            <div t-if="this.state.error" class="alert alert-danger mb-3" role="alert" t-out="this.state.error"/>
+            <div class="alert alert-info mb-3" role="status">
+                Dữ liệu công chỉ thay đổi sau khi admin duyệt. Giải trình và minh chứng chỉ dành cho bạn, admin và HR có quyền xem.
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Ngày công <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" t-model="this.state.workDate" t-att-disabled="this.state.busy"/>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-6">
+                    <label class="form-label fw-semibold">Giờ vào đề nghị <span class="text-danger">*</span></label>
+                    <input type="time" class="form-control" t-model="this.state.requestedIn" t-att-disabled="this.state.busy"/>
+                </div>
+                <div class="col-6">
+                    <label class="form-label fw-semibold">Giờ ra đề nghị <span class="text-danger">*</span></label>
+                    <input type="time" class="form-control" t-model="this.state.requestedOut" t-att-disabled="this.state.busy"/>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Lý do / giải trình <span class="text-danger">*</span></label>
+                <textarea class="form-control" rows="3" placeholder="Nêu giờ cần bổ sung và căn cứ…"
+                    t-model="this.state.reason" t-att-disabled="this.state.busy"/>
+            </div>
+            <div class="mb-2">
+                <label class="form-label fw-semibold">Minh chứng (nếu có)</label>
+                <input type="file" class="form-control" t-on-change="(ev) => this.onFileChange(ev)" t-att-disabled="this.state.busy"/>
+                <div t-if="this.state.evidenceName" class="d-flex align-items-center gap-2 mt-1 small text-muted">
+                    <span>Tệp đã chọn: <strong t-out="this.state.evidenceName"/></span>
+                    <button type="button" class="btn btn-link btn-sm p-0 text-danger" t-on-click="() => this.clearFile()">Bỏ tệp</button>
+                </div>
+            </div>
+        </div>
+        <t t-set-slot="footer">
+            <button type="button" class="btn btn-primary" t-att-disabled="this.state.busy" t-on-click="() => this.save(true)">
+                <t t-if="this.state.busy">Đang gửi…</t>
+                <t t-else="">Gửi duyệt</t>
+            </button>
+            <button type="button" class="btn btn-outline-secondary" t-att-disabled="this.state.busy" t-on-click="() => this.save(false)">
+                Lưu nháp
+            </button>
+            <button type="button" class="btn btn-secondary" t-att-disabled="this.state.busy" t-on-click="() => this.props.close()">
+                Đóng
+            </button>
+        </t>
+    </Dialog>
+</t>
+
+<t t-name="tp_hr_attendance.WithdrawDialog">
+    <Dialog title="'Thu hồi đề nghị điều chỉnh'" size="'sm'">
+        <div class="o_tp_att_dialog">
+            <div t-if="this.state.error" class="alert alert-danger mb-3" role="alert" t-out="this.state.error"/>
+            <p class="mb-3">Bạn có chắc muốn thu hồi đề nghị <strong t-out="this.props.request.name"/>? Dữ liệu công chuẩn sẽ không thay đổi.</p>
+            <div class="mb-2">
+                <label class="form-label fw-semibold">Lý do thu hồi (không bắt buộc)</label>
+                <textarea class="form-control" rows="2" placeholder="Nhập lý do thu hồi nếu cần…"
+                    t-model="this.state.reason" t-att-disabled="this.state.busy"/>
+            </div>
+        </div>
+        <t t-set-slot="footer">
+            <button type="button" class="btn btn-danger" t-att-disabled="this.state.busy" t-on-click="() => this.confirm()">
+                <t t-if="this.state.busy">Đang thu hồi…</t>
+                <t t-else="">Xác nhận thu hồi</t>
+            </button>
+            <button type="button" class="btn btn-secondary" t-att-disabled="this.state.busy" t-on-click="() => this.props.close()">
+                Đóng
+            </button>
+        </t>
+    </Dialog>
 </t>
 </templates>

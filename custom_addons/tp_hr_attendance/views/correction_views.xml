@@ -6,7 +6,7 @@
             <list string="Đề nghị điều chỉnh" js_class="tp_hr_table" import="0" limit="20" duplicate="0">
                 <field name="name"/><field name="work_date"/><field name="employee_code"/><field name="employee_name"/>
                 <field name="department_id"/><field name="requested_in" widget="float_time" options="{'numeric': true}"/><field name="requested_out" widget="float_time" options="{'numeric': true}"/>
-                <field name="state" widget="badge" decoration-success="state == 'approved'" decoration-warning="state == 'submitted'" decoration-danger="state == 'returned'"/>
+                <field name="state" widget="badge" decoration-success="state == 'approved'" decoration-warning="state == 'submitted'" decoration-danger="state == 'returned'" decoration-muted="state in ('withdrawn', 'cancelled')"/>
                 <field name="reviewer_id" optional="show"/><field name="reviewed_at" optional="show"/>
                 <field name="review_note" optional="show"/><field name="is_amendment" optional="hide"/>
             </list>
@@ -25,7 +25,7 @@
                 <field name="requested_in" widget="float_time" options="{'numeric': true}"/><field name="requested_out" widget="float_time" options="{'numeric': true}"/>
                 <field name="reason" optional="show"/><field name="evidence_file" filename="evidence_name" widget="binary" optional="show" invisible="not evidence_file"/>
                 <field name="submitted_at" optional="hide"/>
-                <field name="state" widget="badge" decoration-success="state == 'approved'" decoration-warning="state == 'submitted'" decoration-danger="state == 'returned'"/>
+                <field name="state" widget="badge" decoration-success="state == 'approved'" decoration-warning="state == 'submitted'" decoration-danger="state == 'returned'" decoration-muted="state in ('withdrawn', 'cancelled')"/>
                 <field name="reviewer_id" optional="show"/><field name="reviewed_at" optional="hide"/><field name="is_amendment" optional="hide"/>
                 <button name="action_open_approve" type="object" string="Duyệt" icon="fa-check" class="btn-link text-success" invisible="not tp_can_review"/>
                 <button name="action_open_return" type="object" string="Trả lại" icon="fa-undo" class="btn-link" invisible="not tp_can_review"/>
@@ -39,6 +39,7 @@
             <field name="department_id"/><field name="work_date"/><field name="state"/><field name="reviewer_id"/>
             <filter name="pending" string="Chờ admin duyệt" domain="[('state', '=', 'submitted')]"/>
             <filter name="returned" string="Đã trả lại" domain="[('state', '=', 'returned')]"/>
+            <filter name="withdrawn" string="Đã thu hồi" domain="[('state', '=', 'withdrawn')]"/>
             <filter name="amendment" string="Đính chính sau chốt" domain="[('is_amendment', '=', True)]"/>
         </search></field>
     </record>
@@ -50,15 +51,19 @@
                     <button name="action_submit" type="object" string="Gửi duyệt" class="btn-primary" invisible="not tp_is_owner or state not in ('draft', 'returned')"/>
                     <button name="action_open_approve" type="object" string="Duyệt" class="btn-primary" invisible="not tp_can_review"/>
                     <button name="action_open_return" type="object" string="Trả lại" invisible="not tp_can_review"/>
-                    <button name="action_cancel" type="object" string="Hủy phiếu" confirm="Hủy đề nghị này và giữ lịch sử?" invisible="not tp_is_owner or state not in ('draft', 'submitted', 'returned')"/>
+                    <button name="action_open_withdraw" type="object" string="Thu hồi đề nghị" invisible="not tp_can_withdraw"/>
+                    <button name="action_reopen_draft" type="object" string="Mở lại nháp" invisible="not tp_is_owner or state != 'withdrawn'"/>
+                    <button name="action_cancel" type="object" string="Hủy phiếu" confirm="Hủy đề nghị này và giữ lịch sử?" invisible="not tp_is_owner or state not in ('draft', 'returned')"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approved"/>
                 </header>
                 <sheet>
                     <field name="tp_is_owner" invisible="1"/><field name="tp_can_review" invisible="1"/>
+                    <field name="tp_can_withdraw" invisible="1"/>
                     <field name="tp_period_locked" invisible="1"/><field name="tp_has_reviewer" invisible="1"/>
                     <div class="alert alert-info" role="status">Giải trình và minh chứng chỉ dành cho bạn, admin nhận duyệt (admin gốc hoặc admin được ủy quyền) và HR có quyền xem. Bảng công chung không hiển thị nội dung này.</div>
                     <div class="alert alert-info" role="status" invisible="not tp_is_owner or state not in ('draft', 'returned')">Lưu nháp chưa thay đổi bảng công. Bấm Gửi duyệt để chuyển phiếu cho admin.</div>
-                    <div class="alert alert-warning" role="status" invisible="state != 'submitted'">Phiếu đang chờ admin duyệt. Giờ công chỉ thay đổi sau khi được duyệt.</div>
+                    <div class="alert alert-warning" role="status" invisible="state != 'submitted'">Phiếu đang chờ admin duyệt. Giờ công chỉ thay đổi sau khi được duyệt; bạn có thể thu hồi trước khi admin xử lý.</div>
+                    <div class="alert alert-secondary" role="status" invisible="state != 'withdrawn'">Đã thu hồi đề nghị. Dữ liệu công chuẩn không thay đổi; bạn có thể mở lại thành nháp để sửa hoặc tạo đề nghị mới.</div>
                     <div class="alert alert-danger" role="status" invisible="state != 'returned'">Phiếu đã bị trả lại: xem Ý kiến người xử lý bên dưới, sửa nội dung rồi Gửi duyệt lại.</div>
                     <div class="alert alert-warning" role="status" invisible="tp_has_reviewer or state not in ('draft', 'returned')">Chưa có admin đang hoạt động (ngoài bạn) để nhận duyệt. Có thể lưu nháp; hệ thống không tự chuyển phiếu cho người duyệt khác.</div>
                     <div class="alert alert-warning" role="status" invisible="not tp_period_locked">Ngày thuộc kỳ đã chốt. Duyệt cần quyền chốt kỳ và lý do đính chính; giờ gốc được giữ trong lịch sử.</div>
@@ -86,6 +91,9 @@
                     <group string="Kết quả xử lý">
                         <field name="submitted_at"/><field name="reviewer_id" options="{'no_open': True}"/><field name="reviewed_at"/>
                         <field name="review_note"/><field name="replaced_times"/>
+                        <field name="withdrawn_by_id" options="{'no_open': True}" invisible="not withdrawn_at"/>
+                        <field name="withdrawn_at" invisible="not withdrawn_at"/>
+                        <field name="withdraw_reason" invisible="not withdrawn_at"/>
                     </group>
                 </sheet>
             </form>
@@ -99,9 +107,17 @@
     </record>
     <record id="action_review" model="ir.actions.act_window">
         <field name="name">Xử lý điều chỉnh</field><field name="res_model">tp.hr.attendance.correction</field><field name="view_mode">list,form</field>
-        <field name="domain">[('state', '!=', 'draft')]</field><field name="context">{'tp_filter_profile': 'corrections', 'search_default_pending': 1}</field>
+        <field name="domain">[('state', '=', 'submitted')]</field><field name="context">{'tp_filter_profile': 'corrections'}</field>
         <field name="view_id" ref="correction_review_list"/><field name="search_view_id" ref="correction_search"/>
-        <field name="help" type="html"><p>Không có phiếu chờ xử lý. Mọi đề nghị điều chỉnh công của các phòng chuyển đến admin (admin gốc và admin được ủy quyền); không ai tự duyệt phiếu của mình.</p></field>
+        <field name="help" type="html"><p>Không có phiếu chờ xử lý. Chỉ các phiếu đang ở trạng thái Chờ admin duyệt mới hiển thị tại đây; không ai tự duyệt phiếu của mình.</p></field>
+    </record>
+    <record id="withdraw_wizard_form" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.withdraw.wizard.form</field><field name="model">tp.hr.attendance.withdraw.wizard</field>
+        <field name="arch" type="xml"><form string="Thu hồi đề nghị điều chỉnh">
+            <p>Bạn có chắc muốn thu hồi đề nghị này? Dữ liệu công chuẩn sẽ không thay đổi.</p>
+            <group><field name="correction_id" invisible="1"/><field name="reason" placeholder="Lý do thu hồi (không bắt buộc)…"/></group>
+            <footer><button name="action_confirm" type="object" string="Xác nhận thu hồi" class="btn-primary"/><button string="Đóng" special="cancel"/></footer>
+        </form></field>
     </record>
     <record id="review_wizard_form" model="ir.ui.view">
         <field name="name">tp.hr.attendance.review.wizard.form</field><field name="model">tp.hr.attendance.review.wizard</field>

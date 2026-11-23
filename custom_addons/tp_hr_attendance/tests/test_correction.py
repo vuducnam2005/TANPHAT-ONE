@@ -242,6 +242,15 @@ class TestAttendanceCorrection(AttendanceCase):
         request.write({'requested_out': 18.0})
         request.action_submit()
         self.assertFalse(request.review_note)
+        # Submitted requests must be withdrawn (not cancelled directly); reopen to draft allows cancel.
+        with self.assertRaises(UserError):
+            request.action_cancel()
+        request.action_withdraw('Synthetic nhầm giờ')
+        self.assertEqual(request.state, 'withdrawn')
+        self.assertEqual((request.withdrawn_by_id, request.withdraw_reason), (self.viewer, 'Synthetic nhầm giờ'))
+        self.assertTrue(request.withdrawn_at)
+        request.action_reopen_draft()
+        self.assertEqual(request.state, 'draft')
         request.action_cancel()
         self.assertEqual(request.state, 'cancelled')
         with self.assertRaises(UserError):
@@ -337,7 +346,7 @@ class TestAttendanceCorrection(AttendanceCase):
         self.assign(can_lock=True)
         Period = self.env_for(self.officer)['tp.hr.attendance.period']
         period = Period.create({'name': 'Synthetic period', 'company_id': self.company.id, 'date_from': DAY, 'date_to': DAY})
-        period._tp_lock()
+        period._tp_lock('Synthetic lock with pending')
         request = self.request()
         request.action_submit()
         # A lock assignee is not an approver; the Original Admin still needs the existing lock right to amend.
@@ -362,3 +371,76 @@ class TestAttendanceCorrection(AttendanceCase):
             period._tp_unlock(' ')
         period._tp_unlock('Synthetic reopen basis')
         self.assertEqual(period.state, 'open')
+
+    def test_one_click_submit_withdraw_and_queue_rules(self):
+        self.upload('07:37', '17:05')
+        Corr = self.env_for(self.viewer)['tp.hr.attendance.correction']
+        review_domain = [('state', '=', 'submitted')]
+
+        # 1. Failed one-click submit (empty reason) rolls back without leaving a draft.
+        with self.assertRaises(UserError), self.env.cr.savepoint():
+            Corr.tp_save_and_submit({
+                'work_date': DAY, 'requested_in': 8.0, 'requested_out': 17.0, 'reason': '   ',
+            }, False, True)
+        self.assertFalse(Corr.search([('work_date', '=', DAY)]))
+
+        # 2. Valid one-click submit creates and submits in one transaction; appears in admin queue.
+        res = Corr.tp_save_and_submit({
+            'work_date': DAY, 'requested_in': 8.0, 'requested_out': 17.0, 'reason': 'Synthetic quên chấm',
+        }, False, True)
+        req = Corr.browse(res['id'])
+        self.assertEqual(req.state, 'submitted')
+        self.assertEqual(self.day(self.emp_a, DAY).in_time, '07:37')  # Day untouched before approval.
+        self.assertIn(req.id, self.env_for(self.root)['tp.hr.attendance.correction'].search(review_domain).ids)
+
+        # 3. Cannot create a second submitted request for the same employee & day.
+        with self.assertRaises(UserError), self.env.cr.savepoint():
+            Corr.tp_save_and_submit({
+                'work_date': DAY, 'requested_in': 8.5, 'requested_out': 17.5, 'reason': 'Synthetic trùng ngày',
+            }, False, True)
+
+        # 4. Admin and other users cannot withdraw on behalf of the creator.
+        with self.assertRaises(AccessError):
+            self.as_user(self.root, req).action_withdraw('Admin không được thu hồi thay')
+        with self.assertRaises(AccessError):
+            self.as_user(self.colleague, req).action_withdraw('Người khác không được thu hồi')
+
+        # 5. Owner withdraws -> withdrawn, disappears from admin queue, attendance untouched, history logged.
+        req.action_withdraw('')
+        self.assertEqual(req.state, 'withdrawn')
+        self.assertEqual(req.withdrawn_by_id, self.viewer)
+        self.assertTrue(req.withdrawn_at)
+        self.assertEqual(self.day(self.emp_a, DAY).in_time, '07:37')
+        self.assertNotIn(req.id, self.env_for(self.root)['tp.hr.attendance.correction'].search(review_domain).ids)
+        logs = self.env['tp.hr.attendance.log'].sudo().search([('model', '=', req._name), ('res_id', '=', req.id)])
+        self.assertIn('correction_withdraw', logs.mapped('action'))
+
+        # 6. From withdrawn, owner can reopen as draft, edit and resubmit, OR create a new request.
+        req.action_reopen_draft()
+        self.assertEqual(req.state, 'draft')
+        self.assertNotIn(req.id, self.env_for(self.root)['tp.hr.attendance.correction'].search(review_domain).ids)
+        req.write({'requested_out': 17.5})
+        req.action_submit()
+        self.assertEqual(req.state, 'submitted')
+
+        # 7. Cannot withdraw when period is locked.
+        req.action_withdraw('Thu hồi trước khi chốt kỳ')
+        req.action_reopen_draft()
+        self.assign(can_lock=True)
+        period = self.env_for(self.officer)['tp.hr.attendance.period'].create({
+            'name': 'Synthetic lock withdraw', 'company_id': self.company.id, 'date_from': DAY, 'date_to': DAY,
+        })
+        period._tp_lock('Synthetic lock before submit')
+        req.action_submit()
+        self.assertFalse(req.tp_can_withdraw)
+        with self.assertRaisesRegex(UserError, 'kỳ công đã chốt'):
+            req.action_withdraw('Sau chốt kỳ')
+        period._tp_unlock('Synthetic reopen for approve test')
+
+        # 8. Approved request cannot be withdrawn.
+        self.as_user(self.root, req).action_approve()
+        req.invalidate_recordset()
+        self.assertEqual(req.state, 'approved')
+        self.assertFalse(req.tp_can_withdraw)
+        with self.assertRaises(UserError):
+            req.action_withdraw('Sau duyệt')
