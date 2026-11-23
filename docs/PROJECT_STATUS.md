@@ -1,5 +1,12 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261123-004 — WEBVIEW-ZALO-ERROR-GUARD-001 — PC_SERVER_APPLIED.** Đã triển khai commit `7749fdd1` (`tp_branding` `20.0.2.2.2`) lên PC server (`192.168.1.73`, DB `tp_tanphat_dev`).
+- Backup trước áp tại `C:\TANPHAT-backups\webview-guard001\20261123T090926\` (`tp_tanphat_dev_pre.dump` 10.760.506 bytes, `restore-list.txt` 16.338 dòng, `tp_branding_pre.tar.gz`, `deploy_package.tar.gz`).
+- Đối chiếu SHA256 (LF): **25/25** tệp khớp; nâng cấp `-u tp_branding` exit `0`, **0** `ERROR/CRITICAL`.
+- Snapshot trước → sau bất biến: `employees=39`, `users=32`, `groups_rel=108`, `base_url_md5=00fd15ead17e24d5fff54ae523f14809` giữ nguyên 100%; `tp_branding` lên `20.0.2.2.2`.
+- Kiểm public `https://tpone.tadic.vn` (Zalo iOS UA): `/web/health` HTTP `200 {"status": "pass"}`, `/app/trang-chu` `303 -> /dang-nhap?redirect=%2Fapp%2Ftrang-chu%3F`, bundle công khai `/web/assets/66e5daf/web.assets_frontend_lazy.min.js` và bundle backend `web.assets_backend` trên server đều đã chứa `@tp_branding/webview_error_guard` + `tpExternalWebViewErrorHandler`.
+- Còn lại: người dùng mở lại `https://tpone.tadic.vn/app/trang-chu` ngay trong trình duyệt tích hợp của app Zalo trên iPhone để xác nhận thực tế không còn popup `zaloJSV2`.
+
 **CHG-20261123-003 — WEBVIEW-ZALO-ERROR-GUARD-001 — RELEASE_READY.** Khắc phục lỗi popup `UncaughtClientError > ReferenceError: Can't find variable: zaloJSV2` (`global code@https://tpone.tadic.vn/app/trang-chu:1:21`) khi mở trên trình duyệt tích hợp trong Zalo iOS (`WKWebView`):
 - **Kết quả khảo sát:** 0 chỗ gọi `zaloJSV2` hay `<script>` Zalo trong `custom_addons/`, `addons/`, `odoo/` hoặc HTML trả về. Lỗi phát sinh sau khi OWL WebClient/TitlePlugin đã mount, do Zalo iOS `WKWebView` tự đánh giá JS bridge `zaloJSV2` trong ngữ cảnh global của tài liệu nên `filename` là URL trang thay vì domain khác; `error_service.js` của Odoo không phân loại là `ThirdPartyScriptError` và bật `ClientErrorDialog` ("Rất tiếc!"). Không có lỗi DB/backend.
 - **Sửa đúng phạm vi (`tp_branding` `20.0.2.2.2`):** thêm `static/src/webview_error_guard.js` đăng ký `tpExternalWebViewErrorHandler` (`sequence: 2`, trước `defaultHandler`) vào cả `web.assets_backend` và `web.assets_frontend`. Không khai báo biến giả `window.zaloJSV2`; chỉ chặn popup cho `ReferenceError` tham chiếu `zaloJSV2` ngoài mọi asset bundle (`.js` / `/web/assets/` / `/static/src/`), giữ nguyên mọi lỗi thật của ứng dụng.
@@ -396,7 +403,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261123-003`
+Last change: `CHG-20261123-004`
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.
 - **Kiểm thực:** `-u` exit 0/0 ERROR; ruff file đã đổi, compileall, 23 XML, ACL CSV, 13 JS syntax, `git diff --check` đạt; Playwright `verify_simple003.mjs` (mở/Hủy, không xác nhận) và probe RPC từ chối; DB 18 bảng giữ count/hash, `tp_equipment_move` chỉ thêm 2 cột NULL. Mức từng mục ở [acceptance](demo/EQUIP_001_ACCEPTANCE.md).

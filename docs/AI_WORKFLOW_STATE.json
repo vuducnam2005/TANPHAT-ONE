@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-23T02:07:26.644880+00:00",
-  "last_change_id": "CHG-20261123-003",
+  "updated_at": "2026-11-23T02:15:16.563992+00:00",
+  "last_change_id": "CHG-20261123-004",
   "code_digest": "4ac97a4eff68ad54daab2a3c260495914e7655127e2d2ac336da9b5e36ca5438",
   "code_file_count": 823,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "1ba413e112fd30a74b0c970b184aeb086f7a0622387454c3890f72ccb4e762b0",
-    "docs/CHANGELOG.md": "8ecf347bd103d3be77f027550ba459199f94c2cbb3b4ce4b2bf22c23b010105f",
+    "docs/PROJECT_STATUS.md": "5e7bf449318a0bb5713877be115b11bdd50abc6404275e36f1664a53b09100eb",
+    "docs/CHANGELOG.md": "558da7d9a318b7dae621dc5f1f99be59705d850dfb10582e8779ae48671cb535",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,9 +20,7 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "node --check + py_compile + git diff --check: PASS",
-    "Odoo /tp_branding (tp_tanphat_test): 0 failed, 0 error(s) of 30 tests",
-    "HOOT @tp_branding: 5/5 passed",
-    "Playwright Chromium mobile (Zalo iOS UA) /dang-nhap + /app/trang-chu: PASS"
+    "PC server deploy 7749fdd1 (tp_branding 20.0.2.2.2): 25/25 SHA256, upgrade exit 0, 0 ERROR/CRITICAL, invariant match",
+    "Public https://tpone.tadic.vn: health 200, /app/trang-chu 303, frontend+backend bundles contain tpExternalWebViewErrorHandler"
   ]
 }

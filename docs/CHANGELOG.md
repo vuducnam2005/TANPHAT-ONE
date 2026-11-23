@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261123-004 — WEBVIEW-ZALO-ERROR-GUARD-001: Biên bản áp PC server
+
+- Commit `7749fdd1` (`tp_branding` `20.0.2.2.2`) đã áp lên PC server (`192.168.1.73`, `tp_tanphat_dev`).
+- Backup tại `C:\TANPHAT-backups\webview-guard001\20261123T090926\` (`tp_tanphat_dev_pre.dump` 10.760.506 bytes, `restore-list.txt` 16.338 dòng, `tp_branding_pre.tar.gz`, `deploy_package.tar.gz`).
+- SHA256 25/25 tệp khớp; `-u tp_branding` exit 0, 0 ERROR/CRITICAL; snapshot nhân sự/tài khoản/nhóm/base URL giữ nguyên.
+- Public `https://tpone.tadic.vn`: `/web/health` 200, `/app/trang-chu` 303, bundle `/web/assets/66e5daf/web.assets_frontend_lazy.min.js` và `web.assets_backend` trên server đều đã có `tpExternalWebViewErrorHandler`. Bản ghi docs-only, không restart lại Odoo.
+
 ## CHG-20261123-003 — WEBVIEW-ZALO-ERROR-GUARD-001: Chặn popup lỗi zaloJSV2 do Zalo WebView tự chèn
 
 - Khảo sát toàn bộ repository (`custom_addons/`, `addons/`, `odoo/`, `frontend/`, `docs/`) và HTML thực tế `/app/trang-chu`: 0 tham chiếu `zaloJSV2` hoặc script Zalo; lỗi phát sinh sau khi OWL WebClient/TitlePlugin mount do Zalo iOS `WKWebView` tự đánh giá `zaloJSV2` trong global scope của trang (`filename = document URL`, `lineno = 1`) khiến `error_service.js` không nhận diện là script ngoài.
