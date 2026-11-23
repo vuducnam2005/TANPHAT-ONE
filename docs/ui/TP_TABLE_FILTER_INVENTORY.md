@@ -425,3 +425,10 @@ API keys/passkeys là danh sách credential của chính mình trong khu vực n
 ## HR-AUDIT-CLEANUP-001
 
 Bảng audit giữ bộ lọc mã/hành động/tài khoản/người thực hiện/thời điểm, pager/count/domain hiện có. Default active=True gỡ dòng đã dọn nhất quán khỏi list/count/export; reason_display chỉ là trường diễn giải, snapshot/nguồn không đổi. Wizard count + mật khẩu không phải bảng độc lập (N/A). Browser chọn dòng/action/cancel/mobile PASS. Không export mật khẩu.
+
+## ENTI-IMAGE-SYNC-001 — Đồng bộ ảnh hồ sơ nhân viên ENTI (23/11/2026)
+
+| ID | Màn / action | Tiêu chí lọc & phạm vi bắt buộc | Count / phân trang / xuất | Coverage |
+| --- | --- | --- | --- | --- |
+| ATT-IMG01 | Quản trị chấm công → Nhật ký đồng bộ ảnh (`action_sources` + `tp_enti_image_logs`) | Trạng thái (`downloaded`/`unchanged`/`no_image`/`failed`/`unmapped`), phòng ban (`department_id`), tên/mã NV/bộ phận ENTI; phạm vi `company_id` và quyền `can_manage_enti_images` (`hr.group_hr_manager`, Admin gốc, Admin ủy quyền) | Giới hạn 200 dòng trên bảng xem nhanh quản trị, giữ đầy đủ danh sách ở nút **Mở bảng chi tiết** (`action_enti_employee_images`); không lộ `image_url`/token | Python unit/ORM `TestEntiImageSync` (lọc state/dept/search, chặn viewer) PASS; Playwright desktop 1440 & mobile 390 render 0 lỗi |
+| ATT-IMG02 | Nhật ký đồng bộ ảnh hồ sơ ENTI (`action_enti_employee_images`, `tp.hr.attendance.enti.employee.image`) | `ten_nv`, `ma_nv`, `employee_id`, `department_id`, `state`, `mapping_state` qua `enti_employee_image_search` và `<TpTableFilterBar>` (`filter_profiles.js`); `rule_att_enti_img_company` + ACL chặn `base.group_user` | Native pager/count 10/20/50/100; ẩn `image_url`/`raw_metadata_json` khỏi người dùng thường | Odoo ACL/ORM + Playwright render `action_enti_employee_images` PASS |

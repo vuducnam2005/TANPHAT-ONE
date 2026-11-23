@@ -19,6 +19,8 @@ export class AttendanceSources extends Component {
         this.state = proxy({
             loading: true, refreshing: false, syncing: false, error: "", notice: "", data: null,
             exporting: false, exportError: "", mode: "month", date: "", from: "", to: "", department: "",
+            imageSyncing: false, imageRetrying: false, imageFiltering: false,
+            imageState: "", imageDepartment: "", imageSearch: "",
         });
         this.request = 0;
         // Sync health and the last update time follow the server sync without F5 (bus + visible-tab fallback poll).
@@ -42,6 +44,34 @@ export class AttendanceSources extends Component {
     }
     get unmapped() {
         return (this.enti.unmapped_people || []).slice(0, 5);
+    }
+    get imageSync() {
+        return this.data?.image_sync || {
+            state: "idle",
+            state_label: "Chưa đồng bộ",
+            last_sync_at: "",
+            message: "",
+            prefer_manual_image: false,
+            total_employees: 0,
+            synced_count: 0,
+            no_image_count: 0,
+            failed_count: 0,
+            unmapped_count: 0,
+            rows: [],
+        };
+    }
+    get imageHealth() {
+        const st = this.imageSync.state;
+        if (st === "success") {
+            return { tone: "good", text: this.imageSync.state_label || "Đã đồng bộ" };
+        }
+        if (st === "partial") {
+            return { tone: "warn", text: this.imageSync.state_label || "Hoàn tất (Có ảnh lỗi)" };
+        }
+        if (st === "error") {
+            return { tone: "danger", text: this.imageSync.state_label || "Lỗi đồng bộ" };
+        }
+        return { tone: "neutral", text: this.imageSync.state_label || "Chưa đồng bộ" };
     }
     get health() {
         const source = this.enti;
@@ -67,7 +97,12 @@ export class AttendanceSources extends Component {
         this.state[silent ? "refreshing" : "loading"] = true;
         try {
             const orm = silent ? this.orm.silent : this.orm;
-            const data = await orm.call("tp.hr.attendance.source", "tp_sources_overview", [{}]);
+            const params = {
+                image_state: this.state.imageState,
+                image_department_id: this.state.imageDepartment,
+                image_search: this.state.imageSearch,
+            };
+            const data = await orm.call("tp.hr.attendance.source", "tp_sources_overview", [params]);
             if (request === this.request) {
                 if (!this.state.data && data.today) {
                     Object.assign(this.state, { date: data.today, from: data.today, to: data.today });
@@ -112,6 +147,87 @@ export class AttendanceSources extends Component {
             this.state.syncing = false;
         }
         await this.load({ silent: true });
+    }
+
+    async syncEntiImages({ onlyFailed = false } = {}) {
+        if (this.state.imageSyncing || this.state.imageRetrying) {
+            return;
+        }
+        const flag = onlyFailed ? "imageRetrying" : "imageSyncing";
+        Object.assign(this.state, { [flag]: true, error: "", notice: "" });
+        try {
+            const method = onlyFailed
+                ? "action_retry_failed_enti_images_quick"
+                : "action_sync_enti_images_quick";
+            const res = await this.orm.call("tp.hr.attendance.source", method, []);
+            if (res && res.success === false) {
+                this.state.error = res.message || "Đồng bộ ảnh hồ sơ chưa thành công.";
+            } else {
+                this.state.notice = res?.message || "Đã đồng bộ ảnh hồ sơ nhân viên từ ENTI.";
+            }
+        } catch (error) {
+            this.state.error = rpcError(error, "Đồng bộ ảnh hồ sơ thất bại. Vui lòng thử lại.");
+        } finally {
+            this.state[flag] = false;
+        }
+        await this.load({ silent: true });
+    }
+
+    async togglePreferManualImage(ev) {
+        const enabled = Boolean(ev.target.checked);
+        try {
+            const res = await this.orm.call("tp.hr.attendance.source", "action_toggle_prefer_manual_image", [enabled]);
+            if (this.state.data?.image_sync) {
+                this.state.data.image_sync.prefer_manual_image = Boolean(res?.prefer_manual_image);
+            }
+        } catch (error) {
+            this.state.error = rpcError(error, "Không cập nhật được cấu hình ưu tiên ảnh thủ công.");
+        }
+    }
+
+    async applyImageFilters() {
+        this.state.imageFiltering = true;
+        try {
+            const imgData = await this.orm.call("tp.hr.attendance.source", "tp_enti_image_logs", [{
+                image_state: this.state.imageState,
+                image_department_id: this.state.imageDepartment,
+                image_search: this.state.imageSearch,
+            }]);
+            if (this.state.data) {
+                this.state.data.image_sync = imgData;
+            }
+        } catch (error) {
+            this.state.error = rpcError(error, "Không lọc được nhật ký đồng bộ ảnh.");
+        } finally {
+            this.state.imageFiltering = false;
+        }
+    }
+
+    openImageRecord(row) {
+        if (!row?.id) {
+            return;
+        }
+        return this.action.doAction({
+            type: "ir.actions.act_window",
+            name: "Xem trước & Đối chiếu ảnh hồ sơ ENTI",
+            res_model: "tp.hr.attendance.enti.employee.image",
+            res_id: row.id,
+            views: [[false, "form"]],
+            target: "new",
+        });
+    }
+
+    async applyRowImage(row) {
+        if (!row?.id || row.mapping_state !== "mapped" || !row.has_enti_image) {
+            return;
+        }
+        try {
+            await this.orm.call("tp.hr.attendance.enti.employee.image", "action_apply_to_employee", [[row.id]]);
+            this.state.notice = `Đã cập nhật ảnh hồ sơ cho nhân viên ${row.employee_name || row.ten_nv}.`;
+            await this.load({ silent: true });
+        } catch (error) {
+            this.state.error = rpcError(error, "Không thể cập nhật ảnh hồ sơ.");
+        }
     }
 
     async exportSheet() {

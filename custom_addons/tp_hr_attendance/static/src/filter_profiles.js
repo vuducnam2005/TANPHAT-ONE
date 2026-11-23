@@ -101,3 +101,14 @@ registerTableFilterProfile("tp.hr.attendance.log::logs", {
         { key: "create_date", field: "create_date", label: "Thời điểm", type: "datetime" },
     ],
 });
+
+registerTableFilterProfile("tp.hr.attendance.enti.employee.image", {
+    criteria: [
+        { key: "ten_nv", field: "ten_nv", label: "Họ tên ENTI", type: "char", placeholder: "Họ tên ENTI…" },
+        { key: "ma_nv", field: "ma_nv", label: "Mã ENTI", type: "char", placeholder: "Mã ENTI…" },
+        { key: "employee_id", field: "employee_id", label: "Nhân viên Odoo", type: "many2one", allowEmpty: true },
+        { key: "department_id", field: "department_id", label: "Phòng ban", type: "many2one", allowEmpty: true },
+        { key: "state", field: "state", label: "Trạng thái ảnh", type: "selection", multi: true },
+        { key: "mapping_state", field: "mapping_state", label: "Trạng thái đối chiếu", type: "selection", multi: true },
+    ],
+});

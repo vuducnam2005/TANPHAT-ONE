@@ -8,6 +8,7 @@ import logging
 import threading
 import time
 from datetime import datetime, timedelta
+from urllib.parse import urljoin, urlparse
 
 import requests
 
@@ -18,6 +19,36 @@ DEFAULT_TIMEOUT = 30
 MAX_PAGES = 50
 DEFAULT_COMPANY_KEYWORD = "Tấn Phát"
 RETRY_STATUS = (429, 500, 502, 503, 504)
+DEFAULT_MAX_IMAGE_BYTES = 5 * 1024 * 1024
+IMAGE_FIELD_CANDIDATES = (
+    "anh",
+    "avatar",
+    "avatarUrl",
+    "image",
+    "imageUrl",
+    "photo",
+    "photoUrl",
+    "hinhAnh",
+)
+
+
+def extract_employee_image_field(record):
+    """Return ``(field_name, raw_value)`` from an ENTI employee dict.
+
+    Real ENTI payloads use ``anh`` (observed on ``/api/nhan-vien/get-info`` and ``/api/nhan-vien/search``).
+    Also checks documented alias candidates when ``anh`` is absent.
+    """
+    if not isinstance(record, dict):
+        return "", ""
+    first_present = ""
+    for key in IMAGE_FIELD_CANDIDATES:
+        if key in record:
+            if not first_present:
+                first_present = key
+            val = record.get(key)
+            if isinstance(val, str) and val.strip():
+                return key, val.strip()
+    return first_present, ""
 # One authenticated client per (database, source, account): the cron and the "sync now" button reuse the
 # token and session cookies instead of logging in every minute (ENTI-ATTENDANCE-002). Process memory only:
 # tokens never reach the database, logs or the browser.
@@ -258,6 +289,45 @@ class EntiClient:
         res = self._request("POST", "/api/bo-phan/search", json_data=payload)
         return res.get("data") or []
 
+    def _paginate_post(self, path, max_results_per_page=100):
+        """Fetch all pages of a POST list endpoint (``/api/nhan-vien/get-info`` or ``/api/nhan-vien/search``)."""
+        rows = []
+        seen_keys = set()
+        search_pos = 0
+        total_data = None
+        for _page in range(MAX_PAGES):
+            payload = {
+                "data": [],
+                "searchResultPosition": search_pos,
+                "maxTotalResult": max_results_per_page,
+            }
+            res = self._request("POST", path, json_data=payload)
+            if not isinstance(res, dict):
+                break
+            page_data = res.get("data") or []
+            if res.get("totalData") is not None:
+                total_data = int(res.get("totalData") or 0)
+            num_of_data = int(res.get("numOfData") or len(page_data))
+            more_data = bool(res.get("moreData"))
+            for item in page_data:
+                if not isinstance(item, dict):
+                    continue
+                key = (item.get("keyNV") or "").strip()
+                if key:
+                    if key in seen_keys:
+                        continue
+                    seen_keys.add(key)
+                rows.append(item)
+            if not page_data or num_of_data <= 0:
+                break
+            search_pos += num_of_data
+            if total_data is not None:
+                if search_pos >= total_data:
+                    break
+            elif not more_data:
+                break
+        return rows
+
     def get_employees(self, max_results=300):
         """Fetch employees info list from ENTI."""
         payload = {
@@ -267,6 +337,144 @@ class EntiClient:
         }
         res = self._request("POST", "/api/nhan-vien/get-info", json_data=payload)
         return res.get("data") or []
+
+    def get_employee_profiles(self, max_results_per_page=100):
+        """Fetch employee directory with image field ``anh`` populated.
+
+        Calls ``POST /api/nhan-vien/get-info`` first; if ``get-info`` returns empty ``anh`` values (as observed on
+        live ENTI where ``get-info`` sets ``anh=''`` while ``POST /api/nhan-vien/search`` returns the actual
+        ``data:image/jpeg;base64,...`` in ``anh``), queries ``POST /api/nhan-vien/search`` and merges by ``keyNV``.
+        """
+        info_rows = self._paginate_post("/api/nhan-vien/get-info", max_results_per_page=max_results_per_page)
+        by_key = {}
+        has_any_image = False
+        for item in info_rows:
+            key = (item.get("keyNV") or "").strip()
+            if not key:
+                continue
+            by_key[key] = dict(item)
+            if extract_employee_image_field(item)[1]:
+                has_any_image = True
+
+        if not has_any_image:
+            try:
+                search_rows = self._paginate_post("/api/nhan-vien/search", max_results_per_page=max_results_per_page)
+            except EntiError as exc:
+                if by_key:
+                    _logger.info("ENTI /api/nhan-vien/search fallback unavailable (%s); using get-info only", exc)
+                    search_rows = []
+                else:
+                    raise
+            for item in search_rows:
+                key = (item.get("keyNV") or "").strip()
+                if not key:
+                    continue
+                target = by_key.setdefault(key, {})
+                for field_key, value in item.items():
+                    if value not in (None, "") or field_key not in target:
+                        target[field_key] = value
+        return list(by_key.values())
+
+    def _allowed_image_hosts(self, extra_hosts=None):
+        hosts = {"enti.vn"}
+        base_host = (urlparse(self.base_url).hostname or "").lower()
+        if base_host:
+            hosts.add(base_host)
+        for host in extra_hosts or ():
+            cleaned = str(host or "").strip().lower()
+            if cleaned:
+                hosts.add(cleaned)
+        return hosts
+
+    def validate_image_url(self, image_url, allowed_hosts=None):
+        """Validate and normalize an ENTI image URL (HTTP/HTTPS only, host inside configured ENTI hosts)."""
+        raw = str(image_url or "").strip()
+        if not raw:
+            raise EntiError("URL ảnh trống.")
+        if raw.startswith("/"):
+            raw = urljoin(f"{self.base_url}/", raw.lstrip("/"))
+        parsed = urlparse(raw)
+        if parsed.scheme not in ("http", "https"):
+            raise EntiError(f"Giao thức URL ảnh không hợp lệ ({parsed.scheme or 'trống'}); chỉ chấp nhận HTTP/HTTPS.")
+        host = (parsed.hostname or "").lower()
+        if not host:
+            raise EntiError("URL ảnh thiếu tên miền (host).")
+        allowed = self._allowed_image_hosts(allowed_hosts)
+        host_ok = any(host == candidate or host.endswith(f".{candidate}") for candidate in allowed)
+        if not host_ok:
+            raise EntiError(f"Tên miền ảnh '{host}' không nằm trong danh sách máy chủ ENTI được phép.")
+        return raw
+
+    def download_image(self, image_url, max_bytes=DEFAULT_MAX_IMAGE_BYTES, allowed_hosts=None, retry_count=2):
+        """Download binary image from an allowed ENTI URL with bounded retry, Content-Type and size checks."""
+        url = self.validate_image_url(image_url, allowed_hosts=allowed_hosts)
+        max_bytes = max(1024, int(max_bytes or DEFAULT_MAX_IMAGE_BYTES))
+        headers = {"Accept": "image/*,*/*;q=0.8"}
+        if self.access_token:
+            headers["Authorization"] = f"Bearer {self.access_token}"
+
+        for attempt in range(retry_count + 1):
+            try:
+                resp = self.session.request(
+                    method="GET",
+                    url=url,
+                    headers=headers,
+                    timeout=self.timeout,
+                    stream=True,
+                )
+            except requests.RequestException as exc:
+                if attempt < retry_count:
+                    time.sleep(1 * (attempt + 1))
+                    continue
+                raise EntiError(f"Lỗi mạng hoặc hết thời gian chờ khi tải ảnh ENTI: {exc}") from exc
+
+            try:
+                if resp.status_code == 401 and attempt == 0 and (self._phone or self.refresh_token):
+                    resp.close()
+                    if self._renew_token():
+                        if self.access_token:
+                            headers["Authorization"] = f"Bearer {self.access_token}"
+                        continue
+                    raise EntiAuthError("Phiên ENTI hết hạn khi tải ảnh.", status_code=401)
+
+                if resp.status_code in RETRY_STATUS and attempt < retry_count:
+                    retry_after = resp.headers.get("Retry-After")
+                    sleep_sec = int(retry_after) if retry_after and retry_after.isdigit() else (2 * (attempt + 1))
+                    resp.close()
+                    time.sleep(min(sleep_sec, 10))
+                    continue
+
+                if resp.status_code >= 400:
+                    raise EntiError(f"Máy chủ ENTI trả lỗi HTTP {resp.status_code} khi tải ảnh.", status_code=resp.status_code)
+
+                content_type = (resp.headers.get("Content-Type") or "").split(";", 1)[0].strip().lower()
+                if not content_type.startswith("image/"):
+                    raise EntiError(
+                        f"Content-Type phản hồi không hợp lệ ({content_type or 'trống'}); yêu cầu image/*.",
+                    )
+
+                content_len = resp.headers.get("Content-Length")
+                if content_len and content_len.strip().isdigit() and int(content_len.strip()) > max_bytes:
+                    raise EntiError(
+                        f"Dung lượng ảnh ({content_len.strip()} bytes) vượt quá giới hạn tối đa ({max_bytes} bytes).",
+                    )
+
+                chunks = []
+                total = 0
+                for chunk in resp.iter_content(chunk_size=65536):
+                    if not chunk:
+                        continue
+                    total += len(chunk)
+                    if total > max_bytes:
+                        raise EntiError(
+                            f"Dung lượng ảnh vượt quá giới hạn tối đa ({max_bytes} bytes).",
+                        )
+                    chunks.append(chunk)
+                return b"".join(chunks), content_type
+            finally:
+                resp.close()
+
+        raise EntiError("Đã hết số lần thử tải ảnh từ máy chủ ENTI.")
 
     def get_attendance(self, start_date, end_date, max_results_per_page=50):
         """Fetch attendance report for the date range with full pagination handling.

@@ -22,8 +22,26 @@ from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
 
 from .attendance_common import DEFAULT_TZ, internal, local_today
-from .enti_client import EntiAuthError, EntiError, cached_client, drop_cached_client
+from .enti_client import (
+    DEFAULT_MAX_IMAGE_BYTES,
+    EntiAuthError,
+    EntiError,
+    cached_client,
+    drop_cached_client,
+    extract_employee_image_field,
+)
 from .enti_day import _parse_time_str
+from .enti_image import (
+    PARAM_ALLOWED_IMAGE_HOSTS,
+    PARAM_MAX_IMAGE_BYTES,
+    PARAM_PREFER_MANUAL_IMAGE,
+    _raw_image_bytes,
+    check_enti_image_access,
+    parse_image_value,
+    sanitize_employee_metadata,
+    validate_and_normalize_image,
+)
+from odoo.addons.tp_hr_workspace.models.identity import image_kind
 
 _logger = logging.getLogger(__name__)
 
@@ -39,6 +57,9 @@ MAX_FAST_WINDOW = 100
 FAST_HOURS = (5, 22)            # local hours [from, to) polled every few seconds; otherwise once per cron minute
 RECENT_DAYS = 5                 # the recent window re-read for late corrections and yesterday's out time
 FULL_EVERY = 300                # seconds between two reads of the recent window
+IMAGE_SYNC_EVERY = 1800         # seconds between automatic profile image sync passes inside the non-today cron window
+CRON_IMAGE_BUDGET_SECONDS = 15.0
+MANUAL_IMAGE_BUDGET_SECONDS = 60.0
 HEARTBEAT_EVERY = 1800          # an unchanged successful window read is logged at most every 30 minutes
 ERROR_LOG_EVERY = 900           # the same error is logged again at most every 15 minutes
 LATENCY_HORIZON = 6 * 3600      # older punches are backfill, not live latency
@@ -218,8 +239,14 @@ class AttendanceSourceEnti(models.Model):
     def _tp_pace(self):
         return _PACE.setdefault((self.env.cr.dbname, self.id), {
             "poll": None, "window": None, "heartbeat": None, "error_log": None, "polls": 0, "fails": 0,
-            "healthy": None,
+            "healthy": None, "image_sync": None,
         })
+
+    def _tp_image_sync_due(self):
+        pace = self._tp_pace()
+        if pace.get("image_sync") is None:
+            return True
+        return (time.monotonic() - pace["image_sync"]) >= IMAGE_SYNC_EVERY
 
     def _tp_enti_entry(self):
         """Cached client entry for this source; a credential change starts a fresh client (fresh login)."""
@@ -256,18 +283,8 @@ class AttendanceSourceEnti(models.Model):
         return client
 
     # ------------------------------------------------------------------ public entry points
-    def action_sync_enti_now(self, start_date=None, end_date=None):
-        """Action for Admin / HR to trigger an immediate sync. Returns the result (``success`` False on error)."""
-        self.ensure_one()
-        if not self.env.user.has_group("hr.group_hr_manager") and not self.env.su:
-            raise AccessError(self.env._("Chỉ Quản lý nhân sự hoặc Admin mới được kích hoạt đồng bộ."))
-        return self._tp_execute_sync(start_date=start_date, end_date=end_date)
-
     @api.model
-    def action_sync_enti_quick(self):
-        """Quick sync action invoked from UI button without needing recordset ID."""
-        if not self.env.user.has_group("hr.group_hr_manager") and not self.env.su:
-            raise AccessError(self.env._("Chỉ Quản lý nhân sự hoặc Admin mới được kích hoạt đồng bộ."))
+    def _tp_ensure_enti_source(self):
         company = self.env.company
         source = self.search([("kind", "=", "enti_api"), ("company_id", "=", company.id)], limit=1)
         if not source:
@@ -284,7 +301,54 @@ class AttendanceSourceEnti(models.Model):
                 })
             else:
                 raise UserError(self.env._("Chưa cấu hình tài khoản ENTI. Vui lòng vào Cấu hình kết nối ENTI trước."))
+        return source
+
+    def action_sync_enti_now(self, start_date=None, end_date=None):
+        """Action for Admin / HR to trigger an immediate sync. Returns the result (``success`` False on error)."""
+        self.ensure_one()
+        check_enti_image_access(self.env, self.company_id)
+        return self._tp_execute_sync(start_date=start_date, end_date=end_date)
+
+    @api.model
+    def action_sync_enti_quick(self):
+        """Quick sync action invoked from UI button without needing recordset ID."""
+        check_enti_image_access(self.env, self.env.company)
+        source = self._tp_ensure_enti_source()
         return source.action_sync_enti_now()
+
+    def action_sync_enti_images_now(self, *, only_failed=False, budget_seconds=MANUAL_IMAGE_BUDGET_SECONDS):
+        """Action for Admin / HR Manager to synchronize employee profile photos from ENTI."""
+        self.ensure_one()
+        check_enti_image_access(self.env, self.company_id)
+        return self._tp_run_enti_image_sync(
+            only_failed=bool(only_failed),
+            budget_seconds=budget_seconds,
+            origin="manual",
+            wait=True,
+        )
+
+    @api.model
+    def action_sync_enti_images_quick(self):
+        """Quick button action: synchronize all mapped employee profile photos from ENTI."""
+        check_enti_image_access(self.env, self.env.company)
+        source = self._tp_ensure_enti_source()
+        return source.action_sync_enti_images_now(only_failed=False)
+
+    @api.model
+    def action_retry_failed_enti_images_quick(self):
+        """Quick button action: retry failed employee profile photos from ENTI."""
+        check_enti_image_access(self.env, self.env.company)
+        source = self._tp_ensure_enti_source()
+        return source.action_sync_enti_images_now(only_failed=True)
+
+    @api.model
+    def action_toggle_prefer_manual_image(self, enabled=None):
+        """Toggle or set 'Ưu tiên ảnh thủ công' on the company ENTI source."""
+        check_enti_image_access(self.env, self.env.company)
+        source = self._tp_ensure_enti_source()
+        new_val = (not source.prefer_manual_image) if enabled is None else bool(enabled)
+        internal(source).write({"prefer_manual_image": new_val})
+        return {"prefer_manual_image": new_val}
 
     def _tp_execute_sync(self, start_date=None, end_date=None):
         """Manual full sync of [start_date, end_date] (default: this month up to today)."""
@@ -394,6 +458,20 @@ class AttendanceSourceEnti(models.Model):
             with self.env.cr.savepoint():
                 client = self._tp_enti_ready(entry, phone, password, app_key)
                 stats = self._tp_enti_apply(client, start_date, end_date, with_directory=scope != "today")
+            result = self._tp_enti_succeeded(stats, start_date, end_date, scope, origin, started, now)
+            # Step 2 (time-bounded, isolated from attendance transaction so image errors never rollback attendance)
+            if scope != "today" and self._tp_image_sync_due() and hasattr(client, "get_employee_profiles"):
+                try:
+                    budget = CRON_IMAGE_BUDGET_SECONDS if origin == "cron" else MANUAL_IMAGE_BUDGET_SECONDS
+                    img_res = self._tp_sync_enti_images(
+                        client=client,
+                        only_failed=False,
+                        budget_seconds=budget,
+                        origin=origin,
+                    )
+                    result["image_sync"] = img_res
+                except Exception as img_exc:  # noqa: BLE001 - image step must never undo attendance
+                    _logger.warning("ENTI image sync step failed for source %s: %s", self.id, img_exc)
         except Exception as exc:  # noqa: BLE001 - every failure keeps stored data and is reported
             if isinstance(exc, EntiAuthError):
                 drop_cached_client((self.env.cr.dbname, self.id))
@@ -403,7 +481,7 @@ class AttendanceSourceEnti(models.Model):
             return self._tp_enti_failed(exc, start_date, end_date, scope, origin, started, now)
         finally:
             entry["lock"].release()
-        return self._tp_enti_succeeded(stats, start_date, end_date, scope, origin, started, now)
+        return result
 
     def _tp_enti_day_values(self, work_date, day_obj, tz):
         in_clock, in_utc = _parse_time_str(day_obj.get("vaoDau"), work_date, tz)
@@ -662,3 +740,528 @@ class AttendanceSourceEnti(models.Model):
             self.env["bus.bus"].sudo()._sendone(group, BUS_TYPE, payload)
         except Exception as exc:  # noqa: BLE001 - a bus hiccup must not undo stored attendance
             _logger.warning("Could not broadcast attendance update: %s", exc)
+
+    # ------------------------------------------------------------------ employee image synchronization (Step 2)
+    def _tp_run_enti_image_sync(self, *, only_failed=False, budget_seconds=MANUAL_IMAGE_BUDGET_SECONDS, origin="manual", wait=True):
+        """Standalone entry point for syncing ENTI employee profile images."""
+        self.ensure_one()
+        now = fields.Datetime.now()
+        if wait:
+            self._lock_enti_sync()
+        elif not self._tp_try_lock_enti():
+            return {"success": False, "skipped": True, "message": "Đang có lượt đồng bộ ENTI khác chạy."}
+
+        try:
+            entry, phone, password, app_key = self._tp_enti_entry()
+        except EntiNotConfigured as exc:
+            msg = _error_text(exc)
+            internal(self).write({
+                "last_image_sync_at": now,
+                "last_image_sync_state": "error",
+                "last_image_sync_message": msg[:240],
+            })
+            return {"success": False, "message": msg}
+
+        if not entry["lock"].acquire(timeout=90):
+            return {"success": False, "skipped": True, "message": "Phiên ENTI đang bận; thử lại lượt sau."}
+        try:
+            client = self._tp_enti_ready(entry, phone, password, app_key)
+            return self._tp_sync_enti_images(
+                client=client,
+                only_failed=only_failed,
+                budget_seconds=budget_seconds,
+                origin=origin,
+            )
+        except Exception as exc:  # noqa: BLE001
+            if isinstance(exc, EntiAuthError):
+                drop_cached_client((self.env.cr.dbname, self.id))
+            msg = _error_text(exc)
+            internal(self).write({
+                "last_image_sync_at": now,
+                "last_image_sync_state": "error",
+                "last_image_sync_message": msg[:240],
+            })
+            return {"success": False, "message": msg}
+        finally:
+            entry["lock"].release()
+
+    def _tp_sync_enti_images(
+        self,
+        client=None,
+        profiles=None,
+        *,
+        only_failed=False,
+        budget_seconds=MANUAL_IMAGE_BUDGET_SECONDS,
+        origin="manual",
+    ):
+        """Synchronize employee profile images from ENTI within ``budget_seconds``.
+
+        Each employee is processed in an isolated database savepoint so an error on one image never rolls back
+        other images or any attendance data.
+        """
+        self.ensure_one()
+        started = time.monotonic()
+        deadline = started + max(1.0, float(budget_seconds or MANUAL_IMAGE_BUDGET_SECONDS))
+        now = fields.Datetime.now()
+        pace = self._tp_pace()
+
+        if profiles is None:
+            try:
+                if hasattr(client, "get_employee_profiles"):
+                    profiles = client.get_employee_profiles()
+                elif hasattr(client, "get_employees"):
+                    profiles = client.get_employees()
+                else:
+                    profiles = []
+            except Exception as exc:  # noqa: BLE001
+                msg = _error_text(exc)
+                internal(self).write({
+                    "last_image_sync_at": now,
+                    "last_image_sync_state": "error",
+                    "last_image_sync_message": msg[:240],
+                })
+                return {
+                    "success": False,
+                    "total": 0,
+                    "downloaded": 0,
+                    "unchanged": 0,
+                    "no_image": 0,
+                    "failed": 0,
+                    "unmapped": 0,
+                    "message": msg,
+                }
+
+        if not profiles:
+            msg = "ENTI không trả danh sách hồ sơ nhân viên; giữ nguyên ảnh hiện có."
+            internal(self).write({
+                "last_image_sync_at": now,
+                "last_image_sync_state": "error",
+                "last_image_sync_message": msg,
+            })
+            return {
+                "success": False,
+                "total": 0,
+                "downloaded": 0,
+                "unchanged": 0,
+                "no_image": 0,
+                "failed": 0,
+                "unmapped": 0,
+                "message": msg,
+            }
+
+        Param = self.env["ir.config_parameter"].sudo()
+        max_bytes = _number(Param.get_int(PARAM_MAX_IMAGE_BYTES, DEFAULT_MAX_IMAGE_BYTES), int) or DEFAULT_MAX_IMAGE_BYTES
+        prefer_manual = bool(
+            self.prefer_manual_image
+            or (Param.get_str(PARAM_PREFER_MANUAL_IMAGE) or "").strip().lower() in ("1", "true", "yes")
+        )
+        extra_hosts_raw = Param.get_str(PARAM_ALLOWED_IMAGE_HOSTS) or ""
+        allowed_hosts = [h.strip() for h in extra_hosts_raw.split(",") if h.strip()] or None
+
+        Mapping = self.env["tp.hr.attendance.enti.mapping"].sudo()
+        ImageModel = self.env["tp.hr.attendance.enti.employee.image"].sudo()
+        name_index = None
+
+        def _get_name_index():
+            nonlocal name_index
+            if name_index is None:
+                name_index = Mapping._tp_name_index(self.company_id)
+            return name_index
+
+        mappings = {m.key_nv: m for m in Mapping.search([("source_id", "=", self.id)])}
+        existing_images = {img.key_nv: img for img in ImageModel.search([("source_id", "=", self.id)])}
+
+        # Pre-seed claimed_employees from existing mapped records to guarantee 1 keyNV <-> 1 hr.employee
+        claimed_employees = {}
+        duplicate_employees = set()
+        for key, m in mappings.items():
+            if m.state == "mapped" and m.employee_id:
+                if m.employee_id.id in claimed_employees and claimed_employees[m.employee_id.id] != key:
+                    duplicate_employees.add(m.employee_id.id)
+                else:
+                    claimed_employees[m.employee_id.id] = key
+
+        counts = {
+            "total": len(profiles),
+            "processed": 0,
+            "downloaded": 0,
+            "unchanged": 0,
+            "no_image": 0,
+            "failed": 0,
+            "unmapped": 0,
+            "budget_reached": False,
+        }
+
+        for info in profiles:
+            if time.monotonic() > deadline and counts["processed"] > 0:
+                counts["budget_reached"] = True
+                break
+            if not isinstance(info, dict):
+                continue
+            key_nv = (info.get("keyNV") or "").strip()
+            if not key_nv:
+                continue
+
+            existing_img = existing_images.get(key_nv)
+            if only_failed and (not existing_img or existing_img.state != "failed"):
+                continue
+
+            counts["processed"] += 1
+            try:
+                with self.env.cr.savepoint():
+                    outcome, img_rec = self._tp_sync_one_employee_image(
+                        client=client,
+                        info=info,
+                        mapping=mappings.get(key_nv),
+                        existing_img=existing_img,
+                        get_name_index=_get_name_index,
+                        max_bytes=max_bytes,
+                        prefer_manual=prefer_manual,
+                        allowed_hosts=allowed_hosts,
+                        only_failed=only_failed,
+                        now=now,
+                        claimed_employees=claimed_employees,
+                        duplicate_employees=duplicate_employees,
+                    )
+                    if img_rec:
+                        existing_images[key_nv] = img_rec
+                        if img_rec.mapping_id:
+                            mappings[key_nv] = img_rec.mapping_id
+                    if outcome in counts:
+                        counts[outcome] += 1
+            except Exception as exc:  # noqa: BLE001 - safeguard if savepoint block itself fails
+                counts["failed"] += 1
+                _logger.warning("Image sync failed for key_nv=%s: %s", key_nv, exc)
+
+        pace["image_sync"] = time.monotonic()
+        duration = round(time.monotonic() - started, 2)
+
+        total_failed = ImageModel.search_count([("source_id", "=", self.id), ("state", "=", "failed")])
+        total_synced = ImageModel.search_count([
+            ("source_id", "=", self.id),
+            ("mapping_state", "=", "mapped"),
+            ("state", "in", ("downloaded", "unchanged")),
+        ])
+        total_no_image = ImageModel.search_count([("source_id", "=", self.id), ("state", "=", "no_image")])
+        total_unmapped = Mapping.search_count([("source_id", "=", self.id), ("state", "!=", "mapped")])
+
+        sync_state = "partial" if total_failed > 0 else "success"
+        summary = (
+            f"Đồng bộ ảnh hoàn tất ({duration:.2f}s): "
+            f"{total_synced} đã đồng bộ ({counts['downloaded']} cập nhật mới, {counts['unchanged']} không đổi), "
+            f"{total_no_image} chưa có ảnh, {total_failed} lỗi, {total_unmapped} chưa đối chiếu."
+        )
+        internal(self).write({
+            "last_image_sync_at": now,
+            "last_image_sync_state": sync_state,
+            "last_image_sync_message": summary[:240],
+        })
+        return {
+            "success": True,
+            "state": sync_state,
+            "total": counts["total"],
+            "processed": counts["processed"],
+            "downloaded": counts["downloaded"],
+            "unchanged": counts["unchanged"],
+            "no_image": counts["no_image"],
+            "failed": counts["failed"],
+            "unmapped": counts["unmapped"],
+            "total_synced": total_synced,
+            "total_no_image": total_no_image,
+            "total_failed": total_failed,
+            "total_unmapped": total_unmapped,
+            "duration": duration,
+            "message": summary,
+        }
+
+    def _tp_sync_one_employee_image(
+        self,
+        *,
+        client,
+        info,
+        mapping,
+        existing_img,
+        get_name_index,
+        max_bytes,
+        prefer_manual,
+        allowed_hosts,
+        only_failed,
+        now,
+        claimed_employees,
+        duplicate_employees,
+    ):
+        """Process one ENTI employee profile photo. Returns ``(outcome_key, image_record)``."""
+        Mapping = self.env["tp.hr.attendance.enti.mapping"].sudo()
+        ImageModel = self.env["tp.hr.attendance.enti.employee.image"].sudo()
+
+        key_nv = (info.get("keyNV") or "").strip()
+        ma_nv = (info.get("maNV") or "").strip()
+        ten_nv = (info.get("tenNV") or info.get("hoVaTen") or "").strip()
+        ten_bp = (info.get("tenBP") or info.get("tenBoPhan") or "").strip()
+
+        if not mapping or mapping.state != "mapped" or not mapping.employee_id:
+            mapping = Mapping.tp_suggest_mapping(self, info, index=get_name_index(), existing=mapping)
+        else:
+            meta_updates = {}
+            if ma_nv and ma_nv != (mapping.ma_nv or ""):
+                meta_updates["ma_nv"] = ma_nv
+            if ten_nv and ten_nv != (mapping.ten_nv or ""):
+                meta_updates["ten_nv"] = ten_nv
+            if ten_bp and ten_bp != (mapping.ten_bp or ""):
+                meta_updates["ten_bp"] = ten_bp
+            if meta_updates:
+                mapping.sudo().write(meta_updates)
+
+        mapping_state = mapping.state if mapping else "unmapped"
+        is_mapped = bool(mapping and mapping.state == "mapped" and mapping.employee_id)
+        employee = mapping.employee_id if is_mapped else self.env["hr.employee"]
+
+        field_name, raw_image_val = extract_employee_image_field(info)
+
+        def _upsert_image_record(vals):
+            base_vals = {
+                "mapping_id": mapping.id if mapping else False,
+                "ma_nv": ma_nv or (mapping.ma_nv if mapping else ""),
+                "ten_nv": ten_nv or (mapping.ten_nv if mapping else ""),
+                "ten_bp": ten_bp or (mapping.ten_bp if mapping else ""),
+                "mapping_state": mapping_state,
+                "last_seen_at": now,
+            }
+            base_vals.update(vals)
+            if existing_img:
+                internal(existing_img).write(base_vals)
+                return existing_img
+            base_vals.update({
+                "source_id": self.id,
+                "key_nv": key_nv,
+            })
+            return internal(ImageModel).create(base_vals)
+
+        # Enforce strict 1 keyNV <-> 1 hr.employee before touching any employee record
+        if is_mapped:
+            other_key = claimed_employees.get(employee.id)
+            other_img = ImageModel.search([
+                ("source_id", "=", self.id),
+                ("employee_id", "=", employee.id),
+                ("key_nv", "!=", key_nv),
+            ], limit=1)
+            if employee.id in duplicate_employees or (other_key and other_key != key_nv) or other_img:
+                conflict_code = (other_img.ma_nv or other_img.key_nv) if other_img else other_key
+                err = (
+                    f"Xung đột đối chiếu: nhân viên {employee.name} đã gắn với khóa ENTI khác ({conflict_code}); "
+                    "không cập nhật ảnh để tránh gắn nhầm."
+                )
+                rec = _upsert_image_record({
+                    "employee_id": False,
+                    "state": "failed",
+                    "error_message": err,
+                    "raw_metadata_json": sanitize_employee_metadata(info, image_field=field_name),
+                })
+                return "failed", rec
+            claimed_employees[employee.id] = key_nv
+
+        try:
+            source_kind, ref_label, inline_payload = parse_image_value(raw_image_val, max_bytes=max_bytes)
+        except EntiError as exc:
+            rec = _upsert_image_record({
+                "employee_id": employee.id if is_mapped else False,
+                "image_field": field_name,
+                "state": "failed",
+                "error_message": str(exc)[:500],
+                "raw_metadata_json": sanitize_employee_metadata(info, image_field=field_name),
+            })
+            return "failed", rec
+
+        # Case 1: ENTI returned no image for this employee
+        if source_kind == "none":
+            safe_meta = sanitize_employee_metadata(info, image_field=field_name, image_source="none")
+            if existing_img and existing_img.image_hash and existing_img.state in ("downloaded", "unchanged"):
+                # Keep previously downloaded image when ENTI temporarily returns empty
+                rec = _upsert_image_record({
+                    "employee_id": employee.id if is_mapped else False,
+                    "state": "unchanged" if is_mapped else "pending",
+                    "error_message": "ENTI không trả ảnh trong lượt này; giữ nguyên ảnh đã đồng bộ trước đó.",
+                    "raw_metadata_json": safe_meta,
+                })
+                return ("unchanged" if is_mapped else "unmapped"), rec
+
+            rec = _upsert_image_record({
+                "employee_id": employee.id if is_mapped else False,
+                "image_field": field_name,
+                "image_source": "none",
+                "image_url": False,
+                "state": "no_image" if is_mapped else "pending",
+                "error_message": (
+                    "Nhân viên chưa có ảnh hồ sơ trên ENTI."
+                    if is_mapped
+                    else "Nhân viên chưa đối chiếu và chưa có ảnh trên ENTI."
+                ),
+                "raw_metadata_json": safe_meta,
+            })
+            return ("no_image" if is_mapped else "unmapped"), rec
+
+        # Case 2: Obtain raw bytes from Base64 or Server-side URL download
+        try:
+            if source_kind == "url":
+                if not client or not hasattr(client, "download_image"):
+                    raise EntiError("Client ENTI chưa hỗ trợ tải ảnh từ URL.")
+                raw_bytes, declared_mime = client.download_image(
+                    ref_label,
+                    max_bytes=max_bytes,
+                    allowed_hosts=allowed_hosts,
+                )
+            else:
+                raw_bytes, declared_mime = inline_payload
+        except Exception as exc:  # noqa: BLE001
+            err_msg = str(exc) if isinstance(exc, EntiError) else f"Lỗi tải ảnh từ ENTI ({type(exc).__name__})."
+            rec = _upsert_image_record({
+                "employee_id": employee.id if is_mapped else False,
+                "image_field": field_name,
+                "image_source": source_kind,
+                "image_url": ref_label if source_kind == "url" else False,
+                "state": "failed",
+                "error_message": err_msg[:500],
+                "raw_metadata_json": sanitize_employee_metadata(
+                    info,
+                    image_field=field_name,
+                    image_source=source_kind,
+                ),
+            })
+            return "failed", rec
+
+        # Fast-path unchanged check on raw source SHA-256 before running Pillow
+        fast_hash = hashlib.sha256(raw_bytes).hexdigest()
+        if (
+            not only_failed
+            and existing_img
+            and existing_img.image_hash == fast_hash
+            and existing_img.with_context(bin_size=True).enti_image_1920
+        ):
+            safe_meta = sanitize_employee_metadata(
+                info,
+                image_field=field_name,
+                image_source=source_kind,
+                image_hash=fast_hash,
+                image_mime=existing_img.image_mime or declared_mime or "",
+                image_size=len(raw_bytes),
+            )
+            if not is_mapped:
+                rec = _upsert_image_record({
+                    "employee_id": False,
+                    "state": "pending",
+                    "error_message": "Chờ đối chiếu nhân viên Odoo trước khi cập nhật ảnh hồ sơ.",
+                    "raw_metadata_json": safe_meta,
+                })
+                return "unmapped", rec
+
+            emp_sudo = employee.sudo().with_context(bin_size=False)
+            emp_raw = _raw_image_bytes(emp_sudo.image_1920)
+            emp_hash = hashlib.sha256(emp_raw).hexdigest() if emp_raw else ""
+            if emp_hash and (
+                emp_hash == (existing_img.applied_odoo_hash or "")
+                or (prefer_manual and image_kind(emp_sudo) == "photo")
+            ):
+                rec = _upsert_image_record({
+                    "employee_id": employee.id,
+                    "state": "unchanged",
+                    "error_message": False,
+                    "raw_metadata_json": safe_meta,
+                })
+                return "unchanged", rec
+
+        # Validate Content-Type, size limit, magic bytes, and normalize with Pillow
+        try:
+            norm = validate_and_normalize_image(
+                raw_bytes,
+                declared_mime=declared_mime,
+                max_bytes=max_bytes,
+            )
+        except EntiError as exc:
+            rec = _upsert_image_record({
+                "employee_id": employee.id if is_mapped else False,
+                "image_field": field_name,
+                "image_source": source_kind,
+                "image_url": ref_label if source_kind == "url" else False,
+                "state": "failed",
+                "error_message": str(exc)[:500],
+                "raw_metadata_json": sanitize_employee_metadata(
+                    info,
+                    image_field=field_name,
+                    image_source=source_kind,
+                    image_size=len(raw_bytes),
+                ),
+            })
+            return "failed", rec
+
+        safe_meta = sanitize_employee_metadata(
+            info,
+            image_field=field_name,
+            image_source=source_kind,
+            image_hash=norm["source_hash"],
+            image_mime=norm["mime"],
+            image_size=norm["size"],
+        )
+
+        # If employee is NOT mapped, store the normalized ENTI preview on the staging record only, never on hr.employee
+        if not is_mapped:
+            rec = _upsert_image_record({
+                "employee_id": False,
+                "image_field": field_name,
+                "image_source": source_kind,
+                "image_url": ref_label if source_kind == "url" else False,
+                "image_hash": norm["source_hash"],
+                "image_mime": norm["mime"],
+                "image_size": norm["size"],
+                "enti_image_1920": norm["normalized_b64"],
+                "state": "pending",
+                "error_message": "Chờ đối chiếu nhân viên Odoo trước khi cập nhật ảnh hồ sơ.",
+                "raw_metadata_json": safe_meta,
+            })
+            return "unmapped", rec
+
+        # Mapped employee: upsert staging record first, then apply to hr.employee + res.partner
+        rec = _upsert_image_record({
+            "employee_id": employee.id,
+            "image_field": field_name,
+            "image_source": source_kind,
+            "image_url": ref_label if source_kind == "url" else False,
+            "image_hash": norm["source_hash"],
+            "image_mime": norm["mime"],
+            "image_size": norm["size"],
+            "enti_image_1920": norm["normalized_b64"],
+            "raw_metadata_json": safe_meta,
+        })
+
+        try:
+            with self.env.cr.savepoint():
+                applied, new_state, note = rec._tp_apply_image_to_employee(
+                    employee,
+                    norm["normalized_b64"],
+                    norm["normalized_hash"],
+                    prefer_manual=prefer_manual,
+                )
+        except AccessError as exc:
+            # Protected admin account when triggered from a non-Original-Admin browser session
+            internal(rec).write({
+                "state": "unchanged",
+                "error_message": f"Giữ nguyên ảnh tài khoản quản trị được bảo vệ ({exc}).",
+            })
+            return "unchanged", rec
+        except Exception as exc:  # noqa: BLE001
+            internal(rec).write({
+                "state": "failed",
+                "error_message": f"Không thể ghi ảnh vào hồ sơ nhân viên: {exc}"[:500],
+            })
+            return "failed", rec
+
+        update_vals = {
+            "state": new_state,
+            "error_message": False if applied else note,
+        }
+        if applied:
+            update_vals["applied_odoo_hash"] = norm["normalized_hash"]
+            update_vals["downloaded_at"] = now
+        elif not rec.applied_odoo_hash and new_state == "unchanged":
+            update_vals["applied_odoo_hash"] = norm["normalized_hash"]
+        internal(rec).write(update_vals)
+        return new_state, rec

@@ -54,14 +54,21 @@
         <field name="model">tp.hr.attendance.enti.mapping</field>
         <field name="arch" type="xml">
             <list string="Đối chiếu nhân viên" js_class="tp_hr_table" default_order="state desc, ten_nv" editable="bottom" open_form_view="1" create="0" delete="0">
+                <field name="enti_image_128" string="Ảnh ENTI" widget="image" options="{'size': [40, 40]}" readonly="1"/>
                 <field name="ma_nv" string="Mã trên máy" readonly="1"/>
                 <field name="ten_nv" string="Họ tên trên máy" readonly="1"/>
                 <field name="ten_bp" string="Bộ phận trên máy" readonly="1" optional="hide"/>
+                <field name="odoo_image_128" string="Ảnh hiện tại Odoo" widget="image" options="{'size': [40, 40]}" readonly="1"/>
                 <field name="employee_id" string="Nhân viên trong hệ thống"/>
                 <field name="employee_code" string="Mã nhân viên" readonly="1" optional="hide"/>
                 <field name="employee_department" string="Phòng ban trong hệ thống" readonly="1" optional="hide"/>
                 <field name="state" widget="badge" decoration-success="state == 'mapped'" decoration-warning="state == 'suggested'" decoration-danger="state == 'unmapped'" readonly="1"/>
+                <field name="image_status_label" string="Đồng bộ ảnh" widget="badge" decoration-success="image_state in ('downloaded', 'unchanged') and state == 'mapped'" decoration-warning="image_state in ('pending', 'no_image') or state != 'mapped'" decoration-danger="image_state == 'failed'" readonly="1"/>
+                <field name="has_enti_image" column_invisible="1"/>
+                <field name="image_state" column_invisible="1"/>
                 <field name="match_reason" string="Căn cứ đối chiếu" readonly="1" optional="hide"/>
+                <button name="action_open_image_compare" type="object" string="Xem ảnh" class="btn btn-sm btn-outline-secondary"/>
+                <button name="action_apply_enti_image" type="object" string="Cập nhật ảnh" class="btn btn-sm btn-outline-primary" invisible="state != 'mapped' or not has_enti_image"/>
                 <button name="action_confirm_mapping" type="object" string="Xác nhận" class="btn btn-sm btn-primary" invisible="state == 'mapped'"/>
                 <button name="action_reject_mapping" type="object" string="Hủy khớp" class="btn btn-sm btn-outline-danger" invisible="state == 'unmapped'"/>
             </list>
@@ -75,10 +82,24 @@
             <form string="Đối chiếu nhân viên">
                 <header>
                     <button name="action_confirm_mapping" type="object" string="Xác nhận đối chiếu" class="btn btn-primary" invisible="state == 'mapped'"/>
+                    <button name="action_apply_enti_image" type="object" string="Cập nhật ảnh ENTI sang Odoo" class="btn btn-outline-primary" invisible="state != 'mapped' or not has_enti_image"/>
                     <button name="action_reject_mapping" type="object" string="Hủy ghép nối" class="btn btn-outline-danger" invisible="state == 'unmapped'"/>
                     <field name="state" widget="statusbar" statusbar_visible="unmapped,suggested,mapped"/>
                 </header>
                 <sheet>
+                    <field name="has_enti_image" invisible="1"/>
+                    <field name="image_state" invisible="1"/>
+                    <group string="Xem trước &amp; Đối chiếu ảnh hồ sơ cạnh nhau">
+                        <group string="Ảnh trên máy chấm công ENTI">
+                            <field name="enti_image_1920" string="Ảnh ENTI" widget="image" options="{'size': [180, 180]}" readonly="1"/>
+                            <field name="image_status_label" string="Trạng thái ảnh" readonly="1"/>
+                            <field name="image_synced_at" string="Đồng bộ ảnh lúc" readonly="1"/>
+                        </group>
+                        <group string="Ảnh hiện tại trong Odoo HR">
+                            <field name="odoo_image_1920" string="Ảnh hiện tại Odoo" widget="image" options="{'size': [180, 180]}" readonly="1"/>
+                            <field name="image_error" string="Thông báo / Lỗi ảnh" readonly="1" invisible="not image_error"/>
+                        </group>
+                    </group>
                     <group>
                         <group string="Dữ liệu máy chấm công">
                             <field name="ma_nv" string="Mã trên máy" readonly="1"/>
@@ -224,6 +245,117 @@ records.action_auto_match()
         <field name="search_view_id" ref="enti_sync_log_search"/>
         <field name="help" type="html">
             <p>Chưa có lượt đồng bộ trong phạm vi đang xem.</p>
+        </field>
+    </record>
+
+    <!-- Employee Image Sync Views -->
+    <record id="enti_employee_image_list" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.enti.employee.image.list</field>
+        <field name="model">tp.hr.attendance.enti.employee.image</field>
+        <field name="arch" type="xml">
+            <list string="Nhật ký đồng bộ ảnh hồ sơ ENTI" js_class="tp_hr_table" create="0" edit="0" delete="0">
+                <field name="enti_image_128" string="Ảnh ENTI" widget="image" options="{'size': [40, 40]}"/>
+                <field name="ma_nv" string="Mã ENTI"/>
+                <field name="ten_nv" string="Họ tên ENTI"/>
+                <field name="odoo_image_128" string="Ảnh Odoo hiện tại" widget="image" options="{'size': [40, 40]}"/>
+                <field name="employee_id" string="Nhân viên Odoo"/>
+                <field name="employee_code" string="Mã nhân viên" optional="show"/>
+                <field name="department_id" string="Phòng ban"/>
+                <field name="mapping_state" string="Đối chiếu" widget="badge" decoration-success="mapping_state == 'mapped'" decoration-warning="mapping_state == 'suggested'" decoration-danger="mapping_state == 'unmapped'"/>
+                <field name="status_label" string="Trạng thái ảnh" widget="badge" decoration-success="state in ('downloaded', 'unchanged') and mapping_state == 'mapped'" decoration-warning="state in ('pending', 'no_image') or mapping_state != 'mapped'" decoration-danger="state == 'failed'"/>
+                <field name="state" column_invisible="1"/>
+                <field name="image_mime" string="Định dạng" optional="hide"/>
+                <field name="image_size" string="Dung lượng (B)" optional="hide"/>
+                <field name="downloaded_at" string="Cập nhật lúc"/>
+                <field name="error_message" string="Ghi chú / Lỗi" optional="show"/>
+                <button name="action_apply_to_employee" type="object" string="Cập nhật ảnh" class="btn btn-sm btn-outline-primary" invisible="mapping_state != 'mapped' or not enti_image_128"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="enti_employee_image_form" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.enti.employee.image.form</field>
+        <field name="model">tp.hr.attendance.enti.employee.image</field>
+        <field name="arch" type="xml">
+            <form string="Chi tiết đồng bộ ảnh hồ sơ ENTI" create="0" edit="0" delete="0">
+                <header>
+                    <button name="action_apply_to_employee" type="object" string="Cập nhật ảnh ENTI sang Odoo" class="btn btn-primary" invisible="mapping_state != 'mapped' or not enti_image_1920"/>
+                    <field name="state" widget="statusbar" statusbar_visible="pending,downloaded,unchanged,no_image,failed"/>
+                </header>
+                <sheet>
+                    <group string="Xem trước &amp; So sánh ảnh cạnh nhau">
+                        <group string="Ảnh hồ sơ từ ENTI">
+                            <field name="enti_image_1920" string="Ảnh ENTI" widget="image" options="{'size': [180, 180]}"/>
+                            <field name="image_source"/>
+                            <field name="image_mime"/>
+                            <field name="image_size"/>
+                            <field name="image_hash"/>
+                        </group>
+                        <group string="Ảnh hiện tại trong Odoo HR">
+                            <field name="odoo_image_1920" string="Ảnh hiện tại Odoo" widget="image" options="{'size': [180, 180]}"/>
+                            <field name="employee_id"/>
+                            <field name="employee_code"/>
+                            <field name="department_id"/>
+                            <field name="mapping_state"/>
+                        </group>
+                    </group>
+                    <group string="Thông tin đồng bộ">
+                        <group>
+                            <field name="ma_nv"/>
+                            <field name="ten_nv"/>
+                            <field name="ten_bp"/>
+                            <field name="key_nv"/>
+                        </group>
+                        <group>
+                            <field name="status_label"/>
+                            <field name="downloaded_at"/>
+                            <field name="last_seen_at"/>
+                            <field name="image_url" groups="hr.group_hr_manager,base.group_system"/>
+                        </group>
+                    </group>
+                    <group invisible="not error_message">
+                        <field name="error_message"/>
+                    </group>
+                    <group string="Metadata hồ sơ ENTI" groups="hr.group_hr_manager,base.group_system" invisible="not raw_metadata_json">
+                        <field name="raw_metadata_json"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="enti_employee_image_search" model="ir.ui.view">
+        <field name="name">tp.hr.attendance.enti.employee.image.search</field>
+        <field name="model">tp.hr.attendance.enti.employee.image</field>
+        <field name="arch" type="xml">
+            <search string="Đồng bộ ảnh hồ sơ ENTI">
+                <field name="employee_id" string="Nhân viên Odoo"/>
+                <field name="ten_nv" string="Họ tên ENTI"/>
+                <field name="ma_nv" string="Mã ENTI"/>
+                <field name="department_id" string="Phòng ban"/>
+                <field name="state" string="Trạng thái ảnh"/>
+                <field name="mapping_state" string="Trạng thái đối chiếu"/>
+                <filter name="state_downloaded" string="Đã đồng bộ (Mới)" domain="[('state', '=', 'downloaded')]"/>
+                <filter name="state_unchanged" string="Không thay đổi" domain="[('state', '=', 'unchanged')]"/>
+                <filter name="state_no_image" string="Chưa có ảnh" domain="[('state', '=', 'no_image')]"/>
+                <filter name="state_failed" string="Lỗi tải ảnh" domain="[('state', '=', 'failed')]"/>
+                <filter name="state_unmapped" string="Chưa đối chiếu" domain="[('mapping_state', '!=', 'mapped')]"/>
+                <group>
+                    <filter name="group_state" string="Trạng thái ảnh" context="{'group_by': 'state'}"/>
+                    <filter name="group_department" string="Phòng ban" context="{'group_by': 'department_id'}"/>
+                    <filter name="group_mapping" string="Trạng thái đối chiếu" context="{'group_by': 'mapping_state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_enti_employee_images" model="ir.actions.act_window">
+        <field name="name">Nhật ký đồng bộ ảnh hồ sơ ENTI</field>
+        <field name="res_model">tp.hr.attendance.enti.employee.image</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="enti_employee_image_search"/>
+        <field name="help" type="html">
+            <p>Chưa có dữ liệu đồng bộ ảnh hồ sơ nhân viên từ ENTI.</p>
         </field>
     </record>
 </odoo>

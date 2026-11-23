@@ -3,6 +3,7 @@ from . import (
     test_correction,
     test_directory_privacy,
     test_enti_attendance_002,
+    test_enti_image_sync,
     test_enti_sync,
     test_import,
     test_latest_file,

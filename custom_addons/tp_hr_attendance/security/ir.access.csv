@@ -65,3 +65,7 @@ access_att_enti_log_officer,Attendance ENTI sync log officer,tp.hr.attendance.en
 rule_att_enti_log_company,Attendance ENTI sync log company,tp.hr.attendance.enti.sync.log,,crud,"[('company_id', 'in', company_ids)]"
 access_att_enti_wizard_manager,Attendance ENTI config wizard HR manager,tp.hr.attendance.enti.config.wizard,hr.group_hr_manager,crud,
 access_att_enti_wizard_admin,Attendance ENTI config wizard Admin,tp.hr.attendance.enti.config.wizard,base.group_system,crud,
+access_att_enti_img_manager,Attendance ENTI employee images HR manager,tp.hr.attendance.enti.employee.image,hr.group_hr_manager,crud,
+access_att_enti_img_admin,Attendance ENTI employee images Admin,tp.hr.attendance.enti.employee.image,base.group_system,crud,
+access_att_enti_img_officer,Attendance ENTI employee images officer,tp.hr.attendance.enti.employee.image,tp_hr_attendance.group_attendance_officer,r,
+rule_att_enti_img_company,Attendance ENTI employee images company,tp.hr.attendance.enti.employee.image,,crud,"[('company_id', 'in', company_ids)]"

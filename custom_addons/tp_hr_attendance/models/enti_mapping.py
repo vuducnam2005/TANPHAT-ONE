@@ -88,6 +88,39 @@ class AttendanceEntiMapping(models.Model):
     last_seen_at = fields.Datetime("Lần thấy gần nhất", readonly=True)
     active = fields.Boolean("Đang theo dõi", default=True)
 
+    image_record_id = fields.Many2one(
+        "tp.hr.attendance.enti.employee.image",
+        "Bản ghi ảnh ENTI",
+        compute="_compute_image_fields",
+    )
+    has_enti_image = fields.Boolean("Có ảnh ENTI", compute="_compute_image_fields")
+    enti_image_128 = fields.Image("Ảnh ENTI", compute="_compute_image_fields")
+    enti_image_1920 = fields.Image("Ảnh ENTI (gốc)", compute="_compute_image_fields")
+    odoo_image_128 = fields.Image(
+        "Ảnh hiện tại trong Odoo",
+        related="employee_id.image_128",
+        readonly=True,
+    )
+    odoo_image_1920 = fields.Image(
+        "Ảnh hiện tại trong Odoo (gốc)",
+        related="employee_id.image_1920",
+        readonly=True,
+    )
+    image_state = fields.Selection(
+        [
+            ("pending", "Chờ đồng bộ / Chưa đối chiếu"),
+            ("downloaded", "Đã đồng bộ"),
+            ("unchanged", "Không thay đổi"),
+            ("failed", "Lỗi tải ảnh"),
+            ("no_image", "Chưa có ảnh"),
+        ],
+        "Trạng thái ảnh",
+        compute="_compute_image_fields",
+    )
+    image_status_label = fields.Char("Đồng bộ ảnh", compute="_compute_image_fields")
+    image_synced_at = fields.Datetime("Thời điểm đồng bộ ảnh", compute="_compute_image_fields")
+    image_error = fields.Text("Thông báo / Lỗi ảnh", compute="_compute_image_fields")
+
     _key_unique = models.Constraint(
         "UNIQUE(source_id, key_nv)",
         "Khóa nhân viên ENTI đã tồn tại trong nguồn này.",
@@ -97,8 +130,34 @@ class AttendanceEntiMapping(models.Model):
         "Một nhân viên Odoo chỉ được gắn với một mã chấm công ENTI trong cùng nguồn.",
     )
 
+    @api.depends("source_id", "key_nv", "state", "employee_id")
+    def _compute_image_fields(self):
+        ImageModel = self.env["tp.hr.attendance.enti.employee.image"].sudo()
+        source_ids = self.mapped("source_id").ids
+        keys = [k for k in self.mapped("key_nv") if k]
+        by_pair = {}
+        if source_ids and keys:
+            for img in ImageModel.search([("source_id", "in", source_ids), ("key_nv", "in", keys)]):
+                by_pair[(img.source_id.id, img.key_nv)] = img
+        for rec in self:
+            img = by_pair.get((rec.source_id.id, rec.key_nv))
+            rec.image_record_id = img.id if img else False
+            rec.enti_image_128 = img.enti_image_128 if img else False
+            rec.enti_image_1920 = img.enti_image_1920 if img else False
+            rec.has_enti_image = bool(img and img.with_context(bin_size=True).enti_image_1920)
+            rec.image_state = img.state if img else False
+            if rec.state != "mapped" or not rec.employee_id:
+                rec.image_status_label = "Chưa đối chiếu"
+            elif img:
+                rec.image_status_label = img.status_label
+            else:
+                rec.image_status_label = "Chưa đồng bộ"
+            rec.image_synced_at = img.downloaded_at or img.last_seen_at if img else False
+            rec.image_error = img.error_message if img else False
+
     def _check_hr_manager(self):
-        if not self.env.user.has_group("hr.group_hr_manager") and not self.env.su:
+        from .enti_image import can_manage_enti_images
+        if not can_manage_enti_images(self.env, self.company_id[:1] if self else self.env.company):
             raise AccessError(self.env._("Chỉ Quản lý nhân sự hoặc Admin mới được đối chiếu nhân viên."))
 
     @api.model_create_multi
@@ -139,6 +198,7 @@ class AttendanceEntiMapping(models.Model):
             changed = self.env["tp.hr.attendance.enti.day"]._tp_project_for_mapping(rec)
             if changed:
                 rec.source_id._tp_enti_notify(dates=changed.mapped("work_date"))
+            self.env["tp.hr.attendance.enti.employee.image"]._tp_on_mapping_changed(rec, apply_if_pending=True)
 
     def action_reject_mapping(self):
         """Reject suggested mapping and move back to unmapped."""
@@ -149,6 +209,30 @@ class AttendanceEntiMapping(models.Model):
                 "state": "unmapped",
                 "match_reason": "Bị từ chối đối chiếu tự động; chờ đối chiếu thủ công.",
             })
+            self.env["tp.hr.attendance.enti.employee.image"]._tp_on_mapping_changed(rec, apply_if_pending=False)
+
+    def action_apply_enti_image(self):
+        """Manually update the mapped Odoo employee's profile image from ENTI."""
+        self.ensure_one()
+        self._check_hr_manager()
+        if self.state != "mapped" or not self.employee_id:
+            raise UserError(self.env._("Chỉ cho phép cập nhật ảnh sau khi nhân viên đã được đối chiếu chính xác."))
+        if not self.image_record_id:
+            raise UserError(self.env._("Chưa có dữ liệu ảnh ENTI cho nhân viên này. Vui lòng chạy Đồng bộ ảnh hồ sơ trước."))
+        return self.image_record_id.action_apply_to_employee()
+
+    def action_open_image_compare(self):
+        """Open form view with side-by-side ENTI and Odoo image comparison."""
+        self.ensure_one()
+        self._check_hr_manager()
+        return {
+            "type": "ir.actions.act_window",
+            "name": self.env._("Xem trước & Đối chiếu ảnh ENTI - Odoo"),
+            "res_model": "tp.hr.attendance.enti.mapping",
+            "res_id": self.id,
+            "view_mode": "form",
+            "target": "new",
+        }
 
     def action_auto_match(self):
         """Re-run matching algorithm for records in self."""
@@ -217,6 +301,10 @@ class AttendanceEntiMapping(models.Model):
             self.sudo().write(vals)
             if state == "mapped" and employee:
                 self.env["tp.hr.attendance.enti.day"]._tp_project_for_mapping(self)
+            self.env["tp.hr.attendance.enti.employee.image"]._tp_on_mapping_changed(
+                self,
+                apply_if_pending=bool(state == "mapped" and employee),
+            )
         return bool(vals)
 
     @api.model

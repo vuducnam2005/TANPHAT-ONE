@@ -39,6 +39,159 @@
             <p t-if="this.enti.data_to" class="o_tp_att_admin_data_to">Dữ liệu máy đã nhận đến ngày <strong t-out="this.enti.data_to"/>.</p>
         </section>
 
+        <section class="o_tp_att_admin_panel o_tp_att_admin_images" aria-labelledby="tp_att_admin_images_title">
+            <header>
+                <div>
+                    <h2 id="tp_att_admin_images_title">Nguồn dữ liệu ENTI — Đồng bộ ảnh hồ sơ nhân viên</h2>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mt-1">
+                        <span class="o_tp_att_admin_health mt-0" t-att-class="'o_' + this.imageHealth.tone" t-out="this.imageHealth.text"/>
+                        <span t-if="this.imageSync.last_sync_at" class="text-muted small">
+                            Lần đồng bộ gần nhất: <strong t-out="this.imageSync.last_sync_at"/>
+                        </span>
+                        <span t-else="" class="text-muted small">Lần đồng bộ gần nhất: <strong>Chưa có</strong></span>
+                    </div>
+                </div>
+                <div class="o_tp_att_admin_actions align-items-center" t-if="this.data.can_configure">
+                    <label class="form-check form-switch mb-0 me-2 d-inline-flex align-items-center gap-2">
+                        <input class="form-check-input" type="checkbox"
+                            t-att-checked="this.imageSync.prefer_manual_image"
+                            t-on-change="(ev) => this.togglePreferManualImage(ev)"/>
+                        <span class="form-check-label small">Ưu tiên ảnh thủ công</span>
+                    </label>
+                    <button type="button" class="btn btn-outline-secondary"
+                        t-on-click="() => this.open('tp_hr_attendance.action_enti_employee_images')">
+                        Mở bảng chi tiết
+                    </button>
+                    <button type="button" class="btn btn-outline-warning"
+                        t-on-click="() => this.syncEntiImages({ onlyFailed: true })"
+                        t-att-disabled="this.state.imageSyncing or this.state.imageRetrying">
+                        <i class="oi me-1" data-icon="refresh" aria-hidden="true"/>
+                        <t t-out="this.state.imageRetrying ? 'Đang thử lại…' : 'Đồng bộ lại ảnh lỗi'"/>
+                    </button>
+                    <button type="button" class="btn btn-primary"
+                        t-on-click="() => this.syncEntiImages({ onlyFailed: false })"
+                        t-att-disabled="this.state.imageSyncing or this.state.imageRetrying">
+                        <i class="oi me-1" data-icon="autorenew" aria-hidden="true"/>
+                        <t t-out="this.state.imageSyncing ? 'Đang đồng bộ ảnh…' : 'Đồng bộ ảnh hồ sơ'"/>
+                    </button>
+                </div>
+            </header>
+
+            <dl class="o_tp_att_admin_metrics">
+                <div><dt>Tổng số nhân viên ENTI</dt><dd t-out="this.imageSync.total_employees ?? 0"/></div>
+                <div><dt>Số ảnh đã đồng bộ</dt><dd t-out="this.imageSync.synced_count ?? 0"/></div>
+                <div><dt>Số ảnh chưa có</dt><dd t-out="this.imageSync.no_image_count ?? 0"/></div>
+                <div><dt>Số ảnh lỗi</dt><dd class="o_attention" t-out="this.imageSync.failed_count ?? 0"/></div>
+                <div><dt>Số nhân viên chưa đối chiếu</dt><dd class="o_attention" t-out="this.imageSync.unmapped_count ?? 0"/></div>
+            </dl>
+            <p t-if="this.imageSync.message" class="o_tp_att_admin_data_to" t-out="this.imageSync.message"/>
+
+            <div class="o_tp_att_image_log_controls mt-3">
+                <label class="o_tp_att_field">
+                    <span>Trạng thái ảnh</span>
+                    <select t-on-change="(ev) => { this.state.imageState = ev.target.value; this.applyImageFilters(); }">
+                        <option value="" t-att-selected="!this.state.imageState">Tất cả trạng thái</option>
+                        <option value="synced" t-att-selected="this.state.imageState === 'synced'">Đã đồng bộ</option>
+                        <option value="downloaded" t-att-selected="this.state.imageState === 'downloaded'">Đã tải mới</option>
+                        <option value="unchanged" t-att-selected="this.state.imageState === 'unchanged'">Không thay đổi</option>
+                        <option value="no_image" t-att-selected="this.state.imageState === 'no_image'">Chưa có ảnh</option>
+                        <option value="failed" t-att-selected="this.state.imageState === 'failed'">Lỗi tải ảnh</option>
+                        <option value="unmapped" t-att-selected="this.state.imageState === 'unmapped'">Chưa đối chiếu</option>
+                    </select>
+                </label>
+                <label class="o_tp_att_field">
+                    <span>Phòng ban</span>
+                    <select t-on-change="(ev) => { this.state.imageDepartment = ev.target.value; this.applyImageFilters(); }">
+                        <option value="" t-att-selected="!this.state.imageDepartment">Tất cả phòng ban</option>
+                        <option t-foreach="this.data.departments or []" t-as="dept" t-key="dept.id"
+                            t-att-value="dept.id"
+                            t-att-selected="'' + dept.id === '' + this.state.imageDepartment"
+                            t-out="dept.name"/>
+                    </select>
+                </label>
+                <label class="o_tp_att_field">
+                    <span>Nhân viên</span>
+                    <input type="search" placeholder="Tìm theo tên hoặc mã nhân viên…"
+                        t-att-value="this.state.imageSearch"
+                        t-on-input="(ev) => { this.state.imageSearch = ev.target.value; }"
+                        t-on-change="() => this.applyImageFilters()"/>
+                </label>
+                <button type="button" class="btn btn-outline-secondary"
+                    t-on-click="() => this.applyImageFilters()"
+                    t-att-disabled="this.state.imageFiltering">
+                    Lọc nhật ký
+                </button>
+            </div>
+
+            <p t-if="!this.imageSync.rows?.length" class="o_tp_att_admin_empty mt-3">
+                Chưa có bản ghi nhật ký đồng bộ ảnh phù hợp với bộ lọc.
+            </p>
+            <div t-else="" class="o_tp_att_image_table_wrap mt-3">
+                <table class="table table-sm align-middle mb-0 o_tp_att_image_table">
+                    <thead>
+                        <tr>
+                            <th>Ảnh ENTI / Odoo</th>
+                            <th>Nhân viên ENTI</th>
+                            <th>Nhân viên Odoo</th>
+                            <th>Phòng ban</th>
+                            <th>Trạng thái</th>
+                            <th>Đồng bộ lúc</th>
+                            <th>Ghi chú / Lỗi</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="this.imageSync.rows" t-as="imgRow" t-key="imgRow.id">
+                            <td>
+                                <div class="o_tp_att_image_pair">
+                                    <img t-if="imgRow.has_enti_image"
+                                        t-att-src="'/web/image/tp.hr.attendance.enti.employee.image/' + imgRow.id + '/enti_image_128'"
+                                        alt="Ảnh ENTI" title="Ảnh từ ENTI" class="o_tp_att_thumb"/>
+                                    <span t-else="" class="o_tp_att_thumb_empty" title="Chưa có ảnh ENTI">—</span>
+                                    <img t-if="imgRow.has_odoo_image"
+                                        t-att-src="'/web/image/hr.employee/' + imgRow.employee_id + '/image_128'"
+                                        alt="Ảnh Odoo" title="Ảnh hiện tại trong Odoo" class="o_tp_att_thumb"/>
+                                    <span t-else="" class="o_tp_att_thumb_empty" title="Chưa đối chiếu Odoo">—</span>
+                                </div>
+                            </td>
+                            <td>
+                                <strong t-out="imgRow.ten_nv or '—'"/>
+                                <div t-if="imgRow.ma_nv" class="text-muted small" t-out="imgRow.ma_nv"/>
+                            </td>
+                            <td>
+                                <t t-if="imgRow.employee_id">
+                                    <strong t-out="imgRow.employee_name"/>
+                                    <div t-if="imgRow.employee_code" class="text-muted small" t-out="imgRow.employee_code"/>
+                                </t>
+                                <span t-else="" class="text-warning fw-semibold">Chưa đối chiếu</span>
+                            </td>
+                            <td t-out="imgRow.department_name or '—'"/>
+                            <td>
+                                <span class="o_tp_att_badge"
+                                    t-att-class="(imgRow.mapping_state === 'mapped' and (imgRow.state === 'downloaded' or imgRow.state === 'unchanged')) ? 'o_ok' : (imgRow.state === 'failed' ? 'o_warn' : 'o_muted')"
+                                    t-out="imgRow.status_label"/>
+                            </td>
+                            <td t-out="imgRow.downloaded_at or imgRow.last_seen_at or '—'"/>
+                            <td class="small text-muted" t-out="imgRow.error_message or (imgRow.image_mime ? (imgRow.image_mime + ' · ' + imgRow.image_size + ' B') : '—')"/>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        t-on-click="() => this.openImageRecord(imgRow)">
+                                        Xem ảnh
+                                    </button>
+                                    <button t-if="this.data.can_configure and imgRow.mapping_state === 'mapped' and imgRow.has_enti_image"
+                                        type="button" class="btn btn-sm btn-outline-primary"
+                                        t-on-click="() => this.applyRowImage(imgRow)">
+                                        Cập nhật
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <section t-if="this.data.can_export" class="o_tp_att_admin_panel o_tp_att_admin_export" aria-labelledby="tp_att_admin_export_title">
             <header>
                 <div>

@@ -1,5 +1,14 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261123-008 — ENTI-IMAGE-SYNC-001: Đồng bộ ảnh hồ sơ nhân viên từ ENTI về TANPHAT ONE
+
+- `custom_addons/tp_hr_attendance` **20.0.3.9.0** (`models/enti_client.py`, `models/enti_image.py`, `models/enti_mapping.py`, `models/attendance_source.py`, `models/enti_sync.py`, `security/ir.access.csv`, `views/enti_views.xml`, `static/src/sources.js`, `static/src/sources.xml`, `static/src/admin.scss`, `static/src/filter_profiles.js`, `tests/test_enti_image_sync.py`):
+  - Kiểm chứng API ENTI thực tế: `/api/nhan-vien/get-info` trả trường `anh=""`, còn `/api/nhan-vien/search` trả `anh` dạng `data:image/jpeg;base64,...` cho 38/39 nhân viên. Bổ sung `EntiClient.get_employee_profiles()` và `download_image()` kiểm host allowlist, `Content-Type: image/*`, giới hạn dung lượng và retry có giới hạn.
+  - Tạo model `tp.hr.attendance.enti.employee.image` (metadata sạch, `image_hash`, `state`, `image_url`/`raw_metadata_json` ẩn với người dùng thường), kiểm tra magic bytes + chuẩn hóa ảnh qua Pillow, cập nhật `hr.employee.image_1920` và `res.partner.image_1920` chỉ cho nhân viên đã đối chiếu 1-1 (`state == 'mapped'`), giữ ảnh cũ khi lỗi/trống và tôn trọng `prefer_manual_image`.
+  - Tách đồng bộ ảnh thành bước 2 độc lập trong `enti_sync.py` (savepoint riêng từng nhân viên, không ảnh hưởng dữ liệu chấm công); bổ sung khu vực quản trị đồng bộ ảnh (metrics, Ưu tiên ảnh thủ công, Đồng bộ ảnh hồ sơ, Đồng bộ lại ảnh lỗi, bộ lọc Trạng thái/Phòng ban/Nhân viên, xem ảnh ENTI vs Odoo cạnh nhau).
+  - Bổ sung bộ test `tests/test_enti_image_sync.py` phủ 12+ tình huống bắt buộc.
+- Kiểm thử (`tp_tanphat_test` / 18079): `py_compile`, XML parse, `node --check`, `git diff --check` PASS; `/tp_hr_attendance` (`TestEntiImagePure`, `TestEntiImageSync`, `TestEntiClientFake`, `TestDirectoryPrivacy`, `TestAccess`) **25/25 PASS** (0 error, 0 fail); Playwright desktop `1440×900` & mobile `390×844` **0 pageErrors, 0 consoleErrors, docOverflow=false**.
+
 ## CHG-20261123-007 — ATTENDANCE-CORRECTION-002: Thiết kế lại luồng Đề nghị điều chỉnh công (gửi 1 chạm & thu hồi)
 
 - `custom_addons/tp_hr_attendance` **20.0.3.8.0** (`models/attendance_correction.py`, `models/attendance_overview.py`, `views/correction_views.xml`, `security/ir.access.csv`, `static/src/mine.js`, `static/src/mine.xml`, `tests/test_correction.py`):

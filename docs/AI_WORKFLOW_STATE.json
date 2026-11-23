@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-23T08:30:04.243224+00:00",
-  "last_change_id": "CHG-20261123-007",
-  "code_digest": "95f612ccb17282cb72e0d7d42d58071047afc53c5a9424dc88d22b580a35f721",
-  "code_file_count": 824,
+  "updated_at": "2026-11-23T08:55:36.286519+00:00",
+  "last_change_id": "CHG-20261123-008",
+  "code_digest": "89a68339b577c1b81ce51154abe7d7e3f12a1c73e51ec5cc5d94c4248df0f69b",
+  "code_file_count": 825,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "4d3d33f5162a99dac1cf8e2f326ca9f93fcfe2222412e579ba43b376b3496ff9",
-    "docs/CHANGELOG.md": "12778dbe8bb6d23d386dbb38a1da2f85676dbe84d2d4eaa6927ce0278f329027",
+    "docs/PROJECT_STATUS.md": "e13d929f49a43c01a2ac14d24bc825021a1686e9b9e7d93370e00da8c4d7b775",
+    "docs/CHANGELOG.md": "c68eff0596a931bb9536a8c85f007c29410cef36d810ef5e10bf106824ee2031",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "TestAttendanceCorrection+tp_request 22/22 PASS, TestAttendanceAccess 8/8 PASS, py_compile/node/XML/diff PASS"
+    "tp_hr_attendance 25/25 image+client+privacy+access tests + Playwright 1440/390 0 errors"
   ]
 }

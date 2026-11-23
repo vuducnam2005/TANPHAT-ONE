@@ -14,6 +14,7 @@ from . import (
     employee_code_cache,
     enti_client,
     enti_day,
+    enti_image,
     enti_mapping,
     enti_sync,
     enti_wizard,
