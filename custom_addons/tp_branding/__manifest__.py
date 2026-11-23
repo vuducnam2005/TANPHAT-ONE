@@ -22,7 +22,7 @@ BRAND-WHITELABEL-002, SYSTEM-URL-001:
 
 Platform licence/copyright notices and technical identifiers are kept.
 """,
-    'version': '20.0.2.2.1',
+    'version': '20.0.2.2.2',
     'category': 'Hidden',
     'author': 'Tan Phat JSC',
     'license': 'LGPL-3',
@@ -48,7 +48,14 @@ Platform licence/copyright notices and technical identifiers are kept.
             'tp_branding/static/src/webclient_patch.js',
             'tp_branding/static/src/dialog_patch.js',
             'tp_branding/static/src/links_patch.js',
+            'tp_branding/static/src/webview_error_guard.js',
             'tp_branding/static/src/branding.xml',
+        ],
+        'web.assets_frontend': [
+            'tp_branding/static/src/webview_error_guard.js',
+        ],
+        'web.assets_unit_tests': [
+            'tp_branding/static/tests/**/*.test.js',
         ],
     },
     'installable': True,

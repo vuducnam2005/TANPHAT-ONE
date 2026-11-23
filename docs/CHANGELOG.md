@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261123-003 — WEBVIEW-ZALO-ERROR-GUARD-001: Chặn popup lỗi zaloJSV2 do Zalo WebView tự chèn
+
+- Khảo sát toàn bộ repository (`custom_addons/`, `addons/`, `odoo/`, `frontend/`, `docs/`) và HTML thực tế `/app/trang-chu`: 0 tham chiếu `zaloJSV2` hoặc script Zalo; lỗi phát sinh sau khi OWL WebClient/TitlePlugin mount do Zalo iOS `WKWebView` tự đánh giá `zaloJSV2` trong global scope của trang (`filename = document URL`, `lineno = 1`) khiến `error_service.js` không nhận diện là script ngoài.
+- `tp_branding` **20.0.2.2.2**: thêm `static/src/webview_error_guard.js` đăng ký `tpExternalWebViewErrorHandler` (`sequence: 2`) trong `web.assets_backend` và `web.assets_frontend` (kèm `web.assets_unit_tests`). Không tạo stub giả `window.zaloJSV2`; chỉ bỏ qua `ReferenceError` về `zaloJSV2` không có frame/filename từ `.js` hay `/web/assets/`/`/static/`, giữ nguyên hiển thị cho mọi lỗi ứng dụng thật.
+- Kiểm kỹ thuật (`tp_tanphat_test` / 18079): `node --check`, `py_compile`, `git diff --check` PASS; Odoo `/tp_branding` **30/30 PASS**; HOOT `@tp_branding` **5/5 PASS**; Playwright Chromium mobile (Zalo iOS UA) trên `/dang-nhap` và `/app/trang-chu` PASS. Chưa kiểm trực tiếp trên iPhone/Zalo app thật.
+
 ## CHG-20261123-002 — ATTENDANCE-SHEET-001 + TABLE-PAGE-100: Biên bản áp PC server
 
 - Commit `71f9b8db` đã push/deploy; backup `C:\TANPHAT-backups\attendance-sheet001\attendance-sheet001-20261123T085039`; 44/44 checksum, upgrade 8 addon exit0, log0 ERROR/CRITICAL. Public health200 và route bảng công chuyển hướng đăng nhập sạch. Post-deploy fingerprint read-only giữ 39 nhân viên, 32 users, 897 ngày công/ENTI, 839 phiên, 35 mã máy và group hash. Pre-snapshot SQL bị lỗi dấu ngoặc thừa nên không dùng làm bằng chứng trước-sau tuyệt đối; backup/restore-list đã xác nhận. Browser authenticated chưa chạy. [Receipt](../.local/attendance-sheet001/deploy-result.json).

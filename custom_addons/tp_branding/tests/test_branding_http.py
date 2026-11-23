@@ -142,8 +142,14 @@ class TestBrandingHttp(HttpCase):
         bundle = self.env['ir.qweb']._get_asset_bundle('web.assets_backend', assets_params={})
         js = bundle.js().raw.decode()
         for module in ('@tp_branding/brand_routes', '@tp_branding/brand_urls', '@tp_branding/router_patch', '@tp_branding/title_patch',
-                       '@tp_branding/webclient_patch', '@tp_branding/dialog_patch', '@tp_branding/links_patch'):
+                       '@tp_branding/webclient_patch', '@tp_branding/dialog_patch', '@tp_branding/links_patch',
+                       '@tp_branding/webview_error_guard'):
             self.assertIn(module, js)
+
+    def test_frontend_bundle_ships_webview_error_guard(self):
+        bundle = self.env['ir.qweb']._get_asset_bundle('web.assets_frontend', assets_params={})
+        js = bundle.js().raw.decode()
+        self.assertIn('@tp_branding/webview_error_guard', js)
 
     def test_anonymous_app_goes_to_branded_login(self):
         response = self._get('/app/tp-home?x=1')

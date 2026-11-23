@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-23T01:59:57.669839+00:00",
-  "last_change_id": "CHG-20261123-002",
-  "code_digest": "6e944184cc39249fc6715497e21ee515e759638ef48ffd5a1f22781dd0c029a9",
-  "code_file_count": 815,
+  "updated_at": "2026-11-23T02:07:26.644880+00:00",
+  "last_change_id": "CHG-20261123-003",
+  "code_digest": "4ac97a4eff68ad54daab2a3c260495914e7655127e2d2ac336da9b5e36ca5438",
+  "code_file_count": 823,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "e90b1c15bd4535551a99c99d7d52f1d7f268edb8d1b746a84908febf5ad23d35",
-    "docs/CHANGELOG.md": "dd4e98ca181a1f8a5b0de65a9e1cd4211298fbccbc7012ca8330a9e98c2e95f2",
+    "docs/PROJECT_STATUS.md": "1ba413e112fd30a74b0c970b184aeb086f7a0622387454c3890f72ccb4e762b0",
+    "docs/CHANGELOG.md": "8ecf347bd103d3be77f027550ba459199f94c2cbb3b4ce4b2bf22c23b010105f",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
-    "docs/ROADMAP.md": "94d80e67a9a67acf82a35cf7bce4d78cbeb2a3e00cd1bac71204ecb6a29c853e",
+    "docs/ROADMAP.md": "eb762826b3aa52ff6c476bcf4a61100e2b1a1ff2c685680a9f0b5771b4b8aeca",
     "docs/DECISIONS.md": "e1de85e4cc8daa3832751699e400cd3dc6eb2bab5e708ceda3e7787154476ea4",
     "docs/HANDOFF_TEMPLATE.md": "c7f2182efec0f0f66ac133dc7926f619b5935db5ba65d477b88830a3b2346471",
     "docs/architecture/TP_BUSINESS_WORKFLOW.md": "f8c4a09638a69615171befe9a6ac43fb953ee851995e178bf929cdda6e945ffa",
@@ -20,9 +20,9 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC server backup verified: dump/restore-list/filestore/source-config present",
-    "44/44 release checksums; 8 addon upgrade exit0; upgrade log0 ERROR/CRITICAL",
-    "Public health200 and attendance route redirect verified; authenticated browser pending due missing usable session",
-    "Pre-snapshot SQL query had a syntax typo; post-deploy read-only snapshot recorded and limitation documented"
+    "node --check + py_compile + git diff --check: PASS",
+    "Odoo /tp_branding (tp_tanphat_test): 0 failed, 0 error(s) of 30 tests",
+    "HOOT @tp_branding: 5/5 passed",
+    "Playwright Chromium mobile (Zalo iOS UA) /dang-nhap + /app/trang-chu: PASS"
   ]
 }
