@@ -1,10 +1,16 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261123-011 — ATTENDANCE-CORRECTION-003: Áp PC server và xác minh render public
+
+- Commit `5a636d6a940d0e9d456240fdfa1808b20034fa70` đã push/áp PC server; `tp_hr_attendance 20.0.3.9.1`, `tp_request 20.0.1.1.1`, 11/11 source checksum khớp, upgrade exit 0/0 ERROR-CRITICAL. Backup `C:\TANPHAT-backups\attendance-correction003\corr003-20261123T171407`; snapshot nhân sự/tài khoản/quyền/ngày công/phiên/phiếu/request/base URL bất biến.
+- Public health 200; F5 tải `/web/assets/062fa37/web.assets_web.min.js`; form điều chỉnh mở được, giờ mặc định đúng, nhập giờ/lý do giữ state, console 0 lỗi. Không gửi phiếu thử vào dữ liệu thật. DB test đạt thêm lost-response retry và race thật hai session; synthetic credentials đã hết hiệu lực, test listener dừng. Source drift trước deploy và giới hạn kiểm ghi tại `PROJECT_STATUS.md`.
+
 ## CHG-20261123-010 — ATTENDANCE-CORRECTION-003: Sửa lỗi OWL khi mở form điều chỉnh công
 
 - `CorrectionFormDialog`/`WithdrawDialog` và các filter đối chiếu chuyển sang `t-model.proxy` theo OWL `3.0.0-alpha.50`; form giữ state ngày/giờ/lý do/minh chứng, lấy giờ hiện có của ngày được chọn, để trống phần thiếu và báo lỗi theo trường.
 - Backend `tp_save_and_submit` dùng savepoint, token thao tác + fingerprint chống tạo phiếu trùng khi bấm kép/retry; lý do thu hồi giữ riêng trên phiếu, log diện rộng không nhận nội dung riêng tư. `tp_request` kiểm lại quyền đọc correction gốc và khóa correction trước request cho action liên kết.
 - Kiểm thực: static `node --check`/`py_compile`/XML parse/`git diff --check`; Odoo `tp_tanphat_test` **0 failed, 0 error(s) of 23**; Playwright desktop/mobile minified bundle **0 page/console errors**, vòng đời gửi/trả/thu hồi/duyệt và F5 đạt; race owner thu hồi/admin duyệt đúng một thao tác thành công. Public trước sửa đã tái hiện `OwlError` `CorrectionFormDialog.slot2`; deployment PC server chờ sau commit.
+- Đã áp PC server commit `5a636d6a940d0e9d456240fdfa1808b20034fa70`: `tp_hr_attendance 20.0.3.9.1`, `tp_request 20.0.1.1.1`, backup `C:\TANPHAT-backups\attendance-correction003\corr003-20261123T171407`, upgrade exit 0 và 0 ERROR/CRITICAL. Snapshot 39 nhân viên, 32 users, 897 ngày công, 851 phiên, 2 phiếu điều chỉnh và 3 request bất biến; public health 200, bundle `/web/assets/062fa37/web.assets_web.min.js`, mở form/nhập giờ+lý do đạt, console 0 lỗi.
 
 ## CHG-20261123-009 — ENTI-IMAGE-SYNC-001: Biên bản áp PC server & đồng bộ ảnh thật
 
