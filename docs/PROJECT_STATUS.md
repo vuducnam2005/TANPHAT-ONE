@@ -1,5 +1,12 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261123-009 — ENTI-IMAGE-SYNC-001 — PC_SERVER_APPLIED.** Đã triển khai commit `17970b9e` (`tp_hr_attendance` **20.0.3.9.0**) lên PC server (`192.168.1.73`, DB `tp_tanphat_dev`) và đồng bộ ảnh hồ sơ thật từ ENTI:
+- Backup trước áp tại `C:\TANPHAT-backups\enti-image001\img001-20261123T155853\` (`tp_tanphat_dev.dump`, `restore-list.txt`, `filestore.tar.gz`, `pre_tp_hr_attendance.tar.gz`, `deploy_enti_image001.tar.gz`, `expected_sha256.txt`, `upgrade.log`, `pre_snapshot.txt`, `post_snapshot.txt`).
+- Đối chiếu SHA256: **86/86** tệp khớp; nâng cấp `-u tp_hr_attendance` exit `0`, **0** `ERROR/CRITICAL`.
+- Snapshot trước → sau bất biến 100%: `employees=39`, `users=32`, `groups_hash=37c080c7656757492cd33f605f11bc8b`, `att_days=897`, `att_sessions=842`, `enti_days=897`, `enti_mapping=39`, `base_url=https://tpone.tadic.vn`; `tp_hr_attendance` lên `20.0.3.9.0`.
+- Kết quả đồng bộ ảnh thật trên `tp_tanphat_dev`: **39/39** nhân viên ENTI đã đối chiếu (**38/39** đồng bộ ảnh thật về `hr.employee.image_1920` và `res.partner.image_1920` với `PARTNER_MISMATCH=0`, **1/39** chưa có ảnh trên ENTI (`no_image`) giữ monogram mặc định, **0** lỗi, **0** chưa đối chiếu); chạy lặp lại `action_sync_enti_images_quick` lượt 2 trả `downloaded=0, unchanged=38, no_image=1, failed=0` (~1.7s).
+- Kiểm public `https://tpone.tadic.vn`: `/web/health` HTTP `200 {"status": "pass"}`, `/app/nhan-su/cham-cong/nguon-du-lieu` chuyển hướng sạch `303 -> /dang-nhap?redirect=%2Fapp%2Fnhan-su%2Fcham-cong%2Fnguon-du-lieu%3F`. (Chưa đăng nhập tài khoản thật trên trình duyệt public; Admin đăng nhập vào Quản trị chấm công và Hồ sơ nhân viên để kiểm tra hiển thị trực tiếp.)
+
 **CHG-20261123-008 — ENTI-IMAGE-SYNC-001 — RELEASE_READY.** Triển khai đồng bộ ảnh hồ sơ nhân viên từ ENTI về TANPHAT ONE (`custom_addons/tp_hr_attendance` **20.0.3.9.0**):
 - **Khảo sát API ENTI thực tế:** `POST https://enti.vn/api/nhan-vien/get-info` trả về 39 nhân viên với trường `anh=""` (trống); `POST https://enti.vn/api/nhan-vien/search` trả về 39 nhân viên với trường `anh` chứa chuỗi `data:image/jpeg;base64,...` hợp lệ cho 38/39 nhân viên (1 người chưa có ảnh). `EntiClient.get_employee_profiles()` gộp cả 2 endpoint theo `keyNV`. Không dùng scraping giao diện web ENTI; không lưu/log `phone`, `password`, `access_token`, `refresh_token`, cookie.
 - **Model & Bảo mật ảnh (`models/enti_image.py`, `models/enti_client.py`, `models/enti_mapping.py`):**
@@ -439,7 +446,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261123-008`
+Last change: `CHG-20261123-009`
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.
 - **Kiểm thực:** `-u` exit 0/0 ERROR; ruff file đã đổi, compileall, 23 XML, ACL CSV, 13 JS syntax, `git diff --check` đạt; Playwright `verify_simple003.mjs` (mở/Hủy, không xác nhận) và probe RPC từ chối; DB 18 bảng giữ count/hash, `tp_equipment_move` chỉ thêm 2 cột NULL. Mức từng mục ở [acceptance](demo/EQUIP_001_ACCEPTANCE.md).

@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261123-009 — ENTI-IMAGE-SYNC-001: Biên bản áp PC server & đồng bộ ảnh thật
+
+- Commit `17970b9e` (`tp_hr_attendance` `20.0.3.9.0`) đã áp lên PC server (`192.168.1.73`, `tp_tanphat_dev`).
+- Backup tại `C:\TANPHAT-backups\enti-image001\img001-20261123T155853\` (`tp_tanphat_dev.dump`, `restore-list.txt`, `filestore.tar.gz`, `pre_tp_hr_attendance.tar.gz`).
+- SHA256 86/86 tệp khớp; `-u tp_hr_attendance` exit 0, 0 ERROR/CRITICAL; snapshot `employees=39`, `users=32`, `groups_hash`, `att_days=897`, `att_sessions=842`, `enti_days=897`, `enti_mapping=39`, `base_url` bất biến 100%.
+- Thực chạy đồng bộ ảnh thật từ ENTI trên `tp_tanphat_dev`: `38/39` nhân viên có ảnh thật (`photo=38, generated=1`), `1` chưa có ảnh trên ENTI (`no_image`), `0` lỗi, `0` chưa đối chiếu, `PARTNER_MISMATCH=0`; lượt lặp lại xác nhận `unchanged=38, downloaded=0`. Public `https://tpone.tadic.vn/web/health` HTTP 200 và `/app/nhan-su/cham-cong/nguon-du-lieu` 303 về `/dang-nhap`. Bản ghi docs-only, không restart lại Odoo.
+
 ## CHG-20261123-008 — ENTI-IMAGE-SYNC-001: Đồng bộ ảnh hồ sơ nhân viên từ ENTI về TANPHAT ONE
 
 - `custom_addons/tp_hr_attendance` **20.0.3.9.0** (`models/enti_client.py`, `models/enti_image.py`, `models/enti_mapping.py`, `models/attendance_source.py`, `models/enti_sync.py`, `security/ir.access.csv`, `views/enti_views.xml`, `static/src/sources.js`, `static/src/sources.xml`, `static/src/admin.scss`, `static/src/filter_profiles.js`, `tests/test_enti_image_sync.py`):
