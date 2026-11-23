@@ -17,7 +17,7 @@
 import base64
 import copy
 import threading
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, timedelta
 from io import BytesIO
 from types import SimpleNamespace
 
@@ -35,7 +35,9 @@ from odoo.addons.tp_hr_attendance.models import enti_sync as enti_sync_module
 from odoo.addons.tp_hr_attendance.models.attendance_common import DEFAULT_TZ, internal
 from odoo.addons.tp_hr_attendance.models.attendance_export import (
     build_attendance_book,
+    export_late_totals,
     person_note,
+    worked_days_count,
 )
 from odoo.addons.tp_hr_attendance.models.attendance_figures import (
     class_date,
@@ -525,11 +527,13 @@ class TestExcelImportClosed(AttendanceCase):
         compare = Batch.tp_compare_batches(pair)
         self.assertFalse(compare['can_apply_valid'])
         self.assertTrue(Batch.tp_export_compare(pair)['filename'].endswith('.xlsx'))
-        # Old Excel days stay in the board export, marked as history.
+        # Old Excel days stay in the Report export.
         book = load_workbook(BytesIO(base64.b64decode(self.env_for(self.manager)['tp.hr.attendance.day'].tp_export_sheet(
             {'mode': 'range', 'from': '2026-11-09', 'to': '2026-11-09'})['data'])))
-        sources = {row[10] for row in book['Chi tiết'].iter_rows(min_row=4, values_only=True) if row[0]}
-        self.assertIn('Excel máy (lịch sử)', sources)
+        self.assertEqual(book.sheetnames, ['Report'])
+        ws = book['Report']
+        vao_rows = [r for r in range(7, ws.max_row + 1) if ws.cell(r, 6).value == 'Vào']
+        self.assertTrue(any(ws.cell(r, 7).value == '07:37' and ws.cell(r + 1, 7).value == '17:05' for r in vao_rows))
 
         # Import and history menu entries are retired; existing records remain readable and exportable.
         menus = self.env['ir.ui.menu'].with_user(self.manager)._visible_menu_ids()
@@ -548,81 +552,157 @@ class TestExcelImportClosed(AttendanceCase):
 class TestExportTemplate(BaseCase):
     DAYS = [D16 + timedelta(days=offset) for offset in range(7)]  # Mon 16 .. Sun 22/11/2026
 
-    def book(self, detail=None):
-        days = self.DAYS
-        risky = {'code': 'TP1', 'name': '=HYPERLINK("http://synthetic.invalid")', 'job': '+Kỹ thuật',
-                 'late': {'count': 1, 'minutes': 10}, 'absent': 1, 'note': '-Thiếu giờ ra: 17/11',
-                 'cells': {days[0]: {'state': 'out_recorded', 'in': '08:40', 'out': '17:05', 'late': 10},
-                           days[1]: {'state': 'missing', 'in': '08:20', 'out': ''},
-                           days[2]: {'state': 'absent'}, days[3]: {'state': 'leave'}, days[4]: {'state': 'no_punch'},
-                           days[5]: {'state': 'future'},
-                           days[6]: {'state': 'out_recorded', 'in': '09:00', 'out': '11:00', 'late': 0}}}
-        unknown = {'code': '', 'name': 'Synthetic B', 'job': '', 'late': {'count': None, 'minutes': None},
-                   'absent': 0, 'note': '', 'cells': {}}
+    def book(self, days=None, groups=None):
+        days = days or self.DAYS
+        if groups is None:
+            risky_cells = {
+                days[0]: {'state': 'out_recorded', 'in': '08:40:25', 'out': '17:05:10', 'late': 10},
+                days[1]: {'state': 'missing', 'in': '08:20', 'out': ''},
+                days[2]: {'state': 'missing', 'in': '', 'out': '17:10'},
+                days[3]: {'state': 'leave'},
+                days[4]: {'state': 'absent'},
+                days[5]: {'state': 'future'},
+                days[6]: {'state': 'out_recorded', 'in': '09:00', 'out': '11:00', 'late': 30},
+            }
+            risky = {
+                'code': 'TP1',
+                'name': '=HYPERLINK("http://synthetic.invalid")',
+                'machine_code': '11',
+                'job': '+Kỹ thuật',
+                'late': {'count': 1, 'minutes': 10},
+                'worked_days': worked_days_count(risky_cells),
+                'note': person_note(risky_cells, today=days[4]),
+                'cells': risky_cells,
+            }
+            unknown_cells = {day: {'state': 'no_source'} for day in days if day.weekday() != 6}
+            unknown = {
+                'code': '',
+                'name': 'Synthetic B',
+                'machine_code': '',
+                'job': '',
+                'late': {'count': 0, 'minutes': 0},
+                'worked_days': 0,
+                'note': person_note(unknown_cells, today=days[-1]),
+                'cells': unknown_cells,
+            }
+            groups = [{'name': 'Synthetic Dept', 'people': [risky, unknown]}]
         content, totals = build_attendance_book({
-            'company': 'Synthetic Co', 'title': 'BẢNG CHẤM CÔNG', 'period': 'Từ 16/11/2026 đến 22/11/2026',
-            'scope': 'Toàn công ty', 'stamp': 'Xuất lúc 20/11/2026 10:00', 'days': days,
-            'groups': [{'name': 'Synthetic Dept', 'people': [risky, unknown]}], 'legend': ['Ghi chú:', '@legend'],
-            'detail': detail})
+            'title': 'BẢNG CÔNG THÁNG',
+            'period': f'Từ ngày {days[0]:%d/%m/%Y} - Đến ngày {days[-1]:%d/%m/%Y}',
+            'days': days,
+            'groups': groups,
+        })
         return load_workbook(BytesIO(content)), totals
 
-    def test_matrix_layout_symbols_and_totals(self):
+    def test_report_layout_symbols_and_totals(self):
         book, totals = self.book()
-        self.assertEqual(book.sheetnames, ['Bảng chấm công'])
-        sheet = book['Bảng chấm công']
-        self.assertEqual(sheet['A1'].value, 'TANPHAT ONE · Synthetic Co')
-        self.assertEqual((sheet.freeze_panes, sheet.page_setup.orientation), ('G9', 'landscape'))
-        self.assertEqual([sheet.cell(7, 7 + i).value.date() for i in range(7)], self.DAYS)
-        self.assertEqual([sheet.cell(8, 7 + i).value for i in range(7)], ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'])
-        self.assertEqual(sheet['A9'].value, 'Synthetic Dept · 2 người')
-        self.assertEqual((sheet['F10'].value, sheet['F11'].value), ('Vào', 'Ra'))
-        self.assertEqual((sheet['G10'].value, sheet['G11'].value), (time(8, 40), time(17, 5)))
-        self.assertEqual(sheet['G10'].number_format, 'hh:mm')
-        self.assertTrue(sheet['G10'].fill.start_color.rgb.endswith('FED7AA'), 'late first-in is orange')
-        self.assertEqual((sheet['H10'].value, sheet['H11'].value), (time(8, 20), '—'))
-        self.assertTrue(sheet['H11'].fill.start_color.rgb.endswith('FEF08A'), 'missing out time is yellow')
-        self.assertEqual((sheet['I10'].value, sheet['J10'].value, sheet['K10'].value), ('Vắng', 'Nghỉ', '—'))
-        self.assertIn(sheet['L10'].value, (None, ''))
-        self.assertEqual(sheet['M10'].value, time(9, 0), 'Sunday keeps its real times')
-        self.assertEqual((sheet['N10'].value, sheet['O10'].value, sheet['P10'].value), (1, 10, 1))
-        self.assertEqual((sheet['G12'].value, sheet['N12'].value, sheet['O12'].value, sheet['P12'].value), ('—', '—', '—', 0))
-        self.assertEqual((sheet['N14'].value, sheet['O14'].value, sheet['P14'].value), (1, 10, 1))
-        self.assertIn('1 người thiếu dữ liệu đi muộn', sheet['Q14'].value)
-        self.assertEqual(totals, {'count': 1, 'minutes': 10, 'absent': 1, 'late_unknown': 1})
+        self.assertEqual(book.sheetnames, ['Report'])
+        sheet = book['Report']
+        self.assertEqual(sheet['A2'].value, 'BẢNG CÔNG THÁNG')
+        self.assertEqual(sheet['A3'].value, 'Từ ngày 16/11/2026 - Đến ngày 22/11/2026')
+        self.assertEqual((sheet.freeze_panes, sheet.page_setup.orientation), ('G7', 'landscape'))
+        self.assertEqual(sheet.print_title_rows.replace('$', ''), '5:6')
+        self.assertTrue(bool(sheet.print_area))
+        self.assertEqual([sheet.cell(5, c).value for c in range(1, 7)],
+                         ['STT', 'Mã nhân viên', 'Tên nhân viên', 'ID', 'Chức vụ', 'Vào/Ra'])
+        self.assertEqual([sheet.cell(5, 7 + i).value for i in range(7)], [16, 17, 18, 19, 20, 21, 22])
+        self.assertEqual([sheet.cell(6, 7 + i).value for i in range(7)], ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'])
+        self.assertEqual((sheet['N5'].value, sheet['N6'].value, sheet['O6'].value), ('Đi muộn', 'Lần', 'Phút'))
+        self.assertEqual((sheet['P5'].value, sheet['Q5'].value), ('Số ngày', 'Ghi chú'))
+        self.assertEqual(sheet['A7'].value, 'Synthetic Dept')
+
+        # Employee 1: row 8 (Vào) and row 9 (Ra)
+        self.assertEqual((sheet['A8'].value, sheet['B8'].value, sheet['D8'].value, sheet['F8'].value),
+                         (1, 'TP1', 11, 'Vào'))
+        self.assertIsNone(sheet['A9'].value)
+        self.assertIsNone(sheet['B9'].value)
+        self.assertIsNone(sheet['C9'].value)
+        self.assertIsNone(sheet['D9'].value)
+        self.assertIsNone(sheet['E9'].value)
+        self.assertEqual(sheet['F9'].value, 'Ra')
+        self.assertEqual(sheet['C8'].alignment.horizontal, 'left')
+        self.assertEqual(sheet['E8'].alignment.horizontal, 'center')
+        self.assertEqual((sheet['G8'].value, sheet['G9'].value), ('08:40', '17:05'))
+        self.assertEqual((sheet['H8'].value, sheet['H9'].value), ('08:20', None))
+        self.assertEqual((sheet['I8'].value, sheet['I9'].value), (None, '17:10'))
+        self.assertIsNone(sheet['J8'].value)
+        self.assertIsNone(sheet['K8'].value)
+        self.assertIsNone(sheet['L8'].value)
+        self.assertEqual((sheet['M8'].value, sheet['M9'].value), ('09:00', '11:00'))
+        self.assertEqual((sheet['N8'].value, sheet['O8'].value, sheet['P8'].value), (1, 10, 3))
+        self.assertIsNone(sheet['N9'].value)
+        self.assertIsNone(sheet['O9'].value)
+        self.assertIsNone(sheet['P9'].value)
+        self.assertIn('Thiếu giờ vào: 18/11', sheet['Q8'].value)
+        self.assertIn('Thiếu giờ ra: 17/11', sheet['Q8'].value)
+        self.assertIn('Nghỉ: 19/11', sheet['Q8'].value)
+
+        # Employee 2: row 10-11 (no data -> 0 late, 0 worked days)
+        self.assertEqual((sheet['A10'].value, sheet['N10'].value, sheet['O10'].value, sheet['P10'].value),
+                         (2, 0, 0, 0))
+        self.assertEqual(sheet['Q10'].value, 'Không có dữ liệu trong kỳ')
+        self.assertEqual(totals, {'people': 2, 'count': 1, 'minutes': 10, 'worked_days': 3})
+
+        # Formula injection neutralized & no NaN/null/undefined
         for row in sheet.iter_rows():
             for cell in row:
                 if isinstance(cell.value, str):
                     self.assertFalse(cell.value.startswith(('=', '+', '-', '@')), cell.coordinate)
-        self.assertEqual(sheet['C10'].value, '\'=HYPERLINK("http://synthetic.invalid")')
+                    self.assertNotIn('NaN', cell.value)
+                    self.assertNotIn('undefined', cell.value)
+        self.assertEqual(sheet['C8'].value, '\'=HYPERLINK("http://synthetic.invalid")')
 
-    def test_detail_sheet_rows(self):
-        detail = {'title': 'Chi tiết synthetic', 'rows': [
-            {'department': 'Synthetic Dept', 'code': 'TP1', 'name': '@Synthetic', 'job': '', 'date': D17,
-             'in': '08:20', 'out': '', 'late': None, 'state': 'missing', 'state_label': 'Thiếu giờ ra', 'source': 'ENTI'},
-        ]}
-        book, _totals = self.book(detail)
-        self.assertEqual(book.sheetnames, ['Bảng chấm công', 'Chi tiết'])
-        rows = [row for row in book['Chi tiết'].iter_rows(min_row=4, values_only=True) if row[0]]
-        self.assertEqual(len(rows), 1)
-        self.assertEqual(rows[0][:8], ('Synthetic Dept', 'TP1', "'@Synthetic", '—', datetime(2026, 11, 17), 'T3', time(8, 20), '—'))
-        self.assertEqual(rows[0][8:], ('—', 'Thiếu giờ ra', 'ENTI'))
-        self.assertEqual(book['Chi tiết'].freeze_panes, 'D4')
+    def test_empty_period_two_weeks_and_month_layouts(self):
+        empty_book, totals = self.book(days=self.DAYS, groups=[])
+        self.assertEqual(totals['people'], 0)
+        self.assertEqual(empty_book['Report']['A7'].value, 'Không có dữ liệu trong kỳ đã chọn')
+
+        two_weeks = [D16 + timedelta(days=offset) for offset in range(14)]
+        two_week_book, _ = self.book(days=two_weeks, groups=[])
+        self.assertEqual(two_week_book['Report'].cell(5, 7 + 13).value, 29)
+
+        month_days = [date(2026, 11, 1) + timedelta(days=offset) for offset in range(30)]
+        month_book, _ = self.book(days=month_days, groups=[])
+        self.assertEqual(month_book['Report'].cell(5, 7 + 29).value, 30)
+        self.assertEqual(month_book['Report'].cell(5, 7 + 30).value, 'Đi muộn')
+
+    def test_late_and_worked_days_rules(self):
+        days = self.DAYS
+        cells = {
+            days[0]: {'state': 'out_recorded', 'in': '08:30', 'out': '17:00', 'late': None, 'scheduled': True},
+            days[1]: {'state': 'out_recorded', 'in': '08:42', 'out': '17:05', 'late': None, 'scheduled': True},
+            days[2]: {'state': 'missing', 'in': '', 'out': '17:05', 'late': None, 'scheduled': True},
+            days[3]: {'state': 'leave', 'scheduled': True},
+            days[4]: {'state': 'out_recorded', 'in': '08:40', 'out': '17:00', 'late': 5, 'scheduled': True},
+            days[6]: {'state': 'out_recorded', 'in': '09:30', 'out': '12:00', 'late': 60, 'scheduled': False},
+        }
+        # Exact 08:30 -> 0; 08:42 fallback -> 12 min; ENTI late=5 preserved; Sunday excluded; missing-in excluded.
+        self.assertEqual(export_late_totals(cells, view={'state': 'partial'}, start_hour=8.5, today=days[6]), (2, 17))
+        # Sunday is excluded from worked_days; days[0], days[1], days[2] (has out), days[4] count = 4.
+        self.assertEqual(worked_days_count(cells), 4)
+        # Pre-aggregated exact historical Excel source total is preserved without recalculation.
+        self.assertEqual(
+            export_late_totals(cells, view={'state': 'exact', 'source': '09-15/11', 'count': 4, 'minutes': 99}),
+            (4, 99),
+        )
 
     def test_person_note_lists_only_what_needs_checking(self):
         days = self.DAYS
-        cells = {days[0]: {'state': 'missing', 'in': '', 'out': '17:00'},
-                 days[1]: {'state': 'missing', 'in': '08:00', 'out': ''},
-                 days[2]: {'state': 'review', 'in': '08:00', 'out': '17:00'},
-                 days[3]: {'state': 'out_recorded', 'in': '08:00', 'out': '17:00'}}
-        note = person_note(cells, {'state': 'partial', 'text': 'Số đi muộn có ở tổng kỳ 09–15/11'}, {'unknown': 2},
-                           archived=True)
+        cells = {
+            days[0]: {'state': 'missing', 'in': '', 'out': '17:00'},
+            days[1]: {'state': 'missing', 'in': '08:00', 'out': ''},
+            days[2]: {'state': 'review', 'in': '08:00', 'out': '17:00'},
+            days[3]: {'state': 'out_recorded', 'in': '08:00', 'out': '17:00'},
+        }
+        note = person_note(cells, duplicate_days={days[2]}, archived=True)
         self.assertEqual(note.split('\n'), [
-            'Thiếu giờ vào: 16/11', 'Thiếu giờ ra: 17/11', 'Cần kiểm tra: 18/11',
-            'Chưa có dữ liệu 2 ngày làm (không tính vắng)', 'Đi muộn: Số đi muộn có ở tổng kỳ 09–15/11',
-            'Hồ sơ đã lưu trữ, vẫn có dữ liệu trong kỳ'])
-        excel = person_note({}, {'state': 'exact', 'source': 'Excel', 'note': 'tổng kỳ Excel 09–15/11'}, {})
-        self.assertEqual(excel, 'Đi muộn lấy theo tổng kỳ Excel 09–15/11')
-        self.assertEqual(person_note({days[3]: cells[days[3]]}, {'state': 'exact', 'source': 'ENTI'}, {'unknown': 0}), '')
+            'Thiếu giờ vào: 16/11',
+            'Thiếu giờ ra: 17/11',
+            'Có dữ liệu bất thường: 18/11',
+            'Có bản ghi trùng cần đối chiếu: 18/11',
+            'Hồ sơ đã lưu trữ',
+        ])
+        self.assertEqual(person_note({days[3]: cells[days[3]]}), '')
 
     def test_day_group_one_group_per_day_and_unknown_is_never_not_started(self):
         def cell(state='absent', clock_in='', clock_out='', covered=True):

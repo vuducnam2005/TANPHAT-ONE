@@ -23,8 +23,12 @@ from .attendance_common import (
     utc_to_local,
 )
 from .attendance_correction import clock_label
-from .attendance_export import SOURCE_NAMES, build_attendance_book, person_note
-from .attendance_export import legend as export_legend
+from .attendance_export import (
+    build_attendance_book,
+    export_late_totals,
+    person_note,
+    worked_days_count,
+)
 from .attendance_figures import (
     ATTENTION,
     GROUP_HINTS,
@@ -1034,67 +1038,73 @@ class AttendanceDayOverview(models.Model):
 
     # -------------------------------------------------------------- export
     @api.model
-    def _tp_export_book(self, company, people, start, end, today, *, mode, scope, detail_dates=None, detail_note=''):
-        """One "Bảng chấm công" workbook for ``people`` (ordered dicts of ``_tp_people``) over exactly
-        ``[start, end]``: the same presence cells, late views and absences as the screens (``attendance_export``)."""
+    def _tp_duplicate_days(self, company, employee_ids, start, end):
+        """Return ``{employee_id: {work_date}}`` where ENTI has >1 record for the same employee & day."""
+        if not employee_ids:
+            return {}
+        seen = defaultdict(set)
+        for rec in self.env['tp.hr.attendance.enti.day'].sudo().search_fetch([
+                ('company_id', '=', company.id), ('employee_id', 'in', list(employee_ids)),
+                ('work_date', '>=', start), ('work_date', '<=', end),
+                ('state', 'in', ('applied', 'locked_period', 'superseded_correction'))],
+                ['employee_id', 'work_date', 'key_nv']):
+            seen[rec.employee_id.id, rec.work_date].add(rec.key_nv)
+        dups = defaultdict(set)
+        for (employee_id, work_date), keys in seen.items():
+            if len(keys) > 1:
+                dups[employee_id].add(work_date)
+        return dups
+
+    @api.model
+    def _tp_export_book(self, company, people, start, end, today, *, mode, scope='', detail_dates=None, detail_note=''):
+        """Build the ``Report`` attendance workbook for ``people`` over ``[start, end]``."""
         ids = [person['id'] for person in people]
         cells, _has_leave = self._tp_presence(company, ids, start, end, today)
         views = self._tp_late_views(company, ids, cells, start, end)
-        absence_note = self._tp_absence_note(company, start, end)
-        absences = self._tp_absences(ids, cells, start, end, absence_note == RULE_NOTE)
         days = dates_between(start, end)
         codes = self._tp_sheet_codes(company, ids)
+        start_hour = parse_hours(self._tp_reference_hours())[0]
+        dup_days = self._tp_duplicate_days(company, ids, start, end)
         groups, by_department = [], {}
         for person in people:
             key = person['department_id'] or 0
             if key not in by_department:
                 by_department[key] = {'name': person['department'] or 'Chưa có phòng ban', 'people': []}
                 groups.append(by_department[key])
-            view, absence = views[person['id']], absences[person['id']]
-            person_cells = {day: cells[person['id'], day] for day in days}
-            exact = view['state'] == 'exact'
+            view = views[person['id']]
+            person_cells = {
+                day: (cells[person['id'], day] if (detail_dates is None or day in detail_dates) else {'state': 'future'})
+                for day in days
+            }
+            late_count, late_minutes = export_late_totals(
+                person_cells, None if detail_dates is not None else view, start_hour=start_hour, today=today,
+            )
+            worked_days = worked_days_count(person_cells)
+            emp_dups = {day for day in dup_days.get(person['id'], ()) if detail_dates is None or day in detail_dates}
             by_department[key]['people'].append({
                 'code': person['code'], 'name': person['name'], 'job': person.get('job') or '',
                 'machine_code': codes.get(person['id'], ''),
-                'cells': person_cells, 'absent': absence['days'],
-                'late': {'count': view['count'] if exact else None, 'minutes': view['minutes'] if exact else None},
-                'note': person_note(person_cells, view, absence, person.get('archived', False)),
+                'cells': person_cells,
+                'worked_days': worked_days,
+                'late': {'count': late_count, 'minutes': late_minutes},
+                'note': person_note(
+                    person_cells, view, None, person.get('archived', False),
+                    duplicate_days=emp_dups, today=today,
+                ),
             })
-        detail_rows = []
-        for person in people:
-            for day in days:
-                cell = cells[person['id'], day]
-                if day > today or cell['state'] in UNDRAWN or (detail_dates is not None and day not in detail_dates):
-                    continue
-                detail_rows.append({
-                    'department': person['department'], 'code': person['code'], 'name': person['name'],
-                    'job': person.get('job') or '', 'date': day, 'in': cell['in'], 'out': cell['out'],
-                    'late': late_of(cell) if cell['in'] else '', 'state': cell['state'],
-                    'state_label': mine_row_status(cell['state'], cell['in'], cell['out']),
-                    'source': SOURCE_NAMES.get(cell.get('source'), ''),
-                })
-        tz_ctx = self.with_context(tz=self.env.user.tz or DEFAULT_TZ)
-        exported = fields.Datetime.context_timestamp(tz_ctx, fields.Datetime.now())
-        strip = self._tp_source_strip(company, today)
-        synced = (f"Đồng bộ thành công lần cuối: {strip['updated_at']}" if strip['updated_at']
-                  else 'Chưa có lần đồng bộ thành công')
-        period = (f'Tháng {start:%m/%Y} · ' if mode == 'month' else '') + (
-            f'Từ ngày {start:%d/%m/%Y} đến ngày {end:%d/%m/%Y} · {len(days)} ngày')
         report = {
-            'company': company.name, 'title': 'BẢNG CHẤM CÔNG VÀO / RA', 'period': period, 'scope': scope,
-            'stamp': f"Xuất lúc {exported:%d/%m/%Y %H:%M} · Nguồn: {strip['label']} · {synced}",
-            'days': days, 'groups': groups,
-            'legend': export_legend(f'{start:%d/%m/%Y} – {end:%d/%m/%Y}', self._tp_reference_hours(), absence_note),
-            'detail': {'title': f'Chi tiết theo nhân viên / ngày · {start:%d/%m/%Y} – {min(end, today):%d/%m/%Y}'
-                                f'{detail_note} · mỗi dòng một nhân viên một ngày, không gộp ô',
-                       'rows': detail_rows},
+            'title': 'BẢNG CÔNG THÁNG',
+            'period': f'Từ ngày {start:%d/%m/%Y} - Đến ngày {end:%d/%m/%Y}',
+            'days': days,
+            'groups': groups,
         }
         content, _totals = build_attendance_book(report)
         return content
 
     @api.model
     def _tp_book_result(self, name, start, end, content):
-        return {'filename': f'{name}-{start:%Y%m%d}-{end:%Y%m%d}.xlsx', 'data': base64.b64encode(content).decode()}
+        return {'filename': f'{name}_{start:%d-%m-%Y}_den_{end:%d-%m-%Y}.xlsx',
+                'data': base64.b64encode(content).decode()}
 
     @api.model
     def tp_export_sheet(self, params=None):
@@ -1107,25 +1117,28 @@ class AttendanceDayOverview(models.Model):
         department_id = int(params.get('department_id') or 0)
         term = (params.get('search') or '').strip()
         people = self._tp_people(company, department_id, term, start, end)
-        departments = self.env['hr.department'].browse({person['department_id'] for person in people.values() if person['department_id']})
+        departments = self.env['hr.department'].browse(
+            {person['department_id'] for person in people.values() if person['department_id']})
+        if not departments and department_id:
+            departments = self.env['hr.department'].browse(department_id).exists()
         if not self._tp_can_export_shared(company, departments):
             raise AccessError(self.env._('Người chỉ đọc không xuất dữ liệu chung. HR hoặc người được giao xử lý công mới xuất.'))
         ordered = list(people.values())
-        department = self.env['hr.department'].browse(department_id).exists() if department_id else None
-        scope = ' · '.join(filter(None, [
-            f'Phòng ban: {department.complete_name or department.name}' if department else 'Phạm vi: tất cả phòng ban',
-            f'Tìm nhân viên: "{term}"' if term else '',
-            f'{len(ordered)} nhân viên',
-        ]))
-        content = self._tp_export_book(company, ordered, start, end, today, mode=mode, scope=scope)
+        state_filter = (params.get('state') or '').strip()
+        if mode == 'day' and state_filter and ordered:
+            cells, _has_leave = self._tp_presence(company, [person['id'] for person in ordered], start, end, today)
+            if state_filter == 'attention':
+                ordered = [person for person in ordered if cells[person['id'], start]['state'] in ATTENTION]
+            else:
+                ordered = [person for person in ordered if cells[person['id'], start]['state'] == state_filter]
+        content = self._tp_export_book(company, ordered, start, end, today, mode=mode)
         self.env['tp.hr.attendance.log']._tp_log(self.env.company, 'sheet_export',
                                                  {'from': start, 'to': end, 'people': len(ordered), 'mode': mode})
-        return self._tp_book_result('bang-cham-cong', start, end, content)
+        return self._tp_book_result('Bang_cong', start, end, content)
 
     @api.model
     def tp_export_mine(self, params=None):
-        """Own attendance only (owner from the session, client ids ignored). The matrix covers the whole period;
-        the state/weekday filters of the screen select the rows of the "Chi tiết" sheet (never only one page)."""
+        """Own attendance only (owner from the session, client ids ignored). Uses the same Report layout."""
         self.check_access('read')
         params = dict(params or {})
         company = self.env.company
@@ -1135,18 +1148,13 @@ class AttendanceDayOverview(models.Model):
         dataset = self._tp_mine_dataset(company, employee, params)
         start, end = dataset['start'], dataset['end']
         applied = dataset['applied_filters']
-        filter_parts = []
-        if applied['state']:
-            filter_parts.append(f"Tình trạng: {MINE_STATE_FILTER_LABELS.get(applied['state'], applied['state'])}")
-        if applied['weekday']:
-            filter_parts.append(f"Ngày: {MINE_WEEKDAY_FILTER_LABELS.get(applied['weekday'], applied['weekday'])}")
+        has_filter = bool(applied['state'] or applied['weekday'])
         person = {'id': employee.id, 'code': employee.tp_employee_code or '', 'name': employee.name or '',
                   'department': employee.department_id.name or '', 'department_id': employee.department_id.id or False,
                   'job': employee.job_title or employee.job_id.name or ''}
         filtered = {fields.Date.to_date(row['date']) for row in dataset['filtered_rows']}
+        people_list = [] if (has_filter and not filtered) else [person]
         content = self._tp_export_book(
-            company, [person], start, end, dataset['today'], mode=dataset['mode'],
-            scope=f"Công của tôi: {person['name']}" + (f" ({person['code']})" if person['code'] else ''),
-            detail_dates=filtered if filter_parts else None,
-            detail_note=(' · Bộ lọc: ' + '; '.join(filter_parts)) if filter_parts else '')
-        return self._tp_book_result('cong-cua-toi', start, end, content)
+            company, people_list, start, end, dataset['today'], mode=dataset['mode'],
+            detail_dates=filtered if has_filter else None)
+        return self._tp_book_result('Cong_cua_toi', start, end, content)

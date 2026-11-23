@@ -1,12 +1,15 @@
-"""Attendance workbook "Bảng chấm công" (ENTI-ATTENDANCE-002).
+"""Attendance workbook "Report" matching the TANPHAT ONE timesheet template.
 
-Pure layout code, no ORM: the model (``attendance_overview``) prepares one report dict from the same figures the
-screens show, and this module turns it into an .xlsx. It follows the structure of the HR reference sheet (period
-block, department group rows, two rows Vào / Ra per employee, days across, late count/minutes, absence) without its
-overtime / worked-hour columns, plus an optional flat "Chi tiết" sheet (one row per employee and day, no merges).
+Pure layout and calculation helpers (no ORM): ``attendance_overview`` prepares one report dict from the
+canonical backend figures and this module builds a single-sheet ``.xlsx`` named ``Report``.
 
-Rules kept here: times and dates are real Excel values, a missing time is "—" (never 00:00), unknown numbers are
-"—" (never 0), every text goes through ``xlsx_safe`` (no formula injection), Sunday keeps its real times.
+Structure:
+- Row 2: ``BẢNG CÔNG THÁNG``
+- Row 3: ``Từ ngày dd/mm/yyyy - Đến ngày dd/mm/yyyy``
+- Rows 5-6: two-tier header (STT, Mã nhân viên, Tên nhân viên, ID, Chức vụ, Vào/Ra, day number + weekday,
+  Đi muộn [Lần, Phút], Số ngày, Ghi chú)
+- Department group banner rows followed by two consecutive rows (Vào / Ra) per employee; identity, summary
+  and note cells are vertically merged across the two rows so row 2 stays blank and values never repeat.
 """
 from datetime import date, time
 from io import BytesIO
@@ -19,63 +22,159 @@ from openpyxl.worksheet.properties import PageSetupProperties
 
 from .attendance_logic import WEEKDAY_LABELS, xlsx_safe
 
-MISSING = '—'
-FONT_NAME = 'Arial'
-HEADER = '1E3A8A'          # dark blue header, white text
-HEADER_SUNDAY = '475569'   # Sunday header column
-DEPARTMENT = 'DBEAFE'      # department group rows
-STRIPE = 'F1F5F9'          # every second employee
-SUNDAY = 'E5E7EB'          # Sunday cells (light grey)
-LATE = 'FED7AA'            # first-in later than the reference hour (ENTI late minutes > 0)
-ATTENTION = 'FEF08A'       # missing time / needs checking
-ABSENT = 'FECACA'          # absence established by the schedule
-LEAVE = 'E0F2FE'           # approved leave
-GRID = Side(style='thin', color='94A3B8')
+FONT_NAME = 'Times New Roman'
+HEADER_FILL = 'F2F2F2'
+GROUP_FILL = 'F5F5F5'
+GRID = Side(style='thin', color='000000')
 BORDER = Border(left=GRID, right=GRID, top=GRID, bottom=GRID)
 CENTER = Alignment(horizontal='center', vertical='center')
 CENTER_WRAP = Alignment(horizontal='center', vertical='center', wrap_text=True)
 LEFT = Alignment(horizontal='left', vertical='center')
 LEFT_WRAP = Alignment(horizontal='left', vertical='center', wrap_text=True)
 
-HEADER_ROW = 7             # rows 7-8: two header rows; data from row 9
-IDENTITY = ('STT', 'Mã nhân viên', 'Tên nhân viên', 'ID', 'Chức vụ', 'Vào / Ra')
-IDENTITY_WIDTHS = (5, 14, 25, 8, 16, 7)
-DAY_WIDTH = 7
-NOTE_WIDTH = 44
-DAYS_PER_PAGE = 16         # print: a month spreads over two landscape pages instead of shrinking to one
+HEADER_ROW = 5             # rows 5-6: two-tier header; data starts at row 7
+IDENTITY = ('STT', 'Mã nhân viên', 'Tên nhân viên', 'ID', 'Chức vụ', 'Vào/Ra')
+IDENTITY_WIDTHS = (5, 13, 26, 8, 16, 7)
+DAY_WIDTH = 6.5
+LATE_COUNT_WIDTH = 7
+LATE_MIN_WIDTH = 8
+WORKED_DAYS_WIDTH = 9
+NOTE_WIDTH = 34
+DAYS_PER_PAGE = 16
+NON_WORKED_STATES = ('future', 'off', 'rest', 'leave', 'absent', 'no_punch', 'no_source')
+SOURCE_NAMES = {'enti': 'ENTI', 'excel': 'Excel máy (lịch sử)', 'correction': 'Điều chỉnh đã duyệt',
+                'api': 'Máy chấm công'}
+NOTE_DATES = 8
 
 
 def _fill(color):
     return PatternFill('solid', start_color=color, end_color=color)
 
 
-def _font(bold=False, color='0F172A', size=9, italic=False):
+def _font(bold=False, color='000000', size=9, italic=False):
     return Font(name=FONT_NAME, size=size, bold=bold, italic=italic, color=color)
 
 
 def as_time(text):
-    """``'08:05'`` → ``time(8, 5)``; ``None`` for an empty or unreadable clock (shown as "—")."""
+    """``'08:05'`` or ``'08:05:30'`` -> ``time(8, 5)``; ``None`` when blank or invalid."""
     try:
-        hour, minute = (int(part) for part in (text or '').split(':')[:2])
+        raw = str(text or '').strip()
+        if not raw:
+            return None
+        if 'T' in raw or ' ' in raw:
+            raw = raw.replace('T', ' ').split(' ', 1)[1]
+        parts = raw.split(':')
+        if len(parts) < 2:
+            return None
+        hour, minute = int(parts[0]), int(parts[1])
         return time(hour, minute)
     except (TypeError, ValueError):
         return None
 
 
-def _day_marks(cell):
-    """``(in_value, out_value, fill)`` for one employee/day cell of the matrix."""
-    state = cell.get('state')
-    if state in ('future', 'off', 'rest'):
-        return '', '', None
-    if state == 'absent':
-        return 'Vắng', 'Vắng', ABSENT
-    if state == 'leave':
-        return 'Nghỉ', 'Nghỉ', LEAVE
-    if state in ('no_source', 'no_punch'):
-        return MISSING, MISSING, None
-    attention = state in ('missing', 'review')
-    first, last = as_time(cell.get('in')), as_time(cell.get('out'))
-    return (first or MISSING, last or MISSING, ATTENTION if attention else None)
+def format_clock(text):
+    """Normalize a clock string to ``HH:mm`` (no seconds, no datetime); ``''`` when empty."""
+    parsed = as_time(text)
+    return f'{parsed.hour:02d}:{parsed.minute:02d}' if parsed else ''
+
+
+def _machine_id_value(raw):
+    text = str(raw or '').strip()
+    if not text:
+        return ''
+    return int(text) if text.isdigit() else text
+
+
+def worked_days_count(cells):
+    """Count unique non-Sunday days in ``cells`` (``{date: cell}``) with a valid clock-in or clock-out."""
+    count = 0
+    for day in sorted(cells):
+        if day.weekday() == 6:
+            continue
+        cell = cells[day] or {}
+        if cell.get('state') in NON_WORKED_STATES:
+            continue
+        if as_time(cell.get('in')) is not None or as_time(cell.get('out')) is not None:
+            count += 1
+    return count
+
+
+def export_late_totals(cells, view=None, start_hour=8.5, today=None):
+    """Return ``(late_count, late_minutes)`` as non-negative integers.
+
+    Uses exact pre-aggregated source totals when available (e.g. historical Excel period totals); otherwise
+    uses ENTI daily ``late`` minutes when present and falls back to ``clock_in - start_hour`` (default 08:30)
+    for scheduled non-Sunday working days that have a check-in clock.
+    """
+    view = view or {}
+    if view.get('state') == 'exact' and view.get('source') not in ('', 'ENTI', None):
+        return max(0, round(view.get('count') or 0)), max(0, round(view.get('minutes') or 0))
+
+    ref_minutes = round(start_hour * 60)
+    count = 0
+    minutes = 0
+    for day in sorted(cells):
+        if day.weekday() == 6 or (today and day > today):
+            continue
+        cell = cells[day] or {}
+        if cell.get('state') in NON_WORKED_STATES:
+            continue
+        if not cell.get('scheduled', True):
+            continue
+        t_in = as_time(cell.get('in'))
+        if t_in is None:
+            continue
+        if cell.get('late') is not None:
+            late_min = max(0, round(cell['late']))
+        else:
+            late_min = max(0, (t_in.hour * 60 + t_in.minute) - ref_minutes)
+        if late_min > 0:
+            count += 1
+            minutes += late_min
+    return count, minutes
+
+
+def _dates(days):
+    shown = ', '.join(f'{day:%d/%m}' for day in days[:NOTE_DATES])
+    return shown + (f' … (+{len(days) - NOTE_DATES})' if len(days) > NOTE_DATES else '')
+
+
+def person_note(cells, late=None, absence=None, archived=False, *, duplicate_days=None, today=None):
+    """Concise Vietnamese note for one employee; returns ``''`` when nothing needs attention."""
+    ordered = sorted(cells.items())
+    missing_in = [day for day, cell in ordered
+                  if cell.get('state') in ('missing', 'review') and as_time(cell.get('in')) is None]
+    missing_out = [day for day, cell in ordered
+                   if cell.get('state') in ('missing', 'review')
+                   and as_time(cell.get('in')) is not None and as_time(cell.get('out')) is None]
+    anomaly = [day for day, cell in ordered
+               if cell.get('state') == 'review'
+               and as_time(cell.get('in')) is not None and as_time(cell.get('out')) is not None]
+    leave_days = [day for day, cell in ordered if cell.get('state') == 'leave']
+    dup_days = sorted(duplicate_days or ())
+
+    parts = []
+    if missing_in:
+        parts.append(f'Thiếu giờ vào: {_dates(missing_in)}')
+    if missing_out:
+        parts.append(f'Thiếu giờ ra: {_dates(missing_out)}')
+    if anomaly:
+        parts.append(f'Có dữ liệu bất thường: {_dates(anomaly)}')
+    if dup_days:
+        parts.append(f'Có bản ghi trùng cần đối chiếu: {_dates(dup_days)}')
+    if leave_days:
+        parts.append(f'Nghỉ: {_dates(leave_days)}')
+
+    if not parts and worked_days_count(cells) == 0:
+        past_workdays = [day for day, cell in ordered
+                         if day.weekday() != 6 and (not today or day <= today)
+                         and cell.get('state') in ('absent', 'no_punch', 'no_source')]
+        if past_workdays:
+            parts.append('Không có dữ liệu trong kỳ')
+
+    if archived:
+        parts.append('Hồ sơ đã lưu trữ')
+    return '\n'.join(parts)
 
 
 def _style(cell, *, font=None, fill=None, align=CENTER, border=True, number_format=None):
@@ -90,13 +189,16 @@ def _style(cell, *, font=None, fill=None, align=CENTER, border=True, number_form
 
 
 def _put(sheet, row, column, value, **style):
-    cell = sheet.cell(row, column, xlsx_safe(value) if not isinstance(value, (date, time)) else value)
+    safe_val = value if isinstance(value, (date, time)) else xlsx_safe(value)
+    if isinstance(safe_val, str) and not safe_val:
+        safe_val = None
+    cell = sheet.cell(row, column, safe_val)
     _style(cell, **style)
     return cell
 
 
 def _merge(sheet, first_row, first_col, last_row, last_col, value, **style):
-    """Merged block with borders on every covered cell (Excel draws merged borders per cell)."""
+    """Merge cells and apply uniform border/style across every cell in the merged region."""
     for row in range(first_row, last_row + 1):
         for column in range(first_col, last_col + 1):
             _style(sheet.cell(row, column), **style)
@@ -105,139 +207,23 @@ def _merge(sheet, first_row, first_col, last_row, last_col, value, **style):
     return _put(sheet, first_row, first_col, value, **style)
 
 
-def _note_height(text, width=NOTE_WIDTH):
-    """Height (points) of each of the two rows of an employee so the merged note never overflows."""
-    lines = sum(max(1, ceil(len(part) / (width * 1.05))) for part in (text or '').split('\n'))
-    return max(15.0, ceil(lines * 12 / 2) + 2.0)
+def _pair_row_height(name_text, job_text, note_text, name_width, job_width, note_width):
+    """Compute height per row of a 2-row employee block so wrapped text never overflows."""
+    def _line_count(text, width):
+        if not text:
+            return 1
+        eff = max(8, width * 0.95)
+        return sum(max(1, ceil(len(part) / eff)) for part in str(text).split('\n'))
+
+    max_lines = max(
+        _line_count(name_text, name_width),
+        _line_count(job_text, job_width),
+        _line_count(note_text, note_width),
+    )
+    return max(15.5, ceil((max_lines * 12.5) / 2) + 2.5)
 
 
-def _matrix(sheet, report):
-    days = report['days']
-    first_day = len(IDENTITY) + 1
-    late_col = first_day + len(days)
-    absent_col, note_col = late_col + 2, late_col + 3
-    last_col = note_col
-
-    # ---- period block (rows 1-5)
-    blocks = [
-        (f"TANPHAT ONE · {report['company']}", _font(True, '1E3A8A', 11), 18),
-        (report['title'], _font(True, '0F172A', 15), 24),
-        (report['period'], _font(True, '0F172A', 10), 16),
-        (report['scope'], _font(False, '334155', 9), 15),
-        (report['stamp'], _font(False, '334155', 9), 15),
-    ]
-    for row, (text, font, height) in enumerate(blocks, 1):
-        _merge(sheet, row, 1, row, last_col, text, font=font, align=LEFT, border=False)
-        sheet.row_dimensions[row].height = height
-    sheet.row_dimensions[6].height = 6
-
-    # ---- two header rows
-    head = _font(True, 'FFFFFF')
-    top, bottom = HEADER_ROW, HEADER_ROW + 1
-    for column, label in enumerate(IDENTITY, 1):
-        _merge(sheet, top, column, bottom, column, label, font=head, fill=HEADER, align=CENTER_WRAP)
-    for offset, day in enumerate(days):
-        column = first_day + offset
-        fill = HEADER_SUNDAY if day.weekday() == 6 else HEADER
-        _put(sheet, top, column, day, font=head, fill=fill, number_format='dd/mm')
-        _put(sheet, bottom, column, WEEKDAY_LABELS[day.weekday()], font=head, fill=fill)
-    _merge(sheet, top, late_col, top, late_col + 1, 'Đi muộn', font=head, fill=HEADER)
-    _put(sheet, bottom, late_col, 'Số lần', font=head, fill=HEADER)
-    _put(sheet, bottom, late_col + 1, 'Tổng phút', font=head, fill=HEADER)
-    _put(sheet, top, absent_col, 'Vắng', font=head, fill=HEADER)
-    _put(sheet, bottom, absent_col, 'Số ngày', font=head, fill=HEADER)
-    _merge(sheet, top, note_col, bottom, note_col, 'Ghi chú cần kiểm tra', font=head, fill=HEADER, align=CENTER_WRAP)
-    sheet.row_dimensions[top].height = 18
-    sheet.row_dimensions[bottom].height = 18
-
-    # ---- department groups, two rows per employee
-    row = bottom + 1
-    serial = 0
-    totals = {'count': 0, 'minutes': 0, 'absent': 0, 'late_unknown': 0}
-    for group in report['groups']:
-        _merge(sheet, row, 1, row, last_col, f"{group['name']} · {len(group['people'])} người",
-               font=_font(True, '1E3A8A', 10), fill=DEPARTMENT, align=LEFT)
-        sheet.row_dimensions[row].height = 17
-        row += 1
-        for group_serial, person in enumerate(group['people'], 1):
-            serial += 1
-            stripe = STRIPE if serial % 2 == 0 else None
-            body = _font()
-            for column, value in enumerate((group_serial, person['code'] or MISSING, person['name'],
-                                             person.get('machine_code') or MISSING, person['job'] or MISSING), 1):
-                _merge(sheet, row, column, row + 1, column, value, font=body, fill=stripe,
-                       align=LEFT_WRAP if column in (3, 5) else CENTER_WRAP)
-            _put(sheet, row, len(IDENTITY), 'Vào', font=_font(True, '0F766E'), fill=stripe)
-            _put(sheet, row + 1, len(IDENTITY), 'Ra', font=_font(True, '6D28D9'), fill=stripe)
-            for offset, day in enumerate(days):
-                column = first_day + offset
-                cell = person['cells'].get(day, {})
-                first, last, fill = _day_marks(cell)
-                base = SUNDAY if day.weekday() == 6 else stripe
-                first_fill = fill or base
-                if isinstance(first, time) and (cell.get('late') or 0) > 0:
-                    first_fill = LATE
-                for target, value, color in ((row, first, first_fill), (row + 1, last, fill or base)):
-                    is_time = isinstance(value, time)
-                    font = _font(color='94A3B8') if value == MISSING else (
-                        _font(True, 'B91C1C') if value == 'Vắng' else body)
-                    _put(sheet, target, column, value, font=font, fill=color, number_format='hh:mm' if is_time else None)
-            late = person['late']
-            known = late.get('count') is not None
-            if known:
-                totals['count'] += late['count']
-                totals['minutes'] += late['minutes']
-            else:
-                totals['late_unknown'] += 1
-            totals['absent'] += person['absent']
-            _merge(sheet, row, late_col, row + 1, late_col, late['count'] if known else MISSING, font=body, fill=stripe)
-            _merge(sheet, row, late_col + 1, row + 1, late_col + 1, late['minutes'] if known else MISSING,
-                   font=body, fill=stripe, number_format='#,##0' if known else None)
-            _merge(sheet, row, absent_col, row + 1, absent_col, person['absent'],
-                   font=_font(True, 'B91C1C') if person['absent'] else body, fill=stripe)
-            _merge(sheet, row, note_col, row + 1, note_col, person['note'], font=_font(color='334155', size=8),
-                   fill=stripe, align=LEFT_WRAP)
-            height = _note_height(person['note'])
-            sheet.row_dimensions[row].height = height
-            sheet.row_dimensions[row + 1].height = height
-            row += 2
-
-    # ---- totals of the exported scope (same values as the rows above, for reconciliation)
-    total_font = _font(True)
-    _merge(sheet, row, 1, row, late_col - 1, f'Tổng cộng {serial} nhân viên', font=total_font, fill=DEPARTMENT,
-           align=Alignment(horizontal='right', vertical='center'))
-    known_any = serial > totals['late_unknown']
-    _put(sheet, row, late_col, totals['count'] if known_any else MISSING, font=total_font, fill=DEPARTMENT)
-    _put(sheet, row, late_col + 1, totals['minutes'] if known_any else MISSING, font=total_font, fill=DEPARTMENT,
-         number_format='#,##0' if known_any else None)
-    _put(sheet, row, absent_col, totals['absent'], font=total_font, fill=DEPARTMENT)
-    unknown = totals['late_unknown']
-    _put(sheet, row, note_col, (f'Tổng đi muộn chưa gồm {unknown} người thiếu dữ liệu đi muộn' if unknown else ''),
-         font=_font(color='334155', size=8), fill=DEPARTMENT, align=LEFT_WRAP)
-    sheet.row_dimensions[row].height = 18
-    row += 2
-
-    # ---- legend / notes
-    for line in report['legend']:
-        _merge(sheet, row, 1, row, last_col, line, font=_font(color='334155', size=8), align=LEFT_WRAP, border=False)
-        sheet.row_dimensions[row].height = 13 * max(1, ceil(len(line) / 230))
-        row += 1
-
-    # ---- widths, freeze, print
-    for column, width in enumerate(IDENTITY_WIDTHS, 1):
-        sheet.column_dimensions[get_column_letter(column)].width = width
-    for offset in range(len(days)):
-        sheet.column_dimensions[get_column_letter(first_day + offset)].width = DAY_WIDTH
-    sheet.column_dimensions[get_column_letter(late_col)].width = 8
-    sheet.column_dimensions[get_column_letter(late_col + 1)].width = 10
-    sheet.column_dimensions[get_column_letter(absent_col)].width = 8
-    sheet.column_dimensions[get_column_letter(note_col)].width = NOTE_WIDTH
-    sheet.freeze_panes = f'{get_column_letter(first_day)}{bottom + 1}'
-    _print_setup(sheet, f'{top}:{bottom}', f'A:{get_column_letter(len(IDENTITY))}', max(1, ceil(len(days) / DAYS_PER_PAGE)))
-    return totals
-
-
-def _print_setup(sheet, title_rows, title_cols, pages_wide):
+def _print_setup(sheet, title_rows, title_cols, pages_wide, print_area):
     sheet.page_setup.orientation = 'landscape'
     sheet.page_setup.paperSize = sheet.PAPERSIZE_A4
     sheet.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
@@ -246,123 +232,154 @@ def _print_setup(sheet, title_rows, title_cols, pages_wide):
     sheet.print_title_rows = title_rows
     if title_cols:
         sheet.print_title_cols = title_cols
+    sheet.print_area = print_area
     sheet.print_options.horizontalCentered = True
     sheet.page_margins.left = sheet.page_margins.right = 0.3
-    sheet.page_margins.top = sheet.page_margins.bottom = 0.5
+    sheet.page_margins.top = sheet.page_margins.bottom = 0.4
     sheet.oddFooter.center.text = 'Trang &P / &N'
     sheet.sheet_view.zoomScale = 100
 
 
-DETAIL_HEADER = ('Phòng ban', 'Mã NV', 'Họ và tên', 'Chức vụ', 'Ngày', 'Thứ', 'Giờ vào', 'Giờ ra',
-                 'Phút đi muộn', 'Tình trạng', 'Nguồn')
-DETAIL_WIDTHS = (22, 10, 25, 16, 12, 6, 9, 9, 12, 22, 22)
+def _report_sheet(sheet, report):
+    days = report['days']
+    first_day = len(IDENTITY) + 1
+    late_col = first_day + len(days)
+    days_col = late_col + 2
+    note_col = days_col + 1
+    last_col = note_col
 
-
-def _detail(sheet, report):
-    detail = report['detail']
-    _merge(sheet, 1, 1, 1, len(DETAIL_HEADER), detail['title'], font=_font(True, '1E3A8A', 11), align=LEFT, border=False)
-    sheet.row_dimensions[1].height = 18
-    head = _font(True, 'FFFFFF')
-    for column, label in enumerate(DETAIL_HEADER, 1):
-        _put(sheet, 3, column, label, font=head, fill=HEADER, align=CENTER_WRAP)
+    # ---- rows 1-4: minimalist title block matching sample template
+    sheet.row_dimensions[1].height = 10
+    _merge(sheet, 2, 1, 2, last_col, report.get('title') or 'BẢNG CÔNG THÁNG',
+           font=_font(True, size=14), align=CENTER, border=False)
+    sheet.row_dimensions[2].height = 24
+    _merge(sheet, 3, 1, 3, last_col, report['period'],
+           font=_font(True, size=10), align=CENTER, border=False)
     sheet.row_dimensions[3].height = 18
-    row = 4
-    longest = [len(label) + 2 for label in DETAIL_HEADER]
-    for item in detail['rows']:
-        sunday = item['date'].weekday() == 6
-        fill = SUNDAY if sunday else None
-        values = (item['department'] or MISSING, item['code'] or MISSING, item['name'], item['job'] or MISSING,
-                  item['date'], WEEKDAY_LABELS[item['date'].weekday()], as_time(item['in']) or MISSING,
-                  as_time(item['out']) or MISSING, MISSING if item['late'] is None else item['late'],
-                  item['state_label'], item['source'] or MISSING)
-        for column, value in enumerate(values, 1):
-            number_format = 'dd/mm/yyyy' if isinstance(value, date) else 'hh:mm' if isinstance(value, time) else None
-            cell_fill = fill
-            if column == 7 and isinstance(value, time) and (item['late'] or 0) > 0:
-                cell_fill = LATE
-            elif column in (7, 8) and value == MISSING and item['state'] in ('missing', 'review'):
-                cell_fill = ATTENTION
-            elif column == 10 and item['state'] == 'absent':
-                cell_fill = ABSENT
-            _put(sheet, row, column, value, font=_font(color='94A3B8') if value == MISSING else _font(),
-                 fill=cell_fill, align=LEFT if column in (1, 3, 4, 10, 11) else CENTER, number_format=number_format)
-            if isinstance(value, str):
-                longest[column - 1] = max(longest[column - 1], len(value) + 2)
-        row += 1
-    for column, width in enumerate(DETAIL_WIDTHS, 1):
-        # Wide enough for the longest text (no cut text / "####"), capped so one long name never dominates.
-        sheet.column_dimensions[get_column_letter(column)].width = min(max(width, longest[column - 1]), 48)
-    sheet.freeze_panes = 'D4'
-    if row > 4:
-        sheet.auto_filter.ref = f'A3:{get_column_letter(len(DETAIL_HEADER))}{row - 1}'
-    _print_setup(sheet, '3:3', None, 1)
+    sheet.row_dimensions[4].height = 8
 
+    # ---- rows 5-6: two-tier table header
+    head_font = _font(True, size=9)
+    top, bottom = HEADER_ROW, HEADER_ROW + 1
+    for column, label in enumerate(IDENTITY, 1):
+        _merge(sheet, top, column, bottom, column, label, font=head_font, fill=HEADER_FILL, align=CENTER_WRAP)
+    for offset, day in enumerate(days):
+        column = first_day + offset
+        _put(sheet, top, column, day.day, font=head_font, fill=HEADER_FILL, align=CENTER, number_format='0')
+        _put(sheet, bottom, column, WEEKDAY_LABELS[day.weekday()], font=head_font, fill=HEADER_FILL, align=CENTER)
+    _merge(sheet, top, late_col, top, late_col + 1, 'Đi muộn', font=head_font, fill=HEADER_FILL, align=CENTER)
+    _put(sheet, bottom, late_col, 'Lần', font=head_font, fill=HEADER_FILL, align=CENTER)
+    _put(sheet, bottom, late_col + 1, 'Phút', font=head_font, fill=HEADER_FILL, align=CENTER)
+    _merge(sheet, top, days_col, bottom, days_col, 'Số ngày', font=head_font, fill=HEADER_FILL, align=CENTER_WRAP)
+    _merge(sheet, top, note_col, bottom, note_col, 'Ghi chú', font=head_font, fill=HEADER_FILL, align=CENTER_WRAP)
+    sheet.row_dimensions[top].height = 20
+    sheet.row_dimensions[bottom].height = 18
 
-SOURCE_NAMES = {'enti': 'ENTI', 'excel': 'Excel máy (lịch sử)', 'correction': 'Điều chỉnh đã duyệt',
-                'api': 'Máy chấm công'}
-NOTE_DATES = 8
+    # ---- body: department groups & 2 rows per employee
+    row = bottom + 1
+    serial = 0
+    totals = {'people': 0, 'count': 0, 'minutes': 0, 'worked_days': 0}
+    max_name_len = len('Tên nhân viên')
+    max_job_len = len('Chức vụ')
+    max_note_len = 24
 
+    groups = [group for group in report.get('groups', []) if group.get('people')]
+    if not groups:
+        _merge(sheet, row, 1, row, last_col, 'Không có dữ liệu trong kỳ đã chọn',
+               font=_font(italic=True, size=9), align=CENTER)
+        sheet.row_dimensions[row].height = 24
+        last_row = row
+    else:
+        body_font = _font(size=9)
+        group_font = _font(True, size=9)
+        for group in groups:
+            _merge(sheet, row, 1, row, last_col, group['name'],
+                   font=group_font, fill=GROUP_FILL, align=LEFT)
+            sheet.row_dimensions[row].height = 19
+            row += 1
+            for group_serial, person in enumerate(group['people'], 1):
+                serial += 1
+                name_text = person.get('name') or ''
+                job_text = person.get('job') or ''
+                note_text = person.get('note') or ''
+                max_name_len = max(max_name_len, len(name_text))
+                max_job_len = max(max_job_len, len(job_text))
+                if note_text:
+                    max_note_len = max(max_note_len, *(len(line) for line in note_text.split('\n')))
 
-def _dates(days):
-    shown = ', '.join(f'{day:%d/%m}' for day in days[:NOTE_DATES])
-    return shown + (f' … (+{len(days) - NOTE_DATES})' if len(days) > NOTE_DATES else '')
+                identity_vals = (
+                    group_serial,
+                    person.get('code') or '',
+                    name_text,
+                    _machine_id_value(person.get('machine_code')),
+                    job_text,
+                )
+                for column, value in enumerate(identity_vals, 1):
+                    align = LEFT_WRAP if column == 3 else (CENTER_WRAP if column == 5 else CENTER)
+                    _merge(sheet, row, column, row + 1, column, value, font=body_font, align=align)
 
+                _put(sheet, row, len(IDENTITY), 'Vào', font=body_font, align=CENTER)
+                _put(sheet, row + 1, len(IDENTITY), 'Ra', font=body_font, align=CENTER)
 
-def person_note(cells, late, absence, archived=False):
-    """"Ghi chú cần kiểm tra" of one employee: what is missing or uncertain in the exported range, nothing else.
+                cells = person.get('cells') or {}
+                for offset, day in enumerate(days):
+                    column = first_day + offset
+                    cell = cells.get(day, {})
+                    _put(sheet, row, column, format_clock(cell.get('in')), font=body_font, align=CENTER)
+                    _put(sheet, row + 1, column, format_clock(cell.get('out')), font=body_font, align=CENTER)
 
-    ``cells`` ``{date: cell}``; ``late`` the late view (``state``/``text``/``note``/``source``); ``absence`` the
-    absence total (``unknown`` = scheduled days without any source, never counted as absent)."""
-    ordered = sorted(cells.items())
-    missing_in = [day for day, cell in ordered if cell['state'] in ('missing', 'review') and not cell.get('in')]
-    missing_out = [day for day, cell in ordered
-                   if cell['state'] in ('missing', 'review') and cell.get('in') and not cell.get('out')]
-    review = [day for day, cell in ordered if cell['state'] == 'review' and cell.get('in') and cell.get('out')]
-    parts = []
-    if missing_in:
-        parts.append(f'Thiếu giờ vào: {_dates(missing_in)}')
-    if missing_out:
-        parts.append(f'Thiếu giờ ra: {_dates(missing_out)}')
-    if review:
-        parts.append(f'Cần kiểm tra: {_dates(review)}')
-    if absence.get('unknown'):
-        parts.append(f"Chưa có dữ liệu {absence['unknown']} ngày làm (không tính vắng)")
-    if late['state'] != 'exact':
-        parts.append(f"Đi muộn: {late.get('text') or 'chưa có số liệu'}")
-    elif late.get('source') and late['source'] != 'ENTI':
-        parts.append(f"Đi muộn lấy theo {late['note']}")
-    if archived:
-        parts.append('Hồ sơ đã lưu trữ, vẫn có dữ liệu trong kỳ')
-    return '\n'.join(parts)
+                late = person.get('late') or {}
+                late_count = max(0, round(late.get('count') or 0))
+                late_minutes = max(0, round(late.get('minutes') or 0))
+                worked_days = max(0, round(person.get('worked_days') or 0))
+                totals['people'] += 1
+                totals['count'] += late_count
+                totals['minutes'] += late_minutes
+                totals['worked_days'] += worked_days
 
+                _merge(sheet, row, late_col, row + 1, late_col, late_count,
+                       font=body_font, align=CENTER, number_format='0')
+                _merge(sheet, row, late_col + 1, row + 1, late_col + 1, late_minutes,
+                       font=body_font, align=CENTER, number_format='#,##0')
+                _merge(sheet, row, days_col, row + 1, days_col, worked_days,
+                       font=body_font, align=CENTER, number_format='0')
+                _merge(sheet, row, note_col, row + 1, note_col, note_text,
+                       font=body_font, align=LEFT_WRAP)
 
-def legend(period, hours, absence_note):
-    return [
-        'Ghi chú:',
-        (f'• Giờ làm tham chiếu {hours}. ENTI chỉ trả giờ vào đầu tiên và giờ ra cuối cùng mỗi ngày; '
-         'Odoo không tự thêm lượt chấm và không tự điền giờ.'),
-        ('• Ký hiệu: "—" = chưa có giờ / thiếu dữ liệu (không ghi 00:00); "Vắng" = vắng theo lịch đã xác định; '
-         '"Nghỉ" = nghỉ đã xác nhận; ô trống = ngày chưa đến, ngày nghỉ theo lịch hoặc ngoài thời gian làm việc.'),
-        ('• Màu: cam = giờ vào đi muộn theo ENTI; vàng = thiếu giờ / cần kiểm tra; đỏ nhạt = vắng đã xác định; '
-         'xám = Chủ nhật (vẫn giữ giờ thực tế nếu có).'),
-        (f'• Đi muộn: "Số lần" = số ngày có phút đi muộn > 0; "Tổng phút" = tổng phút muộn đúng khoảng {period}. '
-         '"—" = chưa đủ dữ liệu, không tính là 0.'),
-        (f'• Vắng: {absence_note} Không tính Chủ nhật, ngày chưa đến, ngày trước khi vào làm hoặc sau khi nghỉ việc, '
-         'ngày nghỉ đã duyệt; chỉ có một giờ vào hoặc một giờ ra không tính là vắng.'),
-    ]
+                row_h = _pair_row_height(name_text, job_text, note_text, 28, 18, NOTE_WIDTH)
+                sheet.row_dimensions[row].height = row_h
+                sheet.row_dimensions[row + 1].height = row_h
+                row += 2
+        last_row = row - 1
+
+    # ---- column widths, freeze panes, print setup
+    name_width = min(max(IDENTITY_WIDTHS[2], max_name_len + 3), 38)
+    job_width = min(max(IDENTITY_WIDTHS[4], max_job_len + 3), 26)
+    note_width = min(max(NOTE_WIDTH, max_note_len + 3), 46)
+    widths = [IDENTITY_WIDTHS[0], IDENTITY_WIDTHS[1], name_width, IDENTITY_WIDTHS[3], job_width, IDENTITY_WIDTHS[5]]
+    for column, width in enumerate(widths, 1):
+        sheet.column_dimensions[get_column_letter(column)].width = width
+    for offset in range(len(days)):
+        sheet.column_dimensions[get_column_letter(first_day + offset)].width = DAY_WIDTH
+    sheet.column_dimensions[get_column_letter(late_col)].width = LATE_COUNT_WIDTH
+    sheet.column_dimensions[get_column_letter(late_col + 1)].width = LATE_MIN_WIDTH
+    sheet.column_dimensions[get_column_letter(days_col)].width = WORKED_DAYS_WIDTH
+    sheet.column_dimensions[get_column_letter(note_col)].width = note_width
+
+    sheet.freeze_panes = f'{get_column_letter(first_day)}{bottom + 1}'
+    pages_wide = max(1, ceil(len(days) / DAYS_PER_PAGE))
+    print_area = f'A1:{get_column_letter(last_col)}{last_row}'
+    _print_setup(sheet, f'{top}:{bottom}', f'A:{get_column_letter(len(IDENTITY))}', pages_wide, print_area)
+    return totals
 
 
 def build_attendance_book(report):
-    """``report`` → .xlsx bytes. Keys: company, title, period, scope, stamp, days [date], groups [{name, people}],
-    legend [str], detail ({title, rows} or None). A person: code, name, job, cells {date: cell}, late {count,
-    minutes} (``None`` = unknown), absent (int), note."""
+    """``report`` -> ``(.xlsx bytes, totals)``. Single sheet named ``Report``."""
     book = Workbook()
     sheet = book.active
-    sheet.title = 'Bảng chấm công'
-    totals = _matrix(sheet, report)
-    if report.get('detail') is not None:
-        _detail(book.create_sheet('Chi tiết'), report)
-    book.properties.title = report['title']
+    sheet.title = 'Report'
+    totals = _report_sheet(sheet, report)
+    book.properties.title = report.get('title') or 'BẢNG CÔNG THÁNG'
     book.properties.creator = 'TANPHAT ONE'
     stream = BytesIO()
     book.save(stream)

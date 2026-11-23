@@ -1,5 +1,15 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261123-005 — ATTENDANCE-EXPORT-REPORT-001: Thiết kế lại file Excel xuất chấm công theo mẫu Report
+
+- `custom_addons/tp_hr_attendance` **20.0.3.7.0**:
+  - `models/attendance_export.py`: tái thiết kế toàn bộ trình sinh Excel thành 1 sheet duy nhất `Report` theo đúng bố cục file mẫu `202611_TP_Cham_cong_tuan_3.xlsx` (`BẢNG CÔNG THÁNG`, `Từ ngày dd/mm/yyyy - Đến ngày dd/mm/yyyy`, header 2 tầng `STT`, `Mã nhân viên`, `Tên nhân viên`, `ID`, `Chức vụ`, `Vào/Ra`, cột ngày + thứ `T2..CN`, `Đi muộn [Lần, Phút]`, `Số ngày`, `Ghi chú`), nhóm theo phòng ban, 2 dòng `Vào`/`Ra` cho mỗi nhân viên, viền mảnh đen trắng/xám rất nhạt, tự chỉnh độ rộng, freeze panes `G7`, khổ ngang A4 lặp lại dòng `5:6`, `print_area`, và dòng `Không có dữ liệu trong kỳ đã chọn` khi trống.
+  - Quy tắc dữ liệu & tính toán: giờ hiển thị `HH:mm` (bỏ giây/datetime, trống nếu không có); `export_late_totals` giữ tổng hợp nguồn nếu `exact`, ngược lại lấy ENTI từng ngày hoặc tính từ giờ vào sau `08:30` (bỏ Chủ nhật, ngày nghỉ, ngày thiếu giờ vào; làm tròn nguyên phút; mặc định `0`); `worked_days_count` đếm ngày hợp lệ trong kỳ (bỏ Chủ nhật, không đếm trùng, mặc định `0`); `person_note` chỉ ghi thiếu vào/ra, bất thường, trùng cần đối chiếu, nghỉ hoặc không có dữ liệu (trống nếu bình thường).
+  - `models/attendance_overview.py`: đồng bộ lọc `state` ngày cho `tp_export_sheet`, kiểm soát trùng ENTI (`_tp_duplicate_days`), chuẩn hóa tên file `Bang_cong_dd-mm-yyyy_den_dd-mm-yyyy.xlsx` / `Cong_cua_toi_dd-mm-yyyy_den_dd-mm-yyyy.xlsx`, giữ nguyên phạm vi quyền và lọc nhân viên/phòng ban.
+  - `static/src/board/board.js`, `static/src/board/board.xml`: thêm trạng thái `exporting` chống bấm đúp khi xuất Excel.
+  - `tests/test_upload.py`, `tests/test_enti_attendance_002.py`, `scripts/enti_att002_export_check.py`: cập nhật và bổ sung kiểm thử mẫu `Report`, quy tắc đi muộn/số ngày/ghi chú, lọc phòng ban/nhân viên/ngày/trống, bảo mật và đối chiếu 3 kỳ.
+- Kiểm thử (`tp_tanphat_test` / 18079): `py_compile`, `ruff`, `node --check`, XML parse, `git diff --check` PASS; Odoo `TestAttendanceUpload,TestExportTemplate,TestExcelImportClosed` 15/15 PASS (21 tests), `TestAttendanceAccess,TestDirectoryPrivacy,TestLogic` 11/11 PASS (15 tests); `enti_att002_export_check.py` 3 kỳ (59 NV) 0 vấn đề; Playwright desktop `1440×900` & mobile `390×844` tải file từ Tổng quan/Bảng chấm công đạt 0 pageErrors.
+
 ## CHG-20261123-004 — WEBVIEW-ZALO-ERROR-GUARD-001: Biên bản áp PC server
 
 - Commit `7749fdd1` (`tp_branding` `20.0.2.2.2`) đã áp lên PC server (`192.168.1.73`, `tp_tanphat_dev`).

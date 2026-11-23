@@ -1,7 +1,7 @@
 """HR-ATTENDANCE-SIMPLE-002 (ORM): upload → preview → import, machine late totals, sheet / overview / own view,
 export rights and the API staging foundation. Synthetic company, people and hours only."""
 import base64
-from datetime import date, time, timedelta
+from datetime import date, timedelta
 from io import BytesIO
 
 from openpyxl import load_workbook
@@ -136,7 +136,7 @@ class TestAttendanceUpload(AttendanceCase):
         self.assertEqual(mine['employee']['id'], self.emp_a.id)
         self.assertEqual((mine['late']['state'], mine['late']['count'], mine['late']['minutes']), ('exact', 3, 47))
         self.assertEqual(len(mine['rows']), 7)
-        self.assertEqual((mine['page_size'], mine['total'], mine['period_days']), (50, 7, 7))
+        self.assertEqual((mine['page_size'], mine['total'], mine['period_days']), (100, 7, 7))
         self.assertEqual((mine['summary']['recorded_days'], mine['summary']['attention_days']), (2, 1))
         filtered = Mine.tp_mine(dict(WEEK, state='missing_out', employee_id=self.emp_b.id))
         self.assertEqual((filtered['employee']['id'], filtered['total'], len(filtered['rows'])), (self.emp_a.id, 1, 1))
@@ -145,38 +145,66 @@ class TestAttendanceUpload(AttendanceCase):
         self.assertEqual((filtered['summary']['recorded_days'], filtered['late']['count']), (2, 3))
         with self.assertRaises(UserError):
             Mine.tp_mine(dict(WEEK, state='forged_state'))
-        # ENTI-ATTENDANCE-002: every export follows the "Bảng chấm công" template plus the flat "Chi tiết" sheet.
-        sheets = ['Bảng chấm công', 'Chi tiết']
-        own = load_workbook(BytesIO(base64.b64decode(Mine.tp_export_mine(WEEK)['data'])))
+        # Redesign: single sheet "Report" matching the sample timesheet template.
+        sheets = ['Report']
+        own_res = Mine.tp_export_mine(WEEK)
+        self.assertEqual(own_res['filename'], 'Cong_cua_toi_09-11-2026_den_15-11-2026.xlsx')
+        own = load_workbook(BytesIO(base64.b64decode(own_res['data'])))
         self.assertEqual(own.sheetnames, sheets)
-        self.assertEqual([own['Bảng chấm công'].cell(row, 3).value for row in range(9, own['Bảng chấm công'].max_row + 1)
-                          if own['Bảng chấm công'].cell(row, 6).value == 'Vào'], [self.emp_a.name])
-        self.assertEqual({row[2] for row in own['Chi tiết'].iter_rows(min_row=4, values_only=True) if row[0]}, {self.emp_a.name})
-        own_filtered = load_workbook(BytesIO(base64.b64decode(Mine.tp_export_mine(dict(WEEK, state='missing_out', page=1, page_size=10))['data'])))
+        ws_own = own['Report']
+        self.assertEqual([ws_own.cell(row, 3).value for row in range(7, ws_own.max_row + 1)
+                          if ws_own.cell(row, 6).value == 'Vào'], [self.emp_a.name])
+        own_filtered_res = Mine.tp_export_mine(dict(WEEK, state='missing_out', page=1, page_size=10))
+        own_filtered = load_workbook(BytesIO(base64.b64decode(own_filtered_res['data'])))
         self.assertEqual(own_filtered.sheetnames, sheets)
-        detail = [row for row in own_filtered['Chi tiết'].iter_rows(min_row=4, values_only=True) if row[0]]
-        self.assertEqual(len(detail), 1)
-        dept, code, name, _job, day, weekday, time_in, time_out = detail[0][:8]
-        self.assertEqual((dept, code, name, day.date(), weekday, time_in, time_out),
-                         (self.dept.name, self.emp_a.tp_employee_code, self.emp_a.name, date(2026, 11, 10), 'T3', time(7, 50), '—'))
-        self.assertIn('giờ ra', detail[0][9])
-        # Read-only users cannot export shared data; HR can. Late totals are numbers only for exact source periods.
+        ws_filt = own_filtered['Report']
+        # Day 2 (2026-11-10 -> col 8) is the missing_out day; other days are blank under the filter.
+        vao_rows = [row for row in range(7, ws_filt.max_row + 1) if ws_filt.cell(row, 6).value == 'Vào']
+        self.assertEqual(len(vao_rows), 1)
+        self.assertEqual(ws_filt.cell(vao_rows[0], 8).value, '07:50')
+        self.assertIsNone(ws_filt.cell(vao_rows[0] + 1, 8).value)
+        self.assertIsNone(ws_filt.cell(vao_rows[0], 7).value)
+        # Read-only users cannot export shared data; HR can.
         with self.assertRaises(AccessError):
             Mine.tp_export_sheet(WEEK)
         shared = self.env_for(self.manager)['tp.hr.attendance.day'].tp_export_sheet(WEEK)
+        self.assertEqual(shared['filename'], 'Bang_cong_09-11-2026_den_15-11-2026.xlsx')
         book = load_workbook(BytesIO(base64.b64decode(shared['data'])))
         self.assertEqual(book.sheetnames, sheets)
-        grid = book['Bảng chấm công']
-        blocks = [row for row in range(9, grid.max_row + 1) if grid.cell(row, 6).value == 'Vào']
+        grid = book['Report']
+        blocks = [row for row in range(7, grid.max_row + 1) if grid.cell(row, 6).value == 'Vào']
         self.assertEqual(sorted(grid.cell(row, 7 + 7).value for row in blocks), [0, 3])
         month = self.env_for(self.manager)['tp.hr.attendance.day'].tp_export_sheet({'mode': 'month', 'date': '2026-11-09'})
         month_book = load_workbook(BytesIO(base64.b64decode(month['data'])))
         self.assertEqual(month_book.sheetnames, sheets)
-        month_grid = month_book['Bảng chấm công']
+        month_grid = month_book['Report']
         late_col = 7 + 30
-        partial = [month_grid.cell(row, late_col).value for row in range(9, month_grid.max_row + 1)
+        partial = [month_grid.cell(row, late_col).value for row in range(7, month_grid.max_row + 1)
                    if month_grid.cell(row, 6).value == 'Vào']
-        self.assertIn('—', partial, 'a month holding only a weekly file never shows a split or zero late total')
+        self.assertTrue(all(isinstance(val, int) and val >= 0 for val in partial))
+
+        # Department, employee search, day-state and empty-result export scope parity.
+        DayMgr = self.env_for(self.manager)['tp.hr.attendance.day']
+        by_emp = DayMgr.tp_export_sheet(dict(WEEK, department_id=self.dept.id, search=self.emp_a.tp_employee_code))
+        emp_ws = load_workbook(BytesIO(base64.b64decode(by_emp['data'])))['Report']
+        self.assertEqual([emp_ws.cell(r, 3).value for r in range(7, emp_ws.max_row + 1)
+                          if emp_ws.cell(r, 6).value == 'Vào'], [self.emp_a.name])
+
+        day_missing = DayMgr.tp_export_sheet({'mode': 'day', 'date': '2026-11-10', 'state': 'missing'})
+        day_ws = load_workbook(BytesIO(base64.b64decode(day_missing['data'])))['Report']
+        day_sheet = DayMgr.tp_sheet({'mode': 'day', 'date': '2026-11-10', 'state': 'missing'})
+        self.assertEqual(
+            [day_ws.cell(r, 3).value for r in range(7, day_ws.max_row + 1) if day_ws.cell(r, 6).value == 'Vào'],
+            [row['name'] for row in day_sheet['rows']],
+        )
+
+        empty_res = DayMgr.tp_export_sheet(dict(WEEK, search='KHONG_TON_TAI_XYZ'))
+        empty_ws = load_workbook(BytesIO(base64.b64decode(empty_res['data'])))['Report']
+        self.assertEqual(empty_ws['A7'].value, 'Không có dữ liệu trong kỳ đã chọn')
+
+        mine_empty = Mine.tp_export_mine(dict(WEEK, state='leave'))
+        mine_empty_ws = load_workbook(BytesIO(base64.b64decode(mine_empty['data'])))['Report']
+        self.assertEqual(mine_empty_ws['A7'].value, 'Không có dữ liệu trong kỳ đã chọn')
 
     def test_mine_rows_reverse_chronological(self):
         self.import_week()

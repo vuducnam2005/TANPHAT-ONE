@@ -35,7 +35,7 @@ export class AttendanceBoard extends Component {
         this.state = proxy({
             mode: ["day", "week", "month"].includes(saved.mode) ? saved.mode : "day", date: "", from: "", to: "",
             department: saved.department || "", search: "", dayState: "", page: 1, pageSize: saved.pageSize || 100,
-            ...period, loading: true, error: "", data: null,
+            ...period, loading: true, exporting: false, error: "", data: null,
         });
         this.modes = MODES;
         this.dayStates = DAY_STATES;
@@ -231,10 +231,18 @@ export class AttendanceBoard extends Component {
         return this.action.doAction("tp_hr_attendance.action_sources");
     }
     async exportSheet() {
+        if (this.state.exporting || !this.data) {
+            return;
+        }
+        this.state.exporting = true;
+        this.state.error = "";
         try {
             downloadBase64(await this.orm.call("tp.hr.attendance.day", "tp_export_sheet", [this.params()]));
         } catch (error) {
             this.state.error = rpcError(error, "Không xuất được bảng chấm công. Vui lòng thử lại.");
+        } finally {
+            this.state.exporting = false;
+            this.live.flush();
         }
     }
 }

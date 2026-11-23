@@ -8,7 +8,7 @@
             <p class="o_tp_att_subtitle" t-out="this.title"/>
         </div>
         <div class="o_tp_att_actions">
-            <button t-if="this.data?.can_export" type="button" class="btn btn-outline-primary" t-on-click="this.exportSheet"><i class="oi me-1" data-icon="download" aria-hidden="true"/>Xuất Excel</button>
+            <button t-if="this.data?.can_export" type="button" class="btn btn-outline-primary" t-att-disabled="this.state.exporting" t-on-click="this.exportSheet"><i class="oi me-1" t-att-data-icon="this.state.exporting ? 'hourglass_top' : 'download'" aria-hidden="true"/><t t-out="this.state.exporting ? 'Đang xuất…' : 'Xuất Excel'"/></button>
         </div>
     </header>
 
