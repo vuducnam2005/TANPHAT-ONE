@@ -134,7 +134,7 @@
                 </label>
                 <label class="o_tp_att_field">
                     <span>Nhóm đối chiếu</span>
-                    <select t-model="this.state.draftGroup" aria-label="Lọc theo nhóm đối chiếu">
+                    <select t-model.proxy="this.state.draftGroup" aria-label="Lọc theo nhóm đối chiếu">
                         <option value="">Tất cả nhóm</option>
                         <option t-foreach="this.data.compare_groups" t-as="grp" t-key="grp.key" t-att-value="grp.key"
                             t-out="grp.label + ' (' + grp.cells + ')'"/>
@@ -142,18 +142,18 @@
                 </label>
                 <label class="o_tp_att_field">
                     <span>Đơn vị nguồn</span>
-                    <select t-model="this.state.draftSourceGroup" aria-label="Lọc theo đơn vị nguồn">
+                    <select t-model.proxy="this.state.draftSourceGroup" aria-label="Lọc theo đơn vị nguồn">
                         <option value="">Tất cả đơn vị (<t t-out="this.data.total_all_people"/> người)</option>
                         <option t-foreach="this.data.group_options" t-as="ug" t-key="ug.key" t-att-value="ug.key" t-out="ug.label"/>
                     </select>
                 </label>
                 <label class="o_tp_att_field">
                     <span>Ngày công</span>
-                    <input type="date" t-model="this.state.draftWorkDate" aria-label="Lọc theo ngày công"/>
+                    <input type="date" t-model.proxy="this.state.draftWorkDate" aria-label="Lọc theo ngày công"/>
                 </label>
                 <label class="o_tp_att_field o_tp_att_search_field">
                     <span>Tìm nhân viên / Mã NV / ID máy</span>
-                    <input type="search" t-model="this.state.draftSearch" t-on-keydown="this.onSearchKeydown"
+                    <input type="search" t-model.proxy="this.state.draftSearch" t-on-keydown="this.onSearchKeydown"
                         placeholder="Tên, TP0xx, TP100xx, ID máy..."/>
                 </label>
                 <div class="o_tp_att_filter_btns">

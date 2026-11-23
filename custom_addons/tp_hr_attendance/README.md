@@ -8,6 +8,18 @@ hướng dẫn 002: [HR_ATTENDANCE_SIMPLE_002_USER_GUIDE.md](../../docs/demo/HR_
 policy: [HR_ATTENDANCE_001_POLICY.md](../../docs/security/HR_ATTENDANCE_001_POLICY.md) (§10).
 Lịch sử HR-ATTENDANCE-001 (S1–S4, `20.0.1.2.0`): [acceptance 001](../../docs/demo/HR_ATTENDANCE_001_ACCEPTANCE.md).
 
+Sửa điều chỉnh công `20.0.3.9.1` (ATTENDANCE-CORRECTION-003, 23/11/2026):
+dialog dùng `t-model.proxy` với state `proxy` của OWL `3.0.0-alpha.50`.
+`tp_save_and_submit(vals, correction_id=False, submit=True, operation_token=False)`
+giữ tương thích caller cũ; caller mới dùng token 16 ký tự hex ổn định cho một thao tác.
+`create_token`/`last_save_token` riêng tư lưu token và fingerprint payload/action;
+retry trả cùng phiếu, đổi payload với token đã dùng bị từ chối, lỗi lưu/gửi rollback
+qua savepoint. Unique index khóa token tạo theo nhân viên, giữ unique phiếu submitted
+theo ngày. Duyệt/thu hồi và action liên kết `tp.request` khóa correction trước request;
+quyền đọc request/history liên kết phải thỏa quyền đọc correction gốc.
+Kiểm render: `node scripts/tests/test_attendance_correction_dialog.cjs` (OWL thật,
+Dialog/RPC mô phỏng); kiểm vòng đời thật dùng `tp_tanphat_test`, không fixture trên server.
+
 Module nhỏ cùng DB, dùng hồ sơ `hr.employee`, tài khoản và phòng ban hiện có. Không cài
 `hr_attendance` native (route token, systray check-in, cron vắng mặt/tăng ca — xem policy §6).
 

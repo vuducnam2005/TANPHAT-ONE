@@ -440,45 +440,48 @@
 <t t-name="tp_hr_attendance.CorrectionFormDialog">
     <Dialog title="this.title" size="'md'">
         <div class="o_tp_att_dialog">
-            <div t-if="this.state.error" class="alert alert-danger mb-3" role="alert" t-out="this.state.error"/>
+            <InlineErrors errors="this.fieldErrors" server="this.state.serverError" attempt="this.state.attempt"/>
             <div class="alert alert-info mb-3" role="status">
                 Dữ liệu công chỉ thay đổi sau khi admin duyệt. Giải trình và minh chứng chỉ dành cho bạn, admin và HR có quyền xem.
             </div>
             <div class="mb-3">
-                <label class="form-label fw-semibold">Ngày công <span class="text-danger">*</span></label>
-                <input type="date" class="form-control" t-model="this.state.workDate" t-att-disabled="this.state.busy"/>
+                <label for="tp_att_correction_date" class="form-label fw-semibold">Ngày công <span class="text-danger">*</span></label>
+                <input id="tp_att_correction_date" type="date" class="form-control" t-model.proxy="this.state.workDate" t-att-disabled="this.state.busy"/>
             </div>
             <div class="row g-3 mb-3">
                 <div class="col-6">
-                    <label class="form-label fw-semibold">Giờ vào đề nghị <span class="text-danger">*</span></label>
-                    <input type="time" class="form-control" t-model="this.state.requestedIn" t-att-disabled="this.state.busy"/>
+                    <label for="tp_att_correction_in" class="form-label fw-semibold">Giờ vào đề nghị <span class="text-danger">*</span></label>
+                    <input id="tp_att_correction_in" type="time" class="form-control" t-model.proxy="this.state.requestedIn" t-att-disabled="this.state.busy"/>
                 </div>
                 <div class="col-6">
-                    <label class="form-label fw-semibold">Giờ ra đề nghị <span class="text-danger">*</span></label>
-                    <input type="time" class="form-control" t-model="this.state.requestedOut" t-att-disabled="this.state.busy"/>
+                    <label for="tp_att_correction_out" class="form-label fw-semibold">Giờ ra đề nghị <span class="text-danger">*</span></label>
+                    <input id="tp_att_correction_out" type="time" class="form-control" t-model.proxy="this.state.requestedOut" t-att-disabled="this.state.busy"/>
                 </div>
             </div>
             <div class="mb-3">
-                <label class="form-label fw-semibold">Lý do / giải trình <span class="text-danger">*</span></label>
-                <textarea class="form-control" rows="3" placeholder="Nêu giờ cần bổ sung và căn cứ…"
-                    t-model="this.state.reason" t-att-disabled="this.state.busy"/>
+                <label for="tp_att_correction_reason" class="form-label fw-semibold">Lý do / giải trình <span class="text-danger">*</span></label>
+                <textarea id="tp_att_correction_reason" class="form-control" rows="3" placeholder="Nêu giờ cần bổ sung và căn cứ…"
+                    t-model.proxy="this.state.reason" t-att-disabled="this.state.busy"/>
             </div>
             <div class="mb-2">
-                <label class="form-label fw-semibold">Minh chứng (nếu có)</label>
-                <input type="file" class="form-control" t-on-change="(ev) => this.onFileChange(ev)" t-att-disabled="this.state.busy"/>
+                <label for="tp_att_correction_evidence" class="form-label fw-semibold">Minh chứng (nếu có)</label>
+                <input id="tp_att_correction_evidence" type="file" class="form-control" t-ref="this.evidenceInput"
+                    t-on-change="(ev) => this.onFileChange(ev)" t-att-disabled="this.state.busy or this.state.readingFile"/>
                 <div t-if="this.state.evidenceName" class="d-flex align-items-center gap-2 mt-1 small text-muted">
                     <span>Tệp đã chọn: <strong t-out="this.state.evidenceName"/></span>
-                    <button type="button" class="btn btn-link btn-sm p-0 text-danger" t-on-click="() => this.clearFile()">Bỏ tệp</button>
+                    <button type="button" class="btn btn-link btn-sm p-0 text-danger"
+                        t-att-disabled="this.state.busy or this.state.readingFile" t-on-click="() => this.clearFile()">Bỏ tệp</button>
                 </div>
             </div>
         </div>
         <t t-set-slot="footer">
-            <button type="button" class="btn btn-primary" t-att-disabled="this.state.busy" t-on-click="() => this.save(true)">
-                <t t-if="this.state.busy">Đang gửi…</t>
+            <button type="button" class="btn btn-primary" t-att-disabled="this.state.busy or this.state.readingFile" t-on-click="() => this.save(true)">
+                <t t-if="this.state.busy === 'submit'">Đang gửi…</t>
                 <t t-else="">Gửi duyệt</t>
             </button>
-            <button type="button" class="btn btn-outline-secondary" t-att-disabled="this.state.busy" t-on-click="() => this.save(false)">
-                Lưu nháp
+            <button type="button" class="btn btn-outline-secondary" t-att-disabled="this.state.busy or this.state.readingFile" t-on-click="() => this.save(false)">
+                <t t-if="this.state.busy === 'draft'">Đang lưu…</t>
+                <t t-else="">Lưu nháp</t>
             </button>
             <button type="button" class="btn btn-secondary" t-att-disabled="this.state.busy" t-on-click="() => this.props.close()">
                 Đóng
@@ -490,12 +493,12 @@
 <t t-name="tp_hr_attendance.WithdrawDialog">
     <Dialog title="'Thu hồi đề nghị điều chỉnh'" size="'sm'">
         <div class="o_tp_att_dialog">
-            <div t-if="this.state.error" class="alert alert-danger mb-3" role="alert" t-out="this.state.error"/>
+            <InlineErrors errors="[]" server="this.state.serverError" attempt="this.state.attempt"/>
             <p class="mb-3">Bạn có chắc muốn thu hồi đề nghị <strong t-out="this.props.request.name"/>? Dữ liệu công chuẩn sẽ không thay đổi.</p>
             <div class="mb-2">
-                <label class="form-label fw-semibold">Lý do thu hồi (không bắt buộc)</label>
-                <textarea class="form-control" rows="2" placeholder="Nhập lý do thu hồi nếu cần…"
-                    t-model="this.state.reason" t-att-disabled="this.state.busy"/>
+                <label for="tp_att_withdraw_reason" class="form-label fw-semibold">Lý do thu hồi (không bắt buộc)</label>
+                <textarea id="tp_att_withdraw_reason" class="form-control" rows="2" placeholder="Nhập lý do thu hồi nếu cần…"
+                    t-model.proxy="this.state.reason" t-att-disabled="this.state.busy"/>
             </div>
         </div>
         <t t-set-slot="footer">

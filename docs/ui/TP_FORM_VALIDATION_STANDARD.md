@@ -118,6 +118,7 @@ gọi backend để kiểm tra.
 | Phạm vi | Cách |
 |---|---|
 | Mọi form view native (trang, popup, wizard, quick-create mở form) của mọi module | patch toàn cục |
+| Công của tôi: điều chỉnh công và thu hồi đề nghị (CHG-20261123-010) | `InlineErrors` + `saveError`, lỗi ngày/giờ/lý do theo validator và backend; giữ state khi gửi lỗi, chỉ xác nhận thành công sau RPC |
 | Bảng con editable và popup dòng x2many | patch `ListRenderer` + `collectErrors` |
 | Hồ sơ nhân viên mới (`hr.employee`) | thêm banner khuyến nghị không chặn lưu: chỉ liệt kê Mã NV (khi đã lưu mà vẫn thiếu), Phòng ban, Chức vụ còn thiếu; không yêu cầu field tự sinh/readonly/ẩn |
 | Hợp đồng/phiên bản trên hồ sơ mới | `version_id` ẩn khi chưa có `id` (field tính, không cho nhập) |

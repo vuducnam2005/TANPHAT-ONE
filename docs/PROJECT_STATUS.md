@@ -1,5 +1,10 @@
 # TANPHAT ONE — Trạng thái dự án
 
+**CHG-20261123-010 — ATTENDANCE-CORRECTION-003 — RELEASE_READY.** Đã sửa lỗi mở `CorrectionFormDialog` trên OWL `3.0.0-alpha.50`: `t-model` của dialog điều chỉnh/thu hồi và bốn bộ lọc đối chiếu dùng `t-model.proxy`, giữ state reactive cho ngày, giờ, textarea và minh chứng. Giờ mới lấy từ ngày công được chọn, thiếu giờ để trống; validation hiển thị đúng trường thiếu; gửi/lưu dùng một giao dịch, mã thao tác chống gửi lặp, bấm kép và retry; lý do thu hồi không ghi vào log diện rộng. Hàng đợi `tp.request` giữ quyền đọc theo phiếu điều chỉnh gốc và các đường action liên kết khóa correction trước request để tránh race/deadlock.
+- Backend test trên `tp_tanphat_test`: **0 failed, 0 error(s) of 23 tests** (`tp_hr_attendance` 16, `tp_request` 13), upgrade addon thành công; chỉ còn INFO filestore GC `WinError 5` có sẵn trên Windows.
+- Browser test DB test bằng minified `web.assets_web.min.js` HTTP 200: desktop tạo nháp → sửa/gửi → admin trả lại → sửa/gửi → thu hồi → mở lại → gửi → admin duyệt, F5 và cập nhật giờ; mobile 390×844 gửi/thu hồi/F5; race owner thu hồi/admin duyệt có đúng một winner; **0 page/console errors**. Bằng chứng riêng tại `.local/attendance-correction003/verify-*` và `verify-db-result.json` (dữ liệu synthetic, không dùng main/server).
+- Public trước sửa đã tái hiện `OwlError` tại `ee25ac5/web.assets_web.min.js:1115` trong `CorrectionFormDialog.slot2`. Next: commit/push đúng scope, backup + upgrade `tp_hr_attendance,tp_request` trên PC server, kiểm bundle mới và mở lại form bằng phiên public đã đăng nhập; chưa ghi nhận PC server áp bản sửa.
+
 **CHG-20261123-009 — ENTI-IMAGE-SYNC-001 — PC_SERVER_APPLIED.** Đã triển khai commit `17970b9e` (`tp_hr_attendance` **20.0.3.9.0**) lên PC server (`192.168.1.73`, DB `tp_tanphat_dev`) và đồng bộ ảnh hồ sơ thật từ ENTI:
 - Backup trước áp tại `C:\TANPHAT-backups\enti-image001\img001-20261123T155853\` (`tp_tanphat_dev.dump`, `restore-list.txt`, `filestore.tar.gz`, `pre_tp_hr_attendance.tar.gz`, `deploy_enti_image001.tar.gz`, `expected_sha256.txt`, `upgrade.log`, `pre_snapshot.txt`, `post_snapshot.txt`).
 - Đối chiếu SHA256: **86/86** tệp khớp; nâng cấp `-u tp_hr_attendance` exit `0`, **0** `ERROR/CRITICAL`.
@@ -446,7 +451,7 @@
 **Baseline ứng dụng gần nhất — giữ nguyên CHG-20261114-004 trên main 18069:** UI-SHELL-UNIFY-001 và các delta personal/history đã áp main `18069` (`backup-main-v4`). Menu người dùng 2 mục `Thông tin cá nhân` + `Đăng xuất`.
 
 **Mục tiêu trước (UI-INPUT-001):** đã áp main 18069 (`tp_web_home` 20.0.1.7.0, `tp_web_login` 20.0.1.4.2, `tp_hr_workspace` 20.0.1.11.4, `tp_kd_workspace` 20.0.1.9.1). Ô nhập/chọn/ngày dùng một bộ token chung và có khung 4 cạnh, focus, lỗi, chỉ đọc rõ ràng; Danh sách nhân viên hiện avatar trước tên.
-Last change: `CHG-20261123-009`
+Last change: `CHG-20261123-010`
 **EQUIP-SIMPLE-003 — CHG-20261116-003: IMPLEMENTED_RUNTIME_OBSERVED_MAIN_PENDING_ADMIN_FLOW_CHECK.** Thực thi [prompt](prompts/CLAUDE_EQUIP_SIMPLE_003.md) / DEC-047 kèm lưu ý CHG-20261116-002 (chỉ gán/đổi sang máy trong kho, chưa có người giữ; kiểm cả UI và backend). Backup `.local/equip-simple003/backup-pre-simple003/` (dump 9.259.433 bytes, filestore 855 tệp, source, manifest sha256); không commit/push.
 - **Source:** `models/quick_action.py` mới (TransientModel `tp.equipment.quick.action`, RPC `tp_quick_action`, `free_domain`, trạng thái/nút tính toán); `move.py` (`tp_request_key`/`tp_request_hash`, guard stock còn người giữ); `proposal.py` (`need_type`, phòng ban từ HR); 1 dòng ACL; views/menus/static Kho. `tp_web_home` và module khác không đổi.
 - **Kiểm thực:** `-u` exit 0/0 ERROR; ruff file đã đổi, compileall, 23 XML, ACL CSV, 13 JS syntax, `git diff --check` đạt; Playwright `verify_simple003.mjs` (mở/Hủy, không xác nhận) và probe RPC từ chối; DB 18 bảng giữ count/hash, `tp_equipment_move` chỉ thêm 2 cột NULL. Mức từng mục ở [acceptance](demo/EQUIP_001_ACCEPTANCE.md).

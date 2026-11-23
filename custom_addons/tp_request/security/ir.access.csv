@@ -18,5 +18,6 @@ access_tp_req_orig_admin_read,Requests original admin read non-draft,tp.request,
 access_tp_req_full_admin_read,Requests delegated admin read non-draft,tp.request,tp_admin_delegation.group_full_admin,r,"[('approval_state', '!=', 'draft')]"
 access_tp_req_system_read,Requests system admin read non-draft,tp.request,base.group_system,r,"[('approval_state', '!=', 'draft')]"
 rule_tp_req_company,Requests company scope,tp.request,,crud,"[('company_id', 'in', company_ids)]"
+rule_tp_req_attendance_privacy,Attendance correction requests require canonical read access,tp.request,,r,"['|', ('attendance_correction_id', '=', False), ('attendance_correction_id', 'access', 'read')]"
 access_tp_req_step_user,Request steps read,tp.request.step,base.group_user,r,"[('request_id', 'access', 'read')]"
 access_tp_req_history_user,Request history read,tp.request.history,base.group_user,r,"[('request_id', 'access', 'read')]"

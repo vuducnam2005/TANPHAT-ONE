@@ -436,7 +436,7 @@ class TpRequest(models.Model):
         if is_internal(self) or is_bridge(self):
             return super().write(vals)
         self.check_access('write')
-        lock_rows(self)
+        self._tp_lock_with_corrections()
         forbidden = set(vals) - OWNER_EDITABLE_FIELDS
         if forbidden:
             raise AccessError(_(
@@ -462,7 +462,7 @@ class TpRequest(models.Model):
         if is_internal(self) or is_bridge(self):
             return super(TpRequest, self.with_context(_tp_request_cascade_draft=INTERNAL)).unlink()
         self.check_access('unlink')
-        lock_rows(self)
+        self._tp_lock_with_corrections()
         for rec in self:
             if rec.requester_user_id != self.env.user:
                 raise AccessError(_('Chỉ người lập được xóa bản nháp của mình.'))
@@ -535,11 +535,16 @@ class TpRequest(models.Model):
         return errors
 
     # ------------------------------------------------------------------ Workflow Actions
+    def _tp_lock_with_corrections(self):
+        # Native attendance actions lock the correction before updating this projection.
+        lock_rows(self.mapped('attendance_correction_id'))
+        lock_rows(self)
+
     def action_submit(self, expected_version=None):
         """Submit draft or resubmit returned request. Blocks if required fields or approvers missing."""
         self.ensure_one()
         self.check_access('read')
-        lock_rows(self)
+        self._tp_lock_with_corrections()
         if self.requester_user_id != self.env.user:
             raise AccessError(_('Chỉ người lập đề nghị mới được gửi phê duyệt.'))
         if expected_version is not None and self.version != int(expected_version):
@@ -671,7 +676,7 @@ class TpRequest(models.Model):
         """Approve current pending step atomically; advances to next step or finalizes approval."""
         self.ensure_one()
         self.check_access('read')
-        lock_rows(self)
+        self._tp_lock_with_corrections()
         if expected_version is not None and self.version != int(expected_version):
             raise UserError(_('Hồ sơ đã thay đổi trước thao tác này. Vui lòng tải lại để xem trạng thái mới nhất.'))
 
@@ -777,7 +782,7 @@ class TpRequest(models.Model):
         """Return request to requester for revision; mandatory reason."""
         self.ensure_one()
         self.check_access('read')
-        lock_rows(self)
+        self._tp_lock_with_corrections()
         if expected_version is not None and self.version != int(expected_version):
             raise UserError(_('Hồ sơ đã thay đổi trước thao tác này. Vui lòng tải lại.'))
         clean_reason = (reason or '').strip()
@@ -877,7 +882,7 @@ class TpRequest(models.Model):
         """Withdraw request when permitted; never revokes already-executed business results."""
         self.ensure_one()
         self.check_access('read')
-        lock_rows(self)
+        self._tp_lock_with_corrections()
         if expected_version is not None and self.version != int(expected_version):
             raise UserError(_('Hồ sơ đã thay đổi. Vui lòng tải lại.'))
         if self.requester_user_id != self.env.user:

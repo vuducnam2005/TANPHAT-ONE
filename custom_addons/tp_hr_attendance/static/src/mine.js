@@ -1,11 +1,14 @@
-import { Component, onMounted, onWillStart, onWillUnmount, proxy, useProps } from "@odoo/owl";
+import { Component, onMounted, onWillStart, onWillUnmount, proxy, signal, useProps } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
 import { Dialog } from "@web/core/dialog/dialog";
 import { registry } from "@web/core/registry";
 import { patch } from "@web/core/utils/patch";
 import { useService } from "@web/core/utils/hooks";
+import { uuid } from "@web/core/utils/strings";
 import { HrListController } from "@tp_hr_workspace/table/table";
 import { TpHrMyProfile } from "@tp_hr_workspace/my_profile/my_profile";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
 import {
     PAGE_SIZES,
     downloadBase64,
@@ -58,7 +61,7 @@ const WEEKDAY_OPTIONS = [
 const CORRECTION_BUS_TYPE = "tp_hr_attendance/correction_updated";
 
 function parseClockToFloat(value) {
-    const match = /^(\d{1,2}):(\d{2})$/.exec(String(value || "").trim());
+    const match = /^(\d{2}):(\d{2})$/.exec(value);
     if (!match) {
         return null;
     }
@@ -85,8 +88,10 @@ function readFileAsBase64(file) {
 
 export class CorrectionFormDialog extends Component {
     static template = "tp_hr_attendance.CorrectionFormDialog";
-    static components = { Dialog };
+    static components = { Dialog, InlineErrors };
     props = useProps();
+    evidenceInput = signal.ref();
+    operationToken = uuid();
 
     setup() {
         this.orm = useService("orm");
@@ -94,13 +99,16 @@ export class CorrectionFormDialog extends Component {
         const req = this.props.request || null;
         this.state = proxy({
             workDate: this.props.workDate || req?.workDate || "",
-            requestedIn: req?.requested_in || "08:30",
-            requestedOut: req?.requested_out || "17:00",
+            requestedIn: (req ? req.requested_in : this.props.requestedIn) || "",
+            requestedOut: (req ? req.requested_out : this.props.requestedOut) || "",
             reason: req?.reason || "",
             evidenceName: req?.evidence_name || "",
             evidenceFile: null,
+            readingFile: false,
             busy: false,
-            error: "",
+            attempt: 0,
+            submitAttempt: false,
+            serverError: null,
         });
     }
 
@@ -108,73 +116,98 @@ export class CorrectionFormDialog extends Component {
         return this.props.request ? `Sửa đề nghị ${this.props.request.name}` : "Đề nghị điều chỉnh công";
     }
 
+    get fieldErrors() {
+        if (!this.state.attempt) {
+            return [];
+        }
+        const errors = [];
+        const add = (field, label, message) => errors.push({ id: `tp_att_correction_${field}`, label, message });
+        const inFloat = parseClockToFloat(this.state.requestedIn);
+        const outFloat = parseClockToFloat(this.state.requestedOut);
+        if (!this.state.workDate) {
+            add("date", "Ngày công", "Vui lòng chọn ngày công cần điều chỉnh.");
+        }
+        if (inFloat === null) {
+            add("in", "Giờ vào đề nghị", "Vui lòng nhập giờ vào hợp lệ (00:00–23:59).");
+        }
+        if (outFloat === null) {
+            add("out", "Giờ ra đề nghị", "Vui lòng nhập giờ ra hợp lệ (00:00–23:59).");
+        } else if (inFloat !== null && outFloat <= inFloat) {
+            add("out", "Giờ ra đề nghị", "Giờ ra phải sau giờ vào trong cùng ngày công.");
+        }
+        if (this.state.submitAttempt && !this.state.reason.trim()) {
+            add("reason", "Lý do / giải trình", "Nhập giải trình / lý do trước khi gửi duyệt.");
+        }
+        return errors;
+    }
+
     async onFileChange(ev) {
         const file = ev.target.files?.[0];
-        if (!file) {
+        if (!file || this.state.busy || this.state.readingFile) {
             return;
         }
+        this.state.readingFile = true;
         try {
             this.state.evidenceFile = await readFileAsBase64(file);
             this.state.evidenceName = file.name;
-            this.state.error = "";
+            this.state.serverError = null;
         } catch (err) {
-            this.state.error = err.message || "Không đọc được tệp minh chứng.";
+            ev.target.value = "";
+            this.state.serverError = { kind: "validation", title: "Không đọc được minh chứng", message: err.message };
+        } finally {
+            this.state.readingFile = false;
         }
     }
 
     clearFile() {
+        if (this.state.busy || this.state.readingFile) {
+            return;
+        }
         this.state.evidenceFile = false;
         this.state.evidenceName = "";
+        this.evidenceInput().value = "";
     }
 
     async save(submit) {
-        if (this.state.busy) {
+        if (this.state.busy || this.state.readingFile) {
             return;
         }
-        this.state.error = "";
-        if (!this.state.workDate) {
-            this.state.error = "Vui lòng chọn ngày công cần điều chỉnh.";
-            return;
-        }
-        const inFloat = parseClockToFloat(this.state.requestedIn);
-        const outFloat = parseClockToFloat(this.state.requestedOut);
-        if (inFloat === null || outFloat === null) {
-            this.state.error = "Giờ vào và giờ ra phải hợp lệ (00:00–23:59).";
-            return;
-        }
-        if (outFloat <= inFloat) {
-            this.state.error = "Giờ ra phải sau giờ vào trong cùng ngày công.";
-            return;
-        }
-        if (submit && !this.state.reason.trim()) {
-            this.state.error = "Nhập giải trình / lý do trước khi gửi duyệt.";
+        this.state.serverError = null;
+        this.state.submitAttempt = submit;
+        this.state.attempt++;
+        if (this.fieldErrors.length) {
             return;
         }
         const vals = {
             work_date: this.state.workDate,
-            requested_in: inFloat,
-            requested_out: outFloat,
+            requested_in: parseClockToFloat(this.state.requestedIn),
+            requested_out: parseClockToFloat(this.state.requestedOut),
             reason: this.state.reason.trim() || false,
         };
         if (this.state.evidenceFile !== null) {
             vals.evidence_file = this.state.evidenceFile;
             vals.evidence_name = this.state.evidenceName || false;
         }
-        this.state.busy = true;
+        this.state.busy = submit ? "submit" : "draft";
         try {
             const res = await this.orm.call("tp.hr.attendance.correction", "tp_save_and_submit", [
                 vals,
                 this.props.request?.id || false,
                 Boolean(submit),
+                this.operationToken,
             ]);
-            this.notification.add(
-                submit ? "Đã gửi đề nghị điều chỉnh cho admin" : "Đã lưu bản nháp đề nghị điều chỉnh.",
-                { type: submit ? "success" : "info" }
-            );
+            const sent = submit && res.state === "submitted";
+            let notice = "Đề nghị đã đổi trạng thái. Đang cập nhật danh sách.";
+            if (sent) {
+                notice = "Đã gửi đề nghị điều chỉnh cho admin";
+            } else if (!submit && ["draft", "returned"].includes(res.state)) {
+                notice = "Đã lưu bản nháp đề nghị điều chỉnh.";
+            }
+            this.notification.add(notice, { type: sent ? "success" : "info" });
             this.props.onSaved?.(res.work_date);
             this.props.close();
         } catch (error) {
-            this.state.error = rpcError(error, "Không lưu được đề nghị điều chỉnh. Vui lòng thử lại.");
+            this.state.serverError = saveError(error, { verb: submit ? "gửi duyệt" : "lưu nháp" });
         } finally {
             this.state.busy = false;
         }
@@ -183,13 +216,13 @@ export class CorrectionFormDialog extends Component {
 
 export class WithdrawDialog extends Component {
     static template = "tp_hr_attendance.WithdrawDialog";
-    static components = { Dialog };
+    static components = { Dialog, InlineErrors };
     props = useProps();
 
     setup() {
         this.orm = useService("orm");
         this.notification = useService("notification");
-        this.state = proxy({ reason: "", busy: false, error: "" });
+        this.state = proxy({ reason: "", busy: false, attempt: 0, serverError: null });
     }
 
     async confirm() {
@@ -197,7 +230,8 @@ export class WithdrawDialog extends Component {
             return;
         }
         this.state.busy = true;
-        this.state.error = "";
+        this.state.serverError = null;
+        this.state.attempt++;
         try {
             await this.orm.call("tp.hr.attendance.correction", "action_withdraw", [
                 [this.props.request.id],
@@ -207,7 +241,7 @@ export class WithdrawDialog extends Component {
             this.props.onDone?.();
             this.props.close();
         } catch (error) {
-            this.state.error = rpcError(error, "Không thu hồi được đề nghị. Vui lòng thử lại.");
+            this.state.serverError = saveError(error, { verb: "thu hồi" });
         } finally {
             this.state.busy = false;
         }
@@ -654,8 +688,11 @@ export class MyAttendance extends Component {
 
     openRequest(workDate = "") {
         const defaultDate = workDate || this.data?.today || "";
+        const row = this.data?.rows.find((row) => row.date === defaultDate);
         this.dialog.add(CorrectionFormDialog, {
             workDate: defaultDate,
+            requestedIn: row?.in,
+            requestedOut: row?.out,
             onSaved: (savedDate) => {
                 if (savedDate) {
                     this.state.expandedDate = savedDate;

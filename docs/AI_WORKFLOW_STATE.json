@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-23T09:09:08.986780+00:00",
-  "last_change_id": "CHG-20261123-009",
-  "code_digest": "89a68339b577c1b81ce51154abe7d7e3f12a1c73e51ec5cc5d94c4248df0f69b",
+  "updated_at": "2026-11-23T10:13:11.528080+00:00",
+  "last_change_id": "CHG-20261123-010",
+  "code_digest": "1af8f5a87be4a2be5e0742fd921547f2cb9ac6f8d82bca23825297f1f384f983",
   "code_file_count": 825,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "6789f056c5473fd77267203e2c5fa9099e0465e0b042944c0ef531535d24ad55",
-    "docs/CHANGELOG.md": "7991bff53c54c9ca331ae9b904f3f2f53ca6c724f32c90da7217aa63994c17d8",
+    "docs/PROJECT_STATUS.md": "9873dd1343d12ef5e0fd46abc1b076d97911119f50c7be9621483512b4554a06",
+    "docs/CHANGELOG.md": "eeabbeb7df13baed31ee1d5ac18a1c43e6fd58864bb3455877ba0700c2356c7f",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC server deploy 17970b9e + real ENTI photo sync 38/39 + public health 200"
+    "node scripts/tests/test_attendance_correction_dialog.cjs: PASS; Odoo tp_tanphat_test -u tp_hr_attendance,tp_request --test-tags /tp_hr_attendance:TestAttendanceCorrection,/tp_request: 0 failed, 0 error(s) of 23; browser desktop/mobile/race on minified bundle: PASS, 0 page/console errors; node --check, py_compile, XML parse, ruff attendance, git diff --check: PASS"
   ]
 }

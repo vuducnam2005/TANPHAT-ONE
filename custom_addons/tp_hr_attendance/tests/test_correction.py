@@ -7,7 +7,7 @@ from datetime import date
 from unittest.mock import patch
 
 from odoo import Command
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import tagged
 
 from .common import AttendanceCase, report
@@ -378,7 +378,7 @@ class TestAttendanceCorrection(AttendanceCase):
         review_domain = [('state', '=', 'submitted')]
 
         # 1. Failed one-click submit (empty reason) rolls back without leaving a draft.
-        with self.assertRaises(UserError), self.env.cr.savepoint():
+        with self.assertRaises(UserError):
             Corr.tp_save_and_submit({
                 'work_date': DAY, 'requested_in': 8.0, 'requested_out': 17.0, 'reason': '   ',
             }, False, True)
@@ -394,7 +394,7 @@ class TestAttendanceCorrection(AttendanceCase):
         self.assertIn(req.id, self.env_for(self.root)['tp.hr.attendance.correction'].search(review_domain).ids)
 
         # 3. Cannot create a second submitted request for the same employee & day.
-        with self.assertRaises(UserError), self.env.cr.savepoint():
+        with self.assertRaises(UserError):
             Corr.tp_save_and_submit({
                 'work_date': DAY, 'requested_in': 8.5, 'requested_out': 17.5, 'reason': 'Synthetic trùng ngày',
             }, False, True)
@@ -444,3 +444,64 @@ class TestAttendanceCorrection(AttendanceCase):
         self.assertFalse(req.tp_can_withdraw)
         with self.assertRaises(UserError):
             req.action_withdraw('Sau duyệt')
+
+    def test_one_click_retries_reuse_draft_and_submitted_requests(self):
+        Corr = self.env_for(self.viewer)['tp.hr.attendance.correction']
+        vals = {'work_date': DAY, 'requested_in': 0.0, 'requested_out': 1.0}
+        create_token, submit_token = '0123456789abcdef', 'fedcba9876543210'
+        for missing in (None, False, ''):
+            with self.assertRaises(ValidationError):
+                Corr.tp_save_and_submit(dict(vals, requested_in=missing), False, False, create_token)
+        with self.assertRaises(ValidationError):
+            Corr.tp_save_and_submit({'work_date': DAY, 'requested_out': 1.0}, False, False, create_token)
+        self.assertFalse(Corr.search([('work_date', '=', DAY)]))
+
+        draft = Corr.tp_save_and_submit(vals, False, False, create_token)
+        self.assertEqual(draft, Corr.tp_save_and_submit(vals, False, False, create_token))
+        edited = dict(vals, reason='Synthetic updated explanation', requested_out=1.5)
+        with self.assertRaisesRegex(UserError, 'đã được ghi nhận'):
+            Corr.tp_save_and_submit(edited, False, True, create_token)
+        with self.assertRaisesRegex(UserError, 'giải trình'):
+            Corr.tp_save_and_submit(dict(edited, reason=''), draft['id'], True, submit_token)
+        record = Corr.browse(draft['id'])
+        self.assertEqual((record.state, record.requested_out), ('draft', 1.0))
+
+        submitted = Corr.tp_save_and_submit(edited, record.id, True, submit_token)
+        self.assertEqual((submitted['id'], submitted['state']), (record.id, 'submitted'))
+        self.assertEqual(submitted, Corr.tp_save_and_submit(edited, record.id, True, submit_token))
+        self.assertEqual((record.requested_in, record.requested_out), (0.0, 1.5))
+        with self.assertRaisesRegex(UserError, 'đã được ghi nhận'):
+            Corr.tp_save_and_submit(dict(edited, requested_out=2.0), record.id, True, submit_token)
+
+        self.as_user(self.root, record).action_approve()
+        self.assertEqual(Corr.tp_save_and_submit(edited, record.id, True, submit_token)['state'], 'approved')
+        self.assertEqual(Corr.tp_save_and_submit(vals, False, False, create_token)['id'], record.id)
+        self.assertEqual(Corr.search_count([('work_date', '=', DAY)]), 1)
+
+        other = self.env_for(self.colleague)['tp.hr.attendance.correction']
+        with self.assertRaises(AccessError):
+            other.tp_save_and_submit(edited, record.id, True, submit_token)
+        self.assertNotEqual(other.tp_save_and_submit(vals, False, False, create_token)['id'], record.id)
+
+    def test_one_click_submit_retry_after_withdrawal_keeps_one_private_request(self):
+        Corr = self.env_for(self.viewer)['tp.hr.attendance.correction']
+        vals = {'work_date': DAY, 'requested_in': 8.0, 'requested_out': 17.0, 'reason': 'Synthetic correction'}
+        token = '0123456789abcdef'
+        result = Corr.tp_save_and_submit(vals, False, True, token)
+        record = Corr.browse(result['id'])
+        self.assertEqual(result, Corr.tp_save_and_submit(vals, False, True, token))
+        self.assign()
+        reason = 'Private withdrawal basis'
+        record.action_withdraw(reason)
+        self.assertEqual(record.withdraw_reason, reason)
+        officer = self.env_for(self.officer)
+        log = officer['tp.hr.attendance.log'].search([
+            ('model', '=', record._name), ('res_id', '=', record.id), ('action', '=', 'correction_withdraw'),
+        ])
+        self.assertEqual(len(log), 1)
+        self.assertNotIn(reason, log.detail)
+        with self.assertRaises(AccessError):
+            officer[record._name].browse(record.id).read(['withdraw_reason'])
+        replay = Corr.tp_save_and_submit(vals, False, True, token)
+        self.assertEqual((replay['id'], replay['state']), (record.id, 'withdrawn'))
+        self.assertEqual(Corr.search_count([('work_date', '=', DAY)]), 1)

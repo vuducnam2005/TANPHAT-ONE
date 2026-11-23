@@ -475,6 +475,44 @@ class TestTpRequestWorkflow(TransactionCase):
         self.assertEqual(corr2.tp_request_id.approval_state, 'pending')
         self.assertEqual(self.env['tp.request'].sudo().search_count([('attendance_correction_id', '=', corr2.id)]), 1)
 
+        request = corr2.tp_request_id
+        pending_version = request.version
+        with self.assertRaises(UserError):
+            request.action_withdraw(expected_version=pending_version - 1)
+        self.assertEqual(corr2.state, 'submitted')
+        request.action_withdraw(expected_version=pending_version)
+        with self.assertRaises(UserError):
+            request.with_user(self.admin).action_approve_step(expected_version=pending_version)
+        self.assertEqual((request.approval_state, corr2.state), ('withdrawn', 'withdrawn'))
+        self.assertFalse(corr2.session_id)
+
+    def test_attendance_bridge_private_read_follows_correction_access(self):
+        work_day = date.today() - timedelta(days=4)
+        type_att = self.env.ref('tp_request.type_attendance_correction')
+        res = self.env['tp.request'].with_user(self.user_emp).tp_save_request({
+            'type_id': type_att.id,
+            'title': 'Đề nghị điều chỉnh riêng tư',
+            'description': 'Lý do riêng tư không dành cho quản lý đề nghị',
+            'att_work_date': work_day.isoformat(),
+            'att_requested_in': '08:30',
+            'att_requested_out': '17:00',
+        }, submit=True)
+        req = self.env['tp.request'].browse(res['id'])
+        self.assertEqual(req.with_user(self.user_delegated).description, req.description)
+
+        request_manager = self.env.ref('tp_request.group_request_manager')
+        self.user_mgr.write({'group_ids': [Command.link(request_manager.id)]})
+        self.env['tp.admin.delegation'].with_user(self.admin)._change(
+            self.user_delegated, self.company, 'revoke', 'Synthetic privacy revoke',
+        )
+        for user in (self.user_mgr, self.user_delegated):
+            with self.subTest(user=user.login):
+                view = req.with_user(user)
+                self.assertFalse(view.search_count([('id', '=', req.id)]))
+                with self.assertRaises(AccessError):
+                    view.read(['description'])
+                self.assertFalse(self.env['tp.request.history'].with_user(user).search_count([('request_id', '=', req.id)]))
+
     # ------------------------------------------------------------------ 11, 12, 13: Equipment Assign, Double-Assign Guard, Swap Atomic, Purchase Proposal
     def test_11_12_13_equipment_assign_double_assign_swap_and_purchase(self):
         # Employee sees ONLY their own assigned device (not stock or broken devices)

@@ -8,11 +8,16 @@ Reason, evidence and review notes are private: only the requester, the admins an
 (read-only, after submission) can read them. Every transition is a backend action that locks the row
 first, so a retried or concurrent approval never applies twice.
 """
+import hashlib
+import json
 import math
+import re
 from datetime import time
 
+from psycopg2.errors import UniqueViolation
+
 from odoo import api, fields, models
-from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.exceptions import AccessError, ConcurrencyError, UserError, ValidationError
 
 from .attendance_common import (
     DEFAULT_TZ,
@@ -39,7 +44,7 @@ DERIVED_FIELDS = {'employee_id', 'company_id', 'department_id', 'employee_code',
 # Values the web client may echo back for a new record; anything else on a system field is refused.
 NEUTRAL = {'state': 'draft', 'name': 'Mới', 'version': 1}
 NO_REVIEWER = ('Chưa có admin (admin gốc hoặc admin được ủy quyền đang hiệu lực) khác bạn để nhận duyệt điều chỉnh công '
-               'của công ty này. Phiếu vẫn được lưu nháp; hệ thống không tự chuyển cho người duyệt thay thế. Liên hệ quản trị hệ thống.')
+               'của công ty này. Vui lòng liên hệ quản trị hệ thống.')
 
 
 def float_clock(value):
@@ -71,6 +76,7 @@ class AttendanceCorrection(models.Model):
     _order = 'id desc'
     _check_company_auto = True
     _one_pending_day = models.UniqueIndex("(employee_id, work_date) WHERE state = 'submitted'", 'Ngày này đã có đề nghị chờ duyệt.')
+    _one_create_token = models.UniqueIndex("(employee_id, split_part(create_token, ':', 1)) WHERE create_token IS NOT NULL")
 
     name = fields.Char('Mã phiếu', readonly=True, copy=False, default='Mới')
     employee_id = fields.Many2one('hr.employee', 'Nhân viên', required=True, readonly=True, index=True, ondelete='restrict',
@@ -89,6 +95,8 @@ class AttendanceCorrection(models.Model):
     reason = fields.Text('Giải trình', copy=False)
     evidence_file = fields.Binary('Minh chứng', attachment=True, copy=False)
     evidence_name = fields.Char('Tên tệp minh chứng', copy=False)
+    create_token = fields.Char(readonly=True, copy=False, groups='base.group_no_one')
+    last_save_token = fields.Char(readonly=True, copy=False, groups='base.group_no_one')
     state = fields.Selection(STATES, 'Trạng thái', default='draft', required=True, readonly=True, index=True, copy=False)
     submitted_at = fields.Datetime('Gửi lúc', readonly=True, copy=False)
     withdrawn_by_id = fields.Many2one('res.users', 'Người thu hồi', readonly=True, copy=False)
@@ -287,18 +295,61 @@ class AttendanceCorrection(models.Model):
 
     # -------------------------------------------------------- transitions
     @api.model
-    def tp_save_and_submit(self, vals, correction_id=False, submit=True):
+    def tp_save_and_submit(self, vals, correction_id=False, submit=True, operation_token=False):
         """Create or update owner's correction and optionally submit in one atomic transaction."""
         clean_vals = {k: v for k, v in dict(vals or {}).items() if k in OWNER_FIELDS}
-        if correction_id:
-            record = self.browse(int(correction_id))
-            if not record.exists():
-                raise UserError(self.env._('Không tìm thấy đề nghị điều chỉnh công.'))
-            record.write(clean_vals)
-        else:
-            record = self.create(clean_vals)
-        if submit:
-            record.action_submit()
+        if operation_token and (not isinstance(operation_token, str) or not re.fullmatch(r'[0-9a-f]{16}', operation_token)):
+            raise ValidationError(self.env._('Mã thao tác lưu không hợp lệ.'))
+        for key in ('requested_in', 'requested_out'):
+            if correction_id and key not in clean_vals:
+                continue
+            value = clean_vals.get(key)
+            if isinstance(value, bool) or float_clock(value) is None:
+                raise ValidationError(self.env._('Nhập đủ giờ vào và giờ ra hợp lệ (00:00–23:59).'))
+        operation_key = False
+        if operation_token:
+            contents = json.dumps([bool(submit), clean_vals], sort_keys=True, default=str)
+            operation_key = f'{operation_token}:{hashlib.sha256(contents.encode()).hexdigest()}'
+        try:
+            with self.env.cr.savepoint():
+                if correction_id:
+                    record = self.browse(int(correction_id)).exists()
+                    if not record:
+                        raise UserError(self.env._('Không tìm thấy đề nghị điều chỉnh công.'))
+                    record.check_access('read')
+                    record._tp_check_owner()
+                    record._tp_lock_rows()
+                    previous = record.sudo().last_save_token if operation_token else False
+                    if not previous or not previous.startswith(f'{operation_token}:'):
+                        previous = False
+                        record.write(clean_vals)
+                        if operation_key:
+                            internal(record).write({'last_save_token': operation_key})
+                else:
+                    record = self.browse()
+                    if operation_token:
+                        employee = self._tp_own_employee()
+                        record = self.sudo().search([
+                            ('employee_id', '=', employee.id), ('create_token', '=like', f'{operation_token}:%'),
+                        ], limit=1).with_env(self.env)
+                    previous = False
+                    if record:
+                        record.check_access('read')
+                        previous = record.sudo().create_token
+                    else:
+                        record = self.create(clean_vals)
+                        if operation_key:
+                            internal(record).write({'create_token': operation_key})
+                if previous and previous != operation_key:
+                    raise UserError(self.env._('Thao tác trước đã được ghi nhận. Tải lại để xem phiếu trước khi sửa hoặc gửi duyệt.'))
+                if submit and not previous:
+                    record.action_submit()
+        except UniqueViolation as error:
+            if error.diag.constraint_name == self._one_create_token.full_name(self):
+                # Start with a fresh snapshot when the same creation token commits concurrently.
+                message = 'Concurrent correction creation'
+                raise ConcurrencyError(message) from error
+            raise
         return {
             'id': record.id,
             'name': record.name,
@@ -353,7 +404,7 @@ class AttendanceCorrection(models.Model):
                 'withdraw_reason': clean_reason or False,
                 'version': record.version + 1,
             })
-            record._tp_log('correction_withdraw', reason=clean_reason)
+            record._tp_log('correction_withdraw')
             record._tp_notify_bus('withdraw')
         return True
 

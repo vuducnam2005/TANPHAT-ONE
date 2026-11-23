@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261123-010 — ATTENDANCE-CORRECTION-003: Sửa lỗi OWL khi mở form điều chỉnh công
+
+- `CorrectionFormDialog`/`WithdrawDialog` và các filter đối chiếu chuyển sang `t-model.proxy` theo OWL `3.0.0-alpha.50`; form giữ state ngày/giờ/lý do/minh chứng, lấy giờ hiện có của ngày được chọn, để trống phần thiếu và báo lỗi theo trường.
+- Backend `tp_save_and_submit` dùng savepoint, token thao tác + fingerprint chống tạo phiếu trùng khi bấm kép/retry; lý do thu hồi giữ riêng trên phiếu, log diện rộng không nhận nội dung riêng tư. `tp_request` kiểm lại quyền đọc correction gốc và khóa correction trước request cho action liên kết.
+- Kiểm thực: static `node --check`/`py_compile`/XML parse/`git diff --check`; Odoo `tp_tanphat_test` **0 failed, 0 error(s) of 23**; Playwright desktop/mobile minified bundle **0 page/console errors**, vòng đời gửi/trả/thu hồi/duyệt và F5 đạt; race owner thu hồi/admin duyệt đúng một thao tác thành công. Public trước sửa đã tái hiện `OwlError` `CorrectionFormDialog.slot2`; deployment PC server chờ sau commit.
+
 ## CHG-20261123-009 — ENTI-IMAGE-SYNC-001: Biên bản áp PC server & đồng bộ ảnh thật
 
 - Commit `17970b9e` (`tp_hr_attendance` `20.0.3.9.0`) đã áp lên PC server (`192.168.1.73`, `tp_tanphat_dev`).
