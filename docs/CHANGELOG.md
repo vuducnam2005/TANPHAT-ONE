@@ -4,6 +4,7 @@
 
 - **Sửa đồng bộ trạng thái app (`tp_web_home 20.0.1.13.1`, `tp_branding 20.0.2.3.1`):** bổ sung `HomeLauncher.syncHomeApp()`, `HomeButton.syncAppWithAction()` trên `ACTION_MANAGER:UI-UPDATED` và `syncHomeMenu()` trong `webclient_patch.js` để mọi luồng về Trang chủ (Browser Back/Forward `popstate`, link `/app/trang-chu`, fallback boot, F5 với `sessionStorage.menu_id` cũ) luôn chuyển `menuService` về `tp_web_home.menu_home` (ẩn hoàn toàn sidebar ứng dụng cũ & nhãn app trên navbar, bật `aria-current="page"` cho nút Home) đồng thời khôi phục đúng sidebar khi Forward/Back sang ứng dụng khác.
 - **Kiểm thử:** `node --check`, `py_compile`, `git diff --check` PASS; bổ sung unit test Hoot trong `home_launcher.test.js`; Playwright `1440×900` trên `tp_tanphat_test` đạt **7/7 PASS** (0 lỗi console/OWL).
+- **Áp PC server & Kiểm public:** Commit ứng dụng `07e385cbe146b31d8965b305f74b45bc8f1e6860` đã áp PC server (`192.168.1.73`, `tp_tanphat_dev`); backup `C:\TANPHAT-backups\attendance-app-home002\atthome002-20261125T144626`; 6/6 SHA256 khớp; `-u tp_web_home,tp_branding` exit 0, 0 ERROR/CRITICAL; snapshot 39 nhân viên, 11 users active, 975 ngày công, 865 phiên, 2 phiếu điều chỉnh, 4 request bất biến; public `https://tpone.tadic.vn/web/health` HTTP 200 và bundle mới `/web/assets/41a405e/web.assets_web.min.js` HTTP 200 phục vụ đầy đủ `syncHomeApp`, `syncAppWithAction`, `syncHomeMenu`.
 
 ## CHG-20261125-001 — ATTENDANCE-APP-HOME-001: Sắp xếp Trang chủ 5 nhóm, đổi tên Yêu cầu phê duyệt và tách ứng dụng Chấm công riêng
 
