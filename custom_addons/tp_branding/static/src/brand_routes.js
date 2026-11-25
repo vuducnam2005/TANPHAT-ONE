@@ -618,6 +618,28 @@ export const ROUTE_DEFINITIONS = [
         has_detail: true,
         aliases: ["/app/companies"],
     },
+
+    // 10. Văn phòng số (van-phong-so)
+    {
+        url: "/app/van-phong-so/thong-bao",
+        action_xml_id: "tp_digital_office.action_announcements",
+        action_tag: "tp_digital_office.announcements",
+        native_slug: "thong-bao-noi-bo",
+        name: "Thông báo nội bộ",
+        module: "tp_digital_office",
+        has_detail: false,
+        aliases: ["/app/van-phong-so", "/app/thong-bao-noi-bo"],
+    },
+    {
+        url: "/app/van-phong-so/bien-ban-hop",
+        action_xml_id: "tp_digital_office.action_meeting_minutes",
+        action_tag: "tp_digital_office.meeting_minutes",
+        native_slug: "bien-ban-hop",
+        name: "Biên bản họp",
+        module: "tp_digital_office",
+        has_detail: false,
+        aliases: ["/app/bien-ban-hop"],
+    },
 ];
 
 // Runtime maps for dynamic action ID resolution

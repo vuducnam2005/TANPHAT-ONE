@@ -45,6 +45,16 @@ export class TpRequestCreateModal extends Component {
                 att_work_date: "",
                 att_requested_in: "08:30",
                 att_requested_out: "17:00",
+                leave_kind: "annual",
+                leave_date_from: "",
+                leave_date_to: "",
+                leave_days_count: 1,
+                leave_handover_note: "",
+                trip_destination: "",
+                trip_transport: "",
+                expense_kind: "advance",
+                requested_amount: "",
+                beneficiary_note: "",
             },
             attachments: [],
         });
@@ -83,6 +93,11 @@ export class TpRequestCreateModal extends Component {
             if (!this.state.form.title) {
                 this.state.form.title = `Đề nghị điều chỉnh công ngày ${today.split("-").reverse().join("/")}`;
             }
+        } else if (["leave_request", "business_trip"].includes(typeCard.handler_kind) && !this.state.form.leave_date_from) {
+            const today = new Date().toISOString().slice(0, 10);
+            this.state.form.leave_date_from = today;
+            this.state.form.leave_date_to = today;
+            this.state.form.leave_days_count = 1;
         }
         await this.loadPreview();
     }
@@ -114,6 +129,15 @@ export class TpRequestCreateModal extends Component {
         this.clearFieldError(field);
         if (field === "project_id") {
             this.loadPreview();
+        } else if (field === "leave_date_from" || field === "leave_date_to") {
+            const lf = this.state.form.leave_date_from;
+            const lt = this.state.form.leave_date_to;
+            if (lf && lt && lt >= lf) {
+                const diffDays = Math.round((new Date(lt) - new Date(lf)) / 86400000) + 1;
+                if (diffDays > 0) {
+                    this.state.form.leave_days_count = diffDays;
+                }
+            }
         }
     }
 
@@ -131,6 +155,11 @@ export class TpRequestCreateModal extends Component {
             equipment_issue_detail: "req_equip_issue",
             equipment_quantity: "req_equip_qty",
             it_category: "req_it_category",
+            leave_date_from: "req_leave_from",
+            leave_date_to: "req_leave_to",
+            leave_days_count: "req_leave_days",
+            trip_destination: "req_trip_dest",
+            requested_amount: "req_expense_amount",
         };
         const targetId = idMap[fieldKey];
         if (targetId && this.state.fieldErrors.length) {

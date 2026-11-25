@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_digital_office.CalendarEventDialogMinutePatch"
+       t-inherit="tp_personal_tools.CalendarEventDialog"
+       t-inherit-mode="extension">
+        <xpath expr="//button[contains(text(), 'Chia sẻ qua Trao đổi')]" position="after">
+            <button t-if="this.state.eventId and !this.state.maskedPrivate"
+                    type="button"
+                    class="tp-pt-btn"
+                    t-on-click="() => this.onOpenMeetingMinute()">
+                Biên bản họp
+            </button>
+        </xpath>
+    </t>
+</templates>

@@ -16,10 +16,13 @@ from .request_common import (
     DEFAULT_TZ,
     EXECUTION_STATES,
     EXECUTOR_MODES,
+    EXPENSE_KINDS,
+    FINANCIAL_SETTLEMENT_STATES,
     HANDLER_KINDS,
     INTERNAL,
     IT_CATEGORIES,
     IT_IMPACTS,
+    LEAVE_KINDS,
     OLD_EQUIP_CONDITIONS,
     PRIORITIES,
     STEP_STATES,
@@ -56,6 +59,16 @@ OWNER_EDITABLE_FIELDS = frozenset({
     'att_work_date',
     'att_requested_in',
     'att_requested_out',
+    'leave_kind',
+    'leave_date_from',
+    'leave_date_to',
+    'leave_days_count',
+    'leave_handover_note',
+    'trip_destination',
+    'trip_transport',
+    'expense_kind',
+    'requested_amount',
+    'beneficiary_note',
     'attachment_ids',
 })
 
@@ -95,6 +108,12 @@ SYSTEM_GUARDED_FIELDS = frozenset({
     'equipment_move_ids',
     'equipment_repair_id',
     'equipment_proposal_id',
+    'financial_settlement_state',
+    'voucher_ref',
+    'settlement_confirmed_by_id',
+    'settlement_confirmed_at',
+    'settlement_note',
+    'linked_task_id',
     'step_ids',
     'history_ids',
     'overdue_notified_at',
@@ -257,6 +276,42 @@ class TpRequest(models.Model):
     it_category = fields.Selection(IT_CATEGORIES, string='Nhóm hỗ trợ IT')
     it_device_id = fields.Many2one('maintenance.equipment', string='Thiết bị gặp sự cố IT', ondelete='set null')
     it_urgency_impact = fields.Selection(IT_IMPACTS, string='Mức độ ảnh hưởng', default='self')
+
+    # ------------------------------------------------------------------ Leave, Business Trip & Expense/Advance fields
+    leave_kind = fields.Selection(LEAVE_KINDS, string='Loại nghỉ phép', default='annual')
+    leave_date_from = fields.Date(string='Từ ngày', index=True)
+    leave_date_to = fields.Date(string='Đến ngày', index=True)
+    leave_days_count = fields.Float(string='Số ngày đăng ký', default=1.0, digits=(8, 1))
+    leave_handover_note = fields.Char(string='Bàn giao công việc cho')
+    trip_destination = fields.Char(string='Địa điểm / Tuyến công tác')
+    trip_transport = fields.Char(string='Phương tiện di chuyển')
+
+    expense_kind = fields.Selection(EXPENSE_KINDS, string='Phân loại chi phí', default='advance')
+    currency_id = fields.Many2one(
+        'res.currency',
+        string='Loại tiền',
+        default=lambda self: self.env.company.currency_id,
+        readonly=True,
+    )
+    requested_amount = fields.Monetary(
+        string='Số tiền đề nghị',
+        currency_field='currency_id',
+        default=0.0,
+    )
+    beneficiary_note = fields.Char(string='Thông tin thụ hưởng / căn cứ')
+    financial_settlement_state = fields.Selection(
+        FINANCIAL_SETTLEMENT_STATES,
+        string='Trạng thái thực chi / chứng từ',
+        default='not_applicable',
+        readonly=True,
+        copy=False,
+        index=True,
+    )
+    voucher_ref = fields.Char(string='Số chứng từ thực chi', readonly=True, copy=False)
+    settlement_confirmed_by_id = fields.Many2one('res.users', string='Người đối chiếu thực chi', readonly=True, copy=False)
+    settlement_confirmed_at = fields.Datetime(string='Thời điểm đối chiếu thực chi', readonly=True, copy=False)
+    settlement_note = fields.Text(string='Ghi chú đối chiếu chứng từ', readonly=True, copy=False)
+    linked_task_id = fields.Many2one('project.task', string='Công việc phát sinh liên kết', readonly=True, copy=False, ondelete='set null')
 
     # ------------------------------------------------------------------ Immutable audit history
     history_ids = fields.One2many('tp.request.history', 'request_id', string='Lịch sử hệ thống', readonly=True)
@@ -532,6 +587,27 @@ class TpRequest(models.Model):
             if not self.it_category:
                 errors.append({'id': 'req_it_category', 'label': 'Nhóm hỗ trợ IT', 'location': 'Chi tiết hỗ trợ IT',
                                'message': 'Vui lòng chọn Nhóm hỗ trợ IT.'})
+        elif kind in ('leave_request', 'business_trip'):
+            loc_lbl = 'Chi tiết nghỉ phép' if kind == 'leave_request' else 'Chi tiết công tác'
+            if not self.leave_date_from:
+                errors.append({'id': 'req_leave_from', 'label': 'Từ ngày', 'location': loc_lbl,
+                               'message': 'Vui lòng chọn Từ ngày.'})
+            if not self.leave_date_to:
+                errors.append({'id': 'req_leave_to', 'label': 'Đến ngày', 'location': loc_lbl,
+                               'message': 'Vui lòng chọn Đến ngày.'})
+            elif self.leave_date_from and self.leave_date_to < self.leave_date_from:
+                errors.append({'id': 'req_leave_to', 'label': 'Đến ngày', 'location': loc_lbl,
+                               'message': 'Đến ngày không được trước Từ ngày.'})
+            if not self.leave_days_count or self.leave_days_count <= 0:
+                errors.append({'id': 'req_leave_days', 'label': 'Số ngày', 'location': loc_lbl,
+                               'message': 'Số ngày đăng ký phải lớn hơn 0.'})
+            if kind == 'business_trip' and not (self.trip_destination or '').strip():
+                errors.append({'id': 'req_trip_dest', 'label': 'Địa điểm công tác', 'location': loc_lbl,
+                               'message': 'Vui lòng nhập Địa điểm / Tuyến công tác.'})
+        elif kind == 'expense_advance':
+            if not self.requested_amount or self.requested_amount <= 0:
+                errors.append({'id': 'req_expense_amount', 'label': 'Số tiền đề nghị', 'location': 'Chi tiết chi phí',
+                               'message': 'Số tiền đề nghị phải lớn hơn 0.'})
         return errors
 
     # ------------------------------------------------------------------ Workflow Actions
@@ -731,12 +807,20 @@ class TpRequest(models.Model):
             }
 
         # Final approval reached!
+        # CRITICAL (Mandatory Case #11): Approving an expense/advance/purchase request NEVER
+        # marks cash disbursed (`settled_confirmed`); it sets `pending_disbursement` awaiting voucher!
         exec_required = self.type_id.requires_execution
         executors = self.executor_user_ids or self.type_id._tp_resolve_executors(company=self.company_id)
         exec_due = add_working_hours(now, self.type_id.sla_hours or 24.0) if exec_required else False
+        fin_state = (
+            'pending_disbursement'
+            if self.handler_kind in ('expense_advance', 'equipment_purchase')
+            else 'not_applicable'
+        )
         internal(self).write({
             'approval_state': 'approved',
             'execution_state': 'pending' if exec_required else 'not_applicable',
+            'financial_settlement_state': fin_state,
             'version': new_version,
             'approved_at': now,
             'due_at': False,
@@ -1002,6 +1086,16 @@ class TpRequest(models.Model):
             'it_category': self.it_category,
             'it_device_id': self.it_device_id.id or False,
             'it_urgency_impact': self.it_urgency_impact,
+            'leave_kind': self.leave_kind,
+            'leave_date_from': self.leave_date_from,
+            'leave_date_to': self.leave_date_to,
+            'leave_days_count': self.leave_days_count,
+            'leave_handover_note': self.leave_handover_note,
+            'trip_destination': self.trip_destination,
+            'trip_transport': self.trip_transport,
+            'expense_kind': self.expense_kind,
+            'requested_amount': self.requested_amount,
+            'beneficiary_note': self.beneficiary_note,
         }
         new_req = self.create(vals)
         internal(new_req).write({'source_request_id': self.id})
@@ -1167,6 +1261,114 @@ class TpRequest(models.Model):
             event_type='execution_cancelled',
         )
         return True
+
+    def action_confirm_financial_settlement(self, voucher_ref, note='', expected_version=None):
+        """Confirm actual disbursement/settlement voucher separately from proposal approval."""
+        self.ensure_one()
+        self.check_access('read')
+        lock_rows(self)
+        if expected_version is not None and self.version != int(expected_version):
+            raise UserError(_('Hồ sơ đã thay đổi. Vui lòng tải lại.'))
+        if self.approval_state != 'approved':
+            raise UserError(_('Chỉ đối chiếu chứng từ thực chi cho đề nghị đã được phê duyệt.'))
+        if self.handler_kind not in ('expense_advance', 'equipment_purchase'):
+            raise UserError(_('Loại đề nghị này không áp dụng đối chiếu chứng từ thực chi.'))
+        user = self.env.user
+        is_admin = is_live_admin_user(user, company=self.company_id)
+        is_mgr = is_request_manager(self.env, company=self.company_id)
+        is_exec = (
+            user.id in self.executor_user_ids.ids
+            or self.assigned_executor_id.id == user.id
+            or (self.type_id.executor_mode == 'admin_group' and is_admin)
+        )
+        if not (is_exec or is_mgr or is_admin):
+            raise AccessError(_('Bạn không thuộc bộ phận thực hiện/tài chính để đối chiếu chứng từ thực chi.'))
+        if self.requester_user_id.id == user.id and not is_admin:
+            raise AccessError(_('Người gửi đề nghị không tự xác nhận đối chiếu chứng từ thực chi của chính mình.'))
+        clean_voucher = (voucher_ref or '').strip()
+        if not clean_voucher:
+            raise UserError(_('Bắt buộc nhập Số phiếu chi / Mã chứng từ thực tế khi đối chiếu thực chi.'))
+        clean_note = (note or '').strip()
+        old_fin = self.financial_settlement_state or 'pending_disbursement'
+        internal(self).write({
+            'financial_settlement_state': 'settled_confirmed',
+            'voucher_ref': clean_voucher,
+            'settlement_confirmed_by_id': user.id,
+            'settlement_confirmed_at': fields.Datetime.now(),
+            'settlement_note': clean_note or False,
+            'version': self.version + 1,
+        })
+        self._tp_record_history(
+            'confirm_settlement',
+            state_before=old_fin,
+            state_after='settled_confirmed',
+            step_name=_('Đối chiếu chứng từ thực chi'),
+            note=clean_note or _('Đã đối chiếu chứng từ thực chi.'),
+            result_ref=clean_voucher,
+        )
+        self._tp_notify_internal(
+            self.requester_user_id | self.follower_user_ids,
+            _('Đã đối chiếu chứng từ thực chi'),
+            _('%(actor)s đã đối chiếu chứng từ thực chi (%(ref)s) cho đề nghị "%(title)s".',
+              actor=user.name, ref=clean_voucher, title=self.title),
+            event_type='settlement_confirmed',
+        )
+        return {'status': 'settled_confirmed', 'voucher_ref': clean_voucher}
+
+    def action_create_linked_task(self, assignee_id=None):
+        """Idempotently create or return a single follow-up project.task from an approved request."""
+        self.ensure_one()
+        self.check_access('read')
+        lock_rows(self)
+        if self.approval_state != 'approved':
+            raise UserError(_('Chỉ tạo công việc triển khai từ đề nghị đã được phê duyệt.'))
+        if self.linked_task_id:
+            return {
+                'id': self.linked_task_id.id,
+                'name': self.linked_task_id.sudo().name,
+                'already_existed': True,
+            }
+        uid = self.env.uid
+        user = self.env.user
+        is_allowed = (
+            self.requester_user_id.id == uid
+            or uid in self.executor_user_ids.ids
+            or self.assigned_executor_id.id == uid
+            or is_request_manager(self.env, company=self.company_id)
+            or is_live_admin_user(user, company=self.company_id)
+        )
+        if not is_allowed:
+            raise AccessError(_('Bạn không có quyền tạo công việc triển khai từ đề nghị này.'))
+        target_uid = int(assignee_id) if assignee_id else (
+            self.assigned_executor_id.id
+            or (self.executor_user_ids[:1].id if self.executor_user_ids else uid)
+        )
+        Task = self.env['project.task'].sudo()
+        task_vals = {
+            'name': f'[{self.code}] {self.title}',
+            'description': Markup('<p>Triển khai từ đề nghị phê duyệt <strong>%s</strong>: %s</p>') % (
+                escape(self.code), escape(self.description or self.title)
+            ),
+            'user_ids': [Command.set([target_uid])],
+            'project_id': self.project_id.id or False,
+            'date_deadline': self.needed_date or False,
+        }
+        if 'tp_source_kind' in Task._fields:
+            task_vals['tp_source_kind'] = 'request'
+        task = Task.create(task_vals)
+        internal(self).write({
+            'linked_task_id': task.id,
+            'version': self.version + 1,
+        })
+        self._tp_record_history(
+            'update_progress',
+            state_before=self.execution_state,
+            state_after=self.execution_state,
+            step_name=_('Liên thông công việc'),
+            note=_('Đã tạo công việc triển khai #%(tid)s: %(tname)s', tid=task.id, tname=task.name),
+            result_ref=f'TASK-{task.id}',
+        )
+        return {'id': task.id, 'name': task.name, 'already_existed': False}
 
     # ------------------------------------------------------------------ Overdue Cron (flag + notify only, NEVER auto-approve)
     @api.model
@@ -1608,6 +1810,8 @@ class TpRequest(models.Model):
             'priorities': [{'key': k, 'label': v} for k, v in PRIORITIES],
             'it_categories': [{'key': k, 'label': v} for k, v in IT_CATEGORIES],
             'it_impacts': [{'key': k, 'label': v} for k, v in IT_IMPACTS],
+            'leave_kinds': [{'key': k, 'label': v} for k, v in LEAVE_KINDS],
+            'expense_kinds': [{'key': k, 'label': v} for k, v in EXPENSE_KINDS],
         }
 
     @api.model
@@ -1708,6 +1912,37 @@ class TpRequest(models.Model):
                 if not payload.get('it_category'):
                     field_errors.append({'id': 'req_it_category', 'label': 'Nhóm hỗ trợ IT', 'location': 'Chi tiết hỗ trợ IT',
                                          'message': 'Vui lòng chọn Nhóm hỗ trợ IT.'})
+            elif rtype.handler_kind in ('leave_request', 'business_trip'):
+                loc_lbl = 'Chi tiết nghỉ phép' if rtype.handler_kind == 'leave_request' else 'Chi tiết công tác'
+                lf = (payload.get('leave_date_from') or '').strip()
+                lt = (payload.get('leave_date_to') or '').strip()
+                if not lf:
+                    field_errors.append({'id': 'req_leave_from', 'label': 'Từ ngày', 'location': loc_lbl,
+                                         'message': 'Vui lòng chọn Từ ngày.'})
+                if not lt:
+                    field_errors.append({'id': 'req_leave_to', 'label': 'Đến ngày', 'location': loc_lbl,
+                                         'message': 'Vui lòng chọn Đến ngày.'})
+                elif lf and lt < lf:
+                    field_errors.append({'id': 'req_leave_to', 'label': 'Đến ngày', 'location': loc_lbl,
+                                         'message': 'Đến ngày không được trước Từ ngày.'})
+                try:
+                    ldays = float(payload.get('leave_days_count') or 0)
+                except (TypeError, ValueError):
+                    ldays = 0
+                if ldays <= 0:
+                    field_errors.append({'id': 'req_leave_days', 'label': 'Số ngày', 'location': loc_lbl,
+                                         'message': 'Số ngày đăng ký phải lớn hơn 0.'})
+                if rtype.handler_kind == 'business_trip' and not (payload.get('trip_destination') or '').strip():
+                    field_errors.append({'id': 'req_trip_dest', 'label': 'Địa điểm công tác', 'location': loc_lbl,
+                                         'message': 'Vui lòng nhập Địa điểm / Tuyến công tác.'})
+            elif rtype.handler_kind == 'expense_advance':
+                try:
+                    amt = float(payload.get('requested_amount') or 0)
+                except (TypeError, ValueError):
+                    amt = 0
+                if amt <= 0:
+                    field_errors.append({'id': 'req_expense_amount', 'label': 'Số tiền đề nghị', 'location': 'Chi tiết chi phí',
+                                         'message': 'Số tiền đề nghị phải lớn hơn 0.'})
 
         if field_errors:
             return {'ok': False, 'field_errors': field_errors}
@@ -1736,6 +1971,16 @@ class TpRequest(models.Model):
             'it_category': payload.get('it_category') or False,
             'it_device_id': int(payload['it_device_id']) if payload.get('it_device_id') else False,
             'it_urgency_impact': payload.get('it_urgency_impact') or 'self',
+            'leave_kind': payload.get('leave_kind') or 'annual',
+            'leave_date_from': payload.get('leave_date_from') or False,
+            'leave_date_to': payload.get('leave_date_to') or False,
+            'leave_days_count': float(payload.get('leave_days_count') or 1.0),
+            'leave_handover_note': (payload.get('leave_handover_note') or '').strip() or False,
+            'trip_destination': (payload.get('trip_destination') or '').strip() or False,
+            'trip_transport': (payload.get('trip_transport') or '').strip() or False,
+            'expense_kind': payload.get('expense_kind') or 'advance',
+            'requested_amount': float(payload.get('requested_amount') or 0.0),
+            'beneficiary_note': (payload.get('beneficiary_note') or '').strip() or False,
         }
         if 'follower_user_ids' in payload:
             fids = [int(x) for x in (payload.get('follower_user_ids') or []) if str(x).isdigit()]
@@ -1925,6 +2170,14 @@ class TpRequest(models.Model):
                 'status': dict(prop._fields['review_state'].selection).get(prop.review_state, prop.review_state),
                 'url': f'/app/thiet-bi/de-xuat/{prop.id}' if is_eq_admin else '',
             })
+        if rec.linked_task_id:
+            ltask = rec.linked_task_id.sudo()
+            linked_records.append({
+                'kind': 'task',
+                'label': f'Công việc #{ltask.id}: {ltask.name}',
+                'status': 'Hoàn thành' if ltask.state == '1_done' else 'Đang thực hiện',
+                'url': f'/app/ca-nhan/cong-viec/{ltask.id}',
+            })
 
         # Eligible stock equipment ONLY for authorized equipment executor
         eligible_stock = []
@@ -1951,6 +2204,19 @@ class TpRequest(models.Model):
                 project_display = f'{p.tp_code} · {p.name}' if p.tp_code else p.name
             except AccessError:
                 project_display = 'Dự án nội bộ (giới hạn quyền xem)'
+
+        can_confirm_settlement = bool(
+            rec.approval_state == 'approved'
+            and rec.handler_kind in ('expense_advance', 'equipment_purchase')
+            and rec.financial_settlement_state != 'settled_confirmed'
+            and (can_execute or is_mgr or is_eq_admin)
+            and (not is_owner or is_eq_admin)
+        )
+        can_create_task = bool(
+            rec.approval_state == 'approved'
+            and not rec.linked_task_id
+            and (is_owner or can_execute or is_mgr or is_eq_admin)
+        )
 
         return {
             'id': rec.id,
@@ -2039,6 +2305,31 @@ class TpRequest(models.Model):
                 'impact': rec.it_urgency_impact or 'self',
                 'impact_label': dict(IT_IMPACTS).get(rec.it_urgency_impact, ''),
             },
+            'leave_trip': {
+                'leave_kind': rec.leave_kind or 'annual',
+                'leave_kind_label': dict(LEAVE_KINDS).get(rec.leave_kind, ''),
+                'date_from': rec.leave_date_from.isoformat() if rec.leave_date_from else '',
+                'date_from_display': format_date_vn(rec.leave_date_from),
+                'date_to': rec.leave_date_to.isoformat() if rec.leave_date_to else '',
+                'date_to_display': format_date_vn(rec.leave_date_to),
+                'days_count': rec.leave_days_count or 0.0,
+                'handover_note': rec.leave_handover_note or '',
+                'trip_destination': rec.trip_destination or '',
+                'trip_transport': rec.trip_transport or '',
+            },
+            'expense': {
+                'expense_kind': rec.expense_kind or 'advance',
+                'expense_kind_label': dict(EXPENSE_KINDS).get(rec.expense_kind, ''),
+                'requested_amount': rec.requested_amount or 0.0,
+                'currency_symbol': rec.currency_id.symbol or '₫',
+                'beneficiary_note': rec.beneficiary_note or '',
+                'settlement_state': rec.financial_settlement_state or 'not_applicable',
+                'settlement_state_label': dict(FINANCIAL_SETTLEMENT_STATES).get(rec.financial_settlement_state, ''),
+                'voucher_ref': rec.voucher_ref or '',
+                'settlement_confirmed_by': rec.settlement_confirmed_by_id.sudo().name if rec.settlement_confirmed_by_id else '',
+                'settlement_confirmed_at': format_dt_local(rec.settlement_confirmed_at),
+                'settlement_note': rec.settlement_note or '',
+            },
             'steps': steps,
             'route_preview': route_preview,
             'attachments': attachments,
@@ -2058,7 +2349,9 @@ class TpRequest(models.Model):
                 'can_execute': can_execute,
                 'can_clone': can_clone,
                 'can_transfer': can_transfer,
-                'can_upload_attachment': bool(can_edit or can_execute),
+                'can_confirm_settlement': can_confirm_settlement,
+                'can_create_task': can_create_task,
+                'can_upload_attachment': bool(can_edit or can_execute or can_confirm_settlement),
                 'is_equipment_admin': is_eq_admin,
             },
         }

@@ -253,6 +253,114 @@
                                 </div>
                             </div>
 
+                            <!-- LEAVE REQUEST / BUSINESS TRIP SPECIFIC FIELDS -->
+                            <div t-if="['leave_request', 'business_trip'].includes(this.state.selectedType?.handler_kind)" class="tp_req_section_box">
+                                <h4 class="tp_req_section_title">
+                                    <t t-if="this.state.selectedType?.handler_kind === 'leave_request'">Thông tin đăng ký nghỉ phép (liên thông tổng hợp công)</t>
+                                    <t t-else="">Thông tin cử đi công tác / khảo sát hiện trường</t>
+                                </h4>
+                                <div class="tp_req_row_2" t-if="this.state.selectedType?.handler_kind === 'leave_request'">
+                                    <div class="tp_req_field">
+                                        <label for="req_leave_kind">Loại nghỉ <span class="req_star">*</span></label>
+                                        <select id="req_leave_kind" class="tp_req_input"
+                                                t-att-value="this.state.form.leave_kind"
+                                                t-on-change="(ev) => this.onFieldInput('leave_kind', ev)">
+                                            <option t-foreach="this.state.bootstrap?.leave_kinds || []" t-as="lk" t-key="lk.key"
+                                                    t-att-value="lk.key" t-out="lk.label"/>
+                                        </select>
+                                    </div>
+                                    <div class="tp_req_field" t-att-class="{'has-error': this.hasError('req_leave_days')}">
+                                        <label for="req_leave_days">Số ngày nghỉ <span class="req_star">*</span></label>
+                                        <input id="req_leave_days" type="number" min="0.5" step="0.5" class="tp_req_input"
+                                               t-att-value="this.state.form.leave_days_count"
+                                               t-on-input="(ev) => this.onFieldInput('leave_days_count', ev)"/>
+                                        <p t-if="this.hasError('req_leave_days')" class="tp_req_field_err" t-out="this.errorMessage('req_leave_days')"/>
+                                    </div>
+                                </div>
+                                <div class="tp_req_row_2" t-else="">
+                                    <div class="tp_req_field" t-att-class="{'has-error': this.hasError('req_trip_dest')}">
+                                        <label for="req_trip_dest">Địa điểm / tuyến công tác <span class="req_star">*</span></label>
+                                        <input id="req_trip_dest" type="text" class="tp_req_input"
+                                               placeholder="Ví dụ: Tuyến cao tốc Bắc - Nam đoạn Quảng Ngãi"
+                                               t-att-value="this.state.form.trip_destination"
+                                               t-on-input="(ev) => this.onFieldInput('trip_destination', ev)"/>
+                                        <p t-if="this.hasError('req_trip_dest')" class="tp_req_field_err" t-out="this.errorMessage('req_trip_dest')"/>
+                                    </div>
+                                    <div class="tp_req_field">
+                                        <label for="req_trip_transport">Phương tiện di chuyển</label>
+                                        <input id="req_trip_transport" type="text" class="tp_req_input"
+                                               placeholder="Xe công ty / máy bay / tự túc..."
+                                               t-att-value="this.state.form.trip_transport"
+                                               t-on-input="(ev) => this.onFieldInput('trip_transport', ev)"/>
+                                    </div>
+                                </div>
+                                <div class="tp_req_row_3">
+                                    <div class="tp_req_field" t-att-class="{'has-error': this.hasError('req_leave_from')}">
+                                        <label for="req_leave_from">Từ ngày <span class="req_star">*</span></label>
+                                        <input id="req_leave_from" type="date" class="tp_req_input"
+                                               t-att-value="this.state.form.leave_date_from"
+                                               t-on-input="(ev) => this.onFieldInput('leave_date_from', ev)"/>
+                                        <p t-if="this.hasError('req_leave_from')" class="tp_req_field_err" t-out="this.errorMessage('req_leave_from')"/>
+                                    </div>
+                                    <div class="tp_req_field" t-att-class="{'has-error': this.hasError('req_leave_to')}">
+                                        <label for="req_leave_to">Đến ngày <span class="req_star">*</span></label>
+                                        <input id="req_leave_to" type="date" class="tp_req_input"
+                                               t-att-value="this.state.form.leave_date_to"
+                                               t-on-input="(ev) => this.onFieldInput('leave_date_to', ev)"/>
+                                        <p t-if="this.hasError('req_leave_to')" class="tp_req_field_err" t-out="this.errorMessage('req_leave_to')"/>
+                                    </div>
+                                    <div class="tp_req_field" t-if="this.state.selectedType?.handler_kind === 'business_trip'"
+                                         t-att-class="{'has-error': this.hasError('req_leave_days')}">
+                                        <label for="req_leave_days">Số ngày công tác <span class="req_star">*</span></label>
+                                        <input id="req_leave_days" type="number" min="0.5" step="0.5" class="tp_req_input"
+                                               t-att-value="this.state.form.leave_days_count"
+                                               t-on-input="(ev) => this.onFieldInput('leave_days_count', ev)"/>
+                                        <p t-if="this.hasError('req_leave_days')" class="tp_req_field_err" t-out="this.errorMessage('req_leave_days')"/>
+                                    </div>
+                                </div>
+                                <div class="tp_req_field">
+                                    <label for="req_leave_handover">Người nhận bàn giao / phương án trực thay</label>
+                                    <input id="req_leave_handover" type="text" class="tp_req_input"
+                                           placeholder="Ghi rõ người tiếp nhận công việc trong thời gian vắng mặt..."
+                                           t-att-value="this.state.form.leave_handover_note"
+                                           t-on-input="(ev) => this.onFieldInput('leave_handover_note', ev)"/>
+                                </div>
+                            </div>
+
+                            <!-- EXPENSE ADVANCE / SETTLEMENT SPECIFIC FIELDS -->
+                            <div t-if="this.state.selectedType?.handler_kind === 'expense_advance'" class="tp_req_section_box">
+                                <h4 class="tp_req_section_title">Thông tin tạm ứng / đề nghị thanh toán chi phí</h4>
+                                <div class="tp_req_row_2">
+                                    <div class="tp_req_field">
+                                        <label for="req_expense_kind">Hình thức đề nghị <span class="req_star">*</span></label>
+                                        <select id="req_expense_kind" class="tp_req_input"
+                                                t-att-value="this.state.form.expense_kind"
+                                                t-on-change="(ev) => this.onFieldInput('expense_kind', ev)">
+                                            <option t-foreach="this.state.bootstrap?.expense_kinds || []" t-as="ek" t-key="ek.key"
+                                                    t-att-value="ek.key" t-out="ek.label"/>
+                                        </select>
+                                    </div>
+                                    <div class="tp_req_field" t-att-class="{'has-error': this.hasError('req_expense_amount')}">
+                                        <label for="req_expense_amount">Số tiền đề nghị (VNĐ) <span class="req_star">*</span></label>
+                                        <input id="req_expense_amount" type="number" min="1000" step="1000" class="tp_req_input"
+                                               placeholder="Ví dụ: 5000000"
+                                               t-att-value="this.state.form.requested_amount"
+                                               t-on-input="(ev) => this.onFieldInput('requested_amount', ev)"/>
+                                        <p t-if="this.hasError('req_expense_amount')" class="tp_req_field_err" t-out="this.errorMessage('req_expense_amount')"/>
+                                    </div>
+                                </div>
+                                <div class="tp_req_field">
+                                    <label for="req_beneficiary_note">Thông tin thụ hưởng / tài khoản nhận</label>
+                                    <input id="req_beneficiary_note" type="text" class="tp_req_input"
+                                           placeholder="Số tài khoản, ngân hàng hoặc nhận tiền mặt tại quỹ..."
+                                           t-att-value="this.state.form.beneficiary_note"
+                                           t-on-input="(ev) => this.onFieldInput('beneficiary_note', ev)"/>
+                                </div>
+                                <p class="tp_req_hint">
+                                    Lưu ý: Phê duyệt đề nghị chỉ xác nhận chủ trương chi phí; trạng thái thực chi chỉ được ghi nhận sau khi Kế toán đối chiếu chứng từ chi thực tế.
+                                </p>
+                            </div>
+
                             <!-- Optional Project link (only when type enables it and user has accessible projects) -->
                             <div t-if="this.state.selectedType?.show_project_field and (this.state.bootstrap?.projects || []).length"
                                  class="tp_req_field">

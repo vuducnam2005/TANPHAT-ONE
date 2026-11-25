@@ -111,6 +111,10 @@ class TestBrandUrls(BaseCase):
                 '/app/de-nghi',
                 '/app/bao-cao',
                 '/app/ca-nhan',
+                '/app/van-phong-so',
+                '/app/du-an',
+                '/app/dieu-hanh',
+                '/app/tuyen-dung',
                 '/app/quan-tri',
             )
             self.assertTrue(

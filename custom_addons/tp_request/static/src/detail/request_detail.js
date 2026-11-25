@@ -87,6 +87,10 @@ export class TpRequestDetail extends Component {
             execFulfilledEquipId: "",
             execOldCondition: "",
             execError: "",
+            // Financial settlement verification panel
+            voucherRef: "",
+            settlementNote: "",
+            settlementError: "",
             // Upload & comments
             uploading: false,
             commentBody: "",
@@ -203,6 +207,16 @@ export class TpRequestDetail extends Component {
             att_work_date: d.attendance?.work_date || "",
             att_requested_in: d.attendance?.requested_in || "08:30",
             att_requested_out: d.attendance?.requested_out || "17:00",
+            leave_kind: d.leave_trip?.leave_kind || "annual",
+            leave_date_from: d.leave_trip?.date_from || "",
+            leave_date_to: d.leave_trip?.date_to || "",
+            leave_days_count: d.leave_trip?.days_count || 1,
+            leave_handover_note: d.leave_trip?.handover_note || "",
+            trip_destination: d.leave_trip?.trip_destination || "",
+            trip_transport: d.leave_trip?.trip_transport || "",
+            expense_kind: d.expense?.expense_kind || "advance",
+            requested_amount: d.expense?.requested_amount || "",
+            beneficiary_note: d.expense?.beneficiary_note || "",
         };
         this.state.editing = true;
     }
@@ -243,6 +257,8 @@ export class TpRequestDetail extends Component {
                         : false,
                     equipment_quantity: Number(this.state.editForm.equipment_quantity) || 1,
                     it_device_id: this.state.editForm.it_device_id ? Number(this.state.editForm.it_device_id) : false,
+                    leave_days_count: Number(this.state.editForm.leave_days_count) || 0,
+                    requested_amount: Number(this.state.editForm.requested_amount) || 0,
                 },
                 submitAfter,
             ]);
@@ -596,6 +612,69 @@ export class TpRequestDetail extends Component {
             this.env.bus.trigger("TP_REQUEST:LIVE_UPDATED", { request_id: this.state.requestId });
         } catch (err) {
             this.state.execError = extractErrorMessage(err, "Không thể hủy thực hiện.");
+        } finally {
+            this.state.busy = false;
+        }
+    }
+
+    formatMoneyVnd(amount) {
+        const n = Number(amount);
+        if (!Number.isFinite(n)) return "—";
+        return `${new Intl.NumberFormat("vi-VN").format(n)} ₫`;
+    }
+
+    onVoucherInput(ev) {
+        this.state.voucherRef = ev.target.value;
+        this.state.settlementError = "";
+    }
+
+    onSettlementNoteInput(ev) {
+        this.state.settlementNote = ev.target.value;
+    }
+
+    async confirmSettlement() {
+        const d = this.state.data;
+        if (!d || this.state.busy) return;
+        const ref = (this.state.voucherRef || "").trim();
+        if (!ref) {
+            this.state.settlementError = "Bắt buộc nhập Số phiếu chi / Mã chứng từ thực tế trước khi đối chiếu.";
+            return;
+        }
+        this.state.busy = true;
+        this.state.settlementError = "";
+        try {
+            await this.orm.call("tp.request", "action_confirm_financial_settlement", [[d.id]], {
+                voucher_ref: ref,
+                note: this.state.settlementNote,
+                expected_version: d.version,
+            });
+            this.state.voucherRef = "";
+            this.state.settlementNote = "";
+            this.state.bannerMessage = `Đã đối chiếu chứng từ thực chi (${ref}) thành công.`;
+            this.notification.add(this.state.bannerMessage, { type: "success" });
+            await this.load();
+            this.env.bus.trigger("TP_REQUEST:LIVE_UPDATED", { request_id: this.state.requestId });
+        } catch (err) {
+            this.state.settlementError = extractErrorMessage(err, "Không thể đối chiếu chứng từ thực chi.");
+        } finally {
+            this.state.busy = false;
+        }
+    }
+
+    async createLinkedTask() {
+        const d = this.state.data;
+        if (!d || this.state.busy) return;
+        this.state.busy = true;
+        this.state.decisionError = "";
+        try {
+            const res = await this.orm.call("tp.request", "action_create_linked_task", [[d.id]]);
+            this.state.bannerMessage = res?.already_existed
+                ? `Hồ sơ đã liên kết công việc #${res.id}.`
+                : `Đã tạo công việc triển khai "${res?.name || ""}" trong Công việc của tôi.`;
+            this.notification.add(this.state.bannerMessage, { type: "success" });
+            await this.load();
+        } catch (err) {
+            this.state.decisionError = extractErrorMessage(err, "Không thể tạo công việc triển khai.");
         } finally {
             this.state.busy = false;
         }

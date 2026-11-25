@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_tp_meeting_minute" model="ir.sequence">
+            <field name="name">Biên bản họp TANPHAT ONE</field>
+            <field name="code">tp.meeting.minute</field>
+            <field name="prefix">BBH-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="seq_tp_announcement" model="ir.sequence">
+            <field name="name">Thông báo nội bộ TANPHAT ONE</field>
+            <field name="code">tp.announcement</field>
+            <field name="prefix">TBNB-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

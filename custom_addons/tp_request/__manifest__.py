@@ -1,7 +1,7 @@
 # Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
 {
     'name': 'TANPHAT ONE — Yêu cầu phê duyệt',
-    'version': '20.0.1.2.0',
+    'version': '20.0.2.0.0',
     'summary': 'Nền tảng lập đề nghị, phê duyệt tuần tự và thực hiện sau duyệt dùng chung cho TANPHAT ONE',
     'category': 'Operations',
     'author': 'TANPHAT ONE',
@@ -25,6 +25,7 @@
         'security/ir.access.csv',
         'data/request_sequence.xml',
         'data/request_types.xml',
+        'data/request_types_enterprise.xml',
         'data/request_cron.xml',
         'views/request_views.xml',
         'views/request_menus.xml',

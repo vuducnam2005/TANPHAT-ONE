@@ -19,12 +19,34 @@ BRIDGE_KEY = '_tp_request_bridge'
 
 HANDLER_KINDS = [
     ('attendance_correction', 'Điều chỉnh công'),
+    ('leave_request', 'Nghỉ phép / Nghỉ việc riêng'),
+    ('business_trip', 'Công tác / Hiện trường'),
+    ('expense_advance', 'Tạm ứng / Thanh toán chi phí'),
     ('equipment_assign', 'Cấp thiết bị'),
     ('equipment_swap', 'Đổi thiết bị'),
     ('equipment_purchase', 'Mua bổ sung thiết bị'),
     ('equipment_repair', 'Sửa chữa / báo hỏng thiết bị'),
     ('it_support', 'Hỗ trợ IT'),
     ('general', 'Đề nghị nội bộ chung'),
+]
+
+LEAVE_KINDS = [
+    ('annual', 'Nghỉ phép năm'),
+    ('unpaid', 'Nghỉ không hưởng lương'),
+    ('sick', 'Nghỉ ốm / Chế độ BHXH'),
+    ('personal_paid', 'Nghỉ việc riêng theo chế độ'),
+    ('compensatory', 'Nghỉ bù công'),
+]
+
+EXPENSE_KINDS = [
+    ('advance', 'Đề nghị tạm ứng công việc / dự án'),
+    ('reimbursement', 'Đề nghị thanh toán / hoàn ứng chi phí'),
+]
+
+FINANCIAL_SETTLEMENT_STATES = [
+    ('not_applicable', 'Không phát sinh thu chi'),
+    ('pending_disbursement', 'Đã duyệt đề xuất — Chờ chứng từ thực chi'),
+    ('settled_confirmed', 'Đã đối chiếu chứng từ thực chi'),
 ]
 
 APPROVAL_STATES = [
@@ -121,6 +143,7 @@ HISTORY_ACTIONS = [
     ('update_progress', 'Cập nhật tiến độ thực hiện'),
     ('complete_execution', 'Hoàn thành thực hiện'),
     ('cancel_execution', 'Hủy / không thể thực hiện'),
+    ('confirm_settlement', 'Xác nhận chứng từ thực chi'),
     ('link_result', 'Liên kết hồ sơ nghiệp vụ'),
 ]
 

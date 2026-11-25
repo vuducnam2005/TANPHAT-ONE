@@ -1,0 +1,649 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_digital_office.Workspace">
+        <div class="tp-do-shell">
+            <!-- Single Left Module Sidebar -->
+            <aside t-att-class="'tp-do-sidebar ' + (this.state.mobileNavOpen ? 'is-open' : '')">
+                <button type="button" class="tp-do-home-btn" t-on-click="this.goHome">
+                    <span>← Trang chủ TANPHAT ONE</span>
+                </button>
+                <div class="tp-do-brand-title">Văn phòng số</div>
+                <button type="button"
+                        t-att-class="'tp-do-nav-item ' + (this.state.tab === 'announcements' ? 'is-active' : '')"
+                        t-on-click="() => this.switchTab('announcements')">
+                    <span>Thông báo nội bộ</span>
+                </button>
+                <button type="button"
+                        t-att-class="'tp-do-nav-item ' + (this.state.tab === 'minutes' ? 'is-active' : '')"
+                        t-on-click="() => this.switchTab('minutes')">
+                    <span>Biên bản họp &amp; Đầu việc</span>
+                </button>
+            </aside>
+
+            <!-- Main Workspace Area -->
+            <main class="tp-do-main">
+                <InlineErrors errors="this.state.fieldErrors"
+                              server="this.state.serverError"
+                              attempt="this.state.attempt"/>
+
+                <!-- ==================== LIST MODE ==================== -->
+                <t t-if="this.state.mode === 'list'">
+                    <div class="tp-do-topbar">
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="tp-do-btn tp-do-mobile-toggle" t-on-click="this.toggleMobileNav">
+                                Danh mục
+                            </button>
+                            <div>
+                                <h1 class="tp-do-h1">
+                                    <t t-if="this.state.tab === 'announcements'">Thông báo nội bộ chính thức</t>
+                                    <t t-else="">Biên bản họp &amp; Theo dõi kết luận</t>
+                                </h1>
+                                <p class="tp-do-sub">
+                                    <t t-if="this.state.tab === 'announcements'">
+                                        Kênh truyền thông điều hành một chiều, tách biệt với chat và ghi nhận xác nhận đã đọc theo phiên bản.
+                                    </t>
+                                    <t t-else="">
+                                        Liên kết trực tiếp Lịch họp, chuẩn hóa kết luận và tự động giao việc một lần khi phát hành.
+                                    </t>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button t-if="this.state.tab === 'announcements' and this.state.canCreate"
+                                    type="button" class="tp-do-btn tp-do-btn-primary"
+                                    t-on-click="this.openCreateAnnouncement">
+                                + Soạn thông báo mới
+                            </button>
+                            <button t-if="this.state.tab === 'minutes'"
+                                    type="button" class="tp-do-btn tp-do-btn-primary"
+                                    t-on-click="() => this.openCreateMinute()">
+                                + Lập biên bản họp
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tp-do-card">
+                        <!-- DEC-044 Filter Bar -->
+                        <div class="tp-do-filter-bar">
+                            <input type="search" class="tp-do-input tp-do-search-input"
+                                   placeholder="Tìm theo mã số, tiêu đề, nội dung..."
+                                   t-att-value="this.state.filters.search"
+                                   t-on-input="this.onSearchInput"
+                                   t-on-keydown="this.onSearchKeydown"/>
+                            <button type="button" class="tp-do-btn" t-on-click="this.triggerSearch">Tìm</button>
+
+                            <t t-if="this.state.tab === 'announcements'">
+                                <select class="tp-do-select"
+                                        t-att-value="this.state.filters.category"
+                                        t-on-change="(ev) => this.onFilterChange('category', ev)">
+                                    <option value="">Tất cả phân loại</option>
+                                    <option t-foreach="this.state.filterOptions.categories" t-as="c" t-key="c.key"
+                                            t-att-value="c.key" t-out="c.label"/>
+                                </select>
+                                <select class="tp-do-select"
+                                        t-att-value="this.state.filters.ack_filter"
+                                        t-on-change="(ev) => this.onFilterChange('ack_filter', ev)">
+                                    <option value="">Tất cả trạng thái đọc</option>
+                                    <option value="unacked">Chưa xác nhận đọc</option>
+                                    <option value="acked">Đã xác nhận đọc</option>
+                                </select>
+                            </t>
+                            <t t-else="">
+                                <select class="tp-do-select"
+                                        t-att-value="this.state.filters.project_id"
+                                        t-on-change="(ev) => this.onFilterChange('project_id', ev)">
+                                    <option value="0">Tất cả dự án</option>
+                                    <option t-foreach="this.state.filterOptions.projects" t-as="pr" t-key="pr.id"
+                                            t-att-value="pr.id" t-out="pr.name"/>
+                                </select>
+                            </t>
+
+                            <select class="tp-do-select"
+                                    t-att-value="this.state.filters.state"
+                                    t-on-change="(ev) => this.onFilterChange('state', ev)">
+                                <option value="">Tất cả trạng thái</option>
+                                <option t-foreach="this.state.filterOptions.states" t-as="st" t-key="st.key"
+                                        t-att-value="st.key" t-out="st.label"/>
+                            </select>
+
+                            <button t-if="this.hasActiveFilters" type="button" class="tp-do-btn" t-on-click="this.resetFilters">
+                                Đặt lại bộ lọc
+                            </button>
+                        </div>
+
+                        <!-- Table -->
+                        <div t-if="this.state.loading" class="py-4 text-center text-muted">Đang tải dữ liệu...</div>
+                        <div t-elif="!this.state.rows.length" class="py-4 text-center text-muted">
+                            Chưa có hồ sơ nào phù hợp với bộ lọc hiện tại.
+                        </div>
+                        <div t-else="" class="tp-do-table-wrap">
+                            <table class="tp-do-table" t-if="this.state.tab === 'announcements'">
+                                <thead>
+                                    <tr>
+                                        <th>Số hiệu</th>
+                                        <th>Tiêu đề thông báo</th>
+                                        <th>Phân loại</th>
+                                        <th>Đơn vị ban hành</th>
+                                        <th>Hiệu lực</th>
+                                        <th>Trạng thái</th>
+                                        <th>Xác nhận đọc</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="this.state.rows" t-as="r" t-key="r.id" class="tp-do-row"
+                                        t-on-click="() => this.openAnnouncementDetail(r.id)">
+                                        <td><strong t-out="r.code"/> <span class="text-muted" t-out="'v' + r.version"/></td>
+                                        <td><strong t-out="r.name"/></td>
+                                        <td t-out="r.category_label"/>
+                                        <td t-out="r.issuing_department"/>
+                                        <td t-out="r.effective_date || '—'"/>
+                                        <td>
+                                            <span t-att-class="'tp-do-badge is-' + r.state" t-out="r.state_label"/>
+                                        </td>
+                                        <td>
+                                            <span t-if="r.is_acked" class="tp-do-badge is-acked">Đã xác nhận</span>
+                                            <span t-elif="r.require_ack and r.state === 'published'" class="tp-do-badge is-unacked">Cần xác nhận</span>
+                                            <span t-else="" class="text-muted">—</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <table class="tp-do-table" t-else="">
+                                <thead>
+                                    <tr>
+                                        <th>Mã biên bản</th>
+                                        <th>Cuộc họp</th>
+                                        <th>Thời gian họp</th>
+                                        <th>Chủ trì</th>
+                                        <th>Dự án / Phòng</th>
+                                        <th>Đầu việc</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="this.state.rows" t-as="r" t-key="r.id" class="tp-do-row"
+                                        t-on-click="() => this.openMinuteDetail(r.id)">
+                                        <td><strong t-out="r.code"/> <span class="text-muted" t-out="'v' + r.version"/></td>
+                                        <td><strong t-out="r.name"/></td>
+                                        <td t-out="r.meeting_date"/>
+                                        <td t-out="r.chair_name"/>
+                                        <td t-out="r.project_name !== '—' ? r.project_name : r.department_name"/>
+                                        <td><t t-out="r.tasks_done"/>/<t t-out="r.action_count"/> hoàn thành</td>
+                                        <td>
+                                            <span t-att-class="'tp-do-badge is-' + r.state" t-out="r.state_label"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="tp-do-pager">
+                            <div>Tổng số: <strong t-out="this.state.total"/> bản ghi</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <select class="tp-do-select" t-att-value="this.state.pageSize" t-on-change="this.onPageSizeChange">
+                                    <option value="10">10 / trang</option>
+                                    <option value="20">20 / trang</option>
+                                    <option value="50">50 / trang</option>
+                                    <option value="100">100 / trang</option>
+                                </select>
+                                <button type="button" class="tp-do-btn" t-att-disabled="this.state.page &lt;= 1"
+                                        t-on-click="() => this.changePage(-1)">Trước</button>
+                                <span>Trang <strong t-out="this.state.page"/> / <t t-out="this.state.maxPage"/></span>
+                                <button type="button" class="tp-do-btn" t-att-disabled="this.state.page &gt;= this.state.maxPage"
+                                        t-on-click="() => this.changePage(1)">Sau</button>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- ==================== ANNOUNCEMENT FORM ==================== -->
+                <t t-elif="this.state.mode === 'form' and this.state.tab === 'announcements'">
+                    <div class="tp-do-topbar">
+                        <button type="button" class="tp-do-btn" t-on-click="this.backToList">← Quay lại danh sách</button>
+                        <h1 class="tp-do-h1" t-out="this.state.annForm.id ? 'Chỉnh sửa thông báo nháp' : 'Soạn thông báo nội bộ'"/>
+                    </div>
+                    <div class="tp-do-card">
+                        <div class="tp-do-field">
+                            <label class="tp-do-label" for="ann_name">Tiêu đề thông báo <span class="tp-do-req">*</span></label>
+                            <input id="ann_name" type="text" class="tp-do-input"
+                                   t-model.proxy="this.state.annForm.name"
+                                   placeholder="Ví dụ: Thông báo quy định nghiệm thu hồ sơ bản vẽ giai đoạn TKKT"/>
+                        </div>
+                        <div class="tp-do-grid-2">
+                            <div class="tp-do-field">
+                                <label class="tp-do-label">Phân loại</label>
+                                <select class="tp-do-select" t-model.proxy="this.state.annForm.category">
+                                    <option t-foreach="this.state.filterOptions.categories" t-as="c" t-key="c.key"
+                                            t-att-value="c.key" t-out="c.label"/>
+                                </select>
+                            </div>
+                            <div class="tp-do-field">
+                                <label class="tp-do-label">Phạm vi đối tượng nhận <span class="tp-do-req">*</span></label>
+                                <select class="tp-do-select" t-model.proxy="this.state.annForm.audience_scope">
+                                    <option t-if="this.state.canPublishCompany" value="company">Toàn công ty</option>
+                                    <option value="departments">Theo phòng ban</option>
+                                    <option value="users">Người nhận cụ thể</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="tp-do-field" t-if="this.state.annForm.audience_scope === 'departments'">
+                            <label class="tp-do-label" id="ann_depts">Chọn phòng ban nhận <span class="tp-do-req">*</span></label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button t-foreach="this.state.filterOptions.departments" t-as="dp" t-key="dp.id"
+                                        type="button"
+                                        t-att-class="'tp-do-btn ' + (this.isAnnMultiSelected('target_department_ids', dp.id) ? 'tp-do-btn-primary' : '')"
+                                        t-on-click="() => this.toggleAnnMultiId('target_department_ids', dp.id)"
+                                        t-out="dp.name"/>
+                            </div>
+                        </div>
+
+                        <div class="tp-do-field" t-if="this.state.annForm.audience_scope === 'users'">
+                            <label class="tp-do-label" id="ann_users">Chọn người nhận <span class="tp-do-req">*</span></label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button t-foreach="this.state.filterOptions.users" t-as="u" t-key="u.id"
+                                        type="button"
+                                        t-att-class="'tp-do-btn ' + (this.isAnnMultiSelected('target_user_ids', u.id) ? 'tp-do-btn-primary' : '')"
+                                        t-on-click="() => this.toggleAnnMultiId('target_user_ids', u.id)"
+                                        t-out="u.name"/>
+                            </div>
+                        </div>
+
+                        <div class="tp-do-grid-2">
+                            <div class="tp-do-field">
+                                <label class="tp-do-label">Ngày hiệu lực</label>
+                                <input type="date" class="tp-do-input" t-model.proxy="this.state.annForm.effective_date"/>
+                            </div>
+                            <div class="tp-do-field">
+                                <label class="tp-do-label">Hạn xác nhận đã đọc (tùy chọn)</label>
+                                <input type="date" class="tp-do-input" t-model.proxy="this.state.annForm.ack_deadline"/>
+                            </div>
+                        </div>
+
+                        <div class="tp-do-field">
+                            <label class="tp-do-label" for="ann_body">Nội dung chính thức <span class="tp-do-req">*</span></label>
+                            <textarea id="ann_body" rows="6" class="tp-do-textarea"
+                                      t-model.proxy="this.state.annForm.body"
+                                      placeholder="Nhập đầy đủ nội dung chỉ đạo / thông báo chính thức..."/>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="button" class="tp-do-btn" t-on-click="this.backToList">Hủy</button>
+                            <button type="button" class="tp-do-btn" t-att-disabled="this.state.busy"
+                                    t-on-click="() => this.saveAnnouncement(false)">Lưu nháp</button>
+                            <button type="button" class="tp-do-btn tp-do-btn-primary" t-att-disabled="this.state.busy"
+                                    t-on-click="() => this.saveAnnouncement(true)">Phát hành chính thức</button>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- ==================== ANNOUNCEMENT DETAIL ==================== -->
+                <t t-elif="this.state.mode === 'detail' and this.state.tab === 'announcements' and this.state.detail">
+                    <t t-set="d" t-value="this.state.detail"/>
+                    <div class="tp-do-topbar">
+                        <button type="button" class="tp-do-btn" t-on-click="this.backToList">← Danh sách thông báo</button>
+                        <div class="d-flex flex-wrap gap-2" t-if="d.can_manage">
+                            <button t-if="d.state === 'draft'" type="button" class="tp-do-btn" t-on-click="this.openEditAnnouncement">Sửa nháp</button>
+                            <button t-if="d.state === 'draft'" type="button" class="tp-do-btn tp-do-btn-primary"
+                                    t-on-click="this.publishDraftAnnouncement" t-att-disabled="this.state.busy">Phát hành</button>
+                            <button t-if="d.state === 'published'" type="button" class="tp-do-btn" t-on-click="this.toggleReviseBox">
+                                Cập nhật phiên bản
+                            </button>
+                            <button t-if="d.state === 'published'" type="button" class="tp-do-btn tp-do-btn-danger" t-on-click="this.toggleRevokeBox">
+                                Thu hồi
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Explicit Read Acknowledgement Banner (Mandatory Case #9) -->
+                    <div t-if="d.state === 'published' and d.require_ack"
+                         t-att-class="'tp-do-ack-banner ' + (d.is_acked ? 'is-done' : '')">
+                        <div>
+                            <strong t-if="d.is_acked">Bạn đã xác nhận đọc phiên bản v<t t-out="d.version"/> lúc <t t-out="d.acked_at"/>.</strong>
+                            <strong t-elif="d.had_previous_version_ack">
+                                Thông báo vừa cập nhật lên phiên bản v<t t-out="d.version"/> — Vui lòng xác nhận đọc lại nội dung mới.
+                            </strong>
+                            <strong t-else="">
+                                Vui lòng đọc kỹ nội dung và bấm "Xác nhận đã đọc" (mở trang không tự động đánh dấu đã xác nhận).
+                            </strong>
+                        </div>
+                        <button t-if="!d.is_acked" type="button" class="tp-do-btn tp-do-btn-success"
+                                t-on-click="this.acknowledgeRead" t-att-disabled="this.state.busy">
+                            ✓ Xác nhận đã đọc (v<t t-out="d.version"/>)
+                        </button>
+                    </div>
+
+                    <!-- Revise / Revoke Inline Boxes -->
+                    <div class="tp-do-card" t-if="this.state.showReviseBox">
+                        <h3 class="h6 fw-bold mb-2">Cập nhật phiên bản thông báo đã phát hành</h3>
+                        <div class="tp-do-field">
+                            <label class="tp-do-label">Tiêu đề</label>
+                            <input type="text" class="tp-do-input" t-model.proxy="this.state.detail.name"/>
+                        </div>
+                        <div class="tp-do-field">
+                            <label class="tp-do-label">Nội dung cập nhật</label>
+                            <textarea rows="4" class="tp-do-textarea" t-model.proxy="this.state.detail.body"/>
+                        </div>
+                        <div class="tp-do-field">
+                            <label class="tp-do-label">Lý do cập nhật <span class="tp-do-req">*</span></label>
+                            <input type="text" class="tp-do-input" t-model.proxy="this.state.reviseReason"
+                                   placeholder="Ghi rõ nội dung sửa đổi so với phiên bản trước..."/>
+                        </div>
+                        <label class="d-flex align-items-center gap-2 mb-3">
+                            <input type="checkbox" t-model.proxy="this.state.reviseMajor"/>
+                            <span>Thay đổi nội dung quan trọng (tăng phiên bản v<t t-out="d.version + 1"/> và yêu cầu người nhận xác nhận đọc lại)</span>
+                        </label>
+                        <button type="button" class="tp-do-btn tp-do-btn-primary" t-on-click="this.submitPublishedAnnouncementRevision">
+                            Lưu &amp; phát hành bản cập nhật
+                        </button>
+                    </div>
+
+                    <div class="tp-do-card" t-if="this.state.showRevokeBox">
+                        <h3 class="h6 fw-bold mb-2 text-danger">Thu hồi thông báo nội bộ</h3>
+                        <div class="tp-do-field">
+                            <label class="tp-do-label">Lý do thu hồi <span class="tp-do-req">*</span></label>
+                            <input type="text" class="tp-do-input" t-model.proxy="this.state.revokeReason"
+                                   placeholder="Nhập lý do thu hồi văn bản..."/>
+                        </div>
+                        <button type="button" class="tp-do-btn tp-do-btn-danger" t-on-click="this.submitRevokeAnnouncement">
+                            Xác nhận thu hồi
+                        </button>
+                    </div>
+
+                    <div class="tp-do-card">
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <span class="tp-do-badge is-draft" t-out="d.code + ' · v' + d.version"/>
+                            <span t-att-class="'tp-do-badge is-' + d.state" t-out="d.state_label"/>
+                            <span class="tp-do-badge is-draft" t-out="d.category_label"/>
+                        </div>
+                        <h2 class="tp-do-h1 mb-2" t-out="d.name"/>
+                        <div class="text-muted small mb-3">
+                            Ban hành bởi: <strong t-out="d.issuer_name"/> (<t t-out="d.issuing_department_name"/>)
+                            · Đối tượng: <strong t-out="d.audience_label"/>
+                            · Hiệu lực: <strong t-out="d.effective_date_display || '—'"/>
+                        </div>
+                        <div t-if="d.revoked_reason" class="alert alert-danger py-2">
+                            <strong>Lý do thu hồi / thay thế:</strong> <t t-out="d.revoked_reason"/>
+                        </div>
+                        <div class="p-3 bg-light rounded border" style="white-space: pre-wrap;" t-out="d.body"/>
+
+                        <!-- Attachments -->
+                        <div class="mt-3 pt-3 border-top">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <strong>Văn bản đính kèm (<t t-out="d.attachments.length"/>)</strong>
+                                <label t-if="d.can_manage" class="tp-do-btn mb-0">
+                                    + Đính kèm tệp
+                                    <input type="file" class="d-none" multiple="1" t-on-change="this.uploadDetailAttachment"/>
+                                </label>
+                            </div>
+                            <ul t-if="d.attachments.length" class="mb-0">
+                                <li t-foreach="d.attachments" t-as="att" t-key="att.id">
+                                    <a t-att-href="att.download_url" target="_blank" rel="noopener" t-out="att.name"/>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Recipient Acknowledgement Tracking Card (Issuer / Admin) -->
+                    <div class="tp-do-card" t-if="this.state.ackTracking">
+                        <h3 class="h6 fw-bold mb-2">
+                            Theo dõi xác nhận đã đọc (v<t t-out="this.state.ackTracking.version"/>):
+                            <t t-out="this.state.ackTracking.acked_count"/> / <t t-out="this.state.ackTracking.total_recipients"/> người nhận
+                        </h3>
+                        <div class="tp-do-grid-2">
+                            <div>
+                                <div class="small fw-bold text-warning mb-1">Chưa xác nhận (<t t-out="this.state.ackTracking.unacked_count"/>)</div>
+                                <div t-if="!this.state.ackTracking.unacked_users.length" class="small text-success">100% người nhận đã xác nhận đọc.</div>
+                                <ul t-else="" class="small mb-0">
+                                    <li t-foreach="this.state.ackTracking.unacked_users" t-as="u" t-key="u.user_id" t-out="u.name"/>
+                                </ul>
+                            </div>
+                            <div>
+                                <div class="small fw-bold text-success mb-1">Đã xác nhận (<t t-out="this.state.ackTracking.acked_count"/>)</div>
+                                <ul class="small mb-0">
+                                    <li t-foreach="this.state.ackTracking.acked_users" t-as="u" t-key="u.user_id">
+                                        <t t-out="u.name"/> — <span class="text-muted" t-out="u.acked_at"/>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- ==================== MEETING MINUTE FORM ==================== -->
+                <t t-elif="this.state.mode === 'form' and this.state.tab === 'minutes'">
+                    <div class="tp-do-topbar">
+                        <button type="button" class="tp-do-btn" t-on-click="this.backToList">← Quay lại danh sách</button>
+                        <h1 class="tp-do-h1" t-out="this.state.minForm.id ? 'Cập nhật biên bản họp' : 'Lập biên bản họp mới'"/>
+                    </div>
+                    <div class="tp-do-card">
+                        <div class="tp-do-grid-2">
+                            <div class="tp-do-field">
+                                <label class="tp-do-label">Liên kết Lịch họp (tự động điền thành phần)</label>
+                                <select class="tp-do-select"
+                                        t-att-value="this.state.minForm.calendar_event_id"
+                                        t-on-change="this.onSelectCalendarEventPrefill">
+                                    <option value="0">— Không gắn lịch họp có sẵn —</option>
+                                    <option t-foreach="this.state.filterOptions.events" t-as="ev" t-key="ev.id"
+                                            t-att-value="ev.id" t-out="ev.name"/>
+                                </select>
+                            </div>
+                            <div class="tp-do-field">
+                                <label class="tp-do-label">Thời gian họp</label>
+                                <input type="datetime-local" class="tp-do-input" t-model.proxy="this.state.minForm.meeting_date_iso"/>
+                            </div>
+                        </div>
+
+                        <div class="tp-do-field">
+                            <label class="tp-do-label" for="min_name">Tiêu đề cuộc họp <span class="tp-do-req">*</span></label>
+                            <input id="min_name" type="text" class="tp-do-input"
+                                   t-model.proxy="this.state.minForm.name"
+                                   placeholder="Ví dụ: Họp giao ban tiến độ khảo sát &amp; thiết kế tuần 48"/>
+                        </div>
+
+                        <div class="tp-do-grid-2">
+                            <div class="tp-do-field">
+                                <label class="tp-do-label">Chủ trì cuộc họp</label>
+                                <select class="tp-do-select" t-model.proxy="this.state.minForm.chair_user_id">
+                                    <option value="0">— Chọn người chủ trì —</option>
+                                    <option t-foreach="this.state.filterOptions.users" t-as="u" t-key="u.id"
+                                            t-att-value="u.id" t-out="u.name"/>
+                                </select>
+                            </div>
+                            <div class="tp-do-field">
+                                <label class="tp-do-label">Dự án liên quan</label>
+                                <select class="tp-do-select" t-model.proxy="this.state.minForm.project_id">
+                                    <option value="0">— Không gắn dự án —</option>
+                                    <option t-foreach="this.state.filterOptions.projects" t-as="pr" t-key="pr.id"
+                                            t-att-value="pr.id" t-out="pr.name"/>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="tp-do-field">
+                            <label class="tp-do-label">Thành phần tham dự</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button t-foreach="this.state.filterOptions.users" t-as="u" t-key="u.id"
+                                        type="button"
+                                        t-att-class="'tp-do-btn ' + (this.isMinAttendeeSelected(u.id) ? 'tp-do-btn-primary' : '')"
+                                        t-on-click="() => this.toggleMinAttendee(u.id)"
+                                        t-out="u.name"/>
+                            </div>
+                        </div>
+
+                        <div class="tp-do-field">
+                            <label class="tp-do-label">Nội dung thảo luận</label>
+                            <textarea rows="3" class="tp-do-textarea" t-model.proxy="this.state.minForm.discussion_content"/>
+                        </div>
+
+                        <div class="tp-do-field">
+                            <label class="tp-do-label" for="min_conclusion">Kết luận chính thức <span class="tp-do-req">*</span></label>
+                            <textarea id="min_conclusion" rows="4" class="tp-do-textarea"
+                                      t-model.proxy="this.state.minForm.conclusion_content"
+                                      placeholder="Các quyết định và kết luận thống nhất tại cuộc họp..."/>
+                        </div>
+
+                        <!-- Action Items Table -->
+                        <div class="mt-3" id="min_action_items">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <label class="tp-do-label mb-0">Đầu việc giao từ kết luận cuộc họp (tự tạo Công việc khi Phát hành)</label>
+                                <button type="button" class="tp-do-btn" t-on-click="this.addActionItemRow">+ Thêm đầu việc</button>
+                            </div>
+                            <div class="tp-do-table-wrap">
+                                <table class="tp-do-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nội dung công việc</th>
+                                            <th>Người phụ trách</th>
+                                            <th>Hạn hoàn thành</th>
+                                            <th>Sản phẩm đầu ra</th>
+                                            <th/>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="this.state.minForm.action_items" t-as="it" t-key="it_index">
+                                            <td>
+                                                <input type="text" class="tp-do-input w-100"
+                                                       t-att-value="it.name"
+                                                       placeholder="Đầu việc cụ thể..."
+                                                       t-on-input="(ev) => this.onActionItemChange(it_index, 'name', ev)"/>
+                                            </td>
+                                            <td>
+                                                <select class="tp-do-select w-100"
+                                                        t-att-value="it.assignee_user_id"
+                                                        t-on-change="(ev) => this.onActionItemChange(it_index, 'assignee_user_id', ev)">
+                                                    <option value="">— Chọn người nhận —</option>
+                                                    <option t-foreach="this.state.filterOptions.users" t-as="u" t-key="u.id"
+                                                            t-att-value="u.id" t-out="u.name"/>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="date" class="tp-do-input"
+                                                       t-att-value="it.deadline"
+                                                       t-on-input="(ev) => this.onActionItemChange(it_index, 'deadline', ev)"/>
+                                            </td>
+                                            <td>
+                                                <input type="text" class="tp-do-input w-100"
+                                                       t-att-value="it.deliverable_expected"
+                                                       placeholder="Bản vẽ / báo cáo..."
+                                                       t-on-input="(ev) => this.onActionItemChange(it_index, 'deliverable_expected', ev)"/>
+                                            </td>
+                                            <td>
+                                                <span t-if="it.task_id" class="tp-do-badge is-issued" t-out="'Đã sinh #' + it.task_id"/>
+                                                <button t-else="" type="button" class="tp-do-btn tp-do-btn-danger"
+                                                        t-on-click="() => this.removeActionItemRow(it_index)">Xóa</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="button" class="tp-do-btn" t-on-click="this.backToList">Hủy</button>
+                            <button type="button" class="tp-do-btn" t-att-disabled="this.state.busy"
+                                    t-on-click="() => this.saveMinute(false)">Lưu biên bản</button>
+                            <button type="button" class="tp-do-btn tp-do-btn-primary" t-att-disabled="this.state.busy"
+                                    t-on-click="() => this.saveMinute(true)">Phát hành &amp; Giao việc ngay</button>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- ==================== MEETING MINUTE DETAIL ==================== -->
+                <t t-elif="this.state.mode === 'detail' and this.state.tab === 'minutes' and this.state.detail">
+                    <t t-set="d" t-value="this.state.detail"/>
+                    <div class="tp-do-topbar">
+                        <button type="button" class="tp-do-btn" t-on-click="this.backToList">← Danh sách biên bản</button>
+                        <div class="d-flex flex-wrap gap-2" t-if="d.can_manage">
+                            <button t-if="d.state !== 'issued'" type="button" class="tp-do-btn" t-on-click="this.openEditMinute">Chỉnh sửa</button>
+                            <button t-if="d.state === 'draft'" type="button" class="tp-do-btn"
+                                    t-on-click="this.confirmMinute" t-att-disabled="this.state.busy">Xác nhận nội dung</button>
+                            <button t-if="d.state !== 'issued'" type="button" class="tp-do-btn tp-do-btn-primary"
+                                    t-on-click="this.issueMinute" t-att-disabled="this.state.busy">Phát hành &amp; Sinh đầu việc</button>
+                            <button t-if="d.state === 'issued'" type="button" class="tp-do-btn" t-on-click="this.toggleReviseBox">
+                                Hiệu chỉnh phiên bản (giữ nguyên việc đã giao)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tp-do-card" t-if="this.state.showReviseBox">
+                        <h3 class="h6 fw-bold mb-2">Mở hiệu chỉnh biên bản sau phát hành</h3>
+                        <p class="small text-muted mb-2">
+                            Các đầu việc đã sinh trên Công việc của tôi được bảo toàn, không tự xóa và không nhân bản khi phát hành lại.
+                        </p>
+                        <div class="tp-do-field">
+                            <label class="tp-do-label">Lý do hiệu chỉnh <span class="tp-do-req">*</span></label>
+                            <input type="text" class="tp-do-input" t-model.proxy="this.state.reviseReason"
+                                   placeholder="Nhập lý do hiệu chỉnh kết luận hoặc bổ sung đầu việc..."/>
+                        </div>
+                        <button type="button" class="tp-do-btn tp-do-btn-primary" t-on-click="this.submitMinuteRevision">
+                            Xác nhận mở phiên bản mới
+                        </button>
+                    </div>
+
+                    <div class="tp-do-card">
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <span class="tp-do-badge is-draft" t-out="d.code + ' · v' + d.version"/>
+                            <span t-att-class="'tp-do-badge is-' + d.state" t-out="d.state_label"/>
+                            <span t-if="d.project_name" class="tp-do-badge is-confirmed" t-out="'Dự án: ' + d.project_name"/>
+                        </div>
+                        <h2 class="tp-do-h1 mb-2" t-out="d.name"/>
+                        <div class="text-muted small mb-3">
+                            Thời gian: <strong t-out="d.meeting_date_display"/>
+                            · Chủ trì: <strong t-out="d.chair_name"/>
+                            · Thư ký: <strong t-out="d.secretary_name"/>
+                            <t t-if="d.attendee_names.length"> · Tham dự: <t t-out="d.attendee_names.join(', ')"/></t>
+                        </div>
+                        <div t-if="d.revision_reason" class="alert alert-warning py-2 small">
+                            <strong>Lý do hiệu chỉnh gần nhất:</strong> <t t-out="d.revision_reason"/>
+                        </div>
+                        <div t-if="d.discussion_content" class="mb-3">
+                            <div class="tp-do-label mb-1">Nội dung thảo luận</div>
+                            <div class="p-3 bg-light rounded border" style="white-space: pre-wrap;" t-out="d.discussion_content"/>
+                        </div>
+                        <div class="mb-3">
+                            <div class="tp-do-label mb-1">Kết luận chính thức</div>
+                            <div class="p-3 bg-light rounded border fw-semibold" style="white-space: pre-wrap;" t-out="d.conclusion_content || 'Chưa cập nhật kết luận.'"/>
+                        </div>
+
+                        <!-- Action Items Tracking -->
+                        <div class="mt-3">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <h3 class="h6 fw-bold mb-0">Bảng theo dõi đầu việc kết luận (<t t-out="d.action_items.length"/>)</h3>
+                                <button type="button" class="tp-do-btn" t-on-click="this.openMyTasks">Mở Công việc của tôi →</button>
+                            </div>
+                            <div class="tp-do-table-wrap" t-if="d.action_items.length">
+                                <table class="tp-do-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Đầu việc</th>
+                                            <th>Người phụ trách</th>
+                                            <th>Hạn hoàn thành</th>
+                                            <th>Sản phẩm đầu ra</th>
+                                            <th>Trạng thái công việc</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="d.action_items" t-as="it" t-key="it.id">
+                                            <td><strong t-out="it.name"/></td>
+                                            <td t-out="it.assignee_name"/>
+                                            <td t-out="it.deadline_display || '—'"/>
+                                            <td t-out="it.deliverable_expected || '—'"/>
+                                            <td>
+                                                <span t-att-class="'tp-do-badge ' + (it.task_id ? 'is-issued' : 'is-draft')"
+                                                      t-out="(it.task_id ? '#' + it.task_id + ' · ' : '') + it.task_state_label"/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div t-else="" class="text-muted small">Cuộc họp này không có đầu việc giao riêng.</div>
+                        </div>
+                    </div>
+                </t>
+            </main>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- 8. Nghỉ phép / Nghỉ việc riêng (tích hợp căn cứ nghỉ sang Bảng công, không giả tạo punch gốc) -->
+        <record id="type_leave_request" model="tp.request.type">
+            <field name="code">HR_LEAVE</field>
+            <field name="name">Nghỉ phép / Nghỉ việc riêng</field>
+            <field name="description">Đề nghị nghỉ phép năm, nghỉ việc riêng hoặc nghỉ ốm; sau khi được duyệt sẽ ghi nhận căn cứ nghỉ trên bảng công mà không sửa dữ liệu punch gốc.</field>
+            <field name="guidance">Chọn loại nghỉ, từ ngày đến ngày, số ngày nghỉ, người nhận bàn giao công việc trong thời gian nghỉ và nêu rõ lý do.</field>
+            <field name="icon">event_busy</field>
+            <field name="color">#0284C7</field>
+            <field name="sequence">12</field>
+            <field name="handler_kind">leave_request</field>
+            <field name="submitter_scope">all_internal</field>
+            <field name="require_reason" eval="True"/>
+            <field name="require_attachment" eval="False"/>
+            <field name="allow_attachment" eval="True"/>
+            <field name="require_needed_date" eval="False"/>
+            <field name="show_project_field" eval="False"/>
+            <field name="allow_reject" eval="True"/>
+            <field name="allow_return" eval="True"/>
+            <field name="allow_withdraw" eval="True"/>
+            <field name="sla_hours">16.0</field>
+            <field name="default_priority">normal</field>
+            <field name="requires_execution" eval="False"/>
+            <field name="executor_mode">none</field>
+        </record>
+        <record id="step_leave_request_1" model="tp.request.type.step">
+            <field name="type_id" ref="type_leave_request"/>
+            <field name="sequence">10</field>
+            <field name="name">Trưởng phòng phê duyệt nghỉ phép</field>
+            <field name="approver_rule">department_manager</field>
+            <field name="approval_policy">any_one</field>
+            <field name="sla_hours">16.0</field>
+            <field name="can_return" eval="True"/>
+            <field name="can_reject" eval="True"/>
+        </record>
+
+        <!-- 9. Công tác / Hiện trường (căn cứ công tác chính thức, tách biệt với lịch hẹn thông thường) -->
+        <record id="type_business_trip" model="tp.request.type">
+            <field name="code">HR_BUSINESS_TRIP</field>
+            <field name="name">Công tác / Khảo sát hiện trường</field>
+            <field name="description">Đề nghị đi công tác, khảo sát hiện trường hoặc giám sát tác giả theo dự án; khi được duyệt trở thành căn cứ công tác chính thức trên bảng chấm công.</field>
+            <field name="guidance">Chọn thời gian đi/về, địa điểm công tác, dự án liên quan, phương tiện di chuyển và nội dung nhiệm vụ công tác.</field>
+            <field name="icon">flight_takeoff</field>
+            <field name="color">#0D9488</field>
+            <field name="sequence">15</field>
+            <field name="handler_kind">business_trip</field>
+            <field name="submitter_scope">all_internal</field>
+            <field name="require_reason" eval="True"/>
+            <field name="require_attachment" eval="False"/>
+            <field name="allow_attachment" eval="True"/>
+            <field name="require_needed_date" eval="False"/>
+            <field name="show_project_field" eval="True"/>
+            <field name="allow_reject" eval="True"/>
+            <field name="allow_return" eval="True"/>
+            <field name="allow_withdraw" eval="True"/>
+            <field name="sla_hours">16.0</field>
+            <field name="default_priority">normal</field>
+            <field name="requires_execution" eval="False"/>
+            <field name="executor_mode">none</field>
+        </record>
+        <record id="step_business_trip_1" model="tp.request.type.step">
+            <field name="type_id" ref="type_business_trip"/>
+            <field name="sequence">10</field>
+            <field name="name">Trưởng phòng phê duyệt lịch công tác</field>
+            <field name="approver_rule">department_manager</field>
+            <field name="approval_policy">any_one</field>
+            <field name="sla_hours">16.0</field>
+            <field name="can_return" eval="True"/>
+            <field name="can_reject" eval="True"/>
+        </record>
+
+        <!-- 10. Tạm ứng / Thanh toán chi phí (tách rõ Duyệt đề xuất != Thực chi kế toán) -->
+        <record id="type_expense_advance" model="tp.request.type">
+            <field name="code">FIN_EXPENSE_ADVANCE</field>
+            <field name="name">Tạm ứng / Thanh toán chi phí</field>
+            <field name="description">Đề nghị tạm ứng công tác/dự án hoặc hoàn ứng chi phí có chứng từ; phê duyệt đề nghị KHÔNG tự ghi nhận tiền thực chi cho đến khi đối chiếu chứng từ chi.</field>
+            <field name="guidance">Chọn phân loại Tạm ứng hoặc Thanh toán chi phí, nhập số tiền đề nghị, dự án liên quan, thông tin thụ hưởng và đính kèm bảng kê/hóa đơn chứng từ.</field>
+            <field name="icon">payments</field>
+            <field name="color">#B45309</field>
+            <field name="sequence">55</field>
+            <field name="handler_kind">expense_advance</field>
+            <field name="submitter_scope">all_internal</field>
+            <field name="require_reason" eval="True"/>
+            <field name="require_attachment" eval="False"/>
+            <field name="allow_attachment" eval="True"/>
+            <field name="require_needed_date" eval="True"/>
+            <field name="show_project_field" eval="True"/>
+            <field name="allow_reject" eval="True"/>
+            <field name="allow_return" eval="True"/>
+            <field name="allow_withdraw" eval="True"/>
+            <field name="sla_hours">24.0</field>
+            <field name="default_priority">normal</field>
+            <field name="requires_execution" eval="True"/>
+            <field name="executor_mode">admin_group</field>
+        </record>
+        <record id="step_expense_advance_1" model="tp.request.type.step">
+            <field name="type_id" ref="type_expense_advance"/>
+            <field name="sequence">10</field>
+            <field name="name">Trưởng phòng xác nhận chi phí</field>
+            <field name="approver_rule">department_manager</field>
+            <field name="approval_policy">any_one</field>
+            <field name="sla_hours">24.0</field>
+            <field name="can_return" eval="True"/>
+            <field name="can_reject" eval="True"/>
+        </record>
+        <record id="step_expense_advance_2" model="tp.request.type.step">
+            <field name="type_id" ref="type_expense_advance"/>
+            <field name="sequence">20</field>
+            <field name="name">Quản trị phê duyệt đề xuất chi</field>
+            <field name="approver_rule">admin_group</field>
+            <field name="approval_policy">any_one</field>
+            <field name="sla_hours">24.0</field>
+            <field name="can_return" eval="True"/>
+            <field name="can_reject" eval="True"/>
+        </record>
+    </data>
+</odoo>

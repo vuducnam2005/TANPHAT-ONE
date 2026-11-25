@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261125-009 — 2026-11-25 — ENTERPRISE-MASTER-BATCH-002: Văn phòng số (`tp_digital_office 20.0.1.0.0`), Mở rộng Yêu cầu phê duyệt (`tp_request 20.0.2.0.0`) & Cầu nối Kế hoạch – Báo cáo
+
+- **Yêu cầu phê duyệt (`tp_request 20.0.2.0.0`):** thêm loại đề nghị Nghỉ phép (`HR_LEAVE`), Công tác hiện trường (`HR_BUSINESS_TRIP`), Tạm ứng/chi phí (`FIN_EXPENSE_ADVANCE`); tách rõ phê duyệt chủ trương (`pending_disbursement`) với đối chiếu chứng từ thực chi (`action_confirm_financial_settlement` + `voucher_ref`, Case #11); thêm `action_create_linked_task` idempotent sang `project.task`.
+- **Văn phòng số (`tp_digital_office 20.0.1.0.0`, `tp_branding 20.0.2.5.0`):** triển khai **Thông báo nội bộ** (`/app/van-phong-so/thong-bao`, xác nhận đọc tường minh theo phiên bản `tp.announcement.ack` + báo cáo người chưa xác nhận, Case #9), **Biên bản họp** (`/app/van-phong-so/bien-ban-hop`, liên kết `calendar.event`, khóa `FOR UPDATE` sinh `project.task` một lần khi phát hành, hiệu chỉnh có lý do không xóa/nhân bản việc cũ, Case #5), và cầu nối kế hoạch `Năm → Quý → Tháng → Tuần` + nạp task vào báo cáo nháp giữ nguyên tính bất biến `tp.report.snapshot` (Case #7, #8) + tổng hợp tải công việc trung thực.
+- **Kiểm thử (`tp_tanphat_test`):** Static PY/XML/QWeb/SCSS/JS PASS; Odoo `/tp_digital_office,/tp_request:TestEnterpriseRequestTypes,/tp_branding:TestBrandUrls` **19/19 PASS (`0 failed, 0 error`)** (cùng bộ hồi quy `tp_request` & `tp_branding` HTTP đạt).
+
 ## CHG-20261125-008 — 2026-11-25 — ENTERPRISE-MASTER-BATCH-001: Baseline 17 phân hệ & Hoàn thiện Đợt 1 Công cụ làm việc hàng ngày (`tp_personal_tools 20.0.2.0.0`)
 
 - **Baseline Đợt 0 (`docs/architecture/TP_ENTERPRISE_INVENTORY_AND_FLOWS.md`, `docs/security/TP_ENTERPRISE_ACCESS_MATRIX.md`):** lập inventory thực tế 17 nhóm chức năng (10 cột + phân biệt `SRC/INST/DEP/TECH/UAT/LIVE`), đặc tả 4 luồng nghiệp vụ liên thông, tách 11 định nghĩa tài chính quản trị, 5 cổng quy chế mở và ma trận phân quyền × chống xung đột đồng thời.

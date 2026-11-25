@@ -272,6 +272,80 @@
                                         </div>
                                     </t>
 
+                                    <t t-if="d.handler_kind === 'leave_request' or d.handler_kind === 'business_trip'">
+                                        <div class="tp_req_field" t-if="d.handler_kind === 'leave_request'">
+                                            <label class="tp_req_label">Loại nghỉ <span class="tp_req_star">*</span></label>
+                                            <select id="req_leave_kind" class="tp_req_select"
+                                                    t-att-value="this.state.editForm.leave_kind"
+                                                    t-on-change="(ev) => this.onEditField('leave_kind', ev)">
+                                                <t t-foreach="this.state.bootstrap?.leave_kinds || []" t-as="lk" t-key="lk.key">
+                                                    <option t-att-value="lk.key"><t t-out="lk.label"/></option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                        <div class="tp_req_field" t-if="d.handler_kind === 'business_trip'">
+                                            <label class="tp_req_label">Địa điểm / tuyến công tác <span class="tp_req_star">*</span></label>
+                                            <input id="req_trip_dest" type="text" class="tp_req_input"
+                                                   t-att-value="this.state.editForm.trip_destination"
+                                                   t-on-input="(ev) => this.onEditField('trip_destination', ev)"/>
+                                        </div>
+                                        <div class="tp_req_field" t-if="d.handler_kind === 'business_trip'">
+                                            <label class="tp_req_label">Phương tiện</label>
+                                            <input type="text" class="tp_req_input"
+                                                   t-att-value="this.state.editForm.trip_transport"
+                                                   t-on-input="(ev) => this.onEditField('trip_transport', ev)"/>
+                                        </div>
+                                        <div class="tp_req_field">
+                                            <label class="tp_req_label">Từ ngày <span class="tp_req_star">*</span></label>
+                                            <input id="req_leave_from" type="date" class="tp_req_input"
+                                                   t-att-value="this.state.editForm.leave_date_from"
+                                                   t-on-input="(ev) => this.onEditField('leave_date_from', ev)"/>
+                                        </div>
+                                        <div class="tp_req_field">
+                                            <label class="tp_req_label">Đến ngày <span class="tp_req_star">*</span></label>
+                                            <input id="req_leave_to" type="date" class="tp_req_input"
+                                                   t-att-value="this.state.editForm.leave_date_to"
+                                                   t-on-input="(ev) => this.onEditField('leave_date_to', ev)"/>
+                                        </div>
+                                        <div class="tp_req_field">
+                                            <label class="tp_req_label">Số ngày <span class="tp_req_star">*</span></label>
+                                            <input id="req_leave_days" type="number" min="0.5" step="0.5" class="tp_req_input"
+                                                   t-att-value="this.state.editForm.leave_days_count"
+                                                   t-on-input="(ev) => this.onEditField('leave_days_count', ev)"/>
+                                        </div>
+                                        <div class="tp_req_field is-full">
+                                            <label class="tp_req_label">Người nhận bàn giao công việc</label>
+                                            <input type="text" class="tp_req_input"
+                                                   t-att-value="this.state.editForm.leave_handover_note"
+                                                   t-on-input="(ev) => this.onEditField('leave_handover_note', ev)"/>
+                                        </div>
+                                    </t>
+
+                                    <t t-if="d.handler_kind === 'expense_advance'">
+                                        <div class="tp_req_field">
+                                            <label class="tp_req_label">Hình thức đề nghị</label>
+                                            <select class="tp_req_select"
+                                                    t-att-value="this.state.editForm.expense_kind"
+                                                    t-on-change="(ev) => this.onEditField('expense_kind', ev)">
+                                                <t t-foreach="this.state.bootstrap?.expense_kinds || []" t-as="ek" t-key="ek.key">
+                                                    <option t-att-value="ek.key"><t t-out="ek.label"/></option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                        <div class="tp_req_field">
+                                            <label class="tp_req_label">Số tiền đề nghị (VNĐ) <span class="tp_req_star">*</span></label>
+                                            <input id="req_expense_amount" type="number" min="1000" step="1000" class="tp_req_input"
+                                                   t-att-value="this.state.editForm.requested_amount"
+                                                   t-on-input="(ev) => this.onEditField('requested_amount', ev)"/>
+                                        </div>
+                                        <div class="tp_req_field is-full">
+                                            <label class="tp_req_label">Thông tin thụ hưởng</label>
+                                            <input type="text" class="tp_req_input"
+                                                   t-att-value="this.state.editForm.beneficiary_note"
+                                                   t-on-input="(ev) => this.onEditField('beneficiary_note', ev)"/>
+                                        </div>
+                                    </t>
+
                                     <div class="tp_req_field">
                                         <label class="tp_req_label">Mức độ ưu tiên</label>
                                         <select class="tp_req_select"
@@ -375,6 +449,64 @@
                                     <div class="tp_req_meta_item" t-if="d.it_support.device_name">
                                         <span class="tp_req_meta_k">Thiết bị gặp sự cố</span>
                                         <strong class="tp_req_meta_v"><t t-out="d.it_support.device_name"/></strong>
+                                    </div>
+                                </div>
+
+                                <!-- Leave / Business Trip details -->
+                                <div class="tp_req_meta_grid" t-if="d.handler_kind === 'leave_request' or d.handler_kind === 'business_trip'">
+                                    <div class="tp_req_meta_item" t-if="d.handler_kind === 'leave_request'">
+                                        <span class="tp_req_meta_k">Loại nghỉ đăng ký</span>
+                                        <strong class="tp_req_meta_v"><t t-out="d.leave_trip.leave_kind_label || '—'"/></strong>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.handler_kind === 'business_trip'">
+                                        <span class="tp_req_meta_k">Địa điểm / tuyến công tác</span>
+                                        <strong class="tp_req_meta_v is-highlight"><t t-out="d.leave_trip.trip_destination || '—'"/></strong>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.handler_kind === 'business_trip' and d.leave_trip.trip_transport">
+                                        <span class="tp_req_meta_k">Phương tiện di chuyển</span>
+                                        <span class="tp_req_meta_v"><t t-out="d.leave_trip.trip_transport"/></span>
+                                    </div>
+                                    <div class="tp_req_meta_item">
+                                        <span class="tp_req_meta_k">Thời gian áp dụng</span>
+                                        <strong class="tp_req_meta_v"><t t-out="d.leave_trip.date_from_display || '—'"/> → <t t-out="d.leave_trip.date_to_display || '—'"/></strong>
+                                    </div>
+                                    <div class="tp_req_meta_item">
+                                        <span class="tp_req_meta_k">Số ngày đăng ký</span>
+                                        <strong class="tp_req_meta_v is-highlight"><t t-out="d.leave_trip.days_count"/> ngày</strong>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.leave_trip.handover_note">
+                                        <span class="tp_req_meta_k">Người nhận bàn giao</span>
+                                        <span class="tp_req_meta_v"><t t-out="d.leave_trip.handover_note"/></span>
+                                    </div>
+                                </div>
+
+                                <!-- Expense / Financial Settlement separation details -->
+                                <div class="tp_req_meta_grid" t-if="d.handler_kind === 'expense_advance' or (d.handler_kind === 'equipment_purchase' and d.expense.settlement_state !== 'not_applicable')">
+                                    <div class="tp_req_meta_item" t-if="d.handler_kind === 'expense_advance'">
+                                        <span class="tp_req_meta_k">Hình thức chi phí</span>
+                                        <strong class="tp_req_meta_v"><t t-out="d.expense.expense_kind_label || '—'"/></strong>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.handler_kind === 'expense_advance'">
+                                        <span class="tp_req_meta_k">Số tiền đề nghị</span>
+                                        <strong class="tp_req_meta_v is-highlight"><t t-out="this.formatMoneyVnd(d.expense.requested_amount)"/></strong>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.expense.beneficiary_note">
+                                        <span class="tp_req_meta_k">Thông tin thụ hưởng</span>
+                                        <span class="tp_req_meta_v"><t t-out="d.expense.beneficiary_note"/></span>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.expense.settlement_state !== 'not_applicable'">
+                                        <span class="tp_req_meta_k">Trạng thái chứng từ thực chi</span>
+                                        <strong class="tp_req_meta_v">
+                                            <t t-out="d.expense.settlement_state_label"/>
+                                        </strong>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.expense.voucher_ref">
+                                        <span class="tp_req_meta_k">Số chứng từ / phiếu chi thực tế</span>
+                                        <strong class="tp_req_meta_v is-highlight"><t t-out="d.expense.voucher_ref"/></strong>
+                                    </div>
+                                    <div class="tp_req_meta_item" t-if="d.expense.settlement_confirmed_by">
+                                        <span class="tp_req_meta_k">Đối chiếu bởi</span>
+                                        <span class="tp_req_meta_v"><t t-out="d.expense.settlement_confirmed_by"/> (<t t-out="d.expense.settlement_confirmed_at"/>)</span>
                                     </div>
                                 </div>
 
@@ -727,6 +859,52 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Sequential Approval Route Card -->
+                        <div class="tp_req_card" t-if="d.permissions.can_confirm_settlement">
+                            <div class="tp_req_card_head">
+                                <h3>Đối chiếu chứng từ thực chi</h3>
+                                <span class="tp_req_badge is-returned">Chờ chứng từ</span>
+                            </div>
+                            <p class="tp_req_muted tp_req_note_small">
+                                Phê duyệt đề nghị mới chỉ xác nhận chủ trương. Chỉ xác nhận thực chi khi đã có chứng từ chi thực tế (UNC / phiếu chi quỹ).
+                            </p>
+                            <div class="tp_req_alert is-danger" t-if="this.state.settlementError">
+                                <i class="oi" data-icon="error" aria-hidden="true"/>
+                                <span><t t-out="this.state.settlementError"/></span>
+                            </div>
+                            <div class="tp_req_field">
+                                <label class="tp_req_label">Số phiếu chi / Mã chứng từ <span class="tp_req_star">*</span></label>
+                                <input type="text" class="tp_req_input" placeholder="Ví dụ: PC-2026/11-045 hoặc UNC-8821"
+                                       t-att-value="this.state.voucherRef"
+                                       t-on-input="this.onVoucherInput"/>
+                            </div>
+                            <div class="tp_req_field">
+                                <label class="tp_req_label">Ghi chú đối chiếu (tùy chọn)</label>
+                                <textarea rows="2" class="tp_req_textarea" placeholder="Ghi chú ngày giải ngân, chứng từ gốc..."
+                                          t-att-value="this.state.settlementNote"
+                                          t-on-input="this.onSettlementNoteInput"/>
+                            </div>
+                            <button type="button" class="tp_req_btn tp_req_btn_success is-full-btn"
+                                    t-on-click="this.confirmSettlement" t-att-disabled="this.state.busy">
+                                <i class="oi" data-icon="verified" aria-hidden="true"/>
+                                <span>Xác nhận đã đối chiếu thực chi</span>
+                            </button>
+                        </div>
+
+                        <div class="tp_req_card" t-if="d.permissions.can_create_task">
+                            <div class="tp_req_card_head">
+                                <h3>Liên thông công việc</h3>
+                            </div>
+                            <p class="tp_req_muted tp_req_note_small">
+                                Chuyển đề nghị đã duyệt thành đầu việc theo dõi trên bảng Công việc của tôi (không nhân bản khi bấm lại).
+                            </p>
+                            <button type="button" class="tp_req_btn tp_req_btn_secondary is-full-btn"
+                                    t-on-click="this.createLinkedTask" t-att-disabled="this.state.busy">
+                                <i class="oi" data-icon="add_task" aria-hidden="true"/>
+                                <span>Tạo công việc triển khai</span>
+                            </button>
                         </div>
 
                         <!-- Sequential Approval Route Card -->

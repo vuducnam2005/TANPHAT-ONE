@@ -1,0 +1,40 @@
+# Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
+{
+    'name': 'TANPHAT ONE — Văn phòng số (Thông báo & Biên bản họp)',
+    'version': '20.0.1.0.0',
+    'category': 'Productivity',
+    'summary': 'Thông báo nội bộ có xác nhận đã đọc, Biên bản họp sinh đầu việc, và cầu nối Kế hoạch - Báo cáo',
+    'author': 'TANPHAT ONE',
+    'license': 'LGPL-3',
+    'depends': [
+        'base',
+        'web',
+        'mail',
+        'bus',
+        'calendar',
+        'hr',
+        'project',
+        'tp_core',
+        'tp_branding',
+        'tp_web_home',
+        'tp_personal_tools',
+        'tp_request',
+        'tp_reporting',
+    ],
+    'data': [
+        'security/ir.access.csv',
+        'data/sequences.xml',
+        'views/digital_office_menus.xml',
+    ],
+    'assets': {
+        'web.assets_backend': [
+            'tp_digital_office/static/src/digital_office.scss',
+            'tp_digital_office/static/src/digital_office_workspace.js',
+            'tp_digital_office/static/src/digital_office_workspace.xml',
+            'tp_digital_office/static/src/calendar_minute_patch.js',
+            'tp_digital_office/static/src/calendar_minute_patch.xml',
+        ],
+    },
+    'installable': True,
+    'application': False,
+}
