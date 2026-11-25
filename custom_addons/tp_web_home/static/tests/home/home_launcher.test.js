@@ -659,6 +659,34 @@ describe("home button", () => {
         await animationFrame();
         expect(".o_tp_web_home_button").toHaveCount(0);
     });
+
+    test("mounting HomeLauncher or navigating back to Home resets active app from workspace to Trang chủ", async () => {
+        defineMenus([HOME, HR, DISCUSS]);
+        const menu = getService("menu");
+        menu.setCurrentMenu(HR.id);
+        expect(menu.getCurrentApp().xmlid).toBe(HR.xmlid);
+
+        await mountWithCleanup(HomeLauncher, PROPS);
+        await animationFrame();
+        expect(menu.getCurrentApp().xmlid).toBe(HOME_MENU_XMLID);
+
+        // Also verify HomeButton syncs active app on ACTION_MANAGER:UI-UPDATED (e.g. Browser Back/Forward)
+        const button = await mountWithCleanup(HomeButton);
+        const actionService = getService("action");
+        menu.setCurrentMenu(HR.id);
+        await animationFrame();
+        expect(".o_tp_web_home_button").not.toHaveAttribute("aria-current");
+
+        patchWithCleanup(actionService, {
+            currentController: {
+                action: { id: HOME.actionID, tag: "tp_web_home.home", xml_id: false, res_model: false, path: "tp-home" },
+            },
+        });
+        button.env.bus.trigger("ACTION_MANAGER:UI-UPDATED");
+        await animationFrame();
+        expect(menu.getCurrentApp().xmlid).toBe(HOME_MENU_XMLID);
+        expect(".o_tp_web_home_button").toHaveAttribute("aria-current", "page");
+    });
 });
 
 describe("unified admin tools and icons", () => {

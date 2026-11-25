@@ -13,8 +13,16 @@ import { rpcBus } from "@web/core/network/rpc";
 import { patch } from "@web/core/utils/patch";
 import { WebClient } from "@web/webclient/webclient";
 import { APP_PATH, LEGACY_APP_PATH } from "@tp_branding/brand_urls";
+import { HOME_MENU_XMLID } from "@tp_web_home/home/home_catalog";
 
 const SW_SCRIPT_PATH = "/web/service-worker.js";
+
+function syncHomeMenu(menuService) {
+    const home = menuService?.getAll?.().find((m) => m.xmlid === HOME_MENU_XMLID);
+    if (home && menuService.getCurrentApp?.()?.id !== home.id) {
+        menuService.setCurrentMenu(home);
+    }
+}
 
 async function unregisterLegacyWorker(serviceWorker) {
     try {
@@ -45,6 +53,7 @@ patch(WebClient.prototype, {
                 await this.actionService.doAction("tp_web_home.action_home", {
                     clearBreadcrumbs: true,
                 });
+                syncHomeMenu(this.menuService);
             } catch (fallbackError) {
                 console.error("TANPHAT ONE: fallback to home failed:", fallbackError);
                 await this._loadDefaultApp();
@@ -58,6 +67,7 @@ patch(WebClient.prototype, {
                 console.warn("TANPHAT ONE: Action manager empty after boot, loading default home...");
                 this.actionService
                     .doAction("tp_web_home.action_home", { clearBreadcrumbs: true })
+                    .then(() => syncHomeMenu(this.menuService))
                     .catch(() => this._loadDefaultApp());
             }
         }, 500);

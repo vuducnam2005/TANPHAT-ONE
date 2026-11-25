@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261125-002 — HOME-SIDEBAR-SYNC-001: Đồng bộ ứng dụng đang hoạt động và gỡ sidebar ứng dụng cũ khi về Trang chủ
+
+- **Sửa đồng bộ trạng thái app (`tp_web_home 20.0.1.13.1`, `tp_branding 20.0.2.3.1`):** bổ sung `HomeLauncher.syncHomeApp()`, `HomeButton.syncAppWithAction()` trên `ACTION_MANAGER:UI-UPDATED` và `syncHomeMenu()` trong `webclient_patch.js` để mọi luồng về Trang chủ (Browser Back/Forward `popstate`, link `/app/trang-chu`, fallback boot, F5 với `sessionStorage.menu_id` cũ) luôn chuyển `menuService` về `tp_web_home.menu_home` (ẩn hoàn toàn sidebar ứng dụng cũ & nhãn app trên navbar, bật `aria-current="page"` cho nút Home) đồng thời khôi phục đúng sidebar khi Forward/Back sang ứng dụng khác.
+- **Kiểm thử:** `node --check`, `py_compile`, `git diff --check` PASS; bổ sung unit test Hoot trong `home_launcher.test.js`; Playwright `1440×900` trên `tp_tanphat_test` đạt **7/7 PASS** (0 lỗi console/OWL).
+
 ## CHG-20261125-001 — ATTENDANCE-APP-HOME-001: Sắp xếp Trang chủ 5 nhóm, đổi tên Yêu cầu phê duyệt và tách ứng dụng Chấm công riêng
 
 - **Trang chủ & Đổi tên hiển thị** (`tp_web_home 20.0.1.13.0`, `tp_reporting/static/src/registration.js`, `tp_request 20.0.1.2.0`, `tp_equipment 20.0.1.7.1`): cố định thứ tự 5 nhóm (`Nhân sự và chấm công` → `Báo cáo và phê duyệt` → `Phòng ban và đơn vị` → `Công cụ cá nhân` → `Kho`) qua `registerHomeSection`/`registerHomeModule`, bổ sung icon `clock` & `bar-chart`, bỏ nhóm rỗng `Vận hành nội bộ`, đổi tên ứng dụng Request thành **Yêu cầu phê duyệt** đồng bộ trên toàn bộ điểm điều hướng.

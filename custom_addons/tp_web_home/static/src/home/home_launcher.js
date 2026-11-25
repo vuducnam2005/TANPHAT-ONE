@@ -7,7 +7,7 @@ import { session } from "@web/session";
 import { user } from "@web/core/user";
 import { useService } from "@web/core/utils/hooks";
 import { standardActionServiceProps } from "@web/webclient/actions/action_plugin";
-import { buildCatalog, filterTiles, homeSections, monogram } from "./home_catalog";
+import { buildCatalog, filterTiles, HOME_MENU_XMLID, homeSections, monogram } from "./home_catalog";
 
 const EMPTY_CATALOG = Object.freeze({
     isAdmin: false,
@@ -90,9 +90,11 @@ export class HomeLauncher extends Component {
 
     setup() {
         this.menuService = useService("menu");
+        this.destroyed = false;
         this._onHashChange = () => this.syncFromHash();
 
         onMounted(() => {
+            this.syncHomeApp();
             this.syncFromHash();
             this.loadMenus();
             browser.addEventListener("hashchange", this._onHashChange);
@@ -100,6 +102,7 @@ export class HomeLauncher extends Component {
         });
 
         onWillDestroy(() => {
+            this.destroyed = true;
             this.loadSequence++;
             browser.removeEventListener("hashchange", this._onHashChange);
             browser.removeEventListener("popstate", this._onHashChange);
@@ -161,6 +164,16 @@ export class HomeLauncher extends Component {
         }
     }
 
+    syncHomeApp() {
+        if (this.destroyed) {
+            return;
+        }
+        const home = this.menuService.getAll().find((m) => m.xmlid === HOME_MENU_XMLID);
+        if (home && this.menuService.getCurrentApp()?.id !== home.id) {
+            this.menuService.setCurrentMenu(home);
+        }
+    }
+
     async loadMenus() {
         const sequence = ++this.loadSequence;
         this.menuState.set("loading");
@@ -172,6 +185,9 @@ export class HomeLauncher extends Component {
             // IndexedDB can belong to a previous user. Only a fresh, applied response may
             // unlock the catalog; a failed request must never fall back to cached menus.
             await this.menuService.reload();
+            if (!this.destroyed && sequence === this.loadSequence) {
+                this.syncHomeApp();
+            }
             const capabilities = session.tp_admin_delegation
                 ? await rpc("/web/dataset/call_kw/res.users/get_tp_admin_capabilities", {
                       model: "res.users", method: "get_tp_admin_capabilities", args: [], kwargs: {},

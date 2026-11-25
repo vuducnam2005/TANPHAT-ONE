@@ -23,7 +23,7 @@ BRAND-WHITELABEL-002, SYSTEM-URL-001:
 
 Platform licence/copyright notices and technical identifiers are kept.
 """,
-    'version': '20.0.2.3.0',
+    'version': '20.0.2.3.1',
     'category': 'Hidden',
     'author': 'Tan Phat JSC',
     'license': 'LGPL-3',

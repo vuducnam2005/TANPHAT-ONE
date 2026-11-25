@@ -3,7 +3,7 @@
     'summary': 'Native Home: unified 5-group layout and user workspace (UI-HOME-005)',
     'description': 'Native Odoo home page for TANPHAT ONE (UI-HOME-005). See README.md.',
     'author': 'Tan Phat JSC',
-    'version': '20.0.1.13.0',
+    'version': '20.0.1.13.1',
     'license': 'LGPL-3',
     'depends': ['web', 'tp_web_login'],
     'data': [
