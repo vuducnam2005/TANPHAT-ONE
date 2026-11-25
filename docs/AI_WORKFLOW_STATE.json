@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-25T06:18:06.172596+00:00",
-  "last_change_id": "CHG-20261125-001",
-  "code_digest": "f1f1c2213b76874093739afd2ea3d768ab1eeb6e6f379e0536638f4d822830c4",
+  "updated_at": "2026-11-25T07:33:52.374147+00:00",
+  "last_change_id": "CHG-20261125-002",
+  "code_digest": "8d93cd05cb9c5637d65a01cae52f72a5cdc363fcfb378517e2ff7fac62d3247d",
   "code_file_count": 830,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "a8167a43f75904bf39efb69520f47bfd252bf3a5a9b81c7cd9a26200873e4da4",
-    "docs/CHANGELOG.md": "6b59549bdc39fae9ac7e6025e604a0621f6a4755535d555b0b0c0015d529bbfb",
+    "docs/PROJECT_STATUS.md": "6aee929c1f467756ac8de6af30f6fe83961ff6689aa2c77763f6e37661f14906",
+    "docs/CHANGELOG.md": "db0e4c4fdc3ccb3422f5dcb6bb0d494bd5dd5ce6cd0a92e8e135b09e713fa1aa",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,9 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "py_compile (16 files), ET.parse (11 XML/SVG files), node --check (16 JS files), git diff --check: PASS",
-    "Odoo tp_tanphat_test: tp_branding 34/34 PASS, tp_request 13/13 PASS, tp_hr_attendance TestAttendanceAccess/TestAttendanceCorrection/TestEntiImageSync/TestExportTemplate/TestExcelImportClosed/TestDirectoryPrivacy PASS",
-    "Playwright 1440x900 & 390x844 (Admin & Employee): 8/8 PASS, 0 console/OWL errors; OWL dialog + 11 pure ENTI/metrics unit tests PASS",
-    "PC server 192.168.1.73 deploy commit dd20b221: 49/49 SHA256 match, upgrade exit 0, 0 ERROR/CRITICAL, DB snapshot invariants unchanged; https://tpone.tadic.vn health 200, URLs & bundles ad67a02/2efe8e1 HTTP 200"
+    "node --check; py_compile; git diff --check; Playwright 1440x900 Back/Forward/reload 7/7 PASS (0 console/OWL error); SSH 192.168.1.73:22 timed out on Wi-Fi 192.168.100.247"
   ]
 }
