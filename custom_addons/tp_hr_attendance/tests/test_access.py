@@ -188,6 +188,43 @@ class TestAttendanceAccess(AttendanceCase):
         self.assertFalse(self.env.ref('tp_hr_attendance.menu_assignments', raise_if_not_found=False))
         self.assertFalse(self.env.ref('tp_hr_attendance.menu_logs', raise_if_not_found=False))
 
+    def test_standalone_attendance_app_and_hr_menu_separation(self):
+        """Chấm công has its own root app menu; TP HR sidebar no longer owns attendance menus."""
+        att_root = self.env.ref('tp_hr_attendance.menu_root')
+        hr_root = self.env.ref('tp_hr_workspace.menu_hr')
+        grp_att = self.env.ref('tp_hr_attendance.menu_group_attendance')
+        grp_adm = self.env.ref('tp_hr_attendance.menu_group_attendance_admin')
+        dashboard = self.env.ref('tp_hr_attendance.menu_dashboard')
+        mine = self.env.ref('tp_hr_attendance.menu_mine')
+        review = self.env.ref('tp_hr_attendance.menu_review')
+
+        self.assertFalse(att_root.parent_id)
+        self.assertEqual(att_root.name, 'Chấm công')
+        self.assertEqual(att_root.action, self.env.ref('tp_hr_attendance.action_dashboard'))
+        self.assertEqual(grp_att.parent_id, att_root)
+        self.assertEqual(grp_adm.parent_id, att_root)
+
+        hr_descendants = self.env['ir.ui.menu'].with_context(active_test=False).search([('id', 'child_of', hr_root.id)])
+        att_owned = self.env['ir.model.data'].search([
+            ('module', '=', 'tp_hr_attendance'),
+            ('model', '=', 'ir.ui.menu'),
+        ]).mapped('res_id')
+        self.assertFalse(set(hr_descendants.ids) & set(att_owned), 'TP HR must not contain any tp_hr_attendance menus')
+
+        # Regular employee sees Chấm công root + Tổng quan + Công của tôi, never Quản trị chấm công.
+        viewer_tree = self.env_for(self.viewer)['ir.ui.menu'].load_menus(False)
+        self.assertIn(att_root.id, viewer_tree['root']['children'])
+        self.assertIn(dashboard.id, viewer_tree)
+        self.assertIn(mine.id, viewer_tree)
+        self.assertNotIn(grp_adm.id, viewer_tree)
+        self.assertNotIn(review.id, viewer_tree)
+
+        # HR Manager sees Chấm công + admin menus (overview, mapping, config, logs, periods, review oversight).
+        manager_tree = self.env_for(self.manager)['ir.ui.menu'].load_menus(False)
+        self.assertIn(att_root.id, manager_tree['root']['children'])
+        self.assertIn(grp_adm.id, manager_tree)
+        self.assertIn(review.id, manager_tree)
+
     def test_rejects_non_excel_and_macro_files(self):
         batch = self.batch(b'not an excel file')
         with self.assertRaisesRegex(UserError, 'xlsx'):

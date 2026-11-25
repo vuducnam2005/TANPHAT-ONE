@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <menuitem id="menu_group_attendance" name="Chấm công" parent="tp_hr_workspace.menu_hr" sequence="15" groups="base.group_user"/>
+    <menuitem id="menu_root" name="Chấm công" sequence="32"
+              action="action_dashboard"
+              web_icon="tp_hr_attendance,static/description/icon.svg"
+              groups="base.group_user"/>
+
+    <menuitem id="menu_group_attendance" name="Chấm công" parent="menu_root" sequence="15" groups="base.group_user"/>
     <menuitem id="menu_dashboard" name="Tổng quan chấm công" parent="menu_group_attendance" action="action_dashboard" sequence="10" groups="base.group_user"/>
     <menuitem id="menu_board" name="Bảng chấm công" parent="menu_group_attendance" action="action_board" sequence="20" groups="base.group_user" active="False"/>
     <menuitem id="menu_mine" name="Công của tôi" parent="menu_group_attendance" action="action_mine" sequence="30" groups="base.group_user"/>
@@ -8,7 +13,7 @@
     <menuitem id="menu_my_requests" name="Yêu cầu của tôi" parent="menu_group_attendance" action="action_my_requests" sequence="40" groups="base.group_user" active="False"/>
 
     <!-- base.group_system lets an admin without HR rights reach "Xử lý điều chỉnh"; menu code still gates it. -->
-    <menuitem id="menu_group_attendance_admin" name="Quản trị chấm công" parent="tp_hr_workspace.menu_hr" sequence="85"
+    <menuitem id="menu_group_attendance_admin" name="Quản trị chấm công" parent="menu_root" sequence="85"
               groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer,base.group_system"/>
     <menuitem id="menu_import" name="Lịch sử nhập Excel" parent="menu_group_attendance_admin" action="action_import" sequence="90" active="False"
               groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>

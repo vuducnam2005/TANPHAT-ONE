@@ -1,3 +1,5 @@
+import { router } from "@web/core/browser/router";
+
 /**
  * Home entries are derived only from the menu tree the native menu service received for the
  * current user (/web/webclient/load_menus is filtered by groups on the server). Metadata below
@@ -15,15 +17,56 @@ const DEFAULT_ICON = "/web/static/img/default_icon_app.png";
 /** Roots replaced by their own action leaves, so a root and its first leaf never show twice. */
 const EXPANDED_ROOTS = new Set(["tp_core.menu_platform"]);
 
-/** Unified Home sections in display order. Empty sections are omitted. */
+/**
+ * Unified Home sections in canonical top-to-bottom display order.
+ * Empty sections (0 permitted entries) are omitted automatically.
+ */
 export const SECTIONS = [
-    { key: "departments", label: "Phòng ban và đơn vị" },
-    { key: "hr", label: "Nhân sự và tuyển dụng" },
-    { key: "personal", label: "Công cụ cá nhân" },
+    { key: "hr", label: "Nhân sự và chấm công", order: 10 },
+    { key: "reporting", label: "Báo cáo và phê duyệt", order: 20 },
+    { key: "departments", label: "Phòng ban và đơn vị", order: 30 },
+    { key: "personal", label: "Công cụ cá nhân", order: 40 },
+    { key: "warehouse", label: "Kho", order: 50 },
 ];
 
 /** Display order inside the administrators' "Tất cả ứng dụng" panel. */
-const PANEL_ORDER = ["workspace", "hr", "personal", "apps", "system"];
+const PANEL_ORDER = ["hr", "reporting", "workspace", "personal", "warehouse", "apps", "system"];
+
+/**
+ * Register or update a Home section deterministically without relying on asset load order.
+ */
+export function registerHomeSection(section) {
+    if (!section?.key) {
+        return;
+    }
+    const existing = SECTIONS.find((s) => s.key === section.key);
+    if (existing) {
+        if (section.label) {
+            existing.label = section.label;
+        }
+        if (section.order !== undefined) {
+            existing.order = section.order;
+        }
+        return;
+    }
+    SECTIONS.push({ order: 500, ...section });
+    SECTIONS.sort((a, b) => (a.order ?? 500) - (b.order ?? 500));
+}
+
+/**
+ * Register or update an ADMIN_MODULES entry deterministically by key.
+ */
+export function registerHomeModule(moduleDef) {
+    if (!moduleDef?.key) {
+        return;
+    }
+    const idx = ADMIN_MODULES.findIndex((m) => m.key === moduleDef.key);
+    if (idx >= 0) {
+        ADMIN_MODULES[idx] = { ...ADMIN_MODULES[idx], ...moduleDef };
+        return;
+    }
+    ADMIN_MODULES.push(moduleDef);
+}
 
 export const APP_LABELS = {
     "tp_hr_workspace.menu_department_workspace": {
@@ -142,7 +185,7 @@ export function monogram(label) {
 }
 
 function menuHref(menu, debug) {
-    const href = `/odoo/${menu.actionPath || "action-" + menu.actionID}`;
+    const href = router.stateToUrl({ action: menu.actionPath || menu.actionID });
     return debug ? `${href}?debug=${encodeURIComponent(debug)}` : href;
 }
 
@@ -236,6 +279,7 @@ export const ADMIN_MODULES = [
     {
         key: "business",
         group: "departments",
+        order: 10,
         name: "Kế hoạch Kinh doanh",
         description: "Dự án, đấu thầu, hợp đồng và báo cáo KH-KD",
         status: "Đang hoạt động",
@@ -249,6 +293,7 @@ export const ADMIN_MODULES = [
     {
         key: "design",
         group: "departments",
+        order: 20,
         placeholderOnly: true,
         name: "Phòng Thiết kế",
         description: "Không gian chuyên môn thiết kế",
@@ -260,6 +305,7 @@ export const ADMIN_MODULES = [
     {
         key: "technical",
         group: "departments",
+        order: 30,
         placeholderOnly: true,
         name: "Phòng Kỹ Thuật",
         description: "Không gian chuyên môn kỹ thuật",
@@ -271,6 +317,7 @@ export const ADMIN_MODULES = [
     {
         key: "bim",
         group: "departments",
+        order: 40,
         placeholderOnly: true,
         name: "Phòng BIM-QC",
         description: "Không gian BIM và kiểm soát chất lượng",
@@ -282,6 +329,7 @@ export const ADMIN_MODULES = [
     {
         key: "tadic",
         group: "departments",
+        order: 50,
         placeholderOnly: true,
         name: "TADIC",
         description: "Không gian đơn vị TADIC",
@@ -293,6 +341,7 @@ export const ADMIN_MODULES = [
     {
         key: "hr",
         group: "hr",
+        order: 10,
         name: "Quản lý nhân sự",
         description: "Hồ sơ nhân viên, tổ chức và năng lực",
         status: "Đang hoạt động",
@@ -305,6 +354,7 @@ export const ADMIN_MODULES = [
     {
         key: "recruitment",
         group: "hr",
+        order: 30,
         placeholderOnly: true,
         name: "Tuyển dụng",
         description: "Vị trí tuyển dụng và hồ sơ ứng viên",
@@ -316,6 +366,69 @@ export const ADMIN_MODULES = [
         copy: "Không gian tuyển dụng sẽ được bổ sung sau nền nhân sự: nhu cầu tuyển, vị trí, ứng viên và các vòng xử lý.",
     },
 ];
+
+function orderedSections() {
+    const seen = new Set();
+    const list = [];
+    for (let i = 0; i < SECTIONS.length; i++) {
+        const s = SECTIONS[i];
+        if (!s?.key || seen.has(s.key)) {
+            continue;
+        }
+        seen.add(s.key);
+        list.push({ ...s, _idx: i });
+    }
+    list.sort((a, b) => (a.order ?? 500) - (b.order ?? 500) || a._idx - b._idx);
+    return list.map(({ _idx, ...rest }) => rest);
+}
+
+function sectionRankMap() {
+    const ranks = new Map();
+    orderedSections().forEach((s, idx) => ranks.set(s.key, idx));
+    return ranks;
+}
+
+function sortAndDedupeEntries(entries) {
+    const ranks = sectionRankMap();
+    const seenKeys = new Set();
+    const seenMenus = new Set();
+    const filtered = [];
+    for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i];
+        if (!entry) {
+            continue;
+        }
+        const entryKey = entry.key || entry.xmlid;
+        if (entryKey && seenKeys.has(entryKey)) {
+            continue;
+        }
+        const menuId = entry.menu?.id;
+        if (menuId && seenMenus.has(menuId)) {
+            continue;
+        }
+        if (entryKey) {
+            seenKeys.add(entryKey);
+        }
+        if (menuId) {
+            seenMenus.add(menuId);
+        }
+        filtered.push({ entry, idx: i });
+    }
+    filtered.sort((a, b) => {
+        const gA = ranks.get(a.entry.group) ?? 999;
+        const gB = ranks.get(b.entry.group) ?? 999;
+        if (gA !== gB) {
+            return gA - gB;
+        }
+        const oA = a.entry.order ?? 500;
+        const oB = b.entry.order ?? 500;
+        if (oA !== oB) {
+            return oA - oB;
+        }
+        return a.idx - b.idx;
+    });
+    return filtered.map((item) => item.entry);
+}
 
 function indexMenuTree(rootTree) {
     const menuMap = new Map();
@@ -349,13 +462,16 @@ function attachSearch(entry, extraText = "") {
  */
 export function buildAdminCatalog(rootTree, { debug = "", isSystem = true, isDelegated = false } = {}) {
     const menuMap = indexMenuTree(rootTree);
-    const items = [];
+    const rawItems = [];
     for (const tpl of ADMIN_MODULES) {
         const matchedMenu =
             (tpl.xmlid && menuMap.get(tpl.xmlid)) ||
             (tpl.fallbackXmlid && menuMap.get(tpl.fallbackXmlid)) ||
             null;
         const hasActionMenu = Boolean(matchedMenu && matchedMenu.actionID);
+        if (tpl.requiresMenu && !hasActionMenu) {
+            continue;
+        }
         if (!hasActionMenu && !isSystem && !(isDelegated && tpl.placeholderOnly)) {
             continue;
         }
@@ -372,15 +488,16 @@ export function buildAdminCatalog(rootTree, { debug = "", isSystem = true, isDel
                 item.href = menuHref(matchedMenu, debug);
             }
         }
-        items.push(attachSearch(item));
+        rawItems.push(attachSearch(item));
     }
 
     const deptWsMenu = menuMap.get("tp_hr_workspace.menu_department_workspace");
     if (deptWsMenu && deptWsMenu.actionID) {
-        items.push(
+        rawItems.push(
             attachSearch({
                 key: `menu-${deptWsMenu.id}`,
                 group: "departments",
+                order: 60,
                 name: deptWsMenu.name || "Không gian phòng ban",
                 description: "Đang phát triển",
                 status: "Đang phát triển",
@@ -393,6 +510,7 @@ export function buildAdminCatalog(rootTree, { debug = "", isSystem = true, isDel
         );
     }
 
+    const items = sortAndDedupeEntries(rawItems);
     return {
         modules: items,
         departments: items.filter((m) => m.group === "departments"),
@@ -408,6 +526,7 @@ function personalEntries(apps) {
             return attachSearch({
                 key: tile.key,
                 group: "personal",
+                order: meta.order ?? tile.order ?? 500,
                 name: tile.label,
                 description: tile.hint || "",
                 icon: meta.icon || "circle",
@@ -428,15 +547,11 @@ export function buildCatalog(rootTree, { debug = "", isSystem = false, isDelegat
     const apps = buildTiles(rootTree, debug);
     const modulesCatalog = buildAdminCatalog(rootTree, { debug, isSystem: Boolean(isSystem), isDelegated });
     const personal = personalEntries(apps);
-    // EQUIP-001: modules registered by other addons in their own SECTIONS group (e.g. office
-    // equipment) appear after departments/HR; still only when the server sent their menu.
-    const extraSections = new Set(SECTIONS.map((s) => s.key).filter((k) => !["departments", "hr", "personal"].includes(k)));
-    const entries = [
-        ...modulesCatalog.departments,
-        ...modulesCatalog.hr,
-        ...modulesCatalog.modules.filter((m) => extraSections.has(m.group)),
+    const validGroups = new Set(orderedSections().map((s) => s.key));
+    const entries = sortAndDedupeEntries([
+        ...modulesCatalog.modules.filter((m) => validGroups.has(m.group)),
         ...personal,
-    ];
+    ]);
 
     const system = isSystem
         ? [allAppsEntry(), ...apps.filter((tile) => tile.group === "system")]
@@ -481,11 +596,13 @@ export function filterTiles(tiles, query) {
     });
 }
 
-/** Unified Home sections in display order; empty groups are omitted. */
+/** Unified Home sections in canonical display order; empty groups are omitted. */
 export function homeSections(catalog, query = "") {
-    const entries = filterTiles(catalog.entries || [], query);
-    return SECTIONS.map((section) => ({
-        ...section,
-        tiles: entries.filter((entry) => entry.group === section.key),
-    })).filter((section) => section.tiles.length > 0);
+    const entries = sortAndDedupeEntries(filterTiles(catalog.entries || [], query));
+    return orderedSections()
+        .map((section) => ({
+            ...section,
+            tiles: entries.filter((entry) => entry.group === section.key),
+        }))
+        .filter((section) => section.tiles.length > 0);
 }

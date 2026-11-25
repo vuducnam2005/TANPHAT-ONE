@@ -81,6 +81,16 @@ class TestBrandingHttp(HttpCase):
         self.authenticate(self.internal.login, self.password)
         self._assert_redirect(self._get('/odoo/tp-home'), '/app/tp-home')
         self.assertEqual(self.url_open('/odoo/tp-home').url, self.base_url() + '/app/tp-home')
+        # Legacy attendance paths redirect cleanly to /app/cham-cong/... without loops, keeping query & detail ID.
+        self._assert_redirect(
+            self._get('/app/nhan-su/cham-cong/tong-quan?dept=5'),
+            '/app/cham-cong/tong-quan?dept=5',
+        )
+        self._assert_redirect(
+            self._get('/app/nhan-su/cham-cong/dieu-chinh/12?state=submitted'),
+            '/app/cham-cong/dieu-chinh/12?state=submitted',
+        )
+        self.assertEqual(self._get('/app/cham-cong/tong-quan?dept=5').status_code, 200)
 
     def test_not_legacy_paths_are_not_redirected(self):
         offline = self._get('/odoo/offline')

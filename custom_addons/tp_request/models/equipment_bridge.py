@@ -150,7 +150,7 @@ class TpRequestEquipmentBridge(models.Model):
             'company_id': self.company_id.id,
             'requester_employee_id': self.requester_employee_id.id or False,
             'requester_department_id': self.department_id.id or False,
-            'note': _('Lập từ hồ sơ Đề nghị & Phê duyệt %s. Duyệt mua không tự tạo tài sản nhập kho.', self.code),
+            'note': _('Lập từ hồ sơ Yêu cầu phê duyệt %s. Duyệt mua không tự tạo tài sản nhập kho.', self.code),
             'source_ref': f'tp.request:{self.code}',
             'line_ids': [Command.create({
                 'kind': 'purchase',

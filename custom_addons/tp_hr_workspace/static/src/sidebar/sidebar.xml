@@ -45,16 +45,16 @@
         <t t-if="this.app()">
             <div t-if="this.mode() === 'mobile'" class="o_tp_hr_mobilebar">
                 <button type="button" class="o_tp_hr_menu_toggle"
-                        aria-controls="tp_hr_sidebar"
+                        t-att-aria-controls="this.sidebarId"
                         t-att-aria-expanded="(this.state.drawer) ? 'true' : 'false'"
                         t-on-click="this.openDrawer">
                     <i class="oi" data-icon="menu" aria-hidden="true"/>
-                    <span>Menu TP HR</span>
+                    <span t-out="'Menu ' + this.appTitle"/>
                 </button>
                 <span class="o_tp_hr_mobilebar_title" t-out="this.activeLabel()"/>
             </div>
             <div t-if="this.state.drawer" class="o_tp_hr_backdrop" aria-hidden="true" t-on-click="this.closeDrawer"/>
-            <aside id="tp_hr_sidebar"
+            <aside t-att-id="this.sidebarId"
                    class="o_tp_hr_sidebar"
                    t-att-class="{
                        'is-rail': this.rail(),
@@ -63,24 +63,27 @@
                    }"
                    t-att-role="this.state.drawer ? 'dialog' : null"
                    t-att-aria-modal="this.state.drawer ? 'true' : null"
-                   aria-label="Điều hướng TP HR"
+                   t-att-aria-label="'Điều hướng ' + this.appTitle"
                    t-ref="this.panel"
                    t-on-keydown="this.onKeydown">
                 <div class="o_tp_hr_sb_head">
-                    <span class="o_tp_hr_sb_mark" aria-hidden="true">HR</span>
-                    <span class="o_tp_hr_sb_title">TP HR</span>
+                    <span class="o_tp_hr_sb_mark" aria-hidden="true">
+                        <i t-if="this.appIcon" class="oi" t-att-data-icon="this.appIcon"/>
+                        <t t-else="" t-out="this.appMark"/>
+                    </span>
+                    <span class="o_tp_hr_sb_title" t-out="this.appTitle"/>
                     <button t-if="this.state.drawer" type="button" class="o_tp_hr_sb_icon o_tp_hr_sb_close"
                             title="Đóng menu" aria-label="Đóng menu" t-on-click="this.closeDrawer">
                         <i class="oi" data-icon="close" aria-hidden="true"/>
                     </button>
                     <button t-elif="this.rail()" type="button" class="o_tp_hr_sb_icon o_tp_hr_sb_collapse"
                             title="Mở rộng thanh bên" aria-label="Mở rộng thanh bên"
-                            aria-controls="tp_hr_sidebar" aria-expanded="false" t-on-click="this.expand">
+                            t-att-aria-controls="this.sidebarId" aria-expanded="false" t-on-click="this.expand">
                         <i class="oi" data-icon="left_panel_open" aria-hidden="true"/>
                     </button>
                     <button t-elif="this.mode() === 'desktop'" type="button" class="o_tp_hr_sb_icon o_tp_hr_sb_collapse"
                             title="Thu gọn thanh bên" aria-label="Thu gọn thanh bên"
-                            aria-controls="tp_hr_sidebar" aria-expanded="true" t-on-click="this.collapse">
+                            t-att-aria-controls="this.sidebarId" aria-expanded="true" t-on-click="this.collapse">
                         <i class="oi" data-icon="left_panel_close" aria-hidden="true"/>
                     </button>
                 </div>
@@ -89,8 +92,8 @@
                 <form t-if="!this.rail()" class="o_tp_hr_sb_search" role="search"
                       autocomplete="off" t-on-submit.prevent="() => {}">
                     <i class="oi" data-icon="search" aria-hidden="true"/>
-                    <input type="search" id="tp_hr_function_search" name="tp_hr_function_search"
-                           placeholder="Tìm chức năng…" aria-label="Tìm chức năng TP HR"
+                    <input type="search" t-att-id="this.searchInputId" t-att-name="this.searchInputId"
+                           placeholder="Tìm chức năng…" t-att-aria-label="'Tìm chức năng ' + this.appTitle"
                            autocomplete="off" spellcheck="false"
                            t-att-value="this.state.query" t-ref="this.search"
                            t-on-input="this.onSearchInput"/>
@@ -100,7 +103,7 @@
                     </button>
                 </form>
 
-                <nav class="o_tp_hr_sb_nav" aria-label="Chức năng TP HR">
+                <nav class="o_tp_hr_sb_nav" t-att-aria-label="'Chức năng ' + this.appTitle">
                     <ul class="o_tp_hr_sb_list">
                         <t t-foreach="this.visible()" t-as="entry" t-key="entry.id">
                             <li t-if="entry.type === 'leaf'">
@@ -152,7 +155,7 @@
                             <span class="o_tp_hr_sb_label">Tùy chọn hiển thị</span>
                         </button>
                         <t t-set-slot="content">
-                            <TpHrPrefs/>
+                            <t t-component="this.prefsComponent"/>
                         </t>
                     </Dropdown>
                 </div>

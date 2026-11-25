@@ -33,7 +33,7 @@ class AttendanceCorrectionBridge(models.Model):
     _inherit = 'tp.hr.attendance.correction'
 
     tp_request_id = fields.Many2one(
-        'tp.request', string='Hồ sơ Đề nghị & Phê duyệt', readonly=True, copy=False, ondelete='set null',
+        'tp.request', string='Hồ sơ Yêu cầu phê duyệt', readonly=True, copy=False, ondelete='set null',
     )
 
     def _tp_bridge_request_type(self):

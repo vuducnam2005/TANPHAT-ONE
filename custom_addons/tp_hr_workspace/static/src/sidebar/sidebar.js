@@ -41,19 +41,19 @@ const BODY_CLASSES = [
 ];
 const FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex='-1'])";
 
-function readLastLeaf() {
+function readLastLeaf(key = LAST_LEAF_KEY) {
     try {
-        return Number(browser.sessionStorage.getItem(LAST_LEAF_KEY)) || 0;
+        return Number(browser.sessionStorage.getItem(key)) || 0;
     } catch {
         return 0;
     }
 }
-export function writeLastLeaf(id) {
+export function writeLastLeaf(id, key = LAST_LEAF_KEY) {
     try {
         if (id) {
-            browser.sessionStorage.setItem(LAST_LEAF_KEY, String(id));
+            browser.sessionStorage.setItem(key, String(id));
         } else {
-            browser.sessionStorage.removeItem(LAST_LEAF_KEY);
+            browser.sessionStorage.removeItem(key);
         }
     } catch {
         // sessionStorage unavailable: active leaf falls back to the first matching menu.
@@ -84,17 +84,68 @@ export class TpHrPrefs extends Component {
  * filtered by groups on the server): no RPC, no hard-coded menu ID. Navigation goes through
  * menu.selectMenu, so unsaved-form handling and breadcrumbs stay native.
  */
+const EMPTY_ICONS = {};
+const HR_BODY_CLASSES = {
+    shell: "o_tp_hr_shell",
+    rail: "o_tp_hr_rail",
+    mobile: "o_tp_hr_mobile",
+    compact: "o_tp_hr_compact",
+    reduceMotion: "o_tp_hr_reduce_motion",
+};
+
 export class TpHrSidebar extends Component {
     static template = "tp_hr_workspace.Sidebar";
     static components = { Dropdown, TpHrPrefs, TpUserAccountMenu };
 
-    prefs = hrPrefs;
+    get appXmlid() {
+        return HR_APP_XMLID;
+    }
+    get appTitle() {
+        return "TP HR";
+    }
+    get appMark() {
+        return "HR";
+    }
+    get appIcon() {
+        return "";
+    }
+    get sidebarId() {
+        return "tp_hr_sidebar";
+    }
+    get searchInputId() {
+        return "tp_hr_function_search";
+    }
+    get lastLeafKey() {
+        return LAST_LEAF_KEY;
+    }
+    get prefsComponent() {
+        return TpHrPrefs;
+    }
+    get groupIcons() {
+        return GROUP_ICONS;
+    }
+    get leafIcons() {
+        return EMPTY_ICONS;
+    }
+    get bodyClassConfig() {
+        return HR_BODY_CLASSES;
+    }
+    get prefs() {
+        return hrPrefs;
+    }
+    saveAppPrefs(changes) {
+        savePrefs(changes);
+    }
+    resetAppPrefs() {
+        resetPrefs();
+    }
+
     panel = signal.ref();
     search = signal.ref();
 
     app = computed(() => {
         const app = this.menu.getCurrentApp();
-        return app && app.xmlid === HR_APP_XMLID ? app : null;
+        return app && app.xmlid === this.appXmlid ? app : null;
     });
     mode = computed(() => {
         const size = this.ui.size();
@@ -103,7 +154,7 @@ export class TpHrSidebar extends Component {
     rail = computed(
         () =>
             !this.state.drawer &&
-            ((this.mode() === "tablet") || (this.mode() === "desktop" && hrPrefs.collapsed))
+            ((this.mode() === "tablet") || (this.mode() === "desktop" && this.prefs.collapsed))
     );
     entries = computed(() => {
         const app = this.app();
@@ -120,11 +171,17 @@ export class TpHrSidebar extends Component {
                     id: node.id,
                     key: node.xmlid || String(node.id),
                     name: node.name,
-                    icon: GROUP_ICONS[node.xmlid] || "apps",
+                    icon: this.groupIcons[node.xmlid] || "apps",
                     leaves,
                 });
             } else if (node.actionID) {
-                entries.push({ type: "leaf", id: node.id, name: node.name, leaf: node, icon: "pie_chart" });
+                entries.push({
+                    type: "leaf",
+                    id: node.id,
+                    name: node.name,
+                    leaf: node,
+                    icon: this.leafIcons[node.xmlid] || "pie_chart",
+                });
             }
         }
         return entries;
@@ -166,7 +223,7 @@ export class TpHrSidebar extends Component {
         useBus(this.env.bus, "ACTION_MANAGER:UI-UPDATED", () => this.syncActive());
         useBus(this.env.bus, "MENUS:APP-CHANGED", () => this.syncActive());
         useEffect(() => this.applyBodyClasses());
-        onWillDestroy(() => document.body.classList.remove(...BODY_CLASSES));
+        onWillDestroy(() => document.body.classList.remove(...Object.values(this.bodyClassConfig)));
         onPatched(() => {
             const target = this.focusAfterPatch;
             this.focusAfterPatch = null;
@@ -176,7 +233,9 @@ export class TpHrSidebar extends Component {
             if (target === "panel") {
                 this.panel()?.querySelector(FOCUSABLE)?.focus();
             } else if (target === "toggle") {
-                document.querySelector(".o_tp_hr_menu_toggle, .o_tp_hr_sb_collapse")?.focus();
+                document.querySelector(
+                    `.o_tp_hr_menu_toggle[aria-controls="${this.sidebarId}"], #${this.sidebarId} .o_tp_hr_sb_collapse`
+                )?.focus();
             }
         });
     }
@@ -184,18 +243,24 @@ export class TpHrSidebar extends Component {
     applyBodyClasses() {
         const on = Boolean(this.app());
         const body = document.body;
-        body.classList.toggle("o_tp_hr_shell", on);
-        body.classList.toggle("o_tp_hr_rail", on && this.rail());
-        body.classList.toggle("o_tp_hr_mobile", on && this.mode() === "mobile");
-        body.classList.toggle("o_tp_hr_compact", on && hrPrefs.density === "compact");
-        body.classList.toggle("o_tp_hr_reduce_motion", on && hrPrefs.motion === "reduced");
+        const cls = this.bodyClassConfig;
+        const prefs = this.prefs;
+        body.classList.toggle(cls.shell, on);
+        body.classList.toggle(cls.rail, on && this.rail());
+        body.classList.toggle(cls.mobile, on && this.mode() === "mobile");
+        body.classList.toggle(cls.compact, on && prefs.density === "compact");
+        body.classList.toggle(cls.reduceMotion, on && prefs.motion === "reduced");
         if (!on && this.lastApp) {
-            writeLastLeaf(0);
+            writeLastLeaf(0, this.lastLeafKey);
         }
         this.lastApp = on;
     }
 
-    /** Active leaf = KD leaf whose action is the current one; ties go to the last clicked leaf. */
+    resolveFallbackLeaf(_leaves, _current) {
+        return [];
+    }
+
+    /** Active leaf = app leaf whose action is the current one; ties go to the last clicked leaf. */
     syncActive() {
         this.state.drawer = false;
         if (!this.app()) {
@@ -217,13 +282,16 @@ export class TpHrSidebar extends Component {
         if (!matches.length && hint) {
             matches = leaves.filter((l) => l.xmlid === hint);
         }
+        if (!matches.length && current) {
+            matches = this.resolveFallbackLeaf(leaves, current);
+        }
         if (!matches.length && this.pendingLeaf) {
             // A leaf whose menu runs a server action (TP Contracts) opens another action id.
             matches = leaves.filter((l) => l.id === this.pendingLeaf);
         }
         if (!matches.length && !this.state.active) {
             // Reload/deep link: the leaf this tab last used, else the breadcrumb root from the URL.
-            const last = readLastLeaf();
+            const last = readLastLeaf(this.lastLeafKey);
             matches = leaves.filter((l) => l.id === last);
             if (!matches.length) {
                 const root = router.current.actionStack?.[0]?.action;
@@ -235,10 +303,10 @@ export class TpHrSidebar extends Component {
         if (!matches.length) {
             return; // e.g. a native action reached from a TP HR form keeps the current leaf
         }
-        const last = readLastLeaf();
+        const last = readLastLeaf(this.lastLeafKey);
         const pick = matches.find((m) => m.id === last) || matches[0];
         if (pick.id !== last) {
-            writeLastLeaf(pick.id);
+            writeLastLeaf(pick.id, this.lastLeafKey);
         }
         if (pick.id !== this.state.active) {
             this.state.active = pick.id;
@@ -252,11 +320,11 @@ export class TpHrSidebar extends Component {
     }
 
     activeLabel() {
-        return this.leaves().find((l) => l.id === this.state.active)?.name || "TP HR";
+        return this.leaves().find((l) => l.id === this.state.active)?.name || this.appTitle;
     }
 
     href(leaf) {
-        const href = `/odoo/${leaf.actionPath || "action-" + leaf.actionID}`;
+        const href = router.stateToUrl({ action: leaf.actionPath || leaf.actionID });
         return odoo.debug ? `${href}?debug=${encodeURIComponent(odoo.debug)}` : href;
     }
 
@@ -268,18 +336,18 @@ export class TpHrSidebar extends Component {
         if (this.state.query.trim()) {
             return true;
         }
-        return hrPrefs.groups === null || hrPrefs.groups.includes(group.key);
+        return this.prefs.groups === null || this.prefs.groups.includes(group.key);
     }
 
     toggleGroup(group) {
         const all = this.entries().filter((e) => e.type === "group").map((e) => e.key);
-        const open = new Set(hrPrefs.groups === null ? all : hrPrefs.groups);
+        const open = new Set(this.prefs.groups === null ? all : this.prefs.groups);
         if (open.has(group.key)) {
             open.delete(group.key);
         } else {
             open.add(group.key);
         }
-        savePrefs({ groups: [...open] });
+        this.saveAppPrefs({ groups: [...open] });
     }
 
     onGroupClick(group) {
@@ -299,7 +367,7 @@ export class TpHrSidebar extends Component {
             return; // new tab/window: let the browser follow the real href
         }
         ev.preventDefault();
-        writeLastLeaf(leaf.id);
+        writeLastLeaf(leaf.id, this.lastLeafKey);
         this.pendingLeaf = leaf.id; // read by syncActive() during this navigation only
         Promise.resolve(this.menu.selectMenu(leaf)).finally(() => {
             this.pendingLeaf = 0;
@@ -317,14 +385,14 @@ export class TpHrSidebar extends Component {
 
     expand() {
         if (this.mode() === "desktop") {
-            savePrefs({ collapsed: false });
+            this.saveAppPrefs({ collapsed: false });
         } else {
             this.openDrawer();
         }
     }
 
     collapse() {
-        savePrefs({ collapsed: true });
+        this.saveAppPrefs({ collapsed: true });
         this.focusAfterPatch = "toggle";
     }
 

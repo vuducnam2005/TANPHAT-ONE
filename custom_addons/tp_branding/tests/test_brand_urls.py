@@ -100,8 +100,18 @@ class TestBrandUrls(BaseCase):
             self.assertNotIn(url, seen_urls, f"Duplicate canonical URL: {url}")
             seen_urls.add(url)
 
-            # Check module prefix rule: khkd, nhan-su, thiet-bi, de-nghi, bao-cao, quan-tri, trang-chu
-            valid_prefixes = ('/app/trang-chu', '/app/tai-khoan', '/app/nhan-su', '/app/khkd', '/app/thiet-bi', '/app/de-nghi', '/app/bao-cao', '/app/quan-tri')
+            # Check module prefix rule: khkd, nhan-su, cham-cong, thiet-bi, de-nghi, bao-cao, quan-tri, trang-chu
+            valid_prefixes = (
+                '/app/trang-chu',
+                '/app/tai-khoan',
+                '/app/nhan-su',
+                '/app/cham-cong',
+                '/app/khkd',
+                '/app/thiet-bi',
+                '/app/de-nghi',
+                '/app/bao-cao',
+                '/app/quan-tri',
+            )
             self.assertTrue(
                 url.startswith(valid_prefixes),
                 f"URL {url} must start with one of {valid_prefixes}"
@@ -121,10 +131,15 @@ class TestBrandUrls(BaseCase):
         self.assertIsNotNone(r2)
         self.assertEqual(r2['url'], '/app/trang-chu')
 
-        # By XML ID
+        # By XML ID (standalone Chấm công canonical URL)
         r3 = get_route_by_action_xml_id('tp_hr_attendance.action_dashboard')
         self.assertIsNotNone(r3)
-        self.assertEqual(r3['url'], '/app/nhan-su/cham-cong/tong-quan')
+        self.assertEqual(r3['url'], '/app/cham-cong/tong-quan')
+
+        # Legacy attendance alias resolves to standalone Chấm công route
+        r3_legacy = get_route_by_url('/app/nhan-su/cham-cong/tong-quan')
+        self.assertIsNotNone(r3_legacy)
+        self.assertEqual(r3_legacy['url'], '/app/cham-cong/tong-quan')
 
         # By action tag
         r4 = get_route_by_action_tag('tp_equipment.dashboard')
@@ -137,10 +152,19 @@ class TestBrandUrls(BaseCase):
         self.assertEqual(r5['url'], '/app/quan-tri/tai-khoan')
 
     def test_canonical_app_path(self):
-        """Aliases must canonicalize to business route URLs."""
+        """Aliases (including legacy /app/nhan-su/cham-cong/...) canonicalize to business route URLs."""
         self.assertEqual(canonical_app_path('/app/tp-home'), '/app/trang-chu')
-        self.assertEqual(canonical_app_path('/app/cham-cong'), '/app/nhan-su/cham-cong/tong-quan')
-        self.assertEqual(canonical_app_path('/app/cong-cua-toi'), '/app/nhan-su/cham-cong/cua-toi')
+        self.assertEqual(canonical_app_path('/app/cham-cong'), '/app/cham-cong/tong-quan')
+        self.assertEqual(canonical_app_path('/app/nhan-su/cham-cong'), '/app/cham-cong/tong-quan')
+        self.assertEqual(canonical_app_path('/app/nhan-su/cham-cong/tong-quan'), '/app/cham-cong/tong-quan')
+        self.assertEqual(canonical_app_path('/app/cong-cua-toi'), '/app/cham-cong/cua-toi')
+        self.assertEqual(canonical_app_path('/app/nhan-su/cham-cong/cua-toi'), '/app/cham-cong/cua-toi')
+        self.assertEqual(canonical_app_path('/app/nguon-cham-cong'), '/app/cham-cong/quan-tri')
+        self.assertEqual(canonical_app_path('/app/nhan-su/cham-cong/quan-tri'), '/app/cham-cong/quan-tri')
+        self.assertEqual(canonical_app_path('/app/nhan-su/cham-cong/dieu-chinh/12'), '/app/cham-cong/dieu-chinh/12')
+        self.assertEqual(canonical_app_path('/app/nhan-su/cham-cong/dieu-chinh/new'), '/app/cham-cong/dieu-chinh/tao-moi')
+        self.assertEqual(brand_url('/app/nhan-su/cham-cong/dieu-chinh/12?filter=pending#top'), '/app/cham-cong/dieu-chinh/12?filter=pending#top')
+        self.assertEqual(brand_path('/app/cham-cong/dieu-chinh/12'), '/app/cham-cong/dieu-chinh/12')
         self.assertEqual(canonical_app_path('/app/kho-thiet-bi'), '/app/thiet-bi/danh-sach')
         self.assertEqual(canonical_app_path('/app/kho-thiet-bi/44'), '/app/thiet-bi/danh-sach/44')
         self.assertEqual(canonical_app_path('/app/kho-thiet-bi/new'), '/app/thiet-bi/danh-sach/tao-moi')

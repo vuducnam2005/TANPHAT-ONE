@@ -141,7 +141,7 @@ def _parse_clock_to_float(val):
 
 class TpRequest(models.Model):
     _name = 'tp.request'
-    _description = 'Hồ sơ Đề nghị & Phê duyệt'
+    _description = 'Hồ sơ Yêu cầu phê duyệt'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'submitted_at desc, id desc'
     _rec_name = 'code'
@@ -1900,7 +1900,7 @@ class TpRequest(models.Model):
                 'kind': 'attendance',
                 'label': f'Phiếu điều chỉnh công {corr.name}',
                 'status': dict(corr._fields['state'].selection).get(corr.state, corr.state),
-                'url': f'/app/nhan-su/cham-cong/dieu-chinh/{corr.id}' if (is_owner or is_eq_admin or user.has_group('hr.group_hr_manager')) else '',
+                'url': f'/app/cham-cong/dieu-chinh/{corr.id}' if (is_owner or is_eq_admin or user.has_group('hr.group_hr_manager')) else '',
             })
         for mv in rec.equipment_move_ids.sudo():
             linked_records.append({

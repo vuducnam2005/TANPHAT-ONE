@@ -5,7 +5,7 @@
         <field name="name">tp.request.list</field>
         <field name="model">tp.request</field>
         <field name="arch" type="xml">
-            <list string="Đề nghị &amp; Phê duyệt" create="0" edit="0" delete="0">
+            <list string="Yêu cầu phê duyệt" create="0" edit="0" delete="0">
                 <field name="code"/>
                 <field name="title"/>
                 <field name="type_id"/>

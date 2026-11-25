@@ -735,7 +735,9 @@ tbody.o_person_pair:hover tr.o_person_row th {
 }
 
 .o_tp_hr_reduce_motion .o_tp_att_matrix_screen *,
-.o_tp_hr_reduce_motion .o_tp_att_compare_screen * {
+.o_tp_hr_reduce_motion .o_tp_att_compare_screen *,
+.o_tp_att_reduce_motion .o_tp_att_matrix_screen *,
+.o_tp_att_reduce_motion .o_tp_att_compare_screen * {
     transition: none !important;
     animation: none !important;
 }

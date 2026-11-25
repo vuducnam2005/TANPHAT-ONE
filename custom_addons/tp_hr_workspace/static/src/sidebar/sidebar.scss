@@ -7,15 +7,16 @@ $tp-hr-accent: #7fb3d5;
 $tp-hr-ink: #dce6f0;
 $tp-hr-muted: #9fb3c8;
 
-body.o_tp_hr_shell {
+body.o_tp_hr_shell,
+body.o_tp_att_shell {
     --tp-hr-sb-w: 264px;
     --tp-hr-ease: cubic-bezier(0.2, 0, 0, 1);
 
     .o_main_navbar .o_menu_sections {
-        display: none !important; // the sidebar replaces the TP HR section menus
+        display: none !important; // the sidebar replaces the app section menus
     }
 
-    &:not(.o_tp_hr_mobile) {
+    &:not(.o_tp_hr_mobile):not(.o_tp_att_mobile) {
         display: grid !important;
         grid-template-columns: var(--tp-hr-sb-w) minmax(0, 1fr);
         grid-template-rows: auto minmax(0, 1fr) auto;
@@ -42,7 +43,8 @@ body.o_tp_hr_shell {
         }
     }
 
-    &.o_tp_hr_rail {
+    &.o_tp_hr_rail,
+    &.o_tp_att_rail {
         --tp-hr-sb-w: 68px;
     }
 }
@@ -442,13 +444,17 @@ body.o_tp_hr_shell {
 
 @media (prefers-reduced-motion: reduce) {
     body.o_tp_hr_shell,
-    body.o_tp_hr_shell * {
+    body.o_tp_hr_shell *,
+    body.o_tp_att_shell,
+    body.o_tp_att_shell * {
         transition-duration: 0s !important;
         animation-duration: 0s !important;
     }
 }
 body.o_tp_hr_reduce_motion,
-body.o_tp_hr_reduce_motion * {
+body.o_tp_hr_reduce_motion *,
+body.o_tp_att_reduce_motion,
+body.o_tp_att_reduce_motion * {
     transition-duration: 0s !important;
     animation-duration: 0s !important;
 }

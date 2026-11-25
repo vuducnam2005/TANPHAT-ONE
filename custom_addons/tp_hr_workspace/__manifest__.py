@@ -1,6 +1,6 @@
 {
     "name": "TANPHAT ONE — TP HR",
-    "version": "20.0.1.23.0",
+    "version": "20.0.1.24.0",
     "license": "LGPL-3",
     "author": "Tan Phat JSC",
     "depends": ["tp_organization", "hr_skills", "hr_timesheet", "tp_web_home", "tp_web_login", "tp_kd_workspace", "calendar"],

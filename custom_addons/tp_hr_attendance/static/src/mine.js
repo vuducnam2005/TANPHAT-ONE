@@ -785,10 +785,27 @@ patch(HrListController.prototype, {
     },
 });
 
-patch(TpHrMyProfile, { components: { ...TpHrMyProfile.components, MyAttendance } });
 patch(TpHrMyProfile.prototype, {
     setup() {
         super.setup(...arguments);
+        try {
+            this.menuService = useService("menu");
+        } catch {
+            this.menuService = null;
+        }
         this.tabs = [...this.tabs, { id: "attendance", label: "Công của tôi", icon: "calendar_today" }];
+    },
+    setTab(tabId) {
+        if (tabId === "attendance") {
+            const menus = this.menuService?.getAll?.() || [];
+            const mineMenu =
+                menus.find((m) => m.xmlid === "tp_hr_attendance.menu_mine") ||
+                menus.find((m) => m.xmlid === "tp_hr_attendance.menu_root");
+            if (mineMenu) {
+                return this.menuService.selectMenu(mineMenu);
+            }
+            return this.action.doAction("tp_hr_attendance.action_mine");
+        }
+        return super.setTab(tabId);
     },
 });

@@ -16,7 +16,7 @@ export const CHART_COLORS = {
 export function reducedMotion() {
     try {
         return Boolean(browser.matchMedia?.("(prefers-reduced-motion: reduce)").matches
-            || document.querySelector(".o_tp_hr_reduce_motion"));
+            || document.querySelector(".o_tp_hr_reduce_motion, .o_tp_att_reduce_motion"));
     } catch {
         return false;
     }

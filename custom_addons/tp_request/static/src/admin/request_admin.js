@@ -106,7 +106,7 @@ export class TpRequestAdmin extends Component {
         } catch (err) {
             this.state.error = extractErrorMessage(
                 err,
-                "Bạn không có quyền truy cập khu vực Quản trị Đề nghị & Phê duyệt."
+                "Bạn không có quyền truy cập khu vực Quản trị Yêu cầu phê duyệt."
             );
         } finally {
             this.state.loading = false;

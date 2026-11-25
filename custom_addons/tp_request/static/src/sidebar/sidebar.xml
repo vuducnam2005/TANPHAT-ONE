@@ -14,7 +14,7 @@
                         t-att-aria-expanded="this.state.drawer ? 'true' : 'false'"
                         t-on-click="this.openDrawer">
                     <i class="oi" data-icon="menu" aria-hidden="true"/>
-                    <span>Menu Đề nghị</span>
+                    <span>Menu Yêu cầu phê duyệt</span>
                 </button>
                 <span class="o_tp_req_mobilebar_title" t-out="this.activeLabel()"/>
             </div>
@@ -28,11 +28,11 @@
                        'is-drawer': this.state.drawer,
                        'is-hidden': this.mode() === 'mobile' and !this.state.drawer,
                    }"
-                   aria-label="Điều hướng Đề nghị &amp; Phê duyệt"
+                   aria-label="Điều hướng Yêu cầu phê duyệt"
                    t-ref="this.panel">
                 <div class="o_tp_req_sb_head">
-                    <span class="o_tp_req_sb_mark" aria-hidden="true">ĐN</span>
-                    <span class="o_tp_req_sb_title">Đề nghị &amp; Phê duyệt</span>
+                    <span class="o_tp_req_sb_mark" aria-hidden="true">YC</span>
+                    <span class="o_tp_req_sb_title">Yêu cầu phê duyệt</span>
                     <button t-if="this.state.drawer" type="button" class="o_tp_req_sb_icon"
                             title="Đóng menu" aria-label="Đóng menu" t-on-click="this.closeDrawer">
                         <i class="oi" data-icon="close" aria-hidden="true"/>
@@ -45,7 +45,7 @@
                     </button>
                 </div>
 
-                <nav class="o_tp_req_sb_nav" aria-label="Danh mục Đề nghị &amp; Phê duyệt">
+                <nav class="o_tp_req_sb_nav" aria-label="Danh mục Yêu cầu phê duyệt">
                     <ul class="o_tp_req_sb_list">
                         <li t-foreach="this.leaves()" t-as="leaf" t-key="leaf.id">
                             <a class="o_tp_req_sb_leaf"

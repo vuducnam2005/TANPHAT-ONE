@@ -212,7 +212,7 @@ export class TpRequestSidebar extends Component {
     }
 
     activeLabel() {
-        return this.leaves().find((l) => l.id === this.state.active)?.name || "Đề nghị & Phê duyệt";
+        return this.leaves().find((l) => l.id === this.state.active)?.name || "Yêu cầu phê duyệt";
     }
 
     href(leaf) {

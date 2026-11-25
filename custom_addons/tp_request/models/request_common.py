@@ -227,7 +227,7 @@ def is_request_manager(env, company=None, user=None, lock=False):
 
 def require_request_manager(env, company=None):
     if not is_request_manager(env, company=company, lock=True):
-        raise AccessError(_('Chỉ Quản trị Đề nghị & Phê duyệt mới có quyền thực hiện thao tác cấu hình này.'))
+        raise AccessError(_('Chỉ Quản trị Yêu cầu phê duyệt mới có quyền thực hiện thao tác cấu hình này.'))
 
 
 def active_internal_users(users, company=None):

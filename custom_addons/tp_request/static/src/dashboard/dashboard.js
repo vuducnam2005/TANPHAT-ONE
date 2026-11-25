@@ -60,7 +60,7 @@ export class TpRequestDashboard extends Component {
             this.state.error = "";
         } catch (err) {
             if (!silent) {
-                this.state.error = extractErrorMessage(err, "Không tải được tổng quan Đề nghị & Phê duyệt.");
+                this.state.error = extractErrorMessage(err, "Không tải được tổng quan Yêu cầu phê duyệt.");
             }
         } finally {
             this.state.loading = false;

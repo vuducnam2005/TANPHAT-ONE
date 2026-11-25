@@ -1511,4 +1511,5 @@
     .o_tp_att, .o_tp_att *, .o_tp_att_dialog * { animation: none !important; transition: none !important; }
     .o_tp_att_kpi:hover { transform: none !important; }
 }
-.o_tp_hr_reduce_motion :is(.o_tp_att, .o_tp_att *, .o_tp_att_dialog *) { animation: none !important; transition: none !important; }
+.o_tp_hr_reduce_motion :is(.o_tp_att, .o_tp_att *, .o_tp_att_dialog *),
+.o_tp_att_reduce_motion :is(.o_tp_att, .o_tp_att *, .o_tp_att_dialog *) { animation: none !important; transition: none !important; }

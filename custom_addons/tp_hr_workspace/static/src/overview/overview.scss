@@ -129,12 +129,11 @@
 @keyframes tp-hr-chart-refresh {from {opacity:.65;} to {opacity:1;}}
 @media(prefers-reduced-motion:reduce) {.o_tp_hr_overview *{transition:none!important;animation:none!important;}}
 body.o_tp_hr_reduce_motion .o_tp_hr_overview *{transition:none!important;animation:none!important;}
-body.o_tp_hr_shell {
+body.o_tp_hr_shell,
+body.o_tp_att_shell {
     .o_list_table {border-collapse:separate;border-spacing:0; th{background:#edf2f6;position:sticky;top:0;z-index:1;} td,th{border-right:1px solid #e3e9ef;border-bottom:1px solid #dce4eb;} .o_data_row:hover{background:#edf6f7;} .o_data_cell{max-width:320px;} }
     .o_tp_hr_page_size {font-size:13px;select{border:1px solid var(--tp-input-border);border-radius:4px;padding:5px;}}
     .o_tp_hr_employee_code {font-size:15px;color:#167d8d;font-weight:650;}
-}
-body.o_tp_hr_shell {
     .o_searchview_dropdown_toggler { min-width: 36px; }
     .o_searchview_dropdown_toggler::before { content: "▾"; font-family: inherit; }
     .o_tp_hr_page_size { white-space: nowrap; flex-shrink: 0; gap: 6px !important; margin: 0 6px; }

@@ -84,18 +84,27 @@ def is_app_path(path):
     return path == APP_PATH or path.startswith(APP_PATH + '/')
 
 
+LEGACY_ATTENDANCE_PREFIX = '/app/nhan-su/cham-cong'
+
+
 def canonical_app_path(path):
     """Canonicalize a branded path or legacy alias to its business route URL."""
     clean = (path or '').rstrip('/') or '/'
-    # Exact match on registered routes
+    # Exact match on registered routes or their aliases
     route = get_route_by_url(clean)
     if route:
         return route['url']
 
-    # Subpath check: /app/<slug>[/<id>] -> canonical
+    # Subpath check: /app/<slug>[/<id>] or <alias>[/<id>] -> canonical
     if clean.startswith(APP_PATH + '/'):
         sub = clean[len(APP_PATH) + 1:]
         parts = sub.split('/')
+        if len(parts) >= 2 and (parts[-1].isdigit() or parts[-1] in ('new', 'tao-moi')):
+            base_path = APP_PATH + '/' + '/'.join(parts[:-1])
+            base_route = get_route_by_url(base_path)
+            if base_route and base_route.get('has_detail'):
+                suffix = '/tao-moi' if parts[-1] in ('new', 'tao-moi') else '/' + parts[-1]
+                return base_route['url'] + suffix
         first_slug = parts[0]
         route = get_route_by_native_slug(first_slug)
         if route:
@@ -108,15 +117,29 @@ def canonical_app_path(path):
     return path
 
 
+def _canonical_legacy_attendance(key):
+    canonical = canonical_app_path(key)
+    if canonical != key:
+        return canonical
+    suffix = key[len(LEGACY_ATTENDANCE_PREFIX):]
+    return '/app/cham-cong' + (suffix or '/tong-quan')
+
+
 def brand_path(path):
-    """Map one native path to its TANPHAT ONE path, or return it unchanged."""
+    """Map one native or legacy attendance path to its TANPHAT ONE path, or return it unchanged."""
     key = _exact_key(path)
     if key == '/web':
         return APP_PATH
     if key in AUTH_PATHS:
         return AUTH_PATHS[key]
     if is_legacy_app_path(path):
-        return APP_PATH + path[len(LEGACY_APP_PATH):]
+        mapped = APP_PATH + path[len(LEGACY_APP_PATH):]
+        mapped_key = _exact_key(mapped)
+        if mapped_key == LEGACY_ATTENDANCE_PREFIX or mapped_key.startswith(LEGACY_ATTENDANCE_PREFIX + '/'):
+            return _canonical_legacy_attendance(mapped_key)
+        return mapped
+    if key == LEGACY_ATTENDANCE_PREFIX or key.startswith(LEGACY_ATTENDANCE_PREFIX + '/'):
+        return _canonical_legacy_attendance(key)
     return path
 
 

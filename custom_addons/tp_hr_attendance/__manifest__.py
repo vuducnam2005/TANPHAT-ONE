@@ -1,7 +1,8 @@
 {
     "name": "TANPHAT ONE — Chấm công",
     "summary": "Chấm công tự động, quản trị kết nối và xuất bảng công theo kỳ",
-    "version": "20.0.3.9.1",
+    "version": "20.0.4.0.0",
+    "category": "Human Resources/Attendances",
     "license": "LGPL-3",
     "author": "Tan Phat JSC",
     "depends": ["tp_hr_workspace"],
@@ -20,6 +21,11 @@
     ],
     "assets": {
         "web.assets_backend": [
+            "tp_hr_attendance/static/src/prefs.js",
+            "tp_hr_attendance/static/src/home/home_card.js",
+            "tp_hr_attendance/static/src/back_fallbacks.js",
+            "tp_hr_attendance/static/src/sidebar/sidebar.js",
+            "tp_hr_attendance/static/src/sidebar/sidebar.xml",
             "tp_hr_attendance/static/src/filter_profiles.js",
             "tp_hr_attendance/static/src/common.js",
             "tp_hr_attendance/static/src/live.js",
@@ -48,5 +54,5 @@
     },
     "post_init_hook": "post_init_hook",
     "installable": True,
-    "application": False,
+    "application": True,
 }

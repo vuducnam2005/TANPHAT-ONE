@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261125-001 — ATTENDANCE-APP-HOME-001: Sắp xếp Trang chủ 5 nhóm, đổi tên Yêu cầu phê duyệt và tách ứng dụng Chấm công riêng
+
+- **Trang chủ & Đổi tên hiển thị** (`tp_web_home 20.0.1.13.0`, `tp_reporting/static/src/registration.js`, `tp_request 20.0.1.2.0`, `tp_equipment 20.0.1.7.1`): cố định thứ tự 5 nhóm (`Nhân sự và chấm công` → `Báo cáo và phê duyệt` → `Phòng ban và đơn vị` → `Công cụ cá nhân` → `Kho`) qua `registerHomeSection`/`registerHomeModule`, bổ sung icon `clock` & `bar-chart`, bỏ nhóm rỗng `Vận hành nội bộ`, đổi tên ứng dụng Request thành **Yêu cầu phê duyệt** đồng bộ trên toàn bộ điểm điều hướng.
+- **Ứng dụng Chấm công độc lập & URL** (`tp_hr_attendance 20.0.4.0.0`, `tp_hr_workspace 20.0.1.24.0`, `tp_branding 20.0.2.3.0`): tạo menu gốc `tp_hr_attendance.menu_root`, chuyển toàn bộ menu chấm công khỏi sidebar TP HR, bổ sung `TpAttendanceSidebar` kế thừa `TpHrSidebar` với bộ nhớ `tp_att_ui:*` độc lập, chuyển tab `Công của tôi` trong Hồ sơ cá nhân sang ứng dụng Chấm công; chuẩn hóa 16 route `/app/cham-cong/...` kèm alias `/app/nhan-su/cham-cong/...` đồng bộ Python/JS; giữ nguyên dữ liệu, ENTI sync/ảnh/cron, xuất Excel, bridge Request và phân quyền 5 vai trò.
+- **Kiểm thử:** `py_compile`/XML/`node --check`/`git diff --check` PASS; Odoo `tp_branding` 34/34, `tp_request` 13/13, `tp_hr_attendance` access/correction/export/image sync PASS; Playwright `1440×900` & `390×844` 8/8 PASS (0 console/OWL error).
+
 ## CHG-20261123-011 — ATTENDANCE-CORRECTION-003: Áp PC server và xác minh render public
 
 - Commit `5a636d6a940d0e9d456240fdfa1808b20034fa70` đã push/áp PC server; `tp_hr_attendance 20.0.3.9.1`, `tp_request 20.0.1.1.1`, 11/11 source checksum khớp, upgrade exit 0/0 ERROR-CRITICAL. Backup `C:\TANPHAT-backups\attendance-correction003\corr003-20261123T171407`; snapshot nhân sự/tài khoản/quyền/ngày công/phiên/phiếu/request/base URL bất biến.

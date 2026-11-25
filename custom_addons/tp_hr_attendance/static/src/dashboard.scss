@@ -246,7 +246,8 @@ button.o_tp_att_ov_kpi {
     button.o_tp_att_ov_kpi, button.o_tp_att_ov_kpi:hover, button.o_tp_att_ov_kpi .o_more .oi { transform: none !important; transition: none; }
     .o_tp_att_ov_kpi.o_fresh, .o_tp_att_ov_recent_table tr.o_fresh, .o_tp_att_gd_table tr.o_fresh { box-shadow: inset 0 0 0 2px #facc15; }
 }
-.o_tp_hr_reduce_motion {
+.o_tp_hr_reduce_motion,
+.o_tp_att_reduce_motion {
     .o_tp_att_ov_kpi.o_fresh, .o_tp_att_ov_recent_table tr.o_fresh, .o_tp_att_gd_table tr.o_fresh { box-shadow: inset 0 0 0 2px #facc15; }
     button.o_tp_att_ov_kpi, button.o_tp_att_ov_kpi:hover, button.o_tp_att_ov_kpi .o_more .oi { transform: none !important; }
     .o_tp_att_gd_table { animation: none; }

@@ -4,7 +4,7 @@
         <div class="tp_req_page tp_req_admin_page">
             <div class="tp_req_header">
                 <div>
-                    <h1 class="tp_req_title">Quản trị Đề nghị &amp; Phê duyệt</h1>
+                    <h1 class="tp_req_title">Quản trị Yêu cầu phê duyệt</h1>
                     <p class="tp_req_subtitle">
                         Cấu hình danh mục loại đề nghị, tuyến phê duyệt tuần tự, người thực hiện sau duyệt và theo dõi toàn bộ hồ sơ công ty.
                     </p>

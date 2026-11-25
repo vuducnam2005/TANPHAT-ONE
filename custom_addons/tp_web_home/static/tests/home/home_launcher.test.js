@@ -23,6 +23,9 @@ import {
     HOME_MENU_XMLID,
     homeSections,
     normalizeSearch,
+    registerHomeModule,
+    registerHomeSection,
+    SECTIONS,
 } from "@tp_web_home/home/home_catalog";
 import { HomeLauncher } from "@tp_web_home/home/home_launcher";
 
@@ -128,9 +131,9 @@ describe("catalog", () => {
         expect(homeSections(coreOnlyCatalog).map((s) => s.key)).toEqual(["departments", "personal"]);
         expect(coreOnlyCatalog.admin.hr).toEqual([]);
 
-        // User with HR permission sees Quản lý nhân sự under Nhân sự và tuyển dụng (without placeholders).
+        // User with HR permission sees Quản lý nhân sự under Nhân sự và chấm công (without placeholders).
         const hrCatalog = buildCatalog(tree(KD, HR, DISCUSS), { isSystem: false });
-        expect(homeSections(hrCatalog).map((s) => s.key)).toEqual(["departments", "hr", "personal"]);
+        expect(homeSections(hrCatalog).map((s) => s.key)).toEqual(["hr", "departments", "personal"]);
         expect(hrCatalog.admin.hr.map((h) => h.name)).toEqual(["Quản lý nhân sự"]);
     });
 
@@ -142,9 +145,9 @@ describe("catalog", () => {
         expect(catalog.tools[2].href).toBe(undefined);
         // The panel lists the user's own menus only, in panel order (unknown apps keep server order).
         expect(keys(catalog.all)).toEqual([
-            KD.xmlid, HR.xmlid, DISCUSS.xmlid, CRM.xmlid, UNKNOWN.xmlid, SETTINGS.xmlid, APPS.xmlid,
+            HR.xmlid, KD.xmlid, DISCUSS.xmlid, CRM.xmlid, UNKNOWN.xmlid, SETTINGS.xmlid, APPS.xmlid,
         ]);
-        expect(homeSections(catalog).map((s) => s.key)).toEqual(["departments", "hr", "personal"]);
+        expect(homeSections(catalog).map((s) => s.key)).toEqual(["hr", "departments", "personal"]);
         // Admin tools require the user's own menus: no Settings/Apps without them.
         expect(keys(buildCatalog(tree(DISCUSS), { isSystem: true }).tools)).toEqual([ALL_APPS_KEY]);
     });
@@ -241,6 +244,94 @@ describe("catalog", () => {
         expect(font.icon).toEqual({ type: "font", icon: "fa fa-star", color: "#ffffff", background: "#71639e" });
         expect(fallback.icon.type).toBe("monogram");
     });
+
+    test("canonical 5-group order and card order stay deterministic regardless of registration order", () => {
+        const ATT = { id: 21, xmlid: "tp_hr_attendance.menu_root", name: "Chấm công", actionID: 921 };
+        const REP = { id: 22, xmlid: "tp_reporting.menu_root", name: "Báo cáo", actionID: 922 };
+        const REQ = { id: 23, xmlid: "tp_request.menu_root", name: "Yêu cầu phê duyệt", actionID: 923 };
+        const EQP = { id: 24, xmlid: "tp_equipment.menu_root", name: "Kho thiết bị văn phòng", actionID: 924 };
+
+        const savedSections = SECTIONS.map((s) => ({ ...s }));
+        const savedModules = ADMIN_MODULES.map((m) => ({ ...m }));
+        try {
+            // Register in reverse/arbitrary order + add an empty legacy "operations" section
+            registerHomeSection({ key: "operations", label: "Vận hành nội bộ", order: 45 });
+            registerHomeModule({
+                key: "equipment",
+                group: "warehouse",
+                order: 10,
+                requiresMenu: true,
+                name: "Kho thiết bị văn phòng",
+                icon: "monitor",
+                xmlid: EQP.xmlid,
+            });
+            registerHomeModule({
+                key: "tp_request",
+                group: "reporting",
+                order: 20,
+                requiresMenu: true,
+                name: "Yêu cầu phê duyệt",
+                icon: "request_check",
+                xmlid: REQ.xmlid,
+            });
+            registerHomeModule({
+                key: "reporting",
+                group: "reporting",
+                order: 10,
+                requiresMenu: true,
+                name: "Báo cáo",
+                icon: "bar-chart",
+                xmlid: REP.xmlid,
+            });
+            registerHomeModule({
+                key: "attendance",
+                group: "hr",
+                order: 20,
+                requiresMenu: true,
+                name: "Chấm công",
+                icon: "clock",
+                xmlid: ATT.xmlid,
+            });
+
+            const adminCat = buildCatalog(
+                tree(HOME, EQP, DISCUSS, CALENDAR, TODO, REQ, REP, KD, ATT, HR),
+                { isSystem: true }
+            );
+            const sections = homeSections(adminCat);
+            expect(sections.map((s) => [s.key, s.label])).toEqual([
+                ["hr", "Nhân sự và chấm công"],
+                ["reporting", "Báo cáo và phê duyệt"],
+                ["departments", "Phòng ban và đơn vị"],
+                ["personal", "Công cụ cá nhân"],
+                ["warehouse", "Kho"],
+            ]);
+            expect(sections[0].tiles.map((t) => t.name)).toEqual(["Quản lý nhân sự", "Chấm công", "Tuyển dụng"]);
+            expect(sections[1].tiles.map((t) => t.name)).toEqual(["Báo cáo", "Yêu cầu phê duyệt"]);
+            expect(sections[2].tiles.map((t) => t.name)).toEqual([
+                "Kế hoạch Kinh doanh",
+                "Phòng Thiết kế",
+                "Phòng Kỹ Thuật",
+                "Phòng BIM-QC",
+                "TADIC",
+            ]);
+            expect(sections[3].tiles.map((t) => t.name)).toEqual(["Việc cá nhân", "Lịch làm việc", "Trao đổi"]);
+            expect(sections[4].tiles.map((t) => t.name)).toEqual(["Kho thiết bị văn phòng"]);
+
+            // Regular employee without Kho or placeholders omits empty groups and placeholders
+            const empCat = buildCatalog(tree(HOME, DISCUSS, CALENDAR, TODO, REQ, REP, KD, ATT, HR), { isSystem: false });
+            const empSections = homeSections(empCat);
+            expect(empSections.map((s) => s.label)).toEqual([
+                "Nhân sự và chấm công",
+                "Báo cáo và phê duyệt",
+                "Phòng ban và đơn vị",
+                "Công cụ cá nhân",
+            ]);
+            expect(empSections[0].tiles.map((t) => t.name)).toEqual(["Quản lý nhân sự", "Chấm công"]);
+        } finally {
+            SECTIONS.splice(0, SECTIONS.length, ...savedSections);
+            ADMIN_MODULES.splice(0, ADMIN_MODULES.length, ...savedModules);
+        }
+    });
 });
 
 describe("launcher", () => {
@@ -322,19 +413,19 @@ describe("launcher", () => {
         expect("[role=status]").toHaveText("4 lối vào trên Trang chủ");
     });
 
-    test("employee with HR permission sees Nhân sự và tuyển dụng without admin placeholders", async () => {
+    test("employee with HR permission sees Nhân sự và chấm công without admin placeholders", async () => {
         asEmployee();
         defineMenus([HOME, KD, HR, DISCUSS]);
         await mountWithCleanup(HomeLauncher, PROPS);
         await animationFrame();
         expect(queryAllTexts(".tp-home-section h2")).toEqual([
+            "Nhân sự và chấm công",
             "Phòng ban và đơn vị",
-            "Nhân sự và tuyển dụng",
             "Công cụ cá nhân",
         ]);
         expect(queryAllTexts(".tp-name")).toEqual([
-            "Kế hoạch Kinh doanh",
             "Quản lý nhân sự",
+            "Kế hoạch Kinh doanh",
             "Trao đổi",
         ]);
         expect('[data-module="hr"] .tp-badge').toHaveText("Đang hoạt động");
