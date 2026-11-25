@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-25T08:09:47.080281+00:00",
-  "last_change_id": "CHG-20261125-004",
+  "updated_at": "2026-11-25T08:15:23.210205+00:00",
+  "last_change_id": "CHG-20261125-005",
   "code_digest": "3bd424eec70d3d861e0b5c69415b222c8cb49430cd478c7dd98cc3309f992bcb",
   "code_file_count": 830,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "39c9e2b67c31eb894794a8a8f5f3fd6c56a5e0cf2f4f9b4e1693d4b1932592c1",
-    "docs/CHANGELOG.md": "dec32d43625ed66baa6a0c41b1568c1a3baa85c169388352fdeeaf8ed995feda",
+    "docs/PROJECT_STATUS.md": "87654a76f2f7fe59ba248b3e98423972794c6dedaaf82381b58e225c2bb244a2",
+    "docs/CHANGELOG.md": "191414f469aa7d4b676952424ade5536e08e5f7d01471828fa618a5b98805671",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "node --check; XML parse; py_compile; git diff --check; Playwright 1440x900 & 390x844 15/15 cards PASS (0 description, 0 overlap, 0 console error)"
+    "PC server upgrade -u tp_web_home exit 0 (0 ERROR/CRITICAL); public https://tpone.tadic.vn/web/assets/ea60d84/web.assets_web.min.js & c89db5d CSS HTTP 200 verified"
   ]
 }
