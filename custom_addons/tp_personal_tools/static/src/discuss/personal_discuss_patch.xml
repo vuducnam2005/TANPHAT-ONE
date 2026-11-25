@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <!-- 1. Root Discuss Shell: Offline Banner + Single-Screen Mobile Switching -->
+    <t t-inherit="mail.Discuss" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('o-mail-Discuss')]" position="attributes">
+            <attribute name="class" add="tp-pt-scope o_tp_personal_discuss" separator=" "/>
+        </xpath>
+        <xpath expr="//div[hasclass('o-mail-Discuss')]" position="inside">
+            <div t-if="this.tpOnlineState?.isOffline" class="tp-discuss-offline-banner" role="status">
+                ⚠ Mất kết nối mạng — nội dung bạn đang soạn vẫn được giữ an toàn và có thể gửi lại khi có mạng.
+            </div>
+        </xpath>
+        <xpath expr="//MessagingMenu[@t-if='this.ui.isSmall']" position="replace">
+            <MessagingMenu t-if="this.ui.isSmall and !this.thread" state="this.menuState"/>
+            <DiscussContent t-elif="this.ui.isSmall and this.thread" thread="this.props.thread"/>
+        </xpath>
+    </t>
+
+    <!-- 2. Bus Connection Lost Alert in Vietnamese -->
+    <t t-inherit="mail.BusConnectionAlert" t-inherit-mode="extension">
+        <xpath expr="//span[hasclass('o-bus-ConnectionAlert-label')]" position="replace">
+            <span class="o-bus-ConnectionAlert-label lh-1">Đang kết nối lại thời gian thực… (nội dung soạn thảo được giữ nguyên)</span>
+        </xpath>
+    </t>
+
+    <!-- 3. Unified Single Left Sidebar inside DiscussApp (no 4-column split icon rail) -->
+    <t t-inherit="mail.MessagingMenu" t-inherit-mode="extension">
+        <xpath expr="//t[@t-call='mail.MessagingMenu-navigation']" position="replace">
+            <t t-if="!this.env.inDiscussApp" t-call="mail.MessagingMenu-navigation"/>
+        </xpath>
+
+        <xpath expr="//div[hasclass('o-mail-MessagingMenu-searchContainer')]" position="before">
+            <div t-if="this.env.inDiscussApp" class="tp-discuss-sidebar-top">
+                <div class="tp-discuss-brand-row">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="tp-discuss-brand-dot" aria-hidden="true"/>
+                        <h1 class="tp-discuss-heading mb-0">Trao đổi</h1>
+                    </div>
+                    <button type="button"
+                        class="tp-pt-btn tp-pt-btn-sm tp-pt-btn-indigo tp-discuss-new-btn"
+                        t-on-click="() => this.tpOpenCreateDialog('dm')">
+                        + Tạo mới
+                    </button>
+                </div>
+
+                <div class="tp-discuss-pill-bar" role="tablist" aria-label="Phân loại hội thoại">
+                    <button type="button"
+                        role="tab"
+                        t-att-aria-selected="this.tpActivePill === 'all'"
+                        t-att-class="'tp-discuss-pill ' + (this.tpActivePill === 'all' ? 'is-active' : '')"
+                        t-on-click="() => this.tpSelectPill('all')">
+                        Tất cả
+                    </button>
+                    <button type="button"
+                        role="tab"
+                        t-att-aria-selected="this.tpActivePill === 'unread'"
+                        t-att-class="'tp-discuss-pill ' + (this.tpActivePill === 'unread' ? 'is-active' : '')"
+                        t-on-click="() => this.tpSelectPill('unread')">
+                        Chưa đọc
+                        <span t-if="this.tpUnreadChatCounter &gt; 0" class="tp-discuss-pill-count" t-out="this.tpUnreadChatCounter"/>
+                    </button>
+                    <button type="button"
+                        role="tab"
+                        t-att-aria-selected="this.tpActivePill === 'direct'"
+                        t-att-class="'tp-discuss-pill ' + (this.tpActivePill === 'direct' ? 'is-active' : '')"
+                        t-on-click="() => this.tpSelectPill('direct')">
+                        Trực tiếp
+                    </button>
+                    <button type="button"
+                        role="tab"
+                        t-att-aria-selected="this.tpActivePill === 'group'"
+                        t-att-class="'tp-discuss-pill ' + (this.tpActivePill === 'group' ? 'is-active' : '')"
+                        t-on-click="() => this.tpSelectPill('group')">
+                        Nhóm
+                    </button>
+                    <button type="button"
+                        role="tab"
+                        t-att-aria-selected="this.tpActivePill === 'channel'"
+                        t-att-class="'tp-discuss-pill ' + (this.tpActivePill === 'channel' ? 'is-active' : '')"
+                        t-on-click="() => this.tpSelectPill('channel')">
+                        Kênh
+                        <span t-if="this.tpUnreadChannelCounter &gt; 0" class="tp-discuss-pill-count" t-out="this.tpUnreadChannelCounter"/>
+                    </button>
+                </div>
+            </div>
+        </xpath>
+    </t>
+
+    <!-- 4. DiscussContent Header Back Button (Mobile), Presence/Member Subline & Welcoming Empty State -->
+    <t t-inherit="mail.DiscussContent" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('o-mail-DiscussContent-headerInfo')]" position="before">
+            <button t-if="this.ui.isSmall"
+                type="button"
+                class="tp-pt-btn tp-pt-btn-sm tp-discuss-back-btn flex-shrink-0"
+                aria-label="Quay lại danh sách hội thoại"
+                t-on-click="() => this.tpBackToConversationList()">
+                ‹ Hội thoại
+            </button>
+        </xpath>
+
+        <xpath expr="//div[@t-if='this.showsChatLocalDateTime']" position="after">
+            <div t-if="this.tpHeaderMetaLabel" class="tp-discuss-header-subline" t-out="this.tpHeaderMetaLabel"/>
+        </xpath>
+
+        <xpath expr="//div[h4/b/i]" position="replace">
+            <div t-elif="(!this.ui.isSmall or this.isNotificationTabActive) and this.store.discuss.hasRestoredThread"
+                class="tp-discuss-empty-stage d-flex flex-grow-1 align-items-center justify-content-center w-100">
+                <div class="tp-discuss-empty-card">
+                    <div class="tp-discuss-empty-icon" aria-hidden="true">💬</div>
+                    <h3 class="tp-discuss-empty-title">Chọn người hoặc nhóm để bắt đầu trao đổi</h3>
+                    <p class="tp-discuss-empty-desc">
+                        Trao đổi công việc thời gian thực, gửi tệp đính kèm và chia sẻ liên kết Việc cá nhân hoặc Lịch làm việc an toàn theo phân quyền.
+                    </p>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <button type="button"
+                            class="tp-pt-btn tp-pt-btn-indigo"
+                            t-on-click="() => this.tpOpenCreateConversation('dm')">
+                            Nhắn tin trực tiếp
+                        </button>
+                        <button type="button"
+                            class="tp-pt-btn"
+                            t-on-click="() => this.tpOpenCreateConversation('group')">
+                            Tạo nhóm trao đổi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </t>
+
+    <!-- 5. Message Actions alignment when right-aligned inside DiscussApp -->
+    <t t-inherit="mail.Message" t-inherit-mode="extension">
+        <xpath expr="//t[@t-if='this.message.bubbleColor and this.message.hasTextContent and !this.env.inChatWindow']" position="attributes">
+            <attribute name="t-if">this.message.bubbleColor and this.message.hasTextContent and !this.env.inChatWindow and !this.isTpDiscussChannelMessage</attribute>
+        </xpath>
+        <xpath expr="//t[@t-if='this.message.bubbleColor and (!this.message.hasTextContent or this.env.inChatWindow)']" position="attributes">
+            <attribute name="t-if">this.message.bubbleColor and (!this.message.hasTextContent or this.env.inChatWindow or this.isTpDiscussChannelMessage)</attribute>
+        </xpath>
+    </t>
+</templates>

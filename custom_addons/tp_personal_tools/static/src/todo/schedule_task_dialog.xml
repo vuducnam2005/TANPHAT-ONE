@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_personal_tools.ScheduleTaskDialog">
+        <Dialog title="'Đưa công việc vào Lịch làm việc'" size="'md'">
+            <div class="tp-pt-scope d-flex flex-column gap-3">
+                <InlineErrors errors="this.fieldErrors" server="this.state.serverError" attempt="this.state.attempt"/>
+
+                <div class="p-2 rounded-3 border bg-light small text-muted">
+                    Liên kết trực tiếp với công việc gốc <strong class="text-dark" t-out="this.props.task?.name"/> (không nhân bản công việc và không tự đổi hạn hoàn thành của task).
+                </div>
+
+                <div t-if="this.state.conflicts.length" class="p-2 rounded-3 border" style="background: var(--tp-pt-warning-bg); border-color: var(--tp-pt-warning-border); color: #92400e;">
+                    <div class="fw-semibold small mb-1">Lưu ý trùng khung giờ bận:</div>
+                    <ul class="mb-0 ps-3 small">
+                        <li t-foreach="this.state.conflicts" t-as="cf" t-key="cf.event_id">
+                            <strong t-out="cf.who"/>: <span t-out="cf.time_label"/> — <span t-out="cf.title"/>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="tp-pt-field">
+                    <label class="tp-pt-label" for="tp_sched_name">
+                        Tiêu đề lịch <span class="tp-pt-req">*</span>
+                    </label>
+                    <input id="tp_sched_name"
+                           type="text"
+                           class="tp-pt-input"
+                           placeholder="Ví dụ: Hoàn thiện báo cáo tuần"
+                           t-model.proxy="this.state.name"
+                           t-att-disabled="this.state.busy"/>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <label class="d-inline-flex align-items-center gap-2 small fw-semibold cursor-pointer m-0">
+                        <input type="checkbox"
+                               t-model.proxy="this.state.allday"
+                               t-on-change="() => this.onTimeChange()"
+                               t-att-disabled="this.state.busy"/>
+                        <span>Sự kiện cả ngày</span>
+                    </label>
+                    <span class="small text-muted">Định dạng 24h</span>
+                </div>
+
+                <div t-if="!this.state.allday" class="row g-2">
+                    <div class="col-12 col-sm-6 tp-pt-field">
+                        <label class="tp-pt-label" for="tp_sched_start_iso">Bắt đầu <span class="tp-pt-req">*</span></label>
+                        <input id="tp_sched_start_iso"
+                               type="datetime-local"
+                               class="tp-pt-input"
+                               t-model.proxy="this.state.startIso"
+                               t-on-change="() => this.onTimeChange()"
+                               t-att-disabled="this.state.busy"/>
+                    </div>
+                    <div class="col-12 col-sm-6 tp-pt-field">
+                        <label class="tp-pt-label" for="tp_sched_stop_iso">Kết thúc <span class="tp-pt-req">*</span></label>
+                        <input id="tp_sched_stop_iso"
+                               type="datetime-local"
+                               class="tp-pt-input"
+                               t-model.proxy="this.state.stopIso"
+                               t-on-change="() => this.onTimeChange()"
+                               t-att-disabled="this.state.busy"/>
+                    </div>
+                </div>
+
+                <div t-else="" class="row g-2">
+                    <div class="col-12 col-sm-6 tp-pt-field">
+                        <label class="tp-pt-label" for="tp_sched_start_date">Từ ngày <span class="tp-pt-req">*</span></label>
+                        <input id="tp_sched_start_date"
+                               type="date"
+                               class="tp-pt-input"
+                               t-model.proxy="this.state.startDate"
+                               t-on-change="() => this.onTimeChange()"
+                               t-att-disabled="this.state.busy"/>
+                    </div>
+                    <div class="col-12 col-sm-6 tp-pt-field">
+                        <label class="tp-pt-label" for="tp_sched_stop_date">Đến ngày <span class="tp-pt-req">*</span></label>
+                        <input id="tp_sched_stop_date"
+                               type="date"
+                               class="tp-pt-input"
+                               t-model.proxy="this.state.stopDate"
+                               t-on-change="() => this.onTimeChange()"
+                               t-att-disabled="this.state.busy"/>
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-12 col-sm-6 tp-pt-field" t-if="this.state.myCalendars.length">
+                        <label class="tp-pt-label" for="tp_sched_cal">Lịch chứa sự kiện</label>
+                        <select id="tp_sched_cal" class="tp-pt-select" t-model.proxy="this.state.calendarId" t-att-disabled="this.state.busy">
+                            <option t-foreach="this.state.myCalendars" t-as="cal" t-key="cal.id" t-att-value="cal.id" t-out="cal.name"/>
+                        </select>
+                    </div>
+                    <div class="col-12 col-sm-6 tp-pt-field">
+                        <label class="tp-pt-label" for="tp_sched_privacy">Mức riêng tư</label>
+                        <select id="tp_sched_privacy" class="tp-pt-select" t-model.proxy="this.state.privacy" t-att-disabled="this.state.busy">
+                            <option value="private">Riêng tư (chỉ hiện Bận với người khác)</option>
+                            <option value="confidential">Nội bộ công ty</option>
+                            <option value="public">Công khai</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="tp-pt-field">
+                    <label class="tp-pt-label">Mời đồng nghiệp tham gia (không bắt buộc)</label>
+                    <TpColleaguePicker selected="this.state.invitedColleagues"
+                                       keyField="'partner_id'"
+                                       placeholder="'Tìm đồng nghiệp để mời cùng thực hiện…'"
+                                       disabled="this.state.busy"
+                                       onChange="(list) => this.onColleaguesChange(list)"/>
+                </div>
+
+                <div class="tp-pt-field">
+                    <label class="tp-pt-label" for="tp_sched_loc">Địa điểm</label>
+                    <input id="tp_sched_loc"
+                           type="text"
+                           class="tp-pt-input"
+                           placeholder="Ví dụ: Phòng họp tầng 3 hoặc làm việc tại chỗ"
+                           t-model.proxy="this.state.location"
+                           t-att-disabled="this.state.busy"/>
+                </div>
+            </div>
+            <t t-set-slot="footer">
+                <div class="tp-pt-scope d-flex justify-content-end gap-2 w-100">
+                    <button type="button" class="tp-pt-btn" t-on-click="this.props.close" t-att-disabled="this.state.busy">
+                        Hủy
+                    </button>
+                    <button type="button" class="tp-pt-btn tp-pt-btn-teal" t-on-click="() => this.onSave()" t-att-disabled="this.state.busy">
+                        <t t-out="this.primaryCtaLabel"/>
+                    </button>
+                </div>
+            </t>
+        </Dialog>
+    </t>
+</templates>

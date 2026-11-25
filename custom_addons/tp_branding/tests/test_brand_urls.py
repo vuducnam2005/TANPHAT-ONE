@@ -110,6 +110,7 @@ class TestBrandUrls(BaseCase):
                 '/app/thiet-bi',
                 '/app/de-nghi',
                 '/app/bao-cao',
+                '/app/ca-nhan',
                 '/app/quan-tri',
             )
             self.assertTrue(

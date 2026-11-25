@@ -13,6 +13,7 @@ BRAND-WHITELABEL-002, SYSTEM-URL-001:
   /app/thiet-bi/...
   /app/bao-cao/...
   /app/de-nghi/...
+  /app/ca-nhan/...
   /app/quan-tri/...
 * Two-way route adapter with action stack, detail records (/id), creation (/tao-moi),
   and full backward compatibility for legacy action-ID and slug URLs.
@@ -23,7 +24,7 @@ BRAND-WHITELABEL-002, SYSTEM-URL-001:
 
 Platform licence/copyright notices and technical identifiers are kept.
 """,
-    'version': '20.0.2.3.1',
+    'version': '20.0.2.4.0',
     'category': 'Hidden',
     'author': 'Tan Phat JSC',
     'license': 'LGPL-3',

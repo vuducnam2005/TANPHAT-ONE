@@ -60,8 +60,10 @@ patch(WebClient.prototype, {
             }
         }
 
-        // Post-load check: ensure action manager has active content
+        // Post-load check: ensure action manager has active content & clear any slow-boot recovery overlay
+        document.getElementById("tp-emergency-recovery")?.remove();
         browser.setTimeout(() => {
+            document.getElementById("tp-emergency-recovery")?.remove();
             const actionManager = document.querySelector(".o_action_manager");
             if (actionManager && actionManager.children.length === 0) {
                 console.warn("TANPHAT ONE: Action manager empty after boot, loading default home...");

@@ -1,0 +1,6 @@
+id,name,model_id,group_id/id,operation,domain
+access_tp_personal_operation_log_user,tp.personal.operation.log own access,tp.personal.operation.log,base.group_user,crud,"[('actor_id', '=', user.id)]"
+rule_tp_personal_operation_log_own,tp.personal.operation.log actor restriction,tp.personal.operation.log,,crud,"[('actor_id', '=', user.id)]"
+access_tp_personal_stage_rel_user,project.task.stage.personal own access,project.task.stage.personal,base.group_user,crud,"[('user_id', '=', user.id)]"
+rule_tp_personal_private_task_read,Personal task read isolation,project.task,,r,"['|', '|', ('project_id', '!=', False), ('is_template', '=', True), '|', ('user_ids', 'in', [user.id]), ('message_partner_ids', 'in', [user.partner_id.id])]"
+rule_tp_personal_private_task_write,Personal task write isolation,project.task,,cud,"['|', '|', ('project_id', '!=', False), ('is_template', '=', True), ('user_ids', 'in', [user.id])]"

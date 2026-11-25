@@ -1,0 +1,661 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_personal_tools.TodoWorkspace">
+        <div class="o_tp_personal_todo tp-pt-scope">
+            <!-- Top Toolbar -->
+            <header class="tp-todo-topbar">
+                <div class="tp-todo-brand-group">
+                    <button type="button"
+                            class="tp-pt-icon-btn d-lg-none"
+                            aria-label="Mở danh mục việc cá nhân"
+                            t-on-click="() => (this.state.mobileSidebarOpen = !this.state.mobileSidebarOpen)">
+                        <i class="oi" data-icon="menu" aria-hidden="true"/>
+                    </button>
+                    <span class="tp-todo-app-badge" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="4"/>
+                            <path d="M9 12l2 2 4-4"/>
+                        </svg>
+                    </span>
+                    <h1 class="tp-todo-page-title">Việc cá nhân</h1>
+                </div>
+
+                <div class="tp-todo-toolbar-right">
+                    <div class="tp-todo-search-box">
+                        <i class="oi tp-todo-search-icon" data-icon="search" aria-hidden="true"/>
+                        <input type="search"
+                               class="tp-pt-input tp-todo-search-input"
+                               placeholder="Tìm theo tiêu đề, nội dung, nhãn…"
+                               aria-label="Tìm kiếm công việc cá nhân"
+                               t-att-value="this.state.searchQuery"
+                               t-on-input="(ev) => this.onSearchInput(ev)"/>
+                        <button t-if="this.state.searchQuery"
+                                type="button"
+                                class="tp-todo-search-clear"
+                                aria-label="Xóa từ khóa tìm kiếm"
+                                t-on-click="() => this.clearSearch()">×</button>
+                    </div>
+
+                    <button type="button"
+                            class="tp-pt-btn tp-pt-btn-primary"
+                            t-on-click="() => this.openCreateDrawer(0)">
+                        <i class="oi" data-icon="add" aria-hidden="true"/>
+                        <span>Thêm việc</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="tp-todo-shell-body">
+                <!-- Mobile Backdrop for Left Sidebar -->
+                <div t-if="this.state.mobileSidebarOpen"
+                     class="tp-todo-sidebar-backdrop d-lg-none"
+                     t-on-click="() => (this.state.mobileSidebarOpen = false)"/>
+
+                <!-- Left Navigation Sidebar (Single App Sidebar) -->
+                <aside class="tp-todo-sidebar"
+                       t-att-class="{ 'is-mobile-open': this.state.mobileSidebarOpen }"
+                       aria-label="Phân nhóm việc cá nhân">
+                    <nav class="tp-todo-nav-list">
+                        <button t-foreach="this.BUCKETS"
+                                t-as="b"
+                                t-key="b.key"
+                                type="button"
+                                class="tp-todo-nav-item"
+                                t-att-class="{ 'is-active': this.state.bucket === b.key, 'is-danger': b.key === 'overdue' and this.bucketCount('overdue') > 0 }"
+                                t-att-aria-current="this.state.bucket === b.key ? 'page' : undefined"
+                                t-on-click="() => this.selectBucket(b.key)">
+                            <svg t-if="b.key === 'today'" class="tp-todo-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="1.5"/></svg>
+                            <svg t-elif="b.key === 'upcoming'" class="tp-todo-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+                            <svg t-elif="b.key === 'overdue'" class="tp-todo-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <svg t-elif="b.key === 'all'" class="tp-todo-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                            <svg t-elif="b.key === 'done'" class="tp-todo-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            <svg t-else="" class="tp-todo-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                            <span class="tp-todo-nav-label" t-out="b.label"/>
+                            <span class="tp-todo-nav-count" t-out="this.bucketCount(b.key)"/>
+                        </button>
+                    </nav>
+
+                    <div class="tp-todo-sidebar-stages">
+                        <div class="d-flex align-items-center justify-content-between mb-2 px-2">
+                            <span class="small fw-semibold text-muted">Giai đoạn của tôi</span>
+                            <button type="button"
+                                    class="tp-pt-icon-btn"
+                                    style="width: 28px; height: 28px;"
+                                    title="Thêm giai đoạn cá nhân"
+                                    aria-label="Thêm giai đoạn cá nhân"
+                                    t-on-click="() => (this.state.addingStage = !this.state.addingStage)">
+                                <i class="oi" data-icon="add" aria-hidden="true"/>
+                            </button>
+                        </div>
+                        <div t-if="this.state.addingStage" class="px-2 mb-2 d-flex flex-column gap-1">
+                            <input type="text"
+                                   class="tp-pt-input"
+                                   placeholder="Tên giai đoạn mới…"
+                                   t-model.proxy="this.state.newStageName"
+                                   t-on-keydown="(ev) => this.onNewStageKeydown(ev)"/>
+                            <div class="d-flex gap-1">
+                                <button type="button" class="tp-pt-btn tp-pt-btn-sm tp-pt-btn-primary flex-grow-1" t-on-click="() => this.createNewStage()">Tạo</button>
+                                <button type="button" class="tp-pt-btn tp-pt-btn-sm" t-on-click="() => (this.state.addingStage = false)">Hủy</button>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-column gap-1">
+                            <button t-foreach="this.state.stages"
+                                    t-as="st"
+                                    t-key="st.id"
+                                    type="button"
+                                    class="tp-todo-stage-pill"
+                                    t-att-class="{ 'is-active': (+this.state.appliedFilters.stage_id) === st.id }"
+                                    t-on-click="() => this.toggleSidebarStageFilter(st.id)">
+                                <span class="tp-todo-stage-dot"/>
+                                <span class="text-truncate flex-grow-1 text-start" t-out="st.name"/>
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Main Workspace Content -->
+                <main class="tp-todo-main">
+                    <!-- Compact Summary Strip + View/Filter Controls -->
+                    <div class="tp-todo-subbar">
+                        <div class="tp-todo-summary-strip" role="group" aria-label="Tóm tắt nhanh">
+                            <button type="button"
+                                    class="tp-todo-stat-pill"
+                                    t-att-class="{ 'is-active': this.state.bucket === 'today' }"
+                                    t-on-click="() => this.selectBucket('today')">
+                                <span>Cần làm hôm nay</span>
+                                <strong t-out="this.state.summary.today"/>
+                            </button>
+                            <button type="button"
+                                    class="tp-todo-stat-pill is-overdue"
+                                    t-att-class="{ 'is-active': this.state.bucket === 'overdue' }"
+                                    t-on-click="() => this.selectBucket('overdue')">
+                                <span>Quá hạn</span>
+                                <strong t-out="this.state.summary.overdue"/>
+                            </button>
+                            <button type="button"
+                                    class="tp-todo-stat-pill is-done"
+                                    t-att-class="{ 'is-active': this.state.bucket === 'done' }"
+                                    t-on-click="() => this.selectBucket('done')">
+                                <span>Đã hoàn thành</span>
+                                <strong t-out="this.state.summary.done_in_range"/>
+                            </button>
+                        </div>
+
+                        <div class="tp-todo-view-controls">
+                            <button type="button"
+                                    class="tp-pt-btn tp-pt-btn-sm"
+                                    t-att-class="{ 'tp-todo-filter-btn-active': this.state.filterPanelOpen or this.activeFilterChips.length > 0 }"
+                                    t-on-click="() => (this.state.filterPanelOpen = !this.state.filterPanelOpen)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                                <span>Bộ lọc</span>
+                                <span t-if="this.activeFilterChips.length" class="badge rounded-pill text-bg-primary" t-out="this.activeFilterChips.length"/>
+                            </button>
+
+                            <select class="tp-pt-select tp-todo-sort-select"
+                                    aria-label="Sắp xếp công việc"
+                                    t-att-value="this.state.sortBy"
+                                    t-on-change="(ev) => this.onSortChange(ev)">
+                                <option value="manual">Sắp xếp: Thứ tự thủ công</option>
+                                <option value="deadline">Sắp xếp: Hạn gần nhất</option>
+                                <option value="priority">Sắp xếp: Ưu tiên cao nhất</option>
+                                <option value="recent">Sắp xếp: Mới cập nhật</option>
+                            </select>
+
+                            <div class="tp-todo-view-switch" role="group" aria-label="Chế độ hiển thị">
+                                <button type="button"
+                                        class="tp-todo-switch-btn"
+                                        t-att-class="{ 'is-active': this.state.viewMode === 'board' }"
+                                        t-att-aria-pressed="this.state.viewMode === 'board' ? 'true' : 'false'"
+                                        t-on-click="() => this.setViewMode('board')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="12" rx="1"/></svg>
+                                    <span>Bảng việc</span>
+                                </button>
+                                <button type="button"
+                                        class="tp-todo-switch-btn"
+                                        t-att-class="{ 'is-active': this.state.viewMode === 'list' }"
+                                        t-att-aria-pressed="this.state.viewMode === 'list' ? 'true' : 'false'"
+                                        t-on-click="() => this.setViewMode('list')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                                    <span>Danh sách</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expandable Filter Panel (DEC-044 Standard) -->
+                    <section t-if="this.state.filterPanelOpen" class="tp-todo-filter-panel" aria-label="Bộ lọc việc cá nhân">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-6 col-md-2 tp-pt-field">
+                                <label class="tp-pt-label" for="tp_f_from">Hạn từ ngày</label>
+                                <input id="tp_f_from" type="date" class="tp-pt-input" t-model.proxy="this.state.pendingFilters.date_from"/>
+                            </div>
+                            <div class="col-6 col-md-2 tp-pt-field">
+                                <label class="tp-pt-label" for="tp_f_to">Đến ngày</label>
+                                <input id="tp_f_to" type="date" class="tp-pt-input" t-model.proxy="this.state.pendingFilters.date_to"/>
+                            </div>
+                            <div class="col-6 col-md-2 tp-pt-field">
+                                <label class="tp-pt-label" for="tp_f_prio">Mức ưu tiên</label>
+                                <select id="tp_f_prio" class="tp-pt-select" t-model.proxy="this.state.pendingFilters.priority">
+                                    <option value="">Tất cả</option>
+                                    <option value="3">Khẩn cấp</option>
+                                    <option value="2">Cao</option>
+                                    <option value="1">Trung bình</option>
+                                    <option value="0">Bình thường</option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-2 tp-pt-field">
+                                <label class="tp-pt-label" for="tp_f_tag">Nhãn</label>
+                                <select id="tp_f_tag" class="tp-pt-select" t-model.proxy="this.state.pendingFilters.tag_id">
+                                    <option value="0">Tất cả nhãn</option>
+                                    <option t-foreach="this.state.tags" t-as="tg" t-key="tg.id" t-att-value="tg.id" t-out="tg.name"/>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-2 tp-pt-field">
+                                <label class="tp-pt-label" for="tp_f_stage">Giai đoạn</label>
+                                <select id="tp_f_stage" class="tp-pt-select" t-model.proxy="this.state.pendingFilters.stage_id">
+                                    <option value="0">Tất cả giai đoạn</option>
+                                    <option t-foreach="this.state.stages" t-as="st" t-key="st.id" t-att-value="st.id" t-out="st.name"/>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-2 tp-pt-field">
+                                <label class="tp-pt-label" for="tp_f_comp">Hoàn thành</label>
+                                <select id="tp_f_comp" class="tp-pt-select" t-model.proxy="this.state.pendingFilters.completion">
+                                    <option value="">Mặc định theo mục</option>
+                                    <option value="open">Chưa hoàn thành</option>
+                                    <option value="done">Đã hoàn thành</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-4 tp-pt-field">
+                                <label class="tp-pt-label" for="tp_f_user">Người liên quan</label>
+                                <select id="tp_f_user" class="tp-pt-select" t-model.proxy="this.state.pendingFilters.assignee_id">
+                                    <option value="0">Tất cả người liên quan</option>
+                                    <option t-foreach="this.state.colleagues" t-as="col" t-key="col.user_id" t-att-value="col.user_id" t-out="col.name + (col.department ? ' — ' + col.department : '')"/>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-8 d-flex gap-2 justify-content-end">
+                                <button type="button" class="tp-pt-btn tp-pt-btn-sm" t-on-click="() => this.resetAllFilters()">Xóa bộ lọc</button>
+                                <button type="button" class="tp-pt-btn tp-pt-btn-sm tp-pt-btn-primary" t-on-click="() => this.applyFilters()">Áp dụng</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Active Filter Chips -->
+                    <div t-if="this.activeFilterChips.length" class="tp-todo-chip-bar">
+                        <span class="small text-muted fw-semibold">Đang lọc:</span>
+                        <span t-foreach="this.activeFilterChips" t-as="chip" t-key="chip.key" class="tp-todo-filter-chip">
+                            <span t-out="chip.label"/>
+                            <button type="button" t-att-aria-label="'Gỡ lọc ' + chip.label" t-on-click="() => this.removeFilterChip(chip.key)">×</button>
+                        </span>
+                        <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" t-on-click="() => this.resetAllFilters()">
+                            Xóa tất cả
+                        </button>
+                        <span class="small text-muted ms-auto"><t t-out="this.state.totalCount"/> công việc</span>
+                    </div>
+
+                    <!-- Manual Sort Guidance Banner when sorted by deadline/priority -->
+                    <div t-if="this.state.viewMode === 'board' and !this.state.manualSortEnabled" class="tp-todo-sort-hint">
+                        <i class="oi" data-icon="info" aria-hidden="true"/>
+                        <span>Đang sắp xếp tự động nên tạm khóa kéo thả thứ tự thẻ.</span>
+                        <button type="button" class="btn btn-link btn-sm p-0 fw-semibold ms-1" t-on-click="() => this.switchToManualSort()">
+                            Chuyển sang “Thứ tự thủ công”
+                        </button>
+                    </div>
+
+                    <!-- Inline Validation / Rollback Error Banner -->
+                    <div t-if="this.state.bannerError" class="px-3 pt-2">
+                        <InlineErrors errors="[]" server="this.state.bannerError" attempt="this.state.bannerAttempt"/>
+                    </div>
+
+                    <!-- Loading / Error States -->
+                    <div t-if="this.state.loading and !this.state.stages.length" class="tp-todo-state-box" role="status">
+                        <span>Đang tải công việc cá nhân…</span>
+                    </div>
+
+                    <div t-elif="this.state.loadError" class="tp-todo-state-box">
+                        <div class="text-center">
+                            <p class="fw-semibold text-danger mb-2" t-out="this.state.loadError"/>
+                            <button type="button" class="tp-pt-btn tp-pt-btn-sm" t-on-click="() => this.loadWorkspace()">Thử lại</button>
+                        </div>
+                    </div>
+
+                    <!-- A. KANBAN BOARD VIEW -->
+                    <div t-elif="this.state.viewMode === 'board'"
+                         class="tp-todo-board-scroll"
+                         t-ref="this.boardRef">
+                        <section t-foreach="this.state.stages"
+                                 t-as="stage"
+                                 t-key="stage.id"
+                                 class="tp-todo-column tp-todo-column-draggable"
+                                 t-att-class="{ 'is-folded': stage.fold }"
+                                 t-att-data-stage-id="stage.id">
+                            <t t-set="colTasks" t-value="this.tasksForStage(stage.id)"/>
+
+                            <header class="tp-todo-col-header">
+                                <span class="tp-todo-col-drag-handle d-none d-md-inline-flex" title="Kéo để đổi vị trí cột" aria-hidden="true">⋮⋮</span>
+
+                                <t t-if="this.state.renamingStageId === stage.id">
+                                    <input type="text"
+                                           class="tp-pt-input py-1 px-2"
+                                           style="min-height: 32px;"
+                                           t-model.proxy="this.state.renamingStageName"
+                                           t-on-blur="() => this.saveRenameStage(stage.id)"
+                                           t-on-keydown="(ev) => this.onRenameStageKeydown(stage.id, ev)"/>
+                                </t>
+                                <h2 t-else="" class="tp-todo-col-title" t-out="stage.name"/>
+
+                                <span class="tp-todo-col-count" t-out="colTasks.length"/>
+
+                                <div class="ms-auto d-flex align-items-center gap-1">
+                                    <button type="button"
+                                            class="tp-pt-icon-btn"
+                                            style="width: 30px; height: 30px;"
+                                            t-att-aria-label="'Thêm nhanh vào ' + stage.name"
+                                            title="Thêm việc nhanh"
+                                            t-on-click="() => this.startQuickAdd(stage.id)">
+                                        <i class="oi" data-icon="add" aria-hidden="true"/>
+                                    </button>
+                                    <div class="tp-todo-stage-menu-wrap position-relative">
+                                        <button type="button"
+                                                class="tp-pt-icon-btn"
+                                                style="width: 30px; height: 30px;"
+                                                t-att-aria-label="'Thao tác cột ' + stage.name"
+                                                t-on-click="() => (this.state.openStageMenuId = this.state.openStageMenuId === stage.id ? 0 : stage.id)">
+                                            <i class="oi" data-icon="more_vert" aria-hidden="true"/>
+                                        </button>
+                                        <div t-if="this.state.openStageMenuId === stage.id" class="tp-todo-dropdown-menu">
+                                            <button type="button" class="tp-todo-menu-item" t-on-click="() => this.startRenameStage(stage)">Đổi tên giai đoạn</button>
+                                            <button type="button" class="tp-todo-menu-item" t-on-click="() => this.toggleFoldStage(stage)">
+                                                <t t-out="stage.fold ? 'Mở rộng cột' : 'Thu gọn cột'"/>
+                                            </button>
+                                            <button t-if="this.state.stages.length > 1"
+                                                    type="button"
+                                                    class="tp-todo-menu-item text-danger"
+                                                    t-on-click="() => this.confirmDeleteStage(stage)">
+                                                Xóa giai đoạn
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </header>
+
+                            <!-- Inline Quick Add -->
+                            <div t-if="this.state.quickAddStageId === stage.id" class="tp-todo-quick-add">
+                                <input type="text"
+                                       class="tp-pt-input"
+                                       placeholder="Nhập tiêu đề rồi nhấn Enter…"
+                                       autofocus="autofocus"
+                                       t-model.proxy="this.state.quickAddTitle"
+                                       t-att-disabled="this.state.quickAddBusy"
+                                       t-on-keydown="(ev) => this.onQuickAddKeydown(stage.id, ev)"/>
+                                <div class="d-flex justify-content-end gap-1 mt-2">
+                                    <button type="button"
+                                            class="tp-pt-btn tp-pt-btn-sm"
+                                            t-on-click="() => (this.state.quickAddStageId = 0)">
+                                        Đóng
+                                    </button>
+                                    <button type="button"
+                                            class="tp-pt-btn tp-pt-btn-sm tp-pt-btn-primary"
+                                            t-att-disabled="this.state.quickAddBusy or !this.state.quickAddTitle.trim()"
+                                            t-on-click="() => this.submitQuickAdd(stage.id)">
+                                        <span t-out="this.state.quickAddBusy ? 'Đang tạo…' : 'Thêm'"/>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Column Cards -->
+                            <div t-if="!stage.fold" class="tp-todo-col-cards">
+                                <div t-if="!colTasks.length and this.state.quickAddStageId !== stage.id" class="tp-todo-col-empty">
+                                    <span>Chưa có việc trong giai đoạn này</span>
+                                    <button type="button" class="btn btn-link btn-sm p-0" t-on-click="() => this.startQuickAdd(stage.id)">
+                                        + Thêm việc
+                                    </button>
+                                </div>
+
+                                <article t-foreach="colTasks"
+                                         t-as="task"
+                                         t-key="task.id"
+                                         class="tp-todo-card tp-todo-card-draggable"
+                                         t-att-class="{ 'is-done': task.is_done }"
+                                         t-att-data-task-id="task.id"
+                                         tabindex="0"
+                                         t-on-click="(ev) => this.openTaskDetail(task, ev)"
+                                         t-on-keydown="(ev) => this.onCardKeydown(task, ev)">
+
+                                    <div class="tp-todo-card-top">
+                                        <span t-if="this.state.manualSortEnabled and !this.ui.isSmall"
+                                              class="tp-todo-drag-handle"
+                                              title="Kéo để sắp xếp hoặc chuyển giai đoạn"
+                                              aria-hidden="true">⋮⋮</span>
+
+                                        <button type="button"
+                                                class="tp-todo-check-toggle"
+                                                t-att-class="{ 'is-checked': task.is_done }"
+                                                t-att-aria-label="task.is_done ? 'Mở lại công việc' : 'Đánh dấu hoàn thành'"
+                                                t-on-click="(ev) => this.toggleTaskDone(task, ev)">
+                                            <i class="oi" t-att-data-icon="task.is_done ? 'check' : ''" aria-hidden="true"/>
+                                        </button>
+
+                                        <h3 class="tp-todo-card-title" t-out="task.name"/>
+
+                                        <div class="tp-todo-card-menu-wrap ms-auto">
+                                            <button type="button"
+                                                    class="tp-pt-icon-btn"
+                                                    style="width: 28px; height: 28px;"
+                                                    t-att-aria-label="'Menu thao tác ' + task.name"
+                                                    t-on-click="(ev) => (ev.stopPropagation(), this.state.openCardMenuId = this.state.openCardMenuId === task.id ? 0 : task.id)">
+                                                <i class="oi" data-icon="more_horiz" aria-hidden="true"/>
+                                            </button>
+                                            <div t-if="this.state.openCardMenuId === task.id" class="tp-todo-dropdown-menu is-end">
+                                                <button type="button" class="tp-todo-menu-item" t-on-click="() => (this.state.openCardMenuId = 0, this.openTaskDetail(task))">
+                                                    Mở chi tiết &amp; sửa
+                                                </button>
+                                                <button type="button" class="tp-todo-menu-item" t-on-click="() => this.scheduleTaskFromCard(task)">
+                                                    Đưa vào Lịch làm việc
+                                                </button>
+                                                <button type="button" class="tp-todo-menu-item" t-on-click="() => this.shareTaskFromCard(task)">
+                                                    Chia sẻ qua Trao đổi
+                                                </button>
+                                                <div class="tp-todo-menu-divider"/>
+                                                <div class="tp-todo-menu-heading">Chuyển sang giai đoạn…</div>
+                                                <t t-foreach="this.state.stages" t-as="stOpt" t-key="stOpt.id">
+                                                    <button t-if="stOpt.id !== task.stage_id"
+                                                            type="button"
+                                                            class="tp-todo-menu-item"
+                                                            t-on-click="() => this.moveTaskByMenu(task, stOpt.id, 'top')">
+                                                        → <t t-out="stOpt.name"/>
+                                                    </button>
+                                                </t>
+                                                <div class="tp-todo-menu-divider"/>
+                                                <div class="tp-todo-menu-heading">Di chuyển vị trí…</div>
+                                                <button type="button" class="tp-todo-menu-item" t-on-click="() => this.moveTaskByMenu(task, task.stage_id, 'top')">Lên đầu cột</button>
+                                                <button type="button" class="tp-todo-menu-item" t-on-click="() => this.moveTaskByMenu(task, task.stage_id, 'up')">Lên 1 vị trí</button>
+                                                <button type="button" class="tp-todo-menu-item" t-on-click="() => this.moveTaskByMenu(task, task.stage_id, 'down')">Xuống 1 vị trí</button>
+                                                <button type="button" class="tp-todo-menu-item" t-on-click="() => this.moveTaskByMenu(task, task.stage_id, 'bottom')">Xuống cuối cột</button>
+                                                <div class="tp-todo-menu-divider"/>
+                                                <button type="button" class="tp-todo-menu-item" t-on-click="() => this.archiveTaskFromCard(task)">
+                                                    <t t-out="task.active ? 'Lưu trữ' : 'Khôi phục'"/>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tags -->
+                                    <div t-if="task.tags.length" class="tp-todo-card-tags">
+                                        <span t-foreach="task.tags" t-as="tg" t-key="tg.id" class="tp-todo-tag-chip" t-out="tg.name"/>
+                                    </div>
+
+                                    <!-- Card Metadata Footer -->
+                                    <div class="tp-todo-card-meta">
+                                        <span t-if="task.priority !== '0'"
+                                              class="tp-todo-prio-badge"
+                                              t-att-data-prio="task.priority">
+                                            <i class="oi" data-icon="flag" aria-hidden="true"/>
+                                            <span t-out="task.priority_label"/>
+                                        </span>
+
+                                        <span t-if="task.deadline.status !== 'none'"
+                                              class="tp-todo-deadline-badge"
+                                              t-att-data-status="task.deadline.status">
+                                            <i class="oi" t-att-data-icon="task.deadline.status === 'overdue' ? 'warning' : (task.deadline.status === 'done' ? 'check_circle' : 'schedule')" aria-hidden="true"/>
+                                            <span t-out="task.deadline.label"/>
+                                        </span>
+
+                                        <span t-if="task.checklist_total > 0" class="tp-todo-meta-counter" title="Checklist">
+                                            <span>☑</span>
+                                            <t t-out="task.checklist_done + '/' + task.checklist_total"/>
+                                        </span>
+
+                                        <span t-if="task.attachment_count > 0" class="tp-todo-meta-counter" title="Tệp đính kèm">
+                                            <i class="oi" data-icon="attach_file" aria-hidden="true"/>
+                                            <t t-out="task.attachment_count"/>
+                                        </span>
+
+                                        <span t-if="task.comment_count > 0" class="tp-todo-meta-counter" title="Bình luận">
+                                            <span>💬</span>
+                                            <t t-out="task.comment_count"/>
+                                        </span>
+
+                                        <div t-if="task.other_assignees.length" class="tp-todo-card-avatars ms-auto">
+                                            <img t-foreach="task.other_assignees.slice(0, 3)"
+                                                 t-as="person"
+                                                 t-key="person.user_id"
+                                                 t-att-src="person.avatar_url"
+                                                 t-att-title="person.name"
+                                                 alt=""/>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- B. LIST VIEW -->
+                    <div t-else="" class="tp-todo-list-container">
+                        <div t-if="!this.state.tasks.length" class="tp-todo-empty-card">
+                            <div class="mb-2 text-primary" aria-hidden="true">
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M9 12l2 2 4-4"/></svg>
+                            </div>
+                            <h2 class="fs-5 fw-bold mb-1" t-out="this.activeFilterChips.length ? 'Không có công việc khớp bộ lọc' : 'Chưa có việc cá nhân'"/>
+                            <p class="small text-muted mb-3" t-out="this.activeFilterChips.length ? 'Hãy thử xóa bớt điều kiện lọc để xem toàn bộ công việc của bạn.' : 'Tạo công việc mới để theo dõi việc cần làm hôm nay, đặt hạn và đưa vào lịch.'"/>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button t-if="this.activeFilterChips.length" type="button" class="tp-pt-btn" t-on-click="() => this.resetAllFilters()">Xóa bộ lọc</button>
+                                <button type="button" class="tp-pt-btn tp-pt-btn-primary" t-on-click="() => this.openCreateDrawer(0)">+ Thêm việc</button>
+                            </div>
+                        </div>
+
+                        <t t-else="">
+                            <div class="tp-todo-table-wrap">
+                                <table class="tp-todo-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 48px;">Xong</th>
+                                            <th>Tên công việc</th>
+                                            <th style="width: 150px;">Giai đoạn cá nhân</th>
+                                            <th style="width: 120px;">Ưu tiên</th>
+                                            <th style="width: 165px;">Hạn hoàn thành</th>
+                                            <th style="width: 160px;">Nhãn</th>
+                                            <th style="width: 140px;">Người liên quan</th>
+                                            <th style="width: 90px;" class="text-end">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="this.state.tasks"
+                                            t-as="task"
+                                            t-key="task.id"
+                                            class="tp-todo-list-row"
+                                            t-att-class="{ 'is-done': task.is_done }"
+                                            t-on-click="(ev) => this.openTaskDetail(task, ev)">
+                                            <td>
+                                                <button type="button"
+                                                        class="tp-todo-check-toggle"
+                                                        t-att-class="{ 'is-checked': task.is_done }"
+                                                        t-att-aria-label="task.is_done ? 'Mở lại' : 'Đánh dấu hoàn thành'"
+                                                        t-on-click="(ev) => this.toggleTaskDone(task, ev)">
+                                                    <i class="oi" t-att-data-icon="task.is_done ? 'check' : ''" aria-hidden="true"/>
+                                                </button>
+                                            </td>
+                                            <td>
+                                                <div class="tp-todo-list-title" t-out="task.name"/>
+                                                <div t-if="task.checklist_total > 0 or task.attachment_count > 0 or task.comment_count > 0" class="d-flex gap-2 mt-1 small text-muted">
+                                                    <span t-if="task.checklist_total > 0">☑ <t t-out="task.checklist_done + '/' + task.checklist_total"/></span>
+                                                    <span t-if="task.attachment_count > 0">📎 <t t-out="task.attachment_count"/></span>
+                                                    <span t-if="task.comment_count > 0">💬 <t t-out="task.comment_count"/></span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="tp-todo-stage-badge" t-out="task.stage_name"/>
+                                            </td>
+                                            <td>
+                                                <span class="tp-todo-prio-badge" t-att-data-prio="task.priority" t-out="task.priority_label"/>
+                                            </td>
+                                            <td>
+                                                <span t-if="task.deadline.status !== 'none'"
+                                                      class="tp-todo-deadline-badge"
+                                                      t-att-data-status="task.deadline.status"
+                                                      t-out="task.deadline.label"/>
+                                                <span t-else="" class="text-muted small">—</span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    <span t-foreach="task.tags" t-as="tg" t-key="tg.id" class="tp-todo-tag-chip" t-out="tg.name"/>
+                                                    <span t-if="!task.tags.length" class="text-muted small">—</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-1" t-if="task.other_assignees.length">
+                                                    <img t-foreach="task.other_assignees.slice(0, 3)"
+                                                         t-as="p"
+                                                         t-key="p.user_id"
+                                                         t-att-src="p.avatar_url"
+                                                         t-att-title="p.name"
+                                                         class="rounded-circle"
+                                                         style="width: 24px; height: 24px; object-fit: cover;"
+                                                         alt=""/>
+                                                </div>
+                                                <span t-else="" class="text-muted small">Chỉ mình tôi</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="tp-todo-card-menu-wrap d-inline-block position-relative">
+                                                    <button type="button"
+                                                            class="tp-pt-icon-btn"
+                                                            t-att-aria-label="'Thao tác ' + task.name"
+                                                            t-on-click="(ev) => (ev.stopPropagation(), this.state.openCardMenuId = this.state.openCardMenuId === task.id ? 0 : task.id)">
+                                                        <i class="oi" data-icon="more_vert" aria-hidden="true"/>
+                                                    </button>
+                                                    <div t-if="this.state.openCardMenuId === task.id" class="tp-todo-dropdown-menu is-end">
+                                                        <button type="button" class="tp-todo-menu-item" t-on-click="() => (this.state.openCardMenuId = 0, this.openTaskDetail(task))">Mở chi tiết</button>
+                                                        <button type="button" class="tp-todo-menu-item" t-on-click="() => this.scheduleTaskFromCard(task)">Đưa vào lịch</button>
+                                                        <button type="button" class="tp-todo-menu-item" t-on-click="() => this.shareTaskFromCard(task)">Chia sẻ qua Trao đổi</button>
+                                                        <div class="tp-todo-menu-divider"/>
+                                                        <div class="tp-todo-menu-heading">Chuyển sang giai đoạn…</div>
+                                                        <t t-foreach="this.state.stages" t-as="stOpt" t-key="stOpt.id">
+                                                            <button t-if="stOpt.id !== task.stage_id"
+                                                                    type="button"
+                                                                    class="tp-todo-menu-item"
+                                                                    t-on-click="() => this.moveTaskByMenu(task, stOpt.id, 'top')">
+                                                                → <t t-out="stOpt.name"/>
+                                                            </button>
+                                                        </t>
+                                                        <div class="tp-todo-menu-divider"/>
+                                                        <div class="tp-todo-menu-heading">Di chuyển vị trí…</div>
+                                                        <button type="button" class="tp-todo-menu-item" t-on-click="() => this.moveTaskByMenu(task, task.stage_id, 'top')">Lên đầu giai đoạn</button>
+                                                        <button type="button" class="tp-todo-menu-item" t-on-click="() => this.moveTaskByMenu(task, task.stage_id, 'bottom')">Xuống cuối giai đoạn</button>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Standard Pagination Bar -->
+                            <footer class="tp-todo-pager">
+                                <div class="d-flex align-items-center gap-2 small text-muted">
+                                    <span>Tổng số: <strong class="text-dark" t-out="this.state.totalCount"/> công việc</span>
+                                    <span>· Hiển thị</span>
+                                    <select class="tp-pt-select py-1 px-2"
+                                            style="width: auto; min-height: 32px;"
+                                            aria-label="Số dòng trên trang"
+                                            t-att-value="this.state.pageSize"
+                                            t-on-change="(ev) => this.changePageSize(ev)">
+                                        <option t-foreach="this.PAGE_SIZES" t-as="sz" t-key="sz" t-att-value="sz" t-out="sz"/>
+                                    </select>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button"
+                                            class="tp-pt-btn tp-pt-btn-sm"
+                                            t-att-disabled="this.state.page &lt;= 1"
+                                            t-on-click="() => this.changePage(this.state.page - 1)">
+                                        ‹ Trước
+                                    </button>
+                                    <span class="small fw-semibold">
+                                        Trang <t t-out="this.state.page"/> / <t t-out="this.totalPages"/>
+                                    </span>
+                                    <button type="button"
+                                            class="tp-pt-btn tp-pt-btn-sm"
+                                            t-att-disabled="this.state.page >= this.totalPages"
+                                            t-on-click="() => this.changePage(this.state.page + 1)">
+                                        Sau ›
+                                    </button>
+                                </div>
+                            </footer>
+                        </t>
+                    </div>
+                </main>
+            </div>
+
+            <!-- Right Detail Drawer -->
+            <TpTodoDetailDrawer t-if="this.state.drawerOpen"
+                                t-key="this.state.drawerIsNew ? 'new' : ('task-' + this.state.drawerTaskId)"
+                                taskId="this.state.drawerTaskId"
+                                isNew="this.state.drawerIsNew"
+                                defaultStageId="this.state.drawerDefaultStageId"
+                                stages="this.state.stages"
+                                allTags="this.state.tags"
+                                onTagCreated="(tg) => this.onDrawerTagCreated(tg)"
+                                onSaved="() => this.loadWorkspace()"
+                                onMutated="() => this.loadWorkspace()"
+                                onClose="(resetUrl) => this.closeDrawer(resetUrl)"/>
+        </div>
+    </t>
+</templates>

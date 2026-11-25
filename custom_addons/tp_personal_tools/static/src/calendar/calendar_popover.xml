@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_personal_tools.CalendarPopover">
+        <div class="tp-pt-scope tp-cal-popover" role="dialog" aria-label="Tóm tắt sự kiện lịch">
+            <div class="tp-cal-popover-header">
+                <div class="min-w-0 flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span t-if="this.state.card?.calendar_name" class="tp-cal-popover-cal-badge" t-out="this.state.card.calendar_name"/>
+                        <span t-if="this.state.card?.privacy_label" class="tp-cal-popover-priv-badge" t-out="this.state.card.privacy_label"/>
+                    </div>
+                    <h5 class="tp-cal-popover-title mb-0" t-out="this.state.card?.name or this.title"/>
+                </div>
+                <button type="button" class="tp-pt-icon-btn flex-shrink-0" aria-label="Đóng" t-on-click="this.props.close">
+                    ✕
+                </button>
+            </div>
+
+            <div class="tp-cal-popover-body">
+                <div class="tp-cal-popover-row fw-semibold text-navy">
+                    <span class="tp-cal-pop-icon">🕒</span>
+                    <span t-out="this.state.card?.time_display or this.date"/>
+                </div>
+
+                <t t-if="this.state.card?.is_masked_private">
+                    <div class="tp-cal-private-notice mt-2">
+                        Sự kiện riêng tư — chỉ hiển thị khung giờ bận.
+                    </div>
+                </t>
+
+                <t t-elif="this.state.card">
+                    <div t-if="this.state.card.organizer?.name" class="tp-cal-popover-row">
+                        <span class="tp-cal-pop-icon">👤</span>
+                        <span>Chủ trì: <strong t-out="this.state.card.organizer.name"/></span>
+                    </div>
+
+                    <div t-if="this.state.card.location" class="tp-cal-popover-row">
+                        <span class="tp-cal-pop-icon">📍</span>
+                        <span t-out="this.state.card.location"/>
+                    </div>
+
+                    <div t-if="this.state.card.videocall_location" class="tp-cal-popover-row">
+                        <span class="tp-cal-pop-icon">📹</span>
+                        <a class="tp-cal-video-link" t-att-href="this.state.card.videocall_location" target="_blank" rel="noopener">
+                            Mở phòng họp trực tuyến
+                        </a>
+                    </div>
+
+                    <div t-if="this.state.card.linked_task" class="tp-cal-popover-row">
+                        <span class="tp-cal-pop-icon">☑</span>
+                        <a t-if="this.state.card.linked_task.url" class="tp-cal-video-link" t-att-href="this.state.card.linked_task.url">
+                            Việc cá nhân: <t t-out="this.state.card.linked_task.name"/>
+                        </a>
+                        <span t-else="">Việc: <t t-out="this.state.card.linked_task.name"/></span>
+                    </div>
+
+                    <div t-if="this.visibleAttendees.length > 1" class="tp-cal-popover-attendees mt-2">
+                        <div class="tp-cal-pop-sublabel">Người tham gia (<t t-out="this.state.card.attendees.length"/>):</div>
+                        <div class="tp-cal-pop-att-chips">
+                            <span t-foreach="this.visibleAttendees" t-as="att" t-key="att.attendee_id"
+                                t-attf-class="tp-cal-pop-att-chip is-{{att.state}}"
+                                t-att-title="att.name + ' — ' + att.state_label">
+                                <img t-if="att.avatar_url" t-att-src="att.avatar_url" alt=""/>
+                                <span class="text-truncate" t-out="att.name"/>
+                            </span>
+                            <span t-if="this.hiddenAttendeeCount > 0" class="tp-cal-pop-att-more">
+                                +<t t-out="this.hiddenAttendeeCount"/> người khác
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- RSVP Quick Actions for Invited Attendees -->
+                    <div t-if="this.state.card.is_attendee" class="tp-cal-popover-rsvp mt-2 pt-2 border-top">
+                        <div class="tp-cal-pop-sublabel mb-1">Phản hồi lời mời:</div>
+                        <div class="d-flex gap-1">
+                            <button type="button"
+                                t-att-class="'tp-pt-btn tp-pt-btn-sm flex-grow-1 ' + (this.state.card.my_status === 'accepted' ? 'tp-pt-btn-teal' : '')"
+                                t-att-disabled="this.state.rsvpBusy"
+                                t-on-click="() => this.onRespondStatus('accepted')">
+                                Chấp nhận
+                            </button>
+                            <button type="button"
+                                t-att-class="'tp-pt-btn tp-pt-btn-sm flex-grow-1 ' + (this.state.card.my_status === 'tentative' ? 'tp-pt-btn-primary' : '')"
+                                t-att-disabled="this.state.rsvpBusy"
+                                t-on-click="() => this.onRespondStatus('tentative')">
+                                Chưa chắc
+                            </button>
+                            <button type="button"
+                                t-att-class="'tp-pt-btn tp-pt-btn-sm flex-grow-1 ' + (this.state.card.my_status === 'declined' ? 'tp-pt-btn-danger' : '')"
+                                t-att-disabled="this.state.rsvpBusy"
+                                t-on-click="() => this.onRespondStatus('declined')">
+                                Từ chối
+                            </button>
+                        </div>
+                    </div>
+                </t>
+            </div>
+
+            <div class="tp-cal-popover-footer">
+                <button t-if="this.state.card and !this.state.card.is_masked_private"
+                    type="button"
+                    class="tp-pt-btn tp-pt-btn-sm"
+                    t-on-click="() => this.onShareToDiscuss()">
+                    Chia sẻ
+                </button>
+                <div class="d-flex align-items-center gap-1 ms-auto">
+                    <button t-if="this.state.card?.user_can_edit"
+                        type="button"
+                        class="tp-pt-btn tp-pt-btn-sm tp-pt-btn-danger o_cw_popover_delete"
+                        t-on-click="this.onDeleteEvent">
+                        Xóa
+                    </button>
+                    <button t-if="this.state.card?.user_can_edit"
+                        type="button"
+                        class="tp-pt-btn tp-pt-btn-sm tp-pt-btn-teal o_cw_popover_edit"
+                        t-on-click="this.onEditEvent">
+                        Chỉnh sửa
+                    </button>
+                    <button t-elif="this.state.card and !this.state.card.is_masked_private"
+                        type="button"
+                        class="tp-pt-btn tp-pt-btn-sm o_cw_popover_edit"
+                        t-on-click="this.onEditEvent">
+                        Xem chi tiết
+                    </button>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

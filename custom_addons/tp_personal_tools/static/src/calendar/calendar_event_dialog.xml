@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_personal_tools.CalendarEventDialog">
+        <Dialog title="this.dialogTitle" size="this.dialogSize">
+            <div class="tp-pt-scope tp-cal-dialog-body">
+                <t t-if="this.state.loading">
+                    <div class="tp-cal-dialog-loading py-4 text-center text-muted">
+                        Đang tải thông tin lịch làm việc…
+                    </div>
+                </t>
+
+                <t t-elif="this.state.loadError">
+                    <InlineErrors errors="[]" server="this.state.loadError"/>
+                </t>
+
+                <!-- 1. Read-only / Invited Attendee / Masked Private View -->
+                <t t-elif="this.state.readOnlyMode and this.state.detailCard">
+                    <InlineErrors errors="[]" server="this.state.serverError"/>
+                    <div class="tp-cal-readonly-card">
+                        <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
+                            <div>
+                                <h4 class="tp-cal-ro-title mb-1" t-out="this.state.detailCard.name"/>
+                                <div class="tp-cal-ro-time" t-out="this.state.detailCard.time_display"/>
+                            </div>
+                            <span class="tp-cal-privacy-pill" t-out="this.state.detailCard.privacy_label"/>
+                        </div>
+
+                        <div t-if="this.state.maskedPrivate" class="tp-cal-private-notice">
+                            Đây là khung giờ riêng tư của đồng nghiệp. Hệ thống chỉ hiển thị trạng thái bận/rảnh theo chính sách bảo mật.
+                        </div>
+
+                        <t t-else="">
+                            <div t-if="this.state.detailCard.organizer?.name" class="tp-cal-ro-row">
+                                <span class="tp-cal-ro-label">Chủ trì:</span>
+                                <span class="d-inline-flex align-items-center gap-2">
+                                    <img t-if="this.state.detailCard.organizer.avatar_url" class="tp-cal-avatar-xs" t-att-src="this.state.detailCard.organizer.avatar_url" alt=""/>
+                                    <strong t-out="this.state.detailCard.organizer.name"/>
+                                </span>
+                            </div>
+
+                            <div t-if="this.state.detailCard.location" class="tp-cal-ro-row">
+                                <span class="tp-cal-ro-label">Địa điểm:</span>
+                                <span t-out="this.state.detailCard.location"/>
+                            </div>
+
+                            <div t-if="this.state.detailCard.videocall_location" class="tp-cal-ro-row">
+                                <span class="tp-cal-ro-label">Phòng họp:</span>
+                                <a class="tp-pt-btn tp-pt-btn-sm tp-pt-btn-teal" t-att-href="this.state.detailCard.videocall_location" target="_blank" rel="noopener">
+                                    Tham gia cuộc họp trực tuyến
+                                </a>
+                            </div>
+
+                            <div t-if="this.state.detailCard.linked_task" class="tp-cal-ro-row">
+                                <span class="tp-cal-ro-label">Việc liên kết:</span>
+                                <a t-if="this.state.detailCard.linked_task.url" t-att-href="this.state.detailCard.linked_task.url" class="tp-cal-linked-task-chip" t-out="this.state.detailCard.linked_task.name"/>
+                                <span t-else="" class="tp-cal-linked-task-chip" t-out="this.state.detailCard.linked_task.name"/>
+                            </div>
+
+                            <div t-if="this.state.detailCard.attendees?.length" class="tp-cal-ro-section mt-3">
+                                <div class="tp-pt-label mb-2">Người tham gia (<t t-out="this.state.detailCard.attendees.length"/>)</div>
+                                <div class="tp-cal-attendee-list">
+                                    <div t-foreach="this.state.detailCard.attendees" t-as="att" t-key="att.attendee_id" class="tp-cal-attendee-item">
+                                        <img class="tp-cal-avatar-xs" t-att-src="att.avatar_url" alt=""/>
+                                        <span class="tp-cal-att-name" t-out="att.name"/>
+                                        <span t-attf-class="tp-cal-att-badge is-{{att.state}}" t-out="att.state_label"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div t-if="this.state.detailCard.notes_text" class="tp-cal-ro-section mt-3">
+                                <div class="tp-pt-label mb-1">Nội dung</div>
+                                <div class="tp-cal-ro-notes" t-out="this.state.detailCard.notes_text"/>
+                            </div>
+
+                            <div t-if="this.state.detailCard.is_attendee" class="tp-cal-rsvp-box mt-3">
+                                <div class="tp-pt-label mb-2">Phản hồi lời mời của bạn</div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button"
+                                        t-att-class="'tp-pt-btn tp-pt-btn-sm ' + (this.state.detailCard.my_status === 'accepted' ? 'tp-pt-btn-teal' : '')"
+                                        t-att-disabled="this.state.rsvpBusy"
+                                        t-on-click="() => this.onRespondRsvp('accepted')">
+                                        Chấp nhận
+                                    </button>
+                                    <button type="button"
+                                        t-att-class="'tp-pt-btn tp-pt-btn-sm ' + (this.state.detailCard.my_status === 'tentative' ? 'tp-pt-btn-primary' : '')"
+                                        t-att-disabled="this.state.rsvpBusy"
+                                        t-on-click="() => this.onRespondRsvp('tentative')">
+                                        Chưa chắc chắn
+                                    </button>
+                                    <button type="button"
+                                        t-att-class="'tp-pt-btn tp-pt-btn-sm ' + (this.state.detailCard.my_status === 'declined' ? 'tp-pt-btn-danger' : '')"
+                                        t-att-disabled="this.state.rsvpBusy"
+                                        t-on-click="() => this.onRespondRsvp('declined')">
+                                        Từ chối
+                                    </button>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+
+                <!-- 2. Create / Edit Form -->
+                <t t-else="">
+                    <InlineErrors errors="this.fieldErrors" server="this.state.serverError" attempt="this.state.attempt"/>
+
+                    <div class="tp-cal-form-grid">
+                        <!-- Linked Personal Task Notice -->
+                        <div t-if="this.state.detailCard?.linked_task" class="tp-cal-linked-banner">
+                            <span>Liên kết từ Việc cá nhân:</span>
+                            <a t-if="this.state.detailCard.linked_task.url" t-att-href="this.state.detailCard.linked_task.url" class="fw-semibold" t-out="this.state.detailCard.linked_task.name"/>
+                            <strong t-else="" t-out="this.state.detailCard.linked_task.name"/>
+                            <small class="text-muted">(Đổi giờ lịch không tự sửa hạn hoàn thành công việc)</small>
+                        </div>
+
+                        <!-- Title -->
+                        <div class="tp-pt-field">
+                            <label class="tp-pt-label" for="tp_cal_ev_name">
+                                Tiêu đề lịch làm việc <span class="tp-pt-req">*</span>
+                            </label>
+                            <input id="tp_cal_ev_name"
+                                type="text"
+                                t-att-class="'tp-pt-input ' + (this.hasFieldError('tp_cal_ev_name') ? 'is-invalid' : '')"
+                                placeholder="Ví dụ: Họp giao ban đầu tuần, Khảo sát hiện trường…"
+                                t-model.proxy="this.state.name"
+                                t-on-input="() => this.markDirty()"
+                            />
+                            <div t-if="this.hasFieldError('tp_cal_ev_name')" class="tp-pt-field-error" t-out="this.fieldErrorMessage('tp_cal_ev_name')"/>
+                        </div>
+
+                        <!-- Calendar & All-day toggle -->
+                        <div class="tp-cal-form-row-2">
+                            <div class="tp-pt-field">
+                                <label class="tp-pt-label" for="tp_cal_ev_calendar">Lịch chứa sự kiện</label>
+                                <select id="tp_cal_ev_calendar"
+                                    class="tp-pt-select"
+                                    t-model.proxy="this.state.calendarId"
+                                    t-on-change="() => this.markDirty()">
+                                    <option t-foreach="this.state.writableCalendars" t-as="cal" t-key="cal.id" t-att-value="cal.id">
+                                        <t t-out="cal.name"/>
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="tp-pt-field justify-content-end">
+                                <label class="tp-cal-checkbox-row">
+                                    <input type="checkbox"
+                                        t-model.proxy="this.state.allday"
+                                        t-on-change="() => this.onTimeFieldChange()"/>
+                                    <span>Sự kiện cả ngày</span>
+                                </label>
+                                <div t-if="this.timeSummary24h" class="tp-cal-24h-hint" t-out="this.timeSummary24h"/>
+                            </div>
+                        </div>
+
+                        <!-- Start & End Date/Time -->
+                        <div t-if="this.state.allday" class="tp-cal-form-row-2">
+                            <div class="tp-pt-field">
+                                <label class="tp-pt-label" for="tp_cal_ev_start_date">
+                                    Ngày bắt đầu <span class="tp-pt-req">*</span>
+                                </label>
+                                <input id="tp_cal_ev_start_date"
+                                    type="date"
+                                    t-att-class="'tp-pt-input ' + (this.hasFieldError('tp_cal_ev_start_date') ? 'is-invalid' : '')"
+                                    t-model.proxy="this.state.startDate"
+                                    t-on-change="() => this.onTimeFieldChange()"/>
+                                <div t-if="this.hasFieldError('tp_cal_ev_start_date')" class="tp-pt-field-error" t-out="this.fieldErrorMessage('tp_cal_ev_start_date')"/>
+                            </div>
+                            <div class="tp-pt-field">
+                                <label class="tp-pt-label" for="tp_cal_ev_stop_date">
+                                    Ngày kết thúc <span class="tp-pt-req">*</span>
+                                </label>
+                                <input id="tp_cal_ev_stop_date"
+                                    type="date"
+                                    t-att-class="'tp-pt-input ' + (this.hasFieldError('tp_cal_ev_stop_date') ? 'is-invalid' : '')"
+                                    t-model.proxy="this.state.stopDate"
+                                    t-on-change="() => this.onTimeFieldChange()"/>
+                                <div t-if="this.hasFieldError('tp_cal_ev_stop_date')" class="tp-pt-field-error" t-out="this.fieldErrorMessage('tp_cal_ev_stop_date')"/>
+                            </div>
+                        </div>
+                        <div t-else="" class="tp-cal-form-row-2">
+                            <div class="tp-pt-field">
+                                <label class="tp-pt-label" for="tp_cal_ev_start_iso">
+                                    Bắt đầu (24h) <span class="tp-pt-req">*</span>
+                                </label>
+                                <input id="tp_cal_ev_start_iso"
+                                    type="datetime-local"
+                                    t-att-class="'tp-pt-input ' + (this.hasFieldError('tp_cal_ev_start_iso') ? 'is-invalid' : '')"
+                                    t-model.proxy="this.state.startIso"
+                                    t-on-change="() => this.onTimeFieldChange()"/>
+                                <div t-if="this.hasFieldError('tp_cal_ev_start_iso')" class="tp-pt-field-error" t-out="this.fieldErrorMessage('tp_cal_ev_start_iso')"/>
+                            </div>
+                            <div class="tp-pt-field">
+                                <label class="tp-pt-label" for="tp_cal_ev_stop_iso">
+                                    Kết thúc (24h) <span class="tp-pt-req">*</span>
+                                </label>
+                                <input id="tp_cal_ev_stop_iso"
+                                    type="datetime-local"
+                                    t-att-class="'tp-pt-input ' + (this.hasFieldError('tp_cal_ev_stop_iso') ? 'is-invalid' : '')"
+                                    t-model.proxy="this.state.stopIso"
+                                    t-on-change="() => this.onTimeFieldChange()"/>
+                                <div t-if="this.hasFieldError('tp_cal_ev_stop_iso')" class="tp-pt-field-error" t-out="this.fieldErrorMessage('tp_cal_ev_stop_iso')"/>
+                            </div>
+                        </div>
+
+                        <!-- Participants -->
+                        <div class="tp-pt-field">
+                            <label class="tp-pt-label">Mời đồng nghiệp tham gia</label>
+                            <TpColleaguePicker
+                                selected="this.state.invitedColleagues"
+                                keyField="'partner_id'"
+                                includeSelf="false"
+                                placeholder="'Tìm theo tên, phòng ban hoặc chức vụ (chỉ gửi lời mời khi bấm Lưu)…'"
+                                onChange="(list) => this.onColleaguesChange(list)"
+                            />
+                        </div>
+
+                        <!-- Non-blocking Schedule Conflict Warning -->
+                        <div t-if="this.state.conflicts.length" class="tp-cal-conflict-alert" role="status">
+                            <div class="fw-semibold mb-1">Lưu ý trùng khung giờ bận (<t t-out="this.state.conflicts.length"/>):</div>
+                            <ul class="mb-0 ps-3">
+                                <li t-foreach="this.state.conflicts" t-as="cf" t-key="cf.event_id">
+                                    <strong t-out="cf.who"/>: <span t-out="cf.time_label"/> — <span t-out="cf.title"/>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Location & Video Call -->
+                        <div class="tp-cal-form-row-2">
+                            <div class="tp-pt-field">
+                                <label class="tp-pt-label" for="tp_cal_ev_location">Địa điểm / Phòng họp</label>
+                                <input id="tp_cal_ev_location"
+                                    type="text"
+                                    class="tp-pt-input"
+                                    placeholder="Ví dụ: Phòng họp Tầng 3, Công trường…"
+                                    t-model.proxy="this.state.location"
+                                    t-on-input="() => this.markDirty()"/>
+                            </div>
+                            <div class="tp-pt-field">
+                                <label class="tp-pt-label">Họp trực tuyến</label>
+                                <label class="tp-cal-checkbox-row mb-1">
+                                    <input type="checkbox"
+                                        t-model.proxy="this.state.useDiscussVideocall"
+                                        t-on-change="() => this.markDirty()"/>
+                                    <span>Tạo phòng họp TANPHAT ONE</span>
+                                </label>
+                                <input t-if="!this.state.useDiscussVideocall"
+                                    type="url"
+                                    class="tp-pt-input"
+                                    placeholder="Hoặc dán liên kết họp trực tuyến khác…"
+                                    t-model.proxy="this.state.videocallLocation"
+                                    t-on-input="() => this.markDirty()"/>
+                            </div>
+                        </div>
+
+                        <!-- Privacy & Show As -->
+                        <div class="tp-cal-form-row-2">
+                            <div class="tp-pt-field">
+                                <label class="tp-pt-label" for="tp_cal_ev_privacy">Mức riêng tư</label>
+                                <select id="tp_cal_ev_privacy"
+                                    class="tp-pt-select"
+                                    t-model.proxy="this.state.privacy"
+                                    t-on-change="() => this.markDirty()">
+                                    <option value="public">Công khai nội bộ</option>
+                                    <option value="confidential">Chỉ nội bộ công ty</option>
+                                    <option value="members_only">Chỉ thành viên lịch</option>
+                                    <option value="private">Riêng tư (người khác chỉ thấy Bận)</option>
+                                </select>
+                            </div>
+                            <div class="tp-pt-field">
+                                <label class="tp-pt-label" for="tp_cal_ev_show_as">Trạng thái khung giờ</label>
+                                <select id="tp_cal_ev_show_as"
+                                    class="tp-pt-select"
+                                    t-model.proxy="this.state.showAs"
+                                    t-on-change="() => this.markDirty()">
+                                    <option value="busy">Bận</option>
+                                    <option value="free">Rảnh</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Reminders -->
+                        <div t-if="this.state.alarms.length" class="tp-pt-field">
+                            <label class="tp-pt-label">Nhắc lịch</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button t-foreach="this.state.alarms" t-as="al" t-key="al.id"
+                                    type="button"
+                                    t-att-class="'tp-cal-chip-toggle ' + (this.state.alarmIds.includes(al.id) ? 'is-selected' : '')"
+                                    t-on-click="() => this.toggleAlarm(al.id)"
+                                    t-out="al.name"/>
+                            </div>
+                        </div>
+
+                        <!-- Recurrence -->
+                        <div class="tp-cal-recurrence-block">
+                            <label class="tp-cal-checkbox-row">
+                                <input type="checkbox"
+                                    t-model.proxy="this.state.recurrency"
+                                    t-on-change="() => this.markDirty()"/>
+                                <span class="fw-semibold">Lặp lại định kỳ</span>
+                            </label>
+
+                            <div t-if="this.state.recurrency" class="tp-cal-recurrence-fields mt-2">
+                                <div class="tp-cal-form-row-3">
+                                    <div class="tp-pt-field">
+                                        <label class="tp-pt-label">Chu kỳ</label>
+                                        <select class="tp-pt-select" t-model.proxy="this.state.rruleTypeUi" t-on-change="() => this.markDirty()">
+                                            <option value="daily">Hàng ngày</option>
+                                            <option value="weekly">Hàng tuần</option>
+                                            <option value="monthly">Hàng tháng</option>
+                                            <option value="yearly">Hàng năm</option>
+                                        </select>
+                                    </div>
+                                    <div class="tp-pt-field">
+                                        <label class="tp-pt-label">Mỗi (khoảng)</label>
+                                        <input type="number" min="1" max="52" class="tp-pt-input" t-model.proxy="this.state.interval" t-on-change="() => this.markDirty()"/>
+                                    </div>
+                                    <div class="tp-pt-field">
+                                        <label class="tp-pt-label">Kết thúc lặp</label>
+                                        <select class="tp-pt-select" t-model.proxy="this.state.endType" t-on-change="() => this.markDirty()">
+                                            <option value="count">Theo số lần</option>
+                                            <option value="end_date">Đến ngày cụ thể</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <div t-if="this.state.endType === 'count'" class="tp-pt-field" style="max-width: 220px;">
+                                        <label class="tp-pt-label">Số lần lặp</label>
+                                        <input type="number" min="1" max="365" class="tp-pt-input" t-model.proxy="this.state.count" t-on-change="() => this.markDirty()"/>
+                                    </div>
+                                    <div t-else="" class="tp-pt-field" style="max-width: 240px;">
+                                        <label class="tp-pt-label" for="tp_cal_ev_until">Lặp đến hết ngày <span class="tp-pt-req">*</span></label>
+                                        <input id="tp_cal_ev_until"
+                                            type="date"
+                                            t-att-class="'tp-pt-input ' + (this.hasFieldError('tp_cal_ev_until') ? 'is-invalid' : '')"
+                                            t-model.proxy="this.state.until"
+                                            t-on-change="() => this.markDirty()"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Explicit Recurrence Scope Selector when editing an existing recurring event -->
+                            <div t-if="this.state.eventId and this.state.wasRecurring" class="tp-cal-recurrence-scope mt-3">
+                                <div class="tp-pt-label mb-1">Phạm vi áp dụng thay đổi</div>
+                                <div class="d-flex flex-column gap-1">
+                                    <label class="tp-cal-radio-row">
+                                        <input type="radio" name="tp_rec_scope" value="self_only"
+                                            t-att-checked="this.state.recurrenceUpdate === 'self_only'"
+                                            t-on-change="() => (this.state.recurrenceUpdate = 'self_only', this.markDirty())"/>
+                                        <span>Chỉ sự kiện lần này</span>
+                                    </label>
+                                    <label class="tp-cal-radio-row">
+                                        <input type="radio" name="tp_rec_scope" value="future_events"
+                                            t-att-checked="this.state.recurrenceUpdate === 'future_events'"
+                                            t-on-change="() => (this.state.recurrenceUpdate = 'future_events', this.markDirty())"/>
+                                        <span>Lần này và các lần tiếp theo</span>
+                                    </label>
+                                    <label class="tp-cal-radio-row">
+                                        <input type="radio" name="tp_rec_scope" value="all_events"
+                                            t-att-checked="this.state.recurrenceUpdate === 'all_events'"
+                                            t-on-change="() => (this.state.recurrenceUpdate = 'all_events', this.markDirty())"/>
+                                        <span>Toàn bộ chuỗi lịch lặp</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes / Agenda -->
+                        <div class="tp-pt-field">
+                            <label class="tp-pt-label" for="tp_cal_ev_notes">Nội dung / Ghi chú</label>
+                            <textarea id="tp_cal_ev_notes"
+                                class="tp-pt-textarea"
+                                placeholder="Nội dung chuẩn bị cuộc họp, tài liệu cần mang theo…"
+                                t-model.proxy="this.state.notes"
+                                t-on-input="() => this.markDirty()"/>
+                        </div>
+                    </div>
+                </t>
+            </div>
+
+            <t t-set-slot="footer">
+                <div class="tp-pt-scope d-flex flex-wrap align-items-center justify-content-between w-100 gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <button t-if="this.state.eventId and !this.state.readOnlyMode"
+                            type="button"
+                            class="tp-pt-btn tp-pt-btn-danger"
+                            t-att-disabled="this.state.busy"
+                            t-on-click="() => this.onRequestDelete()">
+                            Xóa sự kiện
+                        </button>
+                        <button t-if="this.state.eventId and !this.state.maskedPrivate"
+                            type="button"
+                            class="tp-pt-btn"
+                            t-on-click="() => this.onOpenShare()">
+                            Chia sẻ qua Trao đổi
+                        </button>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 ms-auto">
+                        <button type="button"
+                            class="tp-pt-btn"
+                            t-att-disabled="this.state.busy"
+                            t-on-click="() => this.onRequestClose()">
+                            <t t-if="this.state.readOnlyMode">Đóng</t>
+                            <t t-else="">Hủy</t>
+                        </button>
+                        <button t-if="!this.state.readOnlyMode and !this.state.loading and !this.state.loadError"
+                            type="button"
+                            class="tp-pt-btn tp-pt-btn-teal"
+                            t-att-disabled="this.state.busy"
+                            t-on-click="() => this.onSave()"
+                            t-out="this.primaryButtonLabel"/>
+                    </div>
+                </div>
+            </t>
+        </Dialog>
+    </t>
+</templates>

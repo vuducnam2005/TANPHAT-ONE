@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_personal_tools.ShareToDiscussDialog">
+        <Dialog title="'Chia sẻ qua Trao đổi'" size="'md'">
+            <div class="tp-pt-scope d-flex flex-column gap-3">
+                <InlineErrors errors="this.fieldErrors" server="this.state.serverError" attempt="this.state.attempt"/>
+
+                <div class="p-2 rounded-3 border bg-light small">
+                    <span class="text-muted">Mục chia sẻ: </span>
+                    <strong t-out="this.props.targetTitle || ('#' + this.props.targetId)"/>
+                    <div class="text-muted mt-1" style="font-size: 12px;">
+                        Người nhận chỉ mở được nội dung nếu tài khoản của họ có quyền xem bản ghi gốc.
+                    </div>
+                </div>
+
+                <div class="tp-pt-field">
+                    <label class="tp-pt-label" for="tp_share_channel_select">
+                        Hội thoại nhận <span class="tp-pt-req">*</span>
+                    </label>
+                    <select id="tp_share_channel_select"
+                            class="tp-pt-select"
+                            t-att-class="{ 'is-invalid': this.fieldErrors.length > 0 }"
+                            t-model.proxy="this.state.selectedChannelId"
+                            t-att-disabled="this.state.loading or this.state.busy">
+                        <option value="0">-- Chọn hội thoại --</option>
+                        <option t-foreach="this.state.channels"
+                                t-as="ch"
+                                t-key="ch.id"
+                                t-att-value="ch.id"
+                                t-out="ch.name + ' (' + ch.type_label + ')'"/>
+                    </select>
+                    <div t-if="!this.state.loading and !this.state.channels.length" class="small text-muted">
+                        Bạn chưa có hội thoại nào đang mở. Hãy mở công cụ Trao đổi để bắt đầu hội thoại trước.
+                    </div>
+                </div>
+
+                <div class="tp-pt-field">
+                    <label class="tp-pt-label" for="tp_share_note_input">Lời nhắn kèm theo</label>
+                    <textarea id="tp_share_note_input"
+                              class="tp-pt-textarea"
+                              placeholder="Ví dụ: Nhờ anh/chị xem giúp công việc này…"
+                              t-model.proxy="this.state.note"
+                              t-att-disabled="this.state.busy"/>
+                </div>
+            </div>
+            <t t-set-slot="footer">
+                <div class="tp-pt-scope d-flex justify-content-end gap-2 w-100">
+                    <button type="button" class="tp-pt-btn" t-on-click="this.props.close" t-att-disabled="this.state.busy">
+                        Hủy
+                    </button>
+                    <button type="button"
+                            class="tp-pt-btn tp-pt-btn-indigo"
+                            t-on-click="() => this.onSubmit()"
+                            t-att-disabled="this.state.busy or !this.state.channels.length">
+                        <span t-if="this.state.busy">Đang gửi…</span>
+                        <span t-else="">Gửi liên kết</span>
+                    </button>
+                </div>
+            </t>
+        </Dialog>
+    </t>
+</templates>

@@ -572,7 +572,41 @@ ROUTE_DEFINITIONS = [
     },
 
     # ------------------------------------------------------------------
-    # 8. Quản trị (quan-tri)
+    # 8. Công cụ cá nhân (ca-nhan)
+    # ------------------------------------------------------------------
+    {
+        "url": "/app/ca-nhan/cong-viec",
+        "action_xml_id": "tp_personal_tools.action_personal_todo",
+        "action_tag": "tp_personal_tools.todo_workspace",
+        "native_slug": "cong-viec-ca-nhan",
+        "name": "Việc cá nhân",
+        "module": "tp_personal_tools",
+        "has_detail": True,
+        "aliases": ["/app/to-do", "/app/cong-viec-ca-nhan"],
+    },
+    {
+        "url": "/app/ca-nhan/lich-lam-viec",
+        "action_xml_id": "calendar.action_calendar_event",
+        "model": "calendar.event",
+        "native_slug": "calendar",
+        "name": "Lịch làm việc",
+        "module": "calendar",
+        "has_detail": True,
+        "aliases": ["/app/calendar", "/app/lich-lam-viec"],
+    },
+    {
+        "url": "/app/ca-nhan/trao-doi",
+        "action_xml_id": "mail.action_discuss",
+        "action_tag": "mail.action_discuss",
+        "native_slug": "discuss",
+        "name": "Trao đổi",
+        "module": "mail",
+        "has_detail": True,
+        "aliases": ["/app/discuss", "/app/trao-doi"],
+    },
+
+    # ------------------------------------------------------------------
+    # 9. Quản trị (quan-tri)
     # ------------------------------------------------------------------
     {
         "url": "/app/quan-tri/cai-dat",

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_personal_tools.ColleaguePicker">
+        <div class="tp-pt-colleague-picker">
+            <div t-if="this.selectedItems.length" class="tp-pt-selected-chips">
+                <span t-foreach="this.selectedItems" t-as="person" t-key="person[this.selectedKeyField]" class="tp-pt-user-chip">
+                    <img t-if="person.avatar_url" t-att-src="person.avatar_url" alt=""/>
+                    <span t-out="person.name"/>
+                    <button t-if="!this.props.disabled and (!this.props.lockedId or person[this.selectedKeyField] !== this.props.lockedId)"
+                            type="button"
+                            class="tp-pt-chip-remove"
+                            t-att-aria-label="'Gỡ ' + person.name"
+                            t-on-click="() => this.removeItem(person)">×</button>
+                </span>
+            </div>
+            <input t-if="!this.props.disabled"
+                   type="text"
+                   class="tp-pt-input"
+                   t-att-id="this.props.inputId || undefined"
+                   t-att-placeholder="this.props.placeholder || 'Tìm theo tên, phòng ban hoặc chức vụ…'"
+                   t-model.proxy="this.state.query"
+                   t-on-focus="() => this.onFocus()"
+                   t-on-input="(ev) => this.onInput(ev)"
+                   t-on-keydown="(ev) => this.onKeydown(ev)"/>
+            <div t-if="this.state.open and !this.props.disabled" class="tp-pt-colleague-dropdown" role="listbox">
+                <div t-if="this.state.loading" class="px-3 py-2 small text-muted">
+                    Đang tìm đồng nghiệp…
+                </div>
+                <div t-elif="!this.availableResults.length" class="px-3 py-2 small text-muted">
+                    Không tìm thấy đồng nghiệp phù hợp.
+                </div>
+                <button t-else=""
+                        t-foreach="this.availableResults"
+                        t-as="colleague"
+                        t-key="colleague[this.selectedKeyField]"
+                        type="button"
+                        class="tp-pt-colleague-option"
+                        role="option"
+                        t-on-click="() => this.selectItem(colleague)">
+                    <span class="tp-pt-avatar-wrap">
+                        <img t-att-src="colleague.avatar_url" alt=""/>
+                        <span t-if="colleague.im_status === 'online' or colleague.im_status === 'away'"
+                              class="tp-pt-presence-dot"
+                              t-att-class="{ 'is-online': colleague.im_status === 'online', 'is-away': colleague.im_status === 'away' }"
+                              t-att-title="colleague.im_status === 'online' ? 'Đang trực tuyến' : 'Tạm vắng'"/>
+                    </span>
+                    <span class="tp-pt-colleague-meta">
+                        <div class="tp-pt-colleague-name" t-out="colleague.name"/>
+                        <div t-if="colleague.department or colleague.job_title" class="tp-pt-colleague-sub">
+                            <t t-out="[colleague.job_title, colleague.department].filter((x) => x).join(' · ')"/>
+                        </div>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </t>
+</templates>

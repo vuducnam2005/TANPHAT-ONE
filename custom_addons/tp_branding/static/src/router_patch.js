@@ -133,7 +133,18 @@ patch(router, {
                         }
 
                         let nativeSub = `/${nativeSegment}`;
-                        if (parsed.isNew || parsed.resId === "new") {
+                        if (route.action_tag === "mail.action_discuss" && typeof parsed.resId === "number") {
+                            if (!target.searchParams.has("active_id")) {
+                                target.searchParams.set("active_id", `discuss.channel_${parsed.resId}`);
+                            }
+                        } else if (
+                            route.action_xml_id === "calendar.action_calendar_event" &&
+                            typeof parsed.resId === "number"
+                        ) {
+                            if (!target.searchParams.has("event_id")) {
+                                target.searchParams.set("event_id", String(parsed.resId));
+                            }
+                        } else if (parsed.isNew || parsed.resId === "new") {
                             nativeSub += "/new";
                         } else if (typeof parsed.resId === "number") {
                             nativeSub += `/${parsed.resId}`;

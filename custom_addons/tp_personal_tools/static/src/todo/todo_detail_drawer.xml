@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_personal_tools.TodoDetailDrawer">
+        <div class="tp-todo-drawer-backdrop" t-on-click="() => this.requestClose()"/>
+        <aside class="tp-todo-drawer tp-pt-scope"
+               t-att-class="{ 'is-expanded': this.state.expanded }"
+               role="dialog"
+               aria-modal="true"
+               t-att-aria-label="this.props.isNew ? 'Thêm công việc cá nhân' : 'Chi tiết công việc cá nhân'"
+               t-ref="this.drawerRef">
+
+            <!-- Drawer Header -->
+            <header class="tp-todo-drawer-header">
+                <div class="d-flex align-items-center gap-2 min-w-0">
+                    <span class="tp-todo-drawer-badge">
+                        <t t-out="this.props.isNew ? 'Thêm việc mới' : (this.state.active ? 'Chi tiết công việc' : 'Đang lưu trữ')"/>
+                    </span>
+                    <span t-if="this.state.dirty" class="badge rounded-pill text-bg-warning">Chưa lưu</span>
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                    <button t-if="!this.props.isNew and this.state.id and !this.state.loadError"
+                            type="button"
+                            class="tp-pt-btn tp-pt-btn-sm d-none d-md-inline-flex"
+                            t-on-click="() => (this.state.expanded = !this.state.expanded)"
+                            t-att-aria-label="this.state.expanded ? 'Thu gọn khung chi tiết' : 'Mở rộng khung chi tiết'">
+                        <i class="oi" t-att-data-icon="this.state.expanded ? 'close_fullscreen' : 'open_in_full'" aria-hidden="true"/>
+                        <span t-out="this.state.expanded ? 'Thu gọn' : 'Mở rộng'"/>
+                    </button>
+                    <button type="button"
+                            class="tp-pt-icon-btn"
+                            aria-label="Đóng chi tiết công việc"
+                            title="Đóng (Esc)"
+                            t-on-click="() => this.requestClose()">
+                        <i class="oi" data-icon="close" aria-hidden="true"/>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Unsaved changes prompt -->
+            <div t-if="this.state.confirmClosePrompt" class="tp-todo-unsaved-bar" role="alert">
+                <div class="small fw-semibold">Bạn có thay đổi chưa lưu. Bạn muốn lưu lại trước khi đóng không?</div>
+                <div class="d-flex gap-2 flex-wrap mt-2">
+                    <button type="button" class="tp-pt-btn tp-pt-btn-sm tp-pt-btn-primary" t-on-click="() => this.onSave()">
+                        Lưu thay đổi
+                    </button>
+                    <button type="button" class="tp-pt-btn tp-pt-btn-sm tp-pt-btn-danger" t-on-click="() => this.discardAndClose()">
+                        Bỏ thay đổi
+                    </button>
+                    <button type="button" class="tp-pt-btn tp-pt-btn-sm" t-on-click="() => (this.state.confirmClosePrompt = false)">
+                        Tiếp tục chỉnh sửa
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading / Access Error States -->
+            <div t-if="this.state.loading" class="tp-todo-drawer-body d-flex align-items-center justify-content-center text-muted">
+                <span>Đang tải chi tiết công việc…</span>
+            </div>
+
+            <div t-elif="this.state.loadError" class="tp-todo-drawer-body">
+                <div class="p-4 rounded-3 border bg-white text-center">
+                    <i class="oi fs-2 text-danger mb-2 d-block" data-icon="lock" aria-hidden="true"/>
+                    <h3 class="fs-6 fw-bold mb-1">Không thể mở công việc này</h3>
+                    <p class="small text-muted mb-3" t-out="this.state.loadError"/>
+                    <button type="button" class="tp-pt-btn" t-on-click="() => this.discardAndClose()">Đóng</button>
+                </div>
+            </div>
+
+            <!-- Main Ordered Form Content (Sections 1 -> 9) -->
+            <div t-else="" class="tp-todo-drawer-body">
+                <InlineErrors errors="this.fieldErrors" server="this.state.serverError" attempt="this.state.attempt"/>
+
+                <!-- 1. Tiêu đề -->
+                <div class="tp-pt-field">
+                    <label class="tp-pt-label" for="tp_todo_drawer_name">
+                        Tiêu đề công việc <span class="tp-pt-req">*</span>
+                    </label>
+                    <input id="tp_todo_drawer_name"
+                           type="text"
+                           class="tp-pt-input tp-todo-title-input"
+                           t-att-class="{ 'is-invalid': this.fieldErrors.length > 0 }"
+                           placeholder="Ví dụ: Rà soát hồ sơ thiết kế cầu vượt"
+                           t-model.proxy="this.state.name"
+                           t-on-input="() => this.markDirty()"
+                           t-att-readonly="!this.state.canWrite"/>
+                </div>
+
+                <!-- 2. Hoàn thành / Ưu tiên / Giai đoạn cá nhân -->
+                <div class="row g-2 align-items-end">
+                    <div class="col-12 col-sm-4 tp-pt-field">
+                        <label class="tp-pt-label">Trạng thái</label>
+                        <button type="button"
+                                class="tp-pt-btn w-100 justify-content-start"
+                                t-att-class="{ 'tp-todo-status-done': this.state.isDone }"
+                                t-att-disabled="!this.state.canWrite"
+                                t-on-click="() => (this.state.isDone = !this.state.isDone, this.markDirty())">
+                            <i class="oi" t-att-data-icon="this.state.isDone ? 'check_circle' : 'radio_button_unchecked'" aria-hidden="true"/>
+                            <span t-out="this.state.isDone ? 'Đã hoàn thành' : 'Đang thực hiện'"/>
+                        </button>
+                    </div>
+                    <div class="col-6 col-sm-4 tp-pt-field">
+                        <label class="tp-pt-label" for="tp_todo_drawer_priority">Mức ưu tiên</label>
+                        <select id="tp_todo_drawer_priority"
+                                class="tp-pt-select"
+                                t-model.proxy="this.state.priority"
+                                t-on-change="() => this.markDirty()"
+                                t-att-disabled="!this.state.canWrite">
+                            <option value="0">Bình thường</option>
+                            <option value="1">Trung bình</option>
+                            <option value="2">Cao</option>
+                            <option value="3">Khẩn cấp</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-sm-4 tp-pt-field">
+                        <label class="tp-pt-label" for="tp_todo_drawer_stage">Giai đoạn cá nhân</label>
+                        <select id="tp_todo_drawer_stage"
+                                class="tp-pt-select"
+                                t-model.proxy="this.state.stageId"
+                                t-on-change="() => this.markDirty()"
+                                t-att-disabled="!this.state.canWrite">
+                            <option t-foreach="this.state.stages"
+                                    t-as="st"
+                                    t-key="st.id"
+                                    t-att-value="st.id"
+                                    t-out="st.name"/>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 3. Hạn hoàn thành & Liên thông Lịch -->
+                <div class="tp-todo-section-box">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-12 col-sm-7 tp-pt-field">
+                            <label class="tp-pt-label" for="tp_todo_drawer_deadline">Hạn hoàn thành</label>
+                            <div class="d-flex gap-1">
+                                <input id="tp_todo_drawer_deadline"
+                                       type="datetime-local"
+                                       class="tp-pt-input"
+                                       t-model.proxy="this.state.deadlineIso"
+                                       t-on-change="() => this.markDirty()"
+                                       t-att-disabled="!this.state.canWrite"/>
+                                <button t-if="this.state.deadlineIso and this.state.canWrite"
+                                        type="button"
+                                        class="tp-pt-btn tp-pt-btn-sm"
+                                        title="Bỏ đặt hạn"
+                                        aria-label="Xóa hạn hoàn thành"
+                                        t-on-click="() => (this.state.deadlineIso = '', this.markDirty())">
+                                    Xóa hạn
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-5" t-if="!this.props.isNew and this.state.id">
+                            <button type="button"
+                                    class="tp-pt-btn w-100"
+                                    style="border-color: #99f6e4; color: var(--tp-pt-cal-accent); background: var(--tp-pt-cal-soft);"
+                                    t-on-click="() => this.openScheduleDialog()">
+                                <i class="oi" data-icon="event" aria-hidden="true"/>
+                                <span>Đưa vào lịch</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div t-if="this.state.linkedEvents.length" class="mt-2 pt-2 border-top d-flex flex-column gap-1">
+                        <div class="small fw-semibold text-muted">Lịch làm việc đã liên kết:</div>
+                        <a t-foreach="this.state.linkedEvents"
+                           t-as="ev"
+                           t-key="ev.id"
+                           t-att-href="ev.url"
+                           class="tp-todo-linked-event-chip">
+                            <i class="oi" data-icon="calendar_today" aria-hidden="true"/>
+                            <strong t-out="ev.name"/>
+                            <span class="text-muted ms-auto" t-out="ev.when_label"/>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 4. Người liên quan -->
+                <div class="tp-pt-field">
+                    <label class="tp-pt-label">Người liên quan (chia sẻ công việc)</label>
+                    <TpColleaguePicker selected="this.state.assignees"
+                                       keyField="'user_id'"
+                                       lockedId="this.selfUserId"
+                                       disabled="!this.state.canWrite"
+                                       placeholder="'Mặc định riêng tư — tìm đồng nghiệp để chia sẻ…'"
+                                       onChange="(list) => this.onAssigneesChange(list)"/>
+                </div>
+
+                <!-- 5. Nhãn -->
+                <div class="tp-pt-field">
+                    <label class="tp-pt-label">Nhãn phân loại</label>
+                    <div class="d-flex flex-wrap gap-1 mb-1" t-if="this.state.allTags.length">
+                        <button t-foreach="this.state.allTags"
+                                t-as="tg"
+                                t-key="tg.id"
+                                type="button"
+                                class="tp-todo-tag-pill"
+                                t-att-class="{ 'is-selected': this.isTagSelected(tg.id) }"
+                                t-att-aria-pressed="this.isTagSelected(tg.id) ? 'true' : 'false'"
+                                t-on-click="() => this.toggleTag(tg.id)">
+                            <span t-out="tg.name"/>
+                        </button>
+                    </div>
+                    <div t-if="this.state.canWrite" class="d-flex gap-2">
+                        <input type="text"
+                               class="tp-pt-input"
+                               placeholder="Tạo nhãn mới (ví dụ: Hồ sơ, Họp tuần)…"
+                               t-model.proxy="this.state.newTagName"
+                               t-on-keydown="(ev) => this.onNewTagKeydown(ev)"/>
+                        <button type="button"
+                                class="tp-pt-btn tp-pt-btn-sm"
+                                t-att-disabled="!this.state.newTagName.trim()"
+                                t-on-click="() => this.createQuickTag()">
+                            + Thêm nhãn
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 6. Nội dung -->
+                <div class="tp-pt-field">
+                    <label class="tp-pt-label" for="tp_todo_drawer_note">Nội dung chi tiết</label>
+                    <textarea id="tp_todo_drawer_note"
+                              class="tp-pt-textarea"
+                              rows="4"
+                              placeholder="Ghi chú nội dung, tài liệu tham chiếu hoặc yêu cầu cần lưu ý…"
+                              t-model.proxy="this.state.noteText"
+                              t-on-input="() => this.markDirty()"
+                              t-att-readonly="!this.state.canWrite"/>
+                </div>
+
+                <!-- 7. Checklist công việc -->
+                <div class="tp-todo-section-box">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <label class="tp-pt-label">Danh sách kiểm tra (Checklist)</label>
+                        <span t-if="this.state.checklist.length" class="small text-muted">
+                            <t t-out="this.state.checklist.filter((c) => c.checked).length"/>/<t t-out="this.state.checklist.length"/> hoàn thành
+                        </span>
+                    </div>
+                    <div t-if="this.state.checklist.length" class="d-flex flex-column gap-1 mb-2">
+                        <div t-foreach="this.state.checklist"
+                             t-as="chk"
+                             t-key="chk.key"
+                             class="tp-todo-check-row"
+                             t-att-class="{ 'is-checked': chk.checked }">
+                            <input type="checkbox"
+                                   class="form-check-input mt-0 cursor-pointer"
+                                   t-att-checked="chk.checked"
+                                   t-att-disabled="!this.state.canWrite"
+                                   t-on-change="() => this.toggleChecklistItem(chk)"/>
+                            <input type="text"
+                                   class="tp-todo-check-text"
+                                   t-model.proxy="chk.text"
+                                   t-on-input="() => this.markDirty()"
+                                   t-att-readonly="!this.state.canWrite"/>
+                            <button t-if="this.state.canWrite"
+                                    type="button"
+                                    class="tp-pt-icon-btn"
+                                    style="width: 28px; height: 28px;"
+                                    aria-label="Xóa mục kiểm tra"
+                                    t-on-click="() => this.removeChecklistItem(chk.key)">
+                                <i class="oi" data-icon="close_small" aria-hidden="true"/>
+                            </button>
+                        </div>
+                    </div>
+                    <div t-if="this.state.canWrite" class="d-flex gap-2">
+                        <input type="text"
+                               class="tp-pt-input"
+                               placeholder="Nhập mục cần kiểm tra rồi nhấn Enter…"
+                               t-model.proxy="this.state.newCheckText"
+                               t-on-keydown="(ev) => this.onChecklistKeydown(ev)"/>
+                        <button type="button"
+                                class="tp-pt-btn tp-pt-btn-sm"
+                                t-att-disabled="!this.state.newCheckText.trim()"
+                                t-on-click="() => this.addChecklistItem()">
+                            Thêm mục
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 8. Tệp đính kèm -->
+                <div t-if="!this.props.isNew and this.state.id" class="tp-todo-section-box">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <label class="tp-pt-label">Tệp đính kèm (<t t-out="this.state.attachments.length"/>)</label>
+                        <div t-if="this.state.canWrite">
+                            <input type="file"
+                                   multiple="multiple"
+                                   class="d-none"
+                                   t-ref="this.fileInputRef"
+                                   t-on-change="(ev) => this.onFileSelected(ev)"/>
+                            <button type="button"
+                                    class="tp-pt-btn tp-pt-btn-sm"
+                                    t-att-disabled="this.state.uploading"
+                                    t-on-click="() => this.fileInputRef()?.click()">
+                                <i class="oi" data-icon="attach_file" aria-hidden="true"/>
+                                <span t-out="this.state.uploading ? 'Đang tải lên…' : 'Đính kèm tệp'"/>
+                            </button>
+                        </div>
+                    </div>
+                    <div t-if="!this.state.attachments.length" class="small text-muted">
+                        Chưa có tệp đính kèm.
+                    </div>
+                    <div t-else="" class="d-flex flex-column gap-2">
+                        <div t-foreach="this.state.attachments"
+                             t-as="att"
+                             t-key="att.id"
+                             class="tp-todo-attachment-row">
+                            <img t-if="att.is_image" t-att-src="att.preview_url" class="tp-todo-att-thumb" alt=""/>
+                            <i t-else="" class="oi fs-5 text-muted" data-icon="description" aria-hidden="true"/>
+                            <div class="min-w-0 flex-grow-1">
+                                <a t-att-href="att.preview_url" target="_blank" rel="noopener" class="fw-semibold small text-truncate d-block" t-out="att.name"/>
+                                <span class="text-muted" style="font-size: 11.5px;" t-out="this.formatBytes(att.file_size)"/>
+                            </div>
+                            <a t-att-href="att.download_url"
+                               class="tp-pt-icon-btn"
+                               title="Tải xuống"
+                               aria-label="Tải tệp xuống">
+                                <i class="oi" data-icon="download" aria-hidden="true"/>
+                            </a>
+                            <button t-if="att.can_delete"
+                                    type="button"
+                                    class="tp-pt-icon-btn text-danger"
+                                    title="Xóa tệp"
+                                    aria-label="Xóa tệp đính kèm"
+                                    t-on-click="() => this.removeAttachment(att)">
+                                <i class="oi" data-icon="delete" aria-hidden="true"/>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 9. Trao đổi / lịch sử -->
+                <div t-if="!this.props.isNew and this.state.id" class="tp-todo-section-box">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <label class="tp-pt-label">Trao đổi &amp; Lịch sử</label>
+                        <button type="button"
+                                class="tp-pt-btn tp-pt-btn-sm"
+                                t-on-click="() => this.openShareDialog()">
+                            <i class="oi" data-icon="share" aria-hidden="true"/>
+                            <span>Chia sẻ qua Trao đổi</span>
+                        </button>
+                    </div>
+                    <div class="d-flex gap-2 mb-3">
+                        <input type="text"
+                               class="tp-pt-input"
+                               placeholder="Viết ghi chú hoặc phản hồi trên công việc này…"
+                               t-model.proxy="this.state.commentDraft"
+                               t-att-disabled="this.state.postingComment"
+                               t-on-keydown="(ev) => this.onCommentKeydown(ev)"/>
+                        <button type="button"
+                                class="tp-pt-btn tp-pt-btn-primary tp-pt-btn-sm"
+                                t-att-disabled="this.state.postingComment or !this.state.commentDraft.trim()"
+                                t-on-click="() => this.postComment()">
+                            <span t-out="this.state.postingComment ? 'Đang gửi…' : 'Gửi'"/>
+                        </button>
+                    </div>
+                    <div t-if="!this.state.messages.length" class="small text-muted">
+                        Chưa có ghi chú trao đổi nào.
+                    </div>
+                    <div t-else="" class="d-flex flex-column gap-2">
+                        <div t-foreach="this.state.messages"
+                             t-as="msg"
+                             t-key="msg.id"
+                             class="tp-todo-msg-item">
+                            <img t-if="msg.author_avatar" t-att-src="msg.author_avatar" class="tp-todo-msg-avatar" alt=""/>
+                            <div class="min-w-0 flex-grow-1">
+                                <div class="d-flex align-items-baseline justify-content-between gap-2">
+                                    <strong class="small" t-out="msg.author_name"/>
+                                    <span class="text-muted" style="font-size: 11.5px;" t-out="msg.date_label"/>
+                                </div>
+                                <div class="small mt-1 text-break" style="white-space: pre-line;" t-out="msg.body_text"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drawer Footer Actions -->
+            <footer t-if="!this.state.loading and !this.state.loadError" class="tp-todo-drawer-footer">
+                <div t-if="!this.props.isNew and this.state.id and this.state.canWrite" class="d-flex gap-2">
+                    <button type="button"
+                            class="tp-pt-btn tp-pt-btn-sm"
+                            t-att-disabled="this.state.saving"
+                            t-on-click="() => this.toggleArchive()">
+                        <i class="oi" t-att-data-icon="this.state.active ? 'archive' : 'unarchive'" aria-hidden="true"/>
+                        <span t-out="this.state.active ? 'Lưu trữ' : 'Khôi phục'"/>
+                    </button>
+                    <button type="button"
+                            class="tp-pt-btn tp-pt-btn-sm tp-pt-btn-danger"
+                            t-att-disabled="this.state.saving"
+                            t-on-click="() => this.confirmDelete()">
+                        <i class="oi" data-icon="delete" aria-hidden="true"/>
+                        <span>Xóa</span>
+                    </button>
+                </div>
+                <div class="d-flex gap-2 ms-auto">
+                    <button type="button" class="tp-pt-btn" t-on-click="() => this.requestClose()" t-att-disabled="this.state.saving">
+                        Đóng
+                    </button>
+                    <button t-if="this.state.canWrite"
+                            type="button"
+                            class="tp-pt-btn tp-pt-btn-primary"
+                            t-on-click="() => this.onSave()"
+                            t-att-disabled="this.state.saving">
+                        <span t-if="this.state.saving">Đang lưu…</span>
+                        <span t-elif="this.props.isNew">Tạo công việc</span>
+                        <span t-else="">Lưu thay đổi</span>
+                    </button>
+                </div>
+            </footer>
+        </aside>
+    </t>
+</templates>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_personal_tools.ShareItemDialog">
+        <Dialog title="'Chia sẻ công việc hoặc lịch hẹn'" size="this.ui.isSmall ? 'fullscreen' : 'md'">
+            <div class="tp-pt-scope tp-discuss-dialog">
+                <div class="tp-discuss-mode-tabs mb-3" role="tablist">
+                    <button type="button"
+                        t-att-class="'tp-discuss-mode-tab ' + (this.state.kind === 'todo' ? 'is-active' : '')"
+                        t-on-click="() => this.switchKind('todo')">
+                        Việc cá nhân của tôi
+                    </button>
+                    <button type="button"
+                        t-att-class="'tp-discuss-mode-tab ' + (this.state.kind === 'calendar' ? 'is-active' : '')"
+                        t-on-click="() => this.switchKind('calendar')">
+                        Lịch làm việc của tôi
+                    </button>
+                </div>
+
+                <InlineErrors errors="this.fieldErrors" server="this.state.serverError" attempt="this.state.attempt"/>
+
+                <div class="tp-pt-field mb-2">
+                    <input type="search"
+                        class="tp-pt-input"
+                        t-att-placeholder="this.state.kind === 'todo' ? 'Tìm công việc cá nhân…' : 'Tìm sự kiện lịch làm việc…'"
+                        t-att-value="this.state.query"
+                        t-on-input="(ev) => this.onQueryInput(ev)"/>
+                </div>
+
+                <div class="tp-discuss-colleague-list mb-3">
+                    <div t-if="this.state.loading" class="text-center text-muted py-3 small">
+                        Đang tải danh sách…
+                    </div>
+                    <div t-elif="!this.state.items.length" class="text-center text-muted py-3 small">
+                        Không có mục nào phù hợp để chia sẻ.
+                    </div>
+                    <button t-else=""
+                        t-foreach="this.state.items"
+                        t-as="it"
+                        t-key="it.model + '_' + it.id"
+                        type="button"
+                        t-att-class="'tp-discuss-colleague-row ' + (this.state.selectedItem?.id === it.id ? 'is-selected' : '')"
+                        t-on-click="() => (this.state.selectedItem = it)">
+                        <div class="min-w-0 flex-grow-1 text-start">
+                            <div class="fw-semibold text-truncate" t-out="it.title"/>
+                            <div class="small text-muted" t-out="it.subtitle"/>
+                        </div>
+                        <span t-if="this.state.selectedItem?.id === it.id" class="tp-discuss-open-pill">Đã chọn ✓</span>
+                    </button>
+                </div>
+
+                <div class="tp-pt-field">
+                    <label class="tp-pt-label" for="tp_share_item_note">Lời nhắn kèm theo (không bắt buộc)</label>
+                    <input id="tp_share_item_note"
+                        type="text"
+                        class="tp-pt-input"
+                        placeholder="Ví dụ: Nhờ anh/chị xem lịch họp này…"
+                        t-model.proxy="this.state.note"/>
+                </div>
+                <div class="small text-muted mt-2">
+                    Lưu ý: Người nhận chỉ mở được chi tiết khi tài khoản của họ có quyền xem bản ghi gốc.
+                </div>
+            </div>
+
+            <t t-set-slot="footer">
+                <div class="tp-pt-scope d-flex justify-content-end gap-2 w-100">
+                    <button type="button" class="tp-pt-btn" t-att-disabled="this.state.busy" t-on-click="this.props.close">
+                        Hủy
+                    </button>
+                    <button type="button"
+                        class="tp-pt-btn tp-pt-btn-indigo"
+                        t-att-disabled="this.state.busy"
+                        t-on-click="() => this.onSendShare()">
+                        <t t-if="this.state.busy">Đang gửi…</t>
+                        <t t-else="">Gửi liên kết</t>
+                    </button>
+                </div>
+            </t>
+        </Dialog>
+    </t>
+</templates>

@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-25T08:15:23.210205+00:00",
-  "last_change_id": "CHG-20261125-005",
-  "code_digest": "3bd424eec70d3d861e0b5c69415b222c8cb49430cd478c7dd98cc3309f992bcb",
-  "code_file_count": 830,
+  "updated_at": "2026-11-25T10:43:26.644357+00:00",
+  "last_change_id": "CHG-20261125-006",
+  "code_digest": "2b834c69be79dc2dabf6c42efc81e920704f77ec3b9f2ec15f615cd4e75e28bf",
+  "code_file_count": 864,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "87654a76f2f7fe59ba248b3e98423972794c6dedaaf82381b58e225c2bb244a2",
-    "docs/CHANGELOG.md": "191414f469aa7d4b676952424ade5536e08e5f7d01471828fa618a5b98805671",
-    "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
+    "docs/PROJECT_STATUS.md": "0f82d30f306b18c3114d3e296df21da4345d1b31cf45b8d9bdbbf12b370e5f10",
+    "docs/CHANGELOG.md": "0c2e584a8432f7cda8987575dba54c9311be8927b882afdf02c5bf8a3f646571",
+    "AGENTS.md": "72c31b7b0d24828d2313203ad211348f916aec386e61ad31b478fb3f80ad4448",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
     "docs/ROADMAP.md": "eb762826b3aa52ff6c476bcf4a61100e2b1a1ff2c685680a9f0b5771b4b8aeca",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC server upgrade -u tp_web_home exit 0 (0 ERROR/CRITICAL); public https://tpone.tadic.vn/web/assets/ea60d84/web.assets_web.min.js & c89db5d CSS HTTP 200 verified"
+    "py_compile+XML+libsass+node --check PASS; Odoo TestPersonalToolsSuite+TestBrandUrls+TestStaffScope 22/22 PASS (0 failed); Playwright E2E + 7 viewports (1920..360) PASS (0 pageErrors, 0 consoleErrors)"
   ]
 }

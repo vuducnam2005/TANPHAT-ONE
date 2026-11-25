@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_personal_tools.CreateChatDialog">
+        <Dialog title="'Bắt đầu trao đổi mới'" size="this.dialogSize">
+            <div class="tp-pt-scope tp-discuss-dialog">
+                <!-- Mode Tabs -->
+                <div class="tp-discuss-mode-tabs mb-3" role="tablist">
+                    <button type="button"
+                        role="tab"
+                        t-att-aria-selected="this.state.mode === 'dm'"
+                        t-att-class="'tp-discuss-mode-tab ' + (this.state.mode === 'dm' ? 'is-active' : '')"
+                        t-on-click="() => this.switchMode('dm')">
+                        Tin nhắn trực tiếp
+                    </button>
+                    <button type="button"
+                        role="tab"
+                        t-att-aria-selected="this.state.mode === 'group'"
+                        t-att-class="'tp-discuss-mode-tab ' + (this.state.mode === 'group' ? 'is-active' : '')"
+                        t-on-click="() => this.switchMode('group')">
+                        Nhóm trao đổi
+                    </button>
+                    <button type="button"
+                        role="tab"
+                        t-att-aria-selected="this.state.mode === 'channel'"
+                        t-att-class="'tp-discuss-mode-tab ' + (this.state.mode === 'channel' ? 'is-active' : '')"
+                        t-on-click="() => this.switchMode('channel')">
+                        Kênh nội bộ
+                    </button>
+                </div>
+
+                <InlineErrors errors="this.fieldErrors" server="this.state.serverError" attempt="this.state.attempt"/>
+
+                <!-- 1. Direct Message Tab -->
+                <div t-if="this.state.mode === 'dm'" class="d-flex flex-column gap-2">
+                    <div class="tp-pt-field">
+                        <label class="tp-pt-label" for="tp_chat_dm_search">Tìm đồng nghiệp</label>
+                        <input id="tp_chat_dm_search"
+                            type="search"
+                            t-att-class="'tp-pt-input ' + (this.hasFieldError('tp_chat_dm_search') ? 'is-invalid' : '')"
+                            placeholder="Nhập họ tên, phòng ban hoặc chức vụ…"
+                            t-att-value="this.state.dmQuery"
+                            t-on-input="(ev) => this.onDmQueryInput(ev)"/>
+                    </div>
+
+                    <div class="tp-discuss-colleague-list">
+                        <div t-if="this.state.dmLoading" class="text-center text-muted py-3 small">
+                            Đang tìm đồng nghiệp…
+                        </div>
+                        <div t-elif="!this.state.dmColleagues.length" class="text-center text-muted py-3 small">
+                            Không tìm thấy đồng nghiệp phù hợp.
+                        </div>
+                        <button t-else=""
+                            t-foreach="this.state.dmColleagues"
+                            t-as="col"
+                            t-key="col.user_id"
+                            type="button"
+                            t-att-class="'tp-discuss-colleague-row ' + (this.state.selectedDmColleague?.user_id === col.user_id ? 'is-selected' : '')"
+                            t-att-disabled="this.state.busy"
+                            t-on-click="() => this.onPickDmColleague(col)">
+                            <div class="tp-discuss-avatar-box">
+                                <img t-att-src="col.avatar_url" alt=""/>
+                                <span t-if="col.im_status === 'online'" class="tp-discuss-status-dot is-online" title="Đang trực tuyến"/>
+                                <span t-elif="col.im_status === 'away'" class="tp-discuss-status-dot is-away" title="Tạm vắng"/>
+                            </div>
+                            <div class="min-w-0 flex-grow-1 text-start">
+                                <div class="fw-semibold text-truncate" t-out="col.name"/>
+                                <div t-if="col.subtitle" class="small text-muted text-truncate" t-out="col.subtitle"/>
+                            </div>
+                            <span class="tp-discuss-open-pill">Nhắn tin ›</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. Group Chat Tab -->
+                <div t-elif="this.state.mode === 'group'" class="d-flex flex-column gap-3">
+                    <div class="tp-pt-field">
+                        <label class="tp-pt-label" for="tp_chat_group_name">
+                            Tên nhóm trao đổi <span class="tp-pt-req">*</span>
+                        </label>
+                        <input id="tp_chat_group_name"
+                            type="text"
+                            t-att-class="'tp-pt-input ' + (this.hasFieldError('tp_chat_group_name') ? 'is-invalid' : '')"
+                            placeholder="Ví dụ: Tổ thiết kế cầu Nhơn Trạch, Nhóm thầu Q4…"
+                            t-model.proxy="this.state.groupName"/>
+                    </div>
+
+                    <div class="tp-pt-field">
+                        <label class="tp-pt-label">
+                            Chọn thành viên tham gia <span class="tp-pt-req">*</span>
+                        </label>
+                        <TpColleaguePicker
+                            selected="this.state.groupMembers"
+                            keyField="'user_id'"
+                            includeSelf="false"
+                            placeholder="'Tìm và thêm đồng nghiệp vào nhóm…'"
+                            onChange="(list) => (this.state.groupMembers = list)"
+                        />
+                    </div>
+
+                    <div class="tp-discuss-member-preview">
+                        <div class="small fw-semibold mb-1 text-navy">
+                            Danh sách thành viên khi tạo nhóm (<t t-out="this.state.groupMembers.length + 1"/>):
+                        </div>
+                        <div class="small text-muted">
+                            • <strong>Bạn</strong> (Trưởng nhóm)
+                            <t t-foreach="this.state.groupMembers" t-as="gm" t-key="gm.user_id">
+                                <br/>• <span class="text-dark fw-medium" t-out="gm.name"/>
+                                <span t-if="gm.department"> (<t t-out="gm.department"/>)</span>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Internal Channel Tab -->
+                <div t-else="" class="d-flex flex-column gap-3">
+                    <div class="tp-pt-field">
+                        <label class="tp-pt-label" for="tp_chat_channel_name">
+                            Tên kênh nội bộ <span class="tp-pt-req">*</span>
+                        </label>
+                        <input id="tp_chat_channel_name"
+                            type="text"
+                            t-att-class="'tp-pt-input ' + (this.hasFieldError('tp_chat_channel_name') ? 'is-invalid' : '')"
+                            placeholder="Ví dụ: thong-bao-ky-thuat, chia-se-tai-lieu…"
+                            t-model.proxy="this.state.channelName"/>
+                    </div>
+                    <div class="tp-pt-field">
+                        <label class="tp-pt-label" for="tp_chat_channel_desc">Mô tả mục đích kênh</label>
+                        <textarea id="tp_chat_channel_desc"
+                            class="tp-pt-textarea"
+                            placeholder="Mô tả ngắn gọn nội dung trao đổi của kênh nội bộ…"
+                            t-model.proxy="this.state.channelDescription"/>
+                    </div>
+                    <div class="small text-muted">
+                        Kênh nội bộ chỉ dành cho nhân sự có tài khoản nội bộ TANPHAT ONE.
+                    </div>
+                </div>
+            </div>
+
+            <t t-set-slot="footer">
+                <div class="tp-pt-scope d-flex justify-content-end gap-2 w-100">
+                    <button type="button" class="tp-pt-btn" t-att-disabled="this.state.busy" t-on-click="this.props.close">
+                        Hủy
+                    </button>
+                    <button t-if="this.state.mode !== 'dm' or this.state.selectedDmColleague"
+                        type="button"
+                        class="tp-pt-btn tp-pt-btn-indigo"
+                        t-att-disabled="this.state.busy"
+                        t-on-click="() => this.onSubmit()"
+                        t-out="this.primaryLabel"/>
+                </div>
+            </t>
+        </Dialog>
+    </t>
+</templates>

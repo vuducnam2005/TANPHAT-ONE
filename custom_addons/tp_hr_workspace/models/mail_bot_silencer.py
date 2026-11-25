@@ -48,10 +48,10 @@ class DiscussChannel(models.Model):
     _inherit = 'discuss.channel'
 
     @api.model
-    def _get_or_create_chat(self, partners_to, pin=False):
-        """Block creation of 1-on-1 direct chats with OdooBot."""
+    def _get_or_create_chat(self, partners_to, **kwargs):
+        """Block creation of 1-on-1 direct chats with OdooBot (Odoo 20 compatible signature)."""
         odoobot_id = self.env['ir.model.data']._xmlid_to_res_id('base.partner_root')
         partner_ids = [p.id if hasattr(p, 'id') else p for p in partners_to]
         if odoobot_id and odoobot_id in partner_ids:
             return self.browse()
-        return super()._get_or_create_chat(partners_to, pin=pin)
+        return super()._get_or_create_chat(partners_to)
