@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261125-007 — 2026-11-25 — PERSONAL-TOOLS-001: Biên bản sao lưu và triển khai PC server (`5d5eaefd`)
+
+- **Triển khai PC server (`192.168.1.73`, `tp_tanphat_dev`):** sao lưu nhị phân tại `C:\TANPHAT-backups\personal-tools001\pt001-20261125T175045` (`tp_tanphat_dev.dump`, `restore-list.txt` 16.423 dòng TOC, `source-pre.tar.gz`, `docker.odoo.conf`, `release-pt001.tar.gz`, `upgrade.log`); đối chiếu **45/45** tệp phát hành khớp SHA256 (`MISMATCHES=0`); chạy `-i tp_personal_tools -u tp_branding,tp_hr_workspace --without-demo=True --stop-after-init --no-http` đạt `rc=0, error_lines=0`; khởi động lại `tp-odoo` và xác nhận `http://127.0.0.1:8069/web/health` trả `200 {"status": "pass"}` (không chạm `tp-tunnel`, không sinh dữ liệu giả).
+- **Trạng thái kiểm tra public `https://tpone.tadic.vn`:** sau mốc `17:54:25`, máy chủ văn phòng `192.168.1.73` ngắt mạng (`https://tpone.tadic.vn` trả Cloudflare `530` origin offline, máy trạm ở mạng `192.168.100.247`), nên phiên chưa thực hiện được truy vấn `POST_SNAP` cuối và kiểm HTTPS ngoài qua tunnel; chờ máy chủ PC online lại để kiểm nhanh public URL và F5 trình duyệt. Bản ghi docs-only, không restart Odoo.
+
 ## CHG-20261125-006 — 2026-11-25 — PERSONAL-TOOLS-001: Thiết kế và triển khai hoàn chỉnh Việc cá nhân, Lịch làm việc và Trao đổi
 
 - **Addon mới `custom_addons/tp_personal_tools` (`20.0.1.0.0`):** xây dựng trọn bộ 3 công cụ cá nhân theo hệ thống thiết kế sáng TANPHAT ONE (`#16345B` navy, `#1766C0` xanh thương hiệu, `#0D8A7B` xanh teal lịch, `#4F46E5` indigo trao đổi, nền `#F4F7FB`) kế thừa hoàn toàn ORM/realtime/sortable/FullCalendar chuẩn Odoo 20 (`project.task`, `project.task.stage.personal`, `calendar.event`, `calendar.calendar`, `discuss.channel`, `mail.store`, `bus_service`); dùng chung `TpColleaguePicker`, `TpShareToDiscussDialog`, `InlineErrors` + `saveError` (`FORM-VALIDATION-001`) và bộ lọc/chip/phân trang `DEC-044`.
