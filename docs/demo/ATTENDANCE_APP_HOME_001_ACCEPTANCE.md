@@ -116,3 +116,27 @@ Không mở rộng nhóm quyền, không thêm `sudo()` vượt kiểm quyền, 
   - Mở **Quản lý nhân sự** hiển thị `#tp_hr_sidebar` không còn nhóm/mục chấm công; bấm tab **Công của tôi** trong Hồ sơ cá nhân chuyển sang `/app/cham-cong/cua-toi`.
   - Ứng dụng Request hiển thị đồng bộ **Yêu cầu phê duyệt** trên Trang chủ, Sidebar (`YC | Yêu cầu phê duyệt`), Tổng quan, Quản trị và tiêu đề tab.
   - Xuất Excel cá nhân `tp_export_mine` trả tệp `.xlsx` hợp lệ (`PK..`); nhân viên thường bị từ chối đọc `ir.config_parameter`.
+
+---
+
+## 5. Kết quả triển khai PC Server (`192.168.1.73`) & Kiểm chứng `https://tpone.tadic.vn`
+
+- **Commit phát hành:** `dd20b221cd0d00ffd3119c87665bece6a23f1def`
+- **Thư mục sao lưu trên PC server:** `C:\TANPHAT-backups\attendance-app-home001\atthome001-20261125T130637` (`tp_tanphat_dev.dump`, `restore-list.txt`, `filestore.tar.gz`, `source-pre.tar.gz`, `docker.odoo.conf`, `SHA256SUMS.json`, `deploy-result.json`).
+- **Kiểm tra gói phát hành & Upgrade:** **49/49** tệp khớp SHA256; one-off upgrade `-u tp_web_home,tp_branding,tp_hr_workspace,tp_hr_attendance,tp_equipment,tp_request` đạt `upgrade_exit = 0`, `log_errors = 0` (`0 ERROR/CRITICAL`).
+- **Bảo toàn dữ liệu & Nghiệp vụ trước → sau trên `tp_tanphat_dev`:**
+  - `employees_active = 39` (`roster_md5 = 0244ff48c83b82b7782121166853c695`)
+  - `users_active = 11`, `users_total = 32` (`groups_md5 = ce68a8d1fa566e6a8dacfdae874ab70f`)
+  - `att_days = 975` (`att_hours_md5 = 5548c7d2d49e2c1fcb5e9eac5a578079`), `att_sessions = 863`, `enti_days = 975`
+  - `enti_mapping = {"mapped": 39}`, `enti_images = 39`, `batches = 5`
+  - `corrections = 2` (`corrections_md5 = e8db0639b2266e87d2ef1b6a9e1953cf`), `locked_periods = 0`
+  - `requests = 4`, `bridged_requests = 2`
+  - Cron `ir_cron_enti_attendance_sync`: `active = true`, `interval = 1 minutes` (đồng bộ liên tục 39 nhân viên không gián đoạn)
+  - Menu: `att_menus_under_hr`: `13 → 0`, `att_root_exists`: `0 → 1`; phiên bản `tp_hr_attendance`: `20.0.4.0.0` (`application = true`).
+- **Kiểm chứng public `https://tpone.tadic.vn`:**
+  - `GET /web/health` → `200 {"status": "pass"}`
+  - `GET /app/cham-cong/tong-quan` → `303 -> /dang-nhap?redirect=%2Fapp%2Fcham-cong%2Ftong-quan%3F`
+  - `GET /app/nhan-su/cham-cong/tong-quan?dept=5` → `302 -> /app/cham-cong/tong-quan?dept=5`
+  - `GET /app/nhan-su/cham-cong/dieu-chinh/12?state=submitted` → `302 -> /app/cham-cong/dieu-chinh/12?state=submitted`
+  - Bundle mới phục vụ thực tế qua HTTPS: `/web/assets/ad67a02/web.assets_web.min.js` (`200`, 8.87 MB — có `Nhân sự và chấm công`, `Báo cáo và phê duyệt`, `Yêu cầu phê duyệt`, `TpAttendanceSidebar`, `/app/cham-cong/tong-quan`) và `/web/assets/2efe8e1/web.assets_web.min.css` (`200`, 1.71 MB — có `o_tp_att_shell`, `o_tp_att_reduce_motion`).
+  - Không thay đổi domain, DNS hoặc container `tp-tunnel`; không tạo user giả hoặc phiếu thử trên database vận hành.
