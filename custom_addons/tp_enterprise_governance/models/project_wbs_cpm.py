@@ -382,14 +382,19 @@ class ProjectTaskWbsCpm(models.Model):
     def action_update_wbs_progress(self, progress_pct, exec_reported=None):
         """Update execution progress — NEVER auto-marks volume_accepted or triggers payment (Mandatory Case #6)."""
         self.ensure_one()
-        self.check_access('write')
+        self.check_access('read')
+        if self.env.user not in self.sudo().user_ids:
+            if self.project_id:
+                self.project_id._tp_check_pm_or_admin()
+            else:
+                self.check_access('write')
         pct = max(min(float(progress_pct or 0.0), 100.0), 0.0)
         vals = {'tp_progress_pct': pct}
         if exec_reported is not None:
             vals['tp_state_exec_reported'] = bool(exec_reported)
         elif pct >= 100.0:
             vals['tp_state_exec_reported'] = True
-        self.write(vals)
+        self.sudo().write(vals)
         return {
             'progress_pct': self.tp_progress_pct,
             'exec_reported': self.tp_state_exec_reported,

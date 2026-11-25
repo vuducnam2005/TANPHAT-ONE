@@ -1,0 +1,32 @@
+id,name,model_id,group_id/id,operation,domain
+access_tp_rec_req_hr_mgr,Recruitment requisition HR manager,tp.recruitment.requisition,hr.group_hr_manager,crud,
+access_tp_rec_req_rec_user,Recruitment requisition officer,tp.recruitment.requisition,hr_recruitment.group_hr_recruitment_user,crud,
+access_tp_rec_req_orig_admin,Recruitment requisition orig admin,tp.recruitment.requisition,tp_admin_delegation.group_original_admin,crud,
+access_tp_rec_req_full_admin,Recruitment requisition full admin,tp.recruitment.requisition,tp_admin_delegation.group_full_admin,crud,
+access_tp_rec_req_system,Recruitment requisition system,tp.recruitment.requisition,base.group_system,crud,
+rule_tp_rec_req_company,Recruitment requisition company scope,tp.recruitment.requisition,,crud,"[('company_id', 'in', company_ids)]"
+access_tp_app_eval_hr_mgr,Applicant evaluation HR manager,tp.applicant.evaluation,hr.group_hr_manager,crud,
+access_tp_app_eval_rec_user,Applicant evaluation recruiter,tp.applicant.evaluation,hr_recruitment.group_hr_recruitment_user,crud,
+access_tp_app_eval_orig_admin,Applicant evaluation orig admin,tp.applicant.evaluation,tp_admin_delegation.group_original_admin,crud,
+access_tp_app_eval_full_admin,Applicant evaluation full admin,tp.applicant.evaluation,tp_admin_delegation.group_full_admin,crud,
+access_tp_app_eval_system,Applicant evaluation system,tp.applicant.evaluation,base.group_system,crud,
+rule_tp_app_eval_company,Applicant evaluation company scope,tp.applicant.evaluation,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_tp_field_checkin_own,Field checkin own read,tp.field.checkin,base.group_user,r,"[('employee_id.user_id', '=', user.id)]"
+access_tp_field_checkin_hr,Field checkin HR manager,tp.field.checkin,hr.group_hr_manager,r,
+access_tp_field_checkin_system,Field checkin system,tp.field.checkin,base.group_system,crud,
+rule_tp_field_checkin_company,Field checkin company scope,tp.field.checkin,,crud,"[('company_id', 'in', company_ids)]"
+access_tp_payroll_policy_hr_mgr,Payroll policy HR manager,tp.payroll.policy,hr.group_hr_manager,cru,
+access_tp_payroll_policy_orig_admin,Payroll policy orig admin,tp.payroll.policy,tp_admin_delegation.group_original_admin,crud,
+access_tp_payroll_policy_full_admin,Payroll policy full admin,tp.payroll.policy,tp_admin_delegation.group_full_admin,crud,
+access_tp_payroll_policy_system,Payroll policy system,tp.payroll.policy,base.group_system,crud,
+rule_tp_payroll_policy_company,Payroll policy company scope,tp.payroll.policy,,crud,"[('company_id', 'in', company_ids)]"
+access_tp_payroll_sheet_hr_mgr,Payroll input sheet HR manager,tp.payroll.input.sheet,hr.group_hr_manager,cru,
+access_tp_payroll_sheet_orig_admin,Payroll input sheet orig admin,tp.payroll.input.sheet,tp_admin_delegation.group_original_admin,crud,
+access_tp_payroll_sheet_full_admin,Payroll input sheet full admin,tp.payroll.input.sheet,tp_admin_delegation.group_full_admin,crud,
+access_tp_payroll_sheet_system,Payroll input sheet system,tp.payroll.input.sheet,base.group_system,crud,
+rule_tp_payroll_sheet_company,Payroll input sheet company scope,tp.payroll.input.sheet,,crud,"[('company_id', 'in', company_ids)]"
+access_tp_payroll_line_hr_mgr,Payroll input line HR manager,tp.payroll.input.line,hr.group_hr_manager,cru,
+access_tp_payroll_line_orig_admin,Payroll input line orig admin,tp.payroll.input.line,tp_admin_delegation.group_original_admin,crud,
+access_tp_payroll_line_full_admin,Payroll input line full admin,tp.payroll.input.line,tp_admin_delegation.group_full_admin,crud,
+access_tp_payroll_line_system,Payroll input line system,tp.payroll.input.line,base.group_system,crud,
+rule_tp_payroll_line_company,Payroll input line company scope,tp.payroll.input.line,,crud,"[('company_id', 'in', company_ids)]"

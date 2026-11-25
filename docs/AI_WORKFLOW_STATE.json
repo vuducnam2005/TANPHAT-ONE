@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-25T13:16:01.559029+00:00",
-  "last_change_id": "CHG-20261125-010",
-  "code_digest": "a9ab4ee467d33b14f4e624d0e5ce01160142097cb5487675cdc310c55074fcc0",
-  "code_file_count": 901,
+  "updated_at": "2026-11-25T13:55:24.650962+00:00",
+  "last_change_id": "CHG-20261125-011",
+  "code_digest": "a6b49258847b000e2ebb818f8215f3f94f48646cc3a961ff11e5319d6ed6877b",
+  "code_file_count": 918,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "78a02b567af3bef0e666431ea98ca7c2e3ce2b1ca94a74c9f2edefcf2b798cd2",
-    "docs/CHANGELOG.md": "95e57d5f4b88e50af46338534639f5b36d0d9d9e628a8bda0ee7579ab3e12147",
+    "docs/PROJECT_STATUS.md": "c1e384129a665a0a164254f199e07197c9fa1bcb46d9c0b8d8fa2582de9df567",
+    "docs/CHANGELOG.md": "8f56149b3c89798f419d9b86eeb44f1bee4b1566899cbfa87ba02fe5ea66d3dc",
     "AGENTS.md": "72c31b7b0d24828d2313203ad211348f916aec386e61ad31b478fb3f80ad4448",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "verify_addons.py PY/XML/QWeb/SCSS/JS PASS; Odoo /tp_enterprise_governance,/tp_branding:TestBrandUrls 18/18 PASS (0 failed, 0 errors)"
+    "Static PY/XML/QWeb/SCSS/JS PASS; Odoo /tp_enterprise_ops,/tp_enterprise_governance,/tp_digital_office,/tp_personal_tools,/tp_request,/tp_branding,/tp_hr_attendance 47/47 PASS (0 failed, 0 error); Playwright 11 routes x 6 viewports (1440..360px) PASS"
   ]
 }

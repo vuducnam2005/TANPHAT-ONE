@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_tp_recruitment_requisition" model="ir.sequence">
+            <field name="name">Đề xuất nhu cầu tuyển dụng TANPHAT ONE</field>
+            <field name="code">tp.recruitment.requisition</field>
+            <field name="prefix">TD-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="default_payroll_policy_pending" model="tp.payroll.policy">
+            <field name="name">Quy chế Tiền lương TANPHAT ONE (Chờ phê duyệt chính thức)</field>
+            <field name="state">pending_approval</field>
+        </record>
+    </data>
+</odoo>

@@ -112,12 +112,12 @@ class PersonalDiscussChannel(models.Model):
         if proj_su.user_id and proj_su.user_id.active and not proj_su.user_id.share:
             users |= proj_su.user_id
 
-        if "tp.project.participation" in self.env:
-            parts = self.env["tp.project.participation"].sudo().search(
+        if "tp.project.assignment" in self.env:
+            assignments = self.env["tp.project.assignment"].sudo().search(
                 [("project_id", "=", project.id), ("active", "=", True)]
             )
-            part_users = parts.mapped("user_id").filtered(lambda u: u.active and not u.share)
-            users |= part_users
+            assign_users = assignments.mapped("user_id").filtered(lambda u: u.active and not u.share)
+            users |= assign_users
 
         proj_tasks = self.env["project.task"].sudo().search(
             [("project_id", "=", project.id), ("active", "=", True)]

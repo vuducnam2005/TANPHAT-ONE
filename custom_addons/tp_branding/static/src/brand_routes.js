@@ -672,6 +672,48 @@ export const ROUTE_DEFINITIONS = [
         has_detail: false,
         aliases: [],
     },
+
+    // 12. Tuyển dụng, Thiết bị khảo sát, Đối soát lương & Trợ lý AI
+    {
+        url: "/app/tuyen-dung",
+        action_xml_id: "tp_enterprise_ops.action_recruitment_workspace",
+        action_tag: "tp_enterprise_ops.recruitment",
+        native_slug: "tuyen-dung",
+        name: "Tuyển dụng nhân sự",
+        module: "tp_enterprise_ops",
+        has_detail: false,
+        aliases: ["/app/tuyen-dung/ung-vien"],
+    },
+    {
+        url: "/app/thiet-bi/khao-sat",
+        action_xml_id: "tp_enterprise_ops.action_survey_equipment_workspace",
+        action_tag: "tp_enterprise_ops.survey_equipment",
+        native_slug: "thiet-bi-khao-sat",
+        name: "Thiết bị khảo sát & Kiểm định",
+        module: "tp_enterprise_ops",
+        has_detail: false,
+        aliases: [],
+    },
+    {
+        url: "/app/nhan-su/doi-soat-luong",
+        action_xml_id: "tp_enterprise_ops.action_payroll_reconcile_workspace",
+        action_tag: "tp_enterprise_ops.payroll_reconcile",
+        native_slug: "doi-soat-luong",
+        name: "Đối soát đầu vào Tiền lương",
+        module: "tp_enterprise_ops",
+        has_detail: false,
+        aliases: [],
+    },
+    {
+        url: "/app/dieu-hanh/tro-ly-ai",
+        action_xml_id: "tp_enterprise_ops.action_ai_assistant_workspace",
+        action_tag: "tp_enterprise_ops.ai_assistant",
+        native_slug: "tro-ly-ai",
+        name: "Trợ lý AI Điều hành",
+        module: "tp_enterprise_ops",
+        has_detail: false,
+        aliases: [],
+    },
 ];
 
 // Runtime maps for dynamic action ID resolution

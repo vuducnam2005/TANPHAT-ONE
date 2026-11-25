@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_enterprise_ops.Workspace">
+        <div class="tp-ops-shell">
+            <!-- Single Left Module Sidebar -->
+            <aside t-att-class="'tp-ops-sidebar ' + (this.state.mobileNavOpen ? 'is-open' : '')">
+                <button type="button" class="tp-ops-home-btn" t-on-click="this.goHome">
+                    <span>← Trang chủ TANPHAT ONE</span>
+                </button>
+                <button type="button"
+                        t-att-class="'tp-ops-nav-btn ' + (this.state.tab === 'recruitment' ? 'is-active' : '')"
+                        t-on-click="() => this.switchTab('recruitment')">
+                    <span>Tuyển dụng &amp; Tiếp nhận</span>
+                </button>
+                <button type="button"
+                        t-att-class="'tp-ops-nav-btn ' + (this.state.tab === 'payroll' ? 'is-active' : '')"
+                        t-on-click="() => this.switchTab('payroll')">
+                    <span>Đối soát đầu vào Lương</span>
+                </button>
+                <button type="button"
+                        t-att-class="'tp-ops-nav-btn ' + (this.state.tab === 'survey' ? 'is-active' : '')"
+                        t-on-click="() => this.switchTab('survey')">
+                    <span>Thiết bị khảo sát &amp; Kiểm định</span>
+                </button>
+                <button type="button"
+                        t-att-class="'tp-ops-nav-btn ' + (this.state.tab === 'ai' ? 'is-active' : '')"
+                        t-on-click="() => this.switchTab('ai')">
+                    <span>Trợ lý AI Nội bộ (RBAC)</span>
+                </button>
+            </aside>
+
+            <main class="tp-ops-main">
+                <InlineErrors errors="this.state.fieldErrors"
+                              server="this.state.serverError"
+                              attempt="this.state.attempt"/>
+
+                <!-- ==================== TAB 1: RECRUITMENT ==================== -->
+                <t t-if="this.state.tab === 'recruitment'">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="tp-ops-btn tp-ops-mobile-toggle" t-on-click="this.toggleMobileNav">Danh mục</button>
+                            <div>
+                                <h1 class="h4 fw-bold mb-0" style="color:#16345B">Tuyển dụng &amp; Chuyển giao Hồ sơ Nhân viên</h1>
+                                <p class="small text-muted mb-0">
+                                    Kéo/chuyển vòng ứng viên không tự sinh nhân viên; bước Tiếp nhận kiểm trùng CCCD/email/SĐT và không tự cấp tài khoản hay quyền Admin.
+                                </p>
+                            </div>
+                        </div>
+                        <button type="button" class="tp-ops-btn tp-ops-btn-primary" t-on-click="this.toggleAddApplicant">
+                            + Thêm hồ sơ ứng viên
+                        </button>
+                    </div>
+
+                    <div class="tp-ops-card" t-if="this.state.showAddApplicant and this.state.recData">
+                        <h3 class="h6 fw-bold mb-2">Tiếp nhận CV ứng viên mới</h3>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-3">
+                                <label class="small fw-semibold">Họ và tên ứng viên *</label>
+                                <input id="app_name" type="text" class="tp-ops-input w-100" t-model.proxy="this.state.appForm.partner_name"/>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small fw-semibold">Email</label>
+                                <input type="email" class="tp-ops-input w-100" t-model.proxy="this.state.appForm.email_from"/>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small fw-semibold">Số điện thoại</label>
+                                <input type="text" class="tp-ops-input w-100" t-model.proxy="this.state.appForm.partner_phone"/>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small fw-semibold">Số CCCD (kiểm trùng)</label>
+                                <input type="text" class="tp-ops-input w-100" t-model.proxy="this.state.appForm.tp_national_id"/>
+                            </div>
+                        </div>
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-4">
+                                <label class="small fw-semibold">Phòng ban dự kiến</label>
+                                <select class="tp-ops-select w-100" t-model.proxy="this.state.appForm.department_id">
+                                    <option value="0">— Chọn phòng ban —</option>
+                                    <option t-foreach="this.state.recData.departments" t-as="d" t-key="d.id" t-att-value="d.id" t-out="d.name"/>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small fw-semibold">Vị trí chức danh</label>
+                                <select class="tp-ops-select w-100" t-model.proxy="this.state.appForm.job_id">
+                                    <option value="0">— Chọn chức danh —</option>
+                                    <option t-foreach="this.state.recData.jobs" t-as="j" t-key="j.id" t-att-value="j.id" t-out="j.name"/>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex justify-content-end gap-2">
+                                <button type="button" class="tp-ops-btn" t-on-click="this.toggleAddApplicant">Hủy</button>
+                                <button type="button" class="tp-ops-btn tp-ops-btn-primary" t-on-click="this.createApplicant">Lưu ứng viên</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Controlled Onboarding Confirmation Box -->
+                    <div class="tp-ops-card border-success" t-if="this.state.hireModalApp">
+                        <h3 class="h6 fw-bold text-success mb-1">
+                            Xác nhận tiếp nhận ứng viên: <t t-out="this.state.hireModalApp.name"/>
+                        </h3>
+                        <p class="small text-muted mb-2">
+                            Hệ thống sẽ kiểm tra trùng CCCD / Email / SĐT và chỉ khởi tạo Hồ sơ nhân viên (`hr.employee`). Tài khoản đăng nhập và quyền truy cập vẫn do Quản trị viên cấp riêng theo quy chế.
+                        </p>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="tp-ops-btn" t-on-click="this.closeHireConfirm">Đóng</button>
+                            <button type="button" class="tp-ops-btn tp-ops-btn-success" t-on-click="this.confirmHireApplicant" t-att-disabled="this.state.busy">
+                                ✓ Xác nhận tạo Hồ sơ Nhân viên
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Bar & Pipeline Kanban -->
+                    <t t-if="this.state.recData">
+                        <div class="tp-ops-card">
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <input type="search" class="tp-ops-input flex-grow-1"
+                                       placeholder="Tìm ứng viên theo họ tên, email, SĐT..."
+                                       t-att-value="this.state.recFilters.search"
+                                       t-on-input="(ev) => this.onRecFilter('search', ev)"/>
+                                <select class="tp-ops-select"
+                                        t-att-value="this.state.recFilters.department_id"
+                                        t-on-change="(ev) => this.onRecFilter('department_id', ev)">
+                                    <option value="0">Tất cả phòng ban</option>
+                                    <option t-foreach="this.state.recData.departments" t-as="d" t-key="d.id" t-att-value="d.id" t-out="d.name"/>
+                                </select>
+                            </div>
+
+                            <div class="tp-ops-kanban">
+                                <div t-foreach="this.state.recData.stages" t-as="st" t-key="st.id" class="tp-ops-stage-col">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <strong t-out="st.name"/>
+                                        <span class="tp-ops-pill is-ok" t-out="this.applicantsInStage(st.id).length"/>
+                                    </div>
+                                    <div t-foreach="this.applicantsInStage(st.id)" t-as="ap" t-key="ap.id" class="tp-ops-app-card">
+                                        <div class="fw-bold" t-out="ap.name"/>
+                                        <div class="small text-muted" t-out="ap.job_name + ' · ' + ap.department_name"/>
+                                        <div class="small text-muted" t-if="ap.email" t-out="ap.email"/>
+                                        <div class="d-flex flex-wrap gap-1 mt-2">
+                                            <select class="tp-ops-select py-1 px-2 small"
+                                                    t-att-value="ap.stage_id"
+                                                    t-on-change="(ev) => this.moveApplicantStage(ap.id, ev)">
+                                                <option t-foreach="this.state.recData.stages" t-as="opt" t-key="opt.id"
+                                                        t-att-value="opt.id" t-out="opt.name"/>
+                                            </select>
+                                            <span t-if="ap.employee_id" class="tp-ops-pill is-ok">Đã lập HS Nhân viên</span>
+                                            <button t-else="" type="button" class="tp-ops-btn tp-ops-btn-success py-1 px-2 small"
+                                                    t-on-click="() => this.openHireConfirm(ap)">
+                                                Tiếp nhận
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+
+                <!-- ==================== TAB 2: SURVEY EQUIPMENT CALIBRATION ==================== -->
+                <t t-elif="this.state.tab === 'survey'">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="tp-ops-btn tp-ops-mobile-toggle" t-on-click="this.toggleMobileNav">Danh mục</button>
+                            <div>
+                                <h1 class="h4 fw-bold mb-0" style="color:#16345B">Thiết bị Khảo sát &amp; Theo dõi Hạn Kiểm định</h1>
+                                <p class="small text-muted mb-0">
+                                    Tự động chặn xuất kho / bàn giao hiện trường đối với máy đo đạc hỏng hoặc quá hạn kiểm định (giữ nguyên Kho thiết bị văn phòng gọn nhẹ).
+                                </p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <input type="search" class="tp-ops-input" placeholder="Tìm máy toàn đạc, RTK, thủy chuẩn..."
+                                   t-att-value="this.state.surveySearch"
+                                   t-on-input="this.onSurveySearchInput"/>
+                            <button type="button" class="tp-ops-btn" t-on-click="() => this.reloadTab()">Lọc</button>
+                        </div>
+                    </div>
+
+                    <div class="tp-ops-card">
+                        <div class="tp-ops-table-wrap">
+                            <table class="tp-ops-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã TB</th>
+                                        <th>Tên thiết bị khảo sát</th>
+                                        <th>Số GCN Kiểm định</th>
+                                        <th>Ngày kiểm định</th>
+                                        <th>Hạn kiểm định</th>
+                                        <th>Trạng thái kiểm định</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-if="!this.state.surveyGear.length">
+                                        <td colspan="6" class="text-center text-muted py-3">Chưa có thiết bị nào được gắn cờ Thiết bị khảo sát hiện trường.</td>
+                                    </tr>
+                                    <tr t-foreach="this.state.surveyGear" t-as="sg" t-key="sg.id">
+                                        <td><strong t-out="sg.tp_code || ('#' + sg.id)"/></td>
+                                        <td t-out="sg.name"/>
+                                        <td t-out="sg.tp_calibration_cert_no || '—'"/>
+                                        <td t-out="sg.tp_calibration_date || '—'"/>
+                                        <td><strong t-out="sg.tp_calibration_due_date || 'Chưa cập nhật'"/></td>
+                                        <td>
+                                            <span t-if="sg.tp_calibration_state === 'valid'" class="tp-ops-pill is-ok">Còn hạn kiểm định</span>
+                                            <span t-elif="sg.tp_calibration_state === 'expiring_soon'" class="tp-ops-pill is-warn">Sắp đến hạn (≤ 30 ngày)</span>
+                                            <span t-else="" class="tp-ops-pill is-err">Quá hạn / Thiếu kiểm định — Chặn xuất dùng</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- ==================== TAB 3: PAYROLL INPUT RECONCILIATION ==================== -->
+                <t t-elif="this.state.tab === 'payroll'">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="tp-ops-btn tp-ops-mobile-toggle" t-on-click="this.toggleMobileNav">Danh mục</button>
+                            <div>
+                                <h1 class="h4 fw-bold mb-0" style="color:#16345B">Bảng Đối soát Dữ liệu Đầu vào Tiền lương</h1>
+                                <p class="small text-muted mb-0">
+                                    Tổng hợp công xác nhận, ngày nghỉ phép &amp; ngày công tác đã duyệt; khóa tính lương thực lĩnh cho đến khi Quy chế tiền lương chính thức được phê duyệt.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <input type="month" class="tp-ops-input" t-att-value="this.state.payrollMonth" t-on-input="this.onPayrollMonthInput"/>
+                            <button type="button" class="tp-ops-btn tp-ops-btn-primary" t-on-click="() => this.reloadTab()">Tổng hợp đối soát</button>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning small">
+                        <strong>Cổng quy chế đang chờ phê duyệt (không tự giả lập công thức lương / thuế / BHXH):</strong>
+                        <div style="white-space: pre-wrap;" t-out="this.state.payrollPolicyNote"/>
+                    </div>
+
+                    <div class="tp-ops-card">
+                        <div class="tp-ops-table-wrap">
+                            <table class="tp-ops-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nhân sự</th>
+                                        <th>Số ngày đủ vào/ra</th>
+                                        <th>Tổng công xác nhận</th>
+                                        <th>Nghỉ phép đã duyệt</th>
+                                        <th>Công tác đã duyệt</th>
+                                        <th>Trạng thái tính lương</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="this.state.payrollLines" t-as="pl" t-key="pl.id">
+                                        <td><strong t-out="pl.employee_id[1]"/></td>
+                                        <td t-out="pl.recorded_punch_days"/>
+                                        <td><strong t-out="pl.confirmed_work_units"/></td>
+                                        <td t-out="pl.approved_leave_days + ' ngày'"/>
+                                        <td t-out="pl.approved_trip_days + ' ngày'"/>
+                                        <td><span class="tp-ops-pill is-warn" t-out="pl.net_pay_status"/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- ==================== TAB 4: RBAC-GUARDED AI ASSISTANT ==================== -->
+                <t t-else="">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="tp-ops-btn tp-ops-mobile-toggle" t-on-click="this.toggleMobileNav">Danh mục</button>
+                            <div>
+                                <h1 class="h4 fw-bold mb-0" style="color:#16345B">Trợ lý AI Điều hành Nội bộ (Kiểm soát RBAC)</h1>
+                                <p class="small text-muted mb-0">
+                                    Chỉ tra cứu văn bản, biên bản họp, hồ sơ dự án và công việc nằm trong phạm vi quyền ORM của người hỏi; loại trừ lương và hợp đồng hạn chế quyền.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tp-ops-card">
+                        <label class="fw-semibold small mb-1">Tra cứu văn bản / biên bản / hồ sơ dự án có trích dẫn nguồn</label>
+                        <div class="d-flex gap-2 mb-3">
+                            <input type="search" class="tp-ops-input flex-grow-1"
+                                   placeholder="Nhập câu hỏi hoặc từ khóa (VD: quy định bản vẽ, biên bản cầu vượt, TKKT...)"
+                                   t-att-value="this.state.aiQuery"
+                                   t-on-input="this.onAiQueryInput"/>
+                            <button type="button" class="tp-ops-btn tp-ops-btn-primary" t-on-click="() => this.reloadTab()">Tra cứu có kiểm quyền</button>
+                        </div>
+
+                        <t t-if="this.state.aiResult">
+                            <div class="p-3 bg-light rounded border mb-3">
+                                <div class="fw-semibold mb-1" t-out="this.state.aiResult.summary"/>
+                                <div class="small text-muted" t-out="this.state.aiResult.policy_notice"/>
+                            </div>
+                            <div t-if="this.state.aiResult.citations.length" class="tp-ops-table-wrap">
+                                <table class="tp-ops-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Loại nguồn</th>
+                                            <th>Mã số</th>
+                                            <th>Tiêu đề trích dẫn</th>
+                                            <th>Trích đoạn</th>
+                                            <th/>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="this.state.aiResult.citations" t-as="cit" t-key="cit_index">
+                                            <td><span class="tp-ops-pill is-ok" t-out="cit.source_type"/></td>
+                                            <td><strong t-out="cit.code"/></td>
+                                            <td t-out="cit.title"/>
+                                            <td class="small text-muted" t-out="cit.snippet"/>
+                                            <td>
+                                                <button type="button" class="tp-ops-btn" t-on-click="() => this.openCitation(cit.url)">Mở nguồn</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </t>
+                    </div>
+
+                    <div class="tp-ops-card">
+                        <h3 class="h6 fw-bold mb-2">Soạn thảo dự thảo công việc (luôn hiển thị xem trước, không tự lưu khi chưa xác nhận)</h3>
+                        <div class="d-flex gap-2 mb-2">
+                            <input type="text" class="tp-ops-input flex-grow-1"
+                                   placeholder="Nhập nội dung cần soạn thành đầu việc nháp..."
+                                   t-att-value="this.state.aiDraftPrompt"
+                                   t-on-input="this.onAiDraftInput"/>
+                            <button type="button" class="tp-ops-btn" t-on-click="this.previewAiDraft">Tạo bản xem trước</button>
+                        </div>
+                        <div t-if="this.state.aiDraftPreview" class="p-3 border rounded bg-light mt-2">
+                            <div class="small text-muted mb-1">Bản xem trước (chưa ghi vào CSDL):</div>
+                            <div class="fw-bold mb-2" t-out="this.state.aiDraftPreview.preview.title"/>
+                            <button type="button" class="tp-ops-btn tp-ops-btn-success" t-on-click="this.confirmAiDraftCreateTask">
+                                ✓ Xác nhận tạo Công việc
+                            </button>
+                        </div>
+                    </div>
+                </t>
+            </main>
+        </div>
+    </t>
+</templates>
