@@ -339,6 +339,33 @@ export const ADMIN_MODULES = [
         copy: "Không gian này đang được chuẩn bị. Các chức năng sẽ được bổ sung sau.",
     },
     {
+        key: "accounting",
+        group: "departments",
+        order: 55,
+        placeholderOnly: true,
+        name: "Phòng Kế toán",
+        description: "Không gian tài chính và kế toán",
+        status: "Chưa phát triển",
+        badgeKind: "unstarted",
+        icon: "calculator",
+        aliases: "ke toan phong ke toan tai chinh accounting finance",
+        copy: "Không gian Phòng Kế toán chưa phát triển. Các chức năng sẽ được xây dựng trong giai đoạn tiếp theo.",
+    },
+    {
+        key: "recruitment",
+        group: "hr",
+        order: 5,
+        placeholderOnly: true,
+        name: "Tuyển dụng",
+        description: "Vị trí tuyển dụng và hồ sơ ứng viên",
+        status: "Đang phát triển",
+        badgeKind: "developing",
+        icon: "user-plus",
+        xmlid: "hr_recruitment.menu_hr_recruitment_root",
+        aliases: "tuyen dung ung vien recruitment",
+        copy: "Không gian tuyển dụng sẽ được bổ sung sau nền nhân sự: nhu cầu tuyển, vị trí, ứng viên và các vòng xử lý.",
+    },
+    {
         key: "hr",
         group: "hr",
         order: 10,
@@ -350,20 +377,6 @@ export const ADMIN_MODULES = [
         xmlid: "tp_hr_workspace.menu_hr",
         aliases: "nhan su hr ho so nhan vien to chuc nang luc",
         copy: "Bắt đầu từ hồ sơ nhân viên, phòng ban, chức danh và năng lực. Dữ liệu nguồn đã đối chiếu sẽ được nhập qua bước kiểm tra riêng; tài khoản đăng nhập và quyền truy cập được quản lý độc lập.",
-    },
-    {
-        key: "recruitment",
-        group: "hr",
-        order: 30,
-        placeholderOnly: true,
-        name: "Tuyển dụng",
-        description: "Vị trí tuyển dụng và hồ sơ ứng viên",
-        status: "Đang phát triển",
-        badgeKind: "developing",
-        icon: "user-plus",
-        xmlid: "hr_recruitment.menu_hr_recruitment_root",
-        aliases: "tuyen dung ung vien recruitment",
-        copy: "Không gian tuyển dụng sẽ được bổ sung sau nền nhân sự: nhu cầu tuyển, vị trí, ứng viên và các vòng xử lý.",
     },
 ];
 
@@ -488,6 +501,11 @@ export function buildAdminCatalog(rootTree, { debug = "", isSystem = true, isDel
                 item.href = menuHref(matchedMenu, debug);
             }
         }
+        const isInactiveState =
+            Boolean(item.placeholderOnly) ||
+            item.badgeKind === "developing" ||
+            item.badgeKind === "unstarted";
+        item.featured = Boolean(item.href) && !isInactiveState;
         rawItems.push(attachSearch(item));
     }
 
@@ -502,6 +520,7 @@ export function buildAdminCatalog(rootTree, { debug = "", isSystem = true, isDel
                 description: "Đang phát triển",
                 status: "Đang phát triển",
                 badgeKind: "developing",
+                featured: false,
                 icon: "building",
                 xmlid: deptWsMenu.xmlid,
                 menu: deptWsMenu,
@@ -529,6 +548,9 @@ function personalEntries(apps) {
                 order: meta.order ?? tile.order ?? 500,
                 name: tile.label,
                 description: tile.hint || "",
+                status: "Đang hoạt động",
+                badgeKind: "active",
+                featured: Boolean(tile.href),
                 icon: meta.icon || "circle",
                 aliases: meta.aliases || "",
                 xmlid: tile.xmlid,

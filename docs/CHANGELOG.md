@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261125-004 — HOME-CARDS-REDESIGN-001: Tinh gọn thẻ Trang chủ, đồng bộ màu xanh cho module đang hoạt động, đảo Tuyển dụng lên đầu và thêm Phòng Kế toán
+
+- **Cập nhật Trang chủ (`tp_web_home 20.0.1.14.0`):** gỡ bỏ toàn bộ dòng chữ mô tả phụ (`.tp-description`) trên mọi thẻ của cả 5 nhóm; áp kiểu thẻ xanh đang hoạt động (`.tp-featured`) cho tất cả module có lối vào hoạt động (`Quản lý nhân sự`, `Chấm công`, `Báo cáo`, `Yêu cầu phê duyệt`, `Kế hoạch Kinh doanh`, `Việc cá nhân`, `Lịch làm việc`, `Trao đổi`, `Kho thiết bị văn phòng`); chuyển **Tuyển dụng** lên trước **Quản lý nhân sự** trong nhóm `Nhân sự và chấm công`; thêm thẻ **Phòng Kế toán** (`Chưa phát triển`, icon `calculator`) vào nhóm `Phòng ban và đơn vị`.
+- **Kiểm thử:** `node --check`, XML parse, `py_compile`, `git diff --check` PASS; cập nhật `home_launcher.test.js`; Playwright `1440×900` & `390×844` (15 thẻ, 0 `.tp-description`, 0 tràn ngang/đè chữ, 0 lỗi console/OWL) PASS.
+
 ## CHG-20261125-003 / CHG-20261125-002 — HOME-SIDEBAR-SYNC-001: Đồng bộ ứng dụng đang hoạt động và gỡ sidebar ứng dụng cũ khi về Trang chủ
 
 - **Sửa đồng bộ trạng thái app (`tp_web_home 20.0.1.13.1`, `tp_branding 20.0.2.3.1`):** bổ sung `HomeLauncher.syncHomeApp()`, `HomeButton.syncAppWithAction()` trên `ACTION_MANAGER:UI-UPDATED` và `syncHomeMenu()` trong `webclient_patch.js` để mọi luồng về Trang chủ (Browser Back/Forward `popstate`, link `/app/trang-chu`, fallback boot, F5 với `sessionStorage.menu_id` cũ) luôn chuyển `menuService` về `tp_web_home.menu_home` (ẩn hoàn toàn sidebar ứng dụng cũ & nhãn app trên navbar, bật `aria-current="page"` cho nút Home) đồng thời khôi phục đúng sidebar khi Forward/Back sang ứng dụng khác.

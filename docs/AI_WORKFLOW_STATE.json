@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-25T07:54:56.474833+00:00",
-  "last_change_id": "CHG-20261125-003",
-  "code_digest": "8d93cd05cb9c5637d65a01cae52f72a5cdc363fcfb378517e2ff7fac62d3247d",
+  "updated_at": "2026-11-25T08:09:47.080281+00:00",
+  "last_change_id": "CHG-20261125-004",
+  "code_digest": "3bd424eec70d3d861e0b5c69415b222c8cb49430cd478c7dd98cc3309f992bcb",
   "code_file_count": 830,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "1ec5e8a32c28cba7f253f4eba1c7ac21c94861ed18ed6f4fcae42a7ac34e6169",
-    "docs/CHANGELOG.md": "0a87bb41dae88c30cec2a163ea1869c578f6a62dc69fae9a01c66a9438481440",
+    "docs/PROJECT_STATUS.md": "39c9e2b67c31eb894794a8a8f5f3fd6c56a5e0cf2f4f9b4e1693d4b1932592c1",
+    "docs/CHANGELOG.md": "dec32d43625ed66baa6a0c41b1568c1a3baa85c169388352fdeeaf8ed995feda",
     "AGENTS.md": "16e9cca62882f072a4d3c20725cb8b38edd56ce04c1c98bcbf03c3fd4802a6d3",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC server upgrade -u tp_web_home,tp_branding exit 0 (0 ERROR/CRITICAL); public https://tpone.tadic.vn/web/health 200 and /web/assets/41a405e/web.assets_web.min.js 200 verified"
+    "node --check; XML parse; py_compile; git diff --check; Playwright 1440x900 & 390x844 15/15 cards PASS (0 description, 0 overlap, 0 console error)"
   ]
 }

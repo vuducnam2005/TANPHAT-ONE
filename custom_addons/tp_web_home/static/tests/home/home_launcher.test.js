@@ -305,7 +305,7 @@ describe("catalog", () => {
                 ["personal", "Công cụ cá nhân"],
                 ["warehouse", "Kho"],
             ]);
-            expect(sections[0].tiles.map((t) => t.name)).toEqual(["Quản lý nhân sự", "Chấm công", "Tuyển dụng"]);
+            expect(sections[0].tiles.map((t) => t.name)).toEqual(["Tuyển dụng", "Quản lý nhân sự", "Chấm công"]);
             expect(sections[1].tiles.map((t) => t.name)).toEqual(["Báo cáo", "Yêu cầu phê duyệt"]);
             expect(sections[2].tiles.map((t) => t.name)).toEqual([
                 "Kế hoạch Kinh doanh",
@@ -313,6 +313,7 @@ describe("catalog", () => {
                 "Phòng Kỹ Thuật",
                 "Phòng BIM-QC",
                 "TADIC",
+                "Phòng Kế toán",
             ]);
             expect(sections[3].tiles.map((t) => t.name)).toEqual(["Việc cá nhân", "Lịch làm việc", "Trao đổi"]);
             expect(sections[4].tiles.map((t) => t.name)).toEqual(["Kho thiết bị văn phòng"]);
@@ -403,6 +404,8 @@ describe("launcher", () => {
             "Trao đổi",
         ]);
         expect('[data-module="business"]').toHaveClass("tp-featured");
+        expect(".tp-entry.tp-featured").toHaveCount(4);
+        expect(".tp-description").toHaveCount(0);
         expect(queryAll(".tp-entry").map((el) => el.getAttribute("href"))).toEqual([
             "/odoo/action-907",
             "/odoo/to-do",
@@ -481,7 +484,7 @@ describe("launcher", () => {
             await contains("[data-back]").click();
             await animationFrame();
             expect("[data-detail-title]").toHaveCount(0);
-            expect("[data-module]").toHaveCount(7);
+            expect("[data-module]").toHaveCount(8);
         } finally {
             browser.location.hash = "";
         }
@@ -690,23 +693,29 @@ describe("home button", () => {
 });
 
 describe("unified admin tools and icons", () => {
-    test("buildAdminCatalog returns 7 items when isSystem=true", () => {
+    test("buildAdminCatalog returns 8 items when isSystem=true", () => {
         const menus = tree(KD, HR);
         const admin = buildAdminCatalog(menus);
-        expect(admin.modules).toHaveLength(7);
+        expect(admin.modules).toHaveLength(8);
         expect(admin.departments.map((d) => d.name)).toEqual([
             "Kế hoạch Kinh doanh",
             "Phòng Thiết kế",
             "Phòng Kỹ Thuật",
             "Phòng BIM-QC",
             "TADIC",
+            "Phòng Kế toán",
         ]);
-        expect(admin.hr.map((h) => h.name)).toEqual(["Quản lý nhân sự", "Tuyển dụng"]);
+        expect(admin.departments[5].status).toBe("Chưa phát triển");
+        expect(admin.departments[5].badgeKind).toBe("unstarted");
+        expect(admin.departments[5].featured).toBe(false);
+        expect(admin.hr.map((h) => h.name)).toEqual(["Tuyển dụng", "Quản lý nhân sự"]);
+        expect(admin.hr[0].featured).toBe(false);
+        expect(admin.hr[1].featured).toBe(true);
         expect(admin.departments[0].badgeKind).toBe("active");
         expect(admin.departments[0].featured).toBe(true);
     });
 
-    test("admin gets tools, panel toggle, placeholder detail navigation, and 7 valid SVG icons", async () => {
+    test("admin gets tools, panel toggle, placeholder detail navigation, and 8 valid SVG icons", async () => {
         defineMenus([HOME, KD, HR, SETTINGS, APPS, CRM]);
         patchWithCleanup(user, { isSystem: true });
         await mountWithCleanup(HomeLauncher, PROPS);
@@ -714,6 +723,7 @@ describe("unified admin tools and icons", () => {
 
         expect(".tp-admin-tools [data-tool]").toHaveCount(3);
         expect(queryAllTexts(".tp-tool-btn")).toEqual(["Cài đặt", "Quản lý ứng dụng", "Tất cả ứng dụng"]);
+        expect(".tp-description").toHaveCount(0);
 
         await contains('[data-tool="all-apps"]').click();
         await animationFrame();
@@ -731,13 +741,14 @@ describe("unified admin tools and icons", () => {
         await contains('[data-tool="base.menu_administration"]').click();
         expect.verifySteps(["select base.menu_administration"]);
 
-        // Placeholder click
-        await contains('[data-module="design"]').click();
+        // Placeholder click (Phòng Kế toán -> Chưa phát triển)
+        await contains('[data-module="accounting"]').click();
         await animationFrame();
-        expect("[data-detail-title]").toHaveText("Phòng Thiết kế");
+        expect("[data-detail-title]").toHaveText("Phòng Kế toán");
+        expect("[data-detail-status]").toHaveText("Chưa phát triển");
         await contains("[data-back]").click();
         await animationFrame();
-        expect("[data-module]").toHaveCount(7);
+        expect("[data-module]").toHaveCount(8);
         expect("[data-module] .tp-icon svg circle[r='10']").toHaveCount(0);
     });
 });
