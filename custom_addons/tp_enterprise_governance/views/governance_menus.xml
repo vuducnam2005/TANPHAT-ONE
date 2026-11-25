@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="action_executive_dashboard" model="ir.actions.client">
+            <field name="name">Điều hành Lãnh đạo</field>
+            <field name="tag">tp_enterprise_governance.executive_dashboard</field>
+            <field name="path">dieu-hanh-tong-quan</field>
+        </record>
+
+        <record id="action_project_wbs_cpm" model="ir.actions.client">
+            <field name="name">Tiến độ WBS &amp; Đường găng CPM</field>
+            <field name="tag">tp_enterprise_governance.project_wbs</field>
+            <field name="path">du-an-wbs-tien-do</field>
+        </record>
+
+        <record id="action_project_dossier_nas" model="ir.actions.client">
+            <field name="name">Hồ sơ dự án &amp; NAS</field>
+            <field name="tag">tp_enterprise_governance.project_dossiers</field>
+            <field name="path">du-an-ho-so-nas</field>
+        </record>
+
+        <menuitem id="menu_governance_root"
+                  name="Điều hành &amp; Dự án"
+                  sequence="12"
+                  action="action_project_wbs_cpm"
+                  groups="base.group_user"/>
+
+        <menuitem id="menu_governance_executive"
+                  name="Tổng quan Điều hành"
+                  parent="menu_governance_root"
+                  action="action_executive_dashboard"
+                  groups="tp_core.group_manager,tp_reporting.group_reporting_finance,tp_admin_delegation.group_original_admin,tp_admin_delegation.group_full_admin,base.group_system"
+                  sequence="10"/>
+
+        <menuitem id="menu_governance_wbs"
+                  name="Tiến độ WBS &amp; Đường găng"
+                  parent="menu_governance_root"
+                  action="action_project_wbs_cpm"
+                  sequence="20"/>
+
+        <menuitem id="menu_governance_dossiers"
+                  name="Hồ sơ dự án &amp; NAS"
+                  parent="menu_governance_root"
+                  action="action_project_dossier_nas"
+                  sequence="30"/>
+    </data>
+</odoo>

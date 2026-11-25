@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261125-010 — 2026-11-25 — ENTERPRISE-MASTER-BATCH-003: Quản trị Dự án WBS/CPM/Baseline, Hồ sơ phiên bản & NAS, Dashboard Điều hành Lãnh đạo (`tp_enterprise_governance 20.0.1.0.0`)
+
+- **Addon mới `custom_addons/tp_enterprise_governance` (`20.0.1.0.0`, `tp_branding 20.0.2.6.0`):** triển khai cấu trúc WBS dự án, thuật toán đường găng CPM thực từ đồ thị DAG (`ES/EF/LS/LF/Float` + chặn chu trình), tiến độ trọng số, đóng băng `tp.project.baseline` & nhật ký đổi mốc có lý do, tách 4 trạng thái hoàn thành kỹ thuật vs nghiệm thu khối lượng (Case #6) và mở rộng tạm ứng/quyết toán thầu phụ - giao khoán trên `tp.allocation` (`/app/du-an/wbs-tien-do`).
+- **Hồ sơ dự án & Điều hành Tài chính (`/app/du-an/ho-so-nas`, `/app/dieu-hanh/tong-quan`):** triển khai `tp.project.dossier` đa phiên bản kèm SHA-256, controller `/tp/dossier/download/<id>` chặn dò ID ngoài phạm vi dự án (Case #14), hàng đợi thư mục `tp.nas.folder.job` idempotent theo `project_id` khi ký nhiều hợp đồng (Case #10), và Dashboard Lãnh đạo tách 11 chỉ tiêu tài chính quản trị có nguồn chứng từ (báo `Chưa đủ dữ liệu` thay vì số `0` giả).
+- **Kiểm thử (`tp_tanphat_test`):** Static PY/XML/QWeb/SCSS/JS PASS; Odoo `/tp_enterprise_governance,/tp_branding:TestBrandUrls` **18/18 PASS (`0 failed, 0 error`)**.
+
 ## CHG-20261125-009 — 2026-11-25 — ENTERPRISE-MASTER-BATCH-002: Văn phòng số (`tp_digital_office 20.0.1.0.0`), Mở rộng Yêu cầu phê duyệt (`tp_request 20.0.2.0.0`) & Cầu nối Kế hoạch – Báo cáo
 
 - **Yêu cầu phê duyệt (`tp_request 20.0.2.0.0`):** thêm loại đề nghị Nghỉ phép (`HR_LEAVE`), Công tác hiện trường (`HR_BUSINESS_TRIP`), Tạm ứng/chi phí (`FIN_EXPENSE_ADVANCE`); tách rõ phê duyệt chủ trương (`pending_disbursement`) với đối chiếu chứng từ thực chi (`action_confirm_financial_settlement` + `voucher_ref`, Case #11); thêm `action_create_linked_task` idempotent sang `project.task`.

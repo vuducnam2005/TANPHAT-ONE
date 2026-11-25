@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-25T13:01:28.826319+00:00",
-  "last_change_id": "CHG-20261125-009",
-  "code_digest": "d0c6d0dd668e50a50b95d385bb4a704867c2b663a5adddfd359e68fc94334abe",
-  "code_file_count": 886,
+  "updated_at": "2026-11-25T13:16:01.559029+00:00",
+  "last_change_id": "CHG-20261125-010",
+  "code_digest": "a9ab4ee467d33b14f4e624d0e5ce01160142097cb5487675cdc310c55074fcc0",
+  "code_file_count": 901,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "870acb82e51c2aa25a48f3b35be8d1580282b7859af0961436d2f39dd2ab8973",
-    "docs/CHANGELOG.md": "7836ca6e81063908a0d6b78ef482242d93001f542599dead4cff9468b7d01983",
+    "docs/PROJECT_STATUS.md": "78a02b567af3bef0e666431ea98ca7c2e3ce2b1ca94a74c9f2edefcf2b798cd2",
+    "docs/CHANGELOG.md": "95e57d5f4b88e50af46338534639f5b36d0d9d9e628a8bda0ee7579ab3e12147",
     "AGENTS.md": "72c31b7b0d24828d2313203ad211348f916aec386e61ad31b478fb3f80ad4448",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "verify_addons.py PY/XML/QWeb/SCSS/JS PASS; Odoo /tp_digital_office,/tp_request:TestEnterpriseRequestTypes,/tp_branding:TestBrandUrls 19/19 PASS (0 failed, 0 errors)"
+    "verify_addons.py PY/XML/QWeb/SCSS/JS PASS; Odoo /tp_enterprise_governance,/tp_branding:TestBrandUrls 18/18 PASS (0 failed, 0 errors)"
   ]
 }

@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_enterprise_governance.Workspace">
+        <div class="tp-gov-shell">
+            <!-- Single Left Module Sidebar -->
+            <aside t-att-class="'tp-gov-sidebar ' + (this.state.mobileNavOpen ? 'is-open' : '')">
+                <button type="button" class="tp-gov-home-btn" t-on-click="this.goHome">
+                    <span>← Trang chủ TANPHAT ONE</span>
+                </button>
+                <div class="tp-gov-nav-label">Điều hành &amp; Dự án</div>
+                <button type="button"
+                        t-att-class="'tp-gov-nav-btn ' + (this.state.tab === 'executive' ? 'is-active' : '')"
+                        t-on-click="() => this.switchTab('executive')">
+                    <span>Dashboard Lãnh đạo</span>
+                </button>
+                <button type="button"
+                        t-att-class="'tp-gov-nav-btn ' + (this.state.tab === 'wbs' ? 'is-active' : '')"
+                        t-on-click="() => this.switchTab('wbs')">
+                    <span>Tiến độ WBS &amp; Đường găng</span>
+                </button>
+                <button type="button"
+                        t-att-class="'tp-gov-nav-btn ' + (this.state.tab === 'dossiers' ? 'is-active' : '')"
+                        t-on-click="() => this.switchTab('dossiers')">
+                    <span>Hồ sơ dự án &amp; NAS</span>
+                </button>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="tp-gov-main">
+                <InlineErrors errors="this.state.fieldErrors"
+                              server="this.state.serverError"
+                              attempt="this.state.attempt"/>
+
+                <!-- ==================== TAB 1: EXECUTIVE DASHBOARD ==================== -->
+                <t t-if="this.state.tab === 'executive'">
+                    <div class="tp-gov-topbar">
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="tp-gov-btn tp-gov-mobile-toggle" t-on-click="this.toggleMobileNav">Danh mục</button>
+                            <div>
+                                <h1 class="tp-gov-h1">Trung tâm Điều hành Lãnh đạo</h1>
+                                <p class="tp-gov-sub">
+                                    Số liệu thực từ CSDL nghiệp vụ, tách bạch 11 chỉ tiêu tài chính quản trị (không giả lập số 0 khi thiếu nguồn).
+                                </p>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <input type="text" class="tp-gov-input" placeholder="Lọc kỳ (VD: 2026-11)"
+                                   t-att-value="this.state.periodFilter"
+                                   t-on-input="this.onPeriodInput"/>
+                            <button type="button" class="tp-gov-btn" t-on-click="() => this.reloadCurrentTab()">Áp dụng kỳ</button>
+                            <button t-if="this.state.execData?.can_finance" type="button"
+                                    class="tp-gov-btn tp-gov-btn-primary" t-on-click="this.toggleFinForm">
+                                + Ghi nhận chỉ tiêu tài chính
+                            </button>
+                        </div>
+                    </div>
+
+                    <div t-if="this.state.loading" class="tp-gov-card text-center text-muted py-4">Đang tổng hợp dữ liệu điều hành...</div>
+                    <t t-elif="this.state.execData">
+                        <t t-set="ed" t-value="this.state.execData"/>
+
+                        <!-- Inline Provenance Financial Entry Form -->
+                        <div class="tp-gov-card" t-if="this.state.showFinEntryModal">
+                            <h3 class="h6 fw-bold mb-2">Ghi nhận chỉ tiêu tài chính quản trị (bắt buộc có nguồn chứng từ)</h3>
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-3">
+                                    <label class="small fw-semibold">Kỳ dữ liệu *</label>
+                                    <input id="fin_period" type="text" class="tp-gov-input w-100" t-model.proxy="this.state.finForm.period_label"/>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="small fw-semibold">Chỉ tiêu (11 định nghĩa tách biệt) *</label>
+                                    <select class="tp-gov-select w-100" t-model.proxy="this.state.finForm.metric_kind">
+                                        <option t-foreach="ed.metric_options" t-as="m" t-key="m.key" t-att-value="m.key" t-out="m.label"/>
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="small fw-semibold">Số tiền (VNĐ) *</label>
+                                    <input id="fin_amount" type="number" step="1000" class="tp-gov-input w-100" t-model.proxy="this.state.finForm.amount"/>
+                                </div>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-4">
+                                    <label class="small fw-semibold">Trạng thái xác nhận</label>
+                                    <select class="tp-gov-select w-100" t-model.proxy="this.state.finForm.data_state">
+                                        <option value="confirmed">Đã xác nhận chứng từ</option>
+                                        <option value="unconfirmed">Tạm tính (chưa xác nhận)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="small fw-semibold">Nguồn chứng từ gốc *</label>
+                                    <input id="fin_source" type="text" class="tp-gov-input w-100"
+                                           placeholder="Ví dụ: HĐ-2026/08, Biên bản nghiệm thu đợt 2, Sổ cái T11/2026..."
+                                           t-model.proxy="this.state.finForm.source_ref"/>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="tp-gov-btn" t-on-click="this.toggleFinForm">Đóng</button>
+                                <button type="button" class="tp-gov-btn tp-gov-btn-primary" t-on-click="this.saveFinEntry">Lưu chỉ tiêu</button>
+                            </div>
+                        </div>
+
+                        <!-- Operational Bottleneck KPIs -->
+                        <div class="tp-gov-kpi-grid">
+                            <div class="tp-gov-kpi-box">
+                                <div class="tp-gov-kpi-val" t-out="ed.kpis.total_projects"/>
+                                <div class="tp-gov-kpi-lbl">Dự án trong danh mục</div>
+                            </div>
+                            <div class="tp-gov-kpi-box" style="cursor:pointer" t-on-click="() => this.openUrl('/app/de-nghi/tong-quan')">
+                                <div class="tp-gov-kpi-val" t-out="ed.kpis.pending_requests"/>
+                                <div class="tp-gov-kpi-lbl">Đề nghị chờ phê duyệt</div>
+                            </div>
+                            <div class="tp-gov-kpi-box" style="cursor:pointer" t-on-click="() => this.openUrl('/app/de-nghi/tong-quan')">
+                                <div class="tp-gov-kpi-val text-danger" t-out="ed.kpis.overdue_requests"/>
+                                <div class="tp-gov-kpi-lbl">Hồ sơ đề nghị quá hạn</div>
+                            </div>
+                            <div class="tp-gov-kpi-box">
+                                <div class="tp-gov-kpi-val text-warning" t-out="ed.kpis.pending_settlement"/>
+                                <div class="tp-gov-kpi-lbl">Đã duyệt chi — Chờ chứng từ thực chi</div>
+                            </div>
+                            <div class="tp-gov-kpi-box" style="cursor:pointer" t-on-click="() => this.openUrl('/app/thiet-bi/tong-quan')">
+                                <div class="tp-gov-kpi-val" t-out="ed.kpis.broken_equipment"/>
+                                <div class="tp-gov-kpi-lbl">Thiết bị hỏng / cần sửa chữa</div>
+                            </div>
+                        </div>
+
+                        <!-- 11 Separated Financial Governance Cards (with Rich Provenance Tooltip) -->
+                        <div class="tp-gov-card" t-if="ed.can_finance">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <h2 class="h6 fw-bold mb-0">11 Chỉ tiêu Tài chính Quản trị Tách biệt (di chuột xem kỳ, nguồn &amp; thời điểm cập nhật)</h2>
+                                <span class="small text-muted">Cập nhật truy vấn: <t t-out="ed.updated_at"/></span>
+                            </div>
+                            <div class="tp-gov-fin-grid">
+                                <div t-foreach="ed.financial_cards" t-as="fc" t-key="fc.key"
+                                     t-att-class="'tp-gov-fin-card ' + (fc.has_data ? 'has-data' : '')"
+                                     t-att-title="fc.label + ' | Giá trị: ' + fc.display_value + ' (' + fc.unit + ') | Kỳ: ' + fc.period + ' | Nguồn: ' + fc.source + ' | Cập nhật: ' + fc.updated_at">
+                                    <div class="tp-gov-fin-title" t-out="fc.label"/>
+                                    <div t-att-class="'tp-gov-fin-val ' + (!fc.has_data ? 'is-missing' : '')"
+                                         t-out="fc.display_value"/>
+                                    <div class="tp-gov-fin-meta">
+                                        <span t-out="fc.state_label"/> · Kỳ: <t t-out="fc.period"/>
+                                        <div class="text-truncate" t-if="fc.has_data" t-out="'Nguồn: ' + fc.source"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Project Progress & Critical Path Chart List -->
+                        <div class="tp-gov-card">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <h2 class="h6 fw-bold mb-0">Tiến độ Trọng số Dự án &amp; Cảnh báo Đường găng (CPM)</h2>
+                                <button type="button" class="tp-gov-btn" t-on-click="() => this.switchTab('wbs')">Mở WBS chi tiết →</button>
+                            </div>
+                            <div t-if="!ed.project_cards.length" class="text-muted small py-2">Chưa có dự án trong phạm vi.</div>
+                            <div class="tp-gov-table-wrap" t-else="">
+                                <table class="tp-gov-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã dự án</th>
+                                            <th>Tên dự án</th>
+                                            <th>Đơn vị chủ trì</th>
+                                            <th>Tiến độ trọng số</th>
+                                            <th>Đường găng CPM</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="ed.project_cards" t-as="pc" t-key="pc.id">
+                                            <td><strong t-out="pc.code"/></td>
+                                            <td t-out="pc.name"/>
+                                            <td t-out="pc.department_name"/>
+                                            <td style="min-width: 180px;">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="tp-gov-progress-track">
+                                                        <div t-att-class="'tp-gov-progress-fill ' + (pc.open_critical_tasks &gt; 0 ? 'is-crit' : '')"
+                                                             t-att-style="'width:' + pc.weighted_progress_pct + '%'"/>
+                                                    </div>
+                                                    <strong t-out="pc.weighted_progress_pct + '%'"/>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span t-if="!pc.cpm_ready" class="tp-gov-pill is-muted">Chưa khai báo thời lượng CPM</span>
+                                                <span t-elif="pc.open_critical_tasks &gt; 0" class="tp-gov-pill is-crit"
+                                                      t-out="pc.open_critical_tasks + ' việc găng (' + pc.cpm_duration_days + ' ngày)'"/>
+                                                <span t-else="" class="tp-gov-pill is-ok">Đường găng đã hoàn tất</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Honest Department Workload Summary -->
+                        <div class="tp-gov-card">
+                            <h2 class="h6 fw-bold mb-2">Phân bổ tải công việc nhân sự (không suy diễn quá tải khi thiếu định mức giờ)</h2>
+                            <div class="tp-gov-table-wrap">
+                                <table class="tp-gov-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nhân sự</th>
+                                            <th>Phòng ban</th>
+                                            <th>Đầu việc dự án/họp đang mở</th>
+                                            <th>Quá hạn</th>
+                                            <th>Đánh giá tải định mức</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="ed.workload_rows" t-as="wr" t-key="wr.employee_id">
+                                            <td><strong t-out="wr.name"/></td>
+                                            <td t-out="wr.department_name"/>
+                                            <td t-out="wr.open_task_count"/>
+                                            <td>
+                                                <span t-if="wr.overdue_task_count &gt; 0" class="tp-gov-pill is-crit" t-out="wr.overdue_task_count"/>
+                                                <span t-else="" class="text-muted">0</span>
+                                            </td>
+                                            <td>
+                                                <span t-att-class="'tp-gov-pill ' + (wr.workload_status === 'high_load' ? 'is-crit' : (wr.workload_status === 'insufficient_data' ? 'is-warn' : 'is-ok'))"
+                                                      t-out="wr.workload_label"/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+
+                <!-- ==================== TAB 2: PROJECT WBS & TRUE CPM ==================== -->
+                <t t-elif="this.state.tab === 'wbs'">
+                    <div class="tp-gov-topbar">
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="tp-gov-btn tp-gov-mobile-toggle" t-on-click="this.toggleMobileNav">Danh mục</button>
+                            <div>
+                                <h1 class="tp-gov-h1">Cấu trúc WBS, Đường găng CPM &amp; Baseline Dự án</h1>
+                                <p class="tp-gov-sub">
+                                    Tính đường găng thực tế từ mạng phụ thuộc DAG (ES/EF/LS/LF/Float), tách bạch 4 trạng thái hoàn thành kỹ thuật vs nghiệm thu khối lượng.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2" t-if="this.state.wbsData?.projects?.length">
+                            <select class="tp-gov-select"
+                                    t-att-value="this.state.selectedProjectId"
+                                    t-on-change="this.onSelectWbsProject">
+                                <option t-foreach="this.state.wbsData.projects" t-as="pr" t-key="pr.id"
+                                        t-att-value="pr.id" t-out="pr.name"/>
+                            </select>
+                            <button type="button" class="tp-gov-btn" t-on-click="() => this.applyTemplate('bridge_road')">
+                                + Mẫu WBS Cầu Đường
+                            </button>
+                            <button type="button" class="tp-gov-btn tp-gov-btn-primary" t-on-click="this.recomputeCpm">
+                                Tính lại Đường găng CPM
+                            </button>
+                        </div>
+                    </div>
+
+                    <div t-if="this.state.loading" class="tp-gov-card text-center text-muted py-4">Đang tải cấu trúc WBS...</div>
+                    <div t-elif="!this.state.wbsData?.selected_project" class="tp-gov-card text-muted py-4 text-center">
+                        Chưa có dự án nào được phân công trong phạm vi của bạn.
+                    </div>
+                    <t t-else="">
+                        <t t-set="sp" t-value="this.state.wbsData.selected_project"/>
+                        <div class="tp-gov-kpi-grid">
+                            <div class="tp-gov-kpi-box">
+                                <div class="tp-gov-kpi-val" t-out="sp.weighted_progress_pct + '%'"/>
+                                <div class="tp-gov-kpi-lbl">Tiến độ trọng số dự án</div>
+                            </div>
+                            <div class="tp-gov-kpi-box">
+                                <div class="tp-gov-kpi-val" t-out="sp.cpm_data_ready ? (sp.cpm_duration_days + ' ngày') : 'Chưa đủ dữ liệu'"/>
+                                <div class="tp-gov-kpi-lbl">Tổng thời lượng đường găng CPM</div>
+                            </div>
+                            <div class="tp-gov-kpi-box">
+                                <div class="tp-gov-kpi-val" t-out="this.state.wbsData.baselines.length"/>
+                                <div class="tp-gov-kpi-lbl">Số phiên bản Baseline đã chốt</div>
+                            </div>
+                        </div>
+
+                        <!-- Adjust Milestone Audit Box -->
+                        <div class="tp-gov-card" t-if="this.state.adjustTaskId">
+                            <h3 class="h6 fw-bold mb-2">Điều chỉnh mốc hoàn thành kế hoạch (bắt buộc lưu nhật ký lý do)</h3>
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-3">
+                                    <label class="small fw-semibold">Ngày kết thúc mới *</label>
+                                    <input type="date" class="tp-gov-input w-100" t-model.proxy="this.state.adjustNewDate"/>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small fw-semibold">Lý do điều chỉnh mốc tiến độ *</label>
+                                    <input type="text" class="tp-gov-input w-100"
+                                           placeholder="Ví dụ: Chờ chủ đầu tư bàn giao bình đồ quy hoạch điều chỉnh..."
+                                           t-model.proxy="this.state.adjustReason"/>
+                                </div>
+                                <div class="col-md-3 d-flex gap-2">
+                                    <button type="button" class="tp-gov-btn" t-on-click="this.cancelAdjustMilestone">Hủy</button>
+                                    <button type="button" class="tp-gov-btn tp-gov-btn-primary" t-on-click="this.submitAdjustMilestone">Lưu mốc mới</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- WBS & CPM Table -->
+                        <div class="tp-gov-card">
+                            <h2 class="h6 fw-bold mb-2">Bảng phân rã công việc WBS &amp; Tham số CPM</h2>
+                            <div class="tp-gov-table-wrap">
+                                <table class="tp-gov-table">
+                                    <thead>
+                                        <tr>
+                                            <th>WBS</th>
+                                            <th>Hạng mục công việc</th>
+                                            <th>Tiền nhiệm</th>
+                                            <th>Thời lượng</th>
+                                            <th>ES / EF</th>
+                                            <th>LS / LF</th>
+                                            <th>Float</th>
+                                            <th>Đường găng</th>
+                                            <th>Trọng số</th>
+                                            <th>Tiến độ</th>
+                                            <th>4 Mốc sản phẩm tách biệt</th>
+                                            <th/>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="this.state.wbsData.tasks" t-as="t" t-key="t.id">
+                                            <td><strong t-out="t.wbs_code"/></td>
+                                            <td>
+                                                <strong t-out="t.name"/>
+                                                <div class="small text-muted" t-out="t.assignee_names"/>
+                                            </td>
+                                            <td t-out="t.predecessor_codes.join(', ') || '—'"/>
+                                            <td t-out="t.duration_days ? (t.duration_days + 'd') : '—'"/>
+                                            <td t-out="sp.cpm_data_ready ? (t.es + ' → ' + t.ef) : '—'"/>
+                                            <td t-out="sp.cpm_data_ready ? (t.ls + ' → ' + t.lf) : '—'"/>
+                                            <td t-out="sp.cpm_data_ready ? (t.total_float + 'd') : '—'"/>
+                                            <td>
+                                                <span t-if="t.is_critical" class="tp-gov-pill is-crit">Găng (Critical)</span>
+                                                <span t-else="" class="tp-gov-pill is-muted">Không găng</span>
+                                            </td>
+                                            <td t-out="t.weight_factor"/>
+                                            <td><strong t-out="t.progress_pct + '%'"/></td>
+                                            <td>
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    <span t-att-class="'tp-gov-pill ' + (t.exec_reported ? 'is-ok' : 'is-muted')">1.Báo xong</span>
+                                                    <span t-att-class="'tp-gov-pill ' + (t.result_verified ? 'is-ok' : 'is-muted')">2.Xác nhận</span>
+                                                    <span t-att-class="'tp-gov-pill ' + (t.dossier_issued ? 'is-ok' : 'is-muted')">3.Phát hành</span>
+                                                    <span t-att-class="'tp-gov-pill ' + (t.volume_accepted ? 'is-ok' : 'is-muted')">4.Nghiệm thu</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="tp-gov-btn" t-on-click="() => this.startAdjustMilestone(t)">
+                                                    Đổi mốc
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Baseline Freeze & Milestone Change History -->
+                        <div class="row g-3">
+                            <div class="col-lg-6">
+                                <div class="tp-gov-card">
+                                    <h3 class="h6 fw-bold mb-2">Chốt Baseline tiến độ dự án</h3>
+                                    <div class="d-flex flex-wrap gap-2 mb-3">
+                                        <input type="text" class="tp-gov-input" placeholder="Tên Baseline (VD: Kế hoạch ký HĐ)"
+                                               t-model.proxy="this.state.baselineName"/>
+                                        <input type="text" class="tp-gov-input flex-grow-1" placeholder="Căn cứ chốt..."
+                                               t-model.proxy="this.state.baselineReason"/>
+                                        <button type="button" class="tp-gov-btn tp-gov-btn-primary" t-on-click="this.captureBaseline">
+                                            Đóng băng Baseline
+                                        </button>
+                                    </div>
+                                    <ul class="small mb-0" t-if="this.state.wbsData.baselines.length">
+                                        <li t-foreach="this.state.wbsData.baselines" t-as="bl" t-key="bl.id">
+                                            <strong t-out="'v' + bl.version + ' — ' + bl.name"/> (<t t-out="bl.cpm_duration_days"/> ngày găng) · <t t-out="bl.captured_by"/> (<t t-out="bl.captured_at"/>)
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="tp-gov-card">
+                                    <h3 class="h6 fw-bold mb-2">Nhật ký điều chỉnh mốc tiến độ</h3>
+                                    <div t-if="!this.state.wbsData.logs.length" class="small text-muted">Chưa phát sinh điều chỉnh mốc tiến độ.</div>
+                                    <ul class="small mb-0" t-else="">
+                                        <li t-foreach="this.state.wbsData.logs" t-as="lg" t-key="lg.id">
+                                            <strong t-out="lg.task_name"/>: <t t-out="lg.old_date || '—'"/> → <strong t-out="lg.new_date"/>
+                                            — Lý do: <em t-out="lg.reason"/> (<t t-out="lg.changed_by"/>)
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+
+                <!-- ==================== TAB 3: PROJECT DOSSIERS & NAS METADATA ==================== -->
+                <t t-else="">
+                    <div class="tp-gov-topbar">
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="tp-gov-btn tp-gov-mobile-toggle" t-on-click="this.toggleMobileNav">Danh mục</button>
+                            <div>
+                                <h1 class="tp-gov-h1">Hồ sơ Dự án theo Phiên bản &amp; Cấu trúc Thư mục NAS</h1>
+                                <p class="tp-gov-sub">
+                                    Kiểm soát quyền tải tệp qua Odoo ACL (không lộ đường dẫn UNC \\NAS), khởi tạo cây thư mục NAS idempotent theo Mã dự án cố định.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="tp-gov-btn tp-gov-btn-primary" t-on-click="this.toggleCreateDossier">
+                                + Thêm bộ hồ sơ giao nộp
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tp-gov-card" t-if="this.state.showCreateDossier and this.state.dossierData">
+                        <h3 class="h6 fw-bold mb-2">Khởi tạo bộ hồ sơ kỹ thuật / giao nộp mới</h3>
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-4">
+                                <label class="small fw-semibold">Dự án *</label>
+                                <select id="dos_proj" class="tp-gov-select w-100" t-model.proxy="this.state.newDossier.project_id">
+                                    <option value="0">— Chọn dự án —</option>
+                                    <option t-foreach="this.state.dossierData.projects" t-as="pr" t-key="pr.id"
+                                            t-att-value="pr.id" t-out="pr.name"/>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small fw-semibold">Giai đoạn *</label>
+                                <select class="tp-gov-select w-100" t-model.proxy="this.state.newDossier.phase_stage">
+                                    <option t-foreach="this.state.dossierData.phases" t-as="ph" t-key="ph.key"
+                                            t-att-value="ph.key" t-out="ph.label"/>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small fw-semibold">Tên bộ hồ sơ / bản vẽ *</label>
+                                <input id="dos_name" type="text" class="tp-gov-input w-100" t-model.proxy="this.state.newDossier.name"
+                                       placeholder="VD: Thuyết minh TKKT cầu chính"/>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="tp-gov-btn tp-gov-btn-primary w-100" t-on-click="this.createDossier">Tạo mới</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <t t-if="this.state.dossierData">
+                        <t t-set="dd" t-value="this.state.dossierData"/>
+                        <div class="tp-gov-card">
+                            <!-- DEC-044 Filter Bar -->
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <input type="search" class="tp-gov-input flex-grow-1"
+                                       placeholder="Tìm theo mã HSDA, tên hồ sơ, đường dẫn chuẩn..."
+                                       t-att-value="this.state.dossierFilters.search"
+                                       t-on-input="(ev) => this.onDossierFilter('search', ev)"/>
+                                <select class="tp-gov-select"
+                                        t-att-value="this.state.dossierFilters.project_id"
+                                        t-on-change="(ev) => this.onDossierFilter('project_id', ev)">
+                                    <option value="0">Tất cả dự án được phân công</option>
+                                    <option t-foreach="dd.projects" t-as="pr" t-key="pr.id" t-att-value="pr.id" t-out="pr.name"/>
+                                </select>
+                                <select class="tp-gov-select"
+                                        t-att-value="this.state.dossierFilters.phase_stage"
+                                        t-on-change="(ev) => this.onDossierFilter('phase_stage', ev)">
+                                    <option value="">Tất cả giai đoạn</option>
+                                    <option t-foreach="dd.phases" t-as="ph" t-key="ph.key" t-att-value="ph.key" t-out="ph.label"/>
+                                </select>
+                                <button type="button" class="tp-gov-btn" t-on-click="this.resetDossierFilters">Đặt lại</button>
+                                <button t-if="this.state.dossierFilters.project_id !== '0'"
+                                        type="button" class="tp-gov-btn"
+                                        t-on-click="() => this.enqueueNasStructure(this.state.dossierFilters.project_id)">
+                                    Khởi tạo cây thư mục NAS cho dự án này
+                                </button>
+                            </div>
+
+                            <div class="tp-gov-table-wrap">
+                                <table class="tp-gov-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã hồ sơ</th>
+                                            <th>Tên bộ hồ sơ</th>
+                                            <th>Dự án</th>
+                                            <th>Giai đoạn</th>
+                                            <th>Phiên bản</th>
+                                            <th>Đường dẫn NAS chuẩn (Metadata)</th>
+                                            <th>Trạng thái</th>
+                                            <th>Thao tác tệp (ACL)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-if="!dd.rows.length">
+                                            <td colspan="8" class="text-center text-muted py-3">Chưa có bộ hồ sơ dự án nào phù hợp bộ lọc.</td>
+                                        </tr>
+                                        <tr t-foreach="dd.rows" t-as="r" t-key="r.id">
+                                            <td><strong t-out="r.code"/></td>
+                                            <td><strong t-out="r.name"/></td>
+                                            <td t-out="r.project_name"/>
+                                            <td t-out="r.phase_label"/>
+                                            <td>
+                                                <span class="tp-gov-pill is-ok" t-if="r.current_version_no &gt; 0" t-out="'v' + r.current_version_no"/>
+                                                <span class="tp-gov-pill is-muted" t-else="">Chưa có tệp</span>
+                                            </td>
+                                            <td><code t-out="r.nas_relative_path"/></td>
+                                            <td><span class="tp-gov-pill is-warn" t-out="r.state_label"/></td>
+                                            <td>
+                                                <div class="d-flex gap-1">
+                                                    <label class="tp-gov-btn mb-0">
+                                                        + Bản mới
+                                                        <input type="file" class="d-none" t-on-change="(ev) => this.uploadDossierVersion(r.id, ev)"/>
+                                                    </label>
+                                                    <a t-if="r.latest_download_url" t-att-href="r.latest_download_url"
+                                                       target="_blank" rel="noopener" class="tp-gov-btn">Tải về</a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- NAS Folder Provisioning Queue -->
+                        <div class="tp-gov-card">
+                            <h3 class="h6 fw-bold mb-2">Hàng đợi cấu trúc thư mục NAS theo Mã dự án cố định (1 cây thư mục / dự án)</h3>
+                            <div class="tp-gov-table-wrap">
+                                <table class="tp-gov-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã gốc dự án</th>
+                                            <th>Dự án</th>
+                                            <th>Thư mục gốc chuẩn hóa</th>
+                                            <th>Số nhánh hợp đồng</th>
+                                            <th>Trạng thái đồng bộ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-if="!dd.nas_jobs.length">
+                                            <td colspan="5" class="text-center text-muted py-2">Chưa có tác vụ thư mục NAS nào.</td>
+                                        </tr>
+                                        <tr t-foreach="dd.nas_jobs" t-as="nj" t-key="nj.id">
+                                            <td><strong t-out="nj.project_code"/></td>
+                                            <td t-out="nj.project_name"/>
+                                            <td><code t-out="nj.root_folder_path"/></td>
+                                            <td t-out="nj.contract_count"/>
+                                            <td><span class="tp-gov-pill is-warn" t-out="nj.state_label"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+            </main>
+        </div>
+    </t>
+</templates>

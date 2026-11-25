@@ -1,0 +1,41 @@
+# Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
+{
+    'name': 'TANPHAT ONE — Quản trị Dự án WBS/CPM, Hồ sơ NAS & Điều hành Lãnh đạo',
+    'version': '20.0.1.0.0',
+    'category': 'Services/Project',
+    'summary': 'WBS, đường găng CPM thực, Baseline tiến độ, Hồ sơ phiên bản & NAS metadata, và Dashboard Điều hành Lãnh đạo 11 chỉ tiêu tài chính',
+    'author': 'TANPHAT ONE',
+    'license': 'LGPL-3',
+    'depends': [
+        'base',
+        'web',
+        'mail',
+        'hr',
+        'project',
+        'tp_core',
+        'tp_branding',
+        'tp_web_home',
+        'tp_project',
+        'tp_contract',
+        'tp_kd_workspace',
+        'tp_reporting',
+        'tp_request',
+        'tp_equipment',
+        'tp_digital_office',
+        'tp_admin_delegation',
+    ],
+    'data': [
+        'security/ir.access.csv',
+        'data/sequences.xml',
+        'views/governance_menus.xml',
+    ],
+    'assets': {
+        'web.assets_backend': [
+            'tp_enterprise_governance/static/src/governance.scss',
+            'tp_enterprise_governance/static/src/governance_workspace.js',
+            'tp_enterprise_governance/static/src/governance_workspace.xml',
+        ],
+    },
+    'installable': True,
+    'application': True,
+}

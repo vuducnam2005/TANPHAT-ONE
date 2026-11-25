@@ -1,0 +1,26 @@
+id,name,model_id,group_id/id,operation,domain
+access_tp_proj_baseline_read,Project baselines read,tp.project.baseline,base.group_user,r,"[('project_id', 'access', 'read')]"
+access_tp_proj_baseline_admin,Project baselines admin CRUD,tp.project.baseline,base.group_system,crud,
+access_tp_proj_baseline_orig_admin,Project baselines orig admin CRUD,tp.project.baseline,tp_admin_delegation.group_original_admin,crud,
+access_tp_proj_baseline_full_admin,Project baselines full admin CRUD,tp.project.baseline,tp_admin_delegation.group_full_admin,crud,
+rule_tp_proj_baseline_company,Project baselines company scope,tp.project.baseline,,crud,"[('company_id', 'in', company_ids)]"
+access_tp_proj_milestone_log_read,Project milestone logs read,tp.project.milestone.log,base.group_user,r,"[('project_id', 'access', 'read')]"
+access_tp_proj_milestone_log_admin,Project milestone logs admin CRUD,tp.project.milestone.log,base.group_system,crud,
+rule_tp_proj_milestone_log_company,Project milestone logs company scope,tp.project.milestone.log,,crud,"[('company_id', 'in', company_ids)]"
+access_tp_proj_dossier_user,Project dossiers scoped user,tp.project.dossier,base.group_user,cru,"[('project_id', 'access', 'read')]"
+access_tp_proj_dossier_orig_admin,Project dossiers orig admin,tp.project.dossier,tp_admin_delegation.group_original_admin,crud,
+access_tp_proj_dossier_full_admin,Project dossiers full admin,tp.project.dossier,tp_admin_delegation.group_full_admin,crud,
+access_tp_proj_dossier_system,Project dossiers system admin,tp.project.dossier,base.group_system,crud,
+rule_tp_proj_dossier_company,Project dossiers company scope,tp.project.dossier,,crud,"[('company_id', 'in', company_ids)]"
+access_tp_proj_dossier_ver_read,Project dossier versions read,tp.project.dossier.version,base.group_user,r,"[('dossier_id', 'access', 'read')]"
+access_tp_proj_dossier_ver_system,Project dossier versions system,tp.project.dossier.version,base.group_system,crud,
+access_tp_nas_job_read,NAS folder jobs read by project access,tp.nas.folder.job,base.group_user,r,"[('project_id', 'access', 'read')]"
+access_tp_nas_job_orig_admin,NAS folder jobs orig admin,tp.nas.folder.job,tp_admin_delegation.group_original_admin,crud,
+access_tp_nas_job_full_admin,NAS folder jobs full admin,tp.nas.folder.job,tp_admin_delegation.group_full_admin,crud,
+access_tp_nas_job_system,NAS folder jobs system,tp.nas.folder.job,base.group_system,crud,
+rule_tp_nas_job_company,NAS folder jobs company scope,tp.nas.folder.job,,crud,"[('company_id', 'in', company_ids)]"
+access_tp_fin_summary_finance_group,Financial summary finance group CRU,tp.financial.summary.entry,tp_reporting.group_reporting_finance,cru,
+access_tp_fin_summary_orig_admin,Financial summary orig admin CRUD,tp.financial.summary.entry,tp_admin_delegation.group_original_admin,crud,
+access_tp_fin_summary_full_admin,Financial summary full admin CRUD,tp.financial.summary.entry,tp_admin_delegation.group_full_admin,crud,
+access_tp_fin_summary_system,Financial summary system CRUD,tp.financial.summary.entry,base.group_system,crud,
+rule_tp_fin_summary_company,Financial summary company scope,tp.financial.summary.entry,,crud,"[('company_id', 'in', company_ids)]"

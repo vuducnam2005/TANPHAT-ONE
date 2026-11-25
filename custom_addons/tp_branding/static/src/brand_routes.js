@@ -640,6 +640,38 @@ export const ROUTE_DEFINITIONS = [
         has_detail: false,
         aliases: ["/app/bien-ban-hop"],
     },
+
+    // 11. Điều hành & Dự án WBS / NAS (dieu-hanh, du-an)
+    {
+        url: "/app/dieu-hanh/tong-quan",
+        action_xml_id: "tp_enterprise_governance.action_executive_dashboard",
+        action_tag: "tp_enterprise_governance.executive_dashboard",
+        native_slug: "dieu-hanh-tong-quan",
+        name: "Điều hành Lãnh đạo",
+        module: "tp_enterprise_governance",
+        has_detail: false,
+        aliases: ["/app/dieu-hanh"],
+    },
+    {
+        url: "/app/du-an/wbs-tien-do",
+        action_xml_id: "tp_enterprise_governance.action_project_wbs_cpm",
+        action_tag: "tp_enterprise_governance.project_wbs",
+        native_slug: "du-an-wbs-tien-do",
+        name: "Tiến độ WBS & Đường găng CPM",
+        module: "tp_enterprise_governance",
+        has_detail: false,
+        aliases: ["/app/du-an"],
+    },
+    {
+        url: "/app/du-an/ho-so-nas",
+        action_xml_id: "tp_enterprise_governance.action_project_dossier_nas",
+        action_tag: "tp_enterprise_governance.project_dossiers",
+        native_slug: "du-an-ho-so-nas",
+        name: "Hồ sơ dự án & NAS",
+        module: "tp_enterprise_governance",
+        has_detail: false,
+        aliases: [],
+    },
 ];
 
 // Runtime maps for dynamic action ID resolution
