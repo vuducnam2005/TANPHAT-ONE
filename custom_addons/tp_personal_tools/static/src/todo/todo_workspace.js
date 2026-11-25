@@ -30,6 +30,15 @@ const BUCKETS = [
     { key: "archived", label: "Lưu trữ" },
 ];
 
+const SOURCE_PILLS = [
+    { key: "", label: "Tất cả nguồn" },
+    { key: "self", label: "Tự tạo" },
+    { key: "project", label: "Dự án" },
+    { key: "meeting", label: "Cuộc họp" },
+    { key: "request", label: "Yêu cầu" },
+    { key: "chat", label: "Trao đổi" },
+];
+
 const PAGE_SIZES = [10, 20, 50, 100];
 
 function resolveInitialTaskstate(props) {
@@ -61,6 +70,7 @@ function emptyFilters() {
         date_from: "",
         date_to: "",
         priority: "",
+        source_kind: "",
         tag_id: 0,
         stage_id: 0,
         completion: "",
@@ -81,6 +91,7 @@ export class TpPersonalTodoWorkspace extends Component {
         this.dialog = useService("dialog");
         this.notification = useService("notification");
         this.BUCKETS = BUCKETS;
+        this.SOURCE_PILLS = SOURCE_PILLS;
         this.PAGE_SIZES = PAGE_SIZES;
 
         const initialRoute = resolveInitialTaskstate(this.props);
@@ -114,6 +125,14 @@ export class TpPersonalTodoWorkspace extends Component {
                 done: 0,
                 done_in_range: 0,
                 archived: 0,
+            },
+            sourceCounts: {
+                all: 0,
+                self: 0,
+                project: 0,
+                meeting: 0,
+                request: 0,
+                chat: 0,
             },
             stages: [],
             tags: [],
@@ -259,6 +278,7 @@ export class TpPersonalTodoWorkspace extends Component {
                     date_from: f.date_from,
                     date_to: f.date_to,
                     priority: f.priority,
+                    source_kind: f.source_kind,
                     tag_ids: f.tag_id ? [Number(f.tag_id)] : [],
                     stage_id: Number(f.stage_id) || 0,
                     completion: f.completion,
@@ -271,6 +291,7 @@ export class TpPersonalTodoWorkspace extends Component {
                 return;
             }
             this.state.summary = res.summary || this.state.summary;
+            this.state.sourceCounts = res.source_counts || this.state.sourceCounts;
             this.state.stages = res.stages || [];
             this.state.tags = res.tags || [];
             this.state.tasks = res.tasks || [];
@@ -307,6 +328,22 @@ export class TpPersonalTodoWorkspace extends Component {
         this.state.page = 1;
         this.state.mobileSidebarOpen = false;
         this.loadWorkspace();
+    }
+
+    selectSourceFilter(sourceKey) {
+        const next = this.state.appliedFilters.source_kind === sourceKey && sourceKey !== "" ? "" : sourceKey;
+        this.state.pendingFilters.source_kind = next;
+        this.state.appliedFilters.source_kind = next;
+        this.state.page = 1;
+        this.loadWorkspace();
+    }
+
+    sourceCount(sourceKey) {
+        const sc = this.state.sourceCounts || {};
+        if (!sourceKey) {
+            return sc.all || 0;
+        }
+        return sc[sourceKey] || 0;
     }
 
     setViewMode(mode) {
@@ -359,6 +396,16 @@ export class TpPersonalTodoWorkspace extends Component {
         if (f.priority !== "") {
             const pMap = { "0": "Bình thường", "1": "Trung bình", "2": "Cao", "3": "Khẩn cấp" };
             chips.push({ key: "priority", label: `Ưu tiên: ${pMap[f.priority] || f.priority}` });
+        }
+        if (f.source_kind) {
+            const sMap = {
+                self: "Tự tạo",
+                project: "Dự án",
+                meeting: "Cuộc họp",
+                request: "Yêu cầu",
+                chat: "Trao đổi",
+            };
+            chips.push({ key: "source_kind", label: `Nguồn: ${sMap[f.source_kind] || f.source_kind}` });
         }
         if (Number(f.tag_id)) {
             const tg = this.state.tags.find((t) => t.id === Number(f.tag_id));

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-25T11:17:32.468138+00:00",
-  "last_change_id": "CHG-20261125-007",
-  "code_digest": "2b834c69be79dc2dabf6c42efc81e920704f77ec3b9f2ec15f615cd4e75e28bf",
-  "code_file_count": 864,
+  "updated_at": "2026-11-25T12:08:25.000481+00:00",
+  "last_change_id": "CHG-20261125-008",
+  "code_digest": "a078c8b34a4a2198709edba117a7fe8d7c56f6635438a4085bd2a556dd73877b",
+  "code_file_count": 867,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "2a440ae984336f41c5555db814189fa60ed01d9ce1a62c5e127e0562d49b4757",
-    "docs/CHANGELOG.md": "d66945ea08e71c97db4953973c65414d2dc2e971e0c7b9814b8f68492d4bf680",
+    "docs/PROJECT_STATUS.md": "7ae69d98bbc7fd3d4834ace71dac6ccddb0fcc751f5c298fbbb0bc322d31ee14",
+    "docs/CHANGELOG.md": "5f70f90c736a9a7afd92c3ecbd4de3f1fe105c0046e8b5e482109fe00a94ea9e",
     "AGENTS.md": "72c31b7b0d24828d2313203ad211348f916aec386e61ad31b478fb3f80ad4448",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC Server backup pt001-20261125T175045 (16423 TOC lines), 45/45 SHA256 verified, -i tp_personal_tools -u tp_branding,tp_hr_workspace rc=0 error_lines=0, local /web/health 200; public tunnel 530 post-17:54 noted"
+    "static py_compile/XML/libsass/node --check PASS; Odoo /tp_personal_tools 12/12 PASS; 2-cursor PostgreSQL room lock 1 ok 1 conflict PASS"
   ]
 }

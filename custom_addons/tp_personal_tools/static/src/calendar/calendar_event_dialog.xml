@@ -19,6 +19,11 @@
                     <div class="tp-cal-readonly-card">
                         <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
                             <div>
+                                <div class="d-flex flex-wrap align-items-center gap-1 mb-1" t-if="!this.state.maskedPrivate">
+                                    <span t-if="this.state.detailCard.event_kind_label" class="badge rounded-pill text-bg-light border text-dark" t-out="this.state.detailCard.event_kind_label"/>
+                                    <span t-if="this.state.detailCard.project?.name" class="badge rounded-pill text-bg-primary" t-out="this.state.detailCard.project.name"/>
+                                    <span t-if="this.state.detailCard.room?.name and this.state.detailCard.room_booking_state === 'confirmed'" class="badge rounded-pill text-bg-success" t-out="'Phòng: ' + this.state.detailCard.room.name + ' (' + this.state.detailCard.room.capacity + ' chỗ)'"/>
+                                </div>
                                 <h4 class="tp-cal-ro-title mb-1" t-out="this.state.detailCard.name"/>
                                 <div class="tp-cal-ro-time" t-out="this.state.detailCard.time_display"/>
                             </div>
@@ -70,6 +75,18 @@
                             <div t-if="this.state.detailCard.notes_text" class="tp-cal-ro-section mt-3">
                                 <div class="tp-pt-label mb-1">Nội dung</div>
                                 <div class="tp-cal-ro-notes" t-out="this.state.detailCard.notes_text"/>
+                            </div>
+
+                            <div t-if="this.state.detailCard.attachments?.length" class="tp-cal-ro-section mt-3">
+                                <div class="tp-pt-label mb-1">Tài liệu đính kèm (<t t-out="this.state.detailCard.attachments.length"/>)</div>
+                                <div class="d-flex flex-column gap-1">
+                                    <a t-foreach="this.state.detailCard.attachments" t-as="att" t-key="att.id"
+                                        t-att-href="att.download_url"
+                                        class="small fw-semibold text-decoration-none d-inline-flex align-items-center gap-1">
+                                        <span>📎</span>
+                                        <span t-out="att.name"/>
+                                    </a>
+                                </div>
                             </div>
 
                             <div t-if="this.state.detailCard.is_attendee" class="tp-cal-rsvp-box mt-3">
@@ -125,6 +142,36 @@
                                 t-on-input="() => this.markDirty()"
                             />
                             <div t-if="this.hasFieldError('tp_cal_ev_name')" class="tp-pt-field-error" t-out="this.fieldErrorMessage('tp_cal_ev_name')"/>
+                        </div>
+
+                        <!-- Event Kind & Related Project -->
+                        <div class="tp-cal-form-row-2">
+                            <div class="tp-pt-field">
+                                <label class="tp-pt-label" for="tp_cal_ev_kind">Loại lịch làm việc</label>
+                                <select id="tp_cal_ev_kind"
+                                    class="tp-pt-select"
+                                    t-model.proxy="this.state.eventKind"
+                                    t-on-change="() => this.markDirty()">
+                                    <option value="personal">Cá nhân</option>
+                                    <option value="meeting">Họp</option>
+                                    <option value="field_trip">Công tác / Hiện trường</option>
+                                    <option value="department">Lịch phòng / Công ty</option>
+                                </select>
+                                <div t-if="this.state.eventKind === 'field_trip'" class="small text-muted mt-1">
+                                    Lịch công tác phục vụ điều phối thời gian (không tự sửa dữ liệu chấm công).
+                                </div>
+                            </div>
+                            <div class="tp-pt-field">
+                                <label class="tp-pt-label" for="tp_cal_ev_project">Dự án liên quan</label>
+                                <select id="tp_cal_ev_project"
+                                    class="tp-pt-select"
+                                    t-model.proxy="this.state.projectId"
+                                    t-on-change="() => this.markDirty()">
+                                    <option value="0">— Không gắn dự án —</option>
+                                    <option t-foreach="this.state.projects" t-as="pr" t-key="pr.id" t-att-value="pr.id"
+                                        t-out="(pr.code ? '[' + pr.code + '] ' : '') + pr.name"/>
+                                </select>
+                            </div>
                         </div>
 
                         <!-- Calendar & All-day toggle -->
@@ -223,10 +270,62 @@
                             </ul>
                         </div>
 
-                        <!-- Location & Video Call -->
+                        <!-- Meeting Room Booking & Location & Video Call -->
+                        <div class="tp-pt-field">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="tp-pt-label mb-0" for="tp_cal_ev_room">Đặt phòng họp nội bộ</label>
+                                <button t-if="this.state.canManageRooms"
+                                    type="button"
+                                    class="btn btn-link btn-sm p-0 text-decoration-none"
+                                    t-on-click="() => (this.state.showAddRoomBox = !this.state.showAddRoomBox)">
+                                    <t t-out="this.state.showAddRoomBox ? 'Đóng thêm phòng' : '+ Thêm phòng họp'"/>
+                                </button>
+                            </div>
+                            <select id="tp_cal_ev_room"
+                                class="tp-pt-select"
+                                t-model.proxy="this.state.roomId"
+                                t-on-change="() => this.onRoomSelectChange()">
+                                <option value="0">— Không đặt phòng họp (hoặc nhập địa điểm bên ngoài) —</option>
+                                <option t-foreach="this.state.rooms" t-as="rm" t-key="rm.id" t-att-value="rm.id"
+                                    t-out="rm.display_label + (rm.is_available ? ' · Trống' : ' · ' + rm.conflict_summary)"/>
+                            </select>
+                            <div t-if="this.selectedRoomConflict" class="tp-pt-field-error mt-1">
+                                ⚠ Phòng đang chọn bị trùng lịch xác nhận: <strong t-out="this.selectedRoomConflict"/>. Hệ thống sẽ chặn lưu nếu chưa đổi phòng hoặc khung giờ.
+                            </div>
+
+                            <!-- Admin Quick Add Meeting Room -->
+                            <div t-if="this.state.showAddRoomBox and this.state.canManageRooms" class="p-3 rounded-3 border bg-light mt-2">
+                                <div class="small fw-semibold mb-2">Thêm phòng họp mới vào danh mục công ty</div>
+                                <div class="row g-2">
+                                    <div class="col-5 col-sm-4">
+                                        <input type="text" class="tp-pt-input" placeholder="Mã (VD: PH-T3)" t-model.proxy="this.state.newRoomCode"/>
+                                    </div>
+                                    <div class="col-7 col-sm-5">
+                                        <input type="text" class="tp-pt-input" placeholder="Tên phòng họp *" t-model.proxy="this.state.newRoomName"/>
+                                    </div>
+                                    <div class="col-6 col-sm-3">
+                                        <input type="number" min="1" class="tp-pt-input" placeholder="Sức chứa" t-model.proxy="this.state.newRoomCapacity"/>
+                                    </div>
+                                    <div class="col-6 col-sm-5">
+                                        <input type="text" class="tp-pt-input" placeholder="Vị trí (VD: Tầng 3)" t-model.proxy="this.state.newRoomLocation"/>
+                                    </div>
+                                    <div class="col-12 col-sm-7">
+                                        <input type="text" class="tp-pt-input" placeholder="Thiết bị (TV, máy chiếu…)" t-model.proxy="this.state.newRoomEquipment"/>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2 mt-2">
+                                    <button type="button" class="tp-pt-btn tp-pt-btn-sm tp-pt-btn-teal"
+                                        t-att-disabled="this.state.creatingRoom or !this.state.newRoomCode.trim() or !this.state.newRoomName.trim()"
+                                        t-on-click="() => this.onCreateRoomQuick()">
+                                        <span t-out="this.state.creatingRoom ? 'Đang tạo…' : 'Lưu phòng họp'"/>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="tp-cal-form-row-2">
                             <div class="tp-pt-field">
-                                <label class="tp-pt-label" for="tp_cal_ev_location">Địa điểm / Phòng họp</label>
+                                <label class="tp-pt-label" for="tp_cal_ev_location">Địa điểm chi tiết</label>
                                 <input id="tp_cal_ev_location"
                                     type="text"
                                     class="tp-pt-input"
@@ -371,6 +470,25 @@
                                 placeholder="Nội dung chuẩn bị cuộc họp, tài liệu cần mang theo…"
                                 t-model.proxy="this.state.notes"
                                 t-on-input="() => this.markDirty()"/>
+                        </div>
+
+                        <!-- Meeting Attachments (when editing saved event) -->
+                        <div t-if="this.state.eventId" class="tp-pt-field">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="tp-pt-label mb-0">Tài liệu cuộc họp (<t t-out="this.state.attachments.length"/>)</label>
+                                <div>
+                                    <input type="file" multiple="multiple" class="d-none" t-ref="this.evFileInputRef" t-on-change="(ev) => this.onEventDocSelected(ev)"/>
+                                    <button type="button" class="tp-pt-btn tp-pt-btn-sm" t-att-disabled="this.state.uploadingDoc" t-on-click="() => this.evFileInputRef()?.click()">
+                                        <span t-out="this.state.uploadingDoc ? 'Đang tải…' : '+ Đính kèm tài liệu'"/>
+                                    </button>
+                                </div>
+                            </div>
+                            <div t-if="this.state.attachments.length" class="d-flex flex-column gap-1">
+                                <div t-foreach="this.state.attachments" t-as="att" t-key="att.id" class="d-flex align-items-center justify-content-between px-2 py-1 rounded border bg-white small">
+                                    <a t-att-href="att.download_url" class="text-truncate fw-semibold text-decoration-none" t-out="att.name"/>
+                                    <button t-if="att.can_delete" type="button" class="btn btn-link btn-sm text-danger p-0 ms-2" t-on-click="() => this.onDeleteEventDoc(att)">Xóa</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </t>

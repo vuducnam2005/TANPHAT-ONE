@@ -137,4 +137,22 @@
             <attribute name="t-if">this.message.bubbleColor and (!this.message.hasTextContent or this.env.inChatWindow or this.isTpDiscussChannelMessage)</attribute>
         </xpath>
     </t>
+
+    <!-- 6. Staged File Upload Confirmation Banner inside Discuss Composer -->
+    <t t-inherit="mail.Composer" t-inherit-mode="extension">
+        <xpath expr="//AttachmentList[@t-if='this.props.composer.attachments.length > 0']" position="before">
+            <div t-if="this.env.inDiscussApp and this.props.composer.attachments.length &gt; 0"
+                class="d-flex flex-wrap align-items-center justify-content-between gap-2 px-2 py-1 mt-1 rounded-2 border bg-light small">
+                <span class="fw-semibold text-primary">
+                    📎 Đang chờ gửi (<t t-out="this.props.composer.attachments.length"/> tệp) — kiểm tra danh sách bên dưới rồi nhấn Gửi để xác nhận.
+                </span>
+                <button type="button"
+                    class="btn btn-sm btn-primary py-0 px-2"
+                    t-att-disabled="this.isSendButtonDisabled"
+                    t-on-click="this.sendMessage">
+                    Gửi tệp ngay
+                </button>
+            </div>
+        </xpath>
+    </t>
 </templates>

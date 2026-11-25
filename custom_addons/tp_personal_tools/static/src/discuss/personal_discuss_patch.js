@@ -3,6 +3,7 @@ import { ACTION_TAGS } from "@mail/core/common/action";
 import { Composer } from "@mail/core/common/composer";
 import { registerComposerAction } from "@mail/core/common/composer_actions";
 import { Message } from "@mail/core/common/message";
+import { registerMessageAction } from "@mail/core/common/message_actions";
 import { registerThreadAction } from "@mail/core/common/thread_actions";
 import { Thread } from "@mail/core/common/thread_model";
 import { DiscussContent } from "@mail/core/public_web/discuss_content";
@@ -15,9 +16,32 @@ import { router } from "@web/core/browser/router";
 import { useService } from "@web/core/utils/hooks";
 import { patch } from "@web/core/utils/patch";
 import { TpCreateChatDialog } from "./create_chat_dialog";
+import { TpMessageToTaskDialog } from "./message_to_task_dialog";
 import { TpShareItemDialog } from "./share_item_dialog";
 
 const TP_DIRECT_FILTER_KEY = "tp_direct_only";
+
+// 0. Message action: Convert Discuss message -> Task with preview & confirmation
+registerMessageAction("tp-create-task-from-message", {
+    condition: ({ message, owner }) =>
+        Boolean(
+            owner.env.inDiscussApp &&
+                message?.id &&
+                !message.isEmpty &&
+                message.thread?.model === "discuss.channel"
+        ),
+    icon: "check_circle",
+    name: "Tạo công việc",
+    onSelected: ({ message, store }) => {
+        if (!message?.id) {
+            return;
+        }
+        store.env.services.dialog.add(TpMessageToTaskDialog, {
+            messageId: message.id,
+        });
+    },
+    sequence: 42,
+});
 
 // 1. Composer action: Share permitted Personal Task or Calendar Event into conversation
 registerComposerAction("tp-share-personal-item", {

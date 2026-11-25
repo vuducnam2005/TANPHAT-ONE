@@ -14,6 +14,7 @@ Key guarantees enforced at ORM/backend level:
    conflict checks, or Agenda/Popover RPCs — showing strictly `'Bận'` for busy slots.
 """
 
+import base64
 import html
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
@@ -21,7 +22,9 @@ from zoneinfo import ZoneInfo
 from odoo import Command, api, fields, models
 from odoo.exceptions import AccessError, MissingError, ValidationError
 from odoo.fields import Domain
-from odoo.tools import html2plaintext, html_sanitize
+from odoo.tools import SQL, html2plaintext, html_sanitize
+
+MAX_EVENT_ATTACHMENT_BYTES = 25 * 1024 * 1024  # 25 MB
 
 PRIVATE_SEARCH_SENSITIVE_ROOTS = frozenset(
     {
@@ -33,8 +36,22 @@ PRIVATE_SEARCH_SENSITIVE_ROOTS = frozenset(
         "categ_ids",
         "res_model",
         "res_id",
+        "tp_project_id",
     }
 )
+
+EVENT_KIND_LABELS = {
+    "personal": "Cá nhân",
+    "meeting": "Họp",
+    "field_trip": "Công tác / Hiện trường",
+    "department": "Lịch phòng / Công ty",
+}
+
+ROOM_BOOKING_LABELS = {
+    "none": "Không đặt phòng",
+    "confirmed": "Đã xác nhận phòng",
+    "cancelled": "Đã hủy đặt phòng",
+}
 
 ATTENDEE_STATE_LABELS = {
     "accepted": "Đã chấp nhận",
@@ -103,6 +120,179 @@ class PersonalCalendarAttendee(models.Model):
 
 class PersonalCalendarEvent(models.Model):
     _inherit = "calendar.event"
+
+    tp_event_kind = fields.Selection(
+        [
+            ("personal", "Cá nhân"),
+            ("meeting", "Họp"),
+            ("field_trip", "Công tác / Hiện trường"),
+            ("department", "Lịch phòng / Công ty"),
+        ],
+        string="Loại lịch",
+        default="personal",
+        required=True,
+        index=True,
+        export_string_translation=False,
+    )
+    tp_project_id = fields.Many2one(
+        "project.project",
+        string="Dự án liên quan",
+        ondelete="set null",
+        index=True,
+        export_string_translation=False,
+    )
+    tp_room_id = fields.Many2one(
+        "tp.meeting.room",
+        string="Phòng họp nội bộ",
+        ondelete="restrict",
+        index=True,
+        export_string_translation=False,
+    )
+    tp_room_booking_state = fields.Selection(
+        [
+            ("none", "Không đặt phòng"),
+            ("confirmed", "Đã xác nhận phòng"),
+            ("cancelled", "Đã hủy đặt phòng"),
+        ],
+        string="Trạng thái đặt phòng",
+        default="none",
+        index=True,
+        export_string_translation=False,
+    )
+
+    @api.model
+    def _tp_acquire_room_locks(self, room_ids):
+        """Acquire exclusive `FOR UPDATE` locks on `tp_meeting_room` in deterministic ID order.
+
+        Must be called BEFORE inserting/updating `calendar_event` rows so PostgreSQL never
+        takes a foreign-key `FOR KEY SHARE` lock on `tp_meeting_room` first and deadlocks
+        when two transactions simultaneously upgrade `FOR KEY SHARE` -> `FOR UPDATE`.
+        """
+        clean_ids = sorted({int(r) for r in (room_ids or []) if r})
+        for rid in clean_ids:
+            self.env.cr.execute(
+                SQL("SELECT id FROM tp_meeting_room WHERE id = %s FOR UPDATE", rid)
+            )
+
+    def _tp_lock_and_check_room_conflicts(self):
+        """Serialize room bookings via PostgreSQL `FOR UPDATE` on `tp_meeting_room` + fresh snapshot read.
+
+        Guarantees:
+        1. Two simultaneous transactions booking the same room for overlapping times
+           cannot both commit; the second waits cleanly on `_tp_acquire_room_locks`, then
+           inspects both current-tx rows and latest committed rows (`registry.cursor()`)
+           to work deterministically even under Odoo's `REPEATABLE READ` isolation.
+        2. Cancelled bookings (`tp_room_booking_state != 'confirmed'`) or archived
+           events (`active = False`) immediately release the slot.
+        3. Private event titles are masked as `'Khung giờ bận'` in conflict errors.
+        """
+        confirmed_events = self.filtered(
+            lambda ev: ev.active
+            and ev.tp_room_id
+            and ev.tp_room_booking_state == "confirmed"
+            and ev.start
+            and ev.stop
+        )
+        if not confirmed_events:
+            return
+
+        self._tp_acquire_room_locks(confirmed_events.mapped("tp_room_id").ids)
+        self.env.flush_all()
+
+        tz = _user_tz(self.env)
+        for ev in confirmed_events:
+            room = ev.tp_room_id.sudo()
+            if not room.active:
+                raise ValidationError(
+                    self.env._(
+                        "Phòng họp '%(room)s' hiện đang ngưng sử dụng, không thể đặt mới.",
+                        room=room.name,
+                    )
+                )
+            dom = [
+                ("active", "=", True),
+                ("tp_room_id", "=", room.id),
+                ("tp_room_booking_state", "=", "confirmed"),
+                ("id", "!=", ev.id),
+                ("start", "<", ev.stop),
+                ("stop", ">", ev.start),
+            ]
+            conflict_data = None
+            conflict_local = self.sudo().search(dom, order="start asc", limit=1)
+            if conflict_local:
+                cf_user = conflict_local.with_env(self.env)
+                conflict_data = {
+                    "allday": bool(conflict_local.allday),
+                    "start_date": conflict_local.start_date,
+                    "start": conflict_local.start,
+                    "stop": conflict_local.stop,
+                    "name": conflict_local.name,
+                    "is_priv": cf_user._check_private_event_conditions(),
+                }
+            elif not getattr(self.env.registry, "in_test_mode", lambda: False)():
+                # Fresh read-only snapshot acquired AFTER holding the `FOR UPDATE` room lock,
+                # seeing bookings committed by concurrent transactions while we waited on the lock!
+                with self.env.registry.cursor() as cr_latest:
+                    env_latest = api.Environment(cr_latest, self.env.uid, dict(self.env.context))
+                    cf_ext = (
+                        env_latest["calendar.event"]
+                        .sudo()
+                        .search(dom, order="start asc", limit=1)
+                    )
+                    if cf_ext:
+                        cf_ext_user = cf_ext.with_env(env_latest)
+                        conflict_data = {
+                            "allday": bool(cf_ext.allday),
+                            "start_date": cf_ext.start_date,
+                            "start": cf_ext.start,
+                            "stop": cf_ext.stop,
+                            "name": cf_ext.name,
+                            "is_priv": cf_ext_user._check_private_event_conditions(),
+                        }
+
+            if conflict_data:
+                if conflict_data["allday"]:
+                    slot_str = (
+                        f"{conflict_data['start_date'].strftime('%d/%m/%Y')} (Cả ngày)"
+                        if conflict_data["start_date"]
+                        else "Cả ngày"
+                    )
+                else:
+                    st_loc = conflict_data["start"].replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
+                    en_loc = conflict_data["stop"].replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
+                    slot_str = f"{st_loc.strftime('%d/%m/%Y %H:%M')} – {en_loc.strftime('%H:%M')}"
+                conflict_title = (
+                    "Khung giờ bận"
+                    if conflict_data["is_priv"]
+                    else (conflict_data["name"] or "Cuộc họp đã xác nhận")
+                )
+                raise ValidationError(
+                    self.env._(
+                        "Phòng họp '%(room)s' đã có lịch xác nhận trùng giờ (%(slot)s — %(title)s). Vui lòng chọn phòng khác hoặc đổi khung giờ.",
+                        room=room.name,
+                        slot=slot_str,
+                        title=conflict_title,
+                    )
+                )
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        prepared = []
+        lock_rids = []
+        for vals in vals_list:
+            v = dict(vals)
+            if v.get("tp_room_id") and not v.get("tp_room_booking_state"):
+                v["tp_room_booking_state"] = "confirmed"
+            elif not v.get("tp_room_id"):
+                v.setdefault("tp_room_booking_state", "none")
+            if v.get("tp_room_id") and v.get("tp_room_booking_state") == "confirmed":
+                lock_rids.append(int(v["tp_room_id"]))
+            prepared.append(v)
+        if lock_rids:
+            self._tp_acquire_room_locks(lock_rids)
+        events = super().create(prepared)
+        events._tp_lock_and_check_room_conflicts()
+        return events
 
     def _tp_is_admin_actor(self):
         return bool(
@@ -236,7 +426,46 @@ class PersonalCalendarEvent(models.Model):
                             "Bạn không có quyền sửa lịch của người chủ trì. Bạn vẫn có thể phản hồi lời mời tham gia."
                         )
                     )
-        return super().write(vals)
+        write_vals = dict(vals)
+        if "tp_room_id" in write_vals:
+            if not write_vals.get("tp_room_id"):
+                write_vals.setdefault("tp_room_booking_state", "none")
+            elif "tp_room_booking_state" not in write_vals:
+                write_vals["tp_room_booking_state"] = "confirmed"
+        if write_vals.get("active") is False and "tp_room_booking_state" not in write_vals:
+            # Archiving/cancelling an event releases any confirmed room slot cleanly
+            booked = self.filtered(lambda e: e.tp_room_id and e.tp_room_booking_state == "confirmed")
+            if booked:
+                booked_vals = dict(write_vals, tp_room_booking_state="cancelled")
+                others = self - booked
+                res = True
+                if booked:
+                    res = super(PersonalCalendarEvent, booked).write(booked_vals) and res
+                if others:
+                    res = super(PersonalCalendarEvent, others).write(write_vals) and res
+                return res
+
+        room_touch_fields = {
+            "tp_room_id",
+            "tp_room_booking_state",
+            "start",
+            "stop",
+            "start_date",
+            "stop_date",
+            "allday",
+            "active",
+        }
+        if room_touch_fields & set(write_vals):
+            pre_lock_rids = set(self.mapped("tp_room_id").ids)
+            if write_vals.get("tp_room_id"):
+                pre_lock_rids.add(int(write_vals["tp_room_id"]))
+            if pre_lock_rids:
+                self._tp_acquire_room_locks(pre_lock_rids)
+
+        res = super().write(write_vals)
+        if room_touch_fields & set(write_vals):
+            self._tp_lock_and_check_room_conflicts()
+        return res
 
     def unlink(self):
         if not self.env.su:
@@ -309,6 +538,10 @@ class PersonalCalendarEvent(models.Model):
             )
 
         tz_name = user.tz or self.env.company.partner_id.tz or "Asia/Ho_Chi_Minh"
+        rooms = self.env["tp.meeting.room"].tp_list_available_rooms()
+        projects = self.env["project.project"].search(
+            [("active", "=", True)], order="name asc", limit=150
+        )
         return {
             "primary_calendar_id": primary_cal.id if primary_cal else False,
             "my_calendars": my_calendars,
@@ -316,6 +549,19 @@ class PersonalCalendarEvent(models.Model):
             "colleague_filters": colleague_filters,
             "alarms": [{"id": a.id, "name": a.name} for a in alarms],
             "tags": [{"id": t.id, "name": t.name, "color": t.color or 0} for t in tags],
+            "rooms": rooms,
+            "can_manage_rooms": self.env["tp.meeting.room"]._tp_can_manage_rooms(),
+            "projects": [
+                {
+                    "id": p.id,
+                    "name": p.name or f"Dự án #{p.id}",
+                    "code": getattr(p, "tp_code", "") or "",
+                }
+                for p in projects
+            ],
+            "event_kinds": [
+                {"key": k, "label": lbl} for k, lbl in EVENT_KIND_LABELS.items()
+            ],
             "tz": tz_name,
             "self_partner_id": user.partner_id.id,
             "self_user_id": user.id,
@@ -544,6 +790,14 @@ class PersonalCalendarEvent(models.Model):
                 "my_status_label": "",
                 "recurrency": False,
                 "linked_task": None,
+                "event_kind": "personal",
+                "event_kind_label": "",
+                "project": None,
+                "room": None,
+                "room_booking_state": "none",
+                "room_booking_label": "",
+                "attachment_count": 0,
+                "attachments": [],
                 "alarm_ids": [],
                 "categ_ids": [],
             }
@@ -581,16 +835,54 @@ class PersonalCalendarEvent(models.Model):
         if self.res_model == "project.task" and self.res_id:
             task = self.env["project.task"].browse(self.res_id).exists()
             if task and task.has_access("read"):
-                is_personal = not task.project_id and not task.parent_id and not task.is_template
                 linked_task = {
                     "id": task.id,
                     "name": task.name or f"Công việc #{task.id}",
                     "is_done": task.state == "1_done",
-                    "url": f"/app/ca-nhan/cong-viec/{task.id}" if is_personal else "",
+                    "url": f"/app/ca-nhan/cong-viec/{task.id}",
                 }
+
+        project_info = None
+        if self.tp_project_id and self.tp_project_id.has_access("read"):
+            project_info = {
+                "id": self.tp_project_id.id,
+                "name": self.tp_project_id.name or f"Dự án #{self.tp_project_id.id}",
+                "code": getattr(self.tp_project_id, "tp_code", "") or "",
+            }
+
+        room_info = None
+        if self.tp_room_id:
+            r = self.tp_room_id.sudo()
+            room_info = {
+                "id": r.id,
+                "code": r.code or "",
+                "name": r.name or "",
+                "capacity": r.capacity or 0,
+                "location": r.location or "",
+            }
+
+        ev_attachments = self.env["ir.attachment"].search(
+            [("res_model", "=", "calendar.event"), ("res_id", "=", self.id)],
+            order="id desc",
+            limit=30,
+        )
+        can_edit_ev = self._tp_can_modify_event()
+        att_list = [
+            {
+                "id": a.id,
+                "name": a.name or "Tài liệu cuộc họp",
+                "mimetype": a.mimetype or "application/octet-stream",
+                "file_size": a.file_size or 0,
+                "download_url": f"/web/content/{a.id}?download=true",
+                "can_delete": can_edit_ev,
+            }
+            for a in ev_attachments
+        ]
 
         eff_priv = self.effective_privacy or "public"
         notes_plain = html2plaintext(self.notes or self.description or "").strip()
+        ev_kind = self.tp_event_kind or "personal"
+        room_state = self.tp_room_booking_state or ("confirmed" if self.tp_room_id else "none")
 
         return {
             "id": self.id,
@@ -617,7 +909,7 @@ class PersonalCalendarEvent(models.Model):
             "calendar_id": self.calendar_id.id if self.calendar_id else False,
             "calendar_name": self.calendar_id.display_name if self.calendar_id else "Lịch cá nhân",
             "calendar_color": self.calendar_color or 1,
-            "user_can_edit": self._tp_can_modify_event(),
+            "user_can_edit": can_edit_ev,
             "is_attendee": bool(my_status) and len(attendees) > 1,
             "my_status": my_status,
             "my_status_label": ATTENDEE_STATE_LABELS.get(my_status, ""),
@@ -628,6 +920,14 @@ class PersonalCalendarEvent(models.Model):
             "count": self.count or 5,
             "until": self.until.isoformat() if self.until else "",
             "linked_task": linked_task,
+            "event_kind": ev_kind,
+            "event_kind_label": EVENT_KIND_LABELS.get(ev_kind, "Cá nhân"),
+            "project": project_info,
+            "room": room_info,
+            "room_booking_state": room_state,
+            "room_booking_label": ROOM_BOOKING_LABELS.get(room_state, ""),
+            "attachment_count": len(att_list),
+            "attachments": att_list,
             "alarm_ids": self.alarm_ids.ids,
             "alarm_names": [a.name for a in self.alarm_ids],
             "categ_ids": [{"id": c.id, "name": c.name, "color": c.color or 0} for c in self.categ_ids],
@@ -708,17 +1008,59 @@ class PersonalCalendarEvent(models.Model):
         alarm_ids = [int(a) for a in (vals.get("alarm_ids") or []) if str(a).isdigit()]
         categ_ids = [int(c) for c in (vals.get("categ_ids") or []) if str(c).isdigit()]
 
+        ev_kind = str(vals.get("event_kind") or "personal").strip()
+        if ev_kind not in EVENT_KIND_LABELS:
+            ev_kind = "personal"
+
+        location_clean = str(vals.get("location") or "").strip()
+
         write_vals = {
             "name": name,
             **time_vals,
             "partner_ids": [Command.set(valid_partners.ids)],
-            "location": str(vals.get("location") or "").strip() or False,
+            "location": location_clean or False,
             "notes": notes_html,
             "description": notes_html,
             "privacy": privacy,
             "show_as": show_as,
             "alarm_ids": [Command.set(alarm_ids)],
+            "tp_event_kind": ev_kind,
         }
+        if "project_id" in vals:
+            proj_id = int(vals.get("project_id") or 0)
+            if proj_id:
+                proj = self.env["project.project"].browse(proj_id).exists()
+                if not proj:
+                    raise ValidationError(self.env._("Dự án liên kết không tồn tại."))
+                proj.check_access("read")
+                write_vals["tp_project_id"] = proj.id
+            else:
+                write_vals["tp_project_id"] = False
+
+        if "room_id" in vals:
+            room_id = int(vals.get("room_id") or 0)
+            if room_id:
+                room = self.env["tp.meeting.room"].browse(room_id).exists()
+                if not room or not room.active:
+                    raise ValidationError(self.env._("Phòng họp đã chọn không tồn tại hoặc đang ngưng sử dụng."))
+                room.check_access("read")
+                booking_st = str(vals.get("room_booking_state") or "confirmed")
+                if booking_st not in ("confirmed", "cancelled"):
+                    booking_st = "confirmed"
+                write_vals["tp_room_id"] = room.id
+                write_vals["tp_room_booking_state"] = booking_st
+                if not location_clean and booking_st == "confirmed":
+                    write_vals["location"] = (
+                        f"{room.name} ({room.location})" if room.location else room.name
+                    )
+            else:
+                write_vals["tp_room_id"] = False
+                write_vals["tp_room_booking_state"] = "none"
+        elif "room_booking_state" in vals:
+            st = str(vals.get("room_booking_state") or "none")
+            if st in ("none", "confirmed", "cancelled"):
+                write_vals["tp_room_booking_state"] = st
+
         if categ_ids or "categ_ids" in vals:
             write_vals["categ_ids"] = [Command.set(categ_ids)]
 
@@ -886,6 +1228,16 @@ class PersonalCalendarEvent(models.Model):
         if privacy_filter in ("public", "private", "confidential", "members_only"):
             dom &= Domain("effective_privacy", "in", [privacy_filter])
 
+        event_kind_filter = str(params.get("event_kind") or "").strip()
+        if event_kind_filter in EVENT_KIND_LABELS:
+            dom &= Domain("tp_event_kind", "=", event_kind_filter)
+
+        room_filter_id = int(params.get("room_id") or 0)
+        if room_filter_id:
+            dom &= Domain("tp_room_id", "=", room_filter_id) & Domain(
+                "tp_room_booking_state", "=", "confirmed"
+            )
+
         response_state = str(params.get("response_state") or "").strip()
         if response_state in ("accepted", "declined", "tentative", "needsAction"):
             dom &= Domain(
@@ -944,3 +1296,55 @@ class PersonalCalendarEvent(models.Model):
             "date_to": d_to.isoformat(),
             "today_iso": today_loc.isoformat(),
         }
+
+    @api.model
+    def tp_upload_event_attachment(self, event_id, filename, base64_data, mimetype=""):
+        """Attach a meeting document to `calendar.event` with `public=False`."""
+        self.env["res.users"]._tp_require_internal_caller()
+        ev = self.browse(int(event_id or 0)).exists()
+        if not ev:
+            raise MissingError(self.env._("Sự kiện lịch không tồn tại."))
+        if not ev._tp_can_modify_event():
+            raise AccessError(self.env._("Chỉ người chủ trì mới có quyền đính kèm tài liệu cho lịch này."))
+        clean_name = str(filename or "").strip() or "tai-lieu-hop"
+        if not base64_data:
+            raise ValidationError(self.env._("Nội dung tệp tải lên đang trống."))
+        try:
+            raw_bytes = base64.b64decode(base64_data, validate=False)
+        except Exception as exc:
+            raise ValidationError(self.env._("Không đọc được định dạng tệp tải lên.")) from exc
+        if len(raw_bytes) > MAX_EVENT_ATTACHMENT_BYTES:
+            raise ValidationError(self.env._("Dung lượng tệp vượt quá giới hạn 25 MB."))
+        att_vals = {
+            "name": clean_name,
+            "raw": raw_bytes,
+            "res_model": "calendar.event",
+            "res_id": ev.id,
+            "public": False,
+            "company_id": self.env.company.id,
+        }
+        if mimetype:
+            att_vals["mimetype"] = str(mimetype)
+        att = self.env["ir.attachment"].create(att_vals)
+        return {
+            "id": att.id,
+            "name": att.name,
+            "mimetype": att.mimetype or "application/octet-stream",
+            "file_size": att.file_size or len(raw_bytes),
+            "download_url": f"/web/content/{att.id}?download=true",
+            "can_delete": True,
+        }
+
+    @api.model
+    def tp_delete_event_attachment(self, event_id, attachment_id):
+        self.env["res.users"]._tp_require_internal_caller()
+        ev = self.browse(int(event_id or 0)).exists()
+        if not ev:
+            raise MissingError(self.env._("Sự kiện lịch không tồn tại."))
+        if not ev._tp_can_modify_event():
+            raise AccessError(self.env._("Chỉ người chủ trì mới có quyền xóa tài liệu đính kèm."))
+        att = self.env["ir.attachment"].browse(int(attachment_id or 0)).exists()
+        if not att or att.res_model != "calendar.event" or att.res_id != ev.id:
+            raise MissingError(self.env._("Tài liệu đính kèm không tồn tại trên sự kiện này."))
+        att.unlink()
+        return {"deleted": True}

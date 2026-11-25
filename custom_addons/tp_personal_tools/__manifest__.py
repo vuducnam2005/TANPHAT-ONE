@@ -1,7 +1,7 @@
 # Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
 {
     "name": "TANPHAT ONE — Công cụ cá nhân (Việc cá nhân, Lịch làm việc, Trao đổi)",
-    "version": "20.0.1.0.0",
+    "version": "20.0.2.0.0",
     "category": "Productivity",
     "summary": "Không gian Việc cá nhân, Lịch làm việc và Trao đổi đồng bộ thương hiệu TANPHAT ONE",
     "author": "TANPHAT ONE",
@@ -49,6 +49,8 @@
             "tp_personal_tools/static/src/calendar/personal_calendar_view.scss",
             "tp_personal_tools/static/src/discuss/create_chat_dialog.js",
             "tp_personal_tools/static/src/discuss/create_chat_dialog.xml",
+            "tp_personal_tools/static/src/discuss/message_to_task_dialog.js",
+            "tp_personal_tools/static/src/discuss/message_to_task_dialog.xml",
             "tp_personal_tools/static/src/discuss/share_item_dialog.js",
             "tp_personal_tools/static/src/discuss/share_item_dialog.xml",
             "tp_personal_tools/static/src/discuss/personal_discuss_patch.js",

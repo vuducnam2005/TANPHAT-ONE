@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="tp_personal_tools.MessageToTaskDialog">
+        <Dialog title="'Chuyển tin nhắn thành công việc'" size="this.dialogSize">
+            <div class="tp-pt-scope tp-discuss-dialog d-flex flex-column gap-3">
+                <div t-if="this.state.loading" class="py-4 text-center text-muted small">
+                    Đang chuẩn bị nội dung công việc từ tin nhắn…
+                </div>
+
+                <t t-elif="this.state.loadError">
+                    <InlineErrors errors="[]" server="this.state.loadError"/>
+                </t>
+
+                <t t-else="">
+                    <InlineErrors errors="this.fieldErrors" server="this.state.serverError" attempt="this.state.attempt"/>
+
+                    <!-- Source Message Preview Banner -->
+                    <div class="p-2 px-3 rounded-3 border bg-light small">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-1 mb-1">
+                            <span class="fw-semibold text-primary">
+                                Nguồn: <t t-out="this.state.preview?.channel_name || 'Trao đổi'"/>
+                            </span>
+                            <span class="text-muted">
+                                <t t-out="this.state.preview?.author_name"/> · <t t-out="this.state.preview?.sent_label"/>
+                            </span>
+                        </div>
+                        <div class="text-muted text-truncate" t-out="this.state.preview?.body_text || '(Tin nhắn đính kèm tệp)'"/>
+                    </div>
+
+                    <div class="tp-pt-field">
+                        <label class="tp-pt-label" for="tp_msg_task_name">
+                            Tiêu đề công việc <span class="tp-pt-req">*</span>
+                        </label>
+                        <input id="tp_msg_task_name"
+                            type="text"
+                            t-att-class="'tp-pt-input ' + (this.hasFieldError('tp_msg_task_name') ? 'is-invalid' : '')"
+                            placeholder="Nhập tiêu đề công việc cần giao…"
+                            t-model.proxy="this.state.name"/>
+                    </div>
+
+                    <div class="tp-pt-field">
+                        <label class="tp-pt-label" for="tp_msg_task_deliverable">Đầu ra cần đạt</label>
+                        <input id="tp_msg_task_deliverable"
+                            type="text"
+                            class="tp-pt-input"
+                            placeholder="Ví dụ: Bản vẽ hiệu chỉnh PDF, Bảng tổng hợp khối lượng…"
+                            t-model.proxy="this.state.deliverable"/>
+                    </div>
+
+                    <div class="tp-pt-field">
+                        <label class="tp-pt-label">
+                            Người thực hiện <span class="tp-pt-req">*</span>
+                        </label>
+                        <TpColleaguePicker
+                            selected="this.state.assignees"
+                            keyField="'user_id'"
+                            includeSelf="true"
+                            placeholder="'Chọn đồng nghiệp nhận việc…'"
+                            onChange="(list) => (this.state.assignees = list)"
+                        />
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-12 col-sm-7 tp-pt-field">
+                            <label class="tp-pt-label" for="tp_msg_task_deadline">Hạn hoàn thành</label>
+                            <input id="tp_msg_task_deadline"
+                                type="datetime-local"
+                                class="tp-pt-input"
+                                t-model.proxy="this.state.deadlineIso"/>
+                        </div>
+                        <div class="col-12 col-sm-5 tp-pt-field">
+                            <label class="tp-pt-label" for="tp_msg_task_prio">Mức ưu tiên</label>
+                            <select id="tp_msg_task_prio" class="tp-pt-select" t-model.proxy="this.state.priority">
+                                <option value="0">Bình thường</option>
+                                <option value="1">Trung bình</option>
+                                <option value="2">Cao</option>
+                                <option value="3">Khẩn cấp</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="tp-pt-field">
+                        <label class="tp-pt-label" for="tp_msg_task_note">Nội dung chi tiết</label>
+                        <textarea id="tp_msg_task_note"
+                            class="tp-pt-textarea"
+                            rows="3"
+                            t-model.proxy="this.state.noteText"/>
+                    </div>
+
+                    <label class="d-flex align-items-center gap-2 small cursor-pointer">
+                        <input type="checkbox" class="form-check-input mt-0" t-model.proxy="this.state.notifyChannel"/>
+                        <span>Gửi thông báo liên kết công việc vào cuộc hội thoại này</span>
+                    </label>
+                </t>
+            </div>
+
+            <t t-set-slot="footer">
+                <div class="tp-pt-scope d-flex justify-content-end gap-2 w-100">
+                    <button type="button" class="tp-pt-btn" t-att-disabled="this.state.busy" t-on-click="this.props.close">
+                        Hủy
+                    </button>
+                    <button t-if="!this.state.loading and !this.state.loadError"
+                        type="button"
+                        class="tp-pt-btn tp-pt-btn-indigo"
+                        t-att-disabled="this.state.busy"
+                        t-on-click="() => this.onSubmit()">
+                        <span t-out="this.state.busy ? 'Đang tạo việc…' : 'Xác nhận tạo việc'"/>
+                    </button>
+                </div>
+            </t>
+        </Dialog>
+    </t>
+</templates>

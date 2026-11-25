@@ -1,4 +1,4 @@
-import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
+import { Component, onWillStart, proxy, signal, useProps } from "@odoo/owl";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { Dialog } from "@web/core/dialog/dialog";
 import { useService } from "@web/core/utils/hooks";
@@ -7,6 +7,19 @@ import { InlineErrors } from "@tp_web_home/validation/inline_errors";
 import { saveError } from "@tp_web_home/validation/validation";
 import { TpColleaguePicker } from "../shared/colleague_picker";
 import { TpShareToDiscussDialog } from "../shared/share_to_discuss_dialog";
+
+function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const raw = String(reader.result || "");
+            const idx = raw.indexOf(",");
+            resolve(idx >= 0 ? raw.slice(idx + 1) : raw);
+        };
+        reader.onerror = () => reject(new Error("Không đọc được tệp tài liệu."));
+        reader.readAsDataURL(file);
+    });
+}
 
 function buildDefaultTimes(initialSlot) {
     const pad = (n) => String(n).padStart(2, "0");
@@ -55,6 +68,8 @@ export class TpCalendarEventDialog extends Component {
     static components = { Dialog, InlineErrors, TpColleaguePicker };
     props = useProps();
     operationToken = uuid();
+    roomCreateToken = uuid();
+    evFileInputRef = signal.ref();
 
     setup() {
         this.orm = useService("orm");
@@ -76,6 +91,9 @@ export class TpCalendarEventDialog extends Component {
 
             // Form fields
             name: this.props.initialSlot?.title || "",
+            eventKind: "personal",
+            projectId: 0,
+            roomId: 0,
             calendarId: 0,
             allday: slot.allday,
             startIso: slot.startIso,
@@ -99,11 +117,23 @@ export class TpCalendarEventDialog extends Component {
             until: tomorrow,
             recurrenceUpdate: "self_only",
             wasRecurring: false,
+            attachments: [],
+            uploadingDoc: false,
 
             // Reference data
             writableCalendars: [],
             alarms: [],
             tags: [],
+            rooms: [],
+            projects: [],
+            canManageRooms: false,
+            showAddRoomBox: false,
+            newRoomCode: "",
+            newRoomName: "",
+            newRoomCapacity: 12,
+            newRoomLocation: "",
+            newRoomEquipment: "",
+            creatingRoom: false,
             selfPartnerId: 0,
             conflicts: [],
 
@@ -131,6 +161,9 @@ export class TpCalendarEventDialog extends Component {
             );
             this.state.alarms = boot?.alarms || [];
             this.state.tags = boot?.tags || [];
+            this.state.rooms = boot?.rooms || [];
+            this.state.projects = boot?.projects || [];
+            this.state.canManageRooms = Boolean(boot?.can_manage_rooms);
             if (boot?.primary_calendar_id) {
                 this.state.calendarId = boot.primary_calendar_id;
             } else if (this.state.writableCalendars.length) {
@@ -142,9 +175,8 @@ export class TpCalendarEventDialog extends Component {
                     this.state.eventId,
                 ]);
                 this.applyDetailCard(card);
-            } else {
-                await this.refreshConflicts();
             }
+            await this.refreshConflicts();
         } catch (err) {
             this.state.loadError = saveError(err, {
                 verb: "mở chi tiết lịch làm việc",
@@ -160,6 +192,11 @@ export class TpCalendarEventDialog extends Component {
         this.state.maskedPrivate = Boolean(card.is_masked_private);
         this.state.readOnlyMode = Boolean(card.is_masked_private || !card.user_can_edit);
         this.state.name = card.name || "";
+        this.state.eventKind = card.event_kind || "personal";
+        this.state.projectId = card.project?.id || 0;
+        this.state.roomId =
+            card.room && card.room_booking_state === "confirmed" ? card.room.id : 0;
+        this.state.attachments = card.attachments || [];
         this.state.allday = Boolean(card.allday);
         this.state.startIso = card.start_iso || this.state.startIso;
         this.state.stopIso = card.stop_iso || this.state.stopIso;
@@ -313,16 +350,129 @@ export class TpCalendarEventDialog extends Component {
             const pids = this.state.invitedColleagues.map((c) => c.partner_id);
             const startVal = this.state.allday ? this.state.startDate : this.state.startIso;
             const stopVal = this.state.allday ? this.state.stopDate : this.state.stopIso;
-            const rows = await this.orm.call("calendar.event", "tp_check_schedule_conflicts", [
-                startVal,
-                stopVal,
-                this.state.allday,
-                pids,
-                this.state.eventId || 0,
+            const [rows, roomRows] = await Promise.all([
+                this.orm.call("calendar.event", "tp_check_schedule_conflicts", [
+                    startVal,
+                    stopVal,
+                    this.state.allday,
+                    pids,
+                    this.state.eventId || 0,
+                ]),
+                this.orm.call("tp.meeting.room", "tp_list_available_rooms", [
+                    startVal,
+                    stopVal,
+                    this.state.allday,
+                    this.state.eventId || 0,
+                ]),
             ]);
             this.state.conflicts = Array.isArray(rows) ? rows : [];
+            if (Array.isArray(roomRows)) {
+                this.state.rooms = roomRows;
+            }
         } catch {
             this.state.conflicts = [];
+        }
+    }
+
+    get selectedRoomConflict() {
+        const rid = Number(this.state.roomId || 0);
+        if (!rid) {
+            return "";
+        }
+        const rm = this.state.rooms.find((r) => r.id === rid);
+        return rm && !rm.is_available ? rm.conflict_summary : "";
+    }
+
+    onRoomSelectChange() {
+        this.markDirty();
+        const rid = Number(this.state.roomId || 0);
+        if (rid && !this.state.location.trim()) {
+            const rm = this.state.rooms.find((r) => r.id === rid);
+            if (rm) {
+                this.state.location = rm.location ? `${rm.name} (${rm.location})` : rm.name;
+            }
+        }
+        if (rid && this.state.eventKind === "personal") {
+            this.state.eventKind = "meeting";
+        }
+    }
+
+    async onCreateRoomQuick() {
+        const code = this.state.newRoomCode.trim();
+        const name = this.state.newRoomName.trim();
+        if (!code || !name || this.state.creatingRoom) {
+            return;
+        }
+        this.state.creatingRoom = true;
+        this.state.serverError = null;
+        try {
+            const room = await this.orm.call("tp.meeting.room", "tp_save_meeting_room", [
+                0,
+                {
+                    code,
+                    name,
+                    capacity: Number(this.state.newRoomCapacity || 10),
+                    location: this.state.newRoomLocation,
+                    equipment_note: this.state.newRoomEquipment,
+                },
+                this.roomCreateToken,
+            ]);
+            this.roomCreateToken = uuid();
+            await this.refreshConflicts();
+            this.state.roomId = room.id;
+            this.onRoomSelectChange();
+            this.state.showAddRoomBox = false;
+            this.state.newRoomCode = "";
+            this.state.newRoomName = "";
+            this.state.newRoomLocation = "";
+            this.state.newRoomEquipment = "";
+            this.notification.add(`Đã thêm phòng họp "${room.name}".`, { type: "success" });
+        } catch (err) {
+            this.state.serverError = saveError(err, { verb: "thêm phòng họp" });
+        } finally {
+            this.state.creatingRoom = false;
+        }
+    }
+
+    async onEventDocSelected(ev) {
+        const files = Array.from(ev.target.files || []);
+        if (!files.length || !this.state.eventId || this.state.uploadingDoc) {
+            return;
+        }
+        this.state.uploadingDoc = true;
+        this.state.serverError = null;
+        try {
+            for (const f of files) {
+                const b64 = await readFileAsBase64(f);
+                const att = await this.orm.call(
+                    "calendar.event",
+                    "tp_upload_event_attachment",
+                    [Number(this.state.eventId), f.name, b64, f.type || ""]
+                );
+                this.state.attachments = [att, ...this.state.attachments];
+            }
+        } catch (err) {
+            this.state.serverError = saveError(err, { verb: "đính kèm tài liệu họp" });
+        } finally {
+            this.state.uploadingDoc = false;
+            if (this.evFileInputRef()) {
+                this.evFileInputRef().value = "";
+            }
+        }
+    }
+
+    async onDeleteEventDoc(att) {
+        if (!this.state.eventId) {
+            return;
+        }
+        try {
+            await this.orm.call("calendar.event", "tp_delete_event_attachment", [
+                Number(this.state.eventId),
+                Number(att.id),
+            ]);
+            this.state.attachments = this.state.attachments.filter((a) => a.id !== att.id);
+        } catch (err) {
+            this.state.serverError = saveError(err, { verb: "xóa tài liệu đính kèm" });
         }
     }
 
@@ -372,6 +522,10 @@ export class TpCalendarEventDialog extends Component {
         try {
             const payload = {
                 name: this.state.name.trim(),
+                event_kind: this.state.eventKind || "personal",
+                project_id: Number(this.state.projectId) || 0,
+                room_id: Number(this.state.roomId) || 0,
+                room_booking_state: Number(this.state.roomId) ? "confirmed" : "none",
                 calendar_id: Number(this.state.calendarId) || false,
                 allday: this.state.allday,
                 start_iso: this.state.startIso,

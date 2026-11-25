@@ -4,20 +4,27 @@
         <Dialog title="'Bắt đầu trao đổi mới'" size="this.dialogSize">
             <div class="tp-pt-scope tp-discuss-dialog">
                 <!-- Mode Tabs -->
-                <div class="tp-discuss-mode-tabs mb-3" role="tablist">
+                <div class="tp-discuss-mode-tabs mb-3 flex-wrap" role="tablist">
                     <button type="button"
                         role="tab"
                         t-att-aria-selected="this.state.mode === 'dm'"
                         t-att-class="'tp-discuss-mode-tab ' + (this.state.mode === 'dm' ? 'is-active' : '')"
                         t-on-click="() => this.switchMode('dm')">
-                        Tin nhắn trực tiếp
+                        Tin trực tiếp
                     </button>
                     <button type="button"
                         role="tab"
                         t-att-aria-selected="this.state.mode === 'group'"
                         t-att-class="'tp-discuss-mode-tab ' + (this.state.mode === 'group' ? 'is-active' : '')"
                         t-on-click="() => this.switchMode('group')">
-                        Nhóm trao đổi
+                        Nhóm tự chọn
+                    </button>
+                    <button type="button"
+                        role="tab"
+                        t-att-aria-selected="this.state.mode === 'scoped'"
+                        t-att-class="'tp-discuss-mode-tab ' + (this.state.mode === 'scoped' ? 'is-active' : '')"
+                        t-on-click="() => this.switchMode('scoped')">
+                        Dự án / Phòng ban
                     </button>
                     <button type="button"
                         role="tab"
@@ -111,7 +118,70 @@
                     </div>
                 </div>
 
-                <!-- 3. Internal Channel Tab -->
+                <!-- 3. Project / Department Linked Group Tab -->
+                <div t-elif="this.state.mode === 'scoped'" class="d-flex flex-column gap-3">
+                    <div class="d-flex gap-2">
+                        <button type="button"
+                            t-att-class="'tp-pt-btn tp-pt-btn-sm flex-grow-1 ' + (this.state.scopedKind === 'project' ? 'tp-pt-btn-indigo' : '')"
+                            t-on-click="() => this.onSwitchScopedKind('project')">
+                            Theo Dự án
+                        </button>
+                        <button type="button"
+                            t-att-class="'tp-pt-btn tp-pt-btn-sm flex-grow-1 ' + (this.state.scopedKind === 'department' ? 'tp-pt-btn-indigo' : '')"
+                            t-on-click="() => this.onSwitchScopedKind('department')">
+                            Theo Phòng ban
+                        </button>
+                    </div>
+
+                    <div class="tp-pt-field">
+                        <label class="tp-pt-label" for="tp_chat_scoped_source">
+                            <t t-out="this.state.scopedKind === 'project' ? 'Chọn Dự án nguồn' : 'Chọn Phòng ban nguồn'"/> <span class="tp-pt-req">*</span>
+                        </label>
+                        <select id="tp_chat_scoped_source"
+                            t-att-class="'tp-pt-select ' + (this.hasFieldError('tp_chat_scoped_source') ? 'is-invalid' : '')"
+                            t-model.proxy="this.state.scopedSourceId"
+                            t-on-change="() => this.onScopedSelectionChange()">
+                            <option value="0">— Chọn nguồn liên kết —</option>
+                            <t t-if="this.state.scopedKind === 'project'">
+                                <option t-foreach="this.state.scopedProjects" t-as="p" t-key="p.id" t-att-value="p.id"
+                                    t-out="(p.code ? '[' + p.code + '] ' : '') + p.name"/>
+                            </t>
+                            <t t-else="">
+                                <option t-foreach="this.state.scopedDepartments" t-as="d" t-key="d.id" t-att-value="d.id"
+                                    t-out="d.name"/>
+                            </t>
+                        </select>
+                    </div>
+
+                    <div class="tp-pt-field">
+                        <label class="tp-pt-label" for="tp_chat_scoped_name">Tên hội thoại hiển thị</label>
+                        <input id="tp_chat_scoped_name"
+                            type="text"
+                            class="tp-pt-input"
+                            placeholder="Tự động điền theo tên dự án / phòng ban…"
+                            t-model.proxy="this.state.scopedName"/>
+                    </div>
+
+                    <div class="tp-discuss-member-preview">
+                        <div class="small fw-semibold mb-1 text-navy">
+                            Thành viên theo phân công nguồn (<t t-out="this.state.scopedPreviewMembers.length"/>):
+                        </div>
+                        <div t-if="this.state.scopedPreviewLoading" class="small text-muted">
+                            Đang tra cứu danh sách thành viên theo phân công…
+                        </div>
+                        <div t-elif="!this.state.scopedPreviewMembers.length" class="small text-muted">
+                            Chọn dự án hoặc phòng ban để xem trước danh sách thành viên hợp lệ (không tự thêm toàn công ty hoặc admin kỹ thuật).
+                        </div>
+                        <div t-else="" class="small text-muted">
+                            <t t-foreach="this.state.scopedPreviewMembers" t-as="m" t-key="m.user_id">
+                                • <strong class="text-dark" t-out="m.name"/>
+                                <span t-if="m.department"> (<t t-out="m.department"/>)</span><br/>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Internal Channel Tab -->
                 <div t-else="" class="d-flex flex-column gap-3">
                     <div class="tp-pt-field">
                         <label class="tp-pt-label" for="tp_chat_channel_name">

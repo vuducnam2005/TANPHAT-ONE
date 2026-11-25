@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261125-008 — 2026-11-25 — ENTERPRISE-MASTER-BATCH-001: Baseline 17 phân hệ & Hoàn thiện Đợt 1 Công cụ làm việc hàng ngày (`tp_personal_tools 20.0.2.0.0`)
+
+- **Baseline Đợt 0 (`docs/architecture/TP_ENTERPRISE_INVENTORY_AND_FLOWS.md`, `docs/security/TP_ENTERPRISE_ACCESS_MATRIX.md`):** lập inventory thực tế 17 nhóm chức năng (10 cột + phân biệt `SRC/INST/DEP/TECH/UAT/LIVE`), đặc tả 4 luồng nghiệp vụ liên thông, tách 11 định nghĩa tài chính quản trị, 5 cổng quy chế mở và ma trận phân quyền × chống xung đột đồng thời.
+- **Đợt 1 (`custom_addons/tp_personal_tools 20.0.2.0.0`):** hợp nhất **Công việc của tôi** (tự tạo + dự án/kế hoạch + cuộc họp + yêu cầu + trao đổi trên cùng bản ghi `project.task`, 0 bản sao), thêm lọc nguồn, trường `Đầu ra cần đạt`, tách 2 bước `reported_done` vs `verified` không chạm `stage_id`/workflow dự án; bổ sung danh mục & đặt phòng họp `tp.meeting.room` khóa hàng `FOR UPDATE` chống đặt trùng đồng thời và tự nhả phòng khi dời/hủy lịch, loại lịch + gắn dự án + tài liệu họp (`public=False`); bổ sung nhóm Trao đổi liên kết Dự án/Phòng ban theo phân công thật, hộp thoại **Chuyển tin nhắn thành việc** (`tp_source_message_id` + `operation_token`) và thanh xác nhận tệp chờ gửi.
+- **Kiểm thử (`tp_tanphat_test`):** Static Python/XML/SCSS/JS PASS; Odoo `/tp_personal_tools` **12/12 PASS (`0 failed, 0 error`)**; kiểm thử 2 cursor PostgreSQL đồng thời **`1 ok, 1 conflict` (`TWO_CURSOR_CONCURRENCY_PASS`)**.
+
 ## CHG-20261125-007 — 2026-11-25 — PERSONAL-TOOLS-001: Biên bản sao lưu và triển khai PC server (`5d5eaefd`)
 
 - **Triển khai PC server (`192.168.1.73`, `tp_tanphat_dev`):** sao lưu nhị phân tại `C:\TANPHAT-backups\personal-tools001\pt001-20261125T175045` (`tp_tanphat_dev.dump`, `restore-list.txt` 16.423 dòng TOC, `source-pre.tar.gz`, `docker.odoo.conf`, `release-pt001.tar.gz`, `upgrade.log`); đối chiếu **45/45** tệp phát hành khớp SHA256 (`MISMATCHES=0`); chạy `-i tp_personal_tools -u tp_branding,tp_hr_workspace --without-demo=True --stop-after-init --no-http` đạt `rc=0, error_lines=0`; khởi động lại `tp-odoo` và xác nhận `http://127.0.0.1:8069/web/health` trả `200 {"status": "pass"}` (không chạm `tp-tunnel`, không sinh dữ liệu giả).

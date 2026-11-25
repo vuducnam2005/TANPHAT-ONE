@@ -4,8 +4,9 @@
         <div class="tp-pt-scope tp-cal-popover" role="dialog" aria-label="Tóm tắt sự kiện lịch">
             <div class="tp-cal-popover-header">
                 <div class="min-w-0 flex-grow-1">
-                    <div class="d-flex align-items-center gap-2 mb-1">
+                    <div class="d-flex align-items-center flex-wrap gap-1 mb-1">
                         <span t-if="this.state.card?.calendar_name" class="tp-cal-popover-cal-badge" t-out="this.state.card.calendar_name"/>
+                        <span t-if="this.state.card?.event_kind_label and !this.state.card?.is_masked_private" class="tp-cal-popover-priv-badge" t-out="this.state.card.event_kind_label"/>
                         <span t-if="this.state.card?.privacy_label" class="tp-cal-popover-priv-badge" t-out="this.state.card.privacy_label"/>
                     </div>
                     <h5 class="tp-cal-popover-title mb-0" t-out="this.state.card?.name or this.title"/>
@@ -31,6 +32,16 @@
                     <div t-if="this.state.card.organizer?.name" class="tp-cal-popover-row">
                         <span class="tp-cal-pop-icon">👤</span>
                         <span>Chủ trì: <strong t-out="this.state.card.organizer.name"/></span>
+                    </div>
+
+                    <div t-if="this.state.card.room?.name and this.state.card.room_booking_state === 'confirmed'" class="tp-cal-popover-row">
+                        <span class="tp-cal-pop-icon">🏢</span>
+                        <span>Phòng họp: <strong t-out="this.state.card.room.name"/> (<t t-out="this.state.card.room.capacity"/> chỗ)</span>
+                    </div>
+
+                    <div t-if="this.state.card.project?.name" class="tp-cal-popover-row">
+                        <span class="tp-cal-pop-icon">📁</span>
+                        <span>Dự án: <strong t-out="this.state.card.project.name"/></span>
                     </div>
 
                     <div t-if="this.state.card.location" class="tp-cal-popover-row">

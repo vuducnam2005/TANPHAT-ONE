@@ -1,12 +1,20 @@
 # Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
-"""Backend for Việc cá nhân (Personal Tasks) in TANPHAT ONE.
+"""Backend for Việc cá nhân / Công việc của tôi in TANPHAT ONE.
 
-Reuses native `project.task`, `project.task.type` (personal stages),
-`project.task.stage.personal` (`project_task_user_rel`), `project.tags`,
-`ir.attachment`, `mail.message`, and `calendar.event` (`res_model`/`res_id`).
-Stores per-user manual ordering on `project.task.stage.personal.tp_personal_sequence`
-so moving/reordering a shared personal task never mutates another user's column or order
-and never alters project stages (`stage_id`).
+Aggregates into a single unified workspace ("Công việc của tôi") WITHOUT copying records:
+1. Self-created personal tasks (`project_id = False`, `tp_source_kind = 'self'`).
+2. Project / plan tasks assigned to the user (`project_id != False`, `user_ids` or `kd_responsible_id`).
+3. Tasks created from Meeting Minutes (`tp_source_kind = 'meeting'`).
+4. Tasks linked from Approval Requests (`tp_source_kind = 'request'`).
+5. Tasks converted from Discuss messages (`tp_source_kind = 'chat'`, `tp_source_message_id`).
+
+Key guarantees:
+- Per-user Kanban stage & manual sequence live strictly in `project.task.stage.personal`
+  (`user_id = env.uid`), so dragging/reordering in "Công việc của tôi" NEVER mutates
+  another user's board and NEVER alters `project.task.stage_id` or KH-KD workflow state.
+- Distinguishes simple completion for self-created tasks vs two-step
+  `reported_done` ("Người thực hiện báo xong") and `verified` ("Kết quả được xác nhận")
+  for assigned / project tasks without overriding KH-KD `tp.task.command` governance.
 """
 
 import base64
@@ -18,9 +26,9 @@ from zoneinfo import ZoneInfo
 from markupsafe import Markup
 
 from odoo import Command, api, fields, models
-from odoo.exceptions import AccessError, MissingError, UserError, ValidationError
+from odoo.exceptions import AccessError, MissingError, ValidationError
 from odoo.fields import Domain
-from odoo.tools import html2plaintext, html_sanitize
+from odoo.tools import SQL, html2plaintext, html_sanitize
 
 MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024  # 25 MB server limit
 
@@ -29,6 +37,20 @@ PRIORITY_LABELS = {
     "1": "Trung bình",
     "2": "Cao",
     "3": "Khẩn cấp",
+}
+
+SOURCE_KIND_LABELS = {
+    "self": "Tự tạo",
+    "project": "Dự án",
+    "meeting": "Cuộc họp",
+    "request": "Yêu cầu",
+    "chat": "Trao đổi",
+}
+
+EXEC_REPORT_LABELS = {
+    "in_progress": "Đang thực hiện",
+    "reported_done": "Đã báo xong (chờ xác nhận)",
+    "verified": "Đã xác nhận kết quả",
 }
 
 DEFAULT_VI_STAGES = (
@@ -136,6 +158,88 @@ class PersonalProjectTask(models.Model):
         compute="_compute_tp_personal_sequence",
         export_string_translation=False,
     )
+    tp_deliverable = fields.Char(
+        string="Đầu ra cần đạt",
+        export_string_translation=False,
+    )
+    tp_source_kind = fields.Selection(
+        [
+            ("self", "Việc tự tạo"),
+            ("project", "Dự án / Kế hoạch"),
+            ("meeting", "Từ cuộc họp"),
+            ("request", "Từ yêu cầu"),
+            ("chat", "Từ trao đổi"),
+        ],
+        string="Nguồn công việc",
+        default="self",
+        index=True,
+        export_string_translation=False,
+    )
+    tp_source_message_id = fields.Many2one(
+        "mail.message",
+        string="Tin nhắn nguồn",
+        ondelete="set null",
+        index=True,
+        export_string_translation=False,
+    )
+    tp_source_channel_id = fields.Many2one(
+        "discuss.channel",
+        string="Hội thoại nguồn",
+        ondelete="set null",
+        index=True,
+        export_string_translation=False,
+    )
+    tp_source_request_id = fields.Integer(
+        string="ID Yêu cầu nguồn",
+        index=True,
+        export_string_translation=False,
+    )
+    tp_assigner_user_id = fields.Many2one(
+        "res.users",
+        string="Người giao việc",
+        ondelete="set null",
+        index=True,
+        export_string_translation=False,
+    )
+    tp_verifier_user_id = fields.Many2one(
+        "res.users",
+        string="Người xác nhận kết quả",
+        ondelete="set null",
+        index=True,
+        export_string_translation=False,
+    )
+    tp_exec_report_state = fields.Selection(
+        [
+            ("in_progress", "Đang thực hiện"),
+            ("reported_done", "Đã báo xong"),
+            ("verified", "Đã xác nhận kết quả"),
+        ],
+        string="Trạng thái kết quả thực hiện",
+        default="in_progress",
+        index=True,
+        export_string_translation=False,
+    )
+    tp_reported_result = fields.Text(
+        string="Kết quả thực hiện / Đầu ra bàn giao",
+        export_string_translation=False,
+    )
+    tp_reported_at = fields.Datetime(
+        string="Thời điểm báo xong",
+        readonly=True,
+        export_string_translation=False,
+    )
+    tp_verified_at = fields.Datetime(
+        string="Thời điểm xác nhận kết quả",
+        readonly=True,
+        export_string_translation=False,
+    )
+    tp_verified_by_id = fields.Many2one(
+        "res.users",
+        string="Người đã xác nhận",
+        readonly=True,
+        ondelete="set null",
+        export_string_translation=False,
+    )
 
     @api.depends_context("uid")
     @api.depends("personal_stage_id.tp_personal_sequence")
@@ -171,45 +275,186 @@ class PersonalProjectTask(models.Model):
         return stages
 
     @api.model
-    def _tp_base_personal_domain(self, include_archived=False):
-        """Mandatory scope for Việc cá nhân: never includes project/KH-KD tasks or templates."""
-        dom = (
+    def _tp_ensure_personal_stage_rels(self, tasks, stages):
+        """Ensure each permitted task has a per-user `project.task.stage.personal` row for `env.uid`.
+
+        Writes ONLY to `project.task.stage.personal` (never mutating `project.task.stage_id`
+        or `project.task.state`), so even read-only KH-KD project tasks can be organized
+        cleanly on the user's personal Kanban board.
+        """
+        if not tasks or not stages:
+            return
+        default_stage = stages[:1]
+        Rel = self.env["project.task.stage.personal"].sudo()
+        existing = Rel.search(
+            [("user_id", "=", self.env.uid), ("task_id", "in", tasks.ids)]
+        )
+        have_tids = set(existing.mapped("task_id").ids)
+        missing_vals = [
+            {
+                "user_id": self.env.uid,
+                "task_id": t.id,
+                "stage_id": default_stage.id,
+                "tp_personal_sequence": t.sequence or 10,
+            }
+            for t in tasks
+            if t.id not in have_tids
+        ]
+        if missing_vals:
+            Rel.create(missing_vals)
+
+    @api.model
+    def _tp_my_work_domain(self, include_archived=False, source_filter=""):
+        """Unified 'Công việc của tôi' scope: own tasks + permitted assigned project/meeting/request/chat tasks."""
+        uid = self.env.uid
+        non_project_cond = (
             Domain("project_id", "=", False)
             & Domain("parent_id", "=", False)
-            & Domain("is_template", "=", False)
-            & Domain("user_ids", "in", [self.env.uid])
+            & (
+                Domain("user_ids", "in", [uid])
+                | Domain("tp_assigner_user_id", "=", uid)
+                | Domain("tp_verifier_user_id", "=", uid)
+            )
         )
+        proj_member_cond = (
+            Domain("user_ids", "in", [uid])
+            | Domain("tp_assigner_user_id", "=", uid)
+            | Domain("tp_verifier_user_id", "=", uid)
+        )
+        if "kd_responsible_id" in self._fields:
+            proj_member_cond |= Domain("kd_responsible_id", "=", uid)
+        project_cond = Domain("project_id", "!=", False) & proj_member_cond
+
+        dom = Domain("is_template", "=", False) & (non_project_cond | project_cond)
         if include_archived:
             dom &= Domain("active", "=", False)
         else:
             dom &= Domain("active", "=", True)
+
+        sf = str(source_filter or "").strip()
+        if sf == "self":
+            dom &= Domain("project_id", "=", False) & Domain(
+                "tp_source_kind", "in", [False, "self"]
+            )
+        elif sf == "project":
+            dom &= Domain("project_id", "!=", False) | Domain("tp_source_kind", "=", "project")
+        elif sf in ("meeting", "request", "chat"):
+            dom &= Domain("tp_source_kind", "=", sf)
         return dom
 
+    @api.model
+    def _tp_base_personal_domain(self, include_archived=False):
+        return self._tp_my_work_domain(include_archived=include_archived)
+
+    def _tp_effective_source_kind(self):
+        self.ensure_one()
+        raw = self.tp_source_kind or "self"
+        if raw in ("meeting", "request", "chat"):
+            return raw
+        if self.project_id:
+            return "project"
+        return raw
+
+    def _tp_requires_verification(self):
+        """Return True if task completion requires two-step `reported_done` -> `verified`."""
+        self.ensure_one()
+        if self.project_id:
+            return True
+        if self.tp_verifier_user_id and self.tp_verifier_user_id.id != self.create_uid.id:
+            return True
+        if (
+            self.tp_assigner_user_id
+            and self.tp_assigner_user_id.id not in (t.id for t in self.user_ids)
+        ):
+            return True
+        if self._tp_effective_source_kind() in ("meeting", "request"):
+            return True
+        return False
+
+    def _tp_is_user_involved(self, user=None):
+        self.ensure_one()
+        u = user or self.env.user
+        if u in self.user_ids:
+            return True
+        if self.tp_assigner_user_id == u or self.tp_verifier_user_id == u:
+            return True
+        if "kd_responsible_id" in self._fields and self.kd_responsible_id == u:
+            return True
+        return False
+
+    def _tp_can_verify_result(self):
+        self.ensure_one()
+        u = self.env.user
+        if self.tp_verifier_user_id and self.tp_verifier_user_id == u:
+            return True
+        if not self.project_id and self.tp_assigner_user_id and self.tp_assigner_user_id == u:
+            return True
+        if self.project_id:
+            proj = self.project_id
+            if proj.user_id == u:
+                return True
+            if hasattr(proj, "_tp_head_allowed") and proj._tp_head_allowed():
+                return True
+        return False
+
+    def _tp_can_edit_core_fields(self):
+        """Return True only when caller can directly edit core fields (`name`, `deadline`, `user_ids`).
+
+        Project tasks managed by KH-KD keep their WBS fields protected under `tp.task.command`.
+        """
+        self.ensure_one()
+        if self.project_id:
+            return False
+        return bool(
+            self.env.user in self.user_ids
+            or self.tp_assigner_user_id == self.env.user
+        )
+
     def _tp_assert_personal_task_access(self, mode="read"):
+        """Enforce backend ACL + personal/assigned scope for 'Công việc của tôi'."""
         self.ensure_one()
         if not self.env.user._is_internal() or not self.env.user.active:
-            raise AccessError(self.env._("Tài khoản không có quyền truy cập công việc cá nhân."))
-        self.check_access(mode)
-        if self.project_id or self.parent_id or self.is_template:
-            raise AccessError(
-                self.env._("Bản ghi này không thuộc phạm vi Việc cá nhân.")
-            )
+            raise AccessError(self.env._("Tài khoản không có quyền truy cập công việc."))
+        if self.is_template:
+            raise AccessError(self.env._("Bản ghi mẫu không thuộc phạm vi Công việc của tôi."))
+
         if mode == "read":
+            self.check_access("read")
             allowed = (
-                self.env.user in self.user_ids
+                self._tp_is_user_involved()
                 or self.env.user.partner_id in self.message_partner_ids
             )
-        else:
-            allowed = self.env.user in self.user_ids
-        if not allowed:
+            if not allowed:
+                raise AccessError(
+                    self.env._("Bạn không có quyền truy cập công việc riêng của người khác.")
+                )
+            return
+
+        if mode == "personal_board":
+            # Reordering on caller's personal Kanban board requires read + involvement
+            self.check_access("read")
+            if not self._tp_is_user_involved():
+                raise AccessError(
+                    self.env._("Bạn chỉ có thể sắp xếp các công việc được giao cho mình.")
+                )
+            return
+
+        if self.project_id:
             raise AccessError(
-                self.env._("Bạn không có quyền truy cập công việc riêng của người khác.")
+                self.env._(
+                    "Công việc thuộc dự án được quản lý theo phân quyền WBS của dự án; không sửa/xóa trực tiếp như việc tự tạo."
+                )
+            )
+        self.check_access(mode)
+        if not self._tp_can_edit_core_fields():
+            raise AccessError(
+                self.env._("Bạn không có quyền chỉnh sửa công việc riêng của người khác.")
             )
 
     def _tp_deadline_info(self, deadline_dt, is_closed, today_local):
         if is_closed:
             if not deadline_dt:
-                return {"status": "done", "label": "Hoàn thành", "formatted": ""}
+                return {"status": "done", "label": "Hoàn thành", "formatted": "", "date_only": "", "iso_local": ""}
             local_dt = deadline_dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(_user_tz(self.env))
             return {
                 "status": "done",
@@ -262,13 +507,11 @@ class PersonalProjectTask(models.Model):
         today_local = datetime.now(tz).date()
         default_stage = stages[:1]
 
-        # Personal stage & sequence map for current user
-        rels = self.env["project.task.stage.personal"].search(
+        rels = self.env["project.task.stage.personal"].sudo().search(
             [("user_id", "=", self.env.uid), ("task_id", "in", self.ids)]
         )
         rel_by_task = {r.task_id.id: r for r in rels}
 
-        # Batch attachment counts (real attachments on project.task)
         att_groups = self.env["ir.attachment"]._read_group(
             [("res_model", "=", "project.task"), ("res_id", "in", self.ids)],
             ["res_id"],
@@ -276,7 +519,6 @@ class PersonalProjectTask(models.Model):
         )
         att_counts = {res_id: cnt for res_id, cnt in att_groups}
 
-        # Batch real user comment counts (excluding tracking/system notifications & OdooBot)
         odoobot_id = self.env["ir.model.data"]._xmlid_to_res_id("base.partner_root") or 0
         msg_domain = [
             ("model", "=", "project.task"),
@@ -292,7 +534,6 @@ class PersonalProjectTask(models.Model):
         )
         msg_counts = {res_id: cnt for res_id, cnt in msg_groups}
 
-        # Batch linked calendar event counts
         cal_groups = self.env["calendar.event"]._read_group(
             [("res_model", "=", "project.task"), ("res_id", "in", self.ids), ("active", "=", True)],
             ["res_id"],
@@ -300,7 +541,11 @@ class PersonalProjectTask(models.Model):
         )
         cal_counts = {res_id: cnt for res_id, cnt in cal_groups}
 
-        all_users = self.mapped("user_ids")
+        all_users = (
+            self.mapped("user_ids")
+            | self.mapped("tp_assigner_user_id")
+            | self.mapped("tp_verifier_user_id")
+        )
         colleague_map = {
             c["user_id"]: c for c in self.env["res.users"]._tp_format_colleagues(all_users)
         }
@@ -310,8 +555,15 @@ class PersonalProjectTask(models.Model):
             rel = rel_by_task.get(task.id)
             stage = rel.stage_id if (rel and rel.stage_id) else default_stage
             personal_seq = rel.tp_personal_sequence if rel else (task.sequence or 10)
-            is_done = task.state == "1_done"
-            is_closed = task.is_closed
+            req_verify = task._tp_requires_verification()
+            exec_state = task.tp_exec_report_state or (
+                "verified" if task.state == "1_done" else "in_progress"
+            )
+            if task.state == "1_done" and exec_state == "in_progress":
+                exec_state = "verified"
+
+            is_done = bool(task.state == "1_done" or exec_state == "verified")
+            is_closed = bool(task.is_closed or exec_state == "verified")
             dl = task._tp_deadline_info(task.date_deadline, is_closed, today_local)
             note_preview, checklist = _parse_description_and_checklist(task.description)
             assignees = [
@@ -320,6 +572,30 @@ class PersonalProjectTask(models.Model):
                 if u.id in colleague_map
             ]
             other_assignees = [a for a in assignees if a["user_id"] != self.env.uid]
+            eff_source = task._tp_effective_source_kind()
+            kd_deliv = getattr(task, "kd_deliverable", "") or ""
+            deliverable = task.tp_deliverable or kd_deliv or ""
+
+            project_info = None
+            if task.project_id:
+                project_info = {
+                    "id": task.project_id.id,
+                    "name": task.project_id.name or f"Dự án #{task.project_id.id}",
+                    "code": getattr(task.project_id, "tp_code", "") or "",
+                    "stage_name": task.stage_id.name if task.stage_id else "",
+                }
+
+            assigner_info = (
+                colleague_map.get(task.tp_assigner_user_id.id)
+                if task.tp_assigner_user_id
+                else None
+            )
+            verifier_info = (
+                colleague_map.get(task.tp_verifier_user_id.id)
+                if task.tp_verifier_user_id
+                else None
+            )
+
             rows.append(
                 {
                     "id": task.id,
@@ -334,13 +610,32 @@ class PersonalProjectTask(models.Model):
                     "stage_name": stage.name if stage else "Chưa phân loại",
                     "personal_sequence": personal_seq,
                     "deadline": dl,
+                    "source_kind": eff_source,
+                    "source_label": SOURCE_KIND_LABELS.get(eff_source, "Tự tạo"),
+                    "project": project_info,
+                    "deliverable": deliverable,
+                    "assigner": assigner_info,
+                    "verifier": verifier_info,
+                    "requires_verification": req_verify,
+                    "exec_report_state": exec_state,
+                    "exec_report_label": EXEC_REPORT_LABELS.get(exec_state, "Đang thực hiện"),
+                    "reported_result": task.tp_reported_result or "",
+                    "can_edit_core": task._tp_can_edit_core_fields(),
+                    "can_report_done": bool(
+                        self.env.user in task.user_ids
+                        or (
+                            "kd_responsible_id" in self._fields
+                            and task.kd_responsible_id == self.env.user
+                        )
+                    ),
+                    "can_verify": task._tp_can_verify_result(),
                     "tags": [
                         {"id": tg.id, "name": tg.name, "color": tg.color or 0}
                         for tg in task.tag_ids
                     ],
                     "assignees": assignees,
                     "other_assignees": other_assignees,
-                    "is_shared": len(assignees) > 1,
+                    "is_shared": len(assignees) > 1 or bool(project_info),
                     "attachment_count": att_counts.get(task.id, 0),
                     "comment_count": msg_counts.get(task.id, 0),
                     "calendar_count": cal_counts.get(task.id, 0),
@@ -376,7 +671,7 @@ class PersonalProjectTask(models.Model):
 
     @api.model
     def tp_get_personal_workspace(self, params=None):
-        """Load complete workspace state for Việc cá nhân (summary, stages, filtered tasks)."""
+        """Load complete workspace state for Công việc của tôi (summary, stages, filtered tasks)."""
         self.env["res.users"]._tp_require_internal_caller()
         params = dict(params or {})
         stages = self._tp_ensure_my_personal_stages()
@@ -387,18 +682,21 @@ class PersonalProjectTask(models.Model):
         today_start_utc, tomorrow_start_utc = _local_day_bounds_utc(self.env, today_local)
         now_utc = fields.Datetime.now()
 
-        # Ensure every personal task of current user has a personal stage row
+        source_filter = str(params.get("source_kind") or "").strip()
+
         base_open_tasks = self.with_context(active_test=True).search(
-            self._tp_base_personal_domain(include_archived=False)
+            self._tp_my_work_domain(include_archived=False), limit=1000
         )
         if base_open_tasks:
-            base_open_tasks._populate_missing_personal_stages()
+            self._tp_ensure_personal_stage_rels(base_open_tasks, stages)
 
-        # Real summary metrics in user's personal scope
-        active_base = self._tp_base_personal_domain(include_archived=False)
-        open_dom = active_base & Domain("is_closed", "=", False)
+        active_base = self._tp_my_work_domain(include_archived=False, source_filter=source_filter)
+        closed_cond = Domain("is_closed", "=", True) | Domain("tp_exec_report_state", "=", "verified")
+        open_cond = Domain("is_closed", "=", False) & Domain(
+            "tp_exec_report_state", "in", [False, "in_progress", "reported_done"]
+        )
+        open_dom = active_base & open_cond
 
-        # Find user's "Today" stage if named Hôm nay / Today
         today_stage_ids = [
             s.id
             for s in stages
@@ -417,38 +715,60 @@ class PersonalProjectTask(models.Model):
         overdue_count = self.search_count(open_dom & overdue_cond)
         upcoming_count = self.search_count(open_dom & upcoming_cond)
         all_open_count = self.search_count(open_dom)
-        done_total_count = self.search_count(active_base & Domain("is_closed", "=", True))
+        done_total_count = self.search_count(active_base & closed_cond)
         archived_count = self.with_context(active_test=False).search_count(
-            self._tp_base_personal_domain(include_archived=True)
+            self._tp_my_work_domain(include_archived=True, source_filter=source_filter)
         )
 
-        # Navigation bucket
+        # Count by source for quick source filter pills
+        all_active_unfiltered = self._tp_my_work_domain(include_archived=False) & open_cond
+        source_counts = {
+            "all": self.search_count(all_active_unfiltered),
+            "self": self.search_count(
+                self._tp_my_work_domain(include_archived=False, source_filter="self") & open_cond
+            ),
+            "project": self.search_count(
+                self._tp_my_work_domain(include_archived=False, source_filter="project") & open_cond
+            ),
+            "meeting": self.search_count(
+                self._tp_my_work_domain(include_archived=False, source_filter="meeting") & open_cond
+            ),
+            "request": self.search_count(
+                self._tp_my_work_domain(include_archived=False, source_filter="request") & open_cond
+            ),
+            "chat": self.search_count(
+                self._tp_my_work_domain(include_archived=False, source_filter="chat") & open_cond
+            ),
+        }
+
         bucket = str(params.get("bucket") or "all").strip()
         is_archived_bucket = bucket == "archived"
         ctx_self = self.with_context(active_test=not is_archived_bucket)
-        domain = self._tp_base_personal_domain(include_archived=is_archived_bucket)
+        domain = self._tp_my_work_domain(
+            include_archived=is_archived_bucket, source_filter=source_filter
+        )
 
         if bucket == "today":
-            domain &= Domain("is_closed", "=", False) & today_cond
+            domain &= open_cond & today_cond
         elif bucket == "upcoming":
-            domain &= Domain("is_closed", "=", False) & upcoming_cond
+            domain &= open_cond & upcoming_cond
         elif bucket == "overdue":
-            domain &= Domain("is_closed", "=", False) & overdue_cond
+            domain &= open_cond & overdue_cond
         elif bucket == "done":
-            domain &= Domain("is_closed", "=", True)
+            domain &= closed_cond
         elif bucket == "all":
-            # Show open tasks by default unless user explicitly filters completion
             completion_filter = str(params.get("completion") or "").strip()
             if not completion_filter:
-                domain &= Domain("is_closed", "=", False)
+                domain &= open_cond
 
-        # Optional user filters (never relax mandatory personal scope)
         q = str(params.get("q") or "").strip()
         if q:
             domain &= (
                 Domain("name", "ilike", q)
                 | Domain("description", "ilike", q)
+                | Domain("tp_deliverable", "ilike", q)
                 | Domain("tag_ids.name", "ilike", q)
+                | Domain("project_id.name", "ilike", q)
             )
 
         date_from = str(params.get("date_from") or "").strip()
@@ -476,22 +796,28 @@ class PersonalProjectTask(models.Model):
 
         stage_id = int(params.get("stage_id") or 0)
         if stage_id:
-            domain &= Domain("personal_stage_type_id", "=", stage_id)
+            rel_tids = (
+                self.env["project.task.stage.personal"]
+                .sudo()
+                .search([("user_id", "=", self.env.uid), ("stage_id", "=", stage_id)])
+                .mapped("task_id")
+                .ids
+            )
+            domain &= Domain("id", "in", rel_tids)
 
         completion = str(params.get("completion") or "").strip()
         if completion == "open":
-            domain &= Domain("is_closed", "=", False)
+            domain &= open_cond
+        elif completion == "reported_done":
+            domain &= Domain("tp_exec_report_state", "=", "reported_done")
         elif completion == "done":
-            domain &= Domain("is_closed", "=", True)
+            domain &= closed_cond
 
         assignee_id = int(params.get("assignee_id") or 0)
         if assignee_id:
             domain &= Domain("user_ids", "in", [assignee_id])
 
-        # Count completed in current date/keyword filter scope for summary strip
-        done_in_scope_dom = self._tp_base_personal_domain(include_archived=False) & Domain(
-            "is_closed", "=", True
-        )
+        done_in_scope_dom = active_base & closed_cond
         if date_from:
             d_from = datetime.strptime(date_from[:10], "%Y-%m-%d").date()
             from_utc, _ = _local_day_bounds_utc(self.env, d_from)
@@ -516,9 +842,10 @@ class PersonalProjectTask(models.Model):
             page_size = 100
 
         matching_tasks = ctx_self.search(domain, order="id desc", limit=1000)
+        if matching_tasks and not is_archived_bucket:
+            self._tp_ensure_personal_stage_rels(matching_tasks, stages)
         serialized = matching_tasks._tp_serialize_tasks(stages)
 
-        # Apply deterministic sorting (manual uses per-user tp_personal_sequence!)
         if sort_by == "deadline":
             serialized.sort(
                 key=lambda r: (
@@ -544,7 +871,6 @@ class PersonalProjectTask(models.Model):
         elif sort_by == "recent":
             serialized.sort(key=lambda r: (r["write_date"], r["id"]), reverse=True)
         else:
-            # manual: exact per-user sequence inside each personal stage
             stage_order_map = {s.id: idx for idx, s in enumerate(stages)}
             serialized.sort(
                 key=lambda r: (
@@ -562,10 +888,8 @@ class PersonalProjectTask(models.Model):
                 offset = (page - 1) * page_size
             paged_tasks = serialized[offset : offset + page_size]
         else:
-            # Kanban board groups per stage with per-column cap for performance
             paged_tasks = serialized
 
-        # Available personal/shared tags
         tags = self.env["project.tags"].search(
             [("project_ids", "=", False)], order="name asc", limit=100
         )
@@ -580,6 +904,7 @@ class PersonalProjectTask(models.Model):
                 "done_in_range": done_in_range_count,
                 "archived": archived_count,
             },
+            "source_counts": source_counts,
             "stages": [
                 {
                     "id": s.id,
@@ -600,7 +925,7 @@ class PersonalProjectTask(models.Model):
 
     @api.model
     def tp_get_personal_task_detail(self, task_id):
-        """Return full drawer detail for one personal task after strict permission check."""
+        """Return full drawer detail for one task in 'Công việc của tôi' after strict ACL check."""
         self.env["res.users"]._tp_require_internal_caller()
         tid = int(task_id or 0)
         task = self.with_context(active_test=False).browse(tid).exists()
@@ -609,15 +934,17 @@ class PersonalProjectTask(models.Model):
         task._tp_assert_personal_task_access(mode="read")
 
         stages = self._tp_ensure_my_personal_stages()
+        if task.active and task._tp_is_user_involved():
+            self._tp_ensure_personal_stage_rels(task, stages)
         card_list = task._tp_serialize_tasks(stages)
         card = card_list[0]
         note_text, checklist = _parse_description_and_checklist(task.description)
 
-        # Attachments (permitted ir.attachment records on this task)
         attachments = self.env["ir.attachment"].search(
             [("res_model", "=", "project.task"), ("res_id", "=", task.id)],
             order="id desc",
         )
+        can_edit_core = task._tp_can_edit_core_fields()
         att_items = [
             {
                 "id": a.id,
@@ -629,12 +956,11 @@ class PersonalProjectTask(models.Model):
                 "preview_url": f"/web/image/{a.id}"
                 if (a.mimetype or "").startswith("image/")
                 else f"/web/content/{a.id}",
-                "can_delete": bool(task.active and self.env.user in task.user_ids),
+                "can_delete": bool(task.active and (can_edit_core or a.create_uid == self.env.user)),
             }
             for a in attachments
         ]
 
-        # Linked calendar events (checked for read access and privacy)
         events = self.env["calendar.event"].search(
             [
                 ("res_model", "=", "project.task"),
@@ -670,7 +996,19 @@ class PersonalProjectTask(models.Model):
                 }
             )
 
-        # Chatter / comments & history (excluding OdooBot)
+        source_message_info = None
+        if task.tp_source_message_id:
+            msg_su = task.tp_source_message_id.sudo()
+            chan = task.tp_source_channel_id
+            can_see_chan = bool(chan and chan.exists() and chan.has_access("read"))
+            source_message_info = {
+                "message_id": msg_su.id,
+                "channel_id": chan.id if can_see_chan else 0,
+                "channel_name": (chan.display_name or chan.name) if can_see_chan else "Hội thoại nội bộ",
+                "channel_url": f"/app/ca-nhan/trao-doi/{chan.id}" if can_see_chan else "",
+                "author_name": msg_su.author_id.name or "",
+            }
+
         odoobot_id = self.env["ir.model.data"]._xmlid_to_res_id("base.partner_root") or 0
         msg_dom = [
             ("model", "=", "project.task"),
@@ -704,15 +1042,18 @@ class PersonalProjectTask(models.Model):
                 }
             )
 
-        can_write = bool(self.env.user in task.user_ids)
         return {
             **card,
             "note_text": note_text,
             "checklist": checklist,
             "attachments": att_items,
             "linked_events": linked_events,
+            "source_message_info": source_message_info,
             "messages": msg_items,
-            "can_write": can_write,
+            "can_write": can_edit_core,
+            "can_upload_evidence": bool(
+                task.active and (can_edit_core or card["can_report_done"] or card["can_verify"])
+            ),
             "stages": [
                 {"id": s.id, "name": s.name, "fold": bool(s.fold)}
                 for s in stages
@@ -721,7 +1062,7 @@ class PersonalProjectTask(models.Model):
 
     @api.model
     def tp_create_personal_task(self, vals, operation_token=""):
-        """Create a personal task assigned to the logged-in user (idempotent via operation_token)."""
+        """Create a personal/assigned task (`idempotent` via `operation_token`)."""
         self.env["res.users"]._tp_require_internal_caller()
         vals = dict(vals or {})
         name = str(vals.get("name") or "").strip()
@@ -751,6 +1092,7 @@ class PersonalProjectTask(models.Model):
         if priority not in ("0", "1", "2", "3"):
             priority = "0"
         tag_ids = [int(t) for t in (vals.get("tag_ids") or []) if str(t).isdigit()]
+        deliverable = str(vals.get("deliverable") or "").strip()
         description_html = _compose_description_html(
             vals.get("note_text", ""), vals.get("checklist", [])
         )
@@ -762,6 +1104,7 @@ class PersonalProjectTask(models.Model):
             "deadline": str(deadline_utc or ""),
             "priority": priority,
             "tags": sorted(tag_ids),
+            "deliverable": deliverable,
         }
         op_log = self.env["tp.personal.operation.log"]
         existing, clean_token, fp = op_log.acquire_or_replay(
@@ -770,14 +1113,14 @@ class PersonalProjectTask(models.Model):
         if existing:
             return existing._tp_serialize_tasks(stages)[0]
 
-        # Place new task at top of target personal stage for this user
-        min_seq_rel = self.env["project.task.stage.personal"].search(
+        min_seq_rel = self.env["project.task.stage.personal"].sudo().search(
             [("user_id", "=", self.env.uid), ("stage_id", "=", stage.id)],
             order="tp_personal_sequence asc, id asc",
             limit=1,
         )
         next_seq = (min_seq_rel.tp_personal_sequence - 10) if min_seq_rel else 10
 
+        is_done = bool(vals.get("is_done"))
         create_vals = {
             "name": name,
             "project_id": False,
@@ -786,9 +1129,18 @@ class PersonalProjectTask(models.Model):
             "user_ids": [Command.set(all_user_ids)],
             "priority": priority,
             "date_deadline": deadline_utc,
+            "tp_deliverable": deliverable or False,
+            "tp_source_kind": "self",
+            "tp_assigner_user_id": self.env.uid,
+            "tp_exec_report_state": "verified" if is_done else "in_progress",
             "description": description_html,
-            "state": "1_done" if vals.get("is_done") else "01_in_progress",
+            "state": "1_done" if is_done else "01_in_progress",
         }
+        if vals.get("verifier_user_id"):
+            v_uid = int(vals["verifier_user_id"])
+            v_user = self.env["res.users"].sudo().browse(v_uid).exists()
+            if v_user and v_user.active and not v_user.share:
+                create_vals["tp_verifier_user_id"] = v_user.id
         if tag_ids:
             create_vals["tag_ids"] = [Command.set(tag_ids)]
 
@@ -800,8 +1152,8 @@ class PersonalProjectTask(models.Model):
             )
             .create(create_vals)
         )
-        task._populate_missing_personal_stages()
-        rel = self.env["project.task.stage.personal"].search(
+        self._tp_ensure_personal_stage_rels(task, stages)
+        rel = self.env["project.task.stage.personal"].sudo().search(
             [("user_id", "=", self.env.uid), ("task_id", "=", task.id)],
             limit=1,
         )
@@ -830,14 +1182,21 @@ class PersonalProjectTask(models.Model):
 
     @api.model
     def tp_save_personal_task(self, task_id, vals):
-        """Update fields of an existing personal task with full access validation."""
+        """Update fields of an existing non-project personal task with full access validation."""
         self.env["res.users"]._tp_require_internal_caller()
         task = self.with_context(active_test=False).browse(int(task_id or 0)).exists()
         if not task:
             raise MissingError(self.env._("Công việc không tồn tại hoặc đã bị xóa."))
-        task._tp_assert_personal_task_access(mode="write")
 
         vals = dict(vals or {})
+        # Allow moving personal stage even on project tasks without mutating `project.task`
+        if task.project_id and set(vals.keys()) <= {"stage_id"}:
+            task._tp_assert_personal_task_access(mode="personal_board")
+            if vals.get("stage_id"):
+                self.tp_move_personal_task(task.id, int(vals["stage_id"]), [task.id])
+            return self.tp_get_personal_task_detail(task.id)
+
+        task._tp_assert_personal_task_access(mode="write")
         write_vals = {}
 
         if "name" in vals:
@@ -846,14 +1205,22 @@ class PersonalProjectTask(models.Model):
                 raise ValidationError(self.env._("Vui lòng nhập tiêu đề công việc."))
             write_vals["name"] = name
 
+        if "deliverable" in vals:
+            write_vals["tp_deliverable"] = str(vals.get("deliverable") or "").strip() or False
+
+        if "reported_result" in vals:
+            write_vals["tp_reported_result"] = str(vals.get("reported_result") or "").strip() or False
+
         if "priority" in vals:
             prio = str(vals.get("priority") or "0")
             if prio not in ("0", "1", "2", "3"):
                 raise ValidationError(self.env._("Mức ưu tiên không hợp lệ."))
             write_vals["priority"] = prio
 
-        if "is_done" in vals:
-            write_vals["state"] = "1_done" if vals.get("is_done") else "01_in_progress"
+        if "is_done" in vals and not task._tp_requires_verification():
+            done_flag = bool(vals.get("is_done"))
+            write_vals["state"] = "1_done" if done_flag else "01_in_progress"
+            write_vals["tp_exec_report_state"] = "verified" if done_flag else "in_progress"
 
         if "deadline_iso" in vals:
             write_vals["date_deadline"] = self._tp_parse_local_datetime_input(
@@ -866,8 +1233,7 @@ class PersonalProjectTask(models.Model):
 
         if "user_ids" in vals:
             supplied_uids = [int(u) for u in (vals.get("user_ids") or []) if str(u).isdigit()]
-            # Keep current user in user_ids so owner never accidentally orphans own personal task
-            if self.env.uid not in supplied_uids:
+            if self.env.uid not in supplied_uids and task.tp_assigner_user_id != self.env.user:
                 supplied_uids.insert(0, self.env.uid)
             valid_users = self.env["res.users"].sudo().search(
                 [("id", "in", supplied_uids), ("active", "=", True), ("share", "=", False)]
@@ -884,7 +1250,9 @@ class PersonalProjectTask(models.Model):
 
         if write_vals:
             task.write(write_vals)
-            task._populate_missing_personal_stages()
+
+        stages = self._tp_ensure_my_personal_stages()
+        self._tp_ensure_personal_stage_rels(task, stages)
 
         if "stage_id" in vals and vals.get("stage_id"):
             stage_id = int(vals["stage_id"])
@@ -893,7 +1261,7 @@ class PersonalProjectTask(models.Model):
             )
             if not stage:
                 raise ValidationError(self.env._("Giai đoạn cá nhân không hợp lệ."))
-            rel = self.env["project.task.stage.personal"].search(
+            rel = self.env["project.task.stage.personal"].sudo().search(
                 [("user_id", "=", self.env.uid), ("task_id", "=", task.id)], limit=1
             )
             if rel and rel.stage_id.id != stage.id:
@@ -902,29 +1270,136 @@ class PersonalProjectTask(models.Model):
         return self.tp_get_personal_task_detail(task.id)
 
     @api.model
-    def tp_toggle_personal_task_done(self, task_id, is_done):
-        """Toggle completion state (`1_done` <-> `01_in_progress`) without altering stages."""
+    def tp_report_or_verify_task(self, task_id, action, result_text="", operation_token=""):
+        """Two-step execution reporting (`report_done` vs `verify` vs `reopen`).
+
+        - On project/KH-KD tasks, `report_done` and `verify` update ONLY the execution-result
+          tracking fields (`tp_exec_report_state`, `tp_reported_result`, `tp_verified_*`) and
+          post a chatter trace WITHOUT overriding `project.task.state` or `stage_id` controlled
+          by KH-KD WBS governance!
+        - On non-project assigned tasks, `verify` marks `state = '1_done'` and `reopen`
+          restores `state = '01_in_progress'`.
+        """
         self.env["res.users"]._tp_require_internal_caller()
         task = self.with_context(active_test=False).browse(int(task_id or 0)).exists()
         if not task:
             raise MissingError(self.env._("Công việc không tồn tại."))
+        task._tp_assert_personal_task_access(mode="read")
+
+        if action not in ("report_done", "verify", "reopen"):
+            raise ValidationError(self.env._("Thao tác xác nhận kết quả không hợp lệ."))
+
+        clean_result = str(result_text or "").strip()
+        self.env.flush_all()
+        self.env.cr.execute(SQL("SELECT id FROM project_task WHERE id = %s FOR UPDATE", task.id))
+        task.invalidate_recordset()
+
+        now_utc = fields.Datetime.now()
+        updates = {}
+        log_msg = ""
+
+        if action == "report_done":
+            can_report = bool(
+                self.env.user in task.user_ids
+                or ("kd_responsible_id" in self._fields and task.kd_responsible_id == self.env.user)
+            )
+            if not can_report:
+                raise AccessError(
+                    self.env._("Chỉ người được giao thực hiện mới có quyền báo hoàn thành công việc này.")
+                )
+            updates["tp_exec_report_state"] = "reported_done"
+            updates["tp_reported_at"] = now_utc
+            if clean_result:
+                updates["tp_reported_result"] = clean_result
+            log_msg = "đã báo hoàn thành công việc" + (f": {clean_result}" if clean_result else ".")
+
+        elif action == "verify":
+            if not task._tp_can_verify_result():
+                raise AccessError(
+                    self.env._("Chỉ người giao việc, người xác nhận hoặc phụ trách dự án mới được xác nhận kết quả.")
+                )
+            updates["tp_exec_report_state"] = "verified"
+            updates["tp_verified_at"] = now_utc
+            updates["tp_verified_by_id"] = self.env.uid
+            if clean_result:
+                updates["tp_reported_result"] = clean_result
+            if not task.project_id:
+                updates["state"] = "1_done"
+            log_msg = "đã xác nhận kết quả công việc" + (f": {clean_result}" if clean_result else ".")
+
+        elif action == "reopen":
+            if not (task._tp_can_verify_result() or self.env.user in task.user_ids):
+                raise AccessError(self.env._("Bạn không có quyền mở lại trạng thái kết quả này."))
+            updates["tp_exec_report_state"] = "in_progress"
+            updates["tp_verified_at"] = False
+            updates["tp_verified_by_id"] = False
+            if not task.project_id:
+                updates["state"] = "01_in_progress"
+            log_msg = "đã chuyển công việc về trạng thái đang thực hiện" + (
+                f" ({clean_result})" if clean_result else "."
+            )
+
+        # Write via sudo ONLY after strict ACL + row lock above so `group_scoped_staff`
+        # executors can submit their execution report without opening full write ACL on `project.task`.
+        task.sudo().with_context(tracking_disable=True, mail_create_nosubscribe=True).write(updates)
+        if log_msg:
+            safe_note = Markup("<p><strong>%s</strong> %s</p>") % (
+                html.escape(self.env.user.name or ""),
+                html.escape(log_msg),
+            )
+            task.sudo().message_post(
+                body=safe_note,
+                author_id=self.env.user.partner_id.id,
+                message_type="comment",
+                subtype_xmlid="mail.mt_note",
+            )
+
+        return self.tp_get_personal_task_detail(task.id)
+
+    @api.model
+    def tp_toggle_personal_task_done(self, task_id, is_done):
+        """Toggle completion state for self-created tasks, or toggle `reported_done` on assigned/project tasks."""
+        self.env["res.users"]._tp_require_internal_caller()
+        task = self.with_context(active_test=False).browse(int(task_id or 0)).exists()
+        if not task:
+            raise MissingError(self.env._("Công việc không tồn tại."))
+
+        if task._tp_requires_verification():
+            if is_done:
+                if task._tp_can_verify_result() and task.tp_exec_report_state == "reported_done":
+                    self.tp_report_or_verify_task(task.id, "verify")
+                else:
+                    self.tp_report_or_verify_task(task.id, "report_done")
+            else:
+                self.tp_report_or_verify_task(task.id, "reopen")
+            stages = self._tp_ensure_my_personal_stages()
+            return task._tp_serialize_tasks(stages)[0]
+
         task._tp_assert_personal_task_access(mode="write")
-        task.write({"state": "1_done" if is_done else "01_in_progress"})
+        done_flag = bool(is_done)
+        task.write(
+            {
+                "state": "1_done" if done_flag else "01_in_progress",
+                "tp_exec_report_state": "verified" if done_flag else "in_progress",
+            }
+        )
         stages = self._tp_ensure_my_personal_stages()
         return task._tp_serialize_tasks(stages)[0]
 
     @api.model
     def tp_move_personal_task(self, task_id, target_stage_id, ordered_task_ids=None):
-        """Move and/or resequence a personal task ONLY in the current user's personal stage table.
+        """Move and/or resequence a task ONLY in the current user's personal stage table.
 
-        Never touches `project.task.stage_id` (project stage), `project.task.state`, or
-        `project.task.sequence` (global sequence), so shared tasks keep independent order per user.
+        NEVER touches `project.task.stage_id` (project stage), `project.task.state`,
+        `project.task.kd_command_version`, or `project.task.sequence`, so dragging a
+        project task or shared task on the user's personal Kanban board has ZERO side effects
+        on the project WBS or other colleagues' boards!
         """
         self.env["res.users"]._tp_require_internal_caller()
         task = self.browse(int(task_id or 0)).exists()
         if not task:
             raise MissingError(self.env._("Công việc không tồn tại hoặc đã lưu trữ."))
-        task._tp_assert_personal_task_access(mode="write")
+        task._tp_assert_personal_task_access(mode="personal_board")
 
         stage = self.env["project.task.type"].search(
             [
@@ -939,8 +1414,10 @@ class PersonalProjectTask(models.Model):
                 self.env._("Giai đoạn cá nhân đích không tồn tại hoặc không thuộc tài khoản của bạn.")
             )
 
-        task._populate_missing_personal_stages()
-        target_rel = self.env["project.task.stage.personal"].search(
+        stages = self._tp_ensure_my_personal_stages()
+        self._tp_ensure_personal_stage_rels(task, stages)
+        Rel = self.env["project.task.stage.personal"].sudo()
+        target_rel = Rel.search(
             [("user_id", "=", self.env.uid), ("task_id", "=", task.id)], limit=1
         )
         if not target_rel:
@@ -950,21 +1427,23 @@ class PersonalProjectTask(models.Model):
         if task.id not in ordered_ids:
             ordered_ids.append(task.id)
 
-        # Fetch all personal stage links of current user in target stage + supplied ordered_ids
-        stage_rels = self.env["project.task.stage.personal"].search(
+        stage_rels = Rel.search(
             [
                 ("user_id", "=", self.env.uid),
                 "|",
                 ("stage_id", "=", stage.id),
-                ("task_id", "in", [task.id]),
+                ("task_id", "in", ordered_ids),
             ],
             order="tp_personal_sequence asc, id desc",
         )
         rel_by_tid = {r.task_id.id: r for r in stage_rels}
         target_rel.write({"stage_id": stage.id})
 
-        # Preserve relative order of tasks in this stage that might be currently hidden by filters
-        existing_order = [r.task_id.id for r in stage_rels if r.task_id.id != task.id]
+        existing_order = [
+            r.task_id.id
+            for r in stage_rels
+            if r.task_id.id != task.id and r.stage_id.id == stage.id
+        ]
         merged_order = []
         seen = set()
         for tid in ordered_ids:
@@ -987,7 +1466,6 @@ class PersonalProjectTask(models.Model):
             if updates:
                 rel.write(updates)
 
-        stages = self._tp_ensure_my_personal_stages()
         return task._tp_serialize_tasks(stages)[0]
 
     @api.model
@@ -1046,7 +1524,6 @@ class PersonalProjectTask(models.Model):
         elif action == "toggle_fold":
             stage.write({"fold": not stage.fold})
         elif action == "delete":
-            # Native _unlink_if_remaining_personal_stages enforces >= 1 personal stage & migrates tasks
             stage.unlink()
         else:
             raise ValidationError(self.env._("Thao tác giai đoạn không hợp lệ."))
@@ -1074,12 +1551,14 @@ class PersonalProjectTask(models.Model):
 
     @api.model
     def tp_upload_personal_task_attachment(self, task_id, filename, base64_data, mimetype=""):
-        """Attach a file to a personal task via native `ir.attachment` (`public=False`)."""
+        """Attach a file/evidence to a task via native `ir.attachment` (`public=False`)."""
         self.env["res.users"]._tp_require_internal_caller()
         task = self.browse(int(task_id or 0)).exists()
         if not task:
             raise MissingError(self.env._("Công việc không tồn tại."))
-        task._tp_assert_personal_task_access(mode="write")
+        task._tp_assert_personal_task_access(mode="read")
+        if not task._tp_is_user_involved():
+            raise AccessError(self.env._("Chỉ người thực hiện hoặc người phụ trách mới được đính kèm tệp minh chứng."))
 
         clean_name = str(filename or "").strip() or "tep-dinh-kem"
         if not base64_data:
@@ -1104,7 +1583,12 @@ class PersonalProjectTask(models.Model):
         }
         if mimetype:
             att_vals["mimetype"] = str(mimetype)
-        att = self.env["ir.attachment"].create(att_vals)
+        # If task is a KH-KD project task where direct write on project.task is restricted,
+        # create the non-public attachment under sudo while keeping create_uid = caller via context/check
+        if task.project_id and not task.has_access("write"):
+            att = self.env["ir.attachment"].sudo().create(att_vals)
+        else:
+            att = self.env["ir.attachment"].create(att_vals)
         return {
             "id": att.id,
             "name": att.name,
@@ -1124,17 +1608,18 @@ class PersonalProjectTask(models.Model):
         task = self.browse(int(task_id or 0)).exists()
         if not task:
             raise MissingError(self.env._("Công việc không tồn tại."))
-        task._tp_assert_personal_task_access(mode="write")
+        task._tp_assert_personal_task_access(mode="read")
         att = self.env["ir.attachment"].browse(int(attachment_id or 0)).exists()
         if not att or att.res_model != "project.task" or att.res_id != task.id:
             raise MissingError(self.env._("Tệp đính kèm không tồn tại trên công việc này."))
-        att.check_access("unlink")
-        att.unlink()
+        if not (task._tp_can_edit_core_fields() or att.create_uid == self.env.user):
+            raise AccessError(self.env._("Bạn chỉ có thể xóa tệp minh chứng do chính mình tải lên."))
+        att.sudo().unlink() if task.project_id else att.unlink()
         return {"deleted": True}
 
     @api.model
     def tp_post_personal_task_comment(self, task_id, body, operation_token=""):
-        """Post a comment on a personal task using native `message_post`."""
+        """Post a comment on a permitted task using native `message_post`."""
         self.env["res.users"]._tp_require_internal_caller()
         task = self.browse(int(task_id or 0)).exists()
         if not task:
@@ -1155,8 +1640,10 @@ class PersonalProjectTask(models.Model):
             safe_html = Markup("<p>%s</p>") % Markup("<br/>").join(
                 html.escape(line) for line in clean_body.splitlines()
             )
-            msg = task.message_post(
+            poster = task.sudo() if (task.project_id and not task.has_access("write")) else task
+            msg = poster.message_post(
                 body=safe_html,
+                author_id=self.env.user.partner_id.id,
                 message_type="comment",
                 subtype_xmlid="mail.mt_comment",
             )
@@ -1189,6 +1676,7 @@ class PersonalProjectTask(models.Model):
             "privacy": vals.get("privacy") or "private",
             "calendar_id": vals.get("calendar_id") or False,
             "partner_ids": vals.get("partner_ids") or [],
+            "project_id": task.project_id.id if task.project_id else False,
             "res_model": "project.task",
             "res_id": task.id,
         }

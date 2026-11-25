@@ -70,6 +70,25 @@
             <div t-else="" class="tp-todo-drawer-body">
                 <InlineErrors errors="this.fieldErrors" server="this.state.serverError" attempt="this.state.attempt"/>
 
+                <!-- Source & Project Context Banner -->
+                <div t-if="!this.props.isNew and (this.state.project or this.state.sourceKind !== 'self')" class="p-2 px-3 rounded-3 border bg-light small">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <span class="fw-semibold text-primary">
+                            Nguồn: <t t-out="this.state.project ? ('Dự án · ' + this.state.project.name) : this.state.sourceLabel"/>
+                        </span>
+                        <span class="badge rounded-pill text-bg-secondary" t-out="this.state.execReportLabel"/>
+                    </div>
+                    <div t-if="this.state.assigner and this.state.sourceKind !== 'self'" class="text-muted mt-1">
+                        Người giao: <strong class="text-dark" t-out="this.state.assigner.name"/>
+                        <span t-if="this.state.verifier"> · Xác nhận bởi: <strong class="text-dark" t-out="this.state.verifier.name"/></span>
+                    </div>
+                    <div t-if="this.state.sourceMessageInfo?.channel_url" class="mt-1">
+                        <a t-att-href="this.state.sourceMessageInfo.channel_url" class="fw-semibold text-decoration-none">
+                            ↗ Mở tin nhắn gốc trong <t t-out="this.state.sourceMessageInfo.channel_name"/>
+                        </a>
+                    </div>
+                </div>
+
                 <!-- 1. Tiêu đề -->
                 <div class="tp-pt-field">
                     <label class="tp-pt-label" for="tp_todo_drawer_name">
@@ -89,7 +108,8 @@
                 <div class="row g-2 align-items-end">
                     <div class="col-12 col-sm-4 tp-pt-field">
                         <label class="tp-pt-label">Trạng thái</label>
-                        <button type="button"
+                        <button t-if="!this.state.requiresVerification"
+                                type="button"
                                 class="tp-pt-btn w-100 justify-content-start"
                                 t-att-class="{ 'tp-todo-status-done': this.state.isDone }"
                                 t-att-disabled="!this.state.canWrite"
@@ -97,6 +117,7 @@
                             <i class="oi" t-att-data-icon="this.state.isDone ? 'check_circle' : 'radio_button_unchecked'" aria-hidden="true"/>
                             <span t-out="this.state.isDone ? 'Đã hoàn thành' : 'Đang thực hiện'"/>
                         </button>
+                        <div t-else="" class="tp-pt-input d-flex align-items-center fw-semibold bg-light" t-out="this.state.execReportLabel"/>
                     </div>
                     <div class="col-6 col-sm-4 tp-pt-field">
                         <label class="tp-pt-label" for="tp_todo_drawer_priority">Mức ưu tiên</label>
@@ -116,8 +137,7 @@
                         <select id="tp_todo_drawer_stage"
                                 class="tp-pt-select"
                                 t-model.proxy="this.state.stageId"
-                                t-on-change="() => this.markDirty()"
-                                t-att-disabled="!this.state.canWrite">
+                                t-on-change="(ev) => this.onStageChangeForReadonlyTask(ev)">
                             <option t-foreach="this.state.stages"
                                     t-as="st"
                                     t-key="st.id"
@@ -214,7 +234,54 @@
                     </div>
                 </div>
 
-                <!-- 6. Nội dung -->
+                <!-- 6. Đầu ra cần đạt & Nội dung -->
+                <div class="tp-pt-field">
+                    <label class="tp-pt-label" for="tp_todo_drawer_deliverable">Đầu ra cần đạt</label>
+                    <input id="tp_todo_drawer_deliverable"
+                           type="text"
+                           class="tp-pt-input"
+                           placeholder="Ví dụ: Bản vẽ hiệu chỉnh PDF, Biên bản đối chiếu khối lượng…"
+                           t-model.proxy="this.state.deliverable"
+                           t-on-input="() => this.markDirty()"
+                           t-att-readonly="!this.state.canWrite"/>
+                </div>
+
+                <!-- Two-step Execution Report & Verification Box (for assigned / project tasks) -->
+                <div t-if="!this.props.isNew and this.state.id and this.state.requiresVerification" class="tp-todo-section-box">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <label class="tp-pt-label mb-0">Báo cáo kết quả &amp; Xác nhận</label>
+                        <span class="badge rounded-pill text-bg-light border text-dark" t-out="this.state.execReportLabel"/>
+                    </div>
+                    <textarea class="tp-pt-textarea mb-2"
+                              rows="2"
+                              placeholder="Ghi kết quả đã hoàn thành, số liệu hoặc đường dẫn tài liệu minh chứng…"
+                              t-model.proxy="this.state.reportedResult"
+                              t-att-readonly="!(this.state.canReportDone or this.state.canVerify)"/>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button t-if="this.state.canReportDone and this.state.execReportState !== 'verified'"
+                                type="button"
+                                class="tp-pt-btn tp-pt-btn-sm tp-pt-btn-primary"
+                                t-att-disabled="this.state.reportingBusy"
+                                t-on-click="() => this.onReportOrVerify('report_done')">
+                            <span t-out="this.state.execReportState === 'reported_done' ? 'Cập nhật báo xong' : 'Báo hoàn thành'"/>
+                        </button>
+                        <button t-if="this.state.canVerify and this.state.execReportState !== 'verified'"
+                                type="button"
+                                class="tp-pt-btn tp-pt-btn-sm tp-pt-btn-teal"
+                                t-att-disabled="this.state.reportingBusy"
+                                t-on-click="() => this.onReportOrVerify('verify')">
+                            Xác nhận kết quả đạt
+                        </button>
+                        <button t-if="(this.state.canVerify or this.state.canReportDone) and this.state.execReportState !== 'in_progress'"
+                                type="button"
+                                class="tp-pt-btn tp-pt-btn-sm"
+                                t-att-disabled="this.state.reportingBusy"
+                                t-on-click="() => this.onReportOrVerify('reopen')">
+                            Mở lại thực hiện
+                        </button>
+                    </div>
+                </div>
+
                 <div class="tp-pt-field">
                     <label class="tp-pt-label" for="tp_todo_drawer_note">Nội dung chi tiết</label>
                     <textarea id="tp_todo_drawer_note"
@@ -278,8 +345,8 @@
                 <!-- 8. Tệp đính kèm -->
                 <div t-if="!this.props.isNew and this.state.id" class="tp-todo-section-box">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <label class="tp-pt-label">Tệp đính kèm (<t t-out="this.state.attachments.length"/>)</label>
-                        <div t-if="this.state.canWrite">
+                        <label class="tp-pt-label">Tệp đính kèm / Minh chứng (<t t-out="this.state.attachments.length"/>)</label>
+                        <div t-if="this.state.canUploadEvidence">
                             <input type="file"
                                    multiple="multiple"
                                    class="d-none"

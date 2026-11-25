@@ -200,6 +200,7 @@ export class TpPersonalCalendarController extends AttendeeCalendarController {
             agendaFiltersOpen: false,
             agendaDateFrom: "",
             agendaDateTo: "",
+            agendaEventKind: "",
             agendaResponseState: "",
             agendaPrivacy: "",
             agendaOrganizer: [],
@@ -553,6 +554,7 @@ export class TpPersonalCalendarController extends AttendeeCalendarController {
                     date_to: this.tpState.agendaDateTo,
                     calendar_ids: checkedCalIds,
                     partner_ids: activePartnerIds,
+                    event_kind: this.tpState.agendaEventKind,
                     response_state: this.tpState.agendaResponseState,
                     privacy: this.tpState.agendaPrivacy,
                     organizer_id: this.tpState.agendaOrganizer[0]?.user_id || 0,
@@ -594,6 +596,21 @@ export class TpPersonalCalendarController extends AttendeeCalendarController {
                 label: `Từ khóa: "${this.tpState.searchQuery.trim()}"`,
                 clear: () => {
                     this.tpState.searchQuery = "";
+                },
+            });
+        }
+        if (this.tpState.agendaEventKind) {
+            const kMap = {
+                personal: "Cá nhân",
+                meeting: "Họp",
+                field_trip: "Công tác / Hiện trường",
+                department: "Lịch phòng / Công ty",
+            };
+            chips.push({
+                key: "kind",
+                label: `Loại lịch: ${kMap[this.tpState.agendaEventKind] || ""}`,
+                clear: () => {
+                    this.tpState.agendaEventKind = "";
                 },
             });
         }
@@ -648,6 +665,7 @@ export class TpPersonalCalendarController extends AttendeeCalendarController {
     async resetAgendaFilters() {
         const today = DateTime.local();
         this.tpState.searchQuery = "";
+        this.tpState.agendaEventKind = "";
         this.tpState.agendaResponseState = "";
         this.tpState.agendaPrivacy = "";
         this.tpState.agendaOrganizer = [];

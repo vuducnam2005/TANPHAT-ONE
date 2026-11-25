@@ -12,7 +12,7 @@ import base64
 from datetime import date
 
 from odoo import Command
-from odoo.exceptions import AccessError
+from odoo.exceptions import AccessError, ValidationError
 from odoo.tests import TransactionCase, tagged
 
 
@@ -197,23 +197,92 @@ class TestPersonalToolsSuite(TransactionCase):
         # Project stage (`stage_id` on project.task) must remain untouched (False)
         self.assertFalse(self.env["project.task"].sudo().browse(c2["id"]).stage_id)
 
-    def test_03_personal_scope_excludes_project_tasks_and_unauthorized_users(self):
-        # Create a project task assigned to User A -> must NEVER appear in Việc cá nhân
-        proj = self.env["project.project"].create({"name": "Dự án Cầu Thủ Thiêm Test"})
-        proj_task = self.env["project.task"].create(
+    def test_03_unified_my_work_includes_permitted_project_tasks_without_duplication_and_isolates_board(self):
+        """Mandatory Cases #1 & #2:
+        1. Permitted project task appears in 'Công việc của tôi' without creating a duplicate row.
+        2. Dragging personal Kanban board never mutates project `stage_id` or `state`.
+        3. Unpermitted project tasks & other users' private tasks never leak.
+        4. Assigned/project tasks separate `reported_done` vs `verified`.
+        """
+        proj_stage_1 = self.env["project.task.type"].create({"name": "Giai đoạn Dự án 1", "sequence": 10})
+        proj_stage_2 = self.env["project.task.type"].create({"name": "Giai đoạn Dự án 2", "sequence": 20})
+        proj = self.env["project.project"].create(
             {
-                "name": "Nhiệm vụ thuộc dự án KH-KD",
-                "project_id": proj.id,
-                "user_ids": [Command.set([self.user_a.id])],
+                "name": "Dự án Cầu Thủ Thiêm 4",
+                "user_id": self.user_b.id,
+                "type_ids": [Command.set([proj_stage_1.id, proj_stage_2.id])],
             }
         )
+        # User B is standard internal user assigned to project task -> permitted!
+        total_before = self.env["project.task"].sudo().search_count([])
+        proj_task = self.env["project.task"].create(
+            {
+                "name": "Thẩm tra kết cấu nhịp chính",
+                "project_id": proj.id,
+                "stage_id": proj_stage_1.id,
+                "user_ids": [Command.set([self.user_b.id])],
+                "tp_verifier_user_id": self.delegated_admin.id,
+                "tp_deliverable": "Báo cáo thẩm tra PDF",
+            }
+        )
+        self.assertEqual(
+            self.env["project.task"].sudo().search_count([]),
+            total_before + 1,
+            "Creating 1 project task must create only 1 row",
+        )
+
+        TaskB = self.env["project.task"].with_user(self.user_b)
+        ws_b = TaskB.tp_get_personal_workspace({"bucket": "all"})
+        self.assertEqual(
+            self.env["project.task"].sudo().search_count([]),
+            total_before + 1,
+            "Opening Công việc của tôi must NEVER copy project tasks",
+        )
+        b_ids = [t["id"] for t in ws_b["tasks"]]
+        self.assertIn(proj_task.id, b_ids, "Assigned project task must appear in Công việc của tôi")
+
+        ws_b_proj_only = TaskB.tp_get_personal_workspace(
+            {"bucket": "all", "source_kind": "project"}
+        )
+        self.assertIn(proj_task.id, [t["id"] for t in ws_b_proj_only["tasks"]])
+
+        # Case #2: User B drags proj_task across personal stages -> project stage_id & state stay intact!
+        personal_col_2 = ws_b["stages"][1]["id"]
+        moved = TaskB.tp_move_personal_task(proj_task.id, personal_col_2, [proj_task.id])
+        self.assertEqual(moved["stage_id"], personal_col_2)
+        proj_task.invalidate_recordset()
+        self.assertEqual(
+            proj_task.stage_id.id,
+            proj_stage_1.id,
+            "Dragging personal board must NEVER alter project stage_id!",
+        )
+        self.assertEqual(proj_task.state, "01_in_progress")
+
+        # Two-step completion: Executor User B reports done -> does NOT mark project state 1_done or verified!
+        rep_detail = TaskB.tp_report_or_verify_task(
+            proj_task.id, "report_done", "Đã xuất file PDF ký nháy"
+        )
+        self.assertEqual(rep_detail["exec_report_state"], "reported_done")
+        self.assertEqual(proj_task.state, "01_in_progress")
+        # User C (outsider) cannot verify
+        with self.assertRaises(AccessError):
+            self.env["project.task"].with_user(self.user_c).tp_report_or_verify_task(
+                proj_task.id, "verify"
+            )
+        # Authorized verifier confirms result -> `verified`
+        ver_detail = (
+            self.env["project.task"]
+            .with_user(self.delegated_admin)
+            .tp_report_or_verify_task(proj_task.id, "verify", "Đồng ý kết quả thẩm tra")
+        )
+        self.assertEqual(ver_detail["exec_report_state"], "verified")
+
+        # Scoped KH-KD user_a WITHOUT grant on unmanaged/other project cannot see unpermitted project task
         TaskA = self.env["project.task"].with_user(self.user_a)
         priv_task = TaskA.tp_create_personal_task({"name": "Việc riêng mật của An"})
-
-        ws_a = TaskA.tp_get_personal_workspace({"bucket": "all", "filters": {}})
-        returned_ids = [t["id"] for t in ws_a["tasks"]]
-        self.assertIn(priv_task["id"], returned_ids)
-        self.assertNotIn(proj_task.id, returned_ids, "Project task must never leak into Personal Todo")
+        ws_a = TaskA.tp_get_personal_workspace({"bucket": "all"})
+        self.assertIn(priv_task["id"], [t["id"] for t in ws_a["tasks"]])
+        self.assertNotIn(proj_task.id, [t["id"] for t in ws_a["tasks"]])
 
         # User C (outsider) cannot read, edit, move, or delete User A's personal task via RPC or ORM
         TaskC = self.env["project.task"].with_user(self.user_c)
@@ -563,3 +632,184 @@ class TestPersonalToolsSuite(TransactionCase):
             self.env["calendar.event"].with_user(locked_user).tp_get_calendar_bootstrap()
         with self.assertRaises(AccessError):
             self.env["res.users"].with_user(locked_user).tp_search_colleagues("")
+
+    def test_11_meeting_room_booking_conflict_and_slot_release(self):
+        """Mandatory Case #4:
+        - Non-admin cannot create meeting rooms; Admin/Full Admin can.
+        - Two overlapping bookings for the same confirmed room are blocked at backend (`FOR UPDATE`).
+        - Rescheduling, cancelling room booking, or archiving/deleting the event releases the slot.
+        - Private event booking the room still blocks conflict while masking title as 'Khung giờ bận'.
+        """
+        with self.assertRaises(AccessError):
+            self.env["tp.meeting.room"].with_user(self.user_b).tp_save_meeting_room(
+                0, {"code": "PH-HACK", "name": "Phòng trái phép", "capacity": 8}
+            )
+
+        room = (
+            self.env["tp.meeting.room"]
+            .with_user(self.delegated_admin)
+            .tp_save_meeting_room(
+                0,
+                {
+                    "code": "PH-T3-01",
+                    "name": "Phòng họp Lớn Tầng 3",
+                    "capacity": 20,
+                    "location": "Tầng 3",
+                    "equipment_note": "TV 75 inch, Họp trực tuyến",
+                },
+                operation_token="tok-room-001",
+            )
+        )
+        CalA = self.env["calendar.event"].with_user(self.user_a)
+        CalB = self.env["calendar.event"].with_user(self.user_b)
+
+        ev1 = CalA.tp_save_calendar_event(
+            0,
+            {
+                "name": "Họp hội đồng kỹ thuật BíMậtPhòng99",
+                "event_kind": "meeting",
+                "room_id": room["id"],
+                "allday": False,
+                "start_iso": "2026-12-03T09:00",
+                "stop_iso": "2026-12-03T10:30",
+                "privacy": "private",
+            },
+        )
+        self.assertEqual(ev1["room"]["id"], room["id"])
+        self.assertEqual(ev1["room_booking_state"], "confirmed")
+
+        # Availability check for User B marks room unavailable & masks private title!
+        avail = (
+            self.env["tp.meeting.room"]
+            .with_user(self.user_b)
+            .tp_list_available_rooms("2026-12-03T09:30", "2026-12-03T11:00", False, 0)
+        )
+        r_row = next(r for r in avail if r["id"] == room["id"])
+        self.assertFalse(r_row["is_available"])
+        self.assertNotIn("BíMậtPhòng99", r_row["conflict_summary"])
+
+        # User B attempts overlapping booking -> blocked by ValidationError (without leaking private title)
+        with self.assertRaises(ValidationError) as ctx:
+            CalB.tp_save_calendar_event(
+                0,
+                {
+                    "name": "Họp nhóm khảo sát",
+                    "event_kind": "meeting",
+                    "room_id": room["id"],
+                    "allday": False,
+                    "start_iso": "2026-12-03T10:00",
+                    "stop_iso": "2026-12-03T11:00",
+                },
+            )
+        self.assertNotIn("BíMậtPhòng99", str(ctx.exception))
+
+        # User A moves ev1 to 14:00-15:30 -> 09:00-10:30 slot is immediately released for User B!
+        CalA.tp_save_calendar_event(
+            ev1["id"],
+            {
+                "name": "Họp hội đồng kỹ thuật BíMậtPhòng99",
+                "event_kind": "meeting",
+                "room_id": room["id"],
+                "allday": False,
+                "start_iso": "2026-12-03T14:00",
+                "stop_iso": "2026-12-03T15:30",
+                "privacy": "private",
+            },
+        )
+        ev2 = CalB.tp_save_calendar_event(
+            0,
+            {
+                "name": "Họp nhóm khảo sát",
+                "event_kind": "meeting",
+                "room_id": room["id"],
+                "allday": False,
+                "start_iso": "2026-12-03T09:30",
+                "stop_iso": "2026-12-03T11:00",
+            },
+        )
+        self.assertEqual(ev2["room_booking_state"], "confirmed")
+
+        # Dragging ev2 into ev1's new 14:00-15:30 slot via ORM write (FullCalendar drop) is ALSO blocked!
+        with self.assertRaises(ValidationError):
+            CalB.browse(ev2["id"]).write(
+                {
+                    "start": self.env["calendar.event"].sudo().browse(ev1["id"]).start,
+                    "stop": self.env["calendar.event"].sudo().browse(ev1["id"]).stop,
+                }
+            )
+
+    def test_12_scoped_project_department_channels_and_message_to_task(self):
+        """Mandatory Case #6 & Section F3:
+        - Scoped department/project channels add ONLY real source members (never whole company or random outsider).
+        - Converting a Discuss message to a task preserves `tp_source_message_id`, enforces channel read ACL,
+          and prevents duplicate creation on retry (`operation_token`).
+        """
+        ChanA = self.env["discuss.channel"].with_user(self.user_a)
+        dept_chan = ChanA.tp_create_scoped_channel(
+            {
+                "scope": "department",
+                "source_id": self.dept_tech.id,
+                "description": "Trao đổi chuyên môn Phòng Kỹ thuật",
+            },
+            operation_token="tok-dept-chan-01",
+        )
+        ch_rec = self.env["discuss.channel"].sudo().browse(dept_chan["id"])
+        member_pids = ch_rec.channel_member_ids.mapped("partner_id").ids
+        self.assertIn(self.user_a.partner_id.id, member_pids)
+        # User C is NOT in dept_tech -> NOT added and CANNOT read private department group!
+        self.assertNotIn(self.user_c.partner_id.id, member_pids)
+        with self.assertRaises(AccessError):
+            self.env["discuss.channel"].with_user(self.user_c).browse(ch_rec.id).read(["name"])
+
+        # Post message in private DM between User A and User B
+        dm = ChanA._get_or_create_chat([self.user_b.partner_id.id])
+        msg = dm.message_post(
+            body="<p>Nhờ Bình tổng hợp bảng khối lượng cọc khoan nhồi trước thứ Sáu.</p>",
+            message_type="comment",
+            subtype_xmlid="mail.mt_comment",
+        )
+
+        # Outsider User C cannot preview or convert a message from A-B's private DM!
+        ChanC = self.env["discuss.channel"].with_user(self.user_c)
+        with self.assertRaises(AccessError):
+            ChanC.tp_preview_message_for_task(msg.id)
+        with self.assertRaises(AccessError):
+            ChanC.tp_create_task_from_message(
+                msg.id, {"name": "Hack task", "user_ids": [self.user_c.id]}, "tok-hack"
+            )
+
+        # User A previews & confirms task creation for User B (idempotent on retry)
+        preview = ChanA.tp_preview_message_for_task(msg.id)
+        self.assertIn("cọc khoan nhồi", preview["body_text"])
+        created_1 = ChanA.tp_create_task_from_message(
+            msg.id,
+            {
+                "name": "Tổng hợp khối lượng cọc khoan nhồi",
+                "deliverable": "File Excel + PDF khối lượng cọc",
+                "user_ids": [self.user_b.id],
+                "deadline_iso": "2026-12-04T17:00",
+                "notify_channel": True,
+            },
+            operation_token="tok-msg2task-001",
+        )
+        created_2 = ChanA.tp_create_task_from_message(
+            msg.id,
+            {
+                "name": "Tổng hợp khối lượng cọc khoan nhồi",
+                "deliverable": "File Excel + PDF khối lượng cọc",
+                "user_ids": [self.user_b.id],
+                "deadline_iso": "2026-12-04T17:00",
+                "notify_channel": True,
+            },
+            operation_token="tok-msg2task-001",
+        )
+        self.assertEqual(created_1["id"], created_2["id"], "Retry must not duplicate message task")
+        self.assertEqual(created_1["source_kind"], "chat")
+
+        # Task appears in User B's 'Công việc của tôi' under source_kind='chat' with source message link
+        TaskB = self.env["project.task"].with_user(self.user_b)
+        ws_b_chat = TaskB.tp_get_personal_workspace({"bucket": "all", "source_kind": "chat"})
+        self.assertIn(created_1["id"], [t["id"] for t in ws_b_chat["tasks"]])
+        detail_b = TaskB.tp_get_personal_task_detail(created_1["id"])
+        self.assertEqual(detail_b["source_message_info"]["message_id"], msg.id)
+        self.assertEqual(detail_b["deliverable"], "File Excel + PDF khối lượng cọc")

@@ -288,6 +288,18 @@
                                         t-on-change="() => (this.tpState.agendaPage = 1, this.loadAgenda())"/>
                                 </div>
                                 <div class="tp-cal-filter-field">
+                                    <label class="tp-cal-mini-label">Loại lịch</label>
+                                    <select class="tp-pt-select tp-pt-input-compact"
+                                        t-model.proxy="this.tpState.agendaEventKind"
+                                        t-on-change="() => (this.tpState.agendaPage = 1, this.loadAgenda())">
+                                        <option value="">Tất cả loại lịch</option>
+                                        <option value="personal">Cá nhân</option>
+                                        <option value="meeting">Họp</option>
+                                        <option value="field_trip">Công tác / Hiện trường</option>
+                                        <option value="department">Lịch phòng / Công ty</option>
+                                    </select>
+                                </div>
+                                <div class="tp-cal-filter-field">
                                     <label class="tp-cal-mini-label">Phản hồi của tôi</label>
                                     <select class="tp-pt-select tp-pt-input-compact"
                                         t-model.proxy="this.tpState.agendaResponseState"
@@ -385,6 +397,9 @@
                                             <div class="tp-cal-ag-main min-w-0 flex-grow-1">
                                                 <div class="d-flex flex-wrap align-items-center gap-2">
                                                     <h5 class="tp-cal-ag-title mb-0" t-out="evCard.name"/>
+                                                    <span t-if="!evCard.is_masked_private and evCard.event_kind_label" class="tp-cal-mini-badge" t-out="evCard.event_kind_label"/>
+                                                    <span t-if="!evCard.is_masked_private and evCard.room?.name and evCard.room_booking_state === 'confirmed'" class="tp-cal-mini-badge" t-out="'🏢 ' + evCard.room.name"/>
+                                                    <span t-if="!evCard.is_masked_private and evCard.project?.name" class="tp-cal-mini-badge" t-out="'📁 ' + evCard.project.name"/>
                                                     <span t-if="evCard.recurrency" class="tp-cal-mini-badge">Lặp lại</span>
                                                     <span t-if="evCard.is_masked_private or evCard.effective_privacy === 'private'" class="tp-cal-mini-badge is-priv">Riêng tư</span>
                                                     <span t-if="evCard.my_status_label and evCard.is_attendee"

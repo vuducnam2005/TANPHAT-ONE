@@ -74,7 +74,22 @@ export class TpTodoDetailDrawer extends Component {
             id: this.props.taskId || 0,
             active: true,
             canWrite: true,
+            canUploadEvidence: true,
+            canReportDone: false,
+            canVerify: false,
+            requiresVerification: false,
+            sourceKind: "self",
+            sourceLabel: "Tự tạo",
+            project: null,
+            assigner: null,
+            verifier: null,
+            sourceMessageInfo: null,
+            execReportState: "in_progress",
+            execReportLabel: "Đang thực hiện",
+            reportedResult: "",
+            reportingBusy: false,
             name: "",
+            deliverable: "",
             isDone: false,
             priority: "0",
             stageId: this.props.defaultStageId || 0,
@@ -148,7 +163,23 @@ export class TpTodoDetailDrawer extends Component {
         this.state.id = detail.id;
         this.state.active = Boolean(detail.active);
         this.state.canWrite = Boolean(detail.can_write);
+        this.state.canUploadEvidence = Boolean(
+            detail.can_upload_evidence ?? detail.can_write
+        );
+        this.state.canReportDone = Boolean(detail.can_report_done);
+        this.state.canVerify = Boolean(detail.can_verify);
+        this.state.requiresVerification = Boolean(detail.requires_verification);
+        this.state.sourceKind = detail.source_kind || "self";
+        this.state.sourceLabel = detail.source_label || "Tự tạo";
+        this.state.project = detail.project || null;
+        this.state.assigner = detail.assigner || null;
+        this.state.verifier = detail.verifier || null;
+        this.state.sourceMessageInfo = detail.source_message_info || null;
+        this.state.execReportState = detail.exec_report_state || "in_progress";
+        this.state.execReportLabel = detail.exec_report_label || "Đang thực hiện";
+        this.state.reportedResult = detail.reported_result || "";
         this.state.name = detail.name || "";
+        this.state.deliverable = detail.deliverable || "";
         this.state.isDone = Boolean(detail.is_done);
         this.state.priority = detail.priority || "0";
         this.state.stageId = detail.stage_id || (detail.stages?.[0]?.id ?? 0);
@@ -292,6 +323,8 @@ export class TpTodoDetailDrawer extends Component {
         try {
             const payload = {
                 name: this.state.name.trim(),
+                deliverable: this.state.deliverable.trim(),
+                reported_result: this.state.reportedResult.trim(),
                 is_done: this.state.isDone,
                 priority: this.state.priority,
                 stage_id: Number(this.state.stageId) || false,
@@ -328,6 +361,53 @@ export class TpTodoDetailDrawer extends Component {
             return false;
         } finally {
             this.state.saving = false;
+        }
+    }
+
+    async onReportOrVerify(action) {
+        if (!this.state.id || this.state.reportingBusy) {
+            return;
+        }
+        this.state.reportingBusy = true;
+        this.state.serverError = null;
+        try {
+            const detail = await this.orm.call(
+                "project.task",
+                "tp_report_or_verify_task",
+                [Number(this.state.id), action, this.state.reportedResult.trim(), uuid()]
+            );
+            this.applyDetailData(detail);
+            const msgMap = {
+                report_done: "Đã báo hoàn thành công việc (chờ xác nhận kết quả).",
+                verify: "Đã xác nhận kết quả hoàn thành công việc.",
+                reopen: "Đã mở lại trạng thái thực hiện công việc.",
+            };
+            this.notification.add(msgMap[action] || "Đã cập nhật kết quả.", { type: "success" });
+            this.props.onSaved?.(detail, { created: false });
+        } catch (err) {
+            this.state.serverError = saveError(err, { verb: "cập nhật kết quả thực hiện" });
+        } finally {
+            this.state.reportingBusy = false;
+        }
+    }
+
+    async onStageChangeForReadonlyTask(ev) {
+        const nextStageId = Number(ev.target.value || 0);
+        this.state.stageId = nextStageId;
+        if (!this.state.canWrite && this.state.id && nextStageId) {
+            try {
+                await this.orm.call("project.task", "tp_move_personal_task", [
+                    Number(this.state.id),
+                    nextStageId,
+                    [Number(this.state.id)],
+                ]);
+                this.notification.add("Đã chuyển giai đoạn cá nhân.", { type: "success" });
+                this.props.onMutated?.();
+            } catch (err) {
+                this.state.serverError = saveError(err, { verb: "chuyển giai đoạn cá nhân" });
+            }
+        } else {
+            this.markDirty();
         }
     }
 

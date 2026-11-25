@@ -17,7 +17,7 @@
                             <path d="M9 12l2 2 4-4"/>
                         </svg>
                     </span>
-                    <h1 class="tp-todo-page-title">Việc cá nhân</h1>
+                    <h1 class="tp-todo-page-title">Công việc của tôi</h1>
                 </div>
 
                 <div class="tp-todo-toolbar-right">
@@ -182,6 +182,22 @@
                         </div>
                     </div>
 
+                    <!-- Source Scope Strip (Tự tạo / Dự án / Cuộc họp / Yêu cầu / Trao đổi) -->
+                    <div class="tp-todo-source-strip" role="tablist" aria-label="Phạm vi nguồn công việc">
+                        <button t-foreach="this.SOURCE_PILLS"
+                                t-as="sp"
+                                t-key="sp.key || 'all'"
+                                type="button"
+                                role="tab"
+                                t-att-aria-selected="this.state.appliedFilters.source_kind === sp.key ? 'true' : 'false'"
+                                class="tp-todo-source-pill"
+                                t-att-class="{ 'is-active': this.state.appliedFilters.source_kind === sp.key }"
+                                t-on-click="() => this.selectSourceFilter(sp.key)">
+                            <span t-out="sp.label"/>
+                            <span class="tp-todo-source-count" t-out="this.sourceCount(sp.key)"/>
+                        </button>
+                    </div>
+
                     <!-- Expandable Filter Panel (DEC-044 Standard) -->
                     <section t-if="this.state.filterPanelOpen" class="tp-todo-filter-panel" aria-label="Bộ lọc việc cá nhân">
                         <div class="row g-2 align-items-end">
@@ -218,11 +234,23 @@
                                 </select>
                             </div>
                             <div class="col-6 col-md-2 tp-pt-field">
-                                <label class="tp-pt-label" for="tp_f_comp">Hoàn thành</label>
+                                <label class="tp-pt-label" for="tp_f_comp">Trạng thái kết quả</label>
                                 <select id="tp_f_comp" class="tp-pt-select" t-model.proxy="this.state.pendingFilters.completion">
                                     <option value="">Mặc định theo mục</option>
-                                    <option value="open">Chưa hoàn thành</option>
-                                    <option value="done">Đã hoàn thành</option>
+                                    <option value="open">Đang thực hiện</option>
+                                    <option value="reported_done">Đã báo xong (chờ xác nhận)</option>
+                                    <option value="done">Đã hoàn thành / Đã xác nhận</option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-2 tp-pt-field">
+                                <label class="tp-pt-label" for="tp_f_src">Nguồn công việc</label>
+                                <select id="tp_f_src" class="tp-pt-select" t-model.proxy="this.state.pendingFilters.source_kind">
+                                    <option value="">Tất cả nguồn</option>
+                                    <option value="self">Việc tự tạo</option>
+                                    <option value="project">Dự án / Kế hoạch</option>
+                                    <option value="meeting">Từ cuộc họp</option>
+                                    <option value="request">Từ yêu cầu</option>
+                                    <option value="chat">Từ trao đổi</option>
                                 </select>
                             </div>
                             <div class="col-12 col-md-4 tp-pt-field">
@@ -232,7 +260,7 @@
                                     <option t-foreach="this.state.colleagues" t-as="col" t-key="col.user_id" t-att-value="col.user_id" t-out="col.name + (col.department ? ' — ' + col.department : '')"/>
                                 </select>
                             </div>
-                            <div class="col-12 col-md-8 d-flex gap-2 justify-content-end">
+                            <div class="col-12 col-md-6 d-flex gap-2 justify-content-end">
                                 <button type="button" class="tp-pt-btn tp-pt-btn-sm" t-on-click="() => this.resetAllFilters()">Xóa bộ lọc</button>
                                 <button type="button" class="tp-pt-btn tp-pt-btn-sm tp-pt-btn-primary" t-on-click="() => this.applyFilters()">Áp dụng</button>
                             </div>
@@ -431,11 +459,33 @@
                                                 <button type="button" class="tp-todo-menu-item" t-on-click="() => this.moveTaskByMenu(task, task.stage_id, 'up')">Lên 1 vị trí</button>
                                                 <button type="button" class="tp-todo-menu-item" t-on-click="() => this.moveTaskByMenu(task, task.stage_id, 'down')">Xuống 1 vị trí</button>
                                                 <button type="button" class="tp-todo-menu-item" t-on-click="() => this.moveTaskByMenu(task, task.stage_id, 'bottom')">Xuống cuối cột</button>
-                                                <div class="tp-todo-menu-divider"/>
-                                                <button type="button" class="tp-todo-menu-item" t-on-click="() => this.archiveTaskFromCard(task)">
+                                                <div t-if="task.can_edit_core" class="tp-todo-menu-divider"/>
+                                                <button t-if="task.can_edit_core" type="button" class="tp-todo-menu-item" t-on-click="() => this.archiveTaskFromCard(task)">
                                                     <t t-out="task.active ? 'Lưu trữ' : 'Khôi phục'"/>
                                                 </button>
                                             </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Source / Project / Deliverable / Result Status -->
+                                    <div class="tp-todo-card-source-row">
+                                        <span class="tp-todo-source-badge" t-att-data-src="task.source_kind">
+                                            <t t-out="task.project ? ('Dự án · ' + task.project.name) : task.source_label"/>
+                                        </span>
+                                        <span t-if="task.exec_report_state === 'reported_done'" class="tp-todo-exec-badge is-reported">
+                                            Đã báo xong
+                                        </span>
+                                        <span t-elif="task.requires_verification and task.exec_report_state === 'verified'" class="tp-todo-exec-badge is-verified">
+                                            Đã xác nhận
+                                        </span>
+                                    </div>
+
+                                    <div t-if="task.deliverable or (task.assigner and task.source_kind !== 'self')" class="tp-todo-card-subinfo">
+                                        <div t-if="task.deliverable" class="text-truncate" t-att-title="task.deliverable">
+                                            Đầu ra: <span class="fw-medium text-dark" t-out="task.deliverable"/>
+                                        </div>
+                                        <div t-if="task.assigner and task.source_kind !== 'self'" class="text-truncate">
+                                            Giao bởi: <span t-out="task.assigner.name"/>
                                         </div>
                                     </div>
 
@@ -535,7 +585,17 @@
                                                 </button>
                                             </td>
                                             <td>
+                                                <div class="d-flex flex-wrap align-items-center gap-1 mb-1">
+                                                    <span class="tp-todo-source-badge" t-att-data-src="task.source_kind"
+                                                          t-out="task.project ? ('Dự án · ' + task.project.name) : task.source_label"/>
+                                                    <span t-if="task.exec_report_state === 'reported_done'" class="tp-todo-exec-badge is-reported">
+                                                        Đã báo xong
+                                                    </span>
+                                                </div>
                                                 <div class="tp-todo-list-title" t-out="task.name"/>
+                                                <div t-if="task.deliverable" class="small text-muted text-truncate mt-1">
+                                                    Đầu ra: <span class="text-dark" t-out="task.deliverable"/>
+                                                </div>
                                                 <div t-if="task.checklist_total > 0 or task.attachment_count > 0 or task.comment_count > 0" class="d-flex gap-2 mt-1 small text-muted">
                                                     <span t-if="task.checklist_total > 0">☑ <t t-out="task.checklist_done + '/' + task.checklist_total"/></span>
                                                     <span t-if="task.attachment_count > 0">📎 <t t-out="task.attachment_count"/></span>
