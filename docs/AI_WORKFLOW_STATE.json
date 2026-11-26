@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-25T13:55:24.650962+00:00",
-  "last_change_id": "CHG-20261125-011",
+  "updated_at": "2026-11-26T01:56:36.607294+00:00",
+  "last_change_id": "CHG-20261126-001",
   "code_digest": "a6b49258847b000e2ebb818f8215f3f94f48646cc3a961ff11e5319d6ed6877b",
   "code_file_count": 918,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "c1e384129a665a0a164254f199e07197c9fa1bcb46d9c0b8d8fa2582de9df567",
-    "docs/CHANGELOG.md": "8f56149b3c89798f419d9b86eeb44f1bee4b1566899cbfa87ba02fe5ea66d3dc",
+    "docs/PROJECT_STATUS.md": "aa3e7e707ffaf602abd48b38472841fbd781d0ab382ca58d0b10f8f3286af5cd",
+    "docs/CHANGELOG.md": "9d0f63302850f732dd364b45e5d5b7abe7bea1e1235e570f9aab1815b7d23fbd",
     "AGENTS.md": "72c31b7b0d24828d2313203ad211348f916aec386e61ad31b478fb3f80ad4448",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Static PY/XML/QWeb/SCSS/JS PASS; Odoo /tp_enterprise_ops,/tp_enterprise_governance,/tp_digital_office,/tp_personal_tools,/tp_request,/tp_branding,/tp_hr_attendance 47/47 PASS (0 failed, 0 error); Playwright 11 routes x 6 viewports (1440..360px) PASS"
+    "PC server 192.168.1.73 backup ent011-20261126T084915 (16451 TOC), 97/97 SHA256 match, -i/-u rc=0 error_lines=0, DB invariants 0 drift, public https://tpone.tadic.vn health+routes+JS/CSS bundles HTTP 200 verified"
   ]
 }
