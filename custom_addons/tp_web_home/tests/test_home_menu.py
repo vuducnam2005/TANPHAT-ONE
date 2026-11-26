@@ -5,6 +5,7 @@ HOME_RECORDS = {
     ('ir.actions.client', 'action_home'),
     ('ir.ui.menu', 'menu_home'),
     ('ir.ui.view', 'webclient_bootstrap_user_zoom'),
+    ('ir.ui.view', 'layout_brand_favicon'),
 }
 
 
@@ -26,7 +27,10 @@ class TestHomeMenu(TransactionCase):
         return self.env['ir.ui.menu'].with_user(user).load_menus(False)
 
     def test_module_owns_only_the_home_action_and_menu(self):
-        owned = self.env['ir.model.data'].search([('module', '=', 'tp_web_home')])
+        owned = self.env['ir.model.data'].search([
+            ('module', '=', 'tp_web_home'),
+            ('model', 'not in', ('ir.model', 'ir.model.fields')),
+        ])
         self.assertEqual({(data.model, data.name) for data in owned}, HOME_RECORDS)
 
     def test_backend_viewport_keeps_user_zoom(self):
@@ -104,7 +108,12 @@ class TestHomeHttp(HttpCase):
     def test_public_is_redirected_to_login(self):
         response = self.url_open('/odoo/tp-home', allow_redirects=False)
         self.assertIn(response.status_code, (302, 303))
-        self.assertIn('/web/login', response.headers['Location'])
+        if response.headers['Location'].endswith('/app/tp-home'):
+            # tp_branding (BRAND-WHITELABEL-002): legacy path hops to /app first.
+            response = self.url_open(response.headers['Location'], allow_redirects=False)
+            self.assertIn(response.status_code, (302, 303))
+        location = response.headers['Location']
+        self.assertTrue('/web/login' in location or '/dang-nhap' in location, location)
 
     def test_portal_has_no_backend(self):
         new_test_user(self.env, login='home001.portal.http', groups='base.group_portal')

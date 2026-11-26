@@ -1,9 +1,9 @@
 {
     'name': 'TANPHAT ONE – Trang chủ',
-    'summary': 'Native Home: unified 5-group layout and user workspace (UI-HOME-005)',
-    'description': 'Native Odoo home page for TANPHAT ONE (UI-HOME-005). See README.md.',
+    'summary': 'Native Home: executive & workspace dashboard with real-time KPIs, shortcuts, agenda and task analytics',
+    'description': 'Native Odoo home page for TANPHAT ONE (UI-HOME-006). See README.md.',
     'author': 'Tan Phat JSC',
-    'version': '20.0.1.14.0',
+    'version': '20.0.2.0.0',
     'license': 'LGPL-3',
     'depends': ['web', 'tp_web_login'],
     'data': [

@@ -5,9 +5,10 @@ import { router } from "@web/core/browser/router";
  * current user (/web/webclient/load_menus is filtered by groups on the server). Metadata below
  * enriches a node when its XML ID is actually present; it never grants access or creates routes.
  *
- * UI-SHELL-UNIFY-001: One shared Home catalog and layout for all accounts. Groups render only
- * when they contain at least one permitted entry; developing placeholders stay restricted to
- * system administrators and live delegated administrators.
+ * UI-HOME-006: Shared 5-tier Home layout for all accounts:
+ * - Quick department grid (up to 10 compact tiles in canonical reference order, filtered strictly by permission).
+ * - Full authorized app drawer ("Tất cả ứng dụng" & Hamburger menu) preserving all 5 canonical sections,
+ *   additional authorized apps, and restricting system administration tools strictly to `isSystem`.
  */
 export const HOME_MENU_XMLID = "tp_web_home.menu_home";
 export const ALL_APPS_KEY = "all-apps";
@@ -29,8 +30,90 @@ export const SECTIONS = [
     { key: "warehouse", label: "Kho", order: 50 },
 ];
 
-/** Display order inside the administrators' "Tất cả ứng dụng" panel. */
+/** Display order inside the "Tất cả ứng dụng" / navigation drawer. */
 const PANEL_ORDER = ["hr", "reporting", "workspace", "personal", "warehouse", "apps", "system"];
+
+/**
+ * Canonical 10-tile Quick Access Grid order ("Ứng dụng theo phòng ban", Section 8).
+ * Each slot renders ONLY when the current user actually has permission to open it.
+ */
+export const QUICK_GRID_SLOTS = [
+    {
+        slotKey: "business",
+        entryKey: "business",
+        xmlid: "tp_kd_workspace.menu_kd",
+        gridLabel: "Kế hoạch Kinh doanh",
+        gridIcon: "target",
+        tone: "primary",
+        primaryAccent: true,
+    },
+    {
+        slotKey: "hr",
+        entryKey: "hr",
+        xmlid: "tp_hr_workspace.menu_hr",
+        gridLabel: "Nhân sự",
+        gridIcon: "users",
+        tone: "blue",
+    },
+    {
+        slotKey: "design",
+        entryKey: "design",
+        gridLabel: "Thiết kế",
+        gridIcon: "layers",
+        tone: "indigo",
+    },
+    {
+        slotKey: "technical",
+        entryKey: "technical",
+        gridLabel: "Kỹ thuật",
+        gridIcon: "hardhat",
+        tone: "amber",
+    },
+    {
+        slotKey: "bim",
+        entryKey: "bim",
+        gridLabel: "BIM-QC",
+        gridIcon: "cube",
+        tone: "purple",
+    },
+    {
+        slotKey: "accounting",
+        entryKey: "accounting",
+        gridLabel: "Kế toán",
+        gridIcon: "calculator",
+        tone: "blue",
+    },
+    {
+        slotKey: "tadic",
+        entryKey: "tadic",
+        gridLabel: "TADIC",
+        gridIcon: "building",
+        tone: "blue",
+    },
+    {
+        slotKey: "equipment",
+        entryKey: "equipment",
+        xmlid: "tp_equipment.menu_root",
+        gridLabel: "Kho Thiết bị",
+        gridIcon: "box",
+        tone: "purple",
+    },
+    {
+        slotKey: "attendance",
+        entryKey: "attendance",
+        xmlid: "tp_hr_attendance.menu_root",
+        gridLabel: "Chấm công",
+        gridIcon: "clock-briefcase",
+        tone: "blue",
+    },
+    {
+        slotKey: ALL_APPS_KEY,
+        kind: "panel",
+        gridLabel: "Tất cả ứng dụng",
+        gridIcon: "grid-four",
+        tone: "blue",
+    },
+];
 
 /**
  * Register or update a Home section deterministically without relying on asset load order.
@@ -70,97 +153,156 @@ export function registerHomeModule(moduleDef) {
 
 export const APP_LABELS = {
     "tp_hr_workspace.menu_department_workspace": {
-        hint: "Đang phát triển", group: "workspace", order: 20, icon: "building",
+        hint: "Đang phát triển",
+        group: "workspace",
+        order: 20,
+        icon: "building",
     },
     "tp_kd_workspace.menu_kd": {
-        // U+2011 keeps "KH‑KD" on one line; the alias keeps the ASCII spelling searchable.
-        label: "Kế hoạch Kinh doanh", hint: "Dự án, đấu thầu, hợp đồng và báo cáo KH‑KD",
-        group: "workspace", order: 10, icon: "briefcase",
+        label: "Kế hoạch Kinh doanh",
+        hint: "Dự án, đấu thầu, hợp đồng và báo cáo KH‑KD",
+        group: "workspace",
+        order: 10,
+        icon: "briefcase",
         aliases: "khkd kh-kd kh kd ke hoach kinh doanh workspace planning business",
     },
     "tp_hr_workspace.menu_hr": {
-        label: "Quản lý nhân sự", hint: "Hồ sơ nhân viên, tổ chức và năng lực",
-        group: "hr", order: 10, icon: "users",
+        label: "Quản lý nhân sự",
+        hint: "Hồ sơ nhân viên, tổ chức và năng lực",
+        group: "hr",
+        order: 10,
+        icon: "users",
         aliases: "hr nhan su ho so nhan vien to chuc nang luc",
     },
+    "tp_enterprise_ops.menu_recruitment_root": {
+        label: "Tuyển dụng",
+        hint: "Hồ sơ ứng viên và tiếp nhận nhân sự",
+        group: "hr",
+        order: 5,
+        icon: "user-plus",
+        aliases: "tuyen dung ung vien recruitment phong van",
+    },
+    "tp_digital_office.menu_digital_office_root": {
+        label: "Văn phòng số",
+        hint: "Thông báo nội bộ và biên bản họp",
+        group: "apps",
+        order: 5,
+        icon: "file-text",
+        aliases: "van phong so thong bao noi bo bien ban hop digital office",
+    },
+    "tp_enterprise_governance.menu_governance_root": {
+        label: "Điều hành & Dự án",
+        hint: "WBS/CPM, Hồ sơ dự án NAS và Tổng quan điều hành",
+        group: "apps",
+        order: 6,
+        icon: "bar-chart",
+        aliases: "dieu hanh du an wbs cpm ho so nas lanh dao",
+    },
     "hr.menu_hr_root": {
-        label: "Nhân viên", hint: "Danh bạ nhân viên Odoo",
+        label: "Nhân viên",
+        hint: "Danh bạ nhân viên Odoo",
         order: 60,
         aliases: "employees danh ba nhan vien",
     },
     "project_todo.menu_todo_todos": {
         label: "Việc cá nhân",
-        hint: "Việc cần làm của bạn", group: "personal", order: 10, icon: "check-square",
-        aliases: "todo to-do ghi chu nhac viec",
+        hint: "Việc cần làm của bạn",
+        group: "personal",
+        order: 10,
+        icon: "check-square",
+        aliases: "todo to-do ghi chu nhac viec cong viec cua toi",
     },
     "calendar.mail_menu_calendar": {
         label: "Lịch làm việc",
-        hint: "Lịch và cuộc hẹn", group: "personal", order: 20, icon: "calendar",
-        aliases: "calendar lich hop cuoc hen meeting",
+        hint: "Lịch và cuộc hẹn",
+        group: "personal",
+        order: 20,
+        icon: "calendar",
+        aliases: "calendar lich hop cuoc hen meeting phong hop",
     },
     "mail.menu_root_discuss": {
         label: "Trao đổi",
-        hint: "Tin nhắn và kênh nội bộ", group: "personal", order: 30, icon: "message-circle",
+        hint: "Tin nhắn và kênh nội bộ",
+        group: "personal",
+        order: 30,
+        icon: "message-circle",
         aliases: "discuss chat tin nhan thao luan kenh",
     },
     "base.menu_administration": {
         label: "Cài đặt",
-        hint: "Thiết lập hệ thống", order: 20,
-        group: "system", aliases: "settings thiet lap cau hinh quan tri",
+        hint: "Thiết lập hệ thống",
+        order: 20,
+        group: "system",
+        aliases: "settings thiet lap cau hinh quan tri",
     },
     "base.menu_management": {
         label: "Quản lý ứng dụng",
-        hint: "Cài đặt hoặc gỡ ứng dụng", order: 30,
-        group: "system", aliases: "apps module cai dat go odoo",
+        hint: "Cài đặt hoặc gỡ ứng dụng",
+        order: 30,
+        group: "system",
+        aliases: "apps module cai dat go odoo",
     },
-    // Apps below are reached from the native switcher (and the administrators' panel).
     "contacts.menu_contacts": {
-        label: "Khách hàng và đối tác", order: 50,
+        label: "Khách hàng và đối tác",
+        order: 50,
         hint: "Thông tin liên hệ",
         aliases: "contacts lien he partner customer nha cung cap",
     },
     "crm.crm_menu_root": {
         label: "CRM",
         hint: "Cơ hội kinh doanh",
-        order: 40, aliases: "pipeline lead sales khach hang tiem nang",
+        order: 40,
+        aliases: "pipeline lead sales khach hang tiem nang",
     },
     "project.menu_main_pm": {
-        label: "Công việc dự án", order: 30,
+        label: "Công việc dự án",
+        order: 30,
         hint: "Công việc và tiến độ dự án",
         aliases: "project du an task nhiem vu",
     },
     "tp_project.menu_tp_projects": {
         label: "TP Projects",
-        hint: "Hồ sơ dự án và phân công", order: 10, icon: "projects",
+        hint: "Hồ sơ dự án và phân công",
+        order: 10,
+        icon: "projects",
         aliases: "du an cau duong project",
     },
     "tp_contract.menu_tp_contracts": {
-        label: "TP Contracts", hint: "Hợp đồng và phiên bản hồ sơ", order: 20, icon: "contracts",
+        label: "TP Contracts",
+        hint: "Hợp đồng và phiên bản hồ sơ",
+        order: 20,
+        icon: "contracts",
         aliases: "hop dong contract contracts phien ban",
     },
     "tp_core.menu_work_items": {
         label: "Danh mục công việc",
-        hint: "Danh mục hạng mục", order: 60, icon: "catalog",
+        hint: "Danh mục hạng mục",
+        order: 60,
+        icon: "catalog",
         aliases: "hang muc work item catalog",
     },
     "hr_timesheet.timesheet_menu_root": {
         label: "Giờ làm việc",
-        hint: "Thời gian theo công việc", order: 90,
+        hint: "Thời gian theo công việc",
+        order: 90,
         aliases: "timesheets timesheet thoi gian",
     },
     "hr_expense.menu_hr_expense_root": {
         label: "Chi phí",
-        hint: "Chi phí nhân viên", order: 110,
+        hint: "Chi phí nhân viên",
+        order: 110,
         aliases: "expenses expense hoan ung",
     },
     "account.menu_finance": {
         label: "Hóa đơn",
-        hint: "Hồ sơ hóa đơn", order: 80,
+        hint: "Hồ sơ hóa đơn",
+        order: 80,
         aliases: "invoicing invoice bill",
     },
     "spreadsheet_dashboard.spreadsheet_dashboard_menu_root": {
         label: "Bảng tổng hợp",
-        hint: "Báo cáo và bảng dữ liệu", order: 70,
+        hint: "Báo cáo và bảng dữ liệu",
+        order: 70,
         aliases: "dashboards dashboard spreadsheet",
     },
 };
@@ -168,7 +310,7 @@ export const APP_LABELS = {
 export function normalizeSearch(value) {
     return String(value || "")
         .normalize("NFD")
-        .replace(/[̀-ͯ]/g, "")
+        .replace(/[\u0300-\u036f]/g, "")
         .replace(/[đĐ]/g, "d")
         .toLowerCase()
         .replace(/\s+/g, " ")
@@ -176,7 +318,9 @@ export function normalizeSearch(value) {
 }
 
 export function monogram(label) {
-    const words = label.split(/[\s·&/,-]+/).filter(Boolean);
+    const words = String(label || "")
+        .split(/[\s·&/,-]+/)
+        .filter(Boolean);
     return words
         .slice(0, 2)
         .map((word) => word[0])
@@ -213,16 +357,18 @@ function makeTile(menu, debug) {
         menu,
         xmlid: menu.xmlid,
         label,
+        name: label,
         hint,
         group: meta.group || "apps",
         order: meta.order ?? 1000,
         href: menuHref(menu, debug),
         icon: menuIcon(menu, label, meta),
+        svgIcon: meta.icon || "",
         search: normalizeSearch([label, hint, menu.name, meta.aliases].filter(Boolean).join(" ")),
     };
 }
 
-/** Opens the in-page panel; it is never a menu and has no destination of its own. */
+/** Opens the in-page / drawer all-apps panel; never grants unauthorized routes. */
 function allAppsEntry() {
     const label = "Tất cả ứng dụng";
     const hint = "Mọi ứng dụng được cấp";
@@ -230,6 +376,7 @@ function allAppsEntry() {
         key: ALL_APPS_KEY,
         kind: "panel",
         label,
+        name: label,
         hint,
         group: "system",
         order: 10,
@@ -248,8 +395,6 @@ function actionLeaves(menu) {
 
 /**
  * Every app the user can open, in panel order; unknown apps retain their server order.
- * @param {Object} rootTree `menuService.getMenuAsTree("root")`
- * @param {string} [debug] current debug mode, kept in hrefs like the native apps menu
  */
 export function buildTiles(rootTree, debug = "") {
     const tiles = [];
@@ -266,14 +411,14 @@ export function buildTiles(rootTree, debug = "") {
             }
         }
     }
-    // Array.prototype.sort is stable: equal keys keep the server menu sequence.
-    return tiles.sort((a, b) =>
-        PANEL_ORDER.indexOf(a.group) - PANEL_ORDER.indexOf(b.group) || a.order - b.order
+    return tiles.sort(
+        (a, b) =>
+            PANEL_ORDER.indexOf(a.group) - PANEL_ORDER.indexOf(b.group) || a.order - b.order
     );
 }
 
 /**
- * Department & HR catalog definitions (used for unified cards and admin placeholders).
+ * Department & HR catalog definitions (used for unified entries and admin placeholders).
  */
 export const ADMIN_MODULES = [
     {
@@ -300,6 +445,7 @@ export const ADMIN_MODULES = [
         status: "Đang phát triển",
         badgeKind: "developing",
         icon: "ruler",
+        aliases: "thiet ke phong thiet ke design",
         copy: "Không gian này đang được chuẩn bị. Các chức năng sẽ được bổ sung sau.",
     },
     {
@@ -312,6 +458,7 @@ export const ADMIN_MODULES = [
         status: "Đang phát triển",
         badgeKind: "developing",
         icon: "hardhat",
+        aliases: "ky thuat phong ky thuat technical",
         copy: "Không gian này đang được chuẩn bị. Các chức năng sẽ được bổ sung sau.",
     },
     {
@@ -324,6 +471,7 @@ export const ADMIN_MODULES = [
         status: "Đang phát triển",
         badgeKind: "developing",
         icon: "boxes",
+        aliases: "bim qc bim-qc phong bim",
         copy: "Không gian này đang được chuẩn bị. Các chức năng sẽ được bổ sung sau.",
     },
     {
@@ -336,6 +484,7 @@ export const ADMIN_MODULES = [
         status: "Đang phát triển",
         badgeKind: "developing",
         icon: "building",
+        aliases: "tadic don vi tadic",
         copy: "Không gian này đang được chuẩn bị. Các chức năng sẽ được bổ sung sau.",
     },
     {
@@ -463,15 +612,19 @@ function indexMenuTree(rootTree) {
 function attachSearch(entry, extraText = "") {
     return {
         ...entry,
+        label: entry.label || entry.name,
         search: normalizeSearch(
-            [entry.name, entry.description, entry.menu?.name, entry.aliases, extraText].filter(Boolean).join(" ")
+            [entry.name, entry.label, entry.description, entry.menu?.name, entry.aliases, extraText]
+                .filter(Boolean)
+                .join(" ")
         ),
     };
 }
 
 /**
  * Resolve department and HR entries against the server-filtered menu tree.
- * Without `isSystem`, only entries backed by an authorized menu in `rootTree` are returned.
+ * Without `isSystem`, only entries backed by an authorized menu in `rootTree` are returned
+ * (except live delegated admins who keep developing department placeholders).
  */
 export function buildAdminCatalog(rootTree, { debug = "", isSystem = true, isDelegated = false } = {}) {
     const menuMap = indexMenuTree(rootTree);
@@ -562,12 +715,217 @@ function personalEntries(apps) {
 }
 
 /**
+ * Build the 10-slot Quick Department Grid ("Ứng dụng theo phòng ban", Section 8)
+ * strictly from authorized entries in `catalog`.
+ */
+export function buildQuickGrid(catalog, { includeAllApps = true } = {}) {
+    const entries = catalog?.entries || [];
+    const byKey = new Map();
+    const byXmlid = new Map();
+    for (const entry of entries) {
+        if (entry.key) {
+            byKey.set(entry.key, entry);
+        }
+        if (entry.xmlid) {
+            byXmlid.set(entry.xmlid, entry);
+        }
+    }
+
+    const shortcuts = [];
+    const usedKeys = new Set();
+
+    for (const slot of QUICK_GRID_SLOTS) {
+        if (slot.kind === "panel") {
+            const hasAnyPermittedApp =
+                entries.length > 0 || (catalog?.userApps?.length || 0) > 0;
+            if (includeAllApps && hasAnyPermittedApp) {
+                shortcuts.push({
+                    ...allAppsEntry(),
+                    key: ALL_APPS_KEY,
+                    kind: "panel",
+                    name: slot.gridLabel,
+                    label: slot.gridLabel,
+                    gridLabel: slot.gridLabel,
+                    gridIcon: slot.gridIcon,
+                    tone: slot.tone,
+                    primaryAccent: false,
+                });
+            }
+            continue;
+        }
+        const match =
+            (slot.entryKey && byKey.get(slot.entryKey)) ||
+            (slot.xmlid && byXmlid.get(slot.xmlid)) ||
+            null;
+        if (!match) {
+            continue;
+        }
+        usedKeys.add(match.key);
+        shortcuts.push({
+            ...match,
+            gridLabel: slot.gridLabel,
+            gridIcon: slot.gridIcon,
+            tone: slot.tone,
+            primaryAccent: Boolean(slot.primaryAccent && match.featured),
+        });
+    }
+
+    // Preserve employee's own developing department card ("Phòng ban của tôi") if granted
+    for (const entry of entries) {
+        if (
+            entry.xmlid === "tp_hr_workspace.menu_department_workspace" &&
+            !usedKeys.has(entry.key)
+        ) {
+            const insertIdx = shortcuts.findIndex((s) => s.kind === "panel");
+            const extraCard = {
+                ...entry,
+                gridLabel: entry.name,
+                gridIcon: "building",
+                tone: "blue",
+                primaryAccent: false,
+            };
+            if (insertIdx >= 0) {
+                shortcuts.splice(insertIdx, 0, extraCard);
+            } else {
+                shortcuts.push(extraCard);
+            }
+        }
+    }
+
+    return shortcuts;
+}
+
+/**
+ * Build grouped sections for the "Tất cả ứng dụng" panel and Hamburger navigation drawer.
+ * Preserves all 5 canonical groups + extra permitted apps + admin-only system tools.
+ */
+export function buildDrawerGroups(catalog, query = "") {
+    if (!catalog) {
+        return [];
+    }
+    const groups = [];
+    const baseSections = homeSections(catalog, query);
+    for (const s of baseSections) {
+        groups.push({
+            key: s.key,
+            label: s.label,
+            items: s.tiles,
+        });
+    }
+
+    const extraApps = filterTiles(catalog.extraUserApps || [], query);
+    if (extraApps.length) {
+        groups.push({
+            key: "other_apps",
+            label: "Phân hệ và ứng dụng khác",
+            items: extraApps,
+        });
+    }
+
+    if (catalog.isAdmin) {
+        const sysTools = filterTiles(
+            (catalog.system || []).filter((t) => t.kind !== "panel"),
+            query
+        );
+        if (sysTools.length) {
+            groups.push({
+                key: "system",
+                label: "Quản trị hệ thống",
+                items: sysTools,
+            });
+        }
+    }
+
+    return groups;
+}
+
+/**
+ * Build searchable function entries from permitted Home modules, apps, and action sub-menus.
+ * System administration menus are strictly excluded when `isSystem` is false.
+ */
+export function buildSearchableFunctions(rootTree, catalog, { debug = "", isSystem = false } = {}) {
+    const items = [];
+    const seenMenuIds = new Set();
+    const seenKeys = new Set();
+
+    // 1. Canonical Home entries (including authorized placeholders for admins)
+    for (const entry of catalog?.entries || []) {
+        const k = entry.key || entry.xmlid;
+        if (k && !seenKeys.has(k)) {
+            seenKeys.add(k);
+            if (entry.menu?.id) {
+                seenMenuIds.add(entry.menu.id);
+            }
+            items.push({
+                ...entry,
+                categoryLabel: SECTIONS.find((s) => s.key === entry.group)?.label || "Chức năng",
+            });
+        }
+    }
+
+    // 2. Permitted non-system apps & leaf menus in rootTree
+    for (const app of rootTree?.childrenTree || []) {
+        if (!app || app.xmlid === HOME_MENU_XMLID) {
+            continue;
+        }
+        const appMeta = APP_LABELS[app.xmlid] || {};
+        if (appMeta.group === "system" && !isSystem) {
+            continue;
+        }
+        const appName = appMeta.label || app.name || "Ứng dụng";
+        if (app.actionID && !seenMenuIds.has(app.id)) {
+            seenMenuIds.add(app.id);
+            const tile = makeTile(app, debug);
+            items.push({
+                ...tile,
+                categoryLabel: appMeta.group === "system" ? "Quản trị hệ thống" : "Ứng dụng",
+            });
+        }
+        // Walk up to depth 2 children with actions so users can search concrete features
+        const walkLeaves = (node, trail) => {
+            for (const child of node.childrenTree || []) {
+                const cMeta = APP_LABELS[child.xmlid] || {};
+                if (cMeta.group === "system" && !isSystem) {
+                    continue;
+                }
+                const cName = cMeta.label || child.name || "";
+                if (child.actionID && !seenMenuIds.has(child.id)) {
+                    seenMenuIds.add(child.id);
+                    items.push({
+                        key: `submenu-${child.id}`,
+                        kind: "menu",
+                        menu: child,
+                        xmlid: child.xmlid,
+                        name: cName,
+                        label: cName,
+                        hint: trail,
+                        categoryLabel: trail,
+                        href: menuHref(child, debug),
+                        search: normalizeSearch(`${cName} ${trail} ${cMeta.aliases || ""}`),
+                    });
+                }
+                if (child.childrenTree?.length) {
+                    walkLeaves(child, `${trail} › ${cName}`);
+                }
+            }
+        };
+        walkLeaves(app, appName);
+    }
+
+    return items;
+}
+
+/**
  * Build the unified Home catalog from the server-filtered menu tree.
  * Backend permissions remain the source of truth: no unauthorized routes or menus are created.
  */
 export function buildCatalog(rootTree, { debug = "", isSystem = false, isDelegated = false } = {}) {
     const apps = buildTiles(rootTree, debug);
-    const modulesCatalog = buildAdminCatalog(rootTree, { debug, isSystem: Boolean(isSystem), isDelegated });
+    const modulesCatalog = buildAdminCatalog(rootTree, {
+        debug,
+        isSystem: Boolean(isSystem),
+        isDelegated,
+    });
     const personal = personalEntries(apps);
     const validGroups = new Set(orderedSections().map((s) => s.key));
     const entries = sortAndDedupeEntries([
@@ -586,20 +944,36 @@ export function buildCatalog(rootTree, { debug = "", isSystem = false, isDelegat
           ].filter(Boolean)
         : [];
 
+    const nonSystemApps = apps.filter((tile) => tile.group !== "system");
+    const entryMenuIds = new Set(entries.map((e) => e.menu?.id).filter(Boolean));
+    const extraUserApps = nonSystemApps.filter((tile) => !entryMenuIds.has(tile.menu?.id));
+
     const shownMenuIds = new Set([
-        ...entries.map((entry) => entry.menu?.id).filter(Boolean),
+        ...entryMenuIds,
         ...system.map((tile) => tile.menu?.id).filter(Boolean),
     ]);
 
-    return {
+    const partialCatalog = {
         isAdmin: Boolean(isSystem),
         admin: modulesCatalog,
         tools,
         entries,
         home: apps.filter((tile) => tile.group === "workspace" || tile.group === "personal"),
         system,
+        // Keep `all` admin-only for legacy contract, while `userApps` exposes each user's own permitted apps
         all: isSystem ? apps : [],
+        userApps: isSystem ? apps : nonSystemApps,
+        extraUserApps,
         otherApps: apps.filter((tile) => !shownMenuIds.has(tile.menu?.id)).length,
+    };
+
+    return {
+        ...partialCatalog,
+        quickGrid: buildQuickGrid(partialCatalog),
+        searchableFunctions: buildSearchableFunctions(rootTree, partialCatalog, {
+            debug,
+            isSystem: Boolean(isSystem),
+        }),
     };
 }
 

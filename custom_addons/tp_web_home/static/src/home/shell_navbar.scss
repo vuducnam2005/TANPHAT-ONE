@@ -49,6 +49,12 @@
     .badge { color: #17324d; background: #dcecf8; }
     .tp-shell-mobile-context { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: center; font-size: 13px; color: #dce6f0; }
 }
+body.o_tp_home_active > .o_navbar,
+body.o_tp_home_active > .o_web_client > .o_navbar,
+body:has(#tp-unified-home) > .o_navbar,
+.o_web_client:has(#tp-unified-home) > .o_navbar {
+    display: none !important;
+}
 body.o_tp_hr_shell,
 body.o_tp_att_shell,
 body.o_tp_kd_shell {

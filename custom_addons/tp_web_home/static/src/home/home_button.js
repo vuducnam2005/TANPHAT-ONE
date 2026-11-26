@@ -40,6 +40,7 @@ export class HomeButton extends Component {
             }
             return;
         }
+        document.body?.classList?.remove("o_tp_home_active");
 
         const stack = router.current?.actionStack || [];
         const rootAction = stack[0]?.action;

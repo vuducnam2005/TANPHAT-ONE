@@ -1,6 +1,17 @@
 # tp_web_home — TANPHAT ONE Trang chủ & Shell thống nhất
 
-Native Odoo Community home page and unified shell identity layer. Since `UI-SHELL-UNIFY-001` (`DEC-043`, `CHG-20261114-001`), Home uses one unified component/template (`#tp-unified-home`) and visual design (ice-blue gradient wave backdrop, consistent navbar, `"Trang chủ"` / `"Không gian làm việc của TANPHAT ONE"`, 3-column desktop grid preserving card size) for every user while server-filtered menus and `user.isSystem` determine which sections (`Phòng ban và đơn vị`, `Nhân sự và tuyển dụng`, `Công cụ cá nhân`) and admin tools (`Tất cả ứng dụng`, `Cài đặt`, `Quản lý ứng dụng`) appear.
+Native Odoo Community home page and unified shell identity layer.
+
+### UI-HOME-006 (`CHG-20261126-002`, `20.0.2.0.0`) — Trang chủ 5 tầng theo thiết kế tham chiếu
+
+Thiết kế lại toàn bộ Trang chủ (`/app/trang-chu` / `/odoo/tp-home`) theo bố cục sáng 5 tầng thống nhất cho mọi tài khoản, lấy 100% số liệu thật có kiểm quyền phía server (`models/home_dashboard.py`) mà vẫn giữ `depends: ['web', 'tp_web_login']` (không gây phụ thuộc vòng tròn):
+1. **Tầng A — Navbar sáng duy nhất (`.tp-home-navbar`):** Ẩn `.o_navbar` tối chỉ khi đang ở Trang chủ (`body.o_tp_home_active` / `:has(#tp-unified-home)`), gồm nút `☰` mở ngăn điều hướng, tiêu đề `Trang chủ`, ô tìm kiếm `"Tìm kiếm chức năng, tài liệu…"` (hỗ trợ IME tiếng Việt, phím mũi tên/Enter/Escape, gom nhóm *Chức năng* và *Tài liệu & Hồ sơ* qua `search_tp_home_global` không dùng `ir.attachment.sudo()`), chuông thông báo (`mail.messaging_menu` thực tế kèm `<ErrorHandler>`), nút trợ giúp `?`, và danh tính người dùng (`TpIdentityAvatar` + họ tên thật + menu `Thông tin cá nhân`, `Tài khoản & Bảo mật`, `Đăng xuất`; không giả lập chấm xanh online).
+2. **Tầng B — Banner chào mừng (`.tp-home-banner`):** Nền chuyển sắc xanh sáng kết hợp minh họa tòa nhà TANPHAT ONE (`static/img/home_banner_art.webp` tách sạch chữ mẫu + đường cong SVG), hiển thị trực tiếp `"Chào mừng trở lại,"` và tên người đang đăng nhập.
+3. **Tầng C — 4 Ô chỉ số KPI (`.tp-home-kpi-grid`):** `Nhân sự`, `Yêu cầu phê duyệt`, `Công việc`, `Tồn kho` (đã sửa lỗi chính tả `"Tồn hko"` ở ảnh mẫu). Tài khoản không có quyền Kho nhận `status: 'no_access', count: null` → hiển thị `"Không có quyền xem"` (không bao giờ trả `0` giả và chặn cả gọi RPC trực tiếp `get_tp_home_stock_drilldown_action`). Bấm vào ô có quyền mở đúng danh sách có số bản ghi khớp 100% số đếm KPI.
+4. **Tầng D — Ứng dụng theo phòng ban (`62%`) + Công việc hôm nay (`38%`):** Lưới truy cập nhanh 10 vị trí chuẩn (`Kế hoạch Kinh doanh` nổi bật xanh `#4E7DE8`, `Nhân sự`, `Thiết kế`, `Kỹ thuật`, `BIM-QC`, `Kế toán`, `TADIC`, `Kho Thiết bị`, `Chấm công`, `Tất cả ứng dụng`) tự động co gọn theo đúng quyền menu được cấp; hộp thoại `Tất cả ứng dụng` và ngăn `☰` bảo toàn đầy đủ cả 5 nhóm chuẩn (`Nhân sự và chấm công`, `Báo cáo và phê duyệt`, `Phòng ban và đơn vị`, `Công cụ cá nhân`, `Kho`) cùng ứng dụng khác và công cụ quản trị hệ thống (`isSystem`). Panel `Công việc hôm nay` hợp nhất lịch họp `calendar.event` (loại trừ từ chối & sự kiện riêng tư người khác) và `project.task` đến hạn hôm nay theo múi giờ người dùng (`Asia/Ho_Chi_Minh`), khử trùng lặp việc đã gắn lịch (`res_model='project.task'`) và có hộp thoại `Xem tất cả` phân trang.
+5. **Tầng E — Tình hình công việc (`56%`) + Tỷ lệ công việc (`44%`):** Hai biểu đồ Chart.js (`home_charts.js`) đồng bộ cùng một tập dữ liệu `project.task` với thẻ KPI `Công việc` qua bộ lọc gọn (`Kỳ`, `Phạm vi`, `Phòng ban`). Biểu đồ cột chồng phân bổ mỗi việc vào đúng 1 nhóm phòng ban (`project_id.tp_department_id` → phòng của `kd_responsible_id` → phòng đồng nhất của `user_ids` → `Liên phòng ban` / `Chưa gắn phòng ban`); biểu đồ Donut phân loại không chồng chéo (`Hoàn thành`, `Đang thực hiện`, `Chờ xử lý` bao gồm cả `reported_done` chờ xác nhận, `Quá hạn`), tổng lát cắt bằng 100% tập dữ liệu và loại trừ tuyệt đối việc cá nhân riêng tư (`project_id = False`) của người khác.
+
+Trước `UI-HOME-006`, từ `UI-SHELL-UNIFY-001` (`DEC-043`, `CHG-20261114-001`), Home dùng một component thống nhất (`#tp-unified-home`) lọc theo menu server và `user.isSystem`.
 
 ### Logo hệ thống (`BRAND-LOGO-001`, `CHG-20261116-009`, 20.0.1.9.0)
 
@@ -150,3 +161,14 @@ browser checks `scripts/ui_home003_ui.cjs` + `scripts/ui_home003_checks.cjs`.
 Earlier: UI-HOME-002 ([design](../../docs/ui/UI_HOME_002_DESIGN.md)), UI-HOME-001
 (`docs/demo/UI_HOME_001_RUNBOOK.md`).
 The addon still depends only on `web`; it does not install optional apps or write user Home Actions.
+
+## BRAND-WHITELABEL-002 (`tp_branding`)
+
+When `tp_branding` is installed, the webclient prefix is `/app` instead of `/odoo`.
+The home button, the catalog tiles and the menu entries build their `href` with
+`router.stateToUrl(...)`, so they become `/app/tp-home`, `/app/action-…` and so on.
+Legacy `/odoo/...` links still work: GET/HEAD gets a 302 to `/app/...`.
+This addon still does not depend on `tp_branding`. Without it, the same code
+produces native `/odoo/...` URLs. See
+[inventory](../../docs/ui/BRAND_WHITELABEL_002_INVENTORY.md) and
+[runbook](../../ops/runbooks/BRAND_WHITELABEL_002_DEPLOY_AND_ROLLBACK.md).
