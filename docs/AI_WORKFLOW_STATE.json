@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-26T06:57:30.326751+00:00",
-  "last_change_id": "CHG-20261126-006",
+  "updated_at": "2026-11-26T07:07:08.108984+00:00",
+  "last_change_id": "CHG-20261126-007",
   "code_digest": "548d66954e88b5128b44ad30a789934fd657f4849f997e3bc7eec61e04f9cf9e",
   "code_file_count": 922,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "dd45c5af3826ca7bb5f7aa27341e1d80936b2d24e8eec17c962ebd3d5e435bf6",
-    "docs/CHANGELOG.md": "2b4bbc4562a37c47807ae8d997a47a29bd9177990f29c598f4a06b1cbd74811d",
+    "docs/PROJECT_STATUS.md": "cc1374d2a078aa9d78ee9e99612c753f6f1298f4f79ff89c84ca67d77ea4d437",
+    "docs/CHANGELOG.md": "3723f36d9bbb9aa4f7986395208f038e4db8766f7963cb5c5e78de99c1b8d6cc",
     "AGENTS.md": "72c31b7b0d24828d2313203ad211348f916aec386e61ad31b478fb3f80ad4448",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "libsass+xml+node+ruff PASS; WCAG AA >= 5.02:1; Hoot home_launcher 15/15 PASS; Playwright desktop+mobile 3 roles PASS"
+    "server-pc binary pg_dump + SHA256 66/66 + tp_web_home 20.0.2.2.0 installed + https://tpone.tadic.vn health/assets 200"
   ]
 }

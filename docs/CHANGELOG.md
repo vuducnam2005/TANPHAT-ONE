@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261126-007 — 2026-11-26 — UI-HOME-008-DEPLOY: Biên bản Sao lưu nhị phân, Triển khai PC Server (`192.168.1.73`) & Kiểm chứng Public `https://tpone.tadic.vn` cho commit `e6214209` (`tp_web_home 20.0.2.2.0`)
+
+- **Sao lưu & Triển khai PC Server (`tp_tanphat_dev`):** sao lưu nhị phân tại `C:\TANPHAT-backups\home-redesign008\home008-20261126T135739` (`tp_tanphat_dev.dump` `10.101.497` bytes, SHA256 `7bdc6121...`, `restore-list.txt` `1.405.240` bytes, `source-pre-tp_web_home.tar.gz`, `release-home008.tar.gz`, `docker.odoo.conf`); đối chiếu **66/66** tệp khớp SHA256; nâng cấp `tp_web_home` lên `20.0.2.2.0`, giữ bất biến 100% dữ liệu doanh nghiệp (`employees=39`, `users=33/12`, `att_days=1014`, `corrections=3`, `requests=5`, `equipment=55`).
+- **Kiểm chứng Public `https://tpone.tadic.vn`:** `/web/health` `200`, bundle mới `/web/assets/7caff02/web.assets_web.min.js` (`200`, `9.479.420` bytes) & `/web/assets/1700510/web.assets_web.min.css` (`200`, `1.827.000` bytes) phục vụ đầy đủ toàn bộ bảng màu 10 ô và icon đồng hồ Chấm công. Đồng bộ docs-only lên PC server, không restart lại Odoo.
+
 ## CHG-20261126-006 — 2026-11-26 — UI-HOME-008: Áp dụng bảng màu định danh ổn định, icon trắng và độ tương phản chuẩn cho toàn bộ ô ứng dụng trên Trang chủ (`tp_web_home 20.0.2.2.0`)
 
 - **Giao diện lưới ứng dụng (`custom_addons/tp_web_home 20.0.2.2.0`):** ánh xạ màu gradient riêng theo `key`/`xmlid` ổn định (`resolveShortcutPalette` trong `home_catalog.js`, không dùng `nth-child` hay so tên tiếng Việt, loại bỏ ưu tiên màu đơn lẻ của KH-KD) cho toàn bộ 10 ô phòng ban Admin và lưới ứng dụng Nhân viên trên nền panel trắng; đổi icon `Chấm công` sang đồng hồ (`clock`), chữ và icon trắng `30–34px` đạt tương phản WCAG AA `>= 5.02:1`, bo góc `17px`, hover `-2px` (`180ms`), `:focus-visible` rõ nét và giữ nguyên hành vi/phân quyền của cả module đang hoạt động lẫn module đang phát triển.
