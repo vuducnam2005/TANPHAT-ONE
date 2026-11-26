@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-26T07:52:10.284345+00:00",
-  "last_change_id": "CHG-20261126-008",
+  "updated_at": "2026-11-26T08:16:56.678345+00:00",
+  "last_change_id": "CHG-20261126-009",
   "code_digest": "a328b0e8551c5f8c9358d10de28f0c3944d040278b493158a4ac3542fd3b02cb",
   "code_file_count": 922,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "5ebdf9bfd46baaa2c9dc94730501d64f3992c41cd6de939dcb6225e138b1a693",
-    "docs/CHANGELOG.md": "e6993d08f6cd56bda090431fe959919189b85cf9aedc55eaefef246f1c14c54a",
+    "docs/PROJECT_STATUS.md": "a69d00503eb5cd0ccb91e6260eee9a2d29bb7eb3ccaec0877eac35ffaaf0c125",
+    "docs/CHANGELOG.md": "1a7220096b9a5668499dfab3a74de0ddd861f24e5e1337f88287d8421dba8b87",
     "AGENTS.md": "72c31b7b0d24828d2313203ad211348f916aec386e61ad31b478fb3f80ad4448",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "py_compile+node+ruff PASS; Odoo /tp_web_home 26 runs 0 failed; Hoot 16/16 PASS; Playwright 4 Admin + 2 Employee KPI sidebars PASS"
+    "server-pc backup home009-20261126T145335 + -u tp_web_home 20.0.2.3.0 rc=0 err=0 + STRICT_INVARIANT_DRIFTS={} + public https://tpone.tadic.vn bundle 200 verified"
   ]
 }
