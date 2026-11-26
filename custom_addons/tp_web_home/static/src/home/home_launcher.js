@@ -38,6 +38,8 @@ import {
 
 const EMPTY_CATALOG = Object.freeze({
     isAdmin: false,
+    isDelegated: false,
+    homeMode: "employee",
     admin: null,
     tools: [],
     entries: [],
@@ -51,55 +53,78 @@ const EMPTY_CATALOG = Object.freeze({
     otherApps: 0,
 });
 
-const EMPTY_DASHBOARD = Object.freeze({
-    meta: {
-        updated_at: "",
-        updated_short: "",
-        timezone: "Asia/Ho_Chi_Minh",
-    },
-    kpis: {
-        hr: { key: "hr", label: "Nhân sự", status: "loading", count: null, can_open: false },
-        requests: {
-            key: "requests",
-            label: "Yêu cầu phê duyệt",
-            status: "loading",
-            count: null,
-            can_open: false,
-        },
-        tasks: { key: "tasks", label: "Công việc", status: "loading", count: null, can_open: false },
-        stock: { key: "stock", label: "Tồn kho", status: "loading", count: null, can_open: false },
-    },
-    agenda: {
-        status: "loading",
-        items: [],
-        total_today: 0,
-        has_more: false,
-    },
-    charts: {
-        status: "loading",
-        total: 0,
-        scope_key: "my_work",
-        scope_label: "Công việc của tôi",
-        scope_options: [{ key: "my_work", label: "Công việc của tôi" }],
-        can_filter_department: false,
-        department_key: "",
-        department_label: "Tất cả phòng ban",
-        department_options: [{ key: "", label: "Tất cả phòng ban" }],
-        period_key: "this_month",
-        period_label: "Tháng này",
-        period_options: [
-            { key: "this_month", label: "Tháng này" },
-            { key: "this_month_strict", label: "Có hạn trong tháng" },
-            { key: "this_week", label: "Tuần này" },
-            { key: "this_quarter", label: "Quý này" },
-            { key: "all", label: "Tất cả kỳ" },
+function buildInitialEmptyDashboard(isAdminHint = false) {
+    if (isAdminHint) {
+        return {
+            home_mode: "admin",
+            apps_title: "Ứng dụng theo phòng ban",
+            meta: { updated_at: "", updated_short: "", timezone: "Asia/Ho_Chi_Minh" },
+            cards: [
+                { key: "hr", card_kind: "metric", label: "Nhân sự", status: "loading", count: null, can_open: false, theme: "blue", icon_name: "kpi-hr" },
+                { key: "requests", card_kind: "metric", label: "Yêu cầu phê duyệt", status: "loading", count: null, can_open: false, theme: "purple", icon_name: "kpi-requests" },
+                { key: "tasks", card_kind: "metric", label: "Công việc", status: "loading", count: null, can_open: false, theme: "green", icon_name: "kpi-tasks" },
+                { key: "stock", card_kind: "metric", label: "Tồn kho", status: "loading", count: null, can_open: false, theme: "amber", icon_name: "kpi-stock" },
+            ],
+            kpis: {},
+            agenda: { status: "loading", items: [], total_today: 0, has_more: false },
+            charts: {
+                status: "loading",
+                mode: "admin",
+                total: 0,
+                scope_key: "managed",
+                scope_label: "Phạm vi quản lý",
+                scope_options: [{ key: "managed", label: "Phạm vi quản lý" }],
+                can_filter_department: false,
+                department_key: "",
+                department_label: "Tất cả phòng ban",
+                department_options: [{ key: "", label: "Tất cả phòng ban" }],
+                period_key: "this_month",
+                period_label: "Trong tháng này",
+                period_options: [
+                    { key: "this_week", label: "Trong tuần này" },
+                    { key: "this_month", label: "Trong tháng này" },
+                    { key: "all", label: "Tất cả kỳ" },
+                ],
+                bar: { kind: "department", title: "Tình hình công việc", rows: [], series: [] },
+                donut: { title: "Tỷ lệ công việc", center_count: 0, center_label: "Công việc", slices: [] },
+            },
+        };
+    }
+    return {
+        home_mode: "employee",
+        apps_title: "Ứng dụng của bạn",
+        meta: { updated_at: "", updated_short: "", timezone: "Asia/Ho_Chi_Minh" },
+        cards: [
+            { key: "emp_tasks", card_kind: "metric", label: "Việc chưa hoàn thành", status: "loading", count: null, can_open: false, theme: "blue", icon_name: "kpi-tasks" },
+            { key: "emp_requests", card_kind: "metric", label: "Yêu cầu của tôi chờ duyệt", status: "loading", count: null, can_open: false, theme: "purple", icon_name: "kpi-requests" },
+            { key: "emp_calendar", card_kind: "metric", label: "Lịch hẹn hôm nay", status: "loading", count: null, can_open: false, theme: "green", icon_name: "calendar" },
+            { key: "emp_attendance", card_kind: "status", label: "Chấm công hôm nay", status: "loading", count: null, display_text: "", can_open: false, theme: "amber", icon_name: "clock" },
         ],
-        period_rule_note: "",
-        attribution_note: "",
-        bar: { rows: [], series: [] },
-        donut: { center_count: 0, center_label: "Công việc", slices: [] },
-    },
-});
+        kpis: {},
+        agenda: { status: "loading", items: [], total_today: 0, has_more: false },
+        charts: {
+            status: "loading",
+            mode: "employee",
+            total: 0,
+            scope_key: "my_work",
+            scope_label: "Công việc của tôi",
+            scope_options: [{ key: "my_work", label: "Công việc của tôi" }],
+            can_filter_department: false,
+            department_key: "",
+            department_label: "Tất cả phòng ban",
+            department_options: [{ key: "", label: "Tất cả phòng ban" }],
+            period_key: "this_week",
+            period_label: "Trong tuần này",
+            period_options: [
+                { key: "this_week", label: "Trong tuần này" },
+                { key: "this_month", label: "Trong tháng này" },
+                { key: "all", label: "Tất cả kỳ" },
+            ],
+            bar: { kind: "daily", title: "Công việc của tôi theo ngày", rows: [], series: [] },
+            donut: { title: "Tỷ lệ công việc của tôi", center_count: 0, center_label: "Công việc", slices: [] },
+        },
+    };
+}
 
 const VI_NUMBER = new Intl.NumberFormat("vi-VN");
 
@@ -136,9 +161,9 @@ export class HomeLauncher extends Component {
     // Core Home & Dashboard state
     menuState = signal("loading");
     dashboardState = signal("loading");
-    dashboard = signal(EMPTY_DASHBOARD);
+    dashboard = signal(buildInitialEmptyDashboard(Boolean(user.isSystem)));
     taskFilters = signal({
-        period: "this_month",
+        period: "",
         task_scope: "",
         department_key: "",
     });
@@ -147,6 +172,7 @@ export class HomeLauncher extends Component {
     brokenIcons = signal(new Set());
     selectedModule = signal(null);
     delegatedAdmin = signal(false);
+    serverFullAdmin = signal(null);
     bellSystrayFailed = signal(false);
 
     // Refs for keyboard focus management
@@ -174,14 +200,40 @@ export class HomeLauncher extends Component {
     focusAgendaModal = false;
     lastClickedModuleKey = null;
 
+    /**
+     * Authoritative Home Mode ("admin" vs "employee"):
+     * - When dashboard payload has arrived from server, uses `dashboard().home_mode`.
+     * - Otherwise uses server `get_tp_admin_capabilities` (if available) or `user.isSystem`.
+     */
+    effectiveIsAdmin = computed(() => {
+        if (this.dashboardState() === "ready" && this.dashboard()?.home_mode) {
+            return this.dashboard().home_mode === "admin";
+        }
+        const srv = this.serverFullAdmin();
+        if (srv !== null) {
+            return Boolean(srv);
+        }
+        return Boolean(user.isSystem);
+    });
+
+    homeMode = computed(() => {
+        if (this.effectiveIsAdmin() || this.delegatedAdmin()) {
+            return "admin";
+        }
+        return "employee";
+    });
+
     catalog = computed(() => {
         if (this.menuState() !== "ready") {
             return EMPTY_CATALOG;
         }
+        const isSys = this.effectiveIsAdmin();
+        const mode = this.homeMode();
         const catalog = buildCatalog(this.menuService.getMenuAsTree("root"), {
             debug: odoo.debug,
-            isSystem: Boolean(user.isSystem),
+            isSystem: isSys,
             isDelegated: this.delegatedAdmin(),
+            homeMode: mode,
         });
         const broken = this.brokenIcons();
         const fix = (tile) =>
@@ -203,6 +255,25 @@ export class HomeLauncher extends Component {
     visibleEntries = computed(() => this.sections().flatMap((section) => section.tiles));
     quickGridTiles = computed(() => this.catalog().quickGrid || []);
 
+    appsPanelTitle = computed(() => {
+        if (this.dashboardState() === "ready" && this.dashboard()?.apps_title) {
+            return this.dashboard().apps_title;
+        }
+        return this.homeMode() === "admin" ? "Ứng dụng theo phòng ban" : "Ứng dụng của bạn";
+    });
+
+    barChartTitle = computed(
+        () =>
+            this.dashboard().charts?.bar?.title ||
+            (this.homeMode() === "admin" ? "Tình hình công việc" : "Công việc của tôi theo ngày")
+    );
+
+    donutChartTitle = computed(
+        () =>
+            this.dashboard().charts?.donut?.title ||
+            (this.homeMode() === "admin" ? "Tỷ lệ công việc" : "Tỷ lệ công việc của tôi")
+    );
+
     drawerGroups = computed(() => buildDrawerGroups(this.catalog(), this.panelQuery()));
     panelTiles = computed(() =>
         filterTiles(this.catalog().userApps || [], this.panelQuery())
@@ -213,7 +284,6 @@ export class HomeLauncher extends Component {
             (this.catalog().userApps?.length || 0) > 0
     );
 
-    // Navbar Global Search results (Chức năng + Tài liệu)
     matchedFunctions = computed(() => {
         const q = this.query().trim();
         if (!q || this.menuState() !== "ready") {
@@ -249,7 +319,23 @@ export class HomeLauncher extends Component {
     });
 
     kpiCards = computed(() => {
-        const k = this.dashboard().kpis || EMPTY_DASHBOARD.kpis;
+        const dash = this.dashboard();
+        if (Array.isArray(dash?.cards) && dash.cards.length) {
+            return dash.cards.map((c) => ({
+                ...c,
+                iconName: c.icon_name || c.iconName || "kpi-tasks",
+                theme: c.theme || "blue",
+            }));
+        }
+        const k = dash?.kpis || {};
+        if (k.emp_tasks || k.emp_attendance) {
+            return [
+                { ...k.emp_tasks, theme: "blue", iconName: "kpi-tasks" },
+                { ...k.emp_requests, theme: "purple", iconName: "kpi-requests" },
+                { ...k.emp_calendar, theme: "green", iconName: "calendar" },
+                { ...k.emp_attendance, theme: "amber", iconName: "clock" },
+            ];
+        }
         return [
             { ...k.hr, theme: "blue", iconName: "kpi-hr" },
             { ...k.requests, theme: "purple", iconName: "kpi-requests" },
@@ -265,16 +351,14 @@ export class HomeLauncher extends Component {
         this.userDropdown = useDropdownState();
         this.bellDropdown = useDropdownState();
 
-        // Optional mail.store & native MessagingMenu systray lookup (graceful when `mail` not installed in unit tests)
         this.mailStore = this.env.services?.["mail.store"] || null;
         const mailSystray = registry.category("systray").get("mail.messaging_menu", null);
         this.MessagingSystrayComponent = mailSystray?.Component || null;
         this.messagingSystrayProps = mailSystray?.props ? mailSystray.props() : {};
 
-        // Chart.js hooks
         this.barChart = useHomeChart(() =>
-            buildDepartmentBarSpec(this.dashboard().charts, (deptKey, segKey) =>
-                this.onDrilldownBar(deptKey, segKey)
+            buildDepartmentBarSpec(this.dashboard().charts, (hit) =>
+                this.onDrilldownBar(hit)
             )
         );
         this.donutChart = useHomeChart(() =>
@@ -431,8 +515,12 @@ export class HomeLauncher extends Component {
     }
 
     barCanvasMinWidth() {
-        const count = this.dashboard().charts?.bar?.rows?.length || 0;
-        return count > 6 ? `${count * 84}px` : "100%";
+        const bar = this.dashboard().charts?.bar;
+        const count = bar?.rows?.length || 0;
+        if (bar?.kind === "daily") {
+            return count > 14 ? `${count * 34}px` : "100%";
+        }
+        return count > 6 ? `${count * 76}px` : "100%";
     }
 
     resultMessage() {
@@ -515,12 +603,13 @@ export class HomeLauncher extends Component {
         this.panelQuery.set("");
         this.selectedModule.set(null);
         this.delegatedAdmin.set(false);
+        this.serverFullAdmin.set(null);
         try {
             await this.menuService.reload();
             if (!this.destroyed && sequence === this.loadSequence) {
                 this.syncHomeApp();
             }
-            let capabilities = { delegated: false };
+            let capabilities = { delegated: false, is_full_admin: null };
             if (session.tp_admin_delegation) {
                 try {
                     capabilities = await rpc(
@@ -533,7 +622,7 @@ export class HomeLauncher extends Component {
                         }
                     );
                 } catch {
-                    capabilities = { delegated: false };
+                    capabilities = { delegated: false, is_full_admin: null };
                 }
             }
             if (!this.menuService.getMenuAsTree("root")) {
@@ -541,6 +630,9 @@ export class HomeLauncher extends Component {
             }
             if (sequence === this.loadSequence) {
                 this.delegatedAdmin.set(Boolean(capabilities.delegated));
+                if (typeof capabilities.is_full_admin === "boolean") {
+                    this.serverFullAdmin.set(capabilities.is_full_admin);
+                }
                 this.menuState.set("ready");
                 this.syncFromHash();
             }
@@ -560,8 +652,10 @@ export class HomeLauncher extends Component {
         }
         if (!silent) {
             this.dashboardState.set("loading");
+            this.dashboard.set(buildInitialEmptyDashboard(this.effectiveIsAdmin()));
         }
         const filters = this.taskFilters();
+        const prevMode = this.dashboard()?.home_mode || "";
         try {
             const data = await rpc("/web/dataset/call_kw/res.users/get_tp_home_dashboard", {
                 model: "res.users",
@@ -572,7 +666,16 @@ export class HomeLauncher extends Component {
             if (this.destroyed || seq !== this.dashboardSeq) {
                 return;
             }
-            if (data && typeof data === "object" && data.kpis) {
+            if (data && typeof data === "object" && (data.kpis || data.cards)) {
+                const nextMode = data.home_mode || (data.charts?.mode === "admin" ? "admin" : "");
+                if (prevMode && nextMode && prevMode !== nextMode && filters.period) {
+                    // Admin grant/revoke switched Home mode: reload once with clean default period/scope
+                    this.taskFilters.set({ period: "", task_scope: "", department_key: "" });
+                    this.dashboard.set(data);
+                    this.dashboardState.set("ready");
+                    this.loadDashboard({ silent: true });
+                    return;
+                }
                 this.dashboard.set(data);
                 if (data.charts?.status === "ok") {
                     this.taskFilters.set({
@@ -582,6 +685,7 @@ export class HomeLauncher extends Component {
                     });
                 }
                 this.dashboardState.set("ready");
+                this.syncFromHash();
             } else {
                 this.dashboardState.set("unavailable");
             }
@@ -607,7 +711,7 @@ export class HomeLauncher extends Component {
     onPeriodChange(ev) {
         this.taskFilters.set({
             ...this.taskFilters(),
-            period: ev.target.value || "this_month",
+            period: ev.target.value || "",
         });
         this.loadDashboard({ silent: true });
     }
@@ -831,13 +935,17 @@ export class HomeLauncher extends Component {
                         this.menuService.setCurrentMenu(appMenu);
                     }
                 }
-                await this.actionService.doAction(dd.action_xmlid);
+                await this.actionService.doAction(dd.action_xmlid, {
+                    additionalContext: dd.attendance_today
+                        ? { tp_focus_date: dd.attendance_today }
+                        : {},
+                });
                 return;
             }
             if (dd.type === "rpc_action" && dd.method) {
                 const args =
                     dd.method === "get_tp_home_task_drilldown_action"
-                        ? [this.taskFilters()]
+                        ? [{ ...this.taskFilters(), ...(dd.params || {}) }]
                         : [];
                 const action = await rpc(`/web/dataset/call_kw/res.users/${dd.method}`, {
                     model: "res.users",
@@ -846,19 +954,19 @@ export class HomeLauncher extends Component {
                     kwargs: {},
                 });
                 if (action) {
-                    if (card.key === "hr") {
-                        const hrMenu = this.menuService
+                    const menuTargetMap = {
+                        hr: "tp_hr_workspace.menu_hr",
+                        stock: "tp_equipment.menu_root",
+                        emp_calendar: "calendar.mail_menu_calendar",
+                        emp_tasks: "project_todo.menu_todo_todos",
+                    };
+                    const targetXmlid = menuTargetMap[card.key];
+                    if (targetXmlid) {
+                        const targetMenu = this.menuService
                             .getAll()
-                            .find((m) => m.xmlid === "tp_hr_workspace.menu_hr");
-                        if (hrMenu) {
-                            this.menuService.setCurrentMenu(hrMenu);
-                        }
-                    } else if (card.key === "stock") {
-                        const eqMenu = this.menuService
-                            .getAll()
-                            .find((m) => m.xmlid === "tp_equipment.menu_root");
-                        if (eqMenu) {
-                            this.menuService.setCurrentMenu(eqMenu);
+                            .find((m) => m.xmlid === targetXmlid);
+                        if (targetMenu) {
+                            this.menuService.setCurrentMenu(targetMenu);
                         }
                     }
                     await this.actionService.doAction(action);
@@ -875,11 +983,16 @@ export class HomeLauncher extends Component {
         }
     }
 
-    async onDrilldownBar(departmentKey, segmentKey) {
+    async onDrilldownBar(hit, legacySegment) {
+        const payload =
+            typeof hit === "object" && hit !== null
+                ? hit
+                : { departmentKey: hit || "", dayKey: "", segmentKey: legacySegment || "" };
         await this._executeTaskDrilldown({
             ...this.taskFilters(),
-            bar_department_key: departmentKey || "",
-            bar_segment: segmentKey || "",
+            bar_department_key: payload.departmentKey || "",
+            bar_day_key: payload.dayKey || "",
+            bar_segment: payload.segmentKey || "",
         });
     }
 
@@ -906,6 +1019,14 @@ export class HomeLauncher extends Component {
                 }
             );
             if (action) {
+                if (this.homeMode() === "employee") {
+                    const todoMenu = this.menuService
+                        .getAll()
+                        .find((m) => m.xmlid === "project_todo.menu_todo_todos");
+                    if (todoMenu) {
+                        this.menuService.setCurrentMenu(todoMenu);
+                    }
+                }
                 await this.actionService.doAction(action);
             }
         } catch (error) {
@@ -981,6 +1102,21 @@ export class HomeLauncher extends Component {
             res_model: "project.task",
             res_id: linkedTask.id,
             route: linkedTask.route,
+        });
+    }
+
+    async openCreateTaskShortcut() {
+        const todoMenu = this.menuService
+            .getAll()
+            .find((m) => m.xmlid === "project_todo.menu_todo_todos" && m.actionID);
+        if (!todoMenu) {
+            return;
+        }
+        this.agendaModalOpen.set(false);
+        this.helpOpen.set(false);
+        this.menuService.setCurrentMenu(todoMenu);
+        await this.actionService.doAction(todoMenu.actionID, {
+            props: { resId: "new" },
         });
     }
 

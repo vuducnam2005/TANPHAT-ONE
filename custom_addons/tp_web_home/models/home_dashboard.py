@@ -1,18 +1,25 @@
 # Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
 """Permission-checked server-side data adapters for TANPHAT ONE Home (`tp_web_home`).
 
-Design guarantees:
+Design guarantees (UI-HOME-006 & UI-HOME-007):
 1. Zero circular dependencies: `tp_web_home` continues to depend only on `web` and
-   `tp_web_login`. Installed business modules (`tp_hr_workspace`, `tp_request`,
-   `tp_personal_tools`, `tp_equipment`, `tp_kd_workspace`, `tp_digital_office`,
-   `tp_enterprise_governance`) are discovered dynamically via `self.env`.
-2. Strictly read-only: Home queries never bootstrap personal stages, never mutate
-   records, and never call external syncs (e.g. ENTI).
-3. Permission-true states: Every block distinguishes `ok` (including valid `0`),
-   `no_access`, `unconfigured`, and `error`. Unauthorized KPIs return `count: None`
-   (never `0` and never leaked counts).
-4. Unified dataset: Task KPI, Stacked Bar by Department, Donut by Status, and
-   Task Drilldowns all evaluate the exact same distinct `project.task` population.
+   `tp_web_login`. Installed business modules (`tp_admin_delegation`, `tp_hr_workspace`,
+   `tp_hr_attendance`, `tp_request`, `tp_personal_tools`, `tp_equipment`,
+   `tp_kd_workspace`, `tp_digital_office`, `tp_enterprise_governance`) are discovered
+   dynamically via `self.env`.
+2. Strictly read-only: Home queries never bootstrap personal stages, never create punches,
+   never mutate records, and never call external syncs (e.g. ENTI).
+3. Two server-verified Home modes sharing one visual design:
+   - `admin`: Original Admin (`group_original_admin`) or live Granted Full Admin
+     (`tp.admin.delegation` active in current company). Shows executive KPIs
+     (`Nhân sự`, `Yêu cầu phê duyệt`, `Công việc`, `Tồn kho`) and department task analytics.
+   - `employee`: Every other active internal account (including department heads and
+     business approvers, without turning Home into company-wide admin mode). Never queries
+     or returns Stock KPI; shows 4 rich personal cards (`Việc chưa hoàn thành`,
+     `Yêu cầu của tôi chờ duyệt`, `Lịch hẹn hôm nay`, `Chấm công hôm nay`) and personal
+     daily task bar + status donut charts.
+4. Backend-only identity & scope: ignores any `home_mode`, `user_id`, `employee_id`, or
+   `company_id` sent by the browser; re-verifies permissions on every read and drilldown.
 """
 
 import calendar
@@ -29,25 +36,43 @@ from odoo.fields import Domain
 _logger = logging.getLogger(__name__)
 
 DEFAULT_TZ_NAME = "Asia/Ho_Chi_Minh"
+WEEKDAY_VI = ("T2", "T3", "T4", "T5", "T6", "T7", "CN")
 
 PERIOD_OPTIONS = (
-    ("this_month", "Tháng này"),
+    ("this_week", "Trong tuần này"),
+    ("this_week_strict", "Có hạn trong tuần"),
+    ("this_month", "Trong tháng này"),
     ("this_month_strict", "Có hạn trong tháng"),
-    ("this_week", "Tuần này"),
-    ("this_quarter", "Quý này"),
+    ("this_quarter", "Trong quý này"),
     ("all", "Tất cả kỳ"),
 )
 
-DONUT_BUCKETS = (
+DONUT_BUCKETS_ADMIN = (
     ("done", "Hoàn thành", "#79BE81"),
     ("in_progress", "Đang thực hiện", "#4E7DE8"),
     ("waiting", "Chờ xử lý", "#E8AA40"),
+    ("overdue", "Quá hạn", "#DD6A64"),
+)
+
+DONUT_BUCKETS_EMPLOYEE = (
+    ("done", "Hoàn thành", "#79BE81"),
+    ("in_progress", "Đang thực hiện", "#4E7DE8"),
+    ("waiting", "Chờ xử lý / xác nhận", "#E8AA40"),
     ("overdue", "Quá hạn", "#DD6A64"),
 )
 UNMAPPED_BUCKET = ("unmapped", "Trạng thái khác", "#94A3B8")
 
 CROSS_DEPT_KEY = "cross_dept"
 UNASSIGNED_DEPT_KEY = "unassigned_dept"
+UNDATED_DAY_KEY = "undated"
+
+SOURCE_SHORT_LABELS = {
+    "self": "Tự tạo",
+    "project": "Dự án",
+    "meeting": "Cuộc họp",
+    "request": "Yêu cầu",
+    "chat": "Trao đổi",
+}
 
 
 def _fold_text(value):
@@ -107,7 +132,7 @@ class ResUsersHomeDashboard(models.Model):
     _inherit = "res.users"
 
     # ------------------------------------------------------------------
-    # Caller & Role Capability Helpers
+    # Caller & Mode Authority Helpers (Never trusts client flags/IDs)
     # ------------------------------------------------------------------
     def _tp_home_require_internal(self):
         user = self.env.user
@@ -117,9 +142,18 @@ class ResUsersHomeDashboard(models.Model):
             )
         return user
 
+    def _tp_home_allowed_company(self):
+        """Return active allowed company strictly from session environment."""
+        company = self.env.company
+        allowed = self.env.user.company_ids & self.env.companies
+        if allowed and company not in allowed:
+            company = allowed[:1]
+        return company
+
     def _tp_home_is_full_admin(self, user=None, company=None):
+        """True ONLY for Original Admin or active Granted Full Admin in `company` (DEC-053/054)."""
         user = user or self.env.user
-        company = company or self.env.company
+        company = company or self._tp_home_allowed_company()
         if hasattr(user, "_tp_is_main_admin"):
             if not user._tp_is_main_admin():
                 return False
@@ -127,17 +161,21 @@ class ResUsersHomeDashboard(models.Model):
                 return True
             if hasattr(user, "_tp_is_granted_admin"):
                 return bool(user._tp_is_granted_admin(company=company))
-            return True
+            return False
         return bool(user.active and not user.share and user.has_group("base.group_system"))
 
-    # ------------------------------------------------------------------
-    # 1. KPI: NHÂN SỰ
-    # ------------------------------------------------------------------
+    def _tp_home_mode(self, user=None, company=None):
+        return "admin" if self._tp_home_is_full_admin(user=user, company=company) else "employee"
+
+    # ==================================================================
+    # ADMIN MODE KPIs (1. Nhân sự, 2. Yêu cầu phê duyệt, 4. Tồn kho)
+    # ==================================================================
     @api.model
-    def _tp_home_kpi_hr(self):
+    def _tp_home_kpi_hr(self, company):
         if "hr.employee" not in self.env:
             return {
                 "key": "hr",
+                "card_kind": "metric",
                 "label": "Nhân sự",
                 "status": "unconfigured",
                 "count": None,
@@ -147,7 +185,6 @@ class ResUsersHomeDashboard(models.Model):
                 "drilldown": None,
             }
         try:
-            company = self.env.company
             if "tp.hr.workspace" in self.env:
                 ws = self.env["tp.hr.workspace"]
                 is_delegated_hr = bool(
@@ -158,6 +195,7 @@ class ResUsersHomeDashboard(models.Model):
                     count = employees.search_count(domain)
                     return {
                         "key": "hr",
+                        "card_kind": "metric",
                         "label": "Nhân sự",
                         "status": "ok",
                         "count": int(count),
@@ -176,6 +214,7 @@ class ResUsersHomeDashboard(models.Model):
                     count = pub_emp.search_count(domain)
                     return {
                         "key": "hr",
+                        "card_kind": "metric",
                         "label": "Nhân sự",
                         "status": "ok",
                         "count": int(count),
@@ -186,7 +225,6 @@ class ResUsersHomeDashboard(models.Model):
                         "drilldown": {"type": "rpc_action", "method": "get_tp_home_hr_drilldown_action"},
                     }
 
-            # Fallback when tp_hr_workspace is not installed
             for model_name, xmlid in (
                 ("hr.employee", "hr.open_view_employee_list_my"),
                 ("hr.employee.public", "hr.hr_employee_public_action"),
@@ -198,6 +236,7 @@ class ResUsersHomeDashboard(models.Model):
                         count = Model.search_count(dom)
                         return {
                             "key": "hr",
+                            "card_kind": "metric",
                             "label": "Nhân sự",
                             "status": "ok",
                             "count": int(count),
@@ -205,11 +244,16 @@ class ResUsersHomeDashboard(models.Model):
                             "badge_kind": "neutral",
                             "tooltip": "Nhân viên đang hoạt động trong phạm vi được phép xem",
                             "can_open": True,
-                            "drilldown": {"type": "rpc_action", "method": "get_tp_home_hr_drilldown_action", "fallback_xmlid": xmlid},
+                            "drilldown": {
+                                "type": "rpc_action",
+                                "method": "get_tp_home_hr_drilldown_action",
+                                "fallback_xmlid": xmlid,
+                            },
                         }
 
             return {
                 "key": "hr",
+                "card_kind": "metric",
                 "label": "Nhân sự",
                 "status": "no_access",
                 "count": None,
@@ -221,6 +265,7 @@ class ResUsersHomeDashboard(models.Model):
         except AccessError:
             return {
                 "key": "hr",
+                "card_kind": "metric",
                 "label": "Nhân sự",
                 "status": "no_access",
                 "count": None,
@@ -233,6 +278,7 @@ class ResUsersHomeDashboard(models.Model):
             _logger.exception("TP Home: failed to compute HR KPI")
             return {
                 "key": "hr",
+                "card_kind": "metric",
                 "label": "Nhân sự",
                 "status": "error",
                 "count": None,
@@ -245,6 +291,7 @@ class ResUsersHomeDashboard(models.Model):
     @api.model
     def get_tp_home_hr_drilldown_action(self):
         self._tp_home_require_internal()
+        company = self._tp_home_allowed_company()
         if "tp.hr.workspace" in self.env:
             ws = self.env["tp.hr.workspace"]
             is_delegated_hr = bool(
@@ -254,7 +301,6 @@ class ResUsersHomeDashboard(models.Model):
                 return ws.action_employees({"status": "active"})
             if hasattr(ws, "action_public_employees"):
                 return ws.action_public_employees({})
-        company = self.env.company
         for model_name in ("hr.employee", "hr.employee.public"):
             if model_name in self.env and self.env[model_name].sudo(False).has_access("read"):
                 return {
@@ -266,47 +312,12 @@ class ResUsersHomeDashboard(models.Model):
                 }
         raise AccessError(self.env._("Bạn không có quyền mở danh sách nhân sự."))
 
-    # ------------------------------------------------------------------
-    # 2. KPI: YÊU CẦU PHÊ DUYỆT
-    # ------------------------------------------------------------------
-    def _tp_home_is_request_approver_role(self, Req, company):
-        user = self.env.user
-        uid = user.id
-        if self._tp_home_is_full_admin(user, company):
-            return True
-        if user.has_group("tp_request.group_request_manager"):
-            return True
-        # Live pending or historical step assignment
-        if Req.search_count(Req._tp_mode_domain("to_approve")) > 0:
-            return True
-        if Req.search_count([("all_approver_ids", "in", [uid]), ("requester_user_id", "!=", uid)]) > 0:
-            return True
-        # Explicit approver role in org/project/type config
-        if "hr.department" in self.env:
-            if self.env["hr.department"].sudo().search_count(
-                [("company_id", "=", company.id), ("active", "=", True), ("manager_id.user_id", "=", uid)],
-            ):
-                return True
-        if "hr.employee" in self.env:
-            if self.env["hr.employee"].sudo().search_count(
-                [("company_id", "=", company.id), ("active", "=", True), ("parent_id.user_id", "=", uid)],
-            ):
-                return True
-        if "tp.kd.department.role" in self.env:
-            if self.env["tp.kd.department.role"]._roles(user=user):
-                return True
-        if "tp.request.type.step" in self.env:
-            if self.env["tp.request.type.step"].sudo().search_count(
-                [("type_id.active", "=", True), ("approver_user_ids", "in", [uid])],
-            ):
-                return True
-        return False
-
     @api.model
-    def _tp_home_kpi_requests(self):
+    def _tp_home_kpi_admin_requests(self, company):
         if "tp.request" not in self.env:
             return {
                 "key": "requests",
+                "card_kind": "metric",
                 "label": "Yêu cầu phê duyệt",
                 "status": "unconfigured",
                 "count": None,
@@ -320,6 +331,7 @@ class ResUsersHomeDashboard(models.Model):
             if not Req.has_access("read"):
                 return {
                     "key": "requests",
+                    "card_kind": "metric",
                     "label": "Yêu cầu phê duyệt",
                     "status": "no_access",
                     "count": None,
@@ -328,54 +340,31 @@ class ResUsersHomeDashboard(models.Model):
                     "can_open": False,
                     "drilldown": None,
                 }
-            company = self.env.company
-            uid = self.env.uid
-            is_approver = self._tp_home_is_request_approver_role(Req, company)
-            if is_approver:
-                dom = Req._tp_mode_domain("to_approve")
-                count = Req.search_count(dom)
-                return {
-                    "key": "requests",
-                    "label": "Yêu cầu phê duyệt",
-                    "status": "ok",
-                    "count": int(count),
-                    "role_mode": "to_approve",
-                    "badge_text": "Chờ bạn duyệt",
-                    "badge_kind": "purple",
-                    "tooltip": "Số hồ sơ đề nghị đã gửi đang đến lượt bạn phê duyệt (không tính bản nháp và không tính phiếu của chính bạn).",
-                    "can_open": True,
-                    "drilldown": {
-                        "type": "client_action",
-                        "action_xmlid": "tp_request.action_to_approve",
-                        "menu_xmlid": "tp_request.menu_root",
-                        "request_mode": "to_approve",
-                        "request_tab": "all",
-                    },
-                }
-
-            dom = [("requester_user_id", "=", uid), ("approval_state", "=", "pending")]
+            dom = Domain(Req._tp_mode_domain("to_approve")) & Domain("company_id", "=", company.id)
             count = Req.search_count(dom)
             return {
                 "key": "requests",
+                "card_kind": "metric",
                 "label": "Yêu cầu phê duyệt",
                 "status": "ok",
                 "count": int(count),
-                "role_mode": "mine_pending",
-                "badge_text": "Đang chờ duyệt",
+                "role_mode": "to_approve",
+                "badge_text": "Chờ bạn duyệt",
                 "badge_kind": "purple",
-                "tooltip": "Số đề nghị bạn đã gửi và hiện đang chờ cấp có thẩm quyền phê duyệt (không tính bản nháp).",
+                "tooltip": "Số hồ sơ đề nghị đã gửi đang đến lượt bạn phê duyệt (không tính bản nháp và không tính phiếu của chính bạn).",
                 "can_open": True,
                 "drilldown": {
                     "type": "client_action",
-                    "action_xmlid": "tp_request.action_mine",
+                    "action_xmlid": "tp_request.action_to_approve",
                     "menu_xmlid": "tp_request.menu_root",
-                    "request_mode": "mine",
-                    "request_tab": "pending",
+                    "request_mode": "to_approve",
+                    "request_tab": "all",
                 },
             }
         except AccessError:
             return {
                 "key": "requests",
+                "card_kind": "metric",
                 "label": "Yêu cầu phê duyệt",
                 "status": "no_access",
                 "count": None,
@@ -385,9 +374,10 @@ class ResUsersHomeDashboard(models.Model):
                 "drilldown": None,
             }
         except Exception:
-            _logger.exception("TP Home: failed to compute Request KPI")
+            _logger.exception("TP Home: failed to compute Admin Request KPI")
             return {
                 "key": "requests",
+                "card_kind": "metric",
                 "label": "Yêu cầu phê duyệt",
                 "status": "error",
                 "count": None,
@@ -397,14 +387,12 @@ class ResUsersHomeDashboard(models.Model):
                 "drilldown": None,
             }
 
-    # ------------------------------------------------------------------
-    # 3. KPI: TỒN KHO (maintenance.equipment)
-    # ------------------------------------------------------------------
     @api.model
-    def _tp_home_kpi_stock(self):
+    def _tp_home_kpi_stock(self, company):
         if "maintenance.equipment" not in self.env:
             return {
                 "key": "stock",
+                "card_kind": "metric",
                 "label": "Tồn kho",
                 "status": "unconfigured",
                 "count": None,
@@ -418,6 +406,7 @@ class ResUsersHomeDashboard(models.Model):
             if not Equipment.has_access("read"):
                 return {
                     "key": "stock",
+                    "card_kind": "metric",
                     "label": "Tồn kho",
                     "status": "no_access",
                     "count": None,
@@ -428,12 +417,12 @@ class ResUsersHomeDashboard(models.Model):
                 }
 
             if hasattr(Equipment, "tp_main_summary"):
-                # tp_main_summary enforces check_admin(env, self) and returns exact STOCK_DOMAIN count
                 summary = Equipment.tp_main_summary()
                 stock_count = int(summary.get("stock", 0))
                 free_count = int(summary.get("free", 0))
                 return {
                     "key": "stock",
+                    "card_kind": "metric",
                     "label": "Tồn kho",
                     "status": "ok",
                     "count": stock_count,
@@ -448,9 +437,10 @@ class ResUsersHomeDashboard(models.Model):
                     "drilldown": {"type": "rpc_action", "method": "get_tp_home_stock_drilldown_action"},
                 }
 
-            count = Equipment.search_count([("company_id", "in", [False, self.env.company.id])])
+            count = Equipment.search_count([("company_id", "in", [False, company.id])])
             return {
                 "key": "stock",
+                "card_kind": "metric",
                 "label": "Tồn kho",
                 "status": "ok",
                 "count": int(count),
@@ -461,9 +451,9 @@ class ResUsersHomeDashboard(models.Model):
                 "drilldown": {"type": "rpc_action", "method": "get_tp_home_stock_drilldown_action"},
             }
         except AccessError:
-            # Strict requirement 7.4: NEVER return 0 or count to unauthorized accounts!
             return {
                 "key": "stock",
+                "card_kind": "metric",
                 "label": "Tồn kho",
                 "status": "no_access",
                 "count": None,
@@ -476,6 +466,7 @@ class ResUsersHomeDashboard(models.Model):
             _logger.exception("TP Home: failed to compute Stock KPI")
             return {
                 "key": "stock",
+                "card_kind": "metric",
                 "label": "Tồn kho",
                 "status": "error",
                 "count": None,
@@ -487,13 +478,22 @@ class ResUsersHomeDashboard(models.Model):
 
     @api.model
     def get_tp_home_stock_drilldown_action(self):
-        self._tp_home_require_internal()
+        user = self._tp_home_require_internal()
+        company = self._tp_home_allowed_company()
+        if not self._tp_home_is_full_admin(user=user, company=company):
+            if "maintenance.equipment" not in self.env:
+                raise AccessError(self.env._("Bạn không có quyền truy cập Kho thiết bị."))
+            Equipment = self.env["maintenance.equipment"].sudo(False)
+            Equipment.check_access("read")
+            if hasattr(Equipment, "tp_main_summary"):
+                Equipment.tp_main_summary()
+            else:
+                raise AccessError(self.env._("Bạn không có quyền xem thống kê Tồn kho."))
         if "maintenance.equipment" not in self.env:
             raise AccessError(self.env._("Phân hệ Kho thiết bị chưa được cài đặt."))
         Equipment = self.env["maintenance.equipment"].sudo(False)
         Equipment.check_access("read")
         if hasattr(Equipment, "tp_main_summary"):
-            # Re-verify Kho admin guard identically to tp_main_summary
             Equipment.tp_main_summary()
             action = self.env["ir.actions.actions"]._for_xml_id("tp_equipment.action_equipment")
             base_ctx = action.get("context")
@@ -512,69 +512,539 @@ class ResUsersHomeDashboard(models.Model):
             "name": "Thiết bị tồn kho",
             "res_model": "maintenance.equipment",
             "view_mode": "list,form",
-            "domain": [("company_id", "in", [False, self.env.company.id])],
+            "domain": [("company_id", "in", [False, company.id])],
         }
 
-    # ------------------------------------------------------------------
-    # 4. TASK POPULATION, KPI & TWO CHARTS (Shared Dataset)
-    # ------------------------------------------------------------------
-    def _tp_home_task_management_context(self, Task, company):
-        """Determine real task management authority from groups/roles/projects (never job title)."""
-        user = self.env.user
-        uid = user.id
-        is_full_mgr = bool(
-            self._tp_home_is_full_admin(user, company)
-            or user.has_group("tp_core.group_manager")
-            or user.has_group("project.group_project_manager"),
-        )
-        managed_project_ids = set()
-        if not is_full_mgr and "project.project" in self.env:
-            Project = self.env["project.project"].sudo(False)
-            if Project.has_access("read"):
-                own_projs = Project.search(
-                    [("company_id", "in", [False, company.id]), ("user_id", "=", uid)],
+    # ==================================================================
+    # EMPLOYEE MODE PERSONAL CARDS (Ô 2, Ô 3, Ô 4; Ô 1 shares task dataset)
+    # ==================================================================
+    @api.model
+    def _tp_home_kpi_employee_requests(self, company):
+        """Ô 2 — Yêu cầu của tôi chờ duyệt (strictly caller's own submitted pending requests)."""
+        uid = self.env.uid
+        if "tp.request" in self.env:
+            try:
+                Req = self.env["tp.request"].sudo(False)
+                if not Req.has_access("read"):
+                    return {
+                        "key": "emp_requests",
+                        "card_kind": "metric",
+                        "label": "Yêu cầu của tôi chờ duyệt",
+                        "status": "no_access",
+                        "count": None,
+                        "status_text": "Chưa được cấp quyền",
+                        "tooltip": "Tài khoản chưa có quyền truy cập phân hệ Yêu cầu phê duyệt.",
+                        "can_open": False,
+                        "drilldown": None,
+                    }
+                # Only submitted pending requests of the caller in the allowed company.
+                # Excludes draft, withdrawn, returned, rejected, and approved (even if execution_state is open).
+                # Deduplicates attendance_correction_id so 1-1 attendance bridge is never counted twice.
+                recs = Req.search(
+                    [
+                        ("company_id", "=", company.id),
+                        ("requester_user_id", "=", uid),
+                        ("approval_state", "=", "pending"),
+                    ],
                 )
-                managed_project_ids.update(own_projs.ids)
-            if "tp.kd.department.role" in self.env:
-                kd_role_model = self.env["tp.kd.department.role"]
-                if hasattr(kd_role_model, "_project_ids") and kd_role_model._roles(user=user):
-                    managed_project_ids.update(kd_role_model._project_ids(user))
+                seen_corr_ids = set()
+                unique_ids = []
+                has_corr_field = "attendance_correction_id" in Req._fields
+                for r in recs:
+                    corr_id = r.attendance_correction_id.id if (has_corr_field and r.attendance_correction_id) else 0
+                    if corr_id:
+                        if corr_id in seen_corr_ids:
+                            continue
+                        seen_corr_ids.add(corr_id)
+                    unique_ids.append(r.id)
+                count = len(unique_ids)
+                return {
+                    "key": "emp_requests",
+                    "card_kind": "metric",
+                    "label": "Yêu cầu của tôi chờ duyệt",
+                    "status": "ok",
+                    "count": int(count),
+                    "role_mode": "mine_pending",
+                    "badge_text": "Đang chờ duyệt" if count > 0 else "Không có phiếu chờ",
+                    "badge_kind": "purple" if count > 0 else "neutral",
+                    "tooltip": (
+                        "Số phiếu đề nghị của chính bạn đã gửi và đang trong bước chờ phê duyệt "
+                        "(không tính nháp, thu hồi, trả lại hoặc phiếu đã duyệt đang chờ thực hiện)."
+                    ),
+                    "can_open": True,
+                    "drilldown": {
+                        "type": "client_action",
+                        "action_xmlid": "tp_request.action_mine",
+                        "menu_xmlid": "tp_request.menu_root",
+                        "request_mode": "mine",
+                        "request_tab": "pending",
+                    },
+                }
+            except AccessError:
+                return {
+                    "key": "emp_requests",
+                    "card_kind": "metric",
+                    "label": "Yêu cầu của tôi chờ duyệt",
+                    "status": "no_access",
+                    "count": None,
+                    "status_text": "Chưa được cấp quyền",
+                    "tooltip": "Tài khoản chưa có quyền xem Yêu cầu phê duyệt.",
+                    "can_open": False,
+                    "drilldown": None,
+                }
+            except Exception:
+                _logger.exception("TP Home: failed to compute Employee Request KPI")
+                return {
+                    "key": "emp_requests",
+                    "card_kind": "metric",
+                    "label": "Yêu cầu của tôi chờ duyệt",
+                    "status": "error",
+                    "count": None,
+                    "status_text": "Tạm lỗi nguồn",
+                    "tooltip": "Chưa tải được số lượng yêu cầu của bạn. Vui lòng thử làm mới.",
+                    "can_open": False,
+                    "drilldown": None,
+                }
 
-        can_manage = is_full_mgr or bool(managed_project_ids)
+        # Fallback when tp_request is not installed on minimal environments
+        if "tp.hr.attendance.correction" in self.env:
+            try:
+                Corr = self.env["tp.hr.attendance.correction"].sudo(False)
+                if Corr.has_access("read"):
+                    count = Corr.search_count(
+                        [
+                            ("company_id", "=", company.id),
+                            ("employee_id.user_id", "=", uid),
+                            ("state", "=", "submitted"),
+                        ],
+                    )
+                    return {
+                        "key": "emp_requests",
+                        "card_kind": "metric",
+                        "label": "Yêu cầu của tôi chờ duyệt",
+                        "status": "ok",
+                        "count": int(count),
+                        "role_mode": "mine_pending",
+                        "badge_text": "Đang chờ duyệt" if count > 0 else "Không có phiếu chờ",
+                        "badge_kind": "purple" if count > 0 else "neutral",
+                        "tooltip": "Số đề nghị điều chỉnh công đã gửi đang chờ phê duyệt.",
+                        "can_open": True,
+                        "drilldown": {
+                            "type": "client_action",
+                            "action_xmlid": "tp_hr_attendance.action_my_requests",
+                            "menu_xmlid": "tp_hr_attendance.menu_root",
+                        },
+                    }
+            except Exception:
+                _logger.exception("TP Home: failed to compute fallback correction requests")
+
         return {
-            "can_manage": can_manage,
-            "is_full_mgr": is_full_mgr,
-            "managed_project_ids": sorted(managed_project_ids),
+            "key": "emp_requests",
+            "card_kind": "metric",
+            "label": "Yêu cầu của tôi chờ duyệt",
+            "status": "unconfigured",
+            "count": None,
+            "status_text": "Chưa cài đặt",
+            "tooltip": "Phân hệ Yêu cầu phê duyệt chưa được cài đặt.",
+            "can_open": False,
+            "drilldown": None,
         }
 
-    def _tp_home_my_work_domain(self, Task):
+    def _tp_home_collect_today_calendar_events(self):
+        """Return `(valid_events_sorted, today_local, tz, tz_name)` strictly for the caller's own calendar today.
+
+        Rules (Section 4.3):
+        - Local day in caller's timezone.
+        - All-day events matched strictly by `[start_date, stop_date]` containing `today_local`.
+        - Timed & overnight events crossing midnight matched by `start < stop_utc` and `stop > start_utc`
+          (plus zero-duration reminders at `[start_utc, stop_utc)`).
+        - Recurring events evaluated on their real `calendar.event` occurrence rows.
+        - Excludes archived (`active=False`), declined invitations (`my_att.state == 'declined'`),
+          and private events of other users (`_check_private_event_conditions()`).
+        - Never includes company/colleague events where caller is neither organizer nor participant.
+        """
+        tz, tz_name = _user_tz(self.env)
+        today_local = datetime.now(tz).date()
+        start_utc, stop_utc = _local_bounds_to_utc_naive(tz, today_local, today_local)
+        uid = self.env.uid
+        my_pid = self.env.user.partner_id.id
+
+        Event = self.env["calendar.event"].sudo(False).with_context(active_test=True)
+        if not Event.has_access("read"):
+            raise AccessError(self.env._("Tài khoản không có quyền xem Lịch làm việc."))
+
+        allday_overlap = (
+            Domain("allday", "=", True)
+            & Domain("start_date", "<=", today_local)
+            & Domain("stop_date", ">=", today_local)
+        )
+        timed_overlap = (
+            Domain("allday", "=", False)
+            & Domain("start", "<", stop_utc)
+            & (
+                Domain("stop", ">", start_utc)
+                | (Domain("start", ">=", start_utc) & Domain("stop", "=", start_utc))
+            )
+        )
+        participant_dom = Domain("partner_ids", "in", [my_pid]) | Domain("user_id", "=", uid)
+        ev_dom = Domain("active", "=", True) & participant_dom & (allday_overlap | timed_overlap)
+
+        candidates = Event.search(ev_dom, order="allday desc, start asc, id asc", limit=200)
+        valid_events = []
+        seen_ids = set()
+        for ev in candidates:
+            if ev.id in seen_ids:
+                continue
+            if hasattr(ev, "_check_private_event_conditions") and ev._check_private_event_conditions():
+                continue
+            my_att = ev.attendee_ids.filtered(lambda a: a.partner_id.id == my_pid)[:1]
+            if my_att and my_att.state == "declined":
+                continue
+            seen_ids.add(ev.id)
+            valid_events.append(ev)
+        return valid_events, today_local, tz, tz_name
+
+    @api.model
+    def _tp_home_kpi_employee_calendar(self):
+        """Ô 3 — Lịch hẹn hôm nay (personal meetings & events today)."""
+        if "calendar.event" not in self.env:
+            return {
+                "key": "emp_calendar",
+                "card_kind": "metric",
+                "label": "Lịch hẹn hôm nay",
+                "status": "unconfigured",
+                "count": None,
+                "status_text": "Chưa cài đặt",
+                "tooltip": "Phân hệ Lịch làm việc chưa được cài đặt.",
+                "can_open": False,
+                "drilldown": None,
+            }
+        try:
+            events, today_local, tz, tz_name = self._tp_home_collect_today_calendar_events()
+            count = len(events)
+            now_utc = fields.Datetime.now()
+            badge_text = "Trống lịch"
+            badge_kind = "neutral"
+            if count > 0:
+                badge_kind = "green"
+                upcoming_timed = [
+                    ev for ev in events if not ev.allday and ev.stop and ev.stop >= now_utc
+                ]
+                if upcoming_timed:
+                    st_loc = upcoming_timed[0].start.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
+                    if st_loc.date() < today_local:
+                        badge_text = "Đang diễn ra"
+                    else:
+                        badge_text = f"Lịch {st_loc.strftime('%H:%M')}"
+                elif any(ev.allday for ev in events):
+                    badge_text = "Cả ngày"
+                else:
+                    badge_text = "Trong hôm nay"
+
+            return {
+                "key": "emp_calendar",
+                "card_kind": "metric",
+                "label": "Lịch hẹn hôm nay",
+                "status": "ok",
+                "count": int(count),
+                "badge_text": badge_text,
+                "badge_kind": badge_kind,
+                "tooltip": (
+                    f"Sự kiện và cuộc họp hôm nay ({today_local.strftime('%d/%m/%Y')} · {tz_name}) "
+                    "mà bạn là người chủ trì hoặc tham gia (không tính lịch đã hủy hoặc lời mời đã từ chối)."
+                ),
+                "can_open": True,
+                "drilldown": {
+                    "type": "rpc_action",
+                    "method": "get_tp_home_calendar_drilldown_action",
+                },
+            }
+        except AccessError:
+            return {
+                "key": "emp_calendar",
+                "card_kind": "metric",
+                "label": "Lịch hẹn hôm nay",
+                "status": "no_access",
+                "count": None,
+                "status_text": "Chưa được cấp quyền",
+                "tooltip": "Tài khoản chưa được cấp quyền xem Lịch làm việc.",
+                "can_open": False,
+                "drilldown": None,
+            }
+        except Exception:
+            _logger.exception("TP Home: failed to compute Employee Calendar KPI")
+            return {
+                "key": "emp_calendar",
+                "card_kind": "metric",
+                "label": "Lịch hẹn hôm nay",
+                "status": "error",
+                "count": None,
+                "status_text": "Tạm lỗi nguồn",
+                "tooltip": "Chưa tải được lịch hẹn hôm nay. Vui lòng thử làm mới.",
+                "can_open": False,
+                "drilldown": None,
+            }
+
+    @api.model
+    def get_tp_home_calendar_drilldown_action(self):
+        """Open Lịch làm việc focused at today, filtered strictly to caller's today events."""
+        self._tp_home_require_internal()
+        if "calendar.event" not in self.env:
+            raise AccessError(self.env._("Phân hệ Lịch làm việc chưa được cài đặt."))
+        events, today_local, _tz, _tz_name = self._tp_home_collect_today_calendar_events()
+        event_ids = [ev.id for ev in events]
+        return {
+            "type": "ir.actions.act_window",
+            "name": f"Lịch hẹn hôm nay · {today_local.strftime('%d/%m/%Y')}",
+            "res_model": "calendar.event",
+            "view_mode": "calendar,list,form",
+            "views": [(False, "calendar"), (False, "list"), (False, "form")],
+            "domain": [("id", "in", event_ids)],
+            "context": {
+                "default_mode": "day",
+                "initial_date": today_local.isoformat(),
+            },
+        }
+
+    @api.model
+    def _tp_home_kpi_employee_attendance(self, company):
+        """Ô 4 — Chấm công hôm nay (status card reusing canonical `tp.hr.attendance.day._tp_presence`).
+
+        Guarantees (Section 4.4):
+        - Never creates punches and never triggers ENTI HTTP sync.
+        - Resolves employee strictly via `user_id == env.uid` in `company` (never matches by name).
+        - Evaluates strictly `today` (never shows yesterday's attendance as today).
+        - Distinguishes working, out_recorded, missing, review, leave, rest, no_punch, absent, no_source, off,
+          and unlinked_employee without inventing a separate classification formula.
+        """
+        if "tp.hr.attendance.day" not in self.env or "tp.hr.attendance.correction" not in self.env:
+            return {
+                "key": "emp_attendance",
+                "card_kind": "status",
+                "label": "Chấm công hôm nay",
+                "status": "unconfigured",
+                "count": None,
+                "display_text": "Chưa cài đặt",
+                "sub_text": "Phân hệ Chấm công chưa được kích hoạt",
+                "badge_text": "",
+                "badge_kind": "neutral",
+                "tooltip": "Phân hệ Chấm công chưa được cài đặt trên môi trường này.",
+                "can_open": False,
+                "drilldown": None,
+            }
+        try:
+            Day = self.env["tp.hr.attendance.day"].sudo(False)
+            if not Day.has_access("read"):
+                return {
+                    "key": "emp_attendance",
+                    "card_kind": "status",
+                    "label": "Chấm công hôm nay",
+                    "status": "no_access",
+                    "count": None,
+                    "display_text": "Chưa được cấp quyền",
+                    "sub_text": "",
+                    "badge_text": "",
+                    "badge_kind": "neutral",
+                    "tooltip": "Tài khoản chưa có quyền xem ngày công cá nhân.",
+                    "can_open": False,
+                    "drilldown": None,
+                }
+
+            tz, _tz_name = _user_tz(self.env)
+            today = datetime.now(tz).date()
+            employee = self.env["tp.hr.attendance.correction"]._tp_own_employee(company)
+            drilldown = {
+                "type": "client_action",
+                "action_xmlid": "tp_hr_attendance.action_mine",
+                "menu_xmlid": "tp_hr_attendance.menu_root",
+                "attendance_today": today.isoformat(),
+            }
+
+            if not employee:
+                return {
+                    "key": "emp_attendance",
+                    "card_kind": "status",
+                    "label": "Chấm công hôm nay",
+                    "status": "unlinked_employee",
+                    "count": None,
+                    "display_text": "Chưa xác định hồ sơ nhân viên",
+                    "sub_text": "Liên hệ người quản lý tài khoản / HR để gắn hồ sơ",
+                    "badge_text": "",
+                    "badge_kind": "amber",
+                    "tooltip": (
+                        "Tài khoản đang đăng nhập chưa được gắn với hồ sơ nhân viên trong công ty hiện tại. "
+                        "Vui lòng liên hệ quản trị viên hoặc bộ phận Nhân sự để gắn hồ sơ."
+                    ),
+                    "can_open": True,
+                    "drilldown": drilldown,
+                }
+
+            cells, _has_leave = Day._tp_presence(company, [employee.id], today, today, today)
+            cell = cells.get((employee.id, today)) or {
+                "state": "no_source",
+                "in": "",
+                "out": "",
+                "label": "Chưa có dữ liệu",
+                "day_id": False,
+            }
+            st = cell.get("state") or "no_source"
+            in_str = str(cell.get("in") or "").strip()
+            out_str = str(cell.get("out") or "").strip()
+
+            updated_short = ""
+            if cell.get("day_id"):
+                day_rec = Day.browse(cell["day_id"]).exists()
+                if day_rec and day_rec.source_updated_at:
+                    stamp_loc = day_rec.source_updated_at.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
+                    updated_short = stamp_loc.strftime("%H:%M %d/%m")
+            if not updated_short and hasattr(Day, "_tp_source_strip"):
+                strip = Day._tp_source_strip(company, today)
+                updated_short = strip.get("updated_at") or ""
+
+            if st == "working":
+                display_text = "Đang làm"
+                time_summary = f"Vào: {in_str}" if in_str else "Chờ giờ ra"
+                badge_kind = "green"
+            elif st == "out_recorded":
+                display_text = "Đã về" if (in_str and out_str) else "Đủ vào/ra"
+                time_summary = f"{in_str} – {out_str}" if (in_str and out_str) else "Đủ giờ vào/ra"
+                badge_kind = "green"
+            elif st == "missing":
+                if in_str and not out_str:
+                    display_text = "Thiếu giờ ra"
+                    time_summary = f"Vào: {in_str}"
+                elif out_str and not in_str:
+                    display_text = "Thiếu giờ vào"
+                    time_summary = f"Ra: {out_str}"
+                else:
+                    display_text = "Thiếu giờ vào/ra"
+                    time_summary = "Cần bổ sung"
+                badge_kind = "amber"
+            elif st == "review":
+                display_text = "Cần kiểm tra"
+                time_summary = f"{in_str} – {out_str}".strip(" –") or "Kiểm tra lượt chấm"
+                badge_kind = "amber"
+            elif st == "leave":
+                display_text = "Nghỉ đã xác nhận"
+                time_summary = "Theo đơn đã duyệt"
+                badge_kind = "purple"
+            elif st == "rest":
+                display_text = "Nghỉ theo lịch"
+                time_summary = "Ngày nghỉ ca"
+                badge_kind = "neutral"
+            elif st == "no_punch":
+                display_text = "Chưa chấm công"
+                time_summary = "Chưa có giờ vào"
+                badge_kind = "neutral"
+            elif st == "absent":
+                display_text = "Vắng theo lịch"
+                time_summary = "Không có lượt chấm"
+                badge_kind = "red"
+            elif st == "off":
+                display_text = "Ngoài kỳ làm việc"
+                time_summary = "Theo hợp đồng"
+                badge_kind = "neutral"
+            else:
+                display_text = "Chưa có dữ liệu"
+                time_summary = "Chờ đồng bộ nguồn"
+                badge_kind = "neutral"
+
+            tooltip_parts = [
+                f"Chấm công hôm nay ({today.strftime('%d/%m/%Y')}): {display_text}",
+            ]
+            if in_str or out_str:
+                tooltip_parts.append(f"Giờ ghi nhận: {in_str or '—'} – {out_str or '—'}")
+            if updated_short:
+                tooltip_parts.append(f"Cập nhật nguồn: {updated_short}")
+            tooltip_parts.append("Bấm để mở Công của tôi tại ngày hôm nay.")
+
+            return {
+                "key": "emp_attendance",
+                "card_kind": "status",
+                "label": "Chấm công hôm nay",
+                "status": "ok",
+                "attendance_state": st,
+                "count": None,
+                "display_text": display_text,
+                "in_time": in_str,
+                "out_time": out_str,
+                "updated_at": updated_short,
+                "sub_text": time_summary,
+                "badge_text": time_summary,
+                "badge_kind": badge_kind,
+                "tooltip": " · ".join(tooltip_parts),
+                "can_open": True,
+                "drilldown": drilldown,
+            }
+        except AccessError:
+            return {
+                "key": "emp_attendance",
+                "card_kind": "status",
+                "label": "Chấm công hôm nay",
+                "status": "no_access",
+                "count": None,
+                "display_text": "Chưa được cấp quyền",
+                "sub_text": "",
+                "badge_text": "",
+                "badge_kind": "neutral",
+                "tooltip": "Tài khoản không có quyền xem dữ liệu công cá nhân.",
+                "can_open": False,
+                "drilldown": None,
+            }
+        except Exception:
+            _logger.exception("TP Home: failed to compute Employee Attendance card")
+            return {
+                "key": "emp_attendance",
+                "card_kind": "status",
+                "label": "Chấm công hôm nay",
+                "status": "error",
+                "count": None,
+                "display_text": "Tạm lỗi nguồn",
+                "sub_text": "Vui lòng thử làm mới",
+                "badge_text": "",
+                "badge_kind": "neutral",
+                "tooltip": "Chưa tải được trạng thái chấm công hôm nay.",
+                "can_open": False,
+                "drilldown": None,
+            }
+
+    # ==================================================================
+    # SHARED TASK DATASET & ANALYTICS (Admin Mode vs Employee Personal Mode)
+    # ==================================================================
+    def _tp_home_my_work_domain(self, Task, company):
         uid = self.env.uid
         if hasattr(Task, "_tp_my_work_domain"):
-            return Task._tp_my_work_domain(include_archived=False) & Domain(
+            dom = Task._tp_my_work_domain(include_archived=False) & Domain(
                 "state", "!=", "1_canceled",
             )
-        non_proj = (
-            Domain("project_id", "=", False)
-            & Domain("parent_id", "=", False)
-            & Domain("user_ids", "in", [uid])
-        )
-        proj = Domain("project_id", "!=", False) & Domain("user_ids", "in", [uid])
-        dom = Domain("active", "=", True) & Domain("state", "!=", "1_canceled") & (non_proj | proj)
-        if "is_template" in Task._fields:
-            dom &= Domain("is_template", "=", False)
-        return dom
+        else:
+            non_proj = (
+                Domain("project_id", "=", False)
+                & Domain("parent_id", "=", False)
+                & Domain("user_ids", "in", [uid])
+            )
+            proj = Domain("project_id", "!=", False) & Domain("user_ids", "in", [uid])
+            dom = Domain("active", "=", True) & Domain("state", "!=", "1_canceled") & (non_proj | proj)
+            if "is_template" in Task._fields:
+                dom &= Domain("is_template", "=", False)
+        return dom & Domain("company_id", "in", [False, company.id])
 
-    def _tp_home_period_bounds(self, period_key, tz, today_local):
+    def _tp_home_period_bounds(self, period_key, default_key, tz, today_local):
         valid_keys = {k for k, _ in PERIOD_OPTIONS}
-        pkey = period_key if period_key in valid_keys else "this_month"
+        pkey = period_key if period_key in valid_keys else default_key
         if pkey == "all":
-            return pkey, "Tất cả kỳ", None, None, True
-        if pkey == "this_week":
+            return pkey, "Tất cả kỳ", "Tất cả kỳ", None, None, None, None, True
+        if pkey in ("this_week", "this_week_strict"):
             start_d = today_local - timedelta(days=today_local.weekday())
             end_d = start_d + timedelta(days=6)
-            label = f"Tuần này ({start_d.strftime('%d/%m')} – {end_d.strftime('%d/%m/%Y')})"
             s_utc, e_utc = _local_bounds_to_utc_naive(tz, start_d, end_d)
-            return pkey, label, s_utc, e_utc, False
+            if pkey == "this_week_strict":
+                label = f"Có hạn tuần ({start_d.strftime('%d/%m')}–{end_d.strftime('%d/%m')})"
+                short_badge = "Có hạn trong tuần"
+                return pkey, label, short_badge, start_d, end_d, s_utc, e_utc, False
+            label = f"Tuần này ({start_d.strftime('%d/%m')}–{end_d.strftime('%d/%m')})"
+            short_badge = "Trong tuần này"
+            return pkey, label, short_badge, start_d, end_d, s_utc, e_utc, True
         if pkey == "this_quarter":
             q_idx = (today_local.month - 1) // 3
             start_m = q_idx * 3 + 1
@@ -583,8 +1053,9 @@ class ResUsersHomeDashboard(models.Model):
             start_d = date(today_local.year, start_m, 1)
             end_d = date(today_local.year, end_m, last_day)
             label = f"Quý {q_idx + 1}/{today_local.year}"
+            short_badge = "Trong quý này"
             s_utc, e_utc = _local_bounds_to_utc_naive(tz, start_d, end_d)
-            return pkey, label, s_utc, e_utc, False
+            return pkey, label, short_badge, start_d, end_d, s_utc, e_utc, False
 
         # this_month or this_month_strict
         last_day = calendar.monthrange(today_local.year, today_local.month)[1]
@@ -593,21 +1064,29 @@ class ResUsersHomeDashboard(models.Model):
         s_utc, e_utc = _local_bounds_to_utc_naive(tz, start_d, end_d)
         if pkey == "this_month_strict":
             label = f"Có hạn tháng {today_local.strftime('%m/%Y')}"
-            return pkey, label, s_utc, e_utc, False
+            short_badge = "Có hạn trong tháng"
+            return pkey, label, short_badge, start_d, end_d, s_utc, e_utc, False
         label = f"Tháng {today_local.strftime('%m/%Y')}"
-        return pkey, label, s_utc, e_utc, True
+        short_badge = "Trong tháng này"
+        return pkey, label, short_badge, start_d, end_d, s_utc, e_utc, True
 
     def _tp_home_classify_task_bucket(self, task, now_utc):
-        """Non-overlapping business state classification (Section 10.2)."""
+        """Non-overlapping business state classification (never inferred from personal Kanban column)."""
         has_exec_field = "tp_exec_report_state" in task._fields
         exec_st = task.tp_exec_report_state if has_exec_field else False
         st = task.state or "01_in_progress"
-
-        # 1. Completed: never inferred from personal Kanban column; reported_done stays pending verification
-        is_done = bool(
-            exec_st != "reported_done"
-            and (st in ("1_done", "03_approved") or exec_st == "verified"),
+        req_verify = bool(
+            hasattr(task, "_tp_requires_verification") and task._tp_requires_verification(),
         )
+
+        # 1. Completed: tasks reported done awaiting verification NEVER count as completed!
+        if exec_st == "reported_done":
+            is_done = False
+        elif req_verify and has_exec_field:
+            is_done = bool(exec_st == "verified" or st in ("1_done", "03_approved"))
+        else:
+            is_done = bool(st in ("1_done", "03_approved") or exec_st == "verified")
+
         if is_done:
             return "done"
 
@@ -626,14 +1105,7 @@ class ResUsersHomeDashboard(models.Model):
         return "unmapped"
 
     def _tp_home_attribute_task_departments(self, tasks, company):
-        """Attribute each task to exactly ONE department transparently (Section 10.1):
-        1. `project_id.tp_department_id` (explicit executing lead department on project).
-        2. `kd_responsible_id`'s active employee department in company.
-        3. Unanimous department of `user_ids` in company (`len == 1`);
-           if multiple departments -> `cross_dept` ("Liên phòng ban");
-           if no department -> `unassigned_dept` ("Chưa gắn phòng ban").
-        Never uses `create_uid` and never picks `user_ids[0]` arbitrarily.
-        """
+        """Attribute each task to exactly ONE department transparently (Admin Mode)."""
         if not tasks:
             return {}, {}
 
@@ -715,34 +1187,113 @@ class ResUsersHomeDashboard(models.Model):
         }
         return task_dept_map, meta_by_dept
 
-    def _tp_home_collect_task_dataset(self, params=None):
+    def _tp_home_build_employee_day_bars(self, tasks, bucket_by_task, task_day_map, start_d, end_d):
+        """Build personal daily stacked bar rows (`Công việc của tôi theo ngày`, Section 7.1).
+
+        - Tasks with deadlines map strictly to their local deadline date (`YYYY-MM-DD`).
+        - Tasks without deadlines NEVER get assigned to today; if present, they appear in
+          an explicit `'Chưa đặt hạn'` bar (`day_key = 'undated'`).
+        - When `total == 0`, returns `[]` so the UI renders a clean empty state.
+        - When `total > 0` and `[start_d, end_d]` is at most 31 days (e.g. `this_week` or `this_month`),
+          includes every real calendar day in `[start_d, end_d]` with valid `0` counts on days without tasks.
+        - When `[start_d, end_d]` is unbounded or > 31 days, shows chronological dates that have tasks.
+        """
+        if not tasks:
+            return []
+
+        by_day = {}
+        for t in tasks:
+            dkey = task_day_map[t.id]
+            by_day.setdefault(dkey, []).append(t)
+
+        rows = []
+        if start_d and end_d and (end_d - start_d).days <= 31:
+            span_days = (end_d - start_d).days + 1
+            is_short_week = span_days <= 7
+            for offset in range(span_days):
+                cur_d = start_d + timedelta(days=offset)
+                d_iso = cur_d.isoformat()
+                d_tasks = by_day.get(d_iso, [])
+                done_cnt = sum(1 for t in d_tasks if bucket_by_task[t.id] == "done")
+                open_cnt = len(d_tasks) - done_cnt
+                lbl = (
+                    f"{WEEKDAY_VI[cur_d.weekday()]} {cur_d.strftime('%d/%m')}"
+                    if is_short_week
+                    else cur_d.strftime("%d/%m")
+                )
+                rows.append(
+                    {
+                        "day_key": d_iso,
+                        "day_label": lbl,
+                        "full_label": f"{WEEKDAY_VI[cur_d.weekday()]} {cur_d.strftime('%d/%m/%Y')}",
+                        "done_count": done_cnt,
+                        "incomplete_count": open_cnt,
+                        "total_count": len(d_tasks),
+                    },
+                )
+        else:
+            dated_keys = sorted(k for k in by_day if k != UNDATED_DAY_KEY)
+            for d_iso in dated_keys:
+                cur_d = date.fromisoformat(d_iso)
+                d_tasks = by_day[d_iso]
+                done_cnt = sum(1 for t in d_tasks if bucket_by_task[t.id] == "done")
+                open_cnt = len(d_tasks) - done_cnt
+                rows.append(
+                    {
+                        "day_key": d_iso,
+                        "day_label": cur_d.strftime("%d/%m"),
+                        "full_label": f"{WEEKDAY_VI[cur_d.weekday()]} {cur_d.strftime('%d/%m/%Y')}",
+                        "done_count": done_cnt,
+                        "incomplete_count": open_cnt,
+                        "total_count": len(d_tasks),
+                    },
+                )
+
+        if UNDATED_DAY_KEY in by_day:
+            u_tasks = by_day[UNDATED_DAY_KEY]
+            done_cnt = sum(1 for t in u_tasks if bucket_by_task[t.id] == "done")
+            open_cnt = len(u_tasks) - done_cnt
+            rows.append(
+                {
+                    "day_key": UNDATED_DAY_KEY,
+                    "day_label": "Chưa đặt hạn",
+                    "full_label": "Công việc chưa đặt ngày hạn",
+                    "done_count": done_cnt,
+                    "incomplete_count": open_cnt,
+                    "total_count": len(u_tasks),
+                },
+            )
+        return rows
+
+    def _tp_home_collect_task_dataset(self, params=None, home_mode=None, company=None):
         """Return validated filter state and classified task records for KPI + Charts + Drilldown."""
         params = dict(params or {})
+        company = company or self._tp_home_allowed_company()
+        home_mode = home_mode or self._tp_home_mode(company=company)
+
         Task = self.env["project.task"].sudo(False).with_context(active_test=True)
         if not Task.has_access("read"):
             raise AccessError(self.env._("Tài khoản không có quyền xem công việc."))
 
-        company = self.env.company
         tz, tz_name = _user_tz(self.env)
         today_local = datetime.now(tz).date()
         now_utc = fields.Datetime.now()
 
-        mgmt = self._tp_home_task_management_context(Task, company)
-        can_manage = mgmt["can_manage"]
-
+        is_admin_mode = home_mode == "admin"
         requested_scope = str(params.get("task_scope") or "").strip()
-        if can_manage:
+        if is_admin_mode:
             scope_key = requested_scope if requested_scope in ("managed", "my_work") else "managed"
             scope_options = [
                 {"key": "managed", "label": "Phạm vi quản lý"},
                 {"key": "my_work", "label": "Công việc của tôi"},
             ]
         else:
+            # Employee mode ALWAYS uses personal task scope on Home (Section 1, 4.1, 7)
             scope_key = "my_work"
             scope_options = [{"key": "my_work", "label": "Công việc của tôi"}]
 
-        my_dom = self._tp_home_my_work_domain(Task)
-        if scope_key == "managed" and can_manage:
+        my_dom = self._tp_home_my_work_domain(Task, company)
+        if is_admin_mode and scope_key == "managed":
             proj_dom = (
                 Domain("active", "=", True)
                 & Domain("state", "!=", "1_canceled")
@@ -751,14 +1302,14 @@ class ResUsersHomeDashboard(models.Model):
             )
             if "is_template" in Task._fields:
                 proj_dom &= Domain("is_template", "=", False)
-            if not mgmt["is_full_mgr"]:
-                proj_dom &= Domain("project_id", "in", mgmt["managed_project_ids"] or [0])
             scope_dom = proj_dom | my_dom
         else:
             scope_dom = my_dom
 
-        pkey, plabel, s_utc, e_utc, include_open_undated = self._tp_home_period_bounds(
-            str(params.get("period") or "this_month").strip(), tz, today_local,
+        default_period = "this_month" if is_admin_mode else "this_week"
+        raw_period = str(params.get("period") or "").strip()
+        pkey, plabel, pshort, start_d, end_d, s_utc, e_utc, include_open_undated = (
+            self._tp_home_period_bounds(raw_period, default_period, tz, today_local)
         )
 
         if s_utc and e_utc:
@@ -777,15 +1328,17 @@ class ResUsersHomeDashboard(models.Model):
             full_dom = scope_dom
 
         all_scope_tasks = Task.search(full_dom, order="id asc")
-        task_dept_map, meta_by_dept = self._tp_home_attribute_task_departments(
-            all_scope_tasks, company,
-        )
 
-        # Department filter options (only for managers, plus any departments actually present in scope)
+        task_dept_map, meta_by_dept = ({}, {})
         dept_options = [{"key": "", "label": "Tất cả phòng ban"}]
-        if can_manage:
+        active_dept_key = ""
+
+        if is_admin_mode:
+            task_dept_map, meta_by_dept = self._tp_home_attribute_task_departments(
+                all_scope_tasks, company,
+            )
             all_company_depts = {}
-            if mgmt["is_full_mgr"] and "hr.department" in self.env:
+            if "hr.department" in self.env:
                 for d in (
                     self.env["hr.department"]
                     .sudo()
@@ -810,9 +1363,9 @@ class ResUsersHomeDashboard(models.Model):
             ):
                 dept_options.append({"key": item["key"], "label": item["label"]})
 
-        requested_dept = str(params.get("department_key") or "").strip()
-        valid_dept_keys = {opt["key"] for opt in dept_options}
-        active_dept_key = requested_dept if (can_manage and requested_dept in valid_dept_keys) else ""
+            requested_dept = str(params.get("department_key") or "").strip()
+            valid_dept_keys = {opt["key"] for opt in dept_options}
+            active_dept_key = requested_dept if requested_dept in valid_dept_keys else ""
 
         if active_dept_key:
             filtered_tasks = all_scope_tasks.filtered(
@@ -822,38 +1375,46 @@ class ResUsersHomeDashboard(models.Model):
             filtered_tasks = all_scope_tasks
 
         bucket_by_task = {}
+        task_day_map = {}
         undated_included_count = 0
         for t in filtered_tasks:
-            b = self._tp_home_classify_task_bucket(t, now_utc)
-            bucket_by_task[t.id] = b
-            if not t.date_deadline:
+            bucket_by_task[t.id] = self._tp_home_classify_task_bucket(t, now_utc)
+            if t.date_deadline:
+                dl_loc = t.date_deadline.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
+                task_day_map[t.id] = dl_loc.date().isoformat()
+            else:
+                task_day_map[t.id] = UNDATED_DAY_KEY
                 undated_included_count += 1
 
-        if pkey == "this_month":
+        if pkey in ("this_week", "this_month"):
             period_rule_note = (
-                f"Tính theo hạn hoàn thành trong {plabel} ({tz_name})"
+                f"Phân bố công việc theo ngày hạn hoàn thành trong {plabel} ({tz_name})"
                 + (
-                    f", gồm {undated_included_count} việc đang mở chưa đặt hạn."
+                    f"; gồm {undated_included_count} việc đang mở chưa đặt hạn (tách riêng cột 'Chưa đặt hạn', không gán vào hôm nay)."
                     if undated_included_count
                     else " và các việc đang mở chưa đặt hạn (0 việc)."
                 )
             )
         elif pkey == "all":
-            period_rule_note = "Gồm toàn bộ công việc đang quản lý trong phạm vi đã chọn (có hoặc chưa đặt hạn)."
+            period_rule_note = "Gồm toàn bộ công việc trong phạm vi đã chọn (phân theo hạn hoàn thành; việc chưa có hạn tách cột riêng)."
         else:
             period_rule_note = f"Chỉ tính công việc có hạn hoàn thành nằm trong {plabel} ({tz_name})."
 
         return {
+            "home_mode": home_mode,
             "tasks": filtered_tasks,
             "all_scope_tasks": all_scope_tasks,
             "task_dept_map": task_dept_map,
             "meta_by_dept": meta_by_dept,
+            "task_day_map": task_day_map,
             "bucket_by_task": bucket_by_task,
             "undated_included_count": undated_included_count,
+            "start_d": start_d,
+            "end_d": end_d,
             "scope_key": scope_key,
             "scope_label": {o["key"]: o["label"] for o in scope_options}.get(scope_key, ""),
             "scope_options": scope_options,
-            "can_filter_department": can_manage,
+            "can_filter_department": is_admin_mode,
             "department_key": active_dept_key,
             "department_label": {o["key"]: o["label"] for o in dept_options}.get(
                 active_dept_key, "Tất cả phòng ban",
@@ -861,17 +1422,23 @@ class ResUsersHomeDashboard(models.Model):
             "department_options": dept_options,
             "period_key": pkey,
             "period_label": plabel,
+            "period_short_badge": pshort,
             "period_options": [{"key": k, "label": lbl} for k, lbl in PERIOD_OPTIONS],
             "period_rule_note": period_rule_note,
         }
 
     @api.model
-    def _tp_home_build_tasks_and_charts(self, params=None):
+    def _tp_home_build_tasks_and_charts(self, params=None, home_mode="admin", company=None):
+        is_admin_mode = home_mode == "admin"
+        kpi_key = "tasks" if is_admin_mode else "emp_tasks"
+        kpi_label = "Công việc" if is_admin_mode else "Việc chưa hoàn thành"
+
         if "project.task" not in self.env:
             return (
                 {
-                    "key": "tasks",
-                    "label": "Công việc",
+                    "key": kpi_key,
+                    "card_kind": "metric",
+                    "label": kpi_label,
                     "status": "unconfigured",
                     "count": None,
                     "status_text": "Chưa cài đặt",
@@ -879,18 +1446,19 @@ class ResUsersHomeDashboard(models.Model):
                     "can_open": False,
                     "drilldown": None,
                 },
-                {"status": "unconfigured"},
+                {"status": "unconfigured", "mode": home_mode},
             )
         try:
-            ds = self._tp_home_collect_task_dataset(params)
+            ds = self._tp_home_collect_task_dataset(
+                params=params, home_mode=home_mode, company=company,
+            )
             tasks = ds["tasks"]
             bucket_by_task = ds["bucket_by_task"]
-            task_dept_map = ds["task_dept_map"]
-            meta_by_dept = ds["meta_by_dept"]
             total = len(tasks)
+            done_total = sum(1 for t in tasks if bucket_by_task[t.id] == "done")
+            incomplete_total = total - done_total
 
-            # Donut classification (sum of slices ALWAYS equals total)
-            bucket_defs = list(DONUT_BUCKETS)
+            bucket_defs = list(DONUT_BUCKETS_ADMIN if is_admin_mode else DONUT_BUCKETS_EMPLOYEE)
             unmapped_cnt = sum(1 for t in tasks if bucket_by_task[t.id] == "unmapped")
             if unmapped_cnt > 0:
                 bucket_defs.append(UNMAPPED_BUCKET)
@@ -915,46 +1483,125 @@ class ResUsersHomeDashboard(models.Model):
                     },
                 )
 
-            # Department stacked bar (sum of completed + incomplete across bars ALWAYS equals total)
-            dept_Order_keys = sorted(
-                {task_dept_map[t.id] for t in tasks},
-                key=lambda dk: (
-                    meta_by_dept[dk]["sort_key"],
-                    meta_by_dept[dk]["name"].casefold(),
-                ),
-            )
-            bar_rows = []
-            for dkey in dept_Order_keys:
-                d_tasks = [t for t in tasks if task_dept_map[t.id] == dkey]
-                done_cnt = sum(1 for t in d_tasks if bucket_by_task[t.id] == "done")
-                open_cnt = len(d_tasks) - done_cnt
-                bar_rows.append(
-                    {
-                        "department_key": dkey,
-                        "department_name": meta_by_dept[dkey]["name"],
-                        "done_count": done_cnt,
-                        "incomplete_count": open_cnt,
-                        "total_count": len(d_tasks),
-                    },
+            if is_admin_mode:
+                task_dept_map = ds["task_dept_map"]
+                meta_by_dept = ds["meta_by_dept"]
+                dept_order_keys = sorted(
+                    {task_dept_map[t.id] for t in tasks},
+                    key=lambda dk: (
+                        meta_by_dept[dk]["sort_key"],
+                        meta_by_dept[dk]["name"].casefold(),
+                    ),
                 )
+                bar_rows = []
+                for dkey in dept_order_keys:
+                    d_tasks = [t for t in tasks if task_dept_map[t.id] == dkey]
+                    done_cnt = sum(1 for t in d_tasks if bucket_by_task[t.id] == "done")
+                    open_cnt = len(d_tasks) - done_cnt
+                    bar_rows.append(
+                        {
+                            "department_key": dkey,
+                            "department_name": meta_by_dept[dkey]["name"],
+                            "done_count": done_cnt,
+                            "incomplete_count": open_cnt,
+                            "total_count": len(d_tasks),
+                        },
+                    )
+                kpi = {
+                    "key": "tasks",
+                    "card_kind": "metric",
+                    "label": "Công việc",
+                    "status": "ok",
+                    "count": total,
+                    "badge_text": ds["scope_label"],
+                    "badge_kind": "green",
+                    "tooltip": f"{ds['scope_label']} · {ds['period_label']}. {ds['period_rule_note']}",
+                    "can_open": True,
+                    "drilldown": {
+                        "type": "rpc_action",
+                        "method": "get_tp_home_task_drilldown_action",
+                        "params": {},
+                    },
+                }
+                bar_payload = {
+                    "kind": "department",
+                    "title": "Tình hình công việc",
+                    "subtitle": "",
+                    "series": [
+                        {"key": "done", "label": "Hoàn thành", "color": "#4E7DE8"},
+                        {"key": "incomplete", "label": "Chưa hoàn thành", "color": "#BBD4FA"},
+                    ],
+                    "rows": bar_rows,
+                }
+                donut_payload = {
+                    "title": "Tỷ lệ công việc",
+                    "subtitle": "",
+                    "center_count": total,
+                    "center_label": "Công việc",
+                    "slices": donut_slices,
+                }
+                attribution_note = (
+                    "Phân bổ phòng ban mỗi công việc đúng 1 lần theo thứ tự ưu tiên: "
+                    "(1) Phòng chủ trì của dự án, (2) Phòng của người chịu trách nhiệm chính, "
+                    "(3) Phòng duy nhất của người được giao; việc nhiều phòng đưa vào 'Liên phòng ban', "
+                    "chưa có phòng đưa vào 'Chưa gắn phòng ban'."
+                )
+            else:
+                day_rows = self._tp_home_build_employee_day_bars(
+                    tasks,
+                    bucket_by_task,
+                    ds["task_day_map"],
+                    ds["start_d"],
+                    ds["end_d"],
+                )
+                diff_note = (
+                    f"Ô 'Việc chưa hoàn thành' đếm các việc đang mở ({incomplete_total} việc); "
+                    f"tâm biểu đồ tròn hiển thị tổng cả việc đã hoàn thành và chưa hoàn thành trong kỳ ({total} việc)."
+                )
+                kpi = {
+                    "key": "emp_tasks",
+                    "card_kind": "metric",
+                    "label": "Việc chưa hoàn thành",
+                    "status": "ok",
+                    "count": incomplete_total,
+                    "total_in_period": total,
+                    "done_in_period": done_total,
+                    "badge_text": ds["period_short_badge"],
+                    "badge_kind": "blue",
+                    "tooltip": f"{ds['period_label']}. {diff_note} {ds['period_rule_note']}",
+                    "can_open": True,
+                    "drilldown": {
+                        "type": "rpc_action",
+                        "method": "get_tp_home_task_drilldown_action",
+                        "params": {"bar_segment": "incomplete"},
+                    },
+                }
+                bar_payload = {
+                    "kind": "daily",
+                    "title": "Công việc của tôi theo ngày",
+                    "subtitle": "Phân bố theo hạn hoàn thành trong kỳ (việc chưa có hạn tách riêng)",
+                    "series": [
+                        {"key": "done", "label": "Hoàn thành", "color": "#4E7DE8"},
+                        {"key": "incomplete", "label": "Chưa hoàn thành", "color": "#BBD4FA"},
+                    ],
+                    "rows": day_rows,
+                }
+                donut_payload = {
+                    "title": "Tỷ lệ công việc của tôi",
+                    "subtitle": f"Tổng {total} việc (chưa xong: {incomplete_total})",
+                    "note": diff_note,
+                    "center_count": total,
+                    "center_label": "Công việc",
+                    "slices": donut_slices,
+                }
+                attribution_note = diff_note
 
-            kpi = {
-                "key": "tasks",
-                "label": "Công việc",
-                "status": "ok",
-                "count": total,
-                "badge_text": ds["scope_label"],
-                "badge_kind": "green",
-                "tooltip": f"{ds['scope_label']} · {ds['period_label']}. {ds['period_rule_note']}",
-                "can_open": True,
-                "drilldown": {
-                    "type": "rpc_action",
-                    "method": "get_tp_home_task_drilldown_action",
-                },
-            }
             charts = {
                 "status": "ok",
+                "mode": home_mode,
                 "total": total,
+                "done_total": done_total,
+                "incomplete_total": incomplete_total,
                 "scope_key": ds["scope_key"],
                 "scope_label": ds["scope_label"],
                 "scope_options": ds["scope_options"],
@@ -964,35 +1611,20 @@ class ResUsersHomeDashboard(models.Model):
                 "department_options": ds["department_options"],
                 "period_key": ds["period_key"],
                 "period_label": ds["period_label"],
+                "period_short_badge": ds["period_short_badge"],
                 "period_options": ds["period_options"],
                 "period_rule_note": ds["period_rule_note"],
-                "attribution_note": (
-                    "Phân bổ phòng ban mỗi công việc đúng 1 lần theo thứ tự ưu tiên: "
-                    "(1) Phòng chủ trì của dự án, (2) Phòng của người chịu trách nhiệm chính, "
-                    "(3) Phòng duy nhất của người được giao; việc nhiều phòng đưa vào 'Liên phòng ban', "
-                    "chưa có phòng đưa vào 'Chưa gắn phòng ban'."
-                ),
-                "bar": {
-                    "title": "Tình hình công việc",
-                    "series": [
-                        {"key": "done", "label": "Hoàn thành", "color": "#4E7DE8"},
-                        {"key": "incomplete", "label": "Chưa hoàn thành", "color": "#BBD4FA"},
-                    ],
-                    "rows": bar_rows,
-                },
-                "donut": {
-                    "title": "Tỷ lệ công việc",
-                    "center_count": total,
-                    "center_label": "Công việc",
-                    "slices": donut_slices,
-                },
+                "attribution_note": attribution_note,
+                "bar": bar_payload,
+                "donut": donut_payload,
             }
             return kpi, charts
         except AccessError:
             return (
                 {
-                    "key": "tasks",
-                    "label": "Công việc",
+                    "key": kpi_key,
+                    "card_kind": "metric",
+                    "label": kpi_label,
                     "status": "no_access",
                     "count": None,
                     "status_text": "Không có quyền xem",
@@ -1000,14 +1632,15 @@ class ResUsersHomeDashboard(models.Model):
                     "can_open": False,
                     "drilldown": None,
                 },
-                {"status": "no_access"},
+                {"status": "no_access", "mode": home_mode},
             )
         except Exception:
             _logger.exception("TP Home: failed to compute Task KPI & charts")
             return (
                 {
-                    "key": "tasks",
-                    "label": "Công việc",
+                    "key": kpi_key,
+                    "card_kind": "metric",
+                    "label": kpi_label,
                     "status": "error",
                     "count": None,
                     "status_text": "Tạm lỗi nguồn",
@@ -1015,33 +1648,52 @@ class ResUsersHomeDashboard(models.Model):
                     "can_open": False,
                     "drilldown": None,
                 },
-                {"status": "error"},
+                {"status": "error", "mode": home_mode},
             )
 
     @api.model
     def get_tp_home_task_drilldown_action(self, params=None):
         """Return an `ir.actions.act_window` on `project.task` whose count matches KPI / Bar / Donut 100%."""
-        self._tp_home_require_internal()
+        user = self._tp_home_require_internal()
+        company = self._tp_home_allowed_company()
+        home_mode = self._tp_home_mode(user=user, company=company)
         params = dict(params or {})
-        ds = self._tp_home_collect_task_dataset(params)
+
+        ds = self._tp_home_collect_task_dataset(
+            params=params, home_mode=home_mode, company=company,
+        )
         tasks = ds["tasks"]
         bucket_by_task = ds["bucket_by_task"]
         task_dept_map = ds["task_dept_map"]
         meta_by_dept = ds["meta_by_dept"]
+        task_day_map = ds["task_day_map"]
 
-        bar_dept_key = str(params.get("bar_department_key") or "").strip()
+        bar_dept_key = str(params.get("bar_department_key") or "").strip() if home_mode == "admin" else ""
+        bar_day_key = str(params.get("bar_day_key") or "").strip()
         bar_segment = str(params.get("bar_segment") or "").strip()
         donut_bucket = str(params.get("donut_bucket") or "").strip()
 
-        title_parts = ["Công việc", ds["period_label"]]
+        base_title = "Công việc" if home_mode == "admin" else "Công việc của tôi"
+        title_parts = [base_title, ds["period_label"]]
         matched = list(tasks)
 
         if bar_dept_key:
             matched = [t for t in matched if task_dept_map.get(t.id) == bar_dept_key]
             dname = meta_by_dept.get(bar_dept_key, {}).get("name") or bar_dept_key
             title_parts.append(dname)
-        elif ds["department_key"]:
+        elif home_mode == "admin" and ds["department_key"]:
             title_parts.append(ds["department_label"])
+
+        if bar_day_key:
+            matched = [t for t in matched if task_day_map.get(t.id) == bar_day_key]
+            if bar_day_key == UNDATED_DAY_KEY:
+                title_parts.append("Chưa đặt hạn")
+            else:
+                try:
+                    d_obj = date.fromisoformat(bar_day_key)
+                    title_parts.append(d_obj.strftime("%d/%m/%Y"))
+                except ValueError:
+                    title_parts.append(bar_day_key)
 
         if bar_segment == "done":
             matched = [t for t in matched if bucket_by_task.get(t.id) == "done"]
@@ -1051,8 +1703,9 @@ class ResUsersHomeDashboard(models.Model):
             title_parts.append("Chưa hoàn thành")
         elif donut_bucket:
             matched = [t for t in matched if bucket_by_task.get(t.id) == donut_bucket]
+            bucket_catalog = DONUT_BUCKETS_ADMIN if home_mode == "admin" else DONUT_BUCKETS_EMPLOYEE
             blabel = {
-                k: lbl for k, lbl, _ in (*DONUT_BUCKETS, UNMAPPED_BUCKET)
+                k: lbl for k, lbl, _ in (*bucket_catalog, UNMAPPED_BUCKET)
             }.get(donut_bucket, donut_bucket)
             title_parts.append(blabel)
 
@@ -1067,56 +1720,54 @@ class ResUsersHomeDashboard(models.Model):
             "context": {"create": False},
         }
 
-    # ------------------------------------------------------------------
-    # 5. AGENDA: CÔNG VIỆC HÔM NAY (Tasks due today + Calendar today)
-    # ------------------------------------------------------------------
+    # ==================================================================
+    # AGENDA: CÔNG VIỆC HÔM NAY (Personal Tasks due today + Calendar today)
+    # ==================================================================
     def _tp_home_collect_today_agenda_items(self):
+        company = self._tp_home_allowed_company()
         tz, tz_name = _user_tz(self.env)
         now_local = datetime.now(tz)
         today_local = now_local.date()
         start_utc, stop_utc = _local_bounds_to_utc_naive(tz, today_local, today_local)
         now_utc = fields.Datetime.now()
-        uid = self.env.uid
-        my_pid = self.env.user.partner_id.id
-        has_personal_tools = "tp_exec_report_state" in self.env.get("project.task", self.env["res.users"])._fields
+        has_personal_tools = (
+            "project.task" in self.env
+            and "tp_exec_report_state" in self.env["project.task"]._fields
+        )
 
         items = []
         linked_task_ids_in_events = set()
 
-        # A. Today's Calendar Events / Meetings where user is organizer or participant
+        # A. Today's Calendar Events / Meetings where caller is organizer or participant
         if "calendar.event" in self.env:
-            Event = self.env["calendar.event"].sudo(False)
-            if Event.has_access("read"):
-                ev_dom = (
-                    Domain("active", "=", True)
-                    & Domain("start", "<", stop_utc)
-                    & Domain("stop", ">=", start_utc)
-                    & (Domain("partner_ids", "in", [my_pid]) | Domain("user_id", "=", uid))
-                )
-                events = Event.search(ev_dom, order="allday desc, start asc, id asc", limit=100)
-                for ev in events:
-                    if hasattr(ev, "_check_private_event_conditions") and ev._check_private_event_conditions():
-                        continue
-                    my_att = ev.attendee_ids.filtered(lambda a: a.partner_id.id == my_pid)[:1]
-                    if my_att and my_att.state == "declined":
-                        continue
+            try:
+                events, _td, _tz_obj, _tz_n = self._tp_home_collect_today_calendar_events()
+            except AccessError:
+                events = []
 
-                    if ev.allday:
-                        time_label = "Cả ngày"
-                        sort_key = (0, "00:00", ev.id)
+            for ev in events:
+                if ev.allday:
+                    time_label = "Cả ngày"
+                    sort_key = (0, "00:00", ev.id)
+                else:
+                    st_loc = ev.start.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
+                    en_loc = ev.stop.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
+                    if st_loc.date() == today_local and en_loc.date() == today_local:
+                        time_label = f"{st_loc.strftime('%H:%M')} – {en_loc.strftime('%H:%M')}"
                     else:
-                        st_loc = ev.start.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
-                        en_loc = ev.stop.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
-                        if st_loc.date() == today_local and en_loc.date() == today_local:
-                            time_label = f"{st_loc.strftime('%H:%M')} – {en_loc.strftime('%H:%M')}"
-                        else:
-                            time_label = f"{st_loc.strftime('%d/%m %H:%M')} – {en_loc.strftime('%d/%m %H:%M')}"
-                        sort_key = (1, st_loc.strftime("%H:%M"), ev.id)
+                        time_label = f"{st_loc.strftime('%d/%m %H:%M')} – {en_loc.strftime('%d/%m %H:%M')}"
+                    sort_key = (1, st_loc.strftime("%H:%M") if st_loc.date() == today_local else "00:01", ev.id)
 
-                    linked_task = None
-                    if ev.res_model == "project.task" and ev.res_id and "project.task" in self.env:
-                        t_rec = self.env["project.task"].sudo(False).browse(ev.res_id).exists()
-                        if t_rec and t_rec.has_access("read") and t_rec.active:
+                linked_task = None
+                if ev.res_model == "project.task" and ev.res_id and "project.task" in self.env:
+                    t_rec = self.env["project.task"].sudo(False).browse(ev.res_id).exists()
+                    if t_rec and t_rec.has_access("read") and t_rec.active:
+                        can_read_personal = (
+                            not hasattr(t_rec, "_tp_is_user_involved")
+                            or t_rec._tp_is_user_involved()
+                            or self.env.user.partner_id in t_rec.message_partner_ids
+                        )
+                        if can_read_personal:
                             linked_task_ids_in_events.add(t_rec.id)
                             linked_task = {
                                 "id": t_rec.id,
@@ -1124,32 +1775,33 @@ class ResUsersHomeDashboard(models.Model):
                                 "route": f"/app/ca-nhan/cong-viec/{t_rec.id}" if has_personal_tools else "",
                             }
 
-                    ev_kind = getattr(ev, "tp_event_kind", "meeting") or "meeting"
-                    is_past = bool(not ev.allday and ev.stop and ev.stop < now_utc)
-                    items.append(
-                        {
-                            "uid_key": f"event-{ev.id}",
-                            "kind": "meeting",
-                            "kind_label": "Cuộc họp" if ev_kind == "meeting" else "Lịch hẹn",
-                            "tone": "green" if not is_past else "muted",
-                            "id": ev.id,
-                            "title": ev.name or "(Chưa đặt tiêu đề)",
-                            "time_label": time_label,
-                            "status_label": "Đã qua khung giờ" if is_past else "Lịch hôm nay",
-                            "res_model": "calendar.event",
-                            "res_id": ev.id,
-                            "route": f"/app/ca-nhan/lich-lam-viec/{ev.id}" if has_personal_tools else "",
-                            "linked_task": linked_task,
-                            "_sort": sort_key,
-                        },
-                    )
+                ev_kind = getattr(ev, "tp_event_kind", "meeting") or "meeting"
+                is_past = bool(not ev.allday and ev.stop and ev.stop < now_utc)
+                items.append(
+                    {
+                        "uid_key": f"event-{ev.id}",
+                        "kind": "meeting",
+                        "kind_label": "Cuộc họp" if ev_kind == "meeting" else "Lịch hẹn",
+                        "source_label": "",
+                        "tone": "green" if not is_past else "muted",
+                        "id": ev.id,
+                        "title": ev.name or "(Chưa đặt tiêu đề)",
+                        "time_label": time_label,
+                        "status_label": "Đã qua khung giờ" if is_past else "Lịch hôm nay",
+                        "res_model": "calendar.event",
+                        "res_id": ev.id,
+                        "route": f"/app/ca-nhan/lich-lam-viec/{ev.id}" if has_personal_tools else "",
+                        "linked_task": linked_task,
+                        "_sort": sort_key,
+                    },
+                )
 
         # B. Today's Tasks in caller's personal/assigned work scope (deduplicated against linked events)
         if "project.task" in self.env:
             Task = self.env["project.task"].sudo(False).with_context(active_test=True)
             if Task.has_access("read"):
                 t_dom = (
-                    self._tp_home_my_work_domain(Task)
+                    self._tp_home_my_work_domain(Task, company)
                     & Domain("date_deadline", ">=", start_utc)
                     & Domain("date_deadline", "<", stop_utc)
                 )
@@ -1169,6 +1821,12 @@ class ResUsersHomeDashboard(models.Model):
                         time_label = "Hạn hôm nay"
                         sort_clock = "23:59"
 
+                    eff_source = (
+                        task._tp_effective_source_kind()
+                        if hasattr(task, "_tp_effective_source_kind")
+                        else ("project" if task.project_id else "self")
+                    )
+                    exec_st = getattr(task, "tp_exec_report_state", False)
                     tone_map = {
                         "done": "green",
                         "in_progress": "teal",
@@ -1178,7 +1836,7 @@ class ResUsersHomeDashboard(models.Model):
                     status_map = {
                         "done": "Hoàn thành",
                         "in_progress": "Đang thực hiện",
-                        "waiting": "Chờ xử lý",
+                        "waiting": "Chờ xác nhận" if exec_st == "reported_done" else "Chờ xử lý",
                         "overdue": "Quá hạn",
                     }
                     items.append(
@@ -1186,6 +1844,7 @@ class ResUsersHomeDashboard(models.Model):
                             "uid_key": f"task-{task.id}",
                             "kind": "task",
                             "kind_label": "Công việc",
+                            "source_label": SOURCE_SHORT_LABELS.get(eff_source, "Tự tạo"),
                             "tone": tone_map.get(bucket, "teal"),
                             "id": task.id,
                             "title": task.name or f"Công việc #{task.id}",
@@ -1206,7 +1865,7 @@ class ResUsersHomeDashboard(models.Model):
         return items, today_local, tz_name
 
     @api.model
-    def _tp_home_agenda_summary(self, preview_limit=5):
+    def _tp_home_agenda_summary(self, preview_limit=4):
         if "project.task" not in self.env and "calendar.event" not in self.env:
             return {"status": "unconfigured", "items": [], "total_today": 0}
         try:
@@ -1251,50 +1910,93 @@ class ResUsersHomeDashboard(models.Model):
             "max_page": max_page,
         }
 
-    # ------------------------------------------------------------------
-    # 6. UNIFIED DASHBOARD ENDPOINT
-    # ------------------------------------------------------------------
+    # ==================================================================
+    # UNIFIED DASHBOARD ENDPOINT (Server-Authoritative Admin / Employee)
+    # ==================================================================
     @api.model
     def get_tp_home_dashboard(self, params=None):
         user = self._tp_home_require_internal()
+        company = self._tp_home_allowed_company()
+        home_mode = self._tp_home_mode(user=user, company=company)
         tz, tz_name = _user_tz(self.env)
         now_local = datetime.now(tz)
 
-        hr_kpi = self._tp_home_kpi_hr()
-        req_kpi = self._tp_home_kpi_requests()
-        task_kpi, charts = self._tp_home_build_tasks_and_charts(params)
-        stock_kpi = self._tp_home_kpi_stock()
-        agenda = self._tp_home_agenda_summary(preview_limit=5)
+        # Strip any spoofed client identity/mode keys before reading filter params
+        raw_params = dict(params or {}) if isinstance(params, dict) else {}
+        clean_params = {
+            "period": raw_params.get("period", ""),
+            "task_scope": raw_params.get("task_scope", ""),
+            "department_key": raw_params.get("department_key", ""),
+        }
 
-        return {
-            "meta": {
-                "user_id": user.id,
-                "company_id": self.env.company.id,
-                "company_name": self.env.company.name,
-                "timezone": tz_name,
-                "updated_at": now_local.strftime("%H:%M:%S · %d/%m/%Y"),
-                "updated_short": now_local.strftime("%H:%M"),
-            },
-            "kpis": {
+        agenda = self._tp_home_agenda_summary(preview_limit=4)
+
+        if home_mode == "admin":
+            hr_kpi = self._tp_home_kpi_hr(company)
+            req_kpi = self._tp_home_kpi_admin_requests(company)
+            task_kpi, charts = self._tp_home_build_tasks_and_charts(
+                params=clean_params, home_mode="admin", company=company,
+            )
+            stock_kpi = self._tp_home_kpi_stock(company)
+            cards = [
+                {**hr_kpi, "theme": "blue", "icon_name": "kpi-hr"},
+                {**req_kpi, "theme": "purple", "icon_name": "kpi-requests"},
+                {**task_kpi, "theme": "green", "icon_name": "kpi-tasks"},
+                {**stock_kpi, "theme": "amber", "icon_name": "kpi-stock"},
+            ]
+            kpis_map = {
                 "hr": hr_kpi,
                 "requests": req_kpi,
                 "tasks": task_kpi,
                 "stock": stock_kpi,
+            }
+            apps_title = "Ứng dụng theo phòng ban"
+        else:
+            # Employee mode: NEVER calls Stock KPI, NEVER queries company-wide department bars
+            emp_task_kpi, charts = self._tp_home_build_tasks_and_charts(
+                params=clean_params, home_mode="employee", company=company,
+            )
+            emp_req_kpi = self._tp_home_kpi_employee_requests(company)
+            emp_cal_kpi = self._tp_home_kpi_employee_calendar()
+            emp_att_kpi = self._tp_home_kpi_employee_attendance(company)
+            cards = [
+                {**emp_task_kpi, "theme": "blue", "icon_name": "kpi-tasks"},
+                {**emp_req_kpi, "theme": "purple", "icon_name": "kpi-requests"},
+                {**emp_cal_kpi, "theme": "green", "icon_name": "calendar"},
+                {**emp_att_kpi, "theme": "amber", "icon_name": "clock"},
+            ]
+            kpis_map = {
+                "emp_tasks": emp_task_kpi,
+                "emp_requests": emp_req_kpi,
+                "emp_calendar": emp_cal_kpi,
+                "emp_attendance": emp_att_kpi,
+            }
+            apps_title = "Ứng dụng của bạn"
+
+        return {
+            "home_mode": home_mode,
+            "apps_title": apps_title,
+            "meta": {
+                "home_mode": home_mode,
+                "user_id": user.id,
+                "company_id": company.id,
+                "company_name": company.name,
+                "timezone": tz_name,
+                "updated_at": now_local.strftime("%H:%M:%S · %d/%m/%Y"),
+                "updated_short": now_local.strftime("%H:%M"),
             },
+            "cards": cards,
+            "kpis": kpis_map,
             "agenda": agenda,
             "charts": charts,
         }
 
-    # ------------------------------------------------------------------
-    # 7. PERMISSION-CHECKED DOCUMENT / METADATA SEARCH FOR NAVBAR
-    # ------------------------------------------------------------------
+    # ==================================================================
+    # PERMISSION-CHECKED DOCUMENT / METADATA SEARCH FOR NAVBAR
+    # ==================================================================
     @api.model
     def search_tp_home_global(self, query="", limit=8):
-        """Search permitted documents & records by name/code/metadata without `ir.attachment.sudo()`.
-
-        Every source checks both model read ACL and the source's own business-scope guard
-        so unauthorized titles/codes never leak through search results.
-        """
+        """Search permitted documents & records by name/code/metadata without `ir.attachment.sudo()`."""
         self._tp_home_require_internal()
         raw_q = str(query or "").strip()
         if not raw_q:
@@ -1307,7 +2009,7 @@ class ResUsersHomeDashboard(models.Model):
             return {"documents": []}
         words = [w for w in needle.split(" ") if w]
         max_items = max(1, min(int(limit or 8), 20))
-        company = self.env.company
+        company = self._tp_home_allowed_company()
         results = []
 
         def _matches(*values):
@@ -1382,7 +2084,11 @@ class ResUsersHomeDashboard(models.Model):
                                 rec.state != "draft"
                                 and (
                                     uid in rec.attendee_user_ids.ids
-                                    or (rec.project_id and hasattr(rec.project_id, "_tp_scope_allowed") and rec.project_id._tp_scope_allowed(self.env.user))
+                                    or (
+                                        rec.project_id
+                                        and hasattr(rec.project_id, "_tp_scope_allowed")
+                                        and rec.project_id._tp_scope_allowed(self.env.user)
+                                    )
                                 )
                             ),
                         )
@@ -1431,7 +2137,7 @@ class ResUsersHomeDashboard(models.Model):
                 except AccessError:
                     pass
 
-        # 5. Hồ sơ Yêu cầu phê duyệt (`tp.request`) — strictly caller-accessible requests
+        # 5. Hồ sơ Yêu cầu phê duyệt (`tp.request`) — strictly caller-accessible requests in company
         if "tp.request" in self.env and len(results) < max_items:
             Req = self.env["tp.request"].sudo(False)
             if Req.has_access("read"):
@@ -1442,9 +2148,17 @@ class ResUsersHomeDashboard(models.Model):
                         or self.env.user.has_group("tp_request.group_request_manager"),
                     )
                     if is_mgr:
-                        r_dom = ["|", ("requester_user_id", "=", uid), ("approval_state", "!=", "draft")]
+                        r_dom = [
+                            "&",
+                            ("company_id", "=", company.id),
+                            "|",
+                            ("requester_user_id", "=", uid),
+                            ("approval_state", "!=", "draft"),
+                        ]
                     else:
                         r_dom = [
+                            "&",
+                            ("company_id", "=", company.id),
                             "|",
                             ("requester_user_id", "=", uid),
                             "&",

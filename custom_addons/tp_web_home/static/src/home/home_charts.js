@@ -104,7 +104,10 @@ export function useHomeChart(getSpec) {
 }
 
 /**
- * Build Chart.js spec for the Stacked Department Bar Chart ("Tình hình công việc", Section 10.1).
+ * Build Chart.js spec for Stacked Bar Chart:
+ * - Admin Mode (`bar.kind === "department"`): "Tình hình công việc" by department.
+ * - Employee Mode (`bar.kind === "daily"`): "Công việc của tôi theo ngày" by deadline date
+ *   (with explicit "Chưa đặt hạn" bar when undated tasks exist, and valid 0s on empty days).
  */
 export function buildDepartmentBarSpec(chartsData, onBarClick) {
     if (!chartsData || chartsData.status !== "ok") {
@@ -114,15 +117,24 @@ export function buildDepartmentBarSpec(chartsData, onBarClick) {
     if (!rows.length) {
         return null;
     }
+    const isDaily = chartsData.bar?.kind === "daily";
     const motion = !prefersReducedMotion();
-    const labels = rows.map((r) => r.department_name);
+    const labels = rows.map((r) => (isDaily ? r.day_label : r.department_name));
     const doneValues = rows.map((r) => r.done_count);
     const openValues = rows.map((r) => r.incomplete_count);
     const periodLabel = chartsData.period_label || "";
+    const denseAxis = rows.length > 10;
 
     return {
         type: "bar",
-        signature: JSON.stringify(["bar", periodLabel, chartsData.scope_key, chartsData.department_key, rows]),
+        signature: JSON.stringify([
+            "bar",
+            isDaily ? "daily" : "dept",
+            periodLabel,
+            chartsData.scope_key,
+            chartsData.department_key,
+            rows,
+        ]),
         data: {
             labels,
             datasets: [
@@ -135,13 +147,13 @@ export function buildDepartmentBarSpec(chartsData, onBarClick) {
                     borderRadius: (ctx) => {
                         const openVal = openValues[ctx.dataIndex] || 0;
                         return openVal > 0
-                            ? { topLeft: 0, topRight: 0, bottomLeft: 5, bottomRight: 5 }
-                            : 6;
+                            ? { topLeft: 0, topRight: 0, bottomLeft: 4, bottomRight: 4 }
+                            : 5;
                     },
                     borderSkipped: false,
-                    maxBarThickness: 44,
-                    categoryPercentage: 0.62,
-                    barPercentage: 0.85,
+                    maxBarThickness: denseAxis ? 20 : 38,
+                    categoryPercentage: denseAxis ? 0.76 : 0.62,
+                    barPercentage: 0.86,
                 },
                 {
                     label: "Chưa hoàn thành",
@@ -149,23 +161,24 @@ export function buildDepartmentBarSpec(chartsData, onBarClick) {
                     data: openValues,
                     backgroundColor: "#BBD4FA",
                     hoverBackgroundColor: "#9EC1F7",
-                    borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 },
+                    borderRadius: { topLeft: 5, topRight: 5, bottomLeft: 0, bottomRight: 0 },
                     borderSkipped: false,
-                    maxBarThickness: 44,
-                    categoryPercentage: 0.62,
-                    barPercentage: 0.85,
+                    maxBarThickness: denseAxis ? 20 : 38,
+                    categoryPercentage: denseAxis ? 0.76 : 0.62,
+                    barPercentage: 0.86,
                 },
             ],
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            animation: motion ? { duration: 220, easing: "easeOutCubic" } : false,
+            animation: motion ? { duration: 200, easing: "easeOutCubic" } : false,
             interaction: { mode: "index", intersect: false },
             onHover: (event, elements) => {
                 const target = event?.native?.target;
                 if (target) {
-                    target.style.cursor = elements.length ? "pointer" : "default";
+                    const row = elements.length ? rows[elements[0].index] : null;
+                    target.style.cursor = row && row.total_count > 0 ? "pointer" : "default";
                 }
             },
             onClick: (_event, elements, chart) => {
@@ -175,8 +188,14 @@ export function buildDepartmentBarSpec(chartsData, onBarClick) {
                 const hit = elements[0];
                 const row = rows[hit.index];
                 const ds = chart.data.datasets[hit.datasetIndex];
-                if (row) {
-                    onBarClick(row.department_key, ds?.segmentKey || "");
+                if (!row || row.total_count <= 0) {
+                    return;
+                }
+                const seg = ds?.segmentKey || "";
+                if (isDaily) {
+                    onBarClick({ dayKey: row.day_key, departmentKey: "", segmentKey: seg });
+                } else {
+                    onBarClick({ departmentKey: row.department_key, dayKey: "", segmentKey: seg });
                 }
             },
             scales: {
@@ -186,20 +205,24 @@ export function buildDepartmentBarSpec(chartsData, onBarClick) {
                     border: { color: "#E2EAF5" },
                     ticks: {
                         color: "#344863",
-                        font: { family: '"Segoe UI", system-ui, sans-serif', size: 12.5, weight: "600" },
-                        maxRotation: 0,
-                        autoSkip: false,
+                        font: { family: '"Segoe UI", system-ui, sans-serif', size: 11.5, weight: "600" },
+                        maxRotation: 40,
+                        minRotation: 0,
+                        autoSkip: denseAxis,
+                        maxTicksLimit: denseAxis ? 10 : undefined,
                     },
                 },
                 y: {
                     stacked: true,
                     beginAtZero: true,
+                    suggestedMax: 4,
                     border: { display: false },
                     grid: { color: "#ECF2FA" },
                     ticks: {
                         precision: 0,
+                        maxTicksLimit: 5,
                         color: "#526580",
-                        font: { family: '"Segoe UI", system-ui, sans-serif', size: 12 },
+                        font: { family: '"Segoe UI", system-ui, sans-serif', size: 11 },
                     },
                 },
             },
@@ -207,17 +230,20 @@ export function buildDepartmentBarSpec(chartsData, onBarClick) {
                 legend: { display: false },
                 tooltip: {
                     backgroundColor: "rgba(23, 43, 77, 0.95)",
-                    padding: 11,
-                    cornerRadius: 10,
-                    titleFont: { size: 13, weight: "700" },
-                    bodyFont: { size: 12.5 },
+                    padding: 10,
+                    cornerRadius: 9,
+                    titleFont: { size: 12.5, weight: "700" },
+                    bodyFont: { size: 12 },
                     callbacks: {
                         title: (items) => {
                             const idx = items?.[0]?.dataIndex ?? 0;
                             const row = rows[idx];
-                            return row
-                                ? `${row.department_name} (${periodLabel})`
-                                : "";
+                            if (!row) {
+                                return "";
+                            }
+                            return isDaily
+                                ? row.full_label || row.day_label
+                                : `${row.department_name} (${periodLabel})`;
                         },
                         label: (ctx) => {
                             const row = rows[ctx.dataIndex];
@@ -225,7 +251,16 @@ export function buildDepartmentBarSpec(chartsData, onBarClick) {
                             const tot = row?.total_count || 0;
                             return ` ${ctx.dataset.label}: ${val} / ${tot} công việc`;
                         },
-                        footer: () => "Bấm cột để mở danh sách công việc",
+                        afterBody: () =>
+                            isDaily
+                                ? ["Phân bố theo hạn hoàn thành trong kỳ"]
+                                : [],
+                        footer: (items) => {
+                            const idx = items?.[0]?.dataIndex ?? 0;
+                            return (rows[idx]?.total_count || 0) > 0
+                                ? "Bấm cột để mở danh sách công việc"
+                                : "Ngày này chưa có công việc";
+                        },
                     },
                 },
             },
@@ -233,8 +268,10 @@ export function buildDepartmentBarSpec(chartsData, onBarClick) {
     };
 }
 
+export const buildTaskBarSpec = buildDepartmentBarSpec;
+
 /**
- * Build Chart.js spec for the Status Ratio Donut Chart ("Tỷ lệ công việc", Section 10.2).
+ * Build Chart.js spec for the Status Ratio Donut Chart ("Tỷ lệ công việc" / "Tỷ lệ công việc của tôi").
  */
 export function buildStatusDonutSpec(chartsData, onSliceClick) {
     if (!chartsData || chartsData.status !== "ok") {
@@ -245,11 +282,12 @@ export function buildStatusDonutSpec(chartsData, onSliceClick) {
     const motion = !prefersReducedMotion();
     const periodLabel = chartsData.period_label || "";
     const scopeLabel = chartsData.scope_label || "";
+    const diffNote = chartsData.donut?.note || "";
 
     if (total <= 0) {
         return {
             type: "doughnut",
-            signature: JSON.stringify(["donut-empty", periodLabel, scopeLabel]),
+            signature: JSON.stringify(["donut-empty", chartsData.mode, periodLabel, scopeLabel]),
             data: {
                 labels: ["Chưa có công việc"],
                 datasets: [
@@ -277,7 +315,14 @@ export function buildStatusDonutSpec(chartsData, onSliceClick) {
 
     return {
         type: "doughnut",
-        signature: JSON.stringify(["donut", periodLabel, scopeLabel, chartsData.department_key, slices]),
+        signature: JSON.stringify([
+            "donut",
+            chartsData.mode,
+            periodLabel,
+            scopeLabel,
+            chartsData.department_key,
+            slices,
+        ]),
         data: {
             labels: slices.map((s) => s.label),
             datasets: [
@@ -294,7 +339,7 @@ export function buildStatusDonutSpec(chartsData, onSliceClick) {
             responsive: true,
             maintainAspectRatio: false,
             cutout: "68%",
-            animation: motion ? { duration: 240, easing: "easeOutCubic" } : false,
+            animation: motion ? { duration: 220, easing: "easeOutCubic" } : false,
             onHover: (event, elements) => {
                 const target = event?.native?.target;
                 if (target) {
@@ -315,10 +360,10 @@ export function buildStatusDonutSpec(chartsData, onSliceClick) {
                 legend: { display: false },
                 tooltip: {
                     backgroundColor: "rgba(23, 43, 77, 0.95)",
-                    padding: 11,
-                    cornerRadius: 10,
-                    titleFont: { size: 13, weight: "700" },
-                    bodyFont: { size: 12.5 },
+                    padding: 10,
+                    cornerRadius: 9,
+                    titleFont: { size: 12.5, weight: "700" },
+                    bodyFont: { size: 12 },
                     callbacks: {
                         title: (items) => {
                             const idx = items?.[0]?.dataIndex ?? 0;
@@ -332,7 +377,10 @@ export function buildStatusDonutSpec(chartsData, onSliceClick) {
                             return ` Số lượng: ${s.count} việc (${s.exact_percent}%)`;
                         },
                         afterLabel: () => ` Phạm vi: ${scopeLabel} · ${periodLabel}`,
-                        footer: () => "Bấm lát biểu đồ để mở danh sách",
+                        footer: () =>
+                            diffNote
+                                ? "Bấm lát biểu đồ để mở danh sách tương ứng"
+                                : "Bấm lát biểu đồ để mở danh sách",
                     },
                 },
             },

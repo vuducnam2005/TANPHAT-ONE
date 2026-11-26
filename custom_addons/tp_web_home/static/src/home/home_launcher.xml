@@ -48,7 +48,7 @@
         </span>
     </t>
 
-    <!-- All-Apps Modal / Panel ("Tất cả ứng dụng", preserving all 5 canonical groups + extra apps + admin tools) -->
+    <!-- All-Apps Modal / Panel ("Tất cả ứng dụng") -->
     <t t-name="tp_web_home.AllAppsPanel">
         <div t-if="this.panelOpen() and this.hasAppsDrawer()"
              class="tp-home-modal-backdrop"
@@ -160,7 +160,7 @@
                    t-on-keydown="this.onNavDrawerKeydown">
                 <div class="tp-home-nav-drawer-head">
                     <div class="tp-home-nav-brand">
-                        <img src="/tp_web_home/static/img/brand/tp_logo_mark.png" alt="TANPHAT ONE" width="28" height="28"/>
+                        <img src="/tp_web_home/static/img/brand/tp_logo_mark.png" alt="TANPHAT ONE" width="26" height="26"/>
                         <span>TANPHAT ONE</span>
                     </div>
                     <button type="button"
@@ -223,16 +223,17 @@
                 </div>
                 <div class="tp-home-help-grid">
                     <div class="tp-home-help-card">
-                        <h3>Số liệu trực tiếp theo quyền</h3>
-                        <p>Bốn chỉ số <strong>Nhân sự</strong>, <strong>Yêu cầu phê duyệt</strong>, <strong>Công việc</strong> và <strong>Tồn kho</strong> đọc trực tiếp từ cơ sở dữ liệu theo đúng quyền tài khoản hiện tại. Bấm vào từng ô để mở danh sách khớp số đếm.</p>
+                        <h3>Bốn ô thông tin trực tiếp theo vai trò</h3>
+                        <p t-if="this.homeMode() === 'admin'">Chế độ Quản trị hiển thị <strong>Nhân sự</strong>, <strong>Yêu cầu phê duyệt</strong>, <strong>Công việc</strong> và <strong>Tồn kho</strong> từ dữ liệu thật theo quyền. Bấm vào từng ô để mở danh sách khớp số đếm.</p>
+                        <p t-else="">Chế độ Nhân viên hiển thị <strong>Việc chưa hoàn thành</strong>, <strong>Yêu cầu của tôi chờ duyệt</strong>, <strong>Lịch hẹn hôm nay</strong> và <strong>Chấm công hôm nay</strong> của chính bạn. Bấm từng ô để mở đúng phân hệ chi tiết.</p>
                     </div>
                     <div class="tp-home-help-card">
-                        <h3>Lưới ứng dụng &amp; Tất cả ứng dụng</h3>
-                        <p>Mười ô truy cập nhanh hiển thị các phòng ban được cấp. Các công cụ hàng ngày như <strong>Việc cá nhân</strong>, <strong>Lịch làm việc</strong>, <strong>Trao đổi</strong>, <strong>Báo cáo</strong>, <strong>Yêu cầu phê duyệt</strong> mở nhanh qua <strong>Tất cả ứng dụng</strong>, nút <strong>☰</strong> hoặc thanh tìm kiếm.</p>
+                        <h3>Ứng dụng được cấp &amp; Tìm kiếm nhanh</h3>
+                        <p>Lưới ứng dụng tự động tổng hợp các phân hệ tài khoản được phép truy cập. Mở thêm qua <strong>Tất cả ứng dụng</strong>, nút <strong>☰</strong> hoặc ô tìm kiếm chức năng &amp; tài liệu ở thanh trên cùng.</p>
                     </div>
                     <div class="tp-home-help-card">
-                        <h3>Thống kê &amp; Phân bổ công việc</h3>
-                        <p>Bộ lọc <strong>Kỳ</strong>, <strong>Phạm vi</strong> và <strong>Phòng ban</strong> đồng bộ KPI Công việc cùng hai biểu đồ. Mỗi công việc được tính đúng một lần, không suy trạng thái hoàn thành từ bảng Kanban cá nhân.</p>
+                        <h3>Thống kê công việc đồng bộ</h3>
+                        <p>Bộ lọc <strong>Kỳ</strong> đồng bộ số liệu với hai biểu đồ. Công việc đã báo xong nhưng chờ xác nhận vẫn được giữ ở nhóm chờ xử lý, không suy hoàn thành từ cột Kanban cá nhân.</p>
                     </div>
                 </div>
                 <div class="tp-home-help-links">
@@ -246,10 +247,10 @@
                             type="button"
                             class="tp-help-link-btn"
                             t-on-click="() => this.openPersonalShortcut('calendar.mail_menu_calendar')">Lịch làm việc</button>
-                    <button t-if="this.hasMenuXmlid('tp_request.menu_root')"
+                    <button t-if="this.hasMenuXmlid('tp_hr_attendance.menu_root')"
                             type="button"
                             class="tp-help-link-btn"
-                            t-on-click="() => this.openPersonalShortcut('tp_request.menu_root')">Yêu cầu phê duyệt</button>
+                            t-on-click="() => this.openPersonalShortcut('tp_hr_attendance.menu_root')">Chấm công</button>
                 </div>
             </section>
         </div>
@@ -295,15 +296,16 @@
                             <button type="button"
                                     class="tp-agenda-main-btn"
                                     t-on-click="() => this.onAgendaItemClick(ag)">
-                                <span class="tp-agenda-badge" t-attf-class="tone-{{ag.tone}}" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span t-attf-class="tp-agenda-badge tone-{{ag.tone}}" aria-hidden="true">
+                                    <svg t-if="ag.kind === 'meeting'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                                    <svg t-else="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                 </span>
                                 <span class="tp-agenda-body">
                                     <span class="tp-agenda-title" t-out="ag.title"/>
                                     <span class="tp-agenda-meta">
                                         <span t-out="ag.time_label"/>
                                         <span class="tp-agenda-dot">·</span>
-                                        <span t-out="ag.kind_label"/>
+                                        <span t-out="ag.source_label || ag.kind_label"/>
                                         <span class="tp-agenda-dot">·</span>
                                         <span t-out="ag.status_label"/>
                                     </span>
@@ -340,7 +342,7 @@
                     <button t-if="this.hasMenuXmlid('project_todo.menu_todo_todos')"
                             type="button"
                             class="tp-help-link-btn"
-                            t-on-click="() => this.openPersonalShortcut('project_todo.menu_todo_todos')">Mở Việc cá nhân</button>
+                            t-on-click="() => this.openCreateTaskShortcut()">Tạo việc</button>
                     <button t-if="this.hasMenuXmlid('calendar.mail_menu_calendar')"
                             type="button"
                             class="tp-help-link-btn"
@@ -350,9 +352,12 @@
         </div>
     </t>
 
-    <!-- Main 5-Tier HomeLauncher -->
+    <!-- Main 5-Tier HomeLauncher (Fits 100% on Desktop Viewport without Scrolling) -->
     <t t-name="tp_web_home.HomeLauncher">
-        <div class="o_tp_web_home" t-att-class="this.props.className" t-att-data-state="this.menuState()">
+        <div class="o_tp_web_home"
+             t-att-class="this.props.className"
+             t-att-data-state="this.menuState()"
+             t-att-data-home-mode="this.homeMode()">
             <div id="tp-unified-home" class="o_tp_unified_home" aria-label="Trang chủ TANPHAT ONE">
 
                 <!-- ================================================== -->
@@ -416,8 +421,7 @@
                                 <div class="tp-search-group-head">Chức năng</div>
                                 <t t-foreach="this.matchedFunctions()" t-as="fnItem" t-key="fnItem.key || fnItem.xmlid">
                                     <button type="button"
-                                            class="tp-search-hit"
-                                            t-att-class="{ 'is-active': this.activeSearchIdx() === fnItem_index }"
+                                            t-attf-class="tp-search-hit {{this.activeSearchIdx() === fnItem_index ? 'is-active' : ''}}"
                                             t-on-click="() => this.activateSearchResult({ kind: 'function', item: fnItem })">
                                         <span class="tp-search-hit-icon">
                                             <t t-call="tp_web_home.AdminIcon" icon="fnItem.icon || fnItem.svgIcon || 'grid-four'"/>
@@ -434,8 +438,7 @@
                                 <div class="tp-search-group-head">Tài liệu &amp; Hồ sơ</div>
                                 <t t-foreach="this.docResults()" t-as="doc" t-key="doc.key">
                                     <button type="button"
-                                            class="tp-search-hit"
-                                            t-att-class="{ 'is-active': this.activeSearchIdx() === (this.matchedFunctions().length + doc_index) }"
+                                            t-attf-class="tp-search-hit {{this.activeSearchIdx() === (this.matchedFunctions().length + doc_index) ? 'is-active' : ''}}"
                                             t-on-click="() => this.activateSearchResult({ kind: 'document', doc: doc })">
                                         <span class="tp-search-hit-icon is-doc">
                                             <t t-call="tp_web_home.AdminIcon" icon="'file-text'"/>
@@ -460,7 +463,6 @@
                     </div>
 
                     <div class="tp-home-nav-right">
-                        <!-- Notification Bell (live Odoo MessagingMenu when mail is installed, clean fallback otherwise) -->
                         <div t-if="this.MessagingSystrayComponent and !this.bellSystrayFailed()"
                              class="tp-home-bell-host"
                              title="Thông báo">
@@ -486,7 +488,6 @@
                             </t>
                         </Dropdown>
 
-                        <!-- Help Button ("?") -->
                         <button type="button"
                                 class="tp-home-icon-btn tp-home-help-btn"
                                 title="Hướng dẫn Trang chủ"
@@ -501,7 +502,6 @@
                             </svg>
                         </button>
 
-                        <!-- User Identity Menu (tp_identity + TpIdentityAvatar, no fake online dot) -->
                         <div class="tp-home-user-wrap">
                             <Dropdown state="this.userDropdown"
                                       position="'bottom-end'"
@@ -510,7 +510,7 @@
                                         class="tp-home-user-btn"
                                         t-att-title="this.displayUserName"
                                         t-att-aria-label="this.displayUserName">
-                                    <TpIdentityAvatar size="34"/>
+                                    <TpIdentityAvatar size="30"/>
                                     <span class="tp-home-user-name" t-out="this.displayUserName"/>
                                     <svg class="tp-home-user-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <path d="m6 9 6 6 6-6"/>
@@ -518,15 +518,15 @@
                                 </button>
                                 <t t-set-slot="content">
                                     <DropdownItem class="'tp-profile-menu-item'" attrs="{ 'data-menu': 'personal_profile' }" onSelected="() => this.onOpenPersonalProfile()">
-                                        <svg class="tp-profile-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+                                        <svg class="tp-profile-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
                                         <span>Thông tin cá nhân</span>
                                     </DropdownItem>
                                     <DropdownItem class="'tp-profile-menu-item'" attrs="{ 'data-menu': 'account_security' }" onSelected="() => this.onOpenAccountSecurity()">
-                                        <svg class="tp-profile-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 7v5c0 5 9 9 9 9s9-4 9-9V7z"/></svg>
+                                        <svg class="tp-profile-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 7v5c0 5 9 9 9 9s9-4 9-9V7z"/></svg>
                                         <span>Tài khoản &amp; Bảo mật</span>
                                     </DropdownItem>
                                     <DropdownItem class="'tp-logout-menu-item'" attrs="{ 'data-menu': 'logout' }" onSelected="() => this.onUserLogout()">
-                                        <svg class="tp-logout-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                                        <svg class="tp-logout-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
                                         <span>Đăng xuất</span>
                                     </DropdownItem>
                                 </t>
@@ -544,10 +544,8 @@
                 <t t-call="tp_web_home.AgendaAllModal"/>
 
                 <main class="tp-home-main">
-                    <!-- Inline Action Error (FORM-VALIDATION-001 compliant, never toast danger) -->
                     <InlineErrors t-if="this.actionError()" error="this.actionError()"/>
 
-                    <!-- Loading / Error / Placeholder Detail states -->
                     <div t-if="this.menuState() === 'loading'" class="o_tp_web_home_loading" aria-busy="true">
                         <div class="tp-skeleton-banner"/>
                         <div class="tp-skeleton-kpi-row">
@@ -605,15 +603,15 @@
                         </section>
 
                         <!-- ================================================== -->
-                        <!-- TIER C: 4 KPI CARDS (100% REAL PERMISSION-SCOPED)   -->
+                        <!-- TIER C: 4 INFO / KPI CARDS (ADMIN OR EMPLOYEE)      -->
                         <!-- ================================================== -->
                         <section class="tp-home-kpi-grid" aria-label="Chỉ số tổng quan">
                             <t t-foreach="this.kpiCards()" t-as="card" t-key="card.key">
-                                <button t-if="card.status === 'ok' and card.can_open"
+                                <button t-if="(card.status === 'ok' or card.status === 'unlinked_employee') and card.can_open"
                                         type="button"
-                                        class="tp-kpi-card is-clickable"
-                                        t-attf-class="theme-{{card.theme}}"
+                                        t-attf-class="tp-kpi-card is-clickable theme-{{card.theme}} {{card.card_kind === 'status' ? 'is-status-card' : ''}}"
                                         t-att-data-kpi="card.key"
+                                        t-att-data-kpi-status="card.status"
                                         t-att-title="card.tooltip || card.label"
                                         t-on-click="() => this.onKpiClick(card)">
                                     <span class="tp-kpi-icon" aria-hidden="true">
@@ -621,16 +619,25 @@
                                     </span>
                                     <span class="tp-kpi-main">
                                         <span class="tp-kpi-label" t-out="card.label"/>
-                                        <span class="tp-kpi-value" t-out="this.formatCount(card.count)"/>
+                                        <span class="tp-kpi-value-row">
+                                            <t t-if="card.card_kind === 'status'">
+                                                <span t-attf-class="tp-kpi-status-value {{card.status === 'unlinked_employee' ? 'is-unlinked' : ''}}"
+                                                      t-out="card.display_text"/>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="tp-kpi-value" t-out="this.formatCount(card.count)"/>
+                                            </t>
+                                            <span t-if="card.badge_text"
+                                                  t-attf-class="tp-kpi-pill pill-{{card.badge_kind || 'neutral'}}"
+                                                  t-out="card.badge_text"/>
+                                        </span>
+                                        <span t-if="card.card_kind === 'status' and card.status === 'unlinked_employee' and card.sub_text"
+                                              class="tp-kpi-sub-hint"
+                                              t-out="card.sub_text"/>
                                     </span>
-                                    <span t-if="card.badge_text"
-                                          class="tp-kpi-pill"
-                                          t-attf-class="pill-{{card.badge_kind || 'neutral'}}"
-                                          t-out="card.badge_text"/>
                                 </button>
                                 <div t-else=""
-                                     class="tp-kpi-card is-disabled"
-                                     t-attf-class="theme-{{card.theme}}"
+                                     t-attf-class="tp-kpi-card is-disabled theme-{{card.theme}} {{card.card_kind === 'status' ? 'is-status-card' : ''}}"
                                      t-att-data-kpi="card.key"
                                      t-att-data-kpi-status="card.status"
                                      t-att-title="card.tooltip || card.label">
@@ -640,29 +647,31 @@
                                     <span class="tp-kpi-main">
                                         <span class="tp-kpi-label" t-out="card.label"/>
                                         <span t-if="card.status === 'loading'" class="tp-kpi-skeleton" aria-busy="true"/>
+                                        <span t-elif="card.card_kind === 'status'" class="tp-kpi-status-value is-unlinked" t-out="card.display_text || card.status_text || 'Không khả dụng'"/>
                                         <span t-elif="card.status === 'ok'" class="tp-kpi-value" t-out="this.formatCount(card.count)"/>
                                         <span t-else="" class="tp-kpi-restricted" t-out="card.status_text || 'Không khả dụng'"/>
+                                        <span t-if="card.card_kind === 'status' and card.sub_text and card.status !== 'loading'"
+                                              class="tp-kpi-sub-hint"
+                                              t-out="card.sub_text"/>
                                     </span>
                                 </div>
                             </t>
                         </section>
 
                         <!-- ================================================== -->
-                        <!-- TIER D: DEPARTMENT APPS (62%) + TODAY WORK (38%)    -->
+                        <!-- TIER D: APP GRID (62%) + TODAY WORK (38%)           -->
                         <!-- ================================================== -->
                         <div class="tp-home-mid-row">
-                            <!-- Left: Ứng dụng theo phòng ban -->
                             <section class="tp-home-panel tp-apps-panel" aria-labelledby="tp_home_dept_apps_heading">
                                 <div class="tp-panel-head">
-                                    <h2 id="tp_home_dept_apps_heading" class="tp-panel-title">Ứng dụng theo phòng ban</h2>
+                                    <h2 id="tp_home_dept_apps_heading" class="tp-panel-title" t-out="this.appsPanelTitle()"/>
                                 </div>
 
                                 <div t-if="this.quickGridTiles().length" class="tp-dept-grid">
                                     <t t-foreach="this.quickGridTiles()" t-as="item" t-key="item.key">
                                         <button t-if="item.kind === 'panel'"
                                                 type="button"
-                                                class="tp-dept-tile tp-entry cursor-interaction"
-                                                t-attf-class="tone-{{item.tone || 'blue'}}"
+                                                t-attf-class="tp-dept-tile tp-entry cursor-interaction tone-{{item.tone || 'blue'}}"
                                                 data-tool="all-apps"
                                                 data-module="all-apps"
                                                 aria-controls="tp_home_all_apps"
@@ -675,8 +684,7 @@
                                             <span class="tp-dept-tile-name tp-name" t-out="item.gridLabel || item.label"/>
                                         </button>
                                         <a t-elif="item.href"
-                                           class="tp-dept-tile tp-entry cursor-interaction"
-                                           t-attf-class="tone-{{item.tone || 'blue'}} {{item.primaryAccent ? 'is-primary-accent tp-featured' : ''}}"
+                                           t-attf-class="tp-dept-tile tp-entry cursor-interaction tone-{{item.tone || 'blue'}} {{item.primaryAccent ? 'is-primary-accent tp-featured' : ''}}"
                                            t-att-href="item.href"
                                            t-att-data-menu-xmlid="item.xmlid"
                                            t-att-data-module="item.key"
@@ -688,8 +696,7 @@
                                         </a>
                                         <button t-else=""
                                                 type="button"
-                                                class="tp-dept-tile tp-entry is-placeholder cursor-interaction"
-                                                t-attf-class="tone-{{item.tone || 'blue'}}"
+                                                t-attf-class="tp-dept-tile tp-entry is-placeholder cursor-interaction tone-{{item.tone || 'blue'}}"
                                                 t-att-data-module="item.key"
                                                 t-att-title="item.status || ''"
                                                 t-on-click="(ev) => this.onEntryClick(ev, item)">
@@ -703,7 +710,7 @@
 
                                 <div t-elif="this.emptyKind()" class="o_tp_web_home_empty" t-att-data-empty="this.emptyKind()">
                                     <t t-if="this.emptyKind() === 'switcher'">
-                                        <p class="o_tp_web_home_empty_title">Trang chủ chưa có không gian phòng ban cho tài khoản này</p>
+                                        <p class="o_tp_web_home_empty_title">Trang chủ chưa có lối vào nhanh cho tài khoản này</p>
                                         <p class="o_tp_web_home_empty_text">Mở ứng dụng đã được cấp từ nút menu ☰ ở góc trái trên cùng.</p>
                                     </t>
                                     <p t-else="" class="o_tp_web_home_empty_title">Tài khoản này chưa được cấp ứng dụng nào.</p>
@@ -736,17 +743,19 @@
                                         class="tp-agenda-row">
                                         <button type="button"
                                                 class="tp-agenda-main-btn"
-                                                t-att-title="ag.kind_label + ' · ' + ag.status_label"
+                                                t-att-title="(ag.source_label || ag.kind_label) + ' · ' + ag.status_label"
                                                 t-on-click="() => this.onAgendaItemClick(ag)">
-                                            <span class="tp-agenda-badge" t-attf-class="tone-{{ag.tone}}" aria-hidden="true">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                            <span t-attf-class="tp-agenda-badge tone-{{ag.tone}}" aria-hidden="true">
+                                                <svg t-if="ag.kind === 'meeting'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                                                <svg t-else="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                             </span>
                                             <span class="tp-agenda-body">
                                                 <span class="tp-agenda-title" t-out="ag.title"/>
                                                 <span class="tp-agenda-meta">
                                                     <span t-out="ag.time_label"/>
                                                     <span class="tp-agenda-dot">·</span>
-                                                    <span t-out="ag.kind_label"/>
+                                                    <span t-out="ag.source_label || ag.kind_label"/>
+                                                    <span t-if="ag.kind === 'task' and ag.status_label" class="tp-agenda-status-tag" t-out="ag.status_label"/>
                                                 </span>
                                             </span>
                                         </button>
@@ -769,7 +778,7 @@
                                         <button t-if="this.hasMenuXmlid('project_todo.menu_todo_todos')"
                                                 type="button"
                                                 class="tp-help-link-btn"
-                                                t-on-click="() => this.openPersonalShortcut('project_todo.menu_todo_todos')">Việc cá nhân</button>
+                                                t-on-click="() => this.openCreateTaskShortcut()">Tạo việc</button>
                                         <button t-if="this.hasMenuXmlid('calendar.mail_menu_calendar')"
                                                 type="button"
                                                 class="tp-help-link-btn"
@@ -784,10 +793,15 @@
                         <!-- ================================================== -->
                         <section class="tp-home-analytics-wrap" aria-label="Biểu đồ thống kê công việc">
                             <div class="tp-home-charts-row">
-                                <!-- Left Chart: Tình hình công việc (Stacked Bar + Shared Compact Filter) -->
+                                <!-- Left Chart: Stacked Bar -->
                                 <section class="tp-home-panel tp-chart-panel tp-bar-panel" aria-labelledby="tp_home_bar_heading">
                                     <div class="tp-panel-head tp-chart-head">
-                                        <h2 id="tp_home_bar_heading" class="tp-panel-title">Tình hình công việc</h2>
+                                        <div class="tp-chart-title-wrap">
+                                            <h2 id="tp_home_bar_heading" class="tp-panel-title" t-out="this.barChartTitle()"/>
+                                            <span t-if="this.dashboard().charts?.bar?.subtitle"
+                                                  class="tp-chart-caption"
+                                                  t-out="this.dashboard().charts.bar.subtitle"/>
+                                        </div>
 
                                         <div class="tp-inline-chart-filters">
                                             <label class="tp-filter-field">
@@ -798,7 +812,7 @@
                                                         t-on-change="this.onPeriodChange">
                                                     <t t-foreach="this.dashboard().charts?.period_options || []" t-as="popt" t-key="popt.key">
                                                         <option t-att-value="popt.key"
-                                                                t-att-selected="popt.key === this.taskFilters().period"
+                                                                t-att-selected="popt.key === (this.dashboard().charts?.period_key || this.taskFilters().period)"
                                                                 t-out="popt.label"/>
                                                     </t>
                                                 </select>
@@ -846,7 +860,7 @@
                                          class="tp-bar-layout">
                                         <div class="tp-bar-scroll">
                                             <div class="tp-bar-canvas-box" t-attf-style="min-width: {{this.barCanvasMinWidth()}};">
-                                                <canvas t-ref="this.barChart.ref" role="img" aria-label="Biểu đồ cột tình hình công việc theo phòng ban"/>
+                                                <canvas t-ref="this.barChart.ref" role="img" t-att-aria-label="this.barChartTitle()"/>
                                             </div>
                                         </div>
                                         <div class="tp-bar-legend" aria-label="Chú giải biểu đồ cột">
@@ -867,24 +881,30 @@
                                         Chưa tải được biểu đồ công việc. Vui lòng thử làm mới.
                                     </div>
                                     <div t-else="" class="tp-chart-empty">
-                                        Chưa có công việc trong kỳ và phạm vi đang chọn.
+                                        Chưa có công việc trong kỳ đang chọn.
                                     </div>
                                 </section>
 
-                                <!-- Right Chart: Tỷ lệ công việc (Donut + Legend) -->
+                                <!-- Right Chart: Status Donut + Legend -->
                                 <section class="tp-home-panel tp-chart-panel tp-donut-panel" aria-labelledby="tp_home_donut_heading">
-                                    <div class="tp-panel-head">
-                                        <h2 id="tp_home_donut_heading" class="tp-panel-title">Tỷ lệ công việc</h2>
+                                    <div class="tp-panel-head tp-chart-head">
+                                        <div class="tp-chart-title-wrap">
+                                            <h2 id="tp_home_donut_heading" class="tp-panel-title" t-out="this.donutChartTitle()"/>
+                                            <span t-if="this.dashboard().charts?.donut?.subtitle"
+                                                  class="tp-chart-caption"
+                                                  t-att-title="this.dashboard().charts?.donut?.note || ''"
+                                                  t-out="this.dashboard().charts.donut.subtitle"/>
+                                        </div>
                                         <span t-if="this.dashboard().charts?.period_label"
                                               class="tp-chart-sync-pill"
-                                              t-att-title="this.dashboard().charts?.period_rule_note || ''"
+                                              t-att-title="this.dashboard().charts?.donut?.note || this.dashboard().charts?.period_rule_note || ''"
                                               t-out="this.dashboard().charts.period_label"/>
                                     </div>
 
                                     <div t-if="this.dashboard().charts?.status === 'loading'" class="tp-chart-skeleton" aria-busy="true"/>
                                     <div t-elif="this.dashboard().charts?.status === 'ok'" class="tp-donut-layout">
-                                        <div class="tp-donut-ring-wrap">
-                                            <canvas t-ref="this.donutChart.ref" role="img" aria-label="Biểu đồ tròn tỷ lệ trạng thái công việc"/>
+                                        <div class="tp-donut-ring-wrap" t-att-title="this.dashboard().charts?.donut?.note || ''">
+                                            <canvas t-ref="this.donutChart.ref" role="img" t-att-aria-label="this.donutChartTitle()"/>
                                             <div class="tp-donut-center" aria-hidden="true">
                                                 <span class="tp-donut-center-num" t-out="this.formatCount(this.dashboard().charts?.donut?.center_count || 0)"/>
                                                 <span class="tp-donut-center-lbl" t-out="this.dashboard().charts?.donut?.center_label || 'Công việc'"/>
@@ -903,6 +923,7 @@
                                                         t-on-click="() => this.onDrilldownDonut(sl.key)">
                                                     <span class="tp-legend-swatch" t-attf-style="background-color: {{sl.color}};" aria-hidden="true"/>
                                                     <span class="tp-donut-legend-name" t-out="sl.label"/>
+                                                    <span class="tp-donut-legend-cnt" t-out="sl.count"/>
                                                     <span class="tp-donut-legend-pct" t-out="sl.percent + '%'"/>
                                                 </button>
                                             </li>

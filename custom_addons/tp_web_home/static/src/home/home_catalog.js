@@ -5,10 +5,12 @@ import { router } from "@web/core/browser/router";
  * current user (/web/webclient/load_menus is filtered by groups on the server). Metadata below
  * enriches a node when its XML ID is actually present; it never grants access or creates routes.
  *
- * UI-HOME-006: Shared 5-tier Home layout for all accounts:
- * - Quick department grid (up to 10 compact tiles in canonical reference order, filtered strictly by permission).
- * - Full authorized app drawer ("Tất cả ứng dụng" & Hamburger menu) preserving all 5 canonical sections,
- *   additional authorized apps, and restricting system administration tools strictly to `isSystem`.
+ * UI-HOME-006 & UI-HOME-007:
+ * - Admin mode ("Ứng dụng theo phòng ban"): canonical 10-tile department & HR grid matching reference.
+ * - Employee mode ("Ứng dụng của bạn"): compact grid of the user's real authorized daily apps &
+ *   department workspaces (no fake blank tiles, no unauthorized department placeholders, no admin tools).
+ * - Full authorized app drawer ("Tất cả ứng dụng" & Hamburger menu) preserves all 5 canonical sections,
+ *   additional authorized apps, and restricts system administration tools strictly to `isSystem`.
  */
 export const HOME_MENU_XMLID = "tp_web_home.menu_home";
 export const ALL_APPS_KEY = "all-apps";
@@ -34,8 +36,7 @@ export const SECTIONS = [
 const PANEL_ORDER = ["hr", "reporting", "workspace", "personal", "warehouse", "apps", "system"];
 
 /**
- * Canonical 10-tile Quick Access Grid order ("Ứng dụng theo phòng ban", Section 8).
- * Each slot renders ONLY when the current user actually has permission to open it.
+ * Admin Mode canonical 10-tile Quick Access Grid ("Ứng dụng theo phòng ban", Section 8).
  */
 export const QUICK_GRID_SLOTS = [
     {
@@ -116,6 +117,110 @@ export const QUICK_GRID_SLOTS = [
 ];
 
 /**
+ * Employee Mode priority slots ("Ứng dụng của bạn", UI-HOME-007 Section 5).
+ * Only entries backed by an authorized menu in the server-filtered menu tree are rendered.
+ */
+export const EMPLOYEE_GRID_SLOTS = [
+    {
+        slotKey: "hr",
+        entryKey: "hr",
+        xmlid: "tp_hr_workspace.menu_hr",
+        gridLabel: "Nhân sự",
+        gridIcon: "users",
+        tone: "primary",
+    },
+    {
+        slotKey: "attendance",
+        entryKey: "attendance",
+        xmlid: "tp_hr_attendance.menu_root",
+        gridLabel: "Chấm công",
+        gridIcon: "clock-briefcase",
+        tone: "blue",
+    },
+    {
+        slotKey: "requests",
+        entryKey: "tp_request",
+        xmlid: "tp_request.menu_root",
+        gridLabel: "Yêu cầu phê duyệt",
+        gridIcon: "kpi-requests",
+        tone: "purple",
+    },
+    {
+        slotKey: "reporting",
+        entryKey: "reporting",
+        xmlid: "tp_reporting.menu_root",
+        gridLabel: "Báo cáo",
+        gridIcon: "bar-chart",
+        tone: "indigo",
+    },
+    {
+        slotKey: "todo",
+        xmlid: "project_todo.menu_todo_todos",
+        gridLabel: "Việc cá nhân",
+        gridIcon: "check-square",
+        tone: "blue",
+    },
+    {
+        slotKey: "calendar",
+        xmlid: "calendar.mail_menu_calendar",
+        gridLabel: "Lịch làm việc",
+        gridIcon: "calendar",
+        tone: "blue",
+    },
+    {
+        slotKey: "discuss",
+        xmlid: "mail.menu_root_discuss",
+        gridLabel: "Trao đổi",
+        gridIcon: "message-circle",
+        tone: "blue",
+    },
+    {
+        slotKey: "business",
+        entryKey: "business",
+        xmlid: "tp_kd_workspace.menu_kd",
+        gridLabel: "Kế hoạch Kinh doanh",
+        gridIcon: "target",
+        tone: "blue",
+    },
+    {
+        slotKey: "dept_workspace",
+        xmlid: "tp_hr_workspace.menu_department_workspace",
+        gridLabel: "",
+        gridIcon: "building",
+        tone: "blue",
+    },
+    {
+        slotKey: "equipment",
+        entryKey: "equipment",
+        xmlid: "tp_equipment.menu_root",
+        gridLabel: "Kho Thiết bị",
+        gridIcon: "box",
+        tone: "purple",
+    },
+    {
+        slotKey: "digital_office",
+        xmlid: "tp_digital_office.menu_digital_office_root",
+        gridLabel: "Văn phòng số",
+        gridIcon: "file-text",
+        tone: "indigo",
+    },
+    {
+        slotKey: "recruitment",
+        xmlid: "tp_enterprise_ops.menu_recruitment_root",
+        gridLabel: "Tuyển dụng",
+        gridIcon: "user-plus",
+        tone: "blue",
+    },
+    {
+        slotKey: "governance",
+        xmlid: "tp_enterprise_governance.menu_governance_root",
+        gridLabel: "Điều hành & Dự án",
+        gridIcon: "bar-chart",
+        tone: "blue",
+    },
+];
+
+/**
  * Register or update a Home section deterministically without relying on asset load order.
  */
 export function registerHomeSection(section) {
@@ -173,6 +278,38 @@ export const APP_LABELS = {
         order: 10,
         icon: "users",
         aliases: "hr nhan su ho so nhan vien to chuc nang luc",
+    },
+    "tp_hr_attendance.menu_root": {
+        label: "Chấm công",
+        hint: "Ngày công cá nhân, bảng công và đề nghị điều chỉnh",
+        group: "hr",
+        order: 20,
+        icon: "clock-briefcase",
+        aliases: "cham cong bang cong cong cua toi attendance",
+    },
+    "tp_reporting.menu_root": {
+        label: "Báo cáo",
+        hint: "Báo cáo cá nhân, phòng ban và công ty",
+        group: "reporting",
+        order: 10,
+        icon: "bar-chart",
+        aliases: "bao cao ke hoach chi tieu reporting",
+    },
+    "tp_request.menu_root": {
+        label: "Yêu cầu phê duyệt",
+        hint: "Đề nghị cá nhân và quy trình phê duyệt nội bộ",
+        group: "reporting",
+        order: 20,
+        icon: "kpi-requests",
+        aliases: "yeu cau phe duyet de nghi to trinh request",
+    },
+    "tp_equipment.menu_root": {
+        label: "Kho thiết bị văn phòng",
+        hint: "Thiết bị, bàn giao và kiểm kê",
+        group: "warehouse",
+        order: 10,
+        icon: "box",
+        aliases: "kho thiet bi tai san equipment",
     },
     "tp_enterprise_ops.menu_recruitment_root": {
         label: "Tuyển dụng",
@@ -715,10 +852,109 @@ function personalEntries(apps) {
 }
 
 /**
- * Build the 10-slot Quick Department Grid ("Ứng dụng theo phòng ban", Section 8)
- * strictly from authorized entries in `catalog`.
+ * Build the Employee Quick Grid ("Ứng dụng của bạn", UI-HOME-007 Section 5)
+ * strictly from authorized menu entries for the logged-in employee.
+ * - Never includes unauthorized department placeholders or system administration menus.
+ * - Packs neatly without blank filler cells; caps shortcuts at 9 + "Tất cả ứng dụng" = 10 tiles.
  */
-export function buildQuickGrid(catalog, { includeAllApps = true } = {}) {
+export function buildEmployeeQuickGrid(catalog, { includeAllApps = true } = {}) {
+    const entries = catalog?.entries || [];
+    const userApps = catalog?.userApps || [];
+    const byKey = new Map();
+    const byXmlid = new Map();
+
+    for (const entry of entries) {
+        if (entry.placeholderOnly && !entry.menu) {
+            continue;
+        }
+        if (entry.key) {
+            byKey.set(entry.key, entry);
+        }
+        if (entry.xmlid) {
+            byXmlid.set(entry.xmlid, entry);
+        }
+    }
+    for (const app of userApps) {
+        if (app.group === "system") {
+            continue;
+        }
+        if (app.xmlid && !byXmlid.has(app.xmlid)) {
+            byXmlid.set(app.xmlid, app);
+        }
+    }
+
+    const shortcuts = [];
+    const usedMenuIds = new Set();
+    const usedKeys = new Set();
+    const maxShortcutSlots = includeAllApps ? 9 : 10;
+
+    for (const slot of EMPLOYEE_GRID_SLOTS) {
+        if (shortcuts.length >= maxShortcutSlots) {
+            break;
+        }
+        const match =
+            (slot.entryKey && byKey.get(slot.entryKey)) ||
+            (slot.xmlid && byXmlid.get(slot.xmlid)) ||
+            null;
+        if (!match || !match.menu?.actionID) {
+            continue;
+        }
+        const menuId = match.menu.id;
+        if ((menuId && usedMenuIds.has(menuId)) || (match.key && usedKeys.has(match.key))) {
+            continue;
+        }
+        if (menuId) {
+            usedMenuIds.add(menuId);
+        }
+        if (match.key) {
+            usedKeys.add(match.key);
+        }
+        const gridLabel = slot.gridLabel || match.name || match.label;
+        shortcuts.push({
+            ...match,
+            gridLabel,
+            gridIcon: slot.gridIcon || match.svgIcon || match.icon || "grid-four",
+            tone: slot.tone || "blue",
+            primaryAccent: false,
+        });
+    }
+
+    // Highlight first active authorized workspace/tool tile cleanly like the reference design
+    const firstActive = shortcuts.find(
+        (s) => s.href && s.badgeKind !== "developing" && s.badgeKind !== "unstarted"
+    );
+    if (firstActive) {
+        firstActive.primaryAccent = true;
+    }
+
+    const hasAnyPermittedApp = entries.length > 0 || userApps.length > 0;
+    if (includeAllApps && hasAnyPermittedApp) {
+        shortcuts.push({
+            ...allAppsEntry(),
+            key: ALL_APPS_KEY,
+            kind: "panel",
+            name: "Tất cả ứng dụng",
+            label: "Tất cả ứng dụng",
+            gridLabel: "Tất cả ứng dụng",
+            gridIcon: "grid-four",
+            tone: "blue",
+            primaryAccent: false,
+        });
+    }
+
+    return shortcuts;
+}
+
+/**
+ * Build the Quick Access Grid for either Admin Mode ("Ứng dụng theo phòng ban", 10 canonical slots)
+ * or Employee Mode ("Ứng dụng của bạn", authorized daily apps & workspaces).
+ */
+export function buildQuickGrid(catalog, { includeAllApps = true, homeMode = null } = {}) {
+    const mode = homeMode || (catalog?.isAdmin || catalog?.isDelegated ? "admin" : "employee");
+    if (mode === "employee") {
+        return buildEmployeeQuickGrid(catalog, { includeAllApps });
+    }
+
     const entries = catalog?.entries || [];
     const byKey = new Map();
     const byXmlid = new Map();
@@ -770,7 +1006,6 @@ export function buildQuickGrid(catalog, { includeAllApps = true } = {}) {
         });
     }
 
-    // Preserve employee's own developing department card ("Phòng ban của tôi") if granted
     for (const entry of entries) {
         if (
             entry.xmlid === "tp_hr_workspace.menu_department_workspace" &&
@@ -848,7 +1083,6 @@ export function buildSearchableFunctions(rootTree, catalog, { debug = "", isSyst
     const seenMenuIds = new Set();
     const seenKeys = new Set();
 
-    // 1. Canonical Home entries (including authorized placeholders for admins)
     for (const entry of catalog?.entries || []) {
         const k = entry.key || entry.xmlid;
         if (k && !seenKeys.has(k)) {
@@ -863,7 +1097,6 @@ export function buildSearchableFunctions(rootTree, catalog, { debug = "", isSyst
         }
     }
 
-    // 2. Permitted non-system apps & leaf menus in rootTree
     for (const app of rootTree?.childrenTree || []) {
         if (!app || app.xmlid === HOME_MENU_XMLID) {
             continue;
@@ -881,7 +1114,6 @@ export function buildSearchableFunctions(rootTree, catalog, { debug = "", isSyst
                 categoryLabel: appMeta.group === "system" ? "Quản trị hệ thống" : "Ứng dụng",
             });
         }
-        // Walk up to depth 2 children with actions so users can search concrete features
         const walkLeaves = (node, trail) => {
             for (const child of node.childrenTree || []) {
                 const cMeta = APP_LABELS[child.xmlid] || {};
@@ -919,12 +1151,15 @@ export function buildSearchableFunctions(rootTree, catalog, { debug = "", isSyst
  * Build the unified Home catalog from the server-filtered menu tree.
  * Backend permissions remain the source of truth: no unauthorized routes or menus are created.
  */
-export function buildCatalog(rootTree, { debug = "", isSystem = false, isDelegated = false } = {}) {
+export function buildCatalog(
+    rootTree,
+    { debug = "", isSystem = false, isDelegated = false, homeMode = null } = {}
+) {
     const apps = buildTiles(rootTree, debug);
     const modulesCatalog = buildAdminCatalog(rootTree, {
         debug,
         isSystem: Boolean(isSystem),
-        isDelegated,
+        isDelegated: Boolean(isDelegated),
     });
     const personal = personalEntries(apps);
     const validGroups = new Set(orderedSections().map((s) => s.key));
@@ -953,14 +1188,16 @@ export function buildCatalog(rootTree, { debug = "", isSystem = false, isDelegat
         ...system.map((tile) => tile.menu?.id).filter(Boolean),
     ]);
 
+    const effectiveMode = homeMode || (isSystem || isDelegated ? "admin" : "employee");
     const partialCatalog = {
         isAdmin: Boolean(isSystem),
+        isDelegated: Boolean(isDelegated),
+        homeMode: effectiveMode,
         admin: modulesCatalog,
         tools,
         entries,
         home: apps.filter((tile) => tile.group === "workspace" || tile.group === "personal"),
         system,
-        // Keep `all` admin-only for legacy contract, while `userApps` exposes each user's own permitted apps
         all: isSystem ? apps : [],
         userApps: isSystem ? apps : nonSystemApps,
         extraUserApps,
@@ -969,7 +1206,7 @@ export function buildCatalog(rootTree, { debug = "", isSystem = false, isDelegat
 
     return {
         ...partialCatalog,
-        quickGrid: buildQuickGrid(partialCatalog),
+        quickGrid: buildQuickGrid(partialCatalog, { homeMode: effectiveMode }),
         searchableFunctions: buildSearchableFunctions(rootTree, partialCatalog, {
             debug,
             isSystem: Boolean(isSystem),

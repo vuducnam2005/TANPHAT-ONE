@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-26T04:45:50.428584+00:00",
-  "last_change_id": "CHG-20261126-003",
-  "code_digest": "0b4a3fe69429d3e4c585452e4449fdcd706a858e70167d3df97921cb6e1e41cc",
+  "updated_at": "2026-11-26T06:00:02.772627+00:00",
+  "last_change_id": "CHG-20261126-004",
+  "code_digest": "fef7f9e398f84b84d18772cd7180b668656dbbc3b3b0714082bb33dd7c9b99e1",
   "code_file_count": 922,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "8aba5ed404bfcfc8fca28147517fb990125c1418bbc4481600a5fa58f67107e1",
-    "docs/CHANGELOG.md": "ef128a3f958e07c6d19a593749033ac4c0d09d69a0ed56488d9e8e556826e777",
+    "docs/PROJECT_STATUS.md": "c9ec57ad66d82afc398ffc18023fc2dcd9abff3c207ca761a12416f8a6c54b11",
+    "docs/CHANGELOG.md": "fb8cec6f209a1c78b8f0bc0ad0e8be33d1286f6a6666ee6fc25ce97b5dda3807",
     "AGENTS.md": "72c31b7b0d24828d2313203ad211348f916aec386e61ad31b478fb3f80ad4448",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "PC server backup home006-20261126T113256 (pg_restore --list 17687 TOC lines) + 20/20 SHA256 verified + -u tp_web_home rc=0 err=0 + STRICT_INVARIANT_DRIFTS={} + public https://tpone.tadic.vn health/auth/webp/JS(9aae32a)/CSS(ef16b4f) HTTP 200"
+    "ruff+libsass+xml+node PASS; Odoo /tp_web_home 26 runs (20 tests) 0 failed; Hoot home_launcher 15/15 PASS; Playwright 8 viewports x 3 roles PASS"
   ]
 }

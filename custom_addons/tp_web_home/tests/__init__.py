@@ -1,2 +1,1 @@
-from . import test_home_dashboard
-from . import test_home_menu
+from . import test_home_dashboard, test_home_menu
