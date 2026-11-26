@@ -1,6 +1,6 @@
 # TANPHAT ONE — Trang chủ (`tp_web_home`)
 
-Addon giao diện Trang chủ native Odoo 20 của **TANPHAT ONE** tại `/app/trang-chu` (`20.0.2.2.0`, `UI-HOME-006`, `UI-HOME-007` & `UI-HOME-008`).
+Addon giao diện Trang chủ native Odoo 20 của **TANPHAT ONE** tại `/app/trang-chu` (`20.0.2.3.0`, `UI-HOME-006`..`UI-HOME-009`).
 
 ## Kiến trúc 5 tầng dùng chung một thiết kế cho Admin & Nhân viên
 

@@ -44,21 +44,40 @@ export class HomeButton extends Component {
 
         const stack = router.current?.actionStack || [];
         const rootAction = stack[0]?.action;
-        const menus = this.menuService.getAll();
+        const isRootStaleHome = Boolean(
+            rootAction === "tp-home" || (home && rootAction && rootAction === home.actionID)
+        );
+        const menus = this.menuService
+            .getAll()
+            .filter((m) => m.xmlid !== HOME_MENU_XMLID && (!home || m.appID !== home.id));
+
+        const leafHint =
+            current?.context?.tp_hr_leaf ||
+            current?.context?.tp_kd_leaf ||
+            current?.context?.tp_eq_leaf ||
+            "";
         let matches = [];
-        if (rootAction) {
+        if (leafHint) {
+            matches = menus.filter((m) => m.xmlid === leafHint);
+        }
+        if (!matches.length && rootAction && !isRootStaleHome) {
             matches = menus.filter(
                 (m) => m.actionID && (m.actionID === rootAction || m.actionPath === rootAction)
             );
         }
-        if (!matches.length && stack.length <= 1 && typeof current.id === "number") {
-            matches = menus.filter((m) => m.actionID === current.id);
+        if (!matches.length && (stack.length <= 1 || isRootStaleHome)) {
+            matches = menus.filter(
+                (m) =>
+                    m.actionID &&
+                    ((typeof current.id === "number" && m.actionID === current.id) ||
+                        (current.path && m.actionPath === current.path))
+            );
         }
         if (!matches.length) {
             return;
         }
         const curApp = this.menuService.getCurrentApp();
-        if (curApp && matches.some((m) => m.appID === curApp.id)) {
+        if (curApp && curApp.id !== home?.id && matches.some((m) => m.appID === curApp.id)) {
             return;
         }
         const preferred =

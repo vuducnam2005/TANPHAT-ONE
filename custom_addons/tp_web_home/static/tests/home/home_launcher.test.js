@@ -10,6 +10,7 @@ import {
     patchWithCleanup,
 } from "@web/../tests/web_test_helpers";
 import { browser } from "@web/core/browser/browser";
+import { router } from "@web/core/browser/router";
 import { user } from "@web/core/user";
 import { session } from "@web/session";
 import { HomeButton } from "@tp_web_home/home/home_button";
@@ -593,11 +594,57 @@ describe("5-tier HomeLauncher (Admin & Employee Modes)", () => {
         expect(".tp-donut-panel .tp-panel-title").toHaveText("Tỷ lệ công việc");
 
         patchWithCleanup(getService("action"), {
-            doAction: (act) => expect.step(`action:${act.res_model || act}`),
+            doAction: (act, opts) => {
+                expect.step(`action:${act.res_model || act}:${Boolean(opts?.clearBreadcrumbs)}`);
+            },
         });
         await contains('[data-kpi="hr"]').click();
+        expect(getService("menu").getCurrentApp()?.xmlid).toBe("tp_hr_workspace.menu_hr");
         await contains('[data-kpi="requests"]').click();
-        expect.verifySteps(["action:hr.employee", "action:tp_request.action_to_approve"]);
+        expect.verifySteps([
+            "action:hr.employee:true",
+            "action:tp_request.action_to_approve:true",
+        ]);
+    });
+
+    test("HomeButton.syncAppWithAction preserves target module app when actionStack[0] still holds stale tp-home", async () => {
+        patchWithCleanup(user, { isSystem: true });
+        defineMenus([
+            HOME,
+            {
+                ...HR,
+                children: [{ id: 151, appID: HR.id, xmlid: "tp_hr_workspace.menu_employees", name: "Danh sách nhân viên", actionID: 528 }],
+            },
+            {
+                ...KD,
+                children: [{ id: 91, appID: KD.id, xmlid: "tp_kd_workspace.menu_tasks", name: "Công việc và tiến độ", actionID: 513 }],
+            },
+            {
+                ...EQP,
+                children: [{ id: 241, appID: EQP.id, xmlid: "tp_equipment.menu_equipment_all", name: "Thiết bị", actionID: 593 }],
+            },
+        ]);
+        patchWithCleanup(router, {
+            current: { actionStack: [{ action: "tp-home" }] },
+        });
+        const hb = await mountWithCleanup(HomeButton);
+        const menuService = getService("menu");
+        const actionService = getService("action");
+
+        // Simulate drilling down from Home into TP HR Danh sách nhân viên while router stack[0] is still tp-home
+        const hrApp = menuService.getAll().find((m) => m.xmlid === "tp_hr_workspace.menu_hr");
+        menuService.setCurrentMenu(hrApp);
+        patchWithCleanup(actionService, {
+            currentController: {
+                action: {
+                    id: 528,
+                    res_model: "hr.employee",
+                    context: { tp_hr_leaf: "tp_hr_workspace.menu_employees" },
+                },
+            },
+        });
+        hb.env.bus.trigger("ACTION_MANAGER:UI-UPDATED");
+        expect(menuService.getCurrentApp()?.xmlid).toBe("tp_hr_workspace.menu_hr");
     });
 
     test("Employee mode renders 4 personal cards (including Attendance status), Ứng dụng của bạn, and daily personal charts without Stock", async () => {

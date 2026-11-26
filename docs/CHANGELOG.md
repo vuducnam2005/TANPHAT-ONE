@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261126-008 — 2026-11-26 — UI-HOME-009: Chuẩn hóa điều hướng các thẻ KPI Trang chủ mở đúng phân hệ kèm đầy đủ thanh Sidebar (`tp_web_home 20.0.2.3.0`)
+
+- **Điều hướng phân hệ & Sidebar (`custom_addons/tp_web_home 20.0.2.3.0`):** sửa `HomeButton.syncAppWithAction()` không đặt ngược về `tp_web_home.menu_home` khi `router.current.actionStack[0]` còn giữ `"tp-home"` trong lúc chuyển màn, bổ sung `_activateModuleContext()` + `{ clearBreadcrumbs: true }` trong `home_launcher.js` và gắn `tp_kd_workspace.action_tasks` (`tp_kd_leaf='tp_kd_workspace.menu_tasks'`) cho drilldown `Công việc` Admin trong `home_dashboard.py`; đảm bảo bấm `Nhân sự` mở *TP HR → Danh sách nhân viên* kèm `#tp_hr_sidebar`, `Yêu cầu phê duyệt` mở `#tp_req_sidebar` (*Cần tôi duyệt* / *Đề nghị của tôi*), `Công việc` mở `#tp_kd_sidebar` (*Công việc và tiến độ*), `Tồn kho` mở `#tp_eq_sidebar` (*Thiết bị*), `Chấm công hôm nay` mở `#tp_att_sidebar` (*Công của tôi*).
+- **Kiểm thử (`tp_tanphat_test`):** `py_compile`, `node --check`, `ruff` PASS; Odoo `/tp_web_home` **26 runs / 20 tests PASS (`0 failed, 0 error`)**; Hoot `home_launcher` **16/16 PASS**; Playwright E2E xác minh 100% sidebar hiển thị đầy đủ và quay lại Trang chủ sạch sidebar.
+
 ## CHG-20261126-007 — 2026-11-26 — UI-HOME-008-DEPLOY: Biên bản Sao lưu nhị phân, Triển khai PC Server (`192.168.1.73`) & Kiểm chứng Public `https://tpone.tadic.vn` cho commit `e6214209` (`tp_web_home 20.0.2.2.0`)
 
 - **Sao lưu & Triển khai PC Server (`tp_tanphat_dev`):** sao lưu nhị phân tại `C:\TANPHAT-backups\home-redesign008\home008-20261126T135739` (`tp_tanphat_dev.dump` `10.101.497` bytes, SHA256 `7bdc6121...`, `restore-list.txt` `1.405.240` bytes, `source-pre-tp_web_home.tar.gz`, `release-home008.tar.gz`, `docker.odoo.conf`); đối chiếu **66/66** tệp khớp SHA256; nâng cấp `tp_web_home` lên `20.0.2.2.0`, giữ bất biến 100% dữ liệu doanh nghiệp (`employees=39`, `users=33/12`, `att_days=1014`, `corrections=3`, `requests=5`, `equipment=55`).

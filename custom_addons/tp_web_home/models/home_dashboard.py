@@ -357,6 +357,7 @@ class ResUsersHomeDashboard(models.Model):
                     "type": "client_action",
                     "action_xmlid": "tp_request.action_to_approve",
                     "menu_xmlid": "tp_request.menu_root",
+                    "leaf_xmlid": "tp_request.menu_to_approve",
                     "request_mode": "to_approve",
                     "request_tab": "all",
                 },
@@ -576,6 +577,7 @@ class ResUsersHomeDashboard(models.Model):
                         "type": "client_action",
                         "action_xmlid": "tp_request.action_mine",
                         "menu_xmlid": "tp_request.menu_root",
+                        "leaf_xmlid": "tp_request.menu_mine",
                         "request_mode": "mine",
                         "request_tab": "pending",
                     },
@@ -857,6 +859,7 @@ class ResUsersHomeDashboard(models.Model):
                 "type": "client_action",
                 "action_xmlid": "tp_hr_attendance.action_mine",
                 "menu_xmlid": "tp_hr_attendance.menu_root",
+                "leaf_xmlid": "tp_hr_attendance.menu_mine",
                 "attendance_today": today.isoformat(),
             }
 
@@ -1710,9 +1713,25 @@ class ResUsersHomeDashboard(models.Model):
             title_parts.append(blabel)
 
         matched_ids = [t.id for t in matched]
+        title = " · ".join(title_parts)
+        if home_mode == "admin" and self.env.ref("tp_kd_workspace.action_tasks", raise_if_not_found=False):
+            action = self.env["ir.actions.actions"]._for_xml_id("tp_kd_workspace.action_tasks")
+            base_ctx = action.get("context")
+            if not isinstance(base_ctx, dict):
+                base_ctx = {}
+            action.update(
+                name=title,
+                domain=[("id", "in", matched_ids)],
+                context={
+                    **base_ctx,
+                    "tp_kd_leaf": "tp_kd_workspace.menu_tasks",
+                    "create": False,
+                },
+            )
+            return action
         return {
             "type": "ir.actions.act_window",
-            "name": " · ".join(title_parts),
+            "name": title,
             "res_model": "project.task",
             "view_mode": "list,form",
             "views": [(False, "list"), (False, "form")],

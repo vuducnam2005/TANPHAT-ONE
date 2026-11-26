@@ -910,6 +910,33 @@ export class HomeLauncher extends Component {
         this.activate(entry);
     }
 
+    _activateModuleContext(appXmlid, leafXmlid = "") {
+        const allMenus = this.menuService.getAll();
+        const appMenu = appXmlid ? allMenus.find((m) => m.xmlid === appXmlid) : null;
+        const leafMenu = leafXmlid ? allMenus.find((m) => m.xmlid === leafXmlid) : null;
+        if (leafMenu?.id) {
+            const lastLeafStorageMap = {
+                "tp_hr_workspace.menu_hr": "tp_hr_ui:last_leaf",
+                "tp_kd_workspace.menu_kd": "tp_kd_ui:last_leaf",
+                "tp_equipment.menu_root": "tp_eq_ui:last_leaf",
+                "tp_request.menu_root": "tp_req_ui:last_leaf",
+                "tp_hr_attendance.menu_root": "tp_att_ui:last_leaf",
+            };
+            const storageKey = lastLeafStorageMap[appXmlid];
+            if (storageKey) {
+                try {
+                    browser.sessionStorage?.setItem(storageKey, String(leafMenu.id));
+                } catch {
+                    // Ignore private mode / storage restrictions
+                }
+            }
+        }
+        const target = appMenu || (leafMenu?.appID ? this.menuService.getMenu?.(leafMenu.appID) || leafMenu : leafMenu);
+        if (target) {
+            this.menuService.setCurrentMenu(target);
+        }
+    }
+
     async onKpiClick(card) {
         if (!card?.can_open || !card.drilldown) {
             return;
@@ -930,12 +957,10 @@ export class HomeLauncher extends Component {
                     }
                 }
                 if (dd.menu_xmlid) {
-                    const appMenu = this.menuService.getAll().find((m) => m.xmlid === dd.menu_xmlid);
-                    if (appMenu) {
-                        this.menuService.setCurrentMenu(appMenu);
-                    }
+                    this._activateModuleContext(dd.menu_xmlid, dd.leaf_xmlid || "");
                 }
                 await this.actionService.doAction(dd.action_xmlid, {
+                    clearBreadcrumbs: true,
                     additionalContext: dd.attendance_today
                         ? { tp_focus_date: dd.attendance_today }
                         : {},
@@ -954,22 +979,34 @@ export class HomeLauncher extends Component {
                     kwargs: {},
                 });
                 if (action) {
-                    const menuTargetMap = {
-                        hr: "tp_hr_workspace.menu_hr",
-                        stock: "tp_equipment.menu_root",
-                        emp_calendar: "calendar.mail_menu_calendar",
-                        emp_tasks: "project_todo.menu_todo_todos",
-                    };
-                    const targetXmlid = menuTargetMap[card.key];
-                    if (targetXmlid) {
-                        const targetMenu = this.menuService
+                    const ctx = action.context && typeof action.context === "object" ? action.context : {};
+                    if (card.key === "hr") {
+                        this._activateModuleContext(
+                            "tp_hr_workspace.menu_hr",
+                            ctx.tp_hr_leaf || "tp_hr_workspace.menu_employees"
+                        );
+                    } else if (card.key === "stock") {
+                        this._activateModuleContext(
+                            "tp_equipment.menu_root",
+                            ctx.tp_eq_leaf || "tp_equipment.menu_equipment_all"
+                        );
+                    } else if (card.key === "tasks") {
+                        const hasKd = this.menuService
                             .getAll()
-                            .find((m) => m.xmlid === targetXmlid);
-                        if (targetMenu) {
-                            this.menuService.setCurrentMenu(targetMenu);
-                        }
+                            .some((m) => m.xmlid === "tp_kd_workspace.menu_kd");
+                        this._activateModuleContext(
+                            hasKd ? "tp_kd_workspace.menu_kd" : "project.menu_main_pm",
+                            ctx.tp_kd_leaf || "tp_kd_workspace.menu_tasks"
+                        );
+                    } else if (card.key === "emp_calendar") {
+                        this._activateModuleContext(
+                            "calendar.mail_menu_calendar",
+                            "calendar.calendar_event_menu"
+                        );
+                    } else if (card.key === "emp_tasks") {
+                        this._activateModuleContext("project_todo.menu_todo_todos");
                     }
-                    await this.actionService.doAction(action);
+                    await this.actionService.doAction(action, { clearBreadcrumbs: true });
                 }
             }
         } catch (error) {
@@ -1019,15 +1056,19 @@ export class HomeLauncher extends Component {
                 }
             );
             if (action) {
+                const ctx = action.context && typeof action.context === "object" ? action.context : {};
                 if (this.homeMode() === "employee") {
-                    const todoMenu = this.menuService
+                    this._activateModuleContext("project_todo.menu_todo_todos");
+                } else {
+                    const hasKd = this.menuService
                         .getAll()
-                        .find((m) => m.xmlid === "project_todo.menu_todo_todos");
-                    if (todoMenu) {
-                        this.menuService.setCurrentMenu(todoMenu);
-                    }
+                        .some((m) => m.xmlid === "tp_kd_workspace.menu_kd");
+                    this._activateModuleContext(
+                        hasKd ? "tp_kd_workspace.menu_kd" : "project.menu_main_pm",
+                        ctx.tp_kd_leaf || "tp_kd_workspace.menu_tasks"
+                    );
                 }
-                await this.actionService.doAction(action);
+                await this.actionService.doAction(action, { clearBreadcrumbs: true });
             }
         } catch (error) {
             this.actionError.set(
@@ -1055,8 +1096,9 @@ export class HomeLauncher extends Component {
                     .getAll()
                     .find((m) => m.xmlid === "project_todo.menu_todo_todos");
                 if (todoMenu && item.route) {
-                    this.menuService.setCurrentMenu(todoMenu);
+                    this._activateModuleContext("project_todo.menu_todo_todos");
                     await this.actionService.doAction(todoMenu.actionID, {
+                        clearBreadcrumbs: true,
                         additionalContext: { active_id: item.res_id },
                         props: { resId: item.res_id },
                     });
@@ -1067,20 +1109,27 @@ export class HomeLauncher extends Component {
                     .getAll()
                     .find((m) => m.xmlid === "calendar.mail_menu_calendar");
                 if (calMenu && item.route) {
-                    this.menuService.setCurrentMenu(calMenu);
+                    this._activateModuleContext(
+                        "calendar.mail_menu_calendar",
+                        "calendar.calendar_event_menu"
+                    );
                     await this.actionService.doAction(calMenu.actionID, {
+                        clearBreadcrumbs: true,
                         additionalContext: { active_id: item.res_id },
                     });
                     return;
                 }
             }
-            await this.actionService.doAction({
-                type: "ir.actions.act_window",
-                res_model: item.res_model,
-                res_id: item.res_id,
-                views: [[false, "form"]],
-                view_mode: "form",
-            });
+            await this.actionService.doAction(
+                {
+                    type: "ir.actions.act_window",
+                    res_model: item.res_model,
+                    res_id: item.res_id,
+                    views: [[false, "form"]],
+                    view_mode: "form",
+                },
+                { clearBreadcrumbs: true }
+            );
         } catch (error) {
             this.actionError.set(
                 saveError(error, {
@@ -1114,8 +1163,9 @@ export class HomeLauncher extends Component {
         }
         this.agendaModalOpen.set(false);
         this.helpOpen.set(false);
-        this.menuService.setCurrentMenu(todoMenu);
+        this._activateModuleContext("project_todo.menu_todo_todos");
         await this.actionService.doAction(todoMenu.actionID, {
+            clearBreadcrumbs: true,
             props: { resId: "new" },
         });
     }
