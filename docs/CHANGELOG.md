@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261126-006 — 2026-11-26 — UI-HOME-008: Áp dụng bảng màu định danh ổn định, icon trắng và độ tương phản chuẩn cho toàn bộ ô ứng dụng trên Trang chủ (`tp_web_home 20.0.2.2.0`)
+
+- **Giao diện lưới ứng dụng (`custom_addons/tp_web_home 20.0.2.2.0`):** ánh xạ màu gradient riêng theo `key`/`xmlid` ổn định (`resolveShortcutPalette` trong `home_catalog.js`, không dùng `nth-child` hay so tên tiếng Việt, loại bỏ ưu tiên màu đơn lẻ của KH-KD) cho toàn bộ 10 ô phòng ban Admin và lưới ứng dụng Nhân viên trên nền panel trắng; đổi icon `Chấm công` sang đồng hồ (`clock`), chữ và icon trắng `30–34px` đạt tương phản WCAG AA `>= 5.02:1`, bo góc `17px`, hover `-2px` (`180ms`), `:focus-visible` rõ nét và giữ nguyên hành vi/phân quyền của cả module đang hoạt động lẫn module đang phát triển.
+- **Kiểm thử (`tp_tanphat_test`):** `libsass`, XML parse, `node --check`, `ruff`, `git diff --check` PASS; Hoot `home_launcher` **15/15 PASS**; Playwright desktop (`1536×750`, `1706×1130`) & mobile (`390×844`) đối chiếu trước/sau trên Admin, Nhân viên và tài khoản ít ứng dụng **100% PASS (`0 pageErrors, 0 consoleErrors`)**.
+
 ## CHG-20261126-005 — 2026-11-26 — UI-HOME-007-DEPLOY: Biên bản Sao lưu nhị phân, Triển khai PC Server (`192.168.1.73`) & Kiểm chứng Public `https://tpone.tadic.vn` cho commit `9fb70aad` (`tp_web_home 20.0.2.1.0`)
 
 - **Sao lưu & Triển khai PC Server (`tp_tanphat_dev`):** sao lưu nhị phân tại `C:\TANPHAT-backups\home-redesign007\home007-20261126T130321` (`tp_tanphat_dev.dump` `10.095.222` bytes, SHA256 `850ea139...`, `restore-list.txt` `1.405.240` bytes từ `pg_restore --list`, `release-home007.tar.gz`, `expected_sha256.json`, `docker.odoo.conf`, `upgrade.log`, `SHA256SUMS.json`); đối chiếu **66/66** tệp khớp SHA256 (`MISMATCHES=0`); thực thi `-u tp_web_home --without-demo=True --no-http --stop-after-init --max-cron-threads=0` đạt `rc=0, error_lines=0`; chỉ khởi động lại `tp-odoo` (giữ nguyên `tp-tunnel` & `tp-postgres`).

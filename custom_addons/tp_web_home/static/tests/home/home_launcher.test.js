@@ -444,14 +444,29 @@ describe("catalog & chart specs", () => {
             "Kế hoạch Kinh doanh",
             "Tất cả ứng dụng",
         ]);
-        expect(catalog.quickGrid[0].primaryAccent).toBe(true);
+        expect(catalog.quickGrid.map((g) => g.palette)).toEqual([
+            "attendance",
+            "requests",
+            "reporting",
+            "todo",
+            "calendar",
+            "discuss",
+            "business",
+            "all-apps",
+        ]);
 
-        // Employee with only 2 apps packs cleanly without blank filler slots
+        // Employee with only 2 apps packs cleanly and retains each module's own stable palette (never nth-child)
         const minimalCat = buildCatalog(tree(ATT, TODO), { isSystem: false, homeMode: "employee" });
-        expect(buildEmployeeQuickGrid(minimalCat).map((g) => g.gridLabel)).toEqual([
+        const minimalGrid = buildEmployeeQuickGrid(minimalCat);
+        expect(minimalGrid.map((g) => g.gridLabel)).toEqual([
             "Chấm công",
             "Việc cá nhân",
             "Tất cả ứng dụng",
+        ]);
+        expect(minimalGrid.map((g) => g.palette)).toEqual([
+            "attendance",
+            "todo",
+            "all-apps",
         ]);
     });
 
@@ -493,6 +508,18 @@ describe("catalog & chart specs", () => {
                 "Kho Thiết bị",
                 "Chấm công",
                 "Tất cả ứng dụng",
+            ]);
+            expect(catalog.quickGrid.map((g) => g.palette)).toEqual([
+                "business",
+                "hr",
+                "design",
+                "technical",
+                "bim",
+                "accounting",
+                "tadic",
+                "equipment",
+                "attendance",
+                "all-apps",
             ]);
             const drawerGroups = buildDrawerGroups(catalog);
             expect(drawerGroups.some((g) => g.key === "system")).toBe(true);

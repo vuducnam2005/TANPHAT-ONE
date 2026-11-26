@@ -36,6 +36,69 @@ export const SECTIONS = [
 const PANEL_ORDER = ["hr", "reporting", "workspace", "personal", "warehouse", "apps", "system"];
 
 /**
+ * Stable shortcut color palette mapping by XML ID and canonical module key (UI-HOME-008).
+ * Never relies on DOM position (`nth-child`) or Vietnamese display text, so Admin and Employee
+ * always render the exact same color for the same module regardless of tile count.
+ */
+export const SHORTCUT_PALETTE_BY_XMLID = {
+    "tp_kd_workspace.menu_kd": "business",
+    "tp_hr_workspace.menu_hr": "hr",
+    "tp_equipment.menu_root": "equipment",
+    "tp_hr_attendance.menu_root": "attendance",
+    "tp_request.menu_root": "requests",
+    "tp_reporting.menu_root": "reporting",
+    "project_todo.menu_todo_todos": "todo",
+    "calendar.mail_menu_calendar": "calendar",
+    "mail.menu_root_discuss": "discuss",
+    "tp_hr_workspace.menu_department_workspace": "dept-workspace",
+    "tp_digital_office.menu_digital_office_root": "digital-office",
+    "tp_enterprise_ops.menu_recruitment_root": "recruitment",
+    "tp_enterprise_governance.menu_governance_root": "governance",
+};
+
+export const SHORTCUT_PALETTE_BY_KEY = {
+    business: "business",
+    hr: "hr",
+    design: "design",
+    technical: "technical",
+    bim: "bim",
+    accounting: "accounting",
+    tadic: "tadic",
+    equipment: "equipment",
+    attendance: "attendance",
+    [ALL_APPS_KEY]: "all-apps",
+    tp_request: "requests",
+    requests: "requests",
+    reporting: "reporting",
+    todo: "todo",
+    calendar: "calendar",
+    discuss: "discuss",
+    dept_workspace: "dept-workspace",
+    digital_office: "digital-office",
+    recruitment: "recruitment",
+    governance: "governance",
+};
+
+export function resolveShortcutPalette(item) {
+    if (!item) {
+        return "default";
+    }
+    if (item.kind === "panel" || item.key === ALL_APPS_KEY || item.slotKey === ALL_APPS_KEY) {
+        return "all-apps";
+    }
+    const byXmlid = item.xmlid && SHORTCUT_PALETTE_BY_XMLID[item.xmlid];
+    if (byXmlid) {
+        return byXmlid;
+    }
+    for (const k of [item.palette, item.entryKey, item.slotKey, item.key]) {
+        if (k && SHORTCUT_PALETTE_BY_KEY[k]) {
+            return SHORTCUT_PALETTE_BY_KEY[k];
+        }
+    }
+    return "default";
+}
+
+/**
  * Admin Mode canonical 10-tile Quick Access Grid ("Ứng dụng theo phòng ban", Section 8).
  */
 export const QUICK_GRID_SLOTS = [
@@ -45,8 +108,7 @@ export const QUICK_GRID_SLOTS = [
         xmlid: "tp_kd_workspace.menu_kd",
         gridLabel: "Kế hoạch Kinh doanh",
         gridIcon: "target",
-        tone: "primary",
-        primaryAccent: true,
+        palette: "business",
     },
     {
         slotKey: "hr",
@@ -54,42 +116,42 @@ export const QUICK_GRID_SLOTS = [
         xmlid: "tp_hr_workspace.menu_hr",
         gridLabel: "Nhân sự",
         gridIcon: "users",
-        tone: "blue",
+        palette: "hr",
     },
     {
         slotKey: "design",
         entryKey: "design",
         gridLabel: "Thiết kế",
         gridIcon: "layers",
-        tone: "indigo",
+        palette: "design",
     },
     {
         slotKey: "technical",
         entryKey: "technical",
         gridLabel: "Kỹ thuật",
         gridIcon: "hardhat",
-        tone: "amber",
+        palette: "technical",
     },
     {
         slotKey: "bim",
         entryKey: "bim",
         gridLabel: "BIM-QC",
         gridIcon: "cube",
-        tone: "purple",
+        palette: "bim",
     },
     {
         slotKey: "accounting",
         entryKey: "accounting",
         gridLabel: "Kế toán",
         gridIcon: "calculator",
-        tone: "blue",
+        palette: "accounting",
     },
     {
         slotKey: "tadic",
         entryKey: "tadic",
         gridLabel: "TADIC",
         gridIcon: "building",
-        tone: "blue",
+        palette: "tadic",
     },
     {
         slotKey: "equipment",
@@ -97,22 +159,22 @@ export const QUICK_GRID_SLOTS = [
         xmlid: "tp_equipment.menu_root",
         gridLabel: "Kho Thiết bị",
         gridIcon: "box",
-        tone: "purple",
+        palette: "equipment",
     },
     {
         slotKey: "attendance",
         entryKey: "attendance",
         xmlid: "tp_hr_attendance.menu_root",
         gridLabel: "Chấm công",
-        gridIcon: "clock-briefcase",
-        tone: "blue",
+        gridIcon: "clock",
+        palette: "attendance",
     },
     {
         slotKey: ALL_APPS_KEY,
         kind: "panel",
         gridLabel: "Tất cả ứng dụng",
         gridIcon: "grid-four",
-        tone: "blue",
+        palette: "all-apps",
     },
 ];
 
@@ -127,15 +189,15 @@ export const EMPLOYEE_GRID_SLOTS = [
         xmlid: "tp_hr_workspace.menu_hr",
         gridLabel: "Nhân sự",
         gridIcon: "users",
-        tone: "primary",
+        palette: "hr",
     },
     {
         slotKey: "attendance",
         entryKey: "attendance",
         xmlid: "tp_hr_attendance.menu_root",
         gridLabel: "Chấm công",
-        gridIcon: "clock-briefcase",
-        tone: "blue",
+        gridIcon: "clock",
+        palette: "attendance",
     },
     {
         slotKey: "requests",
@@ -143,7 +205,7 @@ export const EMPLOYEE_GRID_SLOTS = [
         xmlid: "tp_request.menu_root",
         gridLabel: "Yêu cầu phê duyệt",
         gridIcon: "kpi-requests",
-        tone: "purple",
+        palette: "requests",
     },
     {
         slotKey: "reporting",
@@ -151,28 +213,28 @@ export const EMPLOYEE_GRID_SLOTS = [
         xmlid: "tp_reporting.menu_root",
         gridLabel: "Báo cáo",
         gridIcon: "bar-chart",
-        tone: "indigo",
+        palette: "reporting",
     },
     {
         slotKey: "todo",
         xmlid: "project_todo.menu_todo_todos",
         gridLabel: "Việc cá nhân",
         gridIcon: "check-square",
-        tone: "blue",
+        palette: "todo",
     },
     {
         slotKey: "calendar",
         xmlid: "calendar.mail_menu_calendar",
         gridLabel: "Lịch làm việc",
         gridIcon: "calendar",
-        tone: "blue",
+        palette: "calendar",
     },
     {
         slotKey: "discuss",
         xmlid: "mail.menu_root_discuss",
         gridLabel: "Trao đổi",
         gridIcon: "message-circle",
-        tone: "blue",
+        palette: "discuss",
     },
     {
         slotKey: "business",
@@ -180,14 +242,14 @@ export const EMPLOYEE_GRID_SLOTS = [
         xmlid: "tp_kd_workspace.menu_kd",
         gridLabel: "Kế hoạch Kinh doanh",
         gridIcon: "target",
-        tone: "blue",
+        palette: "business",
     },
     {
         slotKey: "dept_workspace",
         xmlid: "tp_hr_workspace.menu_department_workspace",
         gridLabel: "",
         gridIcon: "building",
-        tone: "blue",
+        palette: "dept-workspace",
     },
     {
         slotKey: "equipment",
@@ -195,28 +257,28 @@ export const EMPLOYEE_GRID_SLOTS = [
         xmlid: "tp_equipment.menu_root",
         gridLabel: "Kho Thiết bị",
         gridIcon: "box",
-        tone: "purple",
+        palette: "equipment",
     },
     {
         slotKey: "digital_office",
         xmlid: "tp_digital_office.menu_digital_office_root",
         gridLabel: "Văn phòng số",
         gridIcon: "file-text",
-        tone: "indigo",
+        palette: "digital-office",
     },
     {
         slotKey: "recruitment",
         xmlid: "tp_enterprise_ops.menu_recruitment_root",
         gridLabel: "Tuyển dụng",
         gridIcon: "user-plus",
-        tone: "blue",
+        palette: "recruitment",
     },
     {
         slotKey: "governance",
         xmlid: "tp_enterprise_governance.menu_governance_root",
         gridLabel: "Điều hành & Dự án",
         gridIcon: "bar-chart",
-        tone: "blue",
+        palette: "governance",
     },
 ];
 
@@ -284,7 +346,7 @@ export const APP_LABELS = {
         hint: "Ngày công cá nhân, bảng công và đề nghị điều chỉnh",
         group: "hr",
         order: 20,
-        icon: "clock-briefcase",
+        icon: "clock",
         aliases: "cham cong bang cong cong cua toi attendance",
     },
     "tp_reporting.menu_root": {
@@ -914,17 +976,8 @@ export function buildEmployeeQuickGrid(catalog, { includeAllApps = true } = {}) 
             ...match,
             gridLabel,
             gridIcon: slot.gridIcon || match.svgIcon || match.icon || "grid-four",
-            tone: slot.tone || "blue",
-            primaryAccent: false,
+            palette: resolveShortcutPalette({ ...match, ...slot }),
         });
-    }
-
-    // Highlight first active authorized workspace/tool tile cleanly like the reference design
-    const firstActive = shortcuts.find(
-        (s) => s.href && s.badgeKind !== "developing" && s.badgeKind !== "unstarted"
-    );
-    if (firstActive) {
-        firstActive.primaryAccent = true;
     }
 
     const hasAnyPermittedApp = entries.length > 0 || userApps.length > 0;
@@ -937,8 +990,7 @@ export function buildEmployeeQuickGrid(catalog, { includeAllApps = true } = {}) 
             label: "Tất cả ứng dụng",
             gridLabel: "Tất cả ứng dụng",
             gridIcon: "grid-four",
-            tone: "blue",
-            primaryAccent: false,
+            palette: "all-apps",
         });
     }
 
@@ -983,8 +1035,7 @@ export function buildQuickGrid(catalog, { includeAllApps = true, homeMode = null
                     label: slot.gridLabel,
                     gridLabel: slot.gridLabel,
                     gridIcon: slot.gridIcon,
-                    tone: slot.tone,
-                    primaryAccent: false,
+                    palette: resolveShortcutPalette(slot),
                 });
             }
             continue;
@@ -1001,8 +1052,7 @@ export function buildQuickGrid(catalog, { includeAllApps = true, homeMode = null
             ...match,
             gridLabel: slot.gridLabel,
             gridIcon: slot.gridIcon,
-            tone: slot.tone,
-            primaryAccent: Boolean(slot.primaryAccent && match.featured),
+            palette: resolveShortcutPalette({ ...match, ...slot }),
         });
     }
 
@@ -1016,8 +1066,7 @@ export function buildQuickGrid(catalog, { includeAllApps = true, homeMode = null
                 ...entry,
                 gridLabel: entry.name,
                 gridIcon: "building",
-                tone: "blue",
-                primaryAccent: false,
+                palette: resolveShortcutPalette(entry),
             };
             if (insertIdx >= 0) {
                 shortcuts.splice(insertIdx, 0, extraCard);

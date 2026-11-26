@@ -816,53 +816,68 @@
         }
     }
 
-    .tp-dept-tile {
+    .tp-apps-panel .tp-dept-grid .tp-dept-tile {
+        --tp-tile-from: #334155;
+        --tp-tile-to: #1E293B;
+        --tp-tile-border: rgba(255, 255, 255, 0.16);
+        --tp-tile-shadow: rgba(15, 23, 42, 0.14);
+        --tp-tile-shadow-hover: rgba(15, 23, 42, 0.23);
+
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: clamp(3px, 0.55vh, 6px);
+        gap: clamp(9px, 1.35vh, 14px);
         min-height: clamp(54px, 7.2vh, 82px);
-        padding: clamp(6px, 0.8vh, 10px) 6px;
+        padding: clamp(7px, 0.95vh, 12px) 8px;
         text-align: center;
         text-decoration: none;
-        color: var(--tp-home-text);
-        background: #FFFFFF;
-        border: 1px solid #E3ECF7;
-        border-radius: 12px;
-        box-shadow: 0 2px 7px rgba(23, 43, 77, 0.03);
+        color: #FFFFFF;
+        background: linear-gradient(155deg, var(--tp-tile-from) 0%, var(--tp-tile-to) 100%);
+        border: 1px solid var(--tp-tile-border);
+        border-radius: 17px;
+        box-shadow: 0 3px 10px var(--tp-tile-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.16);
         cursor: pointer;
-        transition: transform var(--tp-home-motion) ease, border-color var(--tp-home-motion) ease, box-shadow var(--tp-home-motion) ease;
+        transition:
+            transform 180ms ease,
+            box-shadow 180ms ease,
+            filter 180ms ease,
+            border-color 180ms ease;
 
         &:hover {
-            transform: translateY(-1px);
-            border-color: #B4CBF0;
-            box-shadow: 0 6px 14px rgba(23, 43, 77, 0.075);
-            color: var(--tp-home-text);
+            transform: translateY(-2px);
+            filter: brightness(1.04);
+            border-color: rgba(255, 255, 255, 0.28);
+            box-shadow: 0 7px 16px var(--tp-tile-shadow-hover), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+            color: #FFFFFF;
+        }
+
+        &:active {
+            transform: translateY(0) scale(0.985);
+            filter: brightness(0.97);
+            transition-duration: 90ms;
+            color: #FFFFFF;
+        }
+
+        &:focus-visible {
+            outline: 2.5px solid #0F172A;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 2px #FFFFFF, 0 6px 14px var(--tp-tile-shadow-hover);
         }
 
         .tp-dept-tile-icon {
             display: grid;
             place-items: center;
-            width: clamp(22px, 2.9vh, 28px);
-            height: clamp(22px, 2.9vh, 28px);
-            color: var(--tp-home-blue);
+            width: clamp(30px, 3.3vh, 34px);
+            height: clamp(30px, 3.3vh, 34px);
+            color: #FFFFFF;
             flex-shrink: 0;
 
             .tp-svg {
-                width: clamp(19px, 2.5vh, 24px);
-                height: clamp(19px, 2.5vh, 24px);
+                width: 100%;
+                height: 100%;
+                stroke-width: 2.05;
             }
-        }
-
-        &.tone-amber .tp-dept-tile-icon {
-            color: #E09B2D;
-        }
-        &.tone-purple .tp-dept-tile-icon {
-            color: #7D5BE0;
-        }
-        &.tone-indigo .tp-dept-tile-icon {
-            color: #5474E8;
         }
 
         .tp-dept-tile-name {
@@ -870,29 +885,147 @@
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            font-size: clamp(11.5px, 1.3vh, 13px);
-            font-weight: 700;
-            line-height: 1.2;
-            color: #1D3152;
+            overflow-wrap: break-word;
+            font-size: clamp(11.5px, 1.32vh, 13.5px);
+            font-weight: 650;
+            line-height: 1.22;
+            color: #FFFFFF;
             max-width: 100%;
         }
 
-        &.is-primary-accent {
-            background: linear-gradient(180deg, #6797F3 0%, #4676E4 100%);
-            border-color: #4676E4;
-            color: #FFFFFF;
-            box-shadow: 0 6px 14px rgba(70, 118, 228, 0.25);
-
-            .tp-dept-tile-icon,
-            .tp-dept-tile-name {
-                color: #FFFFFF;
-            }
-
-            &:hover {
-                border-color: #3564D4;
-                box-shadow: 0 9px 18px rgba(70, 118, 228, 0.32);
-                color: #FFFFFF;
-            }
+        // Stable key / XMLID palettes (WCAG AA >= 5.0:1 with #FFFFFF)
+        &[data-palette="business"] {
+            --tp-tile-from: #2563EB;
+            --tp-tile-to: #1D4ED8;
+            --tp-tile-border: #1E40AF;
+            --tp-tile-shadow: rgba(29, 78, 216, 0.22);
+            --tp-tile-shadow-hover: rgba(29, 78, 216, 0.32);
+        }
+        &[data-palette="hr"] {
+            --tp-tile-from: #0F766E;
+            --tp-tile-to: #115E59;
+            --tp-tile-border: #115E59;
+            --tp-tile-shadow: rgba(15, 118, 110, 0.22);
+            --tp-tile-shadow-hover: rgba(15, 118, 110, 0.32);
+        }
+        &[data-palette="design"] {
+            --tp-tile-from: #0369A1;
+            --tp-tile-to: #075985;
+            --tp-tile-border: #075985;
+            --tp-tile-shadow: rgba(3, 105, 161, 0.22);
+            --tp-tile-shadow-hover: rgba(3, 105, 161, 0.32);
+        }
+        &[data-palette="technical"] {
+            --tp-tile-from: #B45309;
+            --tp-tile-to: #92400E;
+            --tp-tile-border: #92400E;
+            --tp-tile-shadow: rgba(180, 83, 9, 0.22);
+            --tp-tile-shadow-hover: rgba(180, 83, 9, 0.32);
+        }
+        &[data-palette="bim"] {
+            --tp-tile-from: #7C3AED;
+            --tp-tile-to: #6D28D9;
+            --tp-tile-border: #5B21B6;
+            --tp-tile-shadow: rgba(109, 40, 217, 0.22);
+            --tp-tile-shadow-hover: rgba(109, 40, 217, 0.32);
+        }
+        &[data-palette="accounting"] {
+            --tp-tile-from: #15803D;
+            --tp-tile-to: #166534;
+            --tp-tile-border: #166534;
+            --tp-tile-shadow: rgba(21, 128, 61, 0.22);
+            --tp-tile-shadow-hover: rgba(21, 128, 61, 0.32);
+        }
+        &[data-palette="tadic"] {
+            --tp-tile-from: #4338CA;
+            --tp-tile-to: #3730A3;
+            --tp-tile-border: #312E81;
+            --tp-tile-shadow: rgba(67, 56, 202, 0.22);
+            --tp-tile-shadow-hover: rgba(67, 56, 202, 0.32);
+        }
+        &[data-palette="equipment"] {
+            --tp-tile-from: #C2410C;
+            --tp-tile-to: #9A3412;
+            --tp-tile-border: #9A3412;
+            --tp-tile-shadow: rgba(194, 65, 12, 0.22);
+            --tp-tile-shadow-hover: rgba(194, 65, 12, 0.32);
+        }
+        &[data-palette="attendance"] {
+            --tp-tile-from: #0E7490;
+            --tp-tile-to: #155E75;
+            --tp-tile-border: #155E75;
+            --tp-tile-shadow: rgba(14, 116, 144, 0.22);
+            --tp-tile-shadow-hover: rgba(14, 116, 144, 0.32);
+        }
+        &[data-palette="all-apps"] {
+            --tp-tile-from: #475569;
+            --tp-tile-to: #334155;
+            --tp-tile-border: #334155;
+            --tp-tile-shadow: rgba(51, 65, 85, 0.22);
+            --tp-tile-shadow-hover: rgba(51, 65, 85, 0.32);
+        }
+        &[data-palette="requests"] {
+            --tp-tile-from: #7E22CE;
+            --tp-tile-to: #6B21A8;
+            --tp-tile-border: #581C87;
+            --tp-tile-shadow: rgba(107, 33, 168, 0.22);
+            --tp-tile-shadow-hover: rgba(107, 33, 168, 0.32);
+        }
+        &[data-palette="reporting"] {
+            --tp-tile-from: #1D4ED8;
+            --tp-tile-to: #1E40AF;
+            --tp-tile-border: #1E3A8A;
+            --tp-tile-shadow: rgba(30, 64, 175, 0.22);
+            --tp-tile-shadow-hover: rgba(30, 64, 175, 0.32);
+        }
+        &[data-palette="todo"] {
+            --tp-tile-from: #047857;
+            --tp-tile-to: #065F46;
+            --tp-tile-border: #064E3B;
+            --tp-tile-shadow: rgba(4, 120, 87, 0.22);
+            --tp-tile-shadow-hover: rgba(4, 120, 87, 0.32);
+        }
+        &[data-palette="calendar"] {
+            --tp-tile-from: #0369A1;
+            --tp-tile-to: #0C4A6E;
+            --tp-tile-border: #0C4A6E;
+            --tp-tile-shadow: rgba(3, 105, 161, 0.22);
+            --tp-tile-shadow-hover: rgba(3, 105, 161, 0.32);
+        }
+        &[data-palette="discuss"] {
+            --tp-tile-from: #4F46E5;
+            --tp-tile-to: #4338CA;
+            --tp-tile-border: #3730A3;
+            --tp-tile-shadow: rgba(67, 56, 202, 0.22);
+            --tp-tile-shadow-hover: rgba(67, 56, 202, 0.32);
+        }
+        &[data-palette="dept-workspace"] {
+            --tp-tile-from: #3730A3;
+            --tp-tile-to: #312E81;
+            --tp-tile-border: #312E81;
+            --tp-tile-shadow: rgba(55, 48, 163, 0.22);
+            --tp-tile-shadow-hover: rgba(55, 48, 163, 0.32);
+        }
+        &[data-palette="digital-office"] {
+            --tp-tile-from: #6D28D9;
+            --tp-tile-to: #5B21B6;
+            --tp-tile-border: #4C1D95;
+            --tp-tile-shadow: rgba(91, 33, 182, 0.22);
+            --tp-tile-shadow-hover: rgba(91, 33, 182, 0.32);
+        }
+        &[data-palette="recruitment"] {
+            --tp-tile-from: #0F766E;
+            --tp-tile-to: #134E4A;
+            --tp-tile-border: #134E4A;
+            --tp-tile-shadow: rgba(15, 118, 110, 0.22);
+            --tp-tile-shadow-hover: rgba(15, 118, 110, 0.32);
+        }
+        &[data-palette="governance"] {
+            --tp-tile-from: #1E40AF;
+            --tp-tile-to: #1E3A8A;
+            --tp-tile-border: #1E3A8A;
+            --tp-tile-shadow: rgba(30, 58, 138, 0.22);
+            --tp-tile-shadow-hover: rgba(30, 58, 138, 0.32);
         }
     }
 
@@ -1824,7 +1957,7 @@
             grid-template-columns: repeat(4, minmax(0, 1fr));
             grid-auto-rows: auto;
         }
-        .tp-dept-tile {
+        .tp-apps-panel .tp-dept-grid .tp-dept-tile {
             min-height: 76px;
         }
         .tp-agenda-list {
@@ -1916,7 +2049,7 @@
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 8px;
         }
-        .tp-dept-tile {
+        .tp-apps-panel .tp-dept-grid .tp-dept-tile {
             min-height: 76px;
             padding: 10px 8px;
         }
@@ -1951,8 +2084,10 @@
             transition: none !important;
         }
         .tp-kpi-card.is-clickable:hover,
-        .tp-dept-tile:hover {
+        .tp-apps-panel .tp-dept-grid .tp-dept-tile:hover,
+        .tp-apps-panel .tp-dept-grid .tp-dept-tile:active {
             transform: none;
+            filter: none;
         }
     }
 }
