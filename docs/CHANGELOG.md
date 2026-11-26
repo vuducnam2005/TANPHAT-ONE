@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261126-011 — 2026-11-26 — UI-HOME-010-DEPLOY: Biên bản Sao lưu nhị phân, Triển khai PC Server (`192.168.1.73`) & Kiểm chứng Public `https://tpone.tadic.vn` cho commit `7638e13e` (`tp_web_home 20.0.2.4.0`)
+
+- **Sao lưu & Triển khai PC Server (`tp_tanphat_dev`):** sao lưu nhị phân tại `C:\TANPHAT-backups\home-redesign010\home010-20261126T155345` (`tp_tanphat_dev.dump` `10.106.938` bytes, SHA256 `f23e2bb1...`, `restore-list.txt` `17.687` dòng TOC, `source-pre-tp_web_home.tar.gz`, `release-home010.tar.gz`, `docker.odoo.conf`); đối chiếu **66/66** tệp khớp SHA256 (`MISMATCHES=0`); nâng cấp `-u tp_web_home` đạt `rc=0, error_lines=0` (`20.0.2.4.0:installed`), chỉ khởi động lại `tp-odoo` và giữ bất biến 100% dữ liệu doanh nghiệp (`STRICT_INVARIANT_DRIFTS: {}` trên `employees=39`, `users=33/12`, `att_days=1014`, `corrections=3`, `requests=5`, `equipment=55`).
+- **Kiểm chứng Public `https://tpone.tadic.vn`:** `/web/health` `200`, bundle mới `/web/assets/c86be6c/web.assets_web.min.js` (`200`, `9.484.686` bytes) & `/web/assets/edd3da4/web.assets_web.min.css` (`200`, `1.833.869` bytes) phục vụ đầy đủ thiết kế 10 thẻ pastel + sóng cong + huy hiệu icon + nút mũi tên tròn. Đồng bộ docs-only lên PC server, không restart lại Odoo.
+
 ## CHG-20261126-010 — 2026-11-26 — UI-HOME-010: Thiết kế lại thẻ Module phòng ban trên Trang chủ giống 100% ảnh mẫu (`tp_web_home 20.0.2.4.0`)
 
 - **Giao diện thẻ ứng dụng (`custom_addons/tp_web_home 20.0.2.4.0`):** thêm thanh nhấn xanh cạnh tiêu đề panel; thiết kế lại toàn bộ 10 ô phòng ban Admin và lưới ứng dụng Nhân viên theo đúng ảnh tham chiếu gồm nền pastel mảnh viền màu riêng, 2 dải sóng cong bóng sáng góc trên phải (`.tp-dept-tile-waves`), huy hiệu icon vuông bo góc đổ gradient 2 nấc (`.tp-dept-tile-icon`), chữ đậm `#111827` căn trái cân dòng (`text-wrap: balance`, tương phản `>= 15:1`) và nút mũi tên tròn góc phải dưới (`.tp-dept-tile-arrow`), giữ định danh ổn định theo `data-palette` (`key`/`xmlid`) và không ảnh hưởng bố cục gọn 1 màn hình desktop hay phân quyền hiện hành.
