@@ -21,10 +21,48 @@
                 <span class="tp-shell-wordmark">TANPHAT ONE</span>
                 <span class="tp-shell-shortmark">TP ONE</span>
             </div>
-            <span t-if="this.ui.isSmall" class="tp-shell-mobile-context" t-att-title="this.currentApp?.name" t-out="this.currentApp?.name"/>
+            <span t-if="this.ui.isSmall" class="tp-shell-mobile-context" t-att-title="this.tpCurrentAppLabel" t-out="this.tpCurrentAppLabel"/>
         </xpath>
         <xpath expr="//DropdownItem[contains(@class, 'o_menu_brand')]" position="attributes">
-            <attribute name="attrs">{ href: this.getMenuItemHref(this.currentApp), title: this.currentApp.name, 'data-menu-xmlid': this.currentApp.xmlid, 'data-section': this.currentApp.id }</attribute>
+            <attribute name="t-out">this.tpCurrentAppLabel</attribute>
+            <attribute name="attrs">{ href: this.getMenuItemHref(this.currentApp), title: this.tpCurrentAppLabel, 'data-menu-xmlid': this.currentApp.xmlid, 'data-section': this.currentApp.id }</attribute>
+        </xpath>
+        <xpath expr="//header[hasclass('o_navbar')]" position="inside">
+            <TpAppSwitcher
+                open="this.tpAppsOpen()"
+                panelId="'tp_app_switcher_panel'"
+                anchorMode="this.ui.isSmall ? 'mobile' : 'navbar'"
+                currentAppSections="this.ui.isSmall ? this.currentAppSections : []"
+                onClose="(opts) => this.closeTpAppsSwitcher(opts)"
+                onSelectSubMenu="(sec) => this.onTpSubMenuSelected(sec)"
+            />
+        </xpath>
+    </t>
+    <t t-inherit="web.NavBar.AppsMenu" t-inherit-mode="extension">
+        <xpath expr="//a[hasclass('o_menu_toggle')]" position="attributes">
+            <attribute name="title">Mở ứng dụng</attribute>
+            <attribute name="aria-label">Mở ứng dụng</attribute>
+            <attribute name="aria-haspopup">dialog</attribute>
+            <attribute name="t-att-aria-expanded">this.tpAppsOpen() ? 'true' : 'false'</attribute>
+            <attribute name="t-on-click.prevent">this.toggleTpAppsSwitcher</attribute>
+        </xpath>
+        <xpath expr="//a[hasclass('o_menu_toggle')]/t[@t-call='web.NavBar.AppsMenu.Sidebar']" position="replace">
+            <i class="oi" data-icon="apps" aria-hidden="true"/>
+        </xpath>
+        <xpath expr="//div[hasclass('o_navbar_apps_menu')]/Dropdown" position="replace">
+            <button type="button"
+                    class="tp-apps-trigger-btn"
+                    data-hotkey="h"
+                    title="Mở ứng dụng"
+                    aria-label="Mở ứng dụng"
+                    aria-haspopup="dialog"
+                    t-att-aria-expanded="this.tpAppsOpen() ? 'true' : 'false'"
+                    aria-controls="tp_app_switcher_panel"
+                    data-available-offline=""
+                    t-ref="this.tpAppsDesktopBtn"
+                    t-on-click="this.toggleTpAppsSwitcher">
+                <i class="oi" data-icon="apps" aria-hidden="true"/>
+            </button>
         </xpath>
     </t>
     <t t-inherit="web.UserMenu" t-inherit-mode="extension">

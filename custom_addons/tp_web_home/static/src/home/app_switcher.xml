@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tp_web_home.TpAppSwitcher">
+        <div t-if="this.props.open"
+             t-attf-class="tp-apps-backdrop mode-{{this.props.anchorMode || 'navbar'}}"
+             t-on-click="() => this.closeWithFocusRestore()">
+            <section t-att-id="this.props.panelId || 'tp_app_switcher_panel'"
+                     t-attf-class="tp-apps-switcher mode-{{this.props.anchorMode || 'navbar'}}"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-labelledby="tp_apps_switcher_heading"
+                     t-ref="this.panelRef"
+                     t-on-click.stop=""
+                     t-on-keydown="this.onPanelKeydown">
+
+                <!-- Fixed Top Zone: Header + Search + Category Tabs -->
+                <div class="tp-apps-head-zone">
+                    <div class="tp-apps-topbar">
+                        <div class="tp-apps-brand">
+                            <span class="tp-apps-brand-mark" aria-hidden="true">
+                                <img src="/tp_web_home/static/img/brand/tp_logo_mark.png" alt="" width="22" height="22" draggable="false"/>
+                            </span>
+                            <h2 id="tp_apps_switcher_heading"
+                                class="tp-apps-heading"
+                                tabindex="-1"
+                                t-ref="this.titleRef">Ứng dụng TANPHAT ONE</h2>
+                        </div>
+
+                        <div class="tp-apps-top-actions">
+                            <a t-if="this.homeMenu()"
+                               class="tp-apps-home-btn cursor-interaction"
+                               t-att-class="{ 'is-active': this.isOnHome() }"
+                               t-att-href="this.homeHref()"
+                               t-att-aria-current="this.isOnHome() ? 'page' : null"
+                               data-menu-xmlid="tp_web_home.menu_home"
+                               t-on-click="this.onHomeClick">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                    <polyline points="9 22 9 12 15 12 15 22"/>
+                                </svg>
+                                <span>Trang chủ</span>
+                            </a>
+                            <button type="button"
+                                    class="tp-apps-close-btn o_tp_web_home_panel_close cursor-interaction"
+                                    title="Đóng"
+                                    aria-label="Đóng bộ chọn ứng dụng"
+                                    t-on-click="() => this.closeWithFocusRestore()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M18 6 6 18"/>
+                                    <path d="m6 6 12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tp-apps-search-box" role="search">
+                        <svg class="tp-apps-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.3-4.3"/>
+                        </svg>
+                        <input type="text"
+                               class="tp-apps-search-input o_tp_web_home_panel_input"
+                               placeholder="Tìm ứng dụng hoặc chức năng…"
+                               aria-label="Tìm ứng dụng hoặc chức năng"
+                               autocomplete="off"
+                               spellcheck="false"
+                               t-att-value="this.query()"
+                               t-ref="this.searchInputRef"
+                               t-on-input="this.onSearchInput"
+                               t-on-keydown="this.onSearchKeydown"
+                               t-on-compositionstart="this.onCompositionStart"
+                               t-on-compositionend="this.onCompositionEnd"/>
+                        <button t-if="this.query()"
+                                type="button"
+                                class="tp-apps-search-clear o_tp_web_home_search_clear cursor-interaction"
+                                title="Xóa từ khóa"
+                                aria-label="Xóa từ khóa tìm ứng dụng"
+                                t-on-click="this.clearSearch">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M18 6 6 18"/>
+                                <path d="m6 6 12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div t-if="this.tabs().length &gt; 1"
+                         class="tp-apps-tabs"
+                         role="tablist"
+                         aria-label="Nhóm nghiệp vụ">
+                        <t t-foreach="this.tabs()" t-as="tab" t-key="tab.key">
+                            <button type="button"
+                                    role="tab"
+                                    class="tp-apps-tab cursor-interaction"
+                                    t-att-class="{ 'is-active': this.activeTab() === tab.key }"
+                                    t-att-aria-selected="this.activeTab() === tab.key ? 'true' : 'false'"
+                                    t-att-data-tab-key="tab.key"
+                                    t-on-click="() => this.selectTab(tab.key)">
+                                <span t-out="tab.label"/>
+                            </button>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- Scrollable Body Zone -->
+                <div class="tp-apps-scroll-body">
+                    <!-- Mobile Current-App Submenus (preserves submenu navigation inside native apps) -->
+                    <t t-set="mobileSubMenus" t-value="this.flattenSubMenus(this.props.currentAppSections)"/>
+                    <div t-if="mobileSubMenus.length and !this.query()" class="tp-apps-mobile-subnav">
+                        <button type="button"
+                                class="tp-apps-mobile-subnav-toggle"
+                                t-att-aria-expanded="this.subMenusExpanded() ? 'true' : 'false'"
+                                t-on-click="this.toggleSubMenus">
+                            <span t-out="'Danh mục trong ' + this.currentAppName()"/>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path t-if="this.subMenusExpanded()" d="m18 15-6-6-6 6"/>
+                                <path t-else="" d="m6 9 6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div t-if="this.subMenusExpanded()" class="tp-apps-mobile-subnav-list">
+                            <button t-foreach="mobileSubMenus"
+                                    t-as="sub"
+                                    t-key="sub.id"
+                                    type="button"
+                                    class="tp-apps-mobile-subnav-item"
+                                    t-att-data-menu-xmlid="sub.xmlid"
+                                    t-on-click="() => this.onSubMenuClick(sub)"
+                                    t-out="sub.flatLabel"/>
+                        </div>
+                    </div>
+
+                    <t t-if="this.visibleGroups().length">
+                        <section t-foreach="this.visibleGroups()"
+                                 t-as="grp"
+                                 t-key="grp.key"
+                                 class="tp-apps-group"
+                                 t-att-data-drawer-group="grp.key">
+                            <div class="tp-apps-group-head">
+                                <h3 class="tp-apps-group-title" t-out="grp.label"/>
+                                <span class="tp-apps-group-count" t-out="grp.items.length"/>
+                            </div>
+
+                            <div class="tp-apps-grid">
+                                <t t-foreach="grp.items" t-as="tile" t-key="tile.key">
+                                    <a t-if="tile.href"
+                                       class="tp-apps-card o_tp_web_home_app cursor-interaction"
+                                       t-att-class="{ 'is-current-app': this.isCurrentItem(tile) }"
+                                       t-att-data-palette="tile.palette || 'default'"
+                                       t-att-href="tile.href"
+                                       t-att-data-menu-xmlid="tile.xmlid"
+                                       t-att-data-module="tile.key"
+                                       t-att-aria-current="this.isCurrentItem(tile) ? 'page' : null"
+                                       t-on-click="(ev) => this.onCardClick(ev, tile)">
+                                        <span class="tp-apps-card-icon" aria-hidden="true">
+                                            <t t-if="tile.switcherIcon">
+                                                <t t-call="tp_web_home.AdminIcon" icon="tile.switcherIcon"/>
+                                            </t>
+                                            <img t-elif="tile.icon and tile.icon.type === 'image'"
+                                                 class="o_tp_web_home_icon_img"
+                                                 t-att-src="tile.icon.src"
+                                                 alt=""
+                                                 t-on-error="() => this.onIconError(tile)"/>
+                                            <span t-elif="tile.icon and tile.icon.type === 'font'"
+                                                  class="o_tp_web_home_icon_font">
+                                                <i class="oi" t-att-data-icon="tile.icon.icon"/>
+                                            </span>
+                                            <span t-else=""
+                                                  class="o_tp_web_home_icon_monogram"
+                                                  t-out="tile.icon?.text || 'TP'"/>
+                                        </span>
+                                        <span class="tp-apps-card-body">
+                                            <span class="tp-apps-card-title o_tp_web_home_label" t-out="tile.name || tile.label"/>
+                                            <span t-if="this.isCurrentItem(tile)" class="tp-apps-badge is-open">
+                                                <span class="tp-open-dot" aria-hidden="true"/>
+                                                <span>Đang mở</span>
+                                            </span>
+                                            <span t-elif="tile.badgeKind === 'developing'"
+                                                  class="tp-apps-badge is-developing"
+                                                  t-out="tile.status || 'Đang phát triển'"/>
+                                            <span t-elif="tile.badgeKind === 'unstarted'"
+                                                  class="tp-apps-badge is-unstarted"
+                                                  t-out="tile.status || 'Chưa phát triển'"/>
+                                            <span t-elif="tile.status and tile.badgeKind !== 'active' and tile.status !== 'Chỉ quản trị hệ thống'"
+                                                  class="tp-apps-badge is-scoped"
+                                                  t-out="tile.status"/>
+                                        </span>
+                                    </a>
+
+                                    <button t-else=""
+                                            type="button"
+                                            class="tp-apps-card o_tp_web_home_app is-placeholder cursor-interaction"
+                                            t-att-data-palette="tile.palette || 'default'"
+                                            t-att-data-module="tile.key"
+                                            t-att-data-badge-kind="tile.badgeKind || 'developing'"
+                                            t-on-click="(ev) => this.onCardClick(ev, tile)">
+                                        <span class="tp-apps-card-icon" aria-hidden="true">
+                                            <t t-if="tile.switcherIcon">
+                                                <t t-call="tp_web_home.AdminIcon" icon="tile.switcherIcon"/>
+                                            </t>
+                                            <span t-else=""
+                                                  class="o_tp_web_home_icon_monogram"
+                                                  t-out="tile.icon?.text || 'TP'"/>
+                                        </span>
+                                        <span class="tp-apps-card-body">
+                                            <span class="tp-apps-card-title o_tp_web_home_label" t-out="tile.name || tile.label"/>
+                                            <span t-if="tile.badgeKind === 'unstarted'"
+                                                  class="tp-apps-badge is-unstarted"
+                                                  t-out="tile.status || 'Chưa phát triển'"/>
+                                            <span t-else=""
+                                                  class="tp-apps-badge is-developing"
+                                                  t-out="tile.status || 'Đang phát triển'"/>
+                                        </span>
+                                    </button>
+                                </t>
+                            </div>
+                        </section>
+                    </t>
+
+                    <div t-else="" class="tp-apps-empty o_tp_web_home_panel_empty">
+                        <p>Không tìm thấy ứng dụng hoặc chức năng phù hợp.</p>
+                        <button t-if="this.query() or this.activeTab() !== 'all'"
+                                type="button"
+                                class="tp-apps-reset-btn"
+                                t-on-click="this.resetSearchAndTab">Xóa bộ lọc</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </t>
+
+</templates>

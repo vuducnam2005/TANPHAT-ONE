@@ -25,20 +25,41 @@ const EXPANDED_ROOTS = new Set(["tp_core.menu_platform"]);
  * Empty sections (0 permitted entries) are omitted automatically.
  */
 export const SECTIONS = [
-    { key: "hr", label: "Nhân sự và chấm công", order: 10 },
-    { key: "reporting", label: "Báo cáo và phê duyệt", order: 20 },
-    { key: "departments", label: "Phòng ban và đơn vị", order: 30 },
-    { key: "personal", label: "Công cụ cá nhân", order: 40 },
-    { key: "warehouse", label: "Kho", order: 50 },
+    { key: "hr", label: "Nhân sự và chấm công", tabLabel: "Nhân sự", order: 10 },
+    { key: "reporting", label: "Báo cáo và phê duyệt", tabLabel: "Báo cáo", order: 20 },
+    { key: "departments", label: "Phòng ban và đơn vị", tabLabel: "Phòng ban", order: 30 },
+    { key: "personal", label: "Công cụ cá nhân", tabLabel: "Cá nhân", order: 40 },
+    { key: "warehouse", label: "Kho", tabLabel: "Kho", order: 50 },
 ];
 
 /** Display order inside the "Tất cả ứng dụng" / navigation drawer. */
 const PANEL_ORDER = ["hr", "reporting", "workspace", "personal", "warehouse", "apps", "system"];
 
 /**
- * Stable shortcut color palette mapping by XML ID and canonical module key (UI-HOME-008).
- * Never relies on DOM position (`nth-child`) or Vietnamese display text, so Admin and Employee
- * always render the exact same color for the same module regardless of tile count.
+ * Deterministic display order inside each business group, independent of asset load order
+ * when external addons call `registerHomeModule(...)`.
+ */
+const CANONICAL_MODULE_ORDER = {
+    hr: 10,
+    attendance: 20,
+    recruitment: 30,
+    reporting: 10,
+    tp_request: 20,
+    governance: 30,
+    digital_office: 40,
+    business: 10,
+    design: 20,
+    technical: 30,
+    bim: 40,
+    accounting: 50,
+    tadic: 55,
+    equipment: 10,
+    maintenance: 20,
+};
+
+/**
+ * Stable shortcut & app-switcher color palette mapping by XML ID and canonical module key
+ * (UI-HOME-008..010 & UI-APPS-001). Never relies on DOM position (`nth-child`) or Vietnamese text.
  */
 export const SHORTCUT_PALETTE_BY_XMLID = {
     "tp_kd_workspace.menu_kd": "business",
@@ -53,7 +74,23 @@ export const SHORTCUT_PALETTE_BY_XMLID = {
     "tp_hr_workspace.menu_department_workspace": "dept-workspace",
     "tp_digital_office.menu_digital_office_root": "digital-office",
     "tp_enterprise_ops.menu_recruitment_root": "recruitment",
+    "hr_recruitment.menu_hr_recruitment_root": "recruitment",
     "tp_enterprise_governance.menu_governance_root": "governance",
+    "maintenance.menu_maintenance_title": "maintenance",
+    "tp_project.menu_tp_projects": "projects",
+    "tp_contract.menu_tp_contracts": "contracts",
+    "project.menu_main_pm": "project-pm",
+    "tp_core.menu_work_items": "catalog",
+    "crm.crm_menu_root": "crm",
+    "contacts.menu_contacts": "contacts",
+    "spreadsheet_dashboard.spreadsheet_dashboard_menu_root": "spreadsheet",
+    "account.menu_finance": "invoicing",
+    "hr_timesheet.timesheet_menu_root": "timesheet",
+    "hr_expense.menu_hr_expense_root": "expense",
+    "hr.menu_hr_root": "hr-core",
+    "utm.menu_link_tracker_root": "utm",
+    "base.menu_administration": "system",
+    "base.menu_management": "system-apps",
 };
 
 export const SHORTCUT_PALETTE_BY_KEY = {
@@ -65,6 +102,7 @@ export const SHORTCUT_PALETTE_BY_KEY = {
     accounting: "accounting",
     tadic: "tadic",
     equipment: "equipment",
+    maintenance: "maintenance",
     attendance: "attendance",
     [ALL_APPS_KEY]: "all-apps",
     tp_request: "requests",
@@ -74,9 +112,25 @@ export const SHORTCUT_PALETTE_BY_KEY = {
     calendar: "calendar",
     discuss: "discuss",
     dept_workspace: "dept-workspace",
+    "dept-workspace": "dept-workspace",
     digital_office: "digital-office",
+    "digital-office": "digital-office",
     recruitment: "recruitment",
     governance: "governance",
+    projects: "projects",
+    contracts: "contracts",
+    "project-pm": "project-pm",
+    catalog: "catalog",
+    crm: "crm",
+    contacts: "contacts",
+    spreadsheet: "spreadsheet",
+    invoicing: "invoicing",
+    timesheet: "timesheet",
+    expense: "expense",
+    "hr-core": "hr-core",
+    utm: "utm",
+    system: "system",
+    "system-apps": "system-apps",
 };
 
 export function resolveShortcutPalette(item) {
@@ -310,27 +364,32 @@ export function registerHomeModule(moduleDef) {
     if (!moduleDef?.key) {
         return;
     }
-    const idx = ADMIN_MODULES.findIndex((m) => m.key === moduleDef.key);
+    const canonicalOrder = CANONICAL_MODULE_ORDER[moduleDef.key];
+    const normalized =
+        canonicalOrder !== undefined ? { ...moduleDef, order: canonicalOrder } : moduleDef;
+    const idx = ADMIN_MODULES.findIndex((m) => m.key === normalized.key);
     if (idx >= 0) {
-        ADMIN_MODULES[idx] = { ...ADMIN_MODULES[idx], ...moduleDef };
+        ADMIN_MODULES[idx] = { ...ADMIN_MODULES[idx], ...normalized };
         return;
     }
-    ADMIN_MODULES.push(moduleDef);
+    ADMIN_MODULES.push(normalized);
 }
 
 export const APP_LABELS = {
     "tp_hr_workspace.menu_department_workspace": {
+        label: "Phòng ban của tôi",
         hint: "Đang phát triển",
         group: "workspace",
-        order: 20,
+        order: 60,
         icon: "building",
+        aliases: "phong ban cua toi khong gian phong ban department workspace",
     },
     "tp_kd_workspace.menu_kd": {
         label: "Kế hoạch Kinh doanh",
         hint: "Dự án, đấu thầu, hợp đồng và báo cáo KH‑KD",
         group: "workspace",
         order: 10,
-        icon: "briefcase",
+        icon: "target",
         aliases: "khkd kh-kd kh kd ke hoach kinh doanh workspace planning business",
     },
     "tp_hr_workspace.menu_hr": {
@@ -339,7 +398,7 @@ export const APP_LABELS = {
         group: "hr",
         order: 10,
         icon: "users",
-        aliases: "hr nhan su ho so nhan vien to chuc nang luc",
+        aliases: "tp hr nhan su quan ly nhan su ho so nhan vien to chuc nang luc",
     },
     "tp_hr_attendance.menu_root": {
         label: "Chấm công",
@@ -347,7 +406,15 @@ export const APP_LABELS = {
         group: "hr",
         order: 20,
         icon: "clock",
-        aliases: "cham cong bang cong cong cua toi attendance",
+        aliases: "cham cong bang cong cong cua toi attendance enti",
+    },
+    "tp_enterprise_ops.menu_recruitment_root": {
+        label: "Tuyển dụng",
+        hint: "Hồ sơ ứng viên và tiếp nhận nhân sự",
+        group: "hr",
+        order: 30,
+        icon: "user-plus",
+        aliases: "tuyen dung ung vien recruitment phong van tiep nhan",
     },
     "tp_reporting.menu_root": {
         label: "Báo cáo",
@@ -363,7 +430,23 @@ export const APP_LABELS = {
         group: "reporting",
         order: 20,
         icon: "kpi-requests",
-        aliases: "yeu cau phe duyet de nghi to trinh request",
+        aliases: "yeu cau phe duyet de nghi to trinh request approval",
+    },
+    "tp_enterprise_governance.menu_governance_root": {
+        label: "Điều hành lãnh đạo",
+        hint: "Tổng quan điều hành, WBS/CPM và Hồ sơ dự án NAS",
+        group: "reporting",
+        order: 30,
+        icon: "compass",
+        aliases: "dieu hanh lanh dao dieu hanh du an wbs cpm ho so nas governance",
+    },
+    "tp_digital_office.menu_digital_office_root": {
+        label: "Văn phòng số",
+        hint: "Thông báo nội bộ và biên bản họp",
+        group: "reporting",
+        order: 40,
+        icon: "file-text",
+        aliases: "van phong so thong bao noi bo bien ban hop digital office",
     },
     "tp_equipment.menu_root": {
         label: "Kho thiết bị văn phòng",
@@ -371,37 +454,15 @@ export const APP_LABELS = {
         group: "warehouse",
         order: 10,
         icon: "box",
-        aliases: "kho thiet bi tai san equipment",
+        aliases: "kho thiet bi van phong tai san equipment may tinh",
     },
-    "tp_enterprise_ops.menu_recruitment_root": {
-        label: "Tuyển dụng",
-        hint: "Hồ sơ ứng viên và tiếp nhận nhân sự",
-        group: "hr",
-        order: 5,
-        icon: "user-plus",
-        aliases: "tuyen dung ung vien recruitment phong van",
-    },
-    "tp_digital_office.menu_digital_office_root": {
-        label: "Văn phòng số",
-        hint: "Thông báo nội bộ và biên bản họp",
-        group: "apps",
-        order: 5,
-        icon: "file-text",
-        aliases: "van phong so thong bao noi bo bien ban hop digital office",
-    },
-    "tp_enterprise_governance.menu_governance_root": {
-        label: "Điều hành & Dự án",
-        hint: "WBS/CPM, Hồ sơ dự án NAS và Tổng quan điều hành",
-        group: "apps",
-        order: 6,
-        icon: "bar-chart",
-        aliases: "dieu hanh du an wbs cpm ho so nas lanh dao",
-    },
-    "hr.menu_hr_root": {
-        label: "Nhân viên",
-        hint: "Danh bạ nhân viên Odoo",
-        order: 60,
-        aliases: "employees danh ba nhan vien",
+    "maintenance.menu_maintenance_title": {
+        label: "Bảo dưỡng thiết bị",
+        hint: "Yêu cầu bảo trì và theo dõi thiết bị",
+        group: "warehouse",
+        order: 20,
+        icon: "wrench",
+        aliases: "bao duong bao tri maintenance thiet bi oee",
     },
     "project_todo.menu_todo_todos": {
         label: "Việc cá nhân",
@@ -409,7 +470,7 @@ export const APP_LABELS = {
         group: "personal",
         order: 10,
         icon: "check-square",
-        aliases: "todo to-do ghi chu nhac viec cong viec cua toi",
+        aliases: "viec ca nhan todo to-do ghi chu nhac viec cong viec cua toi",
     },
     "calendar.mail_menu_calendar": {
         label: "Lịch làm việc",
@@ -417,7 +478,7 @@ export const APP_LABELS = {
         group: "personal",
         order: 20,
         icon: "calendar",
-        aliases: "calendar lich hop cuoc hen meeting phong hop",
+        aliases: "lich lam viec calendar lich hop cuoc hen meeting phong hop",
     },
     "mail.menu_root_discuss": {
         label: "Trao đổi",
@@ -425,86 +486,153 @@ export const APP_LABELS = {
         group: "personal",
         order: 30,
         icon: "message-circle",
-        aliases: "discuss chat tin nhan thao luan kenh",
+        aliases: "trao doi discuss chat tin nhan thao luan kenh",
     },
     "base.menu_administration": {
         label: "Cài đặt",
         hint: "Thiết lập hệ thống",
-        order: 20,
+        order: 10,
         group: "system",
-        aliases: "settings thiet lap cau hinh quan tri",
+        icon: "settings",
+        aliases: "cai dat settings thiet lap cau hinh quan tri he thong",
     },
     "base.menu_management": {
         label: "Quản lý ứng dụng",
         hint: "Cài đặt hoặc gỡ ứng dụng",
-        order: 30,
+        order: 20,
         group: "system",
-        aliases: "apps module cai dat go odoo",
-    },
-    "contacts.menu_contacts": {
-        label: "Khách hàng và đối tác",
-        order: 50,
-        hint: "Thông tin liên hệ",
-        aliases: "contacts lien he partner customer nha cung cap",
-    },
-    "crm.crm_menu_root": {
-        label: "CRM",
-        hint: "Cơ hội kinh doanh",
-        order: 40,
-        aliases: "pipeline lead sales khach hang tiem nang",
-    },
-    "project.menu_main_pm": {
-        label: "Công việc dự án",
-        order: 30,
-        hint: "Công việc và tiến độ dự án",
-        aliases: "project du an task nhiem vu",
+        icon: "sliders",
+        aliases: "quan ly ung dung apps module cai dat go odoo",
     },
     "tp_project.menu_tp_projects": {
-        label: "TP Projects",
-        hint: "Hồ sơ dự án và phân công",
+        label: "TP Projects — Dự án cầu đường",
+        hint: "Hồ sơ dự án cầu đường và phân công",
         order: 10,
         icon: "projects",
-        aliases: "du an cau duong project",
+        aliases: "tp projects ho so du an cau duong project tanphat one",
     },
     "tp_contract.menu_tp_contracts": {
-        label: "TP Contracts",
+        label: "TP Contracts — Hợp đồng",
         hint: "Hợp đồng và phiên bản hồ sơ",
         order: 20,
         icon: "contracts",
-        aliases: "hop dong contract contracts phien ban",
+        aliases: "tp contracts hop dong contract phu luc phien ban tanphat one",
+    },
+    "project.menu_main_pm": {
+        label: "Quản lý dự án & Nhiệm vụ",
+        order: 30,
+        hint: "Không gian dự án và nhiệm vụ chung",
+        icon: "kanban",
+        aliases: "quan ly du an cong viec du an project nhiem vu task",
+    },
+    "crm.crm_menu_root": {
+        label: "CRM — Cơ hội kinh doanh",
+        hint: "Pipeline khách hàng tiềm năng và cơ hội bán hàng",
+        order: 40,
+        icon: "trending-up",
+        aliases: "crm co hoi kinh doanh pipeline lead sales khach hang tiem nang",
+    },
+    "contacts.menu_contacts": {
+        label: "Khách hàng & Đối tác",
+        order: 50,
+        hint: "Danh bạ đối tác, khách hàng và nhà cung cấp",
+        icon: "contact",
+        aliases: "khach hang va doi tac contacts lien he partner customer nha cung cap",
     },
     "tp_core.menu_work_items": {
         label: "Danh mục công việc",
-        hint: "Danh mục hạng mục",
+        hint: "Danh mục hạng mục chuẩn",
         order: 60,
         icon: "catalog",
-        aliases: "hang muc work item catalog",
+        aliases: "danh muc cong viec hang muc work item catalog tanphat one",
     },
-    "hr_timesheet.timesheet_menu_root": {
-        label: "Giờ làm việc",
-        hint: "Thời gian theo công việc",
-        order: 90,
-        aliases: "timesheets timesheet thoi gian",
+    "hr.menu_hr_root": {
+        label: "Danh bạ & Kỹ năng (Odoo HR)",
+        hint: "Danh bạ nhân viên và kho kỹ năng cơ bản",
+        order: 65,
+        icon: "users",
+        aliases: "nhan vien employees danh ba nhan vien ky nang chung chi hr",
     },
-    "hr_expense.menu_hr_expense_root": {
-        label: "Chi phí",
-        hint: "Chi phí nhân viên",
-        order: 110,
-        aliases: "expenses expense hoan ung",
-    },
-    "account.menu_finance": {
-        label: "Hóa đơn",
-        hint: "Hồ sơ hóa đơn",
-        order: 80,
-        aliases: "invoicing invoice bill",
+    "hr_recruitment.menu_hr_recruitment_root": {
+        label: "Tuyển dụng (Cấu hình Odoo)",
+        hint: "Vị trí công việc, ứng viên và kho nhân tài Odoo",
+        order: 66,
+        icon: "user-plus",
+        aliases: "tuyen dung odoo recruitment talent pool ung vien",
     },
     "spreadsheet_dashboard.spreadsheet_dashboard_menu_root": {
-        label: "Bảng tổng hợp",
-        hint: "Báo cáo và bảng dữ liệu",
+        label: "Bảng tổng hợp số liệu",
+        hint: "Bảng dữ liệu và biểu đồ tổng hợp",
         order: 70,
-        aliases: "dashboards dashboard spreadsheet",
+        icon: "grid-four",
+        aliases: "bang tong hop so lieu dashboards dashboard spreadsheet",
+    },
+    "account.menu_finance": {
+        label: "Hóa đơn & Công nợ",
+        hint: "Hóa đơn bán hàng, mua hàng và thanh toán",
+        order: 80,
+        icon: "receipt",
+        aliases: "hoa don cong no invoicing invoice bill thanh toan ke toan",
+    },
+    "hr_timesheet.timesheet_menu_root": {
+        label: "Giờ làm việc (Timesheet)",
+        hint: "Nhật ký thời gian theo dự án và nhiệm vụ",
+        order: 90,
+        icon: "clock",
+        aliases: "gio lam viec timesheets timesheet nhat ky thoi gian",
+    },
+    "hr_expense.menu_hr_expense_root": {
+        label: "Chi phí & Hoàn ứng",
+        hint: "Đề nghị chi phí và hoàn ứng nhân viên",
+        order: 110,
+        icon: "wallet",
+        aliases: "chi phi hoan ung expenses expense",
+    },
+    "utm.menu_link_tracker_root": {
+        label: "Theo dõi liên kết (UTM)",
+        hint: "Chiến dịch, nguồn và phương tiện liên kết",
+        order: 120,
+        icon: "link",
+        aliases: "trinh theo doi lien ket utm link tracker chien dich",
     },
 };
+
+/**
+ * Return the unified TANPHAT ONE Vietnamese display label for a menu/app node.
+ */
+export function resolveAppDisplayLabel(app) {
+    if (!app) {
+        return "";
+    }
+    if (app.xmlid === HOME_MENU_XMLID) {
+        return "Trang chủ";
+    }
+    const meta = app.xmlid && APP_LABELS[app.xmlid];
+    if (meta?.label) {
+        return meta.label;
+    }
+    return app.name || app.label || "";
+}
+
+export function resolveSwitcherIcon(item) {
+    if (!item) {
+        return "";
+    }
+    if (typeof item.switcherIcon === "string" && item.switcherIcon) {
+        return item.switcherIcon;
+    }
+    if (typeof item.svgIcon === "string" && item.svgIcon) {
+        return item.svgIcon;
+    }
+    if (typeof item.icon === "string" && item.icon) {
+        return item.icon;
+    }
+    const meta = item.xmlid && APP_LABELS[item.xmlid];
+    if (meta?.icon) {
+        return meta.icon;
+    }
+    return "";
+}
 
 export function normalizeSearch(value) {
     return String(value || "")
@@ -674,22 +802,9 @@ export const ADMIN_MODULES = [
         copy: "Không gian này đang được chuẩn bị. Các chức năng sẽ được bổ sung sau.",
     },
     {
-        key: "tadic",
-        group: "departments",
-        order: 50,
-        placeholderOnly: true,
-        name: "TADIC",
-        description: "Không gian đơn vị TADIC",
-        status: "Đang phát triển",
-        badgeKind: "developing",
-        icon: "building",
-        aliases: "tadic don vi tadic",
-        copy: "Không gian này đang được chuẩn bị. Các chức năng sẽ được bổ sung sau.",
-    },
-    {
         key: "accounting",
         group: "departments",
-        order: 55,
+        order: 50,
         placeholderOnly: true,
         name: "Phòng Kế toán",
         description: "Không gian tài chính và kế toán",
@@ -700,18 +815,17 @@ export const ADMIN_MODULES = [
         copy: "Không gian Phòng Kế toán chưa phát triển. Các chức năng sẽ được xây dựng trong giai đoạn tiếp theo.",
     },
     {
-        key: "recruitment",
-        group: "hr",
-        order: 5,
+        key: "tadic",
+        group: "departments",
+        order: 55,
         placeholderOnly: true,
-        name: "Tuyển dụng",
-        description: "Vị trí tuyển dụng và hồ sơ ứng viên",
+        name: "TADIC",
+        description: "Không gian đơn vị TADIC",
         status: "Đang phát triển",
         badgeKind: "developing",
-        icon: "user-plus",
-        xmlid: "hr_recruitment.menu_hr_recruitment_root",
-        aliases: "tuyen dung ung vien recruitment",
-        copy: "Không gian tuyển dụng sẽ được bổ sung sau nền nhân sự: nhu cầu tuyển, vị trí, ứng viên và các vòng xử lý.",
+        icon: "building",
+        aliases: "tadic don vi tadic",
+        copy: "Không gian này đang được chuẩn bị. Các chức năng sẽ được bổ sung sau.",
     },
     {
         key: "hr",
@@ -723,8 +837,74 @@ export const ADMIN_MODULES = [
         badgeKind: "active",
         icon: "users",
         xmlid: "tp_hr_workspace.menu_hr",
-        aliases: "nhan su hr ho so nhan vien to chuc nang luc",
+        aliases: "nhan su tp hr quan ly nhan su ho so nhan vien to chuc nang luc",
         copy: "Bắt đầu từ hồ sơ nhân viên, phòng ban, chức danh và năng lực. Dữ liệu nguồn đã đối chiếu sẽ được nhập qua bước kiểm tra riêng; tài khoản đăng nhập và quyền truy cập được quản lý độc lập.",
+    },
+    {
+        key: "recruitment",
+        group: "hr",
+        order: 30,
+        placeholderOnly: true,
+        name: "Tuyển dụng",
+        description: "Vị trí tuyển dụng và hồ sơ ứng viên",
+        status: "Đang phát triển",
+        badgeKind: "developing",
+        icon: "user-plus",
+        xmlid: "hr_recruitment.menu_hr_recruitment_root",
+        aliases: "tuyen dung ung vien recruitment",
+        copy: "Không gian tuyển dụng sẽ được bổ sung sau nền nhân sự: nhu cầu tuyển, vị trí, ứng viên và các vòng xử lý.",
+    },
+    {
+        key: "reporting",
+        group: "reporting",
+        order: 10,
+        requiresMenu: true,
+        name: "Báo cáo",
+        description: "Báo cáo cá nhân, phòng ban và công ty",
+        status: "Đang hoạt động",
+        badgeKind: "active",
+        icon: "bar-chart",
+        xmlid: "tp_reporting.menu_root",
+        aliases: "bao cao ke hoach chi tieu reporting",
+    },
+    {
+        key: "governance",
+        group: "reporting",
+        order: 30,
+        requiresMenu: true,
+        name: "Điều hành lãnh đạo",
+        description: "Tổng quan điều hành, WBS/CPM và Hồ sơ dự án NAS",
+        status: "Đang hoạt động",
+        badgeKind: "active",
+        icon: "compass",
+        xmlid: "tp_enterprise_governance.menu_governance_root",
+        aliases: "dieu hanh lanh dao dieu hanh du an wbs cpm ho so nas governance",
+    },
+    {
+        key: "digital_office",
+        group: "reporting",
+        order: 40,
+        requiresMenu: true,
+        name: "Văn phòng số",
+        description: "Thông báo nội bộ và biên bản họp",
+        status: "Đang hoạt động",
+        badgeKind: "active",
+        icon: "file-text",
+        xmlid: "tp_digital_office.menu_digital_office_root",
+        aliases: "van phong so thong bao noi bo bien ban hop digital office",
+    },
+    {
+        key: "maintenance",
+        group: "warehouse",
+        order: 20,
+        requiresMenu: true,
+        name: "Bảo dưỡng thiết bị",
+        description: "Yêu cầu bảo trì và theo dõi thiết bị",
+        status: "Đang hoạt động",
+        badgeKind: "active",
+        icon: "wrench",
+        xmlid: "maintenance.menu_maintenance_title",
+        aliases: "bao duong bao tri maintenance thiet bi oee",
     },
 ];
 
@@ -1079,9 +1259,18 @@ export function buildQuickGrid(catalog, { includeAllApps = true, homeMode = null
     return shortcuts;
 }
 
+function enrichSwitcherItem(item) {
+    return {
+        ...item,
+        palette: resolveShortcutPalette(item),
+        switcherIcon: resolveSwitcherIcon(item),
+    };
+}
+
 /**
- * Build grouped sections for the "Tất cả ứng dụng" panel and Hamburger navigation drawer.
- * Preserves all 5 canonical groups + extra permitted apps + admin-only system tools.
+ * Build grouped sections for the unified TANPHAT ONE App Switcher (9-dot Navbar Menu,
+ * Home Navigation Menu, "Tất cả ứng dụng", and Mobile App Sheet).
+ * Preserves all canonical business groups + extra permitted apps + admin-only system tools.
  */
 export function buildDrawerGroups(catalog, query = "") {
     if (!catalog) {
@@ -1093,7 +1282,8 @@ export function buildDrawerGroups(catalog, query = "") {
         groups.push({
             key: s.key,
             label: s.label,
-            items: s.tiles,
+            tabLabel: s.tabLabel || s.label,
+            items: s.tiles.map(enrichSwitcherItem),
         });
     }
 
@@ -1101,8 +1291,9 @@ export function buildDrawerGroups(catalog, query = "") {
     if (extraApps.length) {
         groups.push({
             key: "other_apps",
-            label: "Phân hệ và ứng dụng khác",
-            items: extraApps,
+            label: "Ứng dụng khác được cấp",
+            tabLabel: "Ứng dụng khác",
+            items: extraApps.map(enrichSwitcherItem),
         });
     }
 
@@ -1115,7 +1306,8 @@ export function buildDrawerGroups(catalog, query = "") {
             groups.push({
                 key: "system",
                 label: "Quản trị hệ thống",
-                items: sysTools,
+                tabLabel: "Quản trị",
+                items: sysTools.map(enrichSwitcherItem),
             });
         }
     }

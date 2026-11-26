@@ -2219,4 +2219,13 @@ class TpHomeSession(models.AbstractModel):
     def session_info(self):
         result = super().session_info()
         result["tp_home_dashboard"] = True
+        user = self.env.user
+        if user and not user._is_public() and user.active and not user.share:
+            try:
+                result["tp_home_is_admin"] = bool(user._tp_home_is_full_admin())
+                has_delegation = getattr(user, "_tp_has_admin_delegation", None)
+                result["tp_home_is_delegated"] = bool(has_delegation()) if callable(has_delegation) else False
+            except (AccessError, AttributeError):
+                result["tp_home_is_admin"] = bool(user.has_group("base.group_system"))
+                result["tp_home_is_delegated"] = False
         return result

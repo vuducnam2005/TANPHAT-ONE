@@ -14,6 +14,8 @@ import { router } from "@web/core/browser/router";
 import { user } from "@web/core/user";
 import { session } from "@web/session";
 import { HomeButton } from "@tp_web_home/home/home_button";
+import "@tp_web_home/home/navbar_apps_patch";
+import { NavBar } from "@web/webclient/navbar/navbar";
 import {
     ALL_APPS_KEY,
     ADMIN_MODULES,
@@ -960,5 +962,117 @@ describe("home button", () => {
         });
         await contains(".o_tp_web_home_button").click();
         expect.verifySteps([`select ${HOME_MENU_XMLID}`]);
+    });
+});
+
+describe("Unified 9-dot Navbar App Switcher (UI-APPS-001)", () => {
+    test("9-dot navbar button opens grouped switcher, filters by tab & accent-free search, highlights current app, and preserves currentApp when navigation is cancelled", async () => {
+        patchWithCleanup(user, { isSystem: true });
+        patchWithCleanup(session, { tp_home_is_admin: true });
+        defineMenus([HOME, HR, ATT, REP, REQ, KD, TODO, CALENDAR, DISCUSS, EQP, TP_ROOT, PROJECT, CRM, SETTINGS, APPS]);
+
+        await mountWithCleanup(NavBar);
+        const menuSvc = getService("menu");
+        menuSvc.setCurrentMenu(HR.id);
+        await animationFrame();
+
+        // Unified Vietnamese app name in navbar brand ("TP HR" -> "Quản lý nhân sự")
+        expect(".o_menu_brand").toHaveText("Quản lý nhân sự");
+        // Exactly one 9-dot button with proper ARIA attributes
+        expect(".o_navbar_apps_menu .tp-apps-trigger-btn").toHaveCount(1);
+        expect(".o_navbar_apps_menu .tp-apps-trigger-btn").toHaveAttribute("aria-label", "Mở ứng dụng");
+        expect(".o_navbar_apps_menu .tp-apps-trigger-btn").toHaveAttribute("aria-expanded", "false");
+
+        await contains(".o_navbar_apps_menu .tp-apps-trigger-btn").click();
+        await animationFrame();
+        expect(".o_navbar_apps_menu .tp-apps-trigger-btn").toHaveAttribute("aria-expanded", "true");
+        expect("#tp_app_switcher_panel").toHaveCount(1);
+        expect("#tp_apps_switcher_heading").toHaveText("Ứng dụng TANPHAT ONE");
+        expect("#tp_app_switcher_panel .tp-apps-home-btn").toHaveText("Trang chủ");
+
+        // Current app ("Quản lý nhân sự") is marked with aria-current="page" and "Đang mở" badge
+        expect('#tp_app_switcher_panel .tp-apps-card[data-menu-xmlid="tp_hr_workspace.menu_hr"]').toHaveAttribute(
+            "aria-current",
+            "page"
+        );
+        expect(
+            '#tp_app_switcher_panel .tp-apps-card[data-menu-xmlid="tp_hr_workspace.menu_hr"] .tp-apps-badge.is-open'
+        ).toHaveText(/Đang mở/);
+
+        // TP_ROOT ("TANPHAT") container is expanded into clear destination titles, never shown as vague "TANPHAT"
+        const allTitles = queryAllTexts("#tp_app_switcher_panel .tp-apps-card-title");
+        expect(allTitles.includes("TP Projects — Dự án cầu đường")).toBe(true);
+        expect(allTitles.includes("Danh mục công việc")).toBe(true);
+        expect(allTitles.includes("Quản lý dự án & Nhiệm vụ")).toBe(true);
+        expect(allTitles.includes("CRM — Cơ hội kinh doanh")).toBe(true);
+        expect(allTitles.includes("TANPHAT")).toBe(false);
+
+        // Category tab filtering + search combination
+        await contains('#tp_app_switcher_panel .tp-apps-tab[data-tab-key="personal"]').click();
+        await animationFrame();
+        expect(queryAllTexts("#tp_app_switcher_panel .tp-apps-card-title")).toEqual([
+            "Việc cá nhân",
+            "Lịch làm việc",
+            "Trao đổi",
+        ]);
+
+        await contains("#tp_app_switcher_panel .tp-apps-search-input").edit("lich hop", { confirm: false });
+        await animationFrame();
+        expect(queryAllTexts("#tp_app_switcher_panel .tp-apps-card-title")).toEqual(["Lịch làm việc"]);
+
+        // First Escape clears non-empty search when search input is focused; second Escape closes and restores focus
+        queryOne("#tp_app_switcher_panel .tp-apps-search-input").focus();
+        queryOne("#tp_app_switcher_panel .tp-apps-search-input").dispatchEvent(
+            new KeyboardEvent("keydown", { key: "Escape", bubbles: true })
+        );
+        await animationFrame();
+        expect("#tp_app_switcher_panel").toHaveCount(1);
+        expect(queryOne("#tp_app_switcher_panel .tp-apps-search-input").value).toBe("");
+
+        // Simulate cancelled dirty-form navigation: doAction aborts without firing ACTION_MANAGER:UPDATE or onActionReady
+        patchWithCleanup(getService("action"), {
+            doAction: async () => {
+                // User clicked "Stay on page" on unsaved form dialog -> neither onActionReady nor ACTION_MANAGER:UPDATE runs
+            },
+        });
+        await contains('#tp_app_switcher_panel .tp-apps-tab[data-tab-key="all"]').click();
+        await animationFrame();
+        await contains('#tp_app_switcher_panel .tp-apps-card[data-menu-xmlid="tp_kd_workspace.menu_kd"]').click();
+        await animationFrame();
+        // Current app MUST remain HR, never overwritten prematurely!
+        expect(menuSvc.getCurrentApp()?.xmlid).toBe("tp_hr_workspace.menu_hr");
+
+        // Escape closes panel
+        queryOne("#tp_app_switcher_panel").dispatchEvent(
+            new KeyboardEvent("keydown", { key: "Escape", bubbles: true })
+        );
+        await animationFrame();
+        expect("#tp_app_switcher_panel").toHaveCount(0);
+        expect(".o_navbar_apps_menu .tp-apps-trigger-btn").toHaveAttribute("aria-expanded", "false");
+    });
+
+    test("Employee 9-dot switcher hides system administration & unauthorized placeholders and matches Home All-Apps catalog 100%", async () => {
+        asEmployee();
+        patchWithCleanup(session, { tp_home_is_admin: false, tp_home_is_delegated: false });
+        defineMenus([HOME, HR, ATT, REQ, REP, TODO, CALENDAR, DISCUSS, SETTINGS, APPS]);
+
+        await mountWithCleanup(NavBar);
+        await contains(".o_navbar_apps_menu .tp-apps-trigger-btn").click();
+        await animationFrame();
+
+        const navSwitchTitles = queryAllTexts("#tp_app_switcher_panel .tp-apps-card-title");
+        expect(navSwitchTitles.includes("Cài đặt")).toBe(false);
+        expect(navSwitchTitles.includes("Quản lý ứng dụng")).toBe(false);
+        expect(navSwitchTitles.includes("Phòng Thiết kế")).toBe(false);
+        expect(queryAllTexts("#tp_app_switcher_panel .tp-apps-tab").includes("Quản trị")).toBe(false);
+
+        const catalog = buildCatalog(getService("menu").getMenuAsTree("root"), {
+            isSystem: false,
+            homeMode: "employee",
+        });
+        const homeDrawerTitles = buildDrawerGroups(catalog).flatMap((g) =>
+            g.items.map((i) => i.name || i.label)
+        );
+        expect(navSwitchTitles).toEqual(homeDrawerTitles);
     });
 });

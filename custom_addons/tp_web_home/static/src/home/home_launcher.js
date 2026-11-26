@@ -22,6 +22,7 @@ import { session } from "@web/session";
 import { TpIdentityAvatar } from "../identity/user_account_menu";
 import { InlineErrors } from "../validation/inline_errors";
 import { saveError } from "../validation/validation";
+import { TpAppSwitcher } from "./app_switcher";
 import {
     buildCatalog,
     buildDrawerGroups,
@@ -140,7 +141,14 @@ function isComposing(ev, composing) {
 
 export class HomeLauncher extends Component {
     static template = "tp_web_home.HomeLauncher";
-    static components = { Dropdown, DropdownItem, ErrorHandler, TpIdentityAvatar, InlineErrors };
+    static components = {
+        Dropdown,
+        DropdownItem,
+        ErrorHandler,
+        TpIdentityAvatar,
+        InlineErrors,
+        TpAppSwitcher,
+    };
     props = useProps({ ...standardActionServiceProps });
 
     // Search, Drawers & Overlays
@@ -565,14 +573,34 @@ export class HomeLauncher extends Component {
         if (this.menuState() !== "ready") {
             return;
         }
+        let pendingKey = null;
+        try {
+            pendingKey = browser.sessionStorage?.getItem("tp_pending_home_unit") || null;
+            if (pendingKey) {
+                browser.sessionStorage?.removeItem("tp_pending_home_unit");
+            }
+        } catch {
+            pendingKey = null;
+        }
         const hash = browser.location.hash || "";
         const match = hash.match(/(?:unit|detail)=([a-z0-9_-]+)/);
-        let key = match ? match[1] : null;
+        let key = match ? match[1] : pendingKey;
         if (key === "tech") {
             key = "technical";
         }
         const found = key ? this.catalog().entries.find((m) => m.key === key && !m.menu) : null;
         if (found) {
+            if (pendingKey && !match) {
+                try {
+                    window.history?.replaceState(
+                        window.history.state,
+                        "",
+                        `${browser.location.pathname}${browser.location.search}#unit=${found.key}`
+                    );
+                } catch {
+                    // Ignore history API restrictions in test sandboxes
+                }
+            }
             this.selectedModule.set(found.key);
         } else if (this.selectedModule()) {
             this.selectedModule.set(null);

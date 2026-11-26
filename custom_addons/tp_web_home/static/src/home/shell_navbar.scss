@@ -30,6 +30,16 @@
         &:hover, &[aria-expanded="true"] { background-color: rgba(255, 255, 255, 0.14); }
         &:focus-visible { outline: 2px solid #b3d9f2; outline-offset: -3px; }
     }
+    .o_navbar_apps_menu .tp-apps-trigger-btn,
+    .o_menu_toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        background: transparent;
+        padding: 0 10px;
+        text-decoration: none;
+    }
     .o_tp_web_home_button { display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; }
     .o_tp_web_home_button_active { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.36); box-shadow: none; }
     .o_user_menu { position: relative; align-items: center; gap: 8px; margin-left: 14px; padding: 2px 8px !important; border: 1px solid transparent;
