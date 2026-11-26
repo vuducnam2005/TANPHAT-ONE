@@ -583,6 +583,11 @@ describe("5-tier HomeLauncher (Admin & Employee Modes)", () => {
 
         expect(".o_tp_web_home").toHaveAttribute("data-home-mode", "admin");
         expect("#tp_home_dept_apps_heading").toHaveText("Ứng dụng theo phòng ban");
+        const tileCount = queryAllTexts(".tp-apps-panel .tp-dept-tile .tp-dept-tile-name").length;
+        expect(tileCount).toBeGreaterThan(0);
+        expect(".tp-apps-panel .tp-dept-tile .tp-dept-tile-waves").toHaveCount(tileCount);
+        expect(".tp-apps-panel .tp-dept-tile .tp-dept-tile-icon").toHaveCount(tileCount);
+        expect(".tp-apps-panel .tp-dept-tile .tp-dept-tile-arrow").toHaveCount(tileCount);
         expect(queryAllTexts(".tp-kpi-label")).toEqual([
             "Nhân sự",
             "Yêu cầu phê duyệt",

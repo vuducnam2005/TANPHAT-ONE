@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261126-010 — 2026-11-26 — UI-HOME-010: Thiết kế lại thẻ Module phòng ban trên Trang chủ giống 100% ảnh mẫu (`tp_web_home 20.0.2.4.0`)
+
+- **Giao diện thẻ ứng dụng (`custom_addons/tp_web_home 20.0.2.4.0`):** thêm thanh nhấn xanh cạnh tiêu đề panel; thiết kế lại toàn bộ 10 ô phòng ban Admin và lưới ứng dụng Nhân viên theo đúng ảnh tham chiếu gồm nền pastel mảnh viền màu riêng, 2 dải sóng cong bóng sáng góc trên phải (`.tp-dept-tile-waves`), huy hiệu icon vuông bo góc đổ gradient 2 nấc (`.tp-dept-tile-icon`), chữ đậm `#111827` căn trái cân dòng (`text-wrap: balance`, tương phản `>= 15:1`) và nút mũi tên tròn góc phải dưới (`.tp-dept-tile-arrow`), giữ định danh ổn định theo `data-palette` (`key`/`xmlid`) và không ảnh hưởng bố cục gọn 1 màn hình desktop hay phân quyền hiện hành.
+- **Kiểm thử (`tp_tanphat_test`):** `libsass`, XML parse, `node --check`, `ruff`, `git diff --check` PASS; Hoot `home_launcher` **16/16 PASS**; Playwright desktop (`1536×750`, `1706×1130`) & mobile (`390×844`) trên Admin và Nhân viên **100% PASS (`0 pageErrors, 0 consoleErrors`)**.
+
 ## CHG-20261126-009 — 2026-11-26 — UI-HOME-009-DEPLOY: Biên bản Sao lưu nhị phân, Triển khai PC Server (`192.168.1.73`) & Kiểm chứng Public `https://tpone.tadic.vn` cho commit `cb877a84` (`tp_web_home 20.0.2.3.0`)
 
 - **Sao lưu & Triển khai PC Server (`tp_tanphat_dev`):** sao lưu nhị phân tại `C:\TANPHAT-backups\home-redesign009\home009-20261126T145335` (`tp_tanphat_dev.dump` `10.102.782` bytes, SHA256 `83d1977a...`, `restore-list.txt` `1.405.240` bytes / `17.687` dòng TOC từ `pg_restore --list`, `source-pre-tp_web_home.tar.gz`, `release-home009.tar.gz`, `docker.odoo.conf`); đối chiếu **66/66** tệp khớp SHA256 (`MISMATCHES=0`); nâng cấp `-u tp_web_home` đạt `rc=0, error_lines=0` (`20.0.2.3.0:installed`), chỉ khởi động lại `tp-odoo` và giữ bất biến 100% dữ liệu doanh nghiệp (`STRICT_INVARIANT_DRIFTS: {}` trên `employees=39`, `users=33/12`, `att_days=1014`, `corrections=3`, `requests=5`, `equipment=55`).

@@ -1,9 +1,9 @@
 {
     'name': 'TANPHAT ONE – Trang chủ',
     'summary': 'Native Home: executive & workspace dashboard with real-time KPIs, shortcuts, agenda and task analytics',
-    'description': 'Native Odoo home page for TANPHAT ONE (UI-HOME-006..009). See README.md.',
+    'description': 'Native Odoo home page for TANPHAT ONE (UI-HOME-006..010). See README.md.',
     'author': 'Tan Phat JSC',
-    'version': '20.0.2.3.0',
+    'version': '20.0.2.4.0',
     'license': 'LGPL-3',
     'depends': ['web', 'tp_web_login'],
     'data': [
