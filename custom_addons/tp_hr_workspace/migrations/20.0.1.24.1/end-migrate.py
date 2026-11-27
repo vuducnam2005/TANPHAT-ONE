@@ -12,4 +12,4 @@ def migrate(cr, version):
     env = api.Environment(cr, SUPERUSER_ID, {})
     removed = env["hr.employee"]._tp_cleanup_audit_unsaved_orphans()
     if removed:
-        _logger.info("tp_hr_workspace 20.0.1.24.1: cleaned up F-0002 unsaved test orphans: %s", removed)
+        _logger.info("tp_hr_workspace 20.0.1.24.1 end-migrate: cleaned up F-0002 unsaved test orphans: %s", removed)

@@ -343,7 +343,8 @@ class HrEmployee(models.Model):
         for emp in candidates:
             if 'tp.employment.contract' in self.env and self.env['tp.employment.contract'].sudo().search_count([('employee_id', '=', emp.id)]):
                 continue
-            if 'maintenance.equipment' in self.env and self.env['maintenance.equipment'].sudo().with_context(active_test=False).search_count([('tp_employee_id', '=', emp.id)]):
+            eq_model = self.env.get('maintenance.equipment')
+            if eq_model is not None and 'tp_employee_id' in eq_model._fields and eq_model.sudo().with_context(active_test=False).search_count([('tp_employee_id', '=', emp.id)]):
                 continue
             if 'tp.hr.attendance.day' in self.env and self.env['tp.hr.attendance.day'].sudo().search_count([('employee_id', '=', emp.id)]):
                 continue

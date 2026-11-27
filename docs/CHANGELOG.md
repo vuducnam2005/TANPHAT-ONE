@@ -1,5 +1,9 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261127-002 — 2026-11-27 — PHASE2-WAVE-001-MIGRATE: Chuyển migration `20.0.1.24.1` sang `end-migrate.py` an toàn thứ tự nạp module khi nâng cấp đồng thời `tp_hr_workspace` và `tp_equipment`
+
+- **Migration (`custom_addons/tp_hr_workspace 20.0.1.24.1`):** đổi `post-migrate.py` sang `end-migrate.py` và kiểm tra `'tp_employee_id' in eq_model._fields` trước khi truy vấn `maintenance.equipment` để không phụ thuộc thứ tự nạp registry khi nâng cấp nhiều module.
+
 ## CHG-20261127-001 — 2026-11-27 — PHASE2-WAVE-001: Đợt 1 sửa lỗi khẩn P1/P2 từ Audit `20261126T223300_ICT` (`tp_web_home 20.0.3.0.1`, `tp_hr_workspace 20.0.1.24.1`, `tp_hr_attendance 20.0.4.0.1`, `tp_kd_workspace 20.0.1.11.1`, `tp_equipment 20.0.1.7.2`)
 
 - **HR Unsaved Guard & Dọn bản ghi rỗng (`T-0001` / `F-0002`):** tái sử dụng `TpUnsavedBackDialog` 3 nút (`Lưu và rời trang`, `Bỏ thay đổi`, `Ở lại`) trong `HrProfileController.beforeLeave`, chặn tự lưu ngầm khi chuyển tab / `beforeunload` (`urgentSave`) trên hồ sơ nhân sự và thêm migration `20.0.1.24.1` dọn an toàn bản ghi thử nghiệm rỗng `AUDIT_UNSAVED_TEST` qua `_tp_permanent_unlink` có ghi audit.
