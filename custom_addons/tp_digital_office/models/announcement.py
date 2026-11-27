@@ -1,6 +1,7 @@
 # Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
 """G2: Thông báo nội bộ (tp.announcement) with explicit versioned Read Acknowledgement (Mandatory Case #9)."""
 from markupsafe import Markup, escape
+from psycopg2 import IntegrityError
 
 from odoo import Command, _, api, fields, models
 from odoo.exceptions import AccessError, UserError
@@ -105,11 +106,12 @@ class TpAnnouncement(models.Model):
         user = user or self.env.user
         if is_live_admin_user(user, company=self.company_id):
             return True
-        if self.issuer_user_id.id == user.id and self._tp_can_user_publish(
-            user=user, scope=self.audience_scope, dept_ids=self.target_department_ids.ids
-        ):
-            return True
-        return False
+        return bool(
+            self.issuer_user_id.id == user.id
+            and self._tp_can_user_publish(
+                user=user, scope=self.audience_scope, dept_ids=self.target_department_ids.ids,
+            ),
+        )
 
     def _tp_target_recipient_users(self):
         self.ensure_one()
@@ -143,7 +145,7 @@ class TpAnnouncement(models.Model):
             scope = vals.get('audience_scope') or 'departments'
             if not self._tp_can_user_publish(self.env.user, scope=scope):
                 raise AccessError(_(
-                    'Chỉ Ban Giám đốc (Admin), Quản lý Nhân sự hoặc Trưởng bộ phận mới có thẩm quyền soạn thông báo nội bộ theo phạm vi này.'
+                    'Chỉ Ban Giám đốc (Admin), Quản lý Nhân sự hoặc Trưởng bộ phận mới có thẩm quyền soạn thông báo nội bộ theo phạm vi này.',
                 ))
             if not vals.get('code') or vals['code'] == 'Mới':
                 vals['code'] = self.env['ir.sequence'].sudo().next_by_code('tp.announcement') or 'TBNB-0001'
@@ -156,7 +158,7 @@ class TpAnnouncement(models.Model):
                     raise AccessError(_('Bạn không có quyền chỉnh sửa thông báo này.'))
                 if rec.state != 'draft':
                     raise UserError(_(
-                        'Thông báo đã phát hành. Vui lòng dùng thao tác "Cập nhật phiên bản" hoặc "Thu hồi" kèm lý do.'
+                        'Thông báo đã phát hành. Vui lòng dùng thao tác "Cập nhật phiên bản" hoặc "Thu hồi" kèm lý do.',
                     ))
         return super().write(vals)
 
@@ -174,7 +176,7 @@ class TpAnnouncement(models.Model):
             if not rec._tp_can_manage():
                 raise AccessError(_('Bạn không có quyền phát hành thông báo này.'))
             if not self._tp_can_user_publish(
-                self.env.user, scope=rec.audience_scope, dept_ids=rec.target_department_ids.ids
+                self.env.user, scope=rec.audience_scope, dept_ids=rec.target_department_ids.ids,
             ):
                 raise AccessError(_('Phạm vi đối tượng nhận vượt quá thẩm quyền phát hành của bạn.'))
             if rec.state != 'draft':
@@ -190,8 +192,8 @@ class TpAnnouncement(models.Model):
             })
             rec.message_post(
                 body=Markup('<p>Đã phát hành chính thức thông báo nội bộ <strong>%s</strong> (Phiên bản v%s).</p>') % (
-                    escape(rec.code), rec.version
-                )
+                    escape(rec.code), rec.version,
+                ),
             )
         return True
 
@@ -217,7 +219,7 @@ class TpAnnouncement(models.Model):
                 new_ver,
                 'yêu cầu xác nhận lại' if major_reack else 'hiệu đính nhỏ',
                 escape(clean_reason),
-            )
+            ),
         )
         return {'version': new_ver}
 
@@ -239,7 +241,7 @@ class TpAnnouncement(models.Model):
             body=Markup('<p>Đã chuyển trạng thái sang <strong>%s</strong>. Lý do: %s</p>') % (
                 escape(dict(ANNOUNCEMENT_STATES).get(target_state, target_state)),
                 escape(clean_reason),
-            )
+            ),
         )
         return True
 
@@ -264,12 +266,25 @@ class TpAnnouncement(models.Model):
                 'acked_version': existing.acked_version,
                 'acked_at': format_dt_local(existing.acked_at),
             }
-        ack = Ack.create({
-            'announcement_id': rec.id,
-            'user_id': self.env.uid,
-            'acked_version': rec.version,
-            'operation_token': (operation_token or '').strip() or False,
-        })
+        try:
+            with self.env.cr.savepoint():
+                ack = Ack.create({
+                    'announcement_id': rec.id,
+                    'user_id': self.env.uid,
+                    'acked_version': rec.version,
+                    'operation_token': (operation_token or '').strip() or False,
+                })
+        except IntegrityError:
+            existing = Ack.search([
+                ('announcement_id', '=', rec.id),
+                ('user_id', '=', self.env.uid),
+                ('acked_version', '=', rec.version),
+            ], limit=1)
+            return {
+                'already_acked': True,
+                'acked_version': existing.acked_version if existing else rec.version,
+                'acked_at': format_dt_local(existing.acked_at) if existing else '',
+            }
         return {
             'already_acked': False,
             'acked_version': ack.acked_version,

@@ -22,9 +22,9 @@
         </div>
     </header>
 
-    <div t-if="this.state.error" class="alert alert-danger" role="alert">
-        <t t-out="this.state.error"/>
-        <button type="button" class="btn btn-link p-0 ms-2" t-on-click="this.load">Thử lại</button>
+    <InlineErrors errors="[]" server="this.state.serverError" attempt="this.state.attempt"/>
+    <div t-if="this.state.serverError and !this.data" class="mb-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="this.load">Thử lại</button>
     </div>
 
     <p t-if="this.state.loading and !this.data" role="status" class="o_tp_att_loading">Đang dựng bảng đối chiếu A/B…</p>

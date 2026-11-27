@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_tp_equipment_form_survey_calibration" model="ir.ui.view">
+        <field name="name">maintenance.equipment.form.tp.survey.calibration</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="inherit_id" ref="tp_equipment.equipment_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='info']/group[hasclass('tp_eq_form_cards')]" position="after">
+                <group string="Kiểm định thiết bị khảo sát" name="tp_survey_calibration_group">
+                    <group>
+                        <field name="tp_is_survey_gear"/>
+                        <field name="tp_calibration_state"
+                               invisible="not tp_is_survey_gear"
+                               widget="badge"
+                               decoration-success="tp_calibration_state == 'valid'"
+                               decoration-warning="tp_calibration_state == 'expiring_soon'"
+                               decoration-danger="tp_calibration_state in ('expired', 'unset')"/>
+                        <field name="tp_calibration_date" invisible="not tp_is_survey_gear"/>
+                        <field name="tp_calibration_due_date" invisible="not tp_is_survey_gear"/>
+                    </group>
+                    <group invisible="not tp_is_survey_gear">
+                        <field name="tp_calibration_cert_no" placeholder="VD: GCN-KD-2026-015"/>
+                        <field name="tp_calibration_org" placeholder="VD: Trung tâm Kiểm định Đo lường"/>
+                        <p colspan="2" class="o_tp_eq_note mb-0">
+                            Thiết bị khảo sát chưa khai hạn kiểm định hoặc đã quá hạn kiểm định sẽ tự động khóa thao tác Gán / Đổi máy / Xuất hiện trường.
+                        </p>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

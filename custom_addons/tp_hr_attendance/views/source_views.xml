@@ -101,7 +101,7 @@
                             <field name="code_ids">
                                 <list editable="bottom">
                                     <field name="external_code"/>
-                                    <field name="employee_id"/>
+                                    <field name="employee_id" options="{'no_create': True, 'no_create_edit': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/>
                                     <field name="note"/>
                                 </list>
                             </field>
@@ -116,6 +116,7 @@
     <record id="action_source_records" model="ir.actions.act_window">
         <field name="name">Nguồn API máy chấm công</field>
         <field name="res_model">tp.hr.attendance.source</field>
+        <field name="path">cham-cong-ban-ghi-nguon</field>
         <field name="view_mode">list,form</field>
         <field name="help" type="html"><p>API máy chấm công: Chưa cấu hình. Khai báo nguồn khi đã có đủ thông tin từ hãng máy.</p></field>
     </record>
@@ -129,7 +130,7 @@
                 <field name="local_date"/>
                 <field name="direction"/>
                 <field name="external_code"/>
-                <field name="employee_id"/>
+                <field name="employee_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/>
                 <field name="state" widget="badge" decoration-success="state == 'mapped'" decoration-warning="state == 'unmapped'"/>
                 <field name="source_id" optional="show"/>
                 <field name="source_event_id" optional="hide"/>
@@ -141,6 +142,7 @@
     <record id="action_events" model="ir.actions.act_window">
         <field name="name">Sự kiện thô từ API máy</field>
         <field name="res_model">tp.hr.attendance.event</field>
+        <field name="path">cham-cong-su-kien-cham-cong</field>
         <field name="view_mode">list</field>
         <field name="help" type="html"><p>Chưa có sự kiện. Sự kiện chỉ xuất hiện khi một nguồn API được kết nối và gửi dữ liệu.</p></field>
     </record>

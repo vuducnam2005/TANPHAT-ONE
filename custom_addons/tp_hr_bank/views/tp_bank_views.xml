@@ -4,7 +4,7 @@
         <field name="name">tp.bank.list</field>
         <field name="model">tp.bank</field>
         <field name="arch" type="xml">
-            <list string="Danh mục ngân hàng">
+            <list string="Danh mục ngân hàng" js_class="tp_hr_table" limit="20">
                 <field name="sequence" widget="handle"/>
                 <field name="badge" widget="tp_bank_badge"/>
                 <field name="short_name"/>
@@ -13,11 +13,11 @@
                 <field name="bin"/>
                 <field name="swift" optional="hide"/>
                 <field name="kind"/>
-                <field name="napas_transfer" optional="hide"/>
+                <field name="napas_transfer" optional="show"/>
                 <field name="account_count" optional="show"/>
                 <field name="color" column_invisible="1"/>
                 <field name="text_color" column_invisible="1"/>
-                <field name="active" column_invisible="1"/>
+                <field name="active" widget="tp_hr_active" optional="show"/>
             </list>
         </field>
     </record>
@@ -26,7 +26,7 @@
         <field name="name">tp.bank.form</field>
         <field name="model">tp.bank</field>
         <field name="arch" type="xml">
-            <form string="Ngân hàng">
+            <form string="Ngân hàng" class="o_tp_hr_catalog_form o_tp_hr_compact_form" js_class="tp_hr_catalog">
                 <sheet>
                     <widget name="web_ribbon" title="Ngừng dùng" bg_color="text-bg-secondary" invisible="active"/>
                     <div class="oe_title d-flex align-items-center gap-3">
@@ -61,6 +61,9 @@
         <field name="arch" type="xml">
             <search string="Tìm ngân hàng">
                 <field name="short_name" string="Ngân hàng" filter_domain="['|', '|', '|', ('short_name', 'ilike', self), ('name', 'ilike', self), ('code', 'ilike', self), ('bin', 'ilike', self)]"/>
+                <field name="kind" string="Loại"/>
+                <field name="napas_transfer" string="Hỗ trợ chuyển nhanh NAPAS"/>
+                <field name="active" string="Đang dùng"/>
                 <filter name="filter_bank" string="Ngân hàng" domain="[('kind', '=', 'bank')]"/>
                 <filter name="filter_wallet" string="Ví điện tử / Tài chính" domain="[('kind', '!=', 'bank')]"/>
                 <separator/>
@@ -72,8 +75,10 @@
     <record id="action_tp_bank" model="ir.actions.act_window">
         <field name="name">Danh mục ngân hàng</field>
         <field name="res_model">tp.bank</field>
-        <field name="path">danh-muc-ngan-hang</field>
+        <field name="path">nhan-su-danh-muc-ngan-hang</field>
         <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_tp_bank_list"/>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('view_tp_bank_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('view_tp_bank_form')})]"/>
         <field name="search_view_id" ref="view_tp_bank_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Chưa có ngân hàng trong danh mục</p>

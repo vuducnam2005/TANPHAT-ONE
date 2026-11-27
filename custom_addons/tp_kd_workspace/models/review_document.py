@@ -9,7 +9,7 @@ from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.fields import Domain
 from odoo.tools import SQL
 
-from .workspace import _INTERNAL, kd_leaf
+from .workspace import _INTERNAL, child_context, kd_leaf
 
 TYPED_MODELS = ("tp.allocation", "tp.production", "tp.acceptance", "tp.payment.request",
                 "tp.periodic.plan", "tp.credential", "tp.obligation")
@@ -434,8 +434,13 @@ class ReviewDocument(models.AbstractModel):
     def action_documents(self):
         self.ensure_one()
         self.check_access("read")
-        return {"type": "ir.actions.act_window", "name": "Tài liệu hồ sơ", "res_model": "tp.kd.document",
-                "view_mode": "list,form", "domain": [("target_model", "=", self._name), ("target_id", "=", self.id)]}
+        action = self.env["ir.actions.actions"]._for_xml_id("tp_kd_workspace.action_dossier_documents")
+        action.update({
+            "name": "Tài liệu hồ sơ",
+            "domain": [("target_model", "=", self._name), ("target_id", "=", self.id)],
+            "context": {**child_context(self.env), **kd_leaf(self._name)},
+        })
+        return action
 
     def action_document_add(self):
         return self._kd_open_transition("document_add")

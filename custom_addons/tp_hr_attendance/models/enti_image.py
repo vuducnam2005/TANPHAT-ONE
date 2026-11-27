@@ -14,19 +14,37 @@ import hashlib
 import json
 import logging
 from io import BytesIO
+from urllib.parse import urlsplit, urlunsplit
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from odoo import api, fields, models
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import UserError
 
-from .attendance_common import HR_MANAGER, internal, is_internal
+from .attendance_common import (
+    can_manage_enti_images,
+    check_enti_image_access,
+    deny_direct,
+    internal,
+    is_internal,
+)
 from .enti_client import (
     DEFAULT_MAX_IMAGE_BYTES,
     EntiError,
 )
 from .enti_mapping import MAPPING_STATES
 from odoo.addons.tp_hr_workspace.models.identity import _IDENTITY, image_kind
+
+__all__ = [
+    "AttendanceEntiEmployeeImage",
+    "can_manage_enti_images",
+    "check_enti_image_access",
+    "detect_magic_mime",
+    "parse_image_value",
+    "redact_image_url",
+    "sanitize_employee_metadata",
+    "validate_and_normalize_image",
+]
 
 _logger = logging.getLogger(__name__)
 
@@ -63,29 +81,6 @@ IMAGE_SOURCES = [
 ]
 
 
-def can_manage_enti_images(env, company=None):
-    """True for Original Admin, Delegated Full Admin (with live grant), HR Manager, or superuser."""
-    if env.su:
-        return True
-    user = env.user
-    if user.has_group(HR_MANAGER) or user.has_group("base.group_system"):
-        return True
-    is_orig = getattr(user, "_tp_is_original_admin", None)
-    if callable(is_orig) and is_orig():
-        return True
-    has_grant = getattr(user, "_tp_has_live_admin_grant", None)
-    if callable(has_grant) and has_grant(company or env.company):
-        return True
-    return False
-
-
-def check_enti_image_access(env, company=None):
-    if not can_manage_enti_images(env, company):
-        raise AccessError(
-            env._("Chỉ Quản trị gốc, Quản trị viên ủy quyền hoặc Quản lý nhân sự mới được cấu hình hoặc chạy đồng bộ ảnh."),
-        )
-
-
 def detect_magic_mime(raw_bytes):
     """Inspect magic bytes of ``raw_bytes``; return real MIME type or ``None`` if not a valid image."""
     if not isinstance(raw_bytes, (bytes, bytearray)) or len(raw_bytes) < 8:
@@ -117,7 +112,8 @@ def parse_image_value(raw_value, max_bytes=DEFAULT_MAX_IMAGE_BYTES):
 
     if text.startswith("data:"):
         if "," not in text:
-            raise EntiError("Chuỗi data URI ảnh không đúng định dạng.")
+            msg = "Chuỗi data URI ảnh không đúng định dạng."
+            raise EntiError(msg)
         header, b64_part = text.split(",", 1)
         meta = header[5:].strip()
         parts = [p.strip().lower() for p in meta.split(";") if p.strip()]
@@ -125,7 +121,8 @@ def parse_image_value(raw_value, max_bytes=DEFAULT_MAX_IMAGE_BYTES):
         if not declared_mime.startswith("image/"):
             raise EntiError(f"Content-Type trong data URI không hợp lệ ({declared_mime or 'trống'}); chỉ chấp nhận image/*.")
         if "base64" not in parts:
-            raise EntiError("Data URI ảnh phải được mã hóa base64.")
+            msg = "Data URI ảnh phải được mã hóa base64."
+            raise EntiError(msg)
         b64_clean = "".join(b64_part.split())
         # Base64 expands 3 bytes into 4 chars; reject early before allocating huge buffers.
         if len(b64_clean) > ((max_bytes + 3) * 4 // 3) + 64:
@@ -133,7 +130,8 @@ def parse_image_value(raw_value, max_bytes=DEFAULT_MAX_IMAGE_BYTES):
         try:
             raw_bytes = base64.b64decode(b64_clean, validate=True)
         except (binascii.Error, ValueError) as exc:
-            raise EntiError("Dữ liệu ảnh Base64 bị hỏng hoặc không hợp lệ.") from exc
+            msg = "Dữ liệu ảnh Base64 bị hỏng hoặc không hợp lệ."
+            raise EntiError(msg) from exc
         if len(raw_bytes) > max_bytes:
             raise EntiError(f"Dung lượng ảnh ({len(raw_bytes)} bytes) vượt quá giới hạn tối đa ({max_bytes} bytes).")
         return "base64", f"data:{declared_mime};base64", (raw_bytes, declared_mime)
@@ -142,7 +140,8 @@ def parse_image_value(raw_value, max_bytes=DEFAULT_MAX_IMAGE_BYTES):
     if lower.startswith(("http://", "https://", "/")):
         return "url", text, None
     if "://" in lower or lower.startswith(("javascript:", "file:", "ftp:", "mailto:")):
-        raise EntiError("Giao thức nguồn ảnh không được phép; chỉ hỗ trợ HTTP/HTTPS hoặc Base64.")
+        msg = "Giao thức nguồn ảnh không được phép; chỉ hỗ trợ HTTP/HTTPS hoặc Base64."
+        raise EntiError(msg)
 
     b64_clean = "".join(text.split())
     if len(b64_clean) > ((max_bytes + 3) * 4 // 3) + 64:
@@ -150,7 +149,8 @@ def parse_image_value(raw_value, max_bytes=DEFAULT_MAX_IMAGE_BYTES):
     try:
         raw_bytes = base64.b64decode(b64_clean, validate=True)
     except (binascii.Error, ValueError) as exc:
-        raise EntiError("Nguồn ảnh không phải URL HTTP/HTTPS hay chuỗi Base64 hợp lệ.") from exc
+        msg = "Nguồn ảnh không phải URL HTTP/HTTPS hay chuỗi Base64 hợp lệ."
+        raise EntiError(msg) from exc
     if len(raw_bytes) > max_bytes:
         raise EntiError(f"Dung lượng ảnh ({len(raw_bytes)} bytes) vượt quá giới hạn tối đa ({max_bytes} bytes).")
     return "base64", "base64", (raw_bytes, None)
@@ -159,7 +159,8 @@ def parse_image_value(raw_value, max_bytes=DEFAULT_MAX_IMAGE_BYTES):
 def validate_and_normalize_image(raw_bytes, declared_mime=None, max_bytes=DEFAULT_MAX_IMAGE_BYTES):
     """Verify Content-Type, size limit, magic bytes, and re-encode image into a clean JPEG/PNG."""
     if not raw_bytes:
-        raise EntiError("Dữ liệu ảnh trống.")
+        msg = "Dữ liệu ảnh trống."
+        raise EntiError(msg)
     max_bytes = max(1024, int(max_bytes or DEFAULT_MAX_IMAGE_BYTES))
     if len(raw_bytes) > max_bytes:
         raise EntiError(f"Dung lượng ảnh ({len(raw_bytes)} bytes) vượt quá giới hạn tối đa ({max_bytes} bytes).")
@@ -171,7 +172,8 @@ def validate_and_normalize_image(raw_bytes, declared_mime=None, max_bytes=DEFAUL
 
     magic_mime = detect_magic_mime(raw_bytes)
     if not magic_mime:
-        raise EntiError("Tệp không có magic bytes của định dạng ảnh hợp lệ (JPEG, PNG, GIF, WEBP).")
+        msg = "Tệp không có magic bytes của định dạng ảnh hợp lệ (JPEG, PNG, GIF, WEBP)."
+        raise EntiError(msg)
 
     source_hash = hashlib.sha256(raw_bytes).hexdigest()
     try:
@@ -194,7 +196,8 @@ def validate_and_normalize_image(raw_bytes, declared_mime=None, max_bytes=DEFAUL
                 out_mime = "image/jpeg"
             normalized_bytes = out.getvalue()
     except (UnidentifiedImageError, OSError, ValueError, SyntaxError) as exc:
-        raise EntiError("Không thể giải mã cấu trúc ảnh hợp lệ.") from exc
+        msg = "Không thể giải mã cấu trúc ảnh hợp lệ."
+        raise EntiError(msg) from exc
 
     normalized_hash = hashlib.sha256(normalized_bytes).hexdigest()
     normalized_b64 = base64.b64encode(normalized_bytes).decode("ascii")
@@ -207,6 +210,21 @@ def validate_and_normalize_image(raw_bytes, declared_mime=None, max_bytes=DEFAUL
         "magic_mime": magic_mime,
         "size": len(raw_bytes),
     }
+
+
+def redact_image_url(url):
+    """Strip userinfo, query parameters (tokens/signatures), and fragments before persisting URLs."""
+    text = str(url or "").strip()
+    if not text:
+        return ""
+    try:
+        parts = urlsplit(text)
+    except ValueError:
+        return text.split("?", 1)[0].split("#", 1)[0]
+    netloc = parts.netloc
+    if "@" in netloc:
+        netloc = netloc.rsplit("@", 1)[-1]
+    return urlunsplit((parts.scheme, netloc, parts.path, "", ""))
 
 
 def sanitize_employee_metadata(info, *, image_field="", image_source="none", image_hash="", image_mime="", image_size=0):
@@ -227,7 +245,9 @@ def sanitize_employee_metadata(info, *, image_field="", image_source="none", ima
             else:
                 safe[key_str] = ""
             continue
-        if isinstance(val, (str, int, float, bool)) or val is None:
+        if isinstance(val, str) and val.lower().startswith(("http://", "https://")):
+            safe[key_str] = redact_image_url(val)
+        elif isinstance(val, (str, int, float, bool)) or val is None:
             safe[key_str] = val
         elif isinstance(val, dict):
             nested = {
@@ -251,9 +271,7 @@ def _raw_image_bytes(val):
     """Extract raw binary content from Odoo 20 Binary/BinaryValueAttachment, raw bytes, or base64 strings."""
     if not val:
         return b""
-    if isinstance(val, (bytes, bytearray, memoryview)):
-        raw = bytes(val)
-    elif hasattr(val, "__bytes__") and not isinstance(val, str):
+    if isinstance(val, (bytes, bytearray, memoryview)) or (hasattr(val, "__bytes__") and not isinstance(val, str)):
         raw = bytes(val)
     else:
         raw = str(val).encode("ascii")
@@ -321,8 +339,8 @@ class AttendanceEntiEmployeeImage(models.Model):
     image_url = fields.Char(
         "URL / Nguồn ảnh ENTI",
         readonly=True,
-        groups="hr.group_hr_manager,base.group_system",
-        help="Chỉ hiển thị cho Quản lý nhân sự / Admin; ẩn với người dùng thường.",
+        groups="base.group_no_one",
+        help="Chỉ dành cho chẩn đoán kỹ thuật nội bộ; đã cắt bỏ tham số truy vấn/token.",
     )
     image_hash = fields.Char("Mã băm ảnh (SHA-256)", readonly=True, index=True)
     applied_odoo_hash = fields.Char("Mã băm ảnh đã lưu Odoo", readonly=True)
@@ -355,7 +373,7 @@ class AttendanceEntiEmployeeImage(models.Model):
     raw_metadata_json = fields.Text(
         "Metadata hồ sơ ENTI (JSON)",
         readonly=True,
-        groups="hr.group_hr_manager,base.group_system",
+        groups="base.group_no_one",
     )
 
     _source_key_unique = models.Constraint(
@@ -383,8 +401,8 @@ class AttendanceEntiEmployeeImage(models.Model):
                 rec.status_label = state_labels.get(rec.state, rec.state or "")
 
     def _check_access_guard(self):
-        if not is_internal(self):
-            check_enti_image_access(self.env, self.company_id[:1] if self else self.env.company)
+        if not self.env.su and not is_internal(self):
+            deny_direct(self)
 
     @api.model_create_multi
     def create(self, vals_list):

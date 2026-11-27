@@ -272,7 +272,7 @@
     padding: 8px 11px;
     font-size: 13.5px;
     color: var(--tp-req-ink);
-    background: #ffffff;
+    background-color: #ffffff;
     border: 1.5px solid #cbd5e1;
     border-radius: 8px;
     outline: none;
@@ -286,6 +286,10 @@
         border-color: var(--tp-req-primary);
         box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
     }
+}
+
+.tp_req_select {
+    padding-right: 30px;
 }
 
 .tp_req_textarea {

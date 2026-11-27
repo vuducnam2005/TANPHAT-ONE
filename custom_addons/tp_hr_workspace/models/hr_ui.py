@@ -1,5 +1,6 @@
 """Read-only presentation counts use the same visible, active population as drill-downs."""
 from odoo import api, fields, models
+from odoo.exceptions import AccessError
 
 
 def employee_domain(records, field):
@@ -262,6 +263,20 @@ class Employee(models.Model):
     def action_tp_profile(self):
         self.ensure_one()
         self.check_access('read')
-        return {'type': 'ir.actions.act_window', 'name': self.env._('Hồ sơ nhân viên'),
-                'res_model': self._name, 'res_id': self.id, 'view_mode': 'form',
-                'views': [(self.env.ref('tp_hr_workspace.employee_form').id, 'form')]}
+        action = self.env['ir.actions.actions']._for_xml_id('tp_hr_workspace.action_employees')
+        action.update(
+            res_id=self.id,
+            view_mode='form',
+            views=[(self.env.ref('tp_hr_workspace.employee_form').id, 'form')],
+            context={'tp_hr_leaf': 'tp_hr_workspace.menu_employees'},
+        )
+        return action
+
+    def action_tp_open_own_bank_profile(self):
+        """DEC-065: Allow logged-in account viewing own employee_form to jump straight to self-service bank update."""
+        self.ensure_one()
+        if not self.user_id or self.user_id.id != self.env.uid:
+            raise AccessError(self.env._('Bạn chỉ được tự cập nhật tài khoản ngân hàng của chính mình.'))
+        action = self.env['ir.actions.actions']._for_xml_id('tp_hr_workspace.action_my_profile')
+        action['params'] = {'tab': 'personal'}
+        return action

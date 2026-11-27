@@ -17,6 +17,7 @@
             </div>
 
             <div class="tp-cal-popover-body">
+                <InlineErrors errors="[]" server="this.state.serverError"/>
                 <div class="tp-cal-popover-row fw-semibold text-navy">
                     <span class="tp-cal-pop-icon">🕒</span>
                     <span t-out="this.state.card?.time_display or this.date"/>

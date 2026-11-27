@@ -6,9 +6,16 @@
             <header class="tp-todo-topbar">
                 <div class="tp-todo-brand-group">
                     <button type="button"
-                            class="tp-pt-icon-btn d-lg-none"
+                            class="tp-pt-icon-btn d-md-none"
                             aria-label="Mở danh mục việc cá nhân"
                             t-on-click="() => (this.state.mobileSidebarOpen = !this.state.mobileSidebarOpen)">
+                        <i class="oi" data-icon="menu" aria-hidden="true"/>
+                    </button>
+                    <button type="button"
+                            class="tp-pt-icon-btn d-none d-md-inline-flex"
+                            aria-label="Thu gọn hoặc mở rộng thanh điều hướng"
+                            title="Thu gọn / mở rộng thanh bên"
+                            t-on-click="() => this.toggleSidebarRail()">
                         <i class="oi" data-icon="menu" aria-hidden="true"/>
                     </button>
                     <span class="tp-todo-app-badge" aria-hidden="true">
@@ -48,12 +55,12 @@
             <div class="tp-todo-shell-body">
                 <!-- Mobile Backdrop for Left Sidebar -->
                 <div t-if="this.state.mobileSidebarOpen"
-                     class="tp-todo-sidebar-backdrop d-lg-none"
+                     class="tp-todo-sidebar-backdrop d-md-none"
                      t-on-click="() => (this.state.mobileSidebarOpen = false)"/>
 
                 <!-- Left Navigation Sidebar (Single App Sidebar) -->
                 <aside class="tp-todo-sidebar"
-                       t-att-class="{ 'is-mobile-open': this.state.mobileSidebarOpen }"
+                       t-att-class="{ 'is-mobile-open': this.state.mobileSidebarOpen, 'is-rail': this.state.sidebarCollapsed, 'is-expanded': this.state.sidebarExpanded }"
                        aria-label="Phân nhóm việc cá nhân">
                     <nav class="tp-todo-nav-list">
                         <button t-foreach="this.BUCKETS"
@@ -62,6 +69,7 @@
                                 type="button"
                                 class="tp-todo-nav-item"
                                 t-att-class="{ 'is-active': this.state.bucket === b.key, 'is-danger': b.key === 'overdue' and this.bucketCount('overdue') > 0 }"
+                                t-att-title="b.label + ' (' + this.bucketCount(b.key) + ')'"
                                 t-att-aria-current="this.state.bucket === b.key ? 'page' : undefined"
                                 t-on-click="() => this.selectBucket(b.key)">
                             <svg t-if="b.key === 'today'" class="tp-todo-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="1.5"/></svg>
@@ -105,6 +113,7 @@
                                     type="button"
                                     class="tp-todo-stage-pill"
                                     t-att-class="{ 'is-active': (+this.state.appliedFilters.stage_id) === st.id }"
+                                    t-att-title="'Giai đoạn: ' + st.name"
                                     t-on-click="() => this.toggleSidebarStageFilter(st.id)">
                                 <span class="tp-todo-stage-dot"/>
                                 <span class="text-truncate flex-grow-1 text-start" t-out="st.name"/>
@@ -300,9 +309,11 @@
                     </div>
 
                     <div t-elif="this.state.loadError" class="tp-todo-state-box">
-                        <div class="text-center">
-                            <p class="fw-semibold text-danger mb-2" t-out="this.state.loadError"/>
-                            <button type="button" class="tp-pt-btn tp-pt-btn-sm" t-on-click="() => this.loadWorkspace()">Thử lại</button>
+                        <div class="w-100" style="max-width: 560px;">
+                            <InlineErrors errors="[]" server="this.state.loadError"/>
+                            <div class="text-center mt-3">
+                                <button type="button" class="tp-pt-btn tp-pt-btn-sm" t-on-click="() => this.loadWorkspace()">Thử lại</button>
+                            </div>
                         </div>
                     </div>
 
@@ -510,7 +521,7 @@
                                             <span t-out="task.deadline.label"/>
                                         </span>
 
-                                        <span t-if="task.checklist_total > 0" class="tp-todo-meta-counter" title="Checklist">
+                                        <span t-if="task.checklist_total > 0" class="tp-todo-meta-counter" title="Danh sách kiểm tra">
                                             <span>☑</span>
                                             <t t-out="task.checklist_done + '/' + task.checklist_total"/>
                                         </span>
@@ -672,14 +683,18 @@
                             <footer class="tp-todo-pager">
                                 <div class="d-flex align-items-center gap-2 small text-muted">
                                     <span>Tổng số: <strong class="text-dark" t-out="this.state.totalCount"/> công việc</span>
-                                    <span>· Hiển thị</span>
-                                    <select class="tp-pt-select py-1 px-2"
-                                            style="width: auto; min-height: 32px;"
-                                            aria-label="Số dòng trên trang"
-                                            t-att-value="this.state.pageSize"
-                                            t-on-change="(ev) => this.changePageSize(ev)">
-                                        <option t-foreach="this.PAGE_SIZES" t-as="sz" t-key="sz" t-att-value="sz" t-out="sz"/>
-                                    </select>
+                                    <span>·</span>
+                                    <label class="d-inline-flex align-items-center gap-1 flex-nowrap mb-0">
+                                        <span>Hiển thị</span>
+                                        <select class="tp-pt-select py-1 px-2"
+                                                style="width: auto; min-width: 72px; min-height: 34px;"
+                                                aria-label="Số dòng trên trang"
+                                                t-att-value="this.state.pageSize"
+                                                t-on-change="(ev) => this.changePageSize(ev)">
+                                            <option t-foreach="this.PAGE_SIZES" t-as="sz" t-key="sz" t-att-value="sz" t-out="sz"/>
+                                        </select>
+                                        <span>dòng</span>
+                                    </label>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
                                     <button type="button"

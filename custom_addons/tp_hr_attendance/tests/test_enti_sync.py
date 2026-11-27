@@ -142,17 +142,17 @@ class TestEntiProjection(AttendanceCase):
         self.assertEqual((interval, window), (5, 50))
 
         # Config parameter override to 3 seconds
-        Param.set_param("tp_hr_attendance.enti_fast_poll_seconds", "3")
+        Param.set_str("tp_hr_attendance.enti_fast_poll_seconds", "3")
         interval, window = Source._tp_fast_settings()
         self.assertEqual((interval, window), (3, 50))
 
         # Values below MIN_FAST_SECONDS (2) clamp to 2
-        Param.set_param("tp_hr_attendance.enti_fast_poll_seconds", "1")
+        Param.set_str("tp_hr_attendance.enti_fast_poll_seconds", "1")
         interval, window = Source._tp_fast_settings()
         self.assertEqual((interval, window), (2, 50))
 
         # Setting 0 disables fast polling
-        Param.set_param("tp_hr_attendance.enti_fast_poll_seconds", "0")
+        Param.set_str("tp_hr_attendance.enti_fast_poll_seconds", "0")
         interval, window = Source._tp_fast_settings()
         self.assertEqual((interval, window), (0, 0))
 

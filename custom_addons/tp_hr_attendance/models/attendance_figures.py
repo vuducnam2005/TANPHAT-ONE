@@ -167,13 +167,17 @@ def group_counts(cells, live_ok=True):
 
 def class_date(start, end, today, marked=()):
     """The one day the dashboard groups describe: today inside the period, the start of a future period, else
-    the newest day of a past period that has a mark (the end when none has)."""
+    the newest day of a past period that has a mark (or the last working day when the period ends on a markless Sunday)."""
     if start <= today <= end:
         return today
     if start > today:
         return start
     days = [day for day in marked if start <= day <= end]
-    return max(days) if days else end
+    if days:
+        return max(days)
+    if end.weekday() == 6 and start < end:
+        return end - timedelta(days=1)
+    return end
 
 
 def clock_has_seconds(raw):

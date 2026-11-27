@@ -4,7 +4,9 @@ import { user } from "@web/core/user";
 import { Dialog } from "@web/core/dialog/dialog";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { downloadBase64, formatDate, readStore, rpcError, writeStore } from "../common";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
+import { downloadBase64, formatDate, readStore, writeStore } from "../common";
 import { AttendanceCompare } from "./compare";
 import { AttPager } from "../parts";
 
@@ -15,11 +17,11 @@ const STORE_KEY = "tp_hr_attendance.matrix.v2";
  */
 export class MatrixConfirmDialog extends Component {
     static template = "tp_hr_attendance.MatrixConfirmDialog";
-    static components = { Dialog };
+    static components = { Dialog, InlineErrors };
     props = useProps();
 
     setup() {
-        this.state = proxy({ reason: "", busy: false, error: "" });
+        this.state = proxy({ reason: "", busy: false, serverError: null, attempt: 0 });
     }
 
     async confirm() {
@@ -27,12 +29,13 @@ export class MatrixConfirmDialog extends Component {
             return;
         }
         this.state.busy = true;
-        this.state.error = "";
+        this.state.serverError = null;
         try {
             await this.props.onConfirm(this.state.reason.trim());
             this.props.close();
         } catch (error) {
-            this.state.error = rpcError(error, "Không thực hiện được thao tác. Vui lòng thử lại.");
+            this.state.serverError = saveError(error, { verb: "xác nhận thao tác nguồn tệp" });
+            this.state.attempt++;
             this.state.busy = false;
         }
     }
@@ -55,7 +58,7 @@ export class MatrixPersonDialog extends Component {
  */
 export class AttendanceFileMatrix extends Component {
     static template = "tp_hr_attendance.FileMatrix";
-    static components = { AttPager };
+    static components = { AttPager, InlineErrors };
     props = useProps();
 
     setup() {
@@ -104,7 +107,9 @@ export class AttendanceFileMatrix extends Component {
             collapsedGroups: {},
             loading: true,
             applying: false,
-            error: "",
+            fieldErrors: [],
+            serverError: null,
+            attempt: 0,
             data: null,
         });
 
@@ -197,7 +202,8 @@ export class AttendanceFileMatrix extends Component {
     async load() {
         const req = ++this.request;
         this.state.loading = true;
-        this.state.error = "";
+        this.state.fieldErrors = [];
+        this.state.serverError = null;
         this.state.data = null;
         try {
             const data = await this.orm.call("tp.hr.attendance.batch", "tp_matrix_data", [this.params()]);
@@ -214,7 +220,8 @@ export class AttendanceFileMatrix extends Component {
             this.savePrefs();
         } catch (error) {
             if (req === this.request) {
-                this.state.error = rpcError(error, "Không tải được bảng dữ liệu theo file. Vui lòng thử lại.");
+                this.state.serverError = saveError(error, { verb: "tải bảng dữ liệu theo file" });
+                this.state.attempt++;
             }
         } finally {
             if (req === this.request) {
@@ -276,10 +283,13 @@ export class AttendanceFileMatrix extends Component {
 
     applyFilters() {
         if (this.state.draftFrom && this.state.draftTo && this.state.draftTo < this.state.draftFrom) {
-            this.state.error = "Ngày kết thúc lọc phải sau hoặc bằng ngày bắt đầu.";
+            this.state.fieldErrors = [{ label: "Khoảng ngày lọc", message: "Ngày kết thúc lọc phải sau hoặc bằng ngày bắt đầu." }];
+            this.state.serverError = null;
+            this.state.attempt++;
             return;
         }
         Object.assign(this.state, {
+            fieldErrors: [],
             dateFrom: this.state.draftFrom,
             dateTo: this.state.draftTo,
             sourceGroup: this.state.draftGroup,
@@ -436,7 +446,8 @@ export class AttendanceFileMatrix extends Component {
             }]);
             downloadBase64(file);
         } catch (error) {
-            this.state.error = rpcError(error, "Không xuất được tệp Excel của bảng nguồn.");
+            this.state.serverError = saveError(error, { verb: "xuất tệp Excel của bảng nguồn" });
+            this.state.attempt++;
         }
     }
 

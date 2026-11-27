@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf8'?>
+<?xml version='1.0' encoding='utf-8'?>
 <odoo>
     <record id="equipment_list" model="ir.ui.view">
         <field name="name">tp.equipment.list</field>
@@ -201,7 +201,8 @@
     <record id="equipment_form" model="ir.ui.view">
         <field name="name">tp.equipment.form</field>
         <field name="model">maintenance.equipment</field>
-        <field name="priority">90</field>
+        <field name="mode">primary</field>
+        <field name="priority">5</field>
         <field name="arch" type="xml">
             <form string="Thiết bị văn phòng" class="tp_eq_form o_tp_eq_form_wide" js_class="tp_equipment_form">
                 <header>
@@ -312,12 +313,12 @@
                             <group class="tp_eq_custody_fields">
                                 <group>
                                     <field name="tp_custody" readonly="1"/>
-                                    <field name="tp_employee_id" string="Nhân viên đang giữ" options="{'no_create': True}" invisible="tp_custody not in ('employee', 'loan')" readonly="1"/>
+                                    <field name="tp_employee_id" string="Nhân viên đang giữ" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}" invisible="tp_custody not in ('employee', 'loan')" readonly="1"/>
                                     <field name="tp_employee_job_title" string="Chức danh" readonly="1" invisible="not tp_employee_id"/>
-                                    <field name="tp_holder_department_id" options="{'no_create': True}" invisible="tp_custody != 'department'" readonly="1"/>
+                                    <field name="tp_holder_department_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.department_form'}" invisible="tp_custody != 'department'" readonly="1"/>
                                 </group>
                                 <group>
-                                    <field name="tp_current_department_id" string="Phòng ban hiện tại"/>
+                                    <field name="tp_current_department_id" string="Phòng ban hiện tại" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.department_form'}"/>
                                     <field name="tp_location_id" string="Vị trí đặt máy" options="{'no_create': True}" readonly="1"/>
                                     <field name="tp_stock_location_display" string="Vị trí kho" readonly="1" invisible="tp_custody != 'stock'"/>
                                     <field name="tp_vendor_id" options="{'no_create': True}" invisible="tp_custody != 'vendor'" readonly="1"/>
@@ -391,7 +392,7 @@
                                             <field name="tp_purchase_date"/>
                                             <field name="tp_first_use_date"/>
                                             <field name="tp_date_source" class="o_tp_eq_source"/>
-                                            <field name="tp_currency_id" invisible="1"/>
+                                            <field name="tp_currency_id" invisible="1" options="{'no_open': True, 'no_create': True}"/>
                                             <field name="tp_purchase_value_known"/>
                                             <field name="tp_purchase_value" invisible="not tp_purchase_value_known"/>
                                         </group>
@@ -503,7 +504,7 @@
                             <group string="Nguồn dữ liệu &amp; kiểm soát">
                                 <field name="tp_source_ref"/>
                                 <field name="tp_registered_date"/>
-                                <field name="tp_registered_by_id"/>
+                                <field name="tp_registered_by_id" options="{'no_open': True, 'no_create': True}"/>
                                 <field name="tp_version"/>
                             </group>
                             <p class="o_tp_eq_note">Mọi thay đổi hồ sơ, ghi chú nội bộ và chứng từ đính kèm được lưu bên dưới. Không gửi thông báo cho người nhận máy.</p>
@@ -570,7 +571,7 @@
     <record id="action_equipment_stock" model="ir.actions.act_window">
         <field name="name">Thiết bị tồn kho</field>
         <field name="res_model">maintenance.equipment</field>
-        <field name="path">ton-kho-thiet-bi</field>
+        <field name="path">thiet-bi-ton-kho</field>
         <field name="view_mode">list,form</field>
         <field name="view_id" ref="equipment_stock_list"/>
         <field name="search_view_id" ref="equipment_search"/>
@@ -587,6 +588,7 @@
     <record id="action_equipment_available" model="ir.actions.act_window">
         <field name="name">Sẵn sàng cấp phát</field>
         <field name="res_model">maintenance.equipment</field>
+        <field name="path">thiet-bi-san-sang</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="equipment_search"/>
         <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('equipment_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('equipment_form')})]"/>
@@ -598,6 +600,7 @@
     <record id="action_equipment_in_use" model="ir.actions.act_window">
         <field name="name">Đang sử dụng</field>
         <field name="res_model">maintenance.equipment</field>
+        <field name="path">thiet-bi-dang-dung</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="equipment_search"/>
         <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('equipment_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('equipment_form')})]"/>
@@ -609,6 +612,7 @@
     <record id="action_equipment_attention" model="ir.actions.act_window">
         <field name="name">Cần xử lý</field>
         <field name="res_model">maintenance.equipment</field>
+        <field name="path">thiet-bi-can-chu-y</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="equipment_search"/>
         <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('equipment_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('equipment_form')})]"/>
@@ -621,6 +625,7 @@
     <record id="action_equipment_draft" model="ir.actions.act_window">
         <field name="name">Hồ sơ nháp</field>
         <field name="res_model">maintenance.equipment</field>
+        <field name="path">thiet-bi-ho-so-nhap</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="equipment_search"/>
         <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('equipment_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('equipment_form')})]"/>
@@ -632,6 +637,7 @@
     <record id="action_equipment_retired" model="ir.actions.act_window">
         <field name="name">Ngừng quản lý</field>
         <field name="res_model">maintenance.equipment</field>
+        <field name="path">thiet-bi-ngung-quan-ly</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="equipment_search"/>
         <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('equipment_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('equipment_form')})]"/>

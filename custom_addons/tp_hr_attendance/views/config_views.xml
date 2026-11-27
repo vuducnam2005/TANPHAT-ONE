@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <list string="Mã máy chấm công" js_class="tp_hr_table" editable="bottom" limit="20" import="0">
                 <field name="machine_code"/>
-                <field name="employee_id" options="{'no_create': True}"/>
+                <field name="employee_id" options="{'no_create': True, 'no_create_edit': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/>
                 <field name="source" readonly="1"/>
                 <field name="note"/>
                 <field name="company_id" groups="base.group_multi_company" optional="hide"/>

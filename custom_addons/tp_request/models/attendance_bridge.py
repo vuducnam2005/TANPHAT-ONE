@@ -7,17 +7,22 @@
 - Requests created from 'Công của tôi' appear immediately in 'Đề nghị & Phê duyệt', and
   requests created from 'Đề nghị & Phê duyệt' create/operate the exact same backend record.
 """
+import base64
+
 from odoo import Command, _, api, fields, models
 from odoo.exceptions import UserError
 
 from .request_common import (
     BRIDGE_INTERNAL,
     BRIDGE_KEY,
+    INTERNAL,
     add_working_hours,
     format_date_vn,
     internal,
     is_bridge,
 )
+
+CORR_EVIDENCE_TAG = 'tp_att_corr_evidence'
 
 CORR_TO_REQ_STATE = {
     'draft': 'draft',
@@ -117,6 +122,8 @@ class AttendanceCorrectionBridge(models.Model):
                     [req.id, corr.id],
                 )
                 corr.invalidate_recordset(['tp_request_id'])
+
+            self._tp_sync_evidence_to_request(corr, req, owner_user)
 
             # Sync single authoritative admin approval step snapshot
             step = req.step_ids.filtered(lambda s: s.request_version == (corr.version or 1))[:1]
@@ -226,7 +233,10 @@ class AttendanceCorrectionBridge(models.Model):
 
     def action_reopen_draft(self):
         res = super().action_reopen_draft()
-        self._tp_sync_to_request()
+        self._tp_sync_to_request(
+            action_event='reopen_draft',
+            note=_('Mở lại bản nháp điều chỉnh công để chỉnh sửa.'),
+        )
         return res
 
     def action_cancel(self):
@@ -238,6 +248,69 @@ class AttendanceCorrectionBridge(models.Model):
         res = super()._tp_sync_reviewers()
         self._tp_sync_to_request()
         return res
+
+    def _tp_sync_evidence_to_request(self, corr, req, owner_user):
+        """Idempotently mirror corr.evidence_file <-> req.attachment_ids without duplicating files."""
+        if self.env.context.get('_tp_skip_evidence_mirror'):
+            return
+        Attachment = self.env['ir.attachment'].sudo()
+        src_att = Attachment.search([
+            ('res_model', '=', 'tp.hr.attendance.correction'),
+            ('res_id', '=', corr.id),
+            ('res_field', '=', 'evidence_file'),
+        ], order='id desc', limit=1)
+        mirrored = req.attachment_ids.sudo().filtered(
+            lambda a: a.res_model == 'tp.request' and a.res_id == req.id and a.description == CORR_EVIDENCE_TAG,
+        )
+        if src_att:
+            raw_obj = src_att.raw
+            raw_bytes = raw_obj.content if hasattr(raw_obj, 'content') else (raw_obj or b'')
+            if raw_bytes:
+                fname = (corr.evidence_name or src_att.name or f'minh_chung_{corr.name or corr.id}').strip()
+                mime = src_att.mimetype or 'application/octet-stream'
+                same_cs = req.attachment_ids.sudo().filtered(
+                    lambda a: a.res_model == 'tp.request' and a.res_id == req.id and a.checksum == src_att.checksum,
+                )[:1]
+                if same_cs:
+                    upd_att = {}
+                    if same_cs.description != CORR_EVIDENCE_TAG:
+                        upd_att['description'] = CORR_EVIDENCE_TAG
+                    if fname and same_cs.name != fname:
+                        upd_att['name'] = fname
+                    if upd_att:
+                        same_cs.write(upd_att)
+                    stale = mirrored - same_cs
+                    if stale:
+                        req.write({'attachment_ids': [Command.unlink(a.id) for a in stale]})
+                        stale.unlink()
+                elif mirrored:
+                    keep = mirrored[:1]
+                    keep.write({
+                        'name': fname,
+                        'raw': raw_bytes,
+                        'mimetype': mime,
+                        'description': CORR_EVIDENCE_TAG,
+                    })
+                    extra = mirrored - keep
+                    if extra:
+                        req.write({'attachment_ids': [Command.unlink(a.id) for a in extra]})
+                        extra.unlink()
+                else:
+                    new_att = self.env['ir.attachment'].with_user(owner_user).sudo().create({
+                        'name': fname,
+                        'raw': raw_bytes,
+                        'mimetype': mime,
+                        'res_model': 'tp.request',
+                        'res_id': req.id,
+                        'description': CORR_EVIDENCE_TAG,
+                        'public': False,
+                        'access_token': False,
+                    })
+                    req.write({'attachment_ids': [Command.link(new_att.id)]})
+                return
+        if mirrored and corr.state in ('draft', 'returned'):
+            req.write({'attachment_ids': [Command.unlink(a.id) for a in mirrored]})
+            mirrored.unlink()
 
     def unlink(self):
         linked_reqs = self.sudo().mapped('tp_request_id')
@@ -260,15 +333,52 @@ class TpRequestAttendanceHelper(models.Model):
             'requested_out': att_out,
             'reason': (payload.get('description') or '').strip() or False,
         }
+        att_ids = [int(x) for x in (payload.get('attachment_ids') or []) if str(x).isdigit()]
+        valid_atts = self.env['ir.attachment'].sudo().browse()
+        if att_ids:
+            for att in self.env['ir.attachment'].sudo().browse(att_ids).exists():
+                if att.create_uid.id == self.env.uid and (
+                    (rec and att.res_model == 'tp.request' and att.res_id == rec.id) or not att.res_model
+                ):
+                    valid_atts |= att
+        if valid_atts:
+            first_att = valid_atts[0]
+            raw_obj = first_att.raw
+            raw_bytes = raw_obj.content if hasattr(raw_obj, 'content') else (raw_obj or b'')
+            if raw_bytes:
+                corr_vals['evidence_file'] = base64.b64encode(raw_bytes).decode('ascii')
+                corr_vals['evidence_name'] = first_att.name or 'minh_chung'
+
+        CorrectionCtx = Correction.with_context(_tp_skip_evidence_mirror=True) if valid_atts else Correction
         if rec and rec.attendance_correction_id:
-            corr = rec.attendance_correction_id
+            corr = rec.attendance_correction_id.with_context(_tp_skip_evidence_mirror=bool(valid_atts))
             corr.write(corr_vals)
         else:
-            corr = Correction.create(corr_vals)
+            corr = CorrectionCtx.create(corr_vals)
             rec = corr.sudo().tp_request_id
             if not rec:
                 corr._tp_sync_to_request(action_event='create')
                 rec = corr.sudo().tp_request_id
+
+        if valid_atts and rec:
+            stale_mirrored = rec.sudo().attachment_ids.filtered(
+                lambda a: a.res_model == 'tp.request' and a.res_id == rec.id and a.description == CORR_EVIDENCE_TAG and a not in valid_atts,
+            )
+            if stale_mirrored:
+                internal(rec).write({'attachment_ids': [Command.unlink(a.id) for a in stale_mirrored]})
+                stale_mirrored.unlink()
+            for idx, att in enumerate(valid_atts):
+                att_upd = {
+                    'res_model': 'tp.request',
+                    'res_id': rec.id,
+                    'public': False,
+                    'access_token': False,
+                }
+                if idx == 0:
+                    att_upd['description'] = CORR_EVIDENCE_TAG
+                att.sudo().write(att_upd)
+            internal(rec).write({'attachment_ids': [Command.link(a.id) for a in valid_atts]})
+
         # Preserve user's custom title & priority on the linked tp.request
         title = (payload.get('title') or '').strip()
         upd = {}
@@ -279,7 +389,7 @@ class TpRequestAttendanceHelper(models.Model):
         if upd and rec:
             internal(rec).write(upd)
         if submit:
-            corr.action_submit()
+            corr.with_context(_tp_skip_evidence_mirror=False).action_submit()
         if not rec:
             raise UserError(_('Không khởi tạo được hồ sơ đề nghị điều chỉnh công.'))
         return self.browse(rec.id)

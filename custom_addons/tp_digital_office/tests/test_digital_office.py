@@ -1,6 +1,5 @@
 # Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
 """Automated tests for tp_digital_office: Mandatory Cases #5 (Minutes->Tasks), #7/#8 (Plan->Task->Frozen Snapshot), #9 (Explicit Ack), and Honest Workload."""
-import json
 from datetime import date, datetime, timedelta
 
 from odoo import Command, fields
@@ -112,6 +111,18 @@ class TestDigitalOffice(TransactionCase):
         with self.assertRaises(UserError):
             minute.with_user(self.user_mgr).write({'conclusion_content': 'Sửa ngầm không qua revise'})
 
+        # Adding, editing, or spoofing task_id on action items of an issued minute is strictly blocked (F-A07-0007)
+        with self.assertRaises(UserError):
+            self.env['tp.meeting.action.item'].with_user(self.user_mgr).create({
+                'minute_id': minute.id,
+                'name': 'Thêm lén đầu việc khi đã phát hành',
+                'assignee_user_id': self.user_eng.id,
+            })
+        with self.assertRaises(UserError):
+            minute.action_item_ids[0].with_user(self.user_mgr).write({'name': 'Sửa lén tên đầu việc'})
+        with self.assertRaises(AccessError):
+            minute.action_item_ids[0].with_user(self.admin).write({'task_id': False})
+
         # Deleting an action item that already spawned a task is blocked
         with self.assertRaises(UserError):
             minute.action_item_ids[0].with_user(self.admin).unlink()
@@ -157,9 +168,15 @@ class TestDigitalOffice(TransactionCase):
         self.assertTrue(res['ok'])
         ann_id = res['id']
 
-        # Outsider in another department is blocked from reading department-scoped announcement
+        # Outsider in another department is blocked from reading department-scoped announcement (RPC + direct ORM)
         with self.assertRaises(AccessError):
             self.env['tp.announcement'].with_user(self.user_out).tp_announcement_detail_data(ann_id)
+        with self.assertRaises(AccessError):
+            self.env['tp.announcement'].with_user(self.user_out).browse(ann_id).read(['name', 'body'])
+        self.assertEqual(
+            self.env['tp.announcement'].with_user(self.user_out).search_count([('id', '=', ann_id)]),
+            0,
+        )
 
         # Recipient opens detail -> MUST NOT auto-acknowledge!
         detail_v1 = self.env['tp.announcement'].with_user(self.user_eng).tp_announcement_detail_data(ann_id)
@@ -171,9 +188,13 @@ class TestDigitalOffice(TransactionCase):
         ack1 = self.env['tp.announcement'].with_user(self.user_eng).tp_acknowledge_announcement(ann_id, 'tok-1')
         self.assertFalse(ack1['already_acked'])
         self.assertEqual(ack1['acked_version'], 1)
-        # Idempotent retry
+        # Idempotent retry & ORM ack privacy check (F-A07-0002 / F-A07-0006)
         ack1_dup = self.env['tp.announcement'].with_user(self.user_eng).tp_acknowledge_announcement(ann_id, 'tok-1')
         self.assertTrue(ack1_dup['already_acked'])
+        self.assertEqual(
+            self.env['tp.announcement.ack'].with_user(self.user_out).search_count([('announcement_id', '=', ann_id)]),
+            0,
+        )
 
         # Major revision bumps to v2 -> recipient must re-acknowledge v2 while v1 ack audit remains intact!
         ann = self.env['tp.announcement'].browse(ann_id)
@@ -288,3 +309,20 @@ class TestDigitalOffice(TransactionCase):
         self.assertEqual(snap.payload, snap_payload_before)
         self.assertIn('Thiết kế mố M1 cầu sông Hàn', snap.payload)
         self.assertNotIn('Tên công việc đã đổi sau khi nộp báo cáo', snap.payload)
+
+    def test_04_meeting_minute_timezone_roundtrip_vn(self):
+        """F-A06-0004: meeting_date_iso round-trips accurately between Asia/Ho_Chi_Minh local time and naive UTC."""
+        self.user_mgr.sudo().write({'tz': 'Asia/Ho_Chi_Minh'})
+        res = self.env['tp.meeting.minute'].with_user(self.user_mgr).tp_save_minute({
+            'name': 'Họp giao ban 09:00 sáng giờ VN',
+            'meeting_date_iso': '2026-11-27T09:00',
+            'chair_user_id': self.user_mgr.id,
+            'department_id': self.dept_eng.id,
+        }, issue_now=False)
+        self.assertTrue(res['ok'])
+        minute = self.env['tp.meeting.minute'].browse(res['id'])
+        # 09:00 Asia/Ho_Chi_Minh (+07:00) == 02:00 UTC
+        self.assertEqual(minute.meeting_date, datetime(2026, 11, 27, 2, 0, 0))
+        detail = self.env['tp.meeting.minute'].with_user(self.user_mgr).tp_minute_detail_data(minute.id)
+        self.assertEqual(detail['meeting_date_iso'], '2026-11-27T09:00')
+        self.assertIn('27/11/2026 09:00', detail['meeting_date_display'])

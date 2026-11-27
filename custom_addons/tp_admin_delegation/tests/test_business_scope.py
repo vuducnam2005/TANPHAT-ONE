@@ -1,12 +1,18 @@
 from odoo import Command
 from odoo.tests import TransactionCase, tagged
 
+from .test_delegation import pick_free_employee_codes
+
 
 @tagged('post_install', '-at_install')
 class TestFullAdminBusinessScope(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        employee_model = cls.env['hr.employee']
+        sequence = employee_model._tp_code_sequence()
+        cls.env.cr.execute('SELECT last_value, is_called FROM ir_sequence_%03d' % sequence.id)
+        cls.addClassCleanup(cls._restore_employee_sequence, sequence.id, *cls.env.cr.fetchone())
         cls.company = cls.env.company
         cls.admin = cls.env.ref('base.user_admin')
         cls.env['tp.admin.delegation']._migrate_admin_full_001()
@@ -21,11 +27,13 @@ class TestFullAdminBusinessScope(TransactionCase):
             'company_ids': [Command.set(cls.company.ids)],
             'group_ids': [Command.set([cls.env.ref('tp_kd_workspace.group_scoped_staff').id])],
         })
+        emp_code = pick_free_employee_codes(cls.env, 1)[0]
         cls.employee = cls.env['hr.employee'].create({
             'name': cls.user.name,
             'user_id': cls.user.id,
             'company_id': cls.company.id,
             'department_id': cls.departments[0].id,
+            'tp_employee_code': emp_code,
         })
         cls.projects = cls.env['project.project'].create([
             {
@@ -42,6 +50,11 @@ class TestFullAdminBusinessScope(TransactionCase):
             'user_id': cls.user.id,
             'role': 'reader',
         })
+
+    @classmethod
+    def _restore_employee_sequence(cls, sequence_id, last_value, is_called):
+        with cls.registry.cursor() as cr:
+            cr.execute('SELECT setval(%s, %s, %s)', ['ir_sequence_%03d' % sequence_id, last_value, is_called])
 
     def change(self, operation='grant'):
         self.env['tp.admin.delegation'].with_user(self.admin)._change(

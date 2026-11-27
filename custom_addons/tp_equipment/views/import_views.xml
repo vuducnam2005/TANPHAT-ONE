@@ -123,7 +123,7 @@
     <field name="name">tp.import_line_form</field>
     <field name="model">tp.equipment.import.line</field>
     <field name="arch" type="xml">
-      <form>
+      <form class="tp_eq_form o_tp_eq_form_wide">
         <sheet>
           <group>
             <field name="batch_id"/>
@@ -132,9 +132,9 @@
             <field name="row_number"/>
             <field name="disposition"/>
             <field name="name"/>
-            <field name="employee_id"/>
-            <field name="department_id"/>
-            <field name="location_id"/>
+            <field name="employee_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/>
+            <field name="department_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.department_form'}"/>
+            <field name="location_id" options="{'no_create': True}"/>
             <field name="custody_stock"/>
             <field name="suggestion"/>
             <field name="mapping_confirmed" readonly="1"/>
@@ -143,12 +143,12 @@
             <field name="proposal_kind"/>
             <field name="amount_known"/>
             <field name="amount"/>
-            <field name="currency_id"/>
+            <field name="currency_id" options="{'no_open': True, 'no_create': True}"/>
             <field name="quantity_known"/>
             <field name="quantity"/>
-            <field name="equipment_id"/>
-            <field name="proposal_line_id"/>
-          <field name="identity_resolution"/><field name="match_equipment_id"/><field name="match_proposal_line_id"/><field name="identity_confirmed"/></group>
+            <field name="equipment_id" options="{'no_create': True}"/>
+            <field name="proposal_line_id" options="{'no_create': True}"/>
+          <field name="identity_resolution"/><field name="match_equipment_id" options="{'no_create': True}"/><field name="match_proposal_line_id" options="{'no_create': True}"/><field name="identity_confirmed"/></group>
           <group string="Giá trị xác nhận cho hồ sơ tạo mới" invisible="batch_kind != 'equipment'">
             <field name="category_id"/>
             <field name="asset_class"/>
@@ -174,7 +174,7 @@
     <field name="name">tp.import_form</field>
     <field name="model">tp.equipment.import.batch</field>
     <field name="arch" type="xml">
-      <form class="tp_eq_form" js_class="tp_equipment_form">
+      <form class="tp_eq_form o_tp_eq_form_wide" js_class="tp_equipment_form">
         <header>
           <button name="action_preview" type="object" string="Đọc nguồn / xem trước" class="btn-primary" invisible="state != 'draft'"/>
           <button name="action_apply" type="object" string="Áp dụng dòng đã xác nhận" class="btn-primary" invisible="state not in ('preview', 'partial')" confirm="Áp dụng dữ liệu đã xác nhận vào hồ sơ thật? Dòng đã áp dụng không bị tạo lại."/>
@@ -190,7 +190,7 @@
           <div class="alert alert-info" role="status">Đọc nguồn chỉ lập bản xem trước. Xác nhận từng ánh xạ ID, cách xử lý và nội dung trước khi áp dụng.</div>
           <div class="alert alert-warning" role="status" invisible="state != 'partial'">Đã áp dụng phần đủ thông tin. Dòng chờ giữ trên đợt này kèm lý do; bổ sung ID / nội dung, xác nhận rồi áp dụng tiếp. Dòng đã áp dụng không bị tạo lại.</div>
           <group>
-            <field name="company_id" readonly="state != 'draft'"/>
+            <field name="company_id" readonly="state != 'draft'" options="{'no_open': True, 'no_create': True}"/>
             <field name="kind" readonly="state != 'draft'"/>
             <field name="file_name" readonly="state != 'draft'"/>
             <field name="file" filename="file_name" readonly="state != 'draft'"/>
@@ -200,7 +200,7 @@
             <field name="previous_batch_id" readonly="state == 'applied'"/>
             <field name="identity_confirmed" readonly="state == 'applied'"/>
             <field name="proposal_id"/>
-            <field name="applied_by_id"/>
+            <field name="applied_by_id" options="{'no_open': True, 'no_create': True}"/>
             <field name="applied_date"/>
             <field name="note" placeholder="Ghi kết quả đối chiếu định danh và khác biệt với nguồn trước khi xác nhận phiên bản mới."/>
           </group>
@@ -223,17 +223,18 @@
                   <field name="row_number"/>
                   <field name="disposition"/>
                   <field name="name"/>
-                  <field name="employee_id"/>
-                  <field name="department_id"/>
-                  <field name="location_id"/>
+                  <field name="employee_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/>
+                  <field name="department_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.department_form'}"/>
+                  <field name="location_id" options="{'no_create': True}"/>
                   <field name="mapping_confirmed" readonly="1"/>
-                  <field name="equipment_id"/>
-                  <field name="proposal_line_id"/>
+                  <field name="equipment_id" options="{'no_create': True}"/>
+                  <field name="proposal_line_id" options="{'no_create': True}"/>
                   <field name="resolution_note"/>
-                <button name="action_confirm_mapping" type="object" string="Xác nhận ánh xạ"/><field name="identity_resolution" optional="show"/><field name="match_equipment_id" optional="hide"/><field name="match_proposal_line_id" optional="hide"/><field name="identity_confirmed" optional="hide" readonly="parent.state == 'applied'"/><field name="applied" optional="show"/><field name="category_id" optional="show"/><field name="ownership" optional="hide"/><field name="custody_stock" optional="hide"/><field name="technical_state" optional="hide"/><field name="replacement_needed" optional="hide"/><field name="proposal_kind" optional="hide"/><field name="amount_known" optional="hide"/><field name="amount" optional="hide"/><field name="currency_id" optional="hide"/><field name="quantity_known" optional="hide"/><field name="quantity" optional="hide"/></list>
+                <button name="action_confirm_mapping" type="object" string="Xác nhận ánh xạ"/><field name="identity_resolution" optional="show"/><field name="match_equipment_id" optional="hide" options="{'no_create': True}"/><field name="match_proposal_line_id" optional="hide" options="{'no_create': True}"/><field name="identity_confirmed" optional="hide" readonly="parent.state == 'applied'"/><field name="applied" optional="show"/><field name="category_id" optional="show" options="{'no_create': True}"/><field name="ownership" optional="hide"/><field name="custody_stock" optional="hide"/><field name="technical_state" optional="hide"/><field name="replacement_needed" optional="hide"/><field name="proposal_kind" optional="hide"/><field name="amount_known" optional="hide"/><field name="amount" optional="hide"/><field name="currency_id" optional="hide" options="{'no_open': True, 'no_create': True}"/><field name="quantity_known" optional="hide"/><field name="quantity" optional="hide"/></list>
               </field>
             </page>
           </notebook>
+          <div class="o_tp_eq_chatter_below"/>
         </sheet>
         <chatter/>
       </form>
@@ -243,19 +244,19 @@
     <field name="name">tp.import_alias_form</field>
     <field name="model">tp.equipment.import.alias</field>
     <field name="arch" type="xml">
-      <form>
+      <form class="tp_eq_form o_tp_eq_form_wide">
         <header>
           <button name="action_confirm" type="object" string="Xác nhận ánh xạ" class="btn-primary" invisible="confirmed"/>
         </header>
         <sheet>
           <group>
             <field name="source_text"/>
-            <field name="company_id"/>
-            <field name="employee_id"/>
-            <field name="department_id"/>
-            <field name="location_id"/>
+            <field name="company_id" options="{'no_open': True, 'no_create': True}"/>
+            <field name="employee_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/>
+            <field name="department_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.department_form'}"/>
+            <field name="location_id" options="{'no_create': True}"/>
             <field name="confirmed"/>
-            <field name="confirmed_by_id"/>
+            <field name="confirmed_by_id" options="{'no_open': True, 'no_create': True}"/>
             <field name="confirmed_date"/>
           </group>
         </sheet>

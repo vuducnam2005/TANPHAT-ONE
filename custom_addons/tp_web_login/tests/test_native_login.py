@@ -38,7 +38,7 @@ class TestNativeLogin(HttpCase):
         self.assertTrue(identity)
         identity_text = ' '.join(identity[0].text_content().split())
         self.assertIn('Hệ thống quản trị điều hành', identity_text)
-        self.assertIn('copyright @by Tadic', identity_text)
+        self.assertIn('© TANPHAT ONE · Phát triển bởi Tadic', identity_text)
         self.assertNotIn('Kết nối công việc', identity_text)
         tadic_link = document.xpath("//a[contains(@class, 'tp-auth-copyright-link')]")
         self.assertEqual(len(tadic_link), 1)
@@ -70,8 +70,7 @@ class TestNativeLogin(HttpCase):
         self.assertTrue(document.xpath("//input[@name='password']"))
         self.assertTrue(document.xpath("//input[@name='redirect']"))
         parameters = self.env['ir.config_parameter'].sudo()
-        self.assertEqual(bool(document.xpath("//a[starts-with(@href, '/web/signup') or starts-with(@href, '/tao-tai-khoan')]")),
-                         parameters.get_str('auth_signup.invitation_scope', 'b2b') == 'b2c')
+        self.assertFalse(document.xpath("//a[starts-with(@href, '/web/signup') or starts-with(@href, '/tao-tai-khoan')]"))
         self.assertEqual(bool(document.xpath("//a[starts-with(@href, '/web/reset_password') or starts-with(@href, '/quen-mat-khau')]")),
                          parameters.get_bool('auth_signup.reset_password'))
         if self.env['ir.module.module'].search([('name', '=', 'auth_passkey')]).state == 'installed':
@@ -127,7 +126,7 @@ class TestNativeLogin(HttpCase):
         parameters.set_str('auth_signup.invitation_scope', 'b2c')
         parameters.set_bool('auth_signup.reset_password', True)
         document = self._document(self.url_open('/web/login'))
-        self.assertTrue(document.xpath("//a[starts-with(@href, '/web/signup') or starts-with(@href, '/tao-tai-khoan')]"))
+        self.assertFalse(document.xpath("//a[starts-with(@href, '/web/signup') or starts-with(@href, '/tao-tai-khoan')]"))
         self.assertTrue(document.xpath("//a[starts-with(@href, '/web/reset_password') or starts-with(@href, '/quen-mat-khau')]"))
         for route in ('/web/signup', '/web/reset_password'):
             page = self._document(self.url_open(route))
@@ -148,7 +147,7 @@ class TestNativeLogin(HttpCase):
         }, allow_redirects=False)
         self.assertEqual(response.status_code, 303)
         # tp_branding (BRAND-WHITELABEL-002) serves the webclient on /app.
-        self.assertIn(response.headers['Location'], ('/odoo/tp-home', '/app/tp-home'))
+        self.assertIn(response.headers['Location'], ('/odoo/tp-home', '/app/tp-home', '/app/trang-chu'))
         # The core local redirect normalizes external input to this origin.
         external = self.url_open('/web/login', params={'redirect': 'https://example.invalid/escape'},
                                  allow_redirects=False)

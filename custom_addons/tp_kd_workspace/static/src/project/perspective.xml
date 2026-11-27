@@ -15,7 +15,9 @@
         <button type="button" class="btn btn-primary" t-att-disabled="!this.state.project || this.state.busy" t-on-click="() => this.navigate(this.mode, true)">Mở chi tiết dự án</button>
         <button type="button" class="btn btn-outline-secondary" t-on-click="() => this.load()" t-att-disabled="this.state.busy">Làm mới</button>
     </div>
-    <p role="alert" class="alert alert-danger" t-if="this.state.error" t-out="this.state.error"/>
+    <InlineErrors errors="this.state.fieldErrors || []"
+                  server="this.state.serverError"
+                  attempt="this.state.attempt || 0"/>
     <p role="status" t-if="this.state.busy">Đang tải dữ liệu theo quyền…</p>
     <t t-if="this.state.data">
         <p class="text-muted"><t t-out="this.state.data.project_count"/> dự án trong bộ lọc. Số liệu từ hồ sơ nguồn; bấm từng nhóm để đối chiếu.</p>

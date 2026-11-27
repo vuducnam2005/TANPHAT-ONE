@@ -173,11 +173,11 @@ class TestAttendanceAccess(AttendanceCase):
         menu_import = self.env.ref('tp_hr_attendance.menu_import').id
         enti_config = self.env.ref('tp_hr_attendance.menu_enti_config').id
         viewer_menus = visible(self.viewer)
-        self.assertNotIn(board, viewer_menus)
+        self.assertIn(board, viewer_menus)
         self.assertNotIn(menu_import, viewer_menus)
         self.assertNotIn(enti_config, viewer_menus)
         manager_menus = visible(self.manager)
-        self.assertNotIn(board, manager_menus)
+        self.assertIn(board, manager_menus)
         self.assertNotIn(menu_import, manager_menus)
         self.assertIn(enti_config, manager_menus)
         # Import UI is removed; historical data remains in the canonical export.
@@ -187,6 +187,29 @@ class TestAttendanceAccess(AttendanceCase):
         self.assertFalse(self.env.ref('tp_hr_attendance.menu_codes', raise_if_not_found=False))
         self.assertFalse(self.env.ref('tp_hr_attendance.menu_assignments', raise_if_not_found=False))
         self.assertFalse(self.env.ref('tp_hr_attendance.menu_logs', raise_if_not_found=False))
+
+    def test_enti_security_and_clean_action_paths(self):
+        """DEC-063 & F-A04-0002/0006: sensitive ENTI JSON/URL fields stay hidden, staging is read-only for UI users, and paths are clean."""
+        self.assertEqual(self.env['tp.hr.attendance.enti.day']._fields['raw_json'].groups, 'base.group_no_one')
+        self.assertEqual(self.env['tp.hr.attendance.enti.employee.image']._fields['raw_metadata_json'].groups, 'base.group_no_one')
+        self.assertEqual(self.env['tp.hr.attendance.enti.employee.image']._fields['image_url'].groups, 'base.group_no_one')
+
+        for operation in ('create', 'write', 'unlink'):
+            self.assertFalse(self.env_for(self.manager)['tp.hr.attendance.enti.day'].has_access(operation), operation)
+            self.assertFalse(self.env_for(self.manager)['tp.hr.attendance.enti.employee.image'].has_access(operation), operation)
+
+        expected_paths = {
+            'action_board': 'cham-cong-bang-cong',
+            'action_days': 'cham-cong-ngay-cong',
+            'action_import': 'cham-cong-nhap-excel',
+            'action_import_lines': 'cham-cong-dong-nhap-excel',
+            'action_file_matrix': 'cham-cong-lich-su-nguon',
+            'action_source_records': 'cham-cong-ban-ghi-nguon',
+            'action_events': 'cham-cong-su-kien-cham-cong',
+            'action_enti_employee_images': 'cham-cong-anh-enti',
+        }
+        for xmlid, slug in expected_paths.items():
+            self.assertEqual(self.env.ref(f'tp_hr_attendance.{xmlid}').path, slug, xmlid)
 
     def test_standalone_attendance_app_and_hr_menu_separation(self):
         """Chấm công has its own root app menu; TP HR sidebar no longer owns attendance menus."""

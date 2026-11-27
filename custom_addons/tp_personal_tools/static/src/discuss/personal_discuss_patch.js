@@ -15,6 +15,7 @@ import { browser } from "@web/core/browser/browser";
 import { router } from "@web/core/browser/router";
 import { useService } from "@web/core/utils/hooks";
 import { patch } from "@web/core/utils/patch";
+import { saveError } from "@tp_web_home/validation/validation";
 import { TpCreateChatDialog } from "./create_chat_dialog";
 import { TpMessageToTaskDialog } from "./message_to_task_dialog";
 import { TpShareItemDialog } from "./share_item_dialog";
@@ -82,6 +83,51 @@ registerThreadAction("tp-hide-dm-from-list", {
     sequenceGroup: 40,
 });
 
+registerThreadAction("tp-sync-scoped-members", {
+    condition: ({ channel, owner }) =>
+        Boolean(
+            owner.isDiscussContent &&
+                channel?.tp_can_sync_members &&
+                ["department", "project"].includes(channel?.tp_channel_scope)
+        ),
+    icon: "sync",
+    name: "Đồng bộ thành viên theo nguồn",
+    onSelected: async ({ channel, store }) => {
+        if (!channel?.id) {
+            return;
+        }
+        try {
+            const res = await store.env.services.orm.call(
+                "discuss.channel",
+                "tp_sync_scoped_channel_members",
+                [channel.id]
+            );
+            const added = Number(res?.added_count || 0);
+            const departed = Array.isArray(res?.departed_partner_ids)
+                ? res.departed_partner_ids.length
+                : 0;
+            if (added > 0 && typeof store.fetchChannel === "function") {
+                store.fetchChannel(channel.id);
+            }
+            let msg = added
+                ? `Đã đồng bộ thêm ${added} thành viên mới vào hội thoại.`
+                : "Danh sách thành viên đã khớp với nguồn hiện tại.";
+            if (departed > 0) {
+                msg += ` Có ${departed} thành viên đã chuyển khỏi nguồn (giữ nguyên lịch sử tin nhắn).`;
+            }
+            store.env.services.notification.add(msg, { type: "success" });
+        } catch (err) {
+            const parsed = saveError(err, { verb: "đồng bộ thành viên hội thoại" });
+            store.env.services.notification.add(
+                parsed?.message || "Không thể đồng bộ danh sách thành viên.",
+                { type: "warning" }
+            );
+        }
+    },
+    sequence: 46,
+    sequenceGroup: 20,
+});
+
 registerThreadAction("tp-leave-group-or-channel", {
     condition: ({ channel, owner }) =>
         Boolean(
@@ -99,6 +145,9 @@ registerThreadAction("tp-leave-group-or-channel", {
 
 // 3. Mobile single-screen navigation inside DiscussApp (avoid floating ChatWindow popup on mobile)
 patch(DiscussChannel.prototype, {
+    tp_channel_scope: undefined,
+    tp_can_sync_members: false,
+
     _openChannel() {
         if (this.store.discuss.isActive) {
             this.setAsDiscussThread();

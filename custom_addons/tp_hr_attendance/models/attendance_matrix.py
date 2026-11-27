@@ -398,7 +398,7 @@ class AttendanceBatchMatrix(models.Model):
     def _tp_stamp(self, dt_value):
         if not dt_value:
             return ''
-        tz_env = self.with_context(tz=self.env.user.tz or DEFAULT_TZ)
+        tz_env = self.with_context(tz=DEFAULT_TZ)
         return fields.Datetime.context_timestamp(tz_env, dt_value).strftime('%d/%m/%Y %H:%M')
 
     def _tp_batch_selector_item(self):

@@ -88,7 +88,7 @@
                                 </div>
                             </div>
                         </div>
-                        <p class="tp-auth-copyright" t-translation="off">copyright @<a class="tp-auth-copyright-link" href="https://tanphatjsc.com/" target="_blank" rel="noopener noreferrer">by Tadic</a></p>
+                        <p class="tp-auth-copyright" t-translation="off">© TANPHAT ONE · Phát triển bởi <a class="tp-auth-copyright-link" href="https://tanphatjsc.com/" target="_blank" rel="noopener noreferrer">Tadic</a></p>
                     </aside>
                     <div t-attf-class="tp-auth-panel #{login_card_classes} o_database_list">
                         <div class="card-body tp-auth-content">
@@ -148,6 +148,7 @@
             <attribute name="placeholder">Nhập mật khẩu</attribute>
         </xpath>
         <xpath expr="//button[hasclass('o_show_password')]" position="attributes">
+            <attribute name="title">Hiện mật khẩu</attribute>
             <attribute name="aria-label">Hiện mật khẩu</attribute>
             <attribute name="aria-pressed">false</attribute>
         </xpath>
@@ -212,7 +213,7 @@
 
     <template id="self_service_links" inherit_id="auth_signup.login" name="TANPHAT ONE native self service labels">
         <xpath expr="//a[@t-if='signup_enabled']" position="replace">
-            <a t-if="signup_enabled" class="btn btn-link btn-sm tp-auth-signup-link" t-attf-href="/web/signup?{{ keep_query() }}" t-translation="off">Tạo tài khoản</a>
+            <a t-if="False" class="btn btn-link btn-sm tp-auth-signup-link" t-attf-href="/web/signup?{{ keep_query() }}" t-translation="off">Tạo tài khoản</a>
         </xpath>
         <xpath expr="//a[@t-if='reset_password_enabled']" position="replace">
             <a t-if="reset_password_enabled" class="btn btn-link btn-sm tp-auth-reset-link" t-attf-href="/web/reset_password?{{ keep_query() }}" t-translation="off">Quên mật khẩu?</a>
@@ -245,6 +246,7 @@
             <label for="confirm_password" class="form-label" t-translation="off">Nhập lại mật khẩu</label>
         </xpath>
         <xpath expr="//button[hasclass('o_show_password')]" position="attributes">
+            <attribute name="title">Hiện mật khẩu</attribute>
             <attribute name="aria-label">Hiện mật khẩu</attribute>
             <attribute name="aria-pressed">false</attribute>
         </xpath>

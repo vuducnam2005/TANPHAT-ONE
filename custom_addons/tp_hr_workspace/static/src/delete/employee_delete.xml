@@ -77,6 +77,15 @@
                         <li t-foreach="this.section('keep')" t-as="row" t-key="row_index"><t t-if="this.state.preview.count > 1"><span class="o_tp_hr_delete_owner" t-out="row.employee"/>: </t><t t-out="row.label"/><span class="o_tp_hr_delete_value" t-out="row.value"/></li>
                     </ul>
                 </section>
+                <section t-if="this.allOtherAssignments.length" class="o_tp_hr_delete_section o_tp_hr_delete_assignments" aria-labelledby="tp_hr_delete_assignments">
+                    <h3 id="tp_hr_delete_assignments">Phân công khác</h3>
+                    <ul>
+                        <li t-foreach="this.allOtherAssignments" t-as="row" t-key="row_index">
+                            <t t-if="this.state.preview.count > 1"><span class="o_tp_hr_delete_owner" t-out="row.employee"/>: </t>
+                            <t t-out="row.label"/><span class="o_tp_hr_delete_value" t-out="row.value"/>
+                        </li>
+                    </ul>
+                </section>
                 <section t-if="this.blockers.length" class="o_tp_hr_delete_section o_tp_hr_delete_block" aria-labelledby="tp_hr_delete_block" role="alert">
                     <h3 id="tp_hr_delete_block">Đang chặn — chưa thể xóa</h3>
                     <ul>
@@ -87,7 +96,8 @@
                     <p>Xử lý các mục trên rồi bấm <em>Xem trước lại</em>, hoặc dùng <strong>Lưu trữ</strong> nếu cần giữ lịch sử.</p>
                     <button type="button" class="btn btn-link p-0" t-on-click="this.reloadPreview" t-att-disabled="this.state.busy">Xem trước lại</button>
                 </section>
-                <form id="tp_hr_delete_form" class="o_tp_hr_delete_form" t-on-submit="this.submit" autocomplete="off">
+                <form id="tp_hr_delete_form" class="o_tp_hr_delete_form tp_validation_form" t-on-submit="this.submit" autocomplete="off" novalidate="novalidate">
+                    <InlineErrors errors="this.inlineFieldErrors" server="this.state.server" attempt="this.state.attempt"/>
                     <div t-if="this.state.preview.accountCount" class="o_tp_hr_delete_option">
                         <input id="tp_hr_delete_lock" type="checkbox" class="form-check-input" t-att-checked="this.state.lockAccounts" t-on-change="(ev) => this.state.lockAccounts = ev.target.checked" t-att-disabled="this.state.busy" aria-describedby="tp_hr_delete_lock_help"/>
                         <label for="tp_hr_delete_lock">Xóa hồ sơ và khóa tài khoản</label>
@@ -108,9 +118,9 @@
                         <small id="tp_hr_delete_password_help">Nhập lại mật khẩu đăng nhập của chính bạn (<t t-out="this.state.preview.adminLogin"/>) cho mỗi lần xóa. Mật khẩu không được lưu.</small>
                     </div>
                     <div t-if="this.allAssetsToReturn.length" class="o_tp_hr_delete_action_note alert alert-info py-2 px-3 small mb-2">
-                        <i class="fa fa-info-circle me-1"/> Xóa vĩnh viễn hồ sơ và thu hồi các tài sản được liệt kê về kho trên hệ thống.
+                        <i class="oi me-1" data-icon="info" aria-hidden="true"/> Xóa vĩnh viễn hồ sơ và thu hồi các tài sản được liệt kê về kho trên hệ thống.
                     </div>
-                    <div t-if="this.state.error" class="o_tp_hr_delete_error" role="alert">
+                    <div t-if="this.state.error" class="o_tp_hr_delete_error tp_validation_inline" role="status">
                         <span t-out="this.state.error"/>
                         <button t-if="this.state.stale" type="button" class="btn btn-link p-0 ms-2" t-on-click="this.reloadPreview" t-att-disabled="this.state.busy">Xem trước lại</button>
                     </div>

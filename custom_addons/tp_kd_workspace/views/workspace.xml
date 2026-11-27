@@ -27,22 +27,22 @@
               </div>
               <div class="tp_kd_bp_field">
                 <label for="partner_id" string="Bên ký / đối tác thương mại"/>
-                <field name="partner_id" widget="tp_kd_bp_many2one"/>
+                <field name="partner_id" widget="tp_kd_bp_many2one" context="{'form_view_ref': 'tp_kd_workspace.kd_partner_summary_form'}" options="{'no_create': True}"/>
               </div>
               <div class="tp_kd_bp_field">
                 <label for="company_id"/>
-                <field name="company_id" widget="tp_kd_bp_many2one"/>
+                <field name="company_id" widget="tp_kd_bp_many2one" options="{'no_open': True, 'no_create': True}"/>
               </div>
             </div>
             <div class="tp_kd_bp_block">
               <h2>Chủ trì và mốc bàn giao</h2>
               <div class="tp_kd_bp_field">
                 <label for="tp_department_id"/>
-                <field name="tp_department_id" widget="tp_kd_bp_many2one"/>
+                <field name="tp_department_id" widget="tp_kd_bp_many2one" options="{'no_open': True, 'no_create': True}"/>
               </div>
               <div class="tp_kd_bp_field">
                 <label for="user_id"/>
-                <field name="user_id" widget="tp_kd_bp_many2one"/>
+                <field name="user_id" widget="tp_kd_bp_many2one" options="{'no_open': True, 'no_create': True}"/>
               </div>
               <div class="tp_kd_bp_field">
                 <label for="kd_deadline"/>
@@ -60,7 +60,7 @@
             <page string="Phân công" name="kd_assignment_page" groups="tp_core.group_manager">
               <field name="tp_assignment_ids" widget="tp_kd_relation">
                 <list editable="bottom" limit="20">
-                  <field name="user_id"/>
+                  <field name="user_id" options="{'no_open': True, 'no_create': True}"/>
                   <field name="role"/>
                   <field name="active"/>
                 </list>
@@ -120,13 +120,13 @@
               <h2>Các bên và dự án</h2>
               <div class="tp_kd_bp_field">
                 <label for="partner_id" string="Bên ký / đối tác thương mại"/>
-                <field name="kd_investor_id" readonly="1"/>
-                <field name="partner_id" widget="tp_kd_bp_many2one" readonly="id and not kd_can_edit"/>
+                <field name="kd_investor_id" readonly="1" context="{'form_view_ref': 'tp_kd_workspace.kd_partner_summary_form'}"/>
+                <field name="partner_id" widget="tp_kd_bp_many2one" readonly="id and not kd_can_edit" context="{'form_view_ref': 'tp_kd_workspace.kd_partner_summary_form'}" options="{'no_create': True}"/>
               </div>
               <div class="tp_kd_bp_field">
                 <label for="tp_project_id" string="Dự án liên quan"/>
-                <field name="tp_project_id" widget="tp_kd_bp_many2one" readonly="id"/>
-                <field name="kd_package_id" readonly="id and not kd_can_edit" domain="[('project_id','=',tp_project_id)]"/>
+                <field name="tp_project_id" widget="tp_kd_bp_many2one" readonly="id" context="{'form_view_ref': 'tp_kd_workspace.project_governance_form', 'tp_kd_leaf': 'tp_kd_workspace.menu_projects'}" options="{'no_create': True}"/>
+                <field name="kd_package_id" readonly="id and not kd_can_edit" domain="[('project_id','=',tp_project_id)]" context="{'form_view_ref': 'tp_kd_workspace.package_form', 'tp_kd_leaf': 'tp_kd_workspace.menu_opportunities'}" options="{'no_create': True}"/>
               </div>
               <div class="tp_kd_bp_field">
                 <label for="kd_source"/>
@@ -134,16 +134,16 @@
               </div>
               <div class="tp_kd_bp_field">
                 <label for="company_id"/>
-                <field name="company_id" widget="tp_kd_bp_many2one" readonly="id"/>
+                <field name="company_id" widget="tp_kd_bp_many2one" readonly="id" options="{'no_open': True, 'no_create': True}"/>
               </div>
             </div>
             <div class="tp_kd_bp_block">
               <h2>Phụ trách và kế hoạch</h2>
               <div class="tp_kd_bp_field">
                 <label for="user_id" string="Người phụ trách"/>
-                <field name="user_id" widget="tp_kd_bp_many2one" readonly="id"/>
+                <field name="user_id" widget="tp_kd_bp_many2one" readonly="id" options="{'no_open': True, 'no_create': True}"/>
                 <label for="team_id" string="Nhóm phụ trách trước dự án"/>
-                <field name="team_id" widget="tp_kd_bp_many2one" readonly="id"/>
+                <field name="team_id" widget="tp_kd_bp_many2one" readonly="id" options="{'no_open': True, 'no_create': True}"/>
               </div>
               <div class="tp_kd_bp_field">
                 <label for="kd_route"/>
@@ -191,7 +191,7 @@
     <field name="inherit_id" ref="project.view_task_form2"/>
     <field name="arch" type="xml">
       <xpath expr="//field[@name='project_id'][1]" position="after">
-        <field name="kd_contract_id" domain="[('project_id', '=', project_id)]"/>
+        <field name="kd_contract_id" domain="[('project_id', '=', project_id)]" context="{'form_view_ref': 'tp_contract.view_contract_form', 'tp_kd_leaf': 'tp_kd_workspace.menu_contracts'}" options="{'no_create': True}"/>
         <field name="kd_deliverable"/>
       </xpath>
     </field>
@@ -209,8 +209,8 @@
           </div>
           <group>
             <group>
-              <field name="project_id" placeholder="Tất cả dự án trong quyền"/>
-              <field name="owner_id" placeholder="Tất cả người phụ trách"/>
+              <field name="project_id" placeholder="Tất cả dự án trong quyền" options="{'no_open': True, 'no_create': True}"/>
+              <field name="owner_id" placeholder="Tất cả người phụ trách" options="{'no_open': True, 'no_create': True}"/>
             </group>
             <group>
               <field name="date_from"/>
@@ -338,6 +338,46 @@
   <menuitem id="menu_overview" name="Tổng quan" parent="menu_kd" action="action_overview" sequence="1"/>
   <menuitem id="menu_opportunities" name="Hồ sơ dự án và hồ sơ thầu" parent="menu_group_business" action="action_opportunities" sequence="10"/>
   <menuitem id="menu_projects" name="Hồ sơ dự án" parent="menu_group_business" action="action_projects" sequence="20"/>
-  <menuitem id="menu_contracts" name="Hợp đồng và phụ lục — TP Contracts" parent="menu_group_delivery" action="tp_contract.action_tp_contracts" sequence="10"/>
+  <record id="kd_partner_summary_form" model="ir.ui.view">
+    <field name="name">kd.partner.summary.form</field>
+    <field name="model">res.partner</field>
+    <field name="priority">99</field>
+    <field name="arch" type="xml">
+      <form string="Thông tin đối tác / chủ đầu tư" create="false" edit="false" delete="false" class="tp_kd_form">
+        <sheet>
+          <div class="oe_title">
+            <h1><field name="name" readonly="1"/></h1>
+          </div>
+          <group>
+            <group string="Nhận diện đối tác">
+              <field name="is_company" string="Là tổ chức / doanh nghiệp" readonly="1"/>
+              <field name="vat" string="Mã số thuế" readonly="1"/>
+              <field name="parent_id" string="Đơn vị chủ quản" readonly="1" options="{'no_open': True}"/>
+              <field name="company_id" string="Công ty quản lý" readonly="1" options="{'no_open': True}"/>
+            </group>
+            <group string="Thông tin liên hệ">
+              <field name="phone" string="Điện thoại" readonly="1"/>
+              <field name="email" string="Thư điện tử" readonly="1"/>
+              <field name="street" string="Địa chỉ" readonly="1"/>
+              <field name="city" string="Tỉnh / Thành phố" readonly="1"/>
+            </group>
+          </group>
+          <p class="text-muted">Màn hình tóm tắt đối tác chỉ đọc trong phạm vi Kế hoạch Kinh doanh &amp; Dự án. Cập nhật đối tác thực hiện qua thao tác Đối tác nghiệp vụ được kiểm quyền.</p>
+        </sheet>
+      </form>
+    </field>
+  </record>
+  <record id="kd_work_item_list_style" model="ir.ui.view">
+    <field name="name">kd.work.item.list.style</field>
+    <field name="model">tp.work.item</field>
+    <field name="inherit_id" ref="tp_core.view_work_item_list"/>
+    <field name="arch" type="xml">
+      <xpath expr="/list" position="attributes">
+        <attribute name="js_class">tp_kd_table</attribute>
+        <attribute name="class" add="tp_kd_table" separator=" "/>
+      </xpath>
+    </field>
+  </record>
+  <menuitem id="menu_contracts" name="Hợp đồng và phụ lục — TP Contracts" parent="menu_group_delivery" action="tp_contract.action_tp_contracts_list" sequence="10"/>
   <menuitem id="menu_tasks" name="Kế hoạch và công việc" parent="menu_group_delivery" action="action_tasks" sequence="20"/>
 </odoo>

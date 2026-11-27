@@ -2,12 +2,18 @@ from odoo import Command, fields
 from odoo.exceptions import AccessError
 from odoo.tests import TransactionCase, tagged
 
+from .test_delegation import pick_free_employee_codes
+
 
 @tagged('post_install', '-at_install')
 class TestFullAdminEquipmentScope(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        employee_model = cls.env['hr.employee']
+        sequence = employee_model._tp_code_sequence()
+        cls.env.cr.execute('SELECT last_value, is_called FROM ir_sequence_%03d' % sequence.id)
+        cls.addClassCleanup(cls._restore_employee_sequence, sequence.id, *cls.env.cr.fetchone())
         cls.company = cls.env.company
         cls.main = cls.env.ref('base.user_admin')
         cls.env['tp.admin.delegation']._migrate_admin_full_001()
@@ -22,17 +28,20 @@ class TestFullAdminEquipmentScope(TransactionCase):
             'company_ids': [Command.set(cls.company.ids)],
             'group_ids': [Command.set([cls.env.ref('base.group_user').id])],
         })
+        code_own, code_other = pick_free_employee_codes(cls.env, 2)
         cls.employee = cls.env['hr.employee'].create({
             'name': cls.user.name,
             'company_id': cls.company.id,
             'department_id': cls.departments[0].id,
             'user_id': cls.user.id,
+            'tp_employee_code': code_own,
             'date_version': fields.Date.today(),
         })
         cls.other_employee = cls.env['hr.employee'].create({
             'name': 'Synthetic Other Holder',
             'company_id': cls.company.id,
             'department_id': cls.departments[1].id,
+            'tp_employee_code': code_other,
             'date_version': fields.Date.today(),
         })
         cls.category = cls.env['maintenance.equipment.category'].create({'name': 'Synthetic Category'})
@@ -54,6 +63,11 @@ class TestFullAdminEquipmentScope(TransactionCase):
             'category_id': cls.category.id,
         })
         cls.stock.action_tp_register()
+
+    @classmethod
+    def _restore_employee_sequence(cls, sequence_id, last_value, is_called):
+        with cls.registry.cursor() as cr:
+            cr.execute('SELECT setval(%s, %s, %s)', ['ir_sequence_%03d' % sequence_id, last_value, is_called])
 
     def grant(self, operation='grant'):
         self.env['tp.admin.delegation'].with_user(self.main)._change(

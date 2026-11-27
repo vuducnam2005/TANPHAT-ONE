@@ -3,6 +3,8 @@ import base64
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 
+from lxml import etree
+
 from odoo import Command, api, fields, models
 from odoo.exceptions import AccessError, RedirectWarning, UserError
 from odoo.tools import float_repr
@@ -52,12 +54,20 @@ def revision_action(revision):
     revision.check_access('read')
     # The web client caches reads for an action/context. A completed transition
     # must reload its new version, even when returning to the very same revision.
+    action = revision.env['ir.actions.actions']._for_xml_id('tp_contract.action_tp_contract_revisions')
     context = {key: value for key, value in revision.env.context.items()
                if not key.startswith(('default_', 'search_default_'))}
     context['tp_native_version'] = revision.contract_id.aggregate_version
-    return {'type': 'ir.actions.act_window', 'name': 'TP Contracts', 'res_model': 'tp.contract.revision',
-            'res_id': revision.id, 'view_mode': 'form', 'views': [(False, 'form')], 'target': 'current',
-            'context': context}
+    context.setdefault('tp_kd_leaf', 'tp_kd_workspace.menu_contracts')
+    action.update({
+        'name': 'TP Contracts',
+        'res_id': revision.id,
+        'view_mode': 'form',
+        'views': [(False, 'form')],
+        'target': 'current',
+        'context': context,
+    })
+    return action
 
 
 class NativeMixin(models.AbstractModel):
@@ -67,11 +77,11 @@ class NativeMixin(models.AbstractModel):
     contract_id = fields.Many2one('tp.contract', readonly=True, string='Hợp đồng')
     revision_id = fields.Many2one('tp.contract.revision', readonly=True, string='Bản hợp đồng')
     project_id = fields.Many2one('project.project', required=True, string='Dự án')
-    company_id = fields.Many2one('res.company', required=True, readonly=True)
-    expected_version = fields.Integer(readonly=True)
-    key = fields.Char(readonly=True, copy=False)
-    state = fields.Selection([('draft', 'Draft'), ('done', 'Done')], default='draft', readonly=True)
-    result_revision_id = fields.Many2one('tp.contract.revision', readonly=True, copy=False)
+    company_id = fields.Many2one('res.company', required=True, readonly=True, string='Công ty')
+    expected_version = fields.Integer(readonly=True, string='Phiên bản đối chiếu')
+    key = fields.Char(readonly=True, copy=False, string='Khóa thao tác')
+    state = fields.Selection([('draft', 'Nháp'), ('done', 'Hoàn tất')], default='draft', readonly=True, string='Trạng thái')
+    result_revision_id = fields.Many2one('tp.contract.revision', readonly=True, copy=False, string='Bản kết quả')
 
     @api.model
     def _tp_defaults(self, values):
@@ -215,7 +225,7 @@ class NativeDraft(models.TransientModel):
     _inherit = 'tp.contract.native.mixin'
     _description = 'Create or edit contract draft'
 
-    mode = fields.Selection([('create', 'Create'), ('edit', 'Edit')], readonly=True, default='create')
+    mode = fields.Selection([('create', 'Tạo mới'), ('edit', 'Chỉnh sửa')], readonly=True, default='create', string='Chế độ')
     code = fields.Char(string='Số hợp đồng')
     name = fields.Char(string='Tên hợp đồng')
     contract_type = fields.Selection(CONTRACT_TYPES, default='owner', string='Loại hợp đồng')
@@ -452,7 +462,7 @@ class NativeAmountInput(models.TransientModel):
 
     wizard_id = fields.Many2one('tp.contract.native.draft', required=True, ondelete='cascade')
     scope_key = fields.Char(required=True, string='Mã phạm vi')
-    amount_state = fields.Selection([('unconfirmed', 'Unconfirmed'), ('confirmed', 'Confirmed')],
+    amount_state = fields.Selection([('unconfirmed', 'Chưa xác nhận'), ('confirmed', 'Đã xác nhận')],
                                     required=True, default='unconfirmed', string='Xác nhận giá trị')
     value = fields.Char(string='Số tiền mới')
     tax_basis = fields.Selection(TAX_BASES, required=True, default='unknown', string='Cơ sở thuế')
@@ -492,17 +502,53 @@ class ContractNativeViews(models.Model):
             contract.tp_can_create_amendment = 'create_amendment' in actions
             contract.tp_document_count = self.env['tp.contract.document'].search_count([('contract_id', '=', contract.id)])
 
+    @api.model
+    def get_kd_ui_permissions(self):
+        projects = self.env['project.project'].search([('tp_managed', '=', True)])
+        workflow = self.env['tp.contract.workflow']
+        can_create = any('contract_draft_edit' in workflow._tp_capabilities(p, p.tp_department_id) for p in projects)
+        return {'can_create_contract': can_create, 'create': can_create}
+
+    @api.model
+    def get_views(self, views, options=None):
+        res = super().get_views(views, options=options)
+        list_view = (res.get('views') or {}).get('list')
+        if list_view and list_view.get('arch'):
+            can_create = self.get_kd_ui_permissions()['can_create_contract']
+            doc = etree.fromstring(list_view['arch'])
+            changed = False
+            for btn in doc.xpath(".//header/button[@type='action']"):
+                btn.set('invisible', '0' if can_create else '1')
+                changed = True
+            if changed:
+                list_view['arch'] = etree.tostring(doc, encoding='unicode')
+        return res
+
     def action_tp_open_documents(self):
         self.ensure_one()
         self.check_access('read')
-        return {'type': 'ir.actions.act_window', 'name': 'Tài liệu hợp đồng', 'res_model': 'tp.contract.document',
-                'view_mode': 'list,form', 'domain': [('contract_id', '=', self.id)]}
+        action = self.env['ir.actions.actions']._for_xml_id('tp_contract.action_tp_contract_documents')
+        ctx = {k: v for k, v in self.env.context.items() if not k.startswith(('default_', 'search_default_'))}
+        ctx['tp_kd_leaf'] = 'tp_kd_workspace.menu_contracts'
+        action.update({
+            'name': 'Tài liệu hợp đồng',
+            'domain': [('contract_id', '=', self.id)],
+            'context': ctx,
+        })
+        return action
 
     def action_tp_open_audit(self):
         self.ensure_one()
         self.check_access('read')
-        return {'type': 'ir.actions.act_window', 'name': 'Lịch sử hợp đồng', 'res_model': 'tp.contract.audit',
-                'view_mode': 'list,form', 'domain': [('contract_id', '=', self.id)]}
+        action = self.env['ir.actions.actions']._for_xml_id('tp_contract.action_tp_contract_audits')
+        ctx = {k: v for k, v in self.env.context.items() if not k.startswith(('default_', 'search_default_'))}
+        ctx['tp_kd_leaf'] = 'tp_kd_workspace.menu_contracts'
+        action.update({
+            'name': 'Lịch sử hợp đồng',
+            'domain': [('contract_id', '=', self.id)],
+            'context': ctx,
+        })
+        return action
 
 
 class RevisionNativeViews(models.Model):
@@ -546,8 +592,15 @@ class RevisionNativeViews(models.Model):
     def action_tp_open_amounts(self):
         self.ensure_one()
         self.check_access('read')
-        return {'type': 'ir.actions.act_window', 'name': 'Số tiền theo dòng', 'res_model': 'tp.contract.line.amount',
-                'view_mode': 'list,form', 'domain': [('revision_id', '=', self.id)]}
+        action = self.env['ir.actions.actions']._for_xml_id('tp_contract.action_tp_contract_line_amounts')
+        ctx = {k: v for k, v in self.env.context.items() if not k.startswith(('default_', 'search_default_'))}
+        ctx['tp_kd_leaf'] = 'tp_kd_workspace.menu_contracts'
+        action.update({
+            'name': 'Số tiền theo dòng',
+            'domain': [('revision_id', '=', self.id)],
+            'context': ctx,
+        })
+        return action
 
 
 class SubmissionNativeViews(models.Model):

@@ -1,15 +1,27 @@
 /** @odoo-module **/
 import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
-import { browser } from "@web/core/browser/browser";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { uuid } from "@web/core/utils/strings";
+import { TpDateTime24Field } from "@tp_web_home/inputs/time24";
 import { InlineErrors } from "@tp_web_home/validation/inline_errors";
 import { saveError } from "@tp_web_home/validation/validation";
 
+function todayLocalIsoDate() {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function nowLocalIsoMinutes() {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 class TpDigitalOfficeBase extends Component {
     static template = "tp_digital_office.Workspace";
-    static components = { InlineErrors };
+    static components = { InlineErrors, TpDateTime24Field };
     props = useProps();
     initialTab = "announcements";
 
@@ -21,6 +33,8 @@ class TpDigitalOfficeBase extends Component {
         this.state = proxy({
             tab: this.initialTab, // 'announcements' | 'minutes'
             mobileNavOpen: false,
+            sidebarExpanded: false,
+            sidebarCollapsed: false,
             mode: "list", // 'list' | 'detail' | 'form'
             loading: true,
             busy: false,
@@ -75,7 +89,7 @@ class TpDigitalOfficeBase extends Component {
                 target_department_ids: [],
                 target_user_ids: [],
                 body: "",
-                effective_date: new Date().toISOString().slice(0, 10),
+                effective_date: todayLocalIsoDate(),
                 require_ack: true,
                 ack_deadline: "",
             },
@@ -83,7 +97,7 @@ class TpDigitalOfficeBase extends Component {
                 id: 0,
                 name: "",
                 calendar_event_id: "0",
-                meeting_date_iso: new Date().toISOString().slice(0, 16),
+                meeting_date_iso: nowLocalIsoMinutes(),
                 chair_user_id: "0",
                 project_id: "0",
                 department_id: "0",
@@ -109,6 +123,15 @@ class TpDigitalOfficeBase extends Component {
 
     toggleMobileNav() {
         this.state.mobileNavOpen = !this.state.mobileNavOpen;
+    }
+
+    toggleSidebarRail() {
+        const isTablet = typeof window !== "undefined" && window.innerWidth >= 768 && window.innerWidth < 1280;
+        if (isTablet) {
+            this.state.sidebarExpanded = !this.state.sidebarExpanded;
+        } else {
+            this.state.sidebarCollapsed = !this.state.sidebarCollapsed;
+        }
     }
 
     async switchTab(targetTab) {
@@ -241,7 +264,7 @@ class TpDigitalOfficeBase extends Component {
             target_department_ids: [],
             target_user_ids: [],
             body: "",
-            effective_date: new Date().toISOString().slice(0, 10),
+            effective_date: todayLocalIsoDate(),
             require_ack: true,
             ack_deadline: "",
         };
@@ -429,7 +452,7 @@ class TpDigitalOfficeBase extends Component {
             id: 0,
             name: prefill?.name || "",
             calendar_event_id: String(prefill?.calendar_event_id || 0),
-            meeting_date_iso: prefill?.meeting_date || new Date().toISOString().slice(0, 16),
+            meeting_date_iso: prefill?.meeting_date || nowLocalIsoMinutes(),
             chair_user_id: String(prefill?.chair_user_id || 0),
             project_id: String(prefill?.project_id || 0),
             department_id: "0",
@@ -617,7 +640,7 @@ class TpDigitalOfficeBase extends Component {
     }
 
     openMyTasks() {
-        browser.location.assign("/app/ca-nhan/cong-viec");
+        this.action.doAction("tp_personal_tools.action_personal_todo");
     }
 
     async uploadDetailAttachment(ev) {

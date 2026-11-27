@@ -2,6 +2,8 @@ import { Component, markup, onWillStart, proxy, useProps } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { standardActionServiceProps } from "@web/webclient/actions/action_plugin";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
 
 /**
  * EQUIP-UI-002 — office-equipment overview. Every number opens exactly the set it counts
@@ -22,6 +24,7 @@ const pctWidth = (value, max) => (max > 0 ? Math.max((value * 100) / max, value 
 
 class EquipmentDashboard extends Component {
     static template = "tp_equipment.Dashboard";
+    static components = { InlineErrors };
 
     setup() {
         useProps(standardActionServiceProps);
@@ -29,7 +32,7 @@ class EquipmentDashboard extends Component {
         this.action = useService("action");
         this.state = proxy({
             loading: true,
-            error: "",
+            serverError: null,
             data: null,
             pending: emptyFilters(),
             applied: emptyFilters(),
@@ -45,7 +48,7 @@ class EquipmentDashboard extends Component {
     async load() {
         this.state.loading = !this.state.data;
         this.state.busy = true;
-        this.state.error = "";
+        this.state.serverError = null;
         const filters = { ...this.state.pending };
         try {
             const data = await this.orm.call(MODEL, "get_dashboard", [filters]);
@@ -55,7 +58,7 @@ class EquipmentDashboard extends Component {
             this.state.hoveredAllocKey = null;
             this.state.animKey += 1;
         } catch (err) {
-            this.state.error = err?.data?.message || err?.message || "Không tải được dữ liệu tổng quan.";
+            this.state.serverError = saveError(err, { verb: "tải số liệu tổng quan", write: false });
         } finally {
             this.state.loading = false;
             this.state.busy = false;
@@ -209,6 +212,7 @@ class EquipmentDashboard extends Component {
     async openUi(kind, key = false) {
         if (this.state.busy || !kind) return;
         this.state.busy = true;
+        this.state.serverError = null;
         try {
             const act = await this.orm.call(MODEL, "open_ui_detail", [kind, key, this.state.applied]);
             if (act) {
@@ -219,6 +223,8 @@ class EquipmentDashboard extends Component {
                 }
                 await this.action.doAction(act);
             }
+        } catch (err) {
+            this.state.serverError = saveError(err, { verb: "mở danh sách chi tiết", write: false });
         } finally {
             this.state.busy = false;
         }

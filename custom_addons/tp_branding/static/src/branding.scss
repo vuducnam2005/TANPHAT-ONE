@@ -7,8 +7,8 @@
     align-items: center;
     justify-content: center;
     padding: 24px 16px;
-    background: #F4F7FB;
-    font-family: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--tp-bg-canvas, #F4F7FB);
+    font-family: var(--tp-font-sans, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
     color: #172B4D;
 }
 
@@ -168,5 +168,22 @@ body.tp-rpc-idle .o_loading_indicator {
 
     .o_view_nocontent {
         background: #F8FAFC;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .tp-not-found-btn {
+        min-height: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 }

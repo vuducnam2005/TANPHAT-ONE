@@ -21,6 +21,8 @@ class TpGovernanceBase extends Component {
         this.state = proxy({
             tab: this.initialTab, // 'executive' | 'wbs' | 'dossiers'
             mobileNavOpen: false,
+            sidebarCollapsed: false,
+            tabletExpanded: false,
             loading: true,
             busy: false,
             attempt: 0,
@@ -32,6 +34,8 @@ class TpGovernanceBase extends Component {
             execData: null,
             showFinEntryModal: false,
             finForm: {
+                project_id: "0",
+                department_id: "0",
                 period_label: new Date().toISOString().slice(0, 7),
                 metric_kind: "contract_value",
                 amount: "",
@@ -78,6 +82,23 @@ class TpGovernanceBase extends Component {
         this.state.mobileNavOpen = !this.state.mobileNavOpen;
     }
 
+    toggleSidebarRail() {
+        const w = browser.innerWidth || 1280;
+        if (w >= 768 && w < 1200) {
+            this.state.tabletExpanded = !this.state.tabletExpanded;
+        } else {
+            this.state.sidebarCollapsed = !this.state.sidebarCollapsed;
+        }
+    }
+
+    sidebarClass() {
+        const cls = ["tp-gov-sidebar"];
+        if (this.state.mobileNavOpen) cls.push("is-open");
+        if (this.state.sidebarCollapsed) cls.push("is-collapsed");
+        if (this.state.tabletExpanded) cls.push("is-expanded-tablet");
+        return cls.join(" ");
+    }
+
     hasOpsMenu(xmlid) {
         return Boolean(this.menu?.getAll?.().some((m) => m.xmlid === xmlid));
     }
@@ -94,10 +115,34 @@ class TpGovernanceBase extends Component {
         await this.action.doAction(map[target] || map.wbs, { clearBreadcrumbs: true });
     }
 
-    openUrl(url) {
-        if (url) {
-            browser.location.assign(url);
+    async openModuleAction(actionXmlId, fallbackUrl = "") {
+        try {
+            await this.action.doAction(actionXmlId);
+        } catch (err) {
+            if (fallbackUrl) {
+                browser.location.assign(fallbackUrl);
+            } else {
+                this.state.attempt += 1;
+                this.state.serverError = saveError(err, { verb: "mở phân hệ liên quan", write: false });
+            }
         }
+    }
+
+    dossierStatePillClass(stateKey) {
+        const map = {
+            draft: "is-muted",
+            in_review: "is-info",
+            approved: "is-ok",
+            issued: "is-ok",
+            superseded: "is-crit",
+        };
+        return "tp-gov-pill " + (map[stateKey] || "is-muted");
+    }
+
+    nasStatePillClass(stateKey) {
+        if (stateKey === "synced") return "tp-gov-pill is-ok";
+        if (stateKey === "failed") return "tp-gov-pill is-crit";
+        return "tp-gov-pill is-warn";
     }
 
     async reloadCurrentTab() {
@@ -127,6 +172,7 @@ class TpGovernanceBase extends Component {
                 );
             }
         } catch (err) {
+            this.state.attempt += 1;
             this.state.serverError = saveError(err, { verb: "tải dữ liệu điều hành", write: false });
         } finally {
             this.state.loading = false;
@@ -160,9 +206,11 @@ class TpGovernanceBase extends Component {
             this.state.showFinEntryModal = false;
             this.state.finForm.amount = "";
             this.state.finForm.source_ref = "";
+            this.state.finForm.note = "";
             this.notification.add("Đã ghi nhận chỉ tiêu tài chính quản trị kèm nguồn chứng từ.", { type: "success" });
             await this.reloadCurrentTab();
         } catch (err) {
+            this.state.attempt += 1;
             this.state.serverError = saveError(err, { verb: "ghi nhận chỉ tiêu tài chính" });
         } finally {
             this.state.busy = false;
@@ -189,6 +237,7 @@ class TpGovernanceBase extends Component {
             });
             await this.reloadCurrentTab();
         } catch (err) {
+            this.state.attempt += 1;
             this.state.serverError = saveError(err, { verb: "áp mẫu WBS" });
         } finally {
             this.state.busy = false;
@@ -203,6 +252,7 @@ class TpGovernanceBase extends Component {
             this.notification.add("Đã tính lại đường găng thực tế (ES/EF/LS/LF/Float).", { type: "success" });
             await this.reloadCurrentTab();
         } catch (err) {
+            this.state.attempt += 1;
             this.state.serverError = saveError(err, { verb: "tính đường găng CPM" });
         } finally {
             this.state.busy = false;
@@ -223,6 +273,7 @@ class TpGovernanceBase extends Component {
             this.notification.add(`Đã đóng băng Baseline v${res?.version || 1}.`, { type: "success" });
             await this.reloadCurrentTab();
         } catch (err) {
+            this.state.attempt += 1;
             this.state.serverError = saveError(err, { verb: "chốt Baseline" });
         } finally {
             this.state.busy = false;
@@ -253,6 +304,7 @@ class TpGovernanceBase extends Component {
             this.notification.add("Đã lưu điều chỉnh mốc tiến độ vào nhật ký kiểm toán.", { type: "success" });
             await this.reloadCurrentTab();
         } catch (err) {
+            this.state.attempt += 1;
             this.state.serverError = saveError(err, { verb: "điều chỉnh mốc tiến độ" });
         } finally {
             this.state.busy = false;
@@ -263,6 +315,21 @@ class TpGovernanceBase extends Component {
     onDossierFilter(key, ev) {
         this.state.dossierFilters[key] = ev.target.value;
         this.state.dossierFilters.page = 1;
+        this.reloadCurrentTab();
+    }
+
+    onDossierPageSize(ev) {
+        const nextSize = Number(ev.target.value) || 20;
+        this.state.dossierFilters.page_size = [10, 20, 50, 100].includes(nextSize) ? nextSize : 20;
+        this.state.dossierFilters.page = 1;
+        this.reloadCurrentTab();
+    }
+
+    goDossierPage(targetPage) {
+        const maxPage = this.state.dossierData?.max_page || 1;
+        const clamped = Math.max(1, Math.min(maxPage, Number(targetPage) || 1));
+        if (clamped === this.state.dossierFilters.page) return;
+        this.state.dossierFilters.page = clamped;
         this.reloadCurrentTab();
     }
 
@@ -306,7 +373,40 @@ class TpGovernanceBase extends Component {
             this.notification.add("Đã khởi tạo danh mục hồ sơ giao nộp và đường dẫn chuẩn NAS.", { type: "success" });
             await this.reloadCurrentTab();
         } catch (err) {
+            this.state.attempt += 1;
             this.state.serverError = saveError(err, { verb: "khởi tạo hồ sơ dự án" });
+        } finally {
+            this.state.busy = false;
+        }
+    }
+
+    async transitionDossier(dossierId, method, verbLabel, successMsg) {
+        if (!dossierId || this.state.busy) return;
+        this.state.busy = true;
+        this.state.serverError = null;
+        try {
+            await this.orm.call("tp.project.dossier", method, [[dossierId]]);
+            this.notification.add(successMsg, { type: "success" });
+            await this.reloadCurrentTab();
+        } catch (err) {
+            this.state.attempt += 1;
+            this.state.serverError = saveError(err, { verb: verbLabel });
+        } finally {
+            this.state.busy = false;
+        }
+    }
+
+    async retryNasJob(jobId) {
+        if (!jobId || this.state.busy) return;
+        this.state.busy = true;
+        this.state.serverError = null;
+        try {
+            await this.orm.call("tp.nas.folder.job", "action_retry_job", [[jobId]]);
+            this.notification.add("Đã thực hiện thử lại kiểm tra đồng bộ cây thư mục NAS.", { type: "success" });
+            await this.reloadCurrentTab();
+        } catch (err) {
+            this.state.attempt += 1;
+            this.state.serverError = saveError(err, { verb: "thử lại đồng bộ thư mục NAS" });
         } finally {
             this.state.busy = false;
         }
@@ -326,6 +426,7 @@ class TpGovernanceBase extends Component {
             );
             await this.reloadCurrentTab();
         } catch (err) {
+            this.state.attempt += 1;
             this.state.serverError = saveError(err, { verb: "khởi tạo cây thư mục NAS" });
         } finally {
             this.state.busy = false;
@@ -349,6 +450,7 @@ class TpGovernanceBase extends Component {
             this.notification.add(`Đã lưu phiên bản v${json.version_no} (SHA-256 đã kiểm chứng).`, { type: "success" });
             await this.reloadCurrentTab();
         } catch (err) {
+            this.state.attempt += 1;
             this.state.serverError = saveError(err, { verb: "tải phiên bản hồ sơ" });
         } finally {
             this.state.busy = false;

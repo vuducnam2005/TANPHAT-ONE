@@ -1,16 +1,24 @@
 <odoo>
  <record id="contract_document_list" model="ir.ui.view"><field name="name">tp.hr.contract.document.list</field><field name="model">tp.hr.contract.document</field><field name="arch" type="xml">
-  <list string="Hồ sơ hợp đồng nhân sự" delete="false"><field name="number"/><field name="name"/><field name="kind"/><field name="employee_id"/><field name="signed_date"/><field name="service_start" optional="hide"/><field name="service_end" optional="hide"/></list>
+  <list string="Hồ sơ hợp đồng nhân sự" js_class="tp_hr_table" limit="20" delete="false"><field name="number"/><field name="name"/><field name="kind"/><field name="employee_id" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/><field name="signed_date"/><field name="service_start" optional="hide"/><field name="service_end" optional="hide"/></list>
  </field></record>
  <record id="contract_document_form" model="ir.ui.view"><field name="name">tp.hr.contract.document.form</field><field name="model">tp.hr.contract.document</field><field name="arch" type="xml">
-  <form string="Hồ sơ hợp đồng nhân sự" delete="false"><sheet>
-   <group><group string="Thông tin giấy tờ"><field name="employee_id" options="{'no_create': True}"/><field name="company_id" invisible="1"/><field name="kind" readonly="id != False"/><field name="number"/><field name="name"/><field name="signed_date"/></group>
+  <form string="Hồ sơ hợp đồng nhân sự" delete="false" class="o_tp_hr_catalog_form" js_class="tp_hr_catalog"><sheet>
+   <group><group string="Thông tin giấy tờ"><field name="employee_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/><field name="company_id" invisible="1"/><field name="kind" readonly="id != False"/><field name="number"/><field name="name"/><field name="signed_date"/></group>
    <group string="Thời hạn và bằng chứng"><div invisible="kind != 'labor'" class="text-muted" colspan="2">Ngày hợp đồng lao động lấy từ phiên bản hồ sơ bên dưới. Trở về tab Hợp đồng lao động để chỉnh ngày. Ngày kết thúc trống không tự chứng minh hợp đồng vô thời hạn.</div><field name="service_start" invisible="kind != 'outsourced'"/><field name="service_end" invisible="kind != 'outsourced'"/><field name="file" filename="filename"/><field name="filename" invisible="1"/><field name="appendix" filename="appendix_filename"/><field name="appendix_filename" invisible="1"/></group></group>
    <p class="text-muted">Ngày ký chỉ nhập khi có căn cứ. Tải tệp không xác nhận đã ký hoặc đang có hiệu lực. Không lưu thông tin lương trong tên, ghi chú hoặc tệp này nếu người được quyền đọc hồ sơ chưa có quyền xem lương.</p>
    <group><field name="note"/></group><separator string="Phiên bản hồ sơ liên quan — không phải số hợp đồng"/>
    <field name="version_ids" widget="tp_kd_relation" readonly="1"><list create="false" delete="false"><field name="date_version" string="Có hiệu lực từ"/><field name="contract_date_start" string="Bắt đầu lao động"/><field name="contract_date_end" string="Kết thúc lao động"/><field name="tp_employment_kind"/></list></field>
   </sheet><chatter/></form>
  </field></record>
+ <record id="action_contract_documents" model="ir.actions.act_window">
+  <field name="name">Hồ sơ hợp đồng nhân sự</field>
+  <field name="res_model">tp.hr.contract.document</field>
+  <field name="path">nhan-su-ho-so-hop-dong</field>
+  <field name="view_mode">list,form</field>
+  <field name="view_id" ref="contract_document_list"/>
+  <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('contract_document_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('contract_document_form')})]"/>
+ </record>
  <record id="employment_profile" model="ir.ui.view"><field name="name">tp.hr.employee.employment</field><field name="model">hr.employee</field><field name="inherit_id" ref="employee_form"/><field name="priority">95</field><field name="arch" type="xml">
   <xpath expr="//page[@name='page_overview']//field[@name='job_id']" position="after"><field name="tp_employment_kind" widget="tp_hr_employment"/></xpath>
   <xpath expr="//page[@name='tp_history']" position="before">
@@ -18,13 +26,13 @@
     <group><group string="Tóm tắt phiên bản đang xem"><field name="tp_employment_kind" widget="tp_hr_employment"/><field name="version_id" string="Phiên bản đang xem" readonly="1" invisible="not id" options="{'no_open': True}"/><field name="date_version" string="Có hiệu lực từ" readonly="1"/><field name="is_current" invisible="1"/><field name="is_past" invisible="1"/><field name="is_future" invisible="1"/><div colspan="2"><span invisible="not is_current" class="badge text-bg-primary">Phiên bản hiện tại</span><span invisible="not is_past" class="badge text-bg-secondary">Phiên bản quá khứ</span><span invisible="not is_future" class="badge text-bg-info">Phiên bản tương lai</span></div></group>
     <group string="Thời hạn hợp đồng lao động" invisible="tp_employment_kind == 'outsourced'"><field name="contract_date_start" string="Ngày bắt đầu đã khai báo"/><field name="contract_date_end" string="Ngày kết thúc đã khai báo"/><field name="fixed_term" string="Xác nhận có thời hạn"/><div class="text-muted" colspan="2">Loại hình quản trị không quyết định loại hợp đồng pháp lý. Ngày kết thúc trống không chứng minh hợp đồng không xác định thời hạn.</div></group>
     <group string="Hợp đồng thuê khoán" invisible="tp_employment_kind != 'outsourced'"><p>Thời hạn thuê khoán được nhập trong hồ sơ giấy tờ riêng; không ghi vào ngày hợp đồng lao động.</p></group></group>
-    <group string="Hồ sơ giấy tờ đang xem"><field name="tp_contract_document_id" domain="[('employee_id', '=', id)]" options="{'no_create': True}"/></group>
+    <group string="Hồ sơ giấy tờ đang xem"><field name="tp_contract_document_id" domain="[('employee_id', '=', id)]" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.contract_document_form'}"/></group>
     <div invisible="tp_contract_document_id or contract_date_start" class="o_tp_hr_contract_empty"><h3>Chưa có thông tin hợp đồng</h3><p>Bổ sung giấy tờ khi có căn cứ. Không bắt buộc tạo hợp đồng hoặc tài khoản để hồ sơ có đủ thông tin cơ bản.</p></div>
     <field name="tp_can_add_contract" invisible="1"/><button invisible="not tp_can_add_contract" name="action_tp_add_contract_document" type="object" string="Bổ sung hồ sơ hợp đồng" class="btn btn-primary"/>
     <button name="action_tp_contract_documents" type="object" string="Xem hồ sơ giấy tờ" class="btn btn-outline-secondary ms-2"/>
     <separator string="Lịch sử hợp đồng và phiên bản"/><p class="text-muted">Các phiên bản liên kết cùng giấy tờ không được tính thành nhiều hợp đồng. Xem phiên bản không tạo thêm bản mới.</p>
     <button name="action_open_versions" type="object" string="Phiên bản hồ sơ" class="btn btn-outline-primary"/>
-    <field name="tp_contract_document_ids" widget="tp_kd_relation" readonly="1"><list create="false" delete="false"><field name="number"/><field name="name"/><field name="kind"/><field name="signed_date"/><field name="service_start"/><field name="service_end"/></list></field>
+    <field name="tp_contract_document_ids" widget="tp_kd_relation" readonly="1" context="{'form_view_ref': 'tp_hr_workspace.contract_document_form', 'tp_hr_relation': True}"><list create="false" delete="false"><field name="number"/><field name="name"/><field name="kind"/><field name="signed_date"/><field name="service_start"/><field name="service_end"/></list></field>
    </page>
   </xpath>
   <xpath expr="//button[@name='action_open_versions']/div" position="replace"><div class="o_stat_info"><span class="o_stat_text">Phiên bản hồ sơ</span><span class="o_stat_value"><field name="versions_count"/></span></div></xpath>

@@ -113,6 +113,7 @@ RULE_NOTE = 'Đếm ngày vắng cả ngày theo quy tắc ca đã xác nhận; 
 DEFAULT_PLAN_NOTE = ('Chưa có quy tắc ca đã xác nhận: tạm coi Thứ 2 – Thứ 7 là ngày làm, giờ {hours}; '
                      'Chủ nhật là ngày nghỉ.')
 STALE_AFTER = 600  # seconds without a successful ENTI read (during polling hours) before the strip warns
+BG_STALE_AFTER = 2400  # seconds without a successful ENTI read outside fast hours before warning
 RECENT_LIMIT = 10
 GROUP_PAGE_SIZES = (10, 20, 50, 100)
 RECENT_TITLES = {
@@ -289,19 +290,45 @@ class AttendanceDayOverview(models.Model):
 
     @api.model
     def _tp_leave_days(self, company, employee_ids, start, end):
-        """``{(employee_id, date)}`` of HR-validated leave, or ``None`` when no leave source is installed."""
-        if 'hr.leave' not in self.env:
+        """``{(employee_id, date): label}`` of approved leave / business trip, or ``None`` when no source exists."""
+        has_hr_leave = 'hr.leave' in self.env
+        has_tp_request = 'tp.request' in self.env
+        if not has_hr_leave and not has_tp_request:
             return None
-        Leave = self.env['hr.leave'].sudo()
-        result = set()
-        start_dt = fields.Datetime.to_datetime(start) - timedelta(days=1)
-        end_dt = fields.Datetime.to_datetime(end) + timedelta(days=2)
-        for leave in Leave.search([('employee_id', 'in', list(employee_ids)), ('state', '=', 'validate'),
-                                   ('date_from', '<=', end_dt), ('date_to', '>=', start_dt)]):
-            first = utc_to_local(leave.date_from).date()
-            last = utc_to_local(leave.date_to).date()
-            for day in dates_between(max(first, start), min(last, end)):
-                result.add((leave.employee_id.id, day))
+        ids = list(employee_ids)
+        result = {}
+        if not ids:
+            return result
+        if has_hr_leave:
+            Leave = self.env['hr.leave'].sudo()
+            start_dt = fields.Datetime.to_datetime(start) - timedelta(days=1)
+            end_dt = fields.Datetime.to_datetime(end) + timedelta(days=2)
+            for leave in Leave.search([
+                ('employee_id', 'in', ids), ('state', '=', 'validate'),
+                ('date_from', '<=', end_dt), ('date_to', '>=', start_dt),
+            ]):
+                first = utc_to_local(leave.date_from).date()
+                last = utc_to_local(leave.date_to).date()
+                for day in dates_between(max(first, start), min(last, end)):
+                    result[leave.employee_id.id, day] = 'Nghỉ đã xác nhận'
+        if has_tp_request:
+            Request = self.env['tp.request'].sudo()
+            for req in Request.search([
+                ('company_id', '=', company.id),
+                ('requester_employee_id', 'in', ids),
+                ('approval_state', '=', 'approved'),
+                ('handler_kind', 'in', ('leave_request', 'business_trip')),
+                ('leave_date_from', '!=', False),
+                ('leave_date_to', '!=', False),
+                ('leave_date_from', '<=', end),
+                ('leave_date_to', '>=', start),
+            ]):
+                label = 'Công tác đã duyệt' if req.handler_kind == 'business_trip' else 'Nghỉ phép đã duyệt'
+                first = max(req.leave_date_from, start)
+                last = min(req.leave_date_to, end)
+                if first <= last:
+                    for day in dates_between(first, last):
+                        result[req.requester_employee_id.id, day] = label
         return result
 
     @api.model
@@ -363,8 +390,13 @@ class AttendanceDayOverview(models.Model):
             for work_date in dates_between(start, end):
                 key = (employee_id, work_date)
                 scheduled = plan.scheduled(employee_id, work_date)
+                leave_label = (
+                    leave.get(key, '') if isinstance(leave, dict)
+                    else ('Nghỉ đã xác nhận' if (leave and key in leave) else '')
+                )
                 cell = {'in': '', 'out': '', 'source': '', 'day_id': False, 'late': None, 'early': None,
-                        'in_at': None, 'out_at': None, 'scheduled': scheduled, 'covered': False}
+                        'in_at': None, 'out_at': None, 'scheduled': scheduled, 'covered': False,
+                        'leave_note': '', 'conflict_note': ''}
                 day = day_map.get(key)
                 rec = enti.get(key)
                 punched = bool(day and (day.in_time or day.out_time or day.source_kind != 'enti'))
@@ -381,27 +413,43 @@ class AttendanceDayOverview(models.Model):
                         cell['out'] = utc_to_local(punches[-1]['at'], punches[-1]['tz']).strftime('%H:%M')
                         cell['out_at'] = punches[-1]['at']
                     cell.update(source='api', covered=True, punches=punches)
+                    if leave_label and (cell['in'] or cell['out']):
+                        cell['state'] = 'review'
+                        cell['conflict_note'] = (
+                            f"Xung đột: có {leave_label.lower()} nhưng vẫn ghi nhận giờ chấm máy "
+                            f"({cell['in'] or '—'}–{cell['out'] or '—'})."
+                        )
                 elif punched:
+                    src_kind = day.source_kind or 'excel'
                     cell.update(state=presence_from_day(day.data_state, day.in_time, day.out_time, work_date == today),
-                                source=day.source_kind or 'excel', day_id=day.id, in_at=day.first_in or None,
+                                source=src_kind, day_id=day.id, in_at=day.first_in or None,
                                 out_at=day.last_out or None, covered=True,
                                 **{'in': day.in_time or '', 'out': day.out_time or ''})
                     # ENTI late belongs to ENTI's own first-in; a corrected first-in makes it unknown.
                     if rec and (rec.vao_dau or '') == (day.in_time or ''):
                         cell['late'], cell['early'] = rec.di_muon or 0, rec.ve_som or 0
+                    if leave_label and src_kind != 'correction' and (cell['in'] or cell['out']):
+                        cell['state'] = 'review'
+                        cell['conflict_note'] = (
+                            f"Xung đột: có {leave_label.lower()} nhưng vẫn ghi nhận giờ chấm máy "
+                            f"({cell['in'] or '—'}–{cell['out'] or '—'})."
+                        )
                 elif day or rec or any(employee_id in people and first <= work_date <= last
                                        for first, last, people in coverage):
                     # A source covers the day and returned no punch at all.
                     cell['covered'] = True
                     finished = work_date < today or now_hour >= plan.end_hour(employee_id, work_date)
-                    cell['state'] = no_punch_state(on_leave=bool(leave) and key in leave, scheduled=scheduled,
+                    cell['state'] = no_punch_state(on_leave=bool(leave_label), scheduled=scheduled,
                                                    employed=plan.employed(employee_id, work_date), finished=finished)
+                    if cell['state'] == LEAVE and leave_label:
+                        cell['leave_note'] = leave_label
                     if day:
                         cell.update(source=day.source_kind or 'excel', day_id=day.id)
                     elif rec:
                         cell['source'] = 'enti'
-                elif leave and key in leave:
+                elif leave_label:
                     cell['state'] = LEAVE
+                    cell['leave_note'] = leave_label
                 elif not plan.employed(employee_id, work_date):
                     cell['state'] = 'off'
                 elif not scheduled:
@@ -455,7 +503,8 @@ class AttendanceDayOverview(models.Model):
             kind = 'mixed' if applied else 'api'
         else:
             kind = 'excel' if applied else 'none'
-        tz_ctx = self.with_context(tz=self.env.user.tz or DEFAULT_TZ)
+        tz_name = (live or enti_sources[:1]).timezone if enti_sources else DEFAULT_TZ
+        tz_ctx = self.with_context(tz=tz_name or DEFAULT_TZ)
 
         def stamp(value, pattern='%H:%M:%S %d/%m/%Y'):
             return fields.Datetime.context_timestamp(tz_ctx, value).strftime(pattern) if value else ''
@@ -464,24 +513,30 @@ class AttendanceDayOverview(models.Model):
                                  order='work_date desc', limit=1).work_date
         latest_event = last_event.local_date if last_event and last_event.local_date <= today else None
         latest = max(filter(None, [latest_day, latest_event, latest_enti]), default=None)
-        processor = self.env.user.has_group(HR_MANAGER) or self.env.user.has_group(OFFICER)
+        processor = self.env.user.has_group(HR_MANAGER) or self.env.user.has_group(OFFICER) or self.env.user.has_group('base.group_system')
+        cron = self.env.ref('tp_hr_attendance.ir_cron_enti_attendance_sync', raise_if_not_found=False)
+        cron_active = True if not cron else bool(cron.sudo().active)
         health, error_at, error, poll = 'off', '', '', 0
-        if live:
+        if live and cron_active:
             poll = Source._tp_fast_settings()[0]
             error_newer = live.last_error_at and (not live.last_success_at or live.last_error_at > live.last_success_at)
             if error_newer:
                 health = 'error'
                 error_at = stamp(live.last_error_at)
                 error = live.last_error if processor else 'Đồng bộ tự động đang gián đoạn; dữ liệu đã có được giữ nguyên.'
-            elif not live.last_success_at or (
-                    live._tp_fast_hours() and (fields.Datetime.now() - live.last_success_at).total_seconds() > STALE_AFTER):
+            elif not live.last_success_at:
                 health = 'stale'
             else:
-                health = 'ok'
+                age = (fields.Datetime.now() - live.last_success_at).total_seconds()
+                stale_limit = STALE_AFTER if live._tp_fast_hours() else BG_STALE_AFTER
+                health = 'stale' if age > stale_limit else 'ok'
+        elif live and not cron_active:
+            health = 'off'
         last_success = (live or enti_sources[:1]).last_success_at if enti_sources else False
         return {
             'kind': kind, 'label': SOURCE_LABELS.get(kind, 'Chưa có nguồn'),
-            'connected': bool(enti_sources), 'auto': bool(live), 'health': health, 'poll_seconds': poll,
+            'connected': bool(enti_sources), 'auto': bool(live and cron_active), 'cron_active': cron_active,
+            'health': health, 'poll_seconds': poll,
             'updated_at': stamp(last_success) if last_success else (updated['at'] if updated else ''),
             'updated_ts': _stamp_ms(last_success),
             'error_at': error_at, 'error': error,
@@ -533,8 +588,10 @@ class AttendanceDayOverview(models.Model):
     # ------------------------------------------------------------ overview
     @staticmethod
     def _tp_live_ok(strip, day, today):
-        """False only for today while a connected live source is paused, stale or failing: a person without any
-        mark is then "not determined", never "not started"."""
+        """False when ENTI is actively failing, or on today while a connected live source is paused/stale:
+        a person without any mark is then "not determined", never "not started"."""
+        if strip.get('connected') and strip.get('health') == 'error':
+            return False
         return day != today or not strip.get('connected') or (strip['auto'] and strip['health'] == 'ok')
 
     @api.model
@@ -679,7 +736,7 @@ class AttendanceDayOverview(models.Model):
             rows.append({'stt': len(rows) + 1, 'employee_id': employee_id, 'code': person['code'], 'name': person['name'],
                          'department': person['department'], 'date': day.isoformat(), 'in': cell['in'],
                          'out': cell['out'], 'note': note})
-        page_rows, pager = _page(rows, params, default_size=100, sizes=GROUP_PAGE_SIZES)
+        page_rows, pager = _page(rows, params, default_size=20, sizes=GROUP_PAGE_SIZES)
         return dict({
             'group': group, 'label': GROUP_LABELS[group], 'hint': GROUP_HINTS[group], 'class_date': day.isoformat(),
             'date_label': day_label(day), 'is_today': day == today, 'group_total': len(members),
@@ -802,6 +859,16 @@ class AttendanceDayOverview(models.Model):
             codes[code.employee_id.id].append(code.machine_code)
         return {employee_id: ' / '.join(values) for employee_id, values in codes.items()}
 
+    @staticmethod
+    def _tp_filter_sheet_people(ordered, cells, start, end, state_filter):
+        """Filter employee rows on Bảng chấm công & Excel export across single-day and multi-day modes."""
+        if not state_filter or not ordered:
+            return ordered
+        days = dates_between(start, end)
+        if state_filter == 'attention':
+            return [person for person in ordered if any(cells[person['id'], day]['state'] in ATTENTION for day in days)]
+        return [person for person in ordered if any(cells[person['id'], day]['state'] == state_filter for day in days)]
+
     @api.model
     def tp_sheet(self, params=None):
         """Canonical Vào/Ra matrix, paginated by employee after applying the full server-side filter."""
@@ -811,31 +878,28 @@ class AttendanceDayOverview(models.Model):
         mode, anchor, start, end, today = self._tp_period(params)
         department_id = int(params.get('department_id') or 0)
         term = (params.get('search') or '').strip()
+        state_filter = (params.get('state') or '').strip()
         people = self._tp_people(company, department_id, term, start, end)
         ordered = list(people.values())
         result = {'mode': mode, 'date': anchor.isoformat(), 'start': start.isoformat(), 'end': end.isoformat(), 'today': today.isoformat(),
                   'labels': LABELS, 'departments': self._tp_departments(company), 'file_periods': self._tp_file_periods(company),
-                  'source': self._tp_source_strip(company, today)}
+                  'source': self._tp_source_strip(company, today), 'state': state_filter}
         result.update(self._tp_flags(company))
-        cells, _has_leave = self._tp_presence(company, people, start, end, today)
+        cells, has_leave = self._tp_presence(company, people, start, end, today)
+        result['has_leave_source'] = has_leave
+        filtered_people = self._tp_filter_sheet_people(ordered, cells, start, end, state_filter)
         if mode == 'day':
-            state_filter = params.get('state') or ''
             rows = []
-            for person in ordered:
+            for person in filtered_people:
                 cell = cells[person['id'], start]
-                if state_filter == 'attention' and cell['state'] not in ATTENTION:
-                    continue
-                if state_filter and state_filter != 'attention' and cell['state'] != state_filter:
-                    continue
                 rows.append(dict(person, date=start.isoformat(), day_label=day_label(start), **{'in': cell['in'], 'out': cell['out']},
                                  state=cell['state'], state_label=cell['label'], late_minutes=late_of(cell)))
-            result.update(period_label=day_label(start), late_note=self._tp_day_late_note(company, people, cells, start),
-                          state=state_filter)
+            result.update(period_label=day_label(start), late_note=self._tp_day_late_note(company, people, cells, start))
         else:
             views = self._tp_late_views(company, list(people), cells, start, end)
             absence_note = self._tp_absence_note(company, start, end)
             absences = self._tp_absences(list(people), cells, start, end, absence_note == RULE_NOTE)
-            rows = [dict(person, late=views[person['id']], absent=absences[person['id']]) for person in ordered]
+            rows = [dict(person, late=views[person['id']], absent=absences[person['id']]) for person in filtered_people]
             exact = [row for row in rows if row['late']['state'] == 'exact']
             sources = sorted({row['late']['note'] for row in exact if row['late']['note']})
             result.update(period_label=period_title(mode, start, end), late_source=' · '.join(sources),
@@ -857,7 +921,7 @@ class AttendanceDayOverview(models.Model):
         for row in page_rows:
             row.update(machine_code=codes.get(row['id'], ''), late=views[row['id']], absent=absences[row['id']],
                        cells=[{'date': day.isoformat(), **{key: cells[row['id'], day][key]
-                                                          for key in ('in', 'out', 'state', 'label', 'late')}}
+                                                          for key in ('in', 'out', 'state', 'label', 'late', 'leave_note', 'conflict_note')}}
                               for day in days])
         result.update(day_columns=[{'date': day.isoformat(), 'label': str(day.day),
                                     'weekday': WEEKDAY_LABELS[day.weekday()], 'weekend': day.weekday() >= 5}
@@ -936,13 +1000,13 @@ class AttendanceDayOverview(models.Model):
                 'review_note': req.review_note or '', 'is_amendment': req.is_amendment,
                 'withdraw_reason': req.withdraw_reason or '',
                 'withdrawn_at': fields.Datetime.context_timestamp(
-                    self.with_context(tz=self.env.user.tz or DEFAULT_TZ), req.withdrawn_at,
+                    self.with_context(tz=DEFAULT_TZ), req.withdrawn_at,
                 ).strftime('%d/%m/%Y %H:%M') if req.withdrawn_at else '',
                 'can_withdraw': req.tp_can_withdraw,
             })
         Period = self.env['tp.hr.attendance.period']
         locked_ranges = Period._tp_locked_ranges([company.id])
-        tz_ctx = self.with_context(tz=self.env.user.tz or DEFAULT_TZ)
+        tz_ctx = self.with_context(tz=DEFAULT_TZ)
         all_rows = []
         ordered_dates = sorted(
             dates_between(start, end),
@@ -968,7 +1032,9 @@ class AttendanceDayOverview(models.Model):
                 stamp = fields.Datetime.context_timestamp(tz_ctx, record.source_updated_at)
                 updated_at = stamp.strftime('%d/%m/%Y %H:%M')
             weekday_index = work_date.weekday()
-            has_detail = bool(sessions or day_requests or locked or cell.get('source') or record)
+            conflict_note = cell.get('conflict_note') or ''
+            leave_note = cell.get('leave_note') or ''
+            has_detail = bool(sessions or day_requests or locked or cell.get('source') or record or conflict_note or leave_note)
             all_rows.append({
                 'date': work_date.isoformat(),
                 'day_label': day_label(work_date),
@@ -991,6 +1057,8 @@ class AttendanceDayOverview(models.Model):
                 'sessions': sessions,
                 'requests': day_requests,
                 'updated_at': updated_at,
+                'conflict_note': conflict_note,
+                'leave_note': leave_note,
                 'has_detail': has_detail,
             })
         summary = summarize_mine_rows(all_rows)
@@ -1133,12 +1201,9 @@ class AttendanceDayOverview(models.Model):
             raise AccessError(self.env._('Người chỉ đọc không xuất dữ liệu chung. HR hoặc người được giao xử lý công mới xuất.'))
         ordered = list(people.values())
         state_filter = (params.get('state') or '').strip()
-        if mode == 'day' and state_filter and ordered:
+        if state_filter and ordered:
             cells, _has_leave = self._tp_presence(company, [person['id'] for person in ordered], start, end, today)
-            if state_filter == 'attention':
-                ordered = [person for person in ordered if cells[person['id'], start]['state'] in ATTENTION]
-            else:
-                ordered = [person for person in ordered if cells[person['id'], start]['state'] == state_filter]
+            ordered = self._tp_filter_sheet_people(ordered, cells, start, end, state_filter)
         content = self._tp_export_book(company, ordered, start, end, today, mode=mode)
         self.env['tp.hr.attendance.log']._tp_log(self.env.company, 'sheet_export',
                                                  {'from': start, 'to': end, 'people': len(ordered), 'mode': mode})

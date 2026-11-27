@@ -3,6 +3,7 @@ import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_d
 import { Dialog } from "@web/core/dialog/dialog";
 import { useService } from "@web/core/utils/hooks";
 import { uuid } from "@web/core/utils/strings";
+import { TpDateTime24Field } from "@tp_web_home/inputs/time24";
 import { InlineErrors } from "@tp_web_home/validation/inline_errors";
 import { saveError } from "@tp_web_home/validation/validation";
 import { TpColleaguePicker } from "../shared/colleague_picker";
@@ -65,7 +66,7 @@ function formatIsoPreview24h(isoStr) {
  */
 export class TpCalendarEventDialog extends Component {
     static template = "tp_personal_tools.CalendarEventDialog";
-    static components = { Dialog, InlineErrors, TpColleaguePicker };
+    static components = { Dialog, InlineErrors, TpColleaguePicker, TpDateTime24Field };
     props = useProps();
     operationToken = uuid();
     roomCreateToken = uuid();
@@ -79,7 +80,9 @@ export class TpCalendarEventDialog extends Component {
         this.actionService = useService("action");
 
         const slot = buildDefaultTimes(this.props.initialSlot);
-        const tomorrow = new Date(Date.now() + 86400000 * 14).toISOString().slice(0, 10);
+        const untilDt = new Date(Date.now() + 86400000 * 14);
+        const pad = (n) => String(n).padStart(2, "0");
+        const tomorrow = `${untilDt.getFullYear()}-${pad(untilDt.getMonth() + 1)}-${pad(untilDt.getDate())}`;
 
         this.state = proxy({
             loading: true,
@@ -474,6 +477,16 @@ export class TpCalendarEventDialog extends Component {
         } catch (err) {
             this.state.serverError = saveError(err, { verb: "xóa tài liệu đính kèm" });
         }
+    }
+
+    onStartIsoChange(val) {
+        this.state.startIso = val || "";
+        this.onTimeFieldChange();
+    }
+
+    onStopIsoChange(val) {
+        this.state.stopIso = val || "";
+        this.onTimeFieldChange();
     }
 
     onTimeFieldChange() {

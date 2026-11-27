@@ -20,7 +20,7 @@
     h1 { font-size: 26px; font-weight: 700; margin: 0 0 4px; color: var(--att-navy); letter-spacing: -0.3px; }
     h2 { font-size: 17px; font-weight: 650; margin: 0; color: var(--att-navy); }
     select, input[type=search], input[type=month], input[type=date] {
-        min-height: 44px; padding: 8px 12px; border: 1px solid var(--att-line); border-radius: 8px; background: var(--att-surface);
+        min-height: 44px; padding: 8px 12px; border: 1px solid var(--att-line); border-radius: 8px; background-color: var(--att-surface);
         color: var(--att-navy); font-size: 14px; max-width: 100%;
         &:hover { border-color: var(--att-line-strong); }
     }
@@ -134,8 +134,48 @@
 
 .o_tp_att_pager {
     display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 12px; font-size: 13px; color: var(--att-muted);
-    label { display: flex; align-items: center; gap: 6px; margin: 0; }
-    select { min-width: 96px; min-height: 40px; padding: 6px 10px; border: 1px solid var(--att-line); border-radius: 8px; background: var(--att-surface); color: var(--att-navy); }
+    label { display: flex; align-items: center; gap: 6px; margin: 0; white-space: nowrap; }
+    select { width: auto; min-width: 96px; min-height: 44px; padding: 6px 28px 6px 10px; border: 1px solid var(--att-line); border-radius: 8px; background-color: var(--att-surface); color: var(--att-navy); }
+}
+
+.o_tp_att_filter_btns {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+}
+.o_tp_att_mobile_bar {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;
+}
+.o_tp_att_active_chips {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 10px;
+}
+.o_tp_att_filter_chip {
+    display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 3px 10px;
+    border-radius: 999px; border: 1px solid #93c5fd; background: var(--att-soft); color: var(--att-navy); font-size: 12.5px; font-weight: 600;
+    button {
+        display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px;
+        border: 0; border-radius: 50%; background: transparent; color: var(--att-navy); padding: 0; font-size: 15px; line-height: 1;
+        &:hover { background: rgba(23, 50, 77, 0.12); }
+    }
+}
+.o_tp_att_mobile_cards {
+    display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;
+}
+.o_tp_att_mcard {
+    padding: 12px 14px; background: var(--att-surface); border: 1px solid var(--att-line); border-radius: 10px;
+    cursor: pointer;
+    &:hover { border-color: var(--att-line-strong); background: var(--att-hover); }
+}
+.o_tp_att_mcard_head {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+}
+.o_tp_att_mcard_meta {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px;
+    margin-top: 8px; padding-top: 6px; border-top: 1px solid #eef2f7; font-size: 13px; color: var(--att-muted);
+    strong { color: var(--att-navy); font-variant-numeric: tabular-nums; }
+}
+.o_tp_att_link_hint { color: var(--att-accent); font-size: 12.5px; font-weight: 600; }
+.o_tp_att_empty_box {
+    margin: 0; padding: 20px 14px; text-align: center; color: var(--att-muted);
+    background: var(--att-surface); border: 1px solid var(--att-line); border-radius: 10px;
 }
 
 // Chips (file comparison) and section heads.
@@ -192,14 +232,22 @@
     .o_tp_att_source_cards { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 767.98px) {
-    .o_tp_att { padding: 12px 16px 24px; }
+    .o_tp_att {
+        padding: 12px 16px 24px;
+        select, input[type=search], input[type=month], input[type=date] { min-height: 44px; font-size: 16px; }
+    }
     .o_tp_att h1 { font-size: 22px; }
-    .o_tp_att_toolbar { padding: 10px; gap: 10px; }
-    .o_tp_att_segment { width: 100%; button { flex: 1; min-width: 0; } }
+    .o_tp_att_toolbar {
+        padding: 10px; gap: 10px;
+        &.o_mobile_closed { display: none; }
+    }
+    .o_tp_att_mobile_bar .o_tp_att_segment { width: auto; flex: 1 1 auto; }
+    .o_tp_att_segment { width: 100%; button { flex: 1; min-width: 0; min-height: 44px; } }
     .o_tp_att_period { flex: 1 1 100%; input { flex: 1; min-width: 0; } }
     .o_tp_att_field, .o_tp_att_search { flex: 1 1 100%; max-width: none; select, input { width: 100%; } }
+    .o_tp_att_filter_btns { width: 100%; > .btn { flex: 1 1 auto; min-height: 44px; } }
     .o_tp_att_drill_head .o_tp_att_search { margin-left: 0; }
-    .o_tp_att_pager { justify-content: space-between; }
+    .o_tp_att_pager { justify-content: space-between; select { width: auto; } }
     .o_tp_att_actions { width: 100%; .btn { flex: 1 1 auto; } }
     .o_tp_att_source_file { max-width: 180px; }
     .o_tp_att_source_card dl { grid-template-columns: minmax(0, 1fr); }
@@ -803,10 +851,10 @@
         select {
             min-height: 38px;
             min-width: 195px;
-            padding: 6px 10px;
+            padding: 6px 28px 6px 10px;
             border: 1px solid var(--mine-border);
             border-radius: 8px;
-            background: var(--mine-surface);
+            background-color: var(--mine-surface);
             color: var(--mine-ink);
             font-size: 13.5px;
             &:hover { border-color: #9fb5ce; }
@@ -1352,10 +1400,11 @@
         }
         .o_tp_mine_period_bar { padding: 10px 12px; gap: 8px; }
         .o_tp_mine_period_controls { width: 100%; gap: 8px; }
-        .o_tp_mine_segment { width: 100%; button { flex: 1; min-height: 42px; } }
+        .o_tp_mine_segment { width: 100%; button { flex: 1; min-height: 44px; } }
+        .o_tp_mine_detail_meta .btn { min-height: 44px; }
         .o_tp_mine_nav_group { width: 100%; }
         .o_tp_mine_icon_btn { width: 44px; height: 44px; }
-        .o_tp_mine_input_field { flex: 1 1 190px; min-height: 44px; min-width: 0; input { width: 100%; min-width: 0; } }
+        .o_tp_mine_input_field { flex: 1 1 190px; min-height: 44px; min-width: 0; input { width: 100%; min-width: 0; font-size: 16px; } }
         .o_tp_mine_range_chip { flex: 1 1 190px; min-height: 44px; }
         .o_tp_mine_today_btn { min-height: 44px; flex: 1 1 auto; }
         .o_tp_mine_range_display { width: 100%; font-size: 12.5px; }
@@ -1388,7 +1437,7 @@
         }
         .o_tp_mine_filter_field {
             width: 100%;
-            select { width: 100%; min-width: 0; min-height: 44px; }
+            select { width: 100%; min-width: 0; min-height: 44px; font-size: 16px; }
         }
         .o_tp_mine_filter_btns {
             width: 100%;
@@ -1396,7 +1445,7 @@
         }
         .o_tp_mine_filter_late_note { margin-left: 0; flex: 1 1 100%; }
 
-        // Mobile clean card rows: weekday/date + status on top, Giờ vào | Giờ ra side-by-side below
+        // Mobile clean card rows: weekday/date + top-right 44x44 expand button, Giờ vào | Giờ ra below, status at bottom
         .o_tp_mine_table_wrap {
             overflow: visible;
             padding: 8px 10px;
@@ -1417,6 +1466,7 @@
                 gap: 8px;
             }
             tbody tr.o_tp_mine_row {
+                position: relative;
                 display: grid;
                 grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
                 gap: 8px 10px;
@@ -1440,7 +1490,8 @@
                 }
                 > th.o_cell_day {
                     grid-column: 1 / -1;
-                    padding-bottom: 6px;
+                    padding-right: 48px;
+                    padding-bottom: 8px;
                     border-bottom: 1px solid var(--mine-grid);
                 }
                 > td.o_cell_time {
@@ -1466,15 +1517,14 @@
                     padding-top: 4px;
                 }
                 > td.o_cell_expand {
-                    grid-column: 1 / -1;
-                    text-align: right;
+                    position: absolute;
+                    top: 6px;
+                    right: 8px;
                     padding: 0 !important;
-                    margin-top: -36px;
-                    pointer-events: none;
+                    margin: 0;
                     .o_tp_mine_expand_btn {
-                        pointer-events: auto;
-                        width: 40px;
-                        height: 40px;
+                        width: 44px;
+                        height: 44px;
                     }
                 }
             }

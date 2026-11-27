@@ -59,10 +59,16 @@
                   title="Máy ghi trong kho nhưng vẫn còn người giữ. Cần rà soát dữ liệu; hệ thống không tự xóa người giữ.">
                 <t t-out="this.state.counts.cleanup"/> máy trong kho còn ghi người giữ — cần rà soát
             </span>
-            <div class="tp_eq_main_scope">
+            <div class="tp_eq_main_scope d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-light tp_eq_scope_btn" t-att-disabled="this.blocked"
+                        title="Quét nhãn QR hoặc tra cứu nhanh theo mã thiết bị / serial"
+                        t-on-click="() => this.openScan()">
+                    <i class="oi" data-icon="qr_code" aria-hidden="true"/>
+                    <span>Quét mã QR</span>
+                </button>
                 <Dropdown position="'bottom-end'" menuClass="'tp_eq_scope_menu'">
                     <button type="button" class="btn btn-light tp_eq_scope_btn" t-att-disabled="this.blocked"
-                            title="Nháp, ngừng quản lý, dịch vụ, linh kiện đã gắn, dòng nguồn chờ bổ sung">Phạm vi nâng cao</button>
+                            title="Nháp, ngừng quản lý, phiếu kho, kiểm kê, nhập nguồn và cấu hình">Phạm vi nâng cao</button>
                     <t t-set-slot="content">
                         <t t-foreach="this.advancedScopes" t-as="scope" t-key="scope_index">
                             <div t-if="scope.section" class="dropdown-header tp_eq_scope_section" t-out="scope.section"/>

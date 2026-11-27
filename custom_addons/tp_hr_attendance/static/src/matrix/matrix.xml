@@ -33,9 +33,9 @@
             </div>
         </header>
 
-        <div t-if="this.state.error" class="alert alert-danger" role="alert">
-            <t t-out="this.state.error"/>
-            <button type="button" class="btn btn-link p-0 ms-2" t-on-click="this.load">Thử lại</button>
+        <InlineErrors errors="this.state.fieldErrors" server="this.state.serverError" attempt="this.state.attempt"/>
+        <div t-if="this.state.serverError and !this.data" class="mb-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="this.load">Thử lại</button>
         </div>
 
         <p t-if="this.state.loading and !this.data" role="status" class="o_tp_att_loading">Đang tải bảng dữ liệu nguồn…</p>
@@ -378,7 +378,7 @@
 
 <t t-name="tp_hr_attendance.MatrixConfirmDialog">
     <Dialog title="this.props.title" size="'md'" contentClass="'o_tp_att_dialog'">
-        <div t-if="this.state.error" class="alert alert-danger" role="alert" t-out="this.state.error"/>
+        <InlineErrors errors="[]" server="this.state.serverError" attempt="this.state.attempt"/>
         <t t-if="this.props.mode === 'apply'">
             <p>
                 Áp dụng các dòng hợp lệ của lô <strong t-out="this.props.batch.batch_code"/> (<t t-out="this.props.batch.file_name || this.props.batch.name"/>) vào bảng chấm công tổng hợp?

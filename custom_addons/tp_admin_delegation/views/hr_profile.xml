@@ -89,7 +89,7 @@
         <field name="inherit_id" ref="tp_hr_workspace.view_tp_hr_account_wizard_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='account_status']/.." position="after">
-                <div class="o_tp_hr_account_row"><label for="account_kind"/><field name="account_kind" readonly="1"/></div>
+                <div class="o_tp_hr_account_row"><i class="oi" data-icon="verified_user" aria-hidden="true"/><label for="account_kind"/><field name="account_kind" readonly="1"/></div>
             </xpath>
             <xpath expr="//field[@name='expected_user_id']" position="after">
                 <field name="profile_readonly" invisible="1"/>

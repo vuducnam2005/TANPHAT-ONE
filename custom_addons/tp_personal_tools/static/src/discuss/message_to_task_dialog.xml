@@ -62,11 +62,12 @@
 
                     <div class="row g-2">
                         <div class="col-12 col-sm-7 tp-pt-field">
-                            <label class="tp-pt-label" for="tp_msg_task_deadline">Hạn hoàn thành</label>
-                            <input id="tp_msg_task_deadline"
-                                type="datetime-local"
-                                class="tp-pt-input"
-                                t-model.proxy="this.state.deadlineIso"/>
+                            <label class="tp-pt-label" for="tp_msg_task_deadline">Hạn hoàn thành (24h)</label>
+                            <TpDateTime24Field id="'tp_msg_task_deadline'"
+                                               value="this.state.deadlineIso"
+                                               invalid="false"
+                                               disabled="this.state.busy"
+                                               onChange="(val) => (this.state.deadlineIso = val)"/>
                         </div>
                         <div class="col-12 col-sm-5 tp-pt-field">
                             <label class="tp-pt-label" for="tp_msg_task_prio">Mức ưu tiên</label>

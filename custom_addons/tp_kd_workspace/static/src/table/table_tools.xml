@@ -32,6 +32,9 @@
 
     <t t-name="tp_kd_workspace.QuickFilters">
         <div class="tp_kd_filter_bar" t-att-class="{'is-open': this.state.open}" role="region" aria-label="Thanh công cụ lọc bảng">
+            <InlineErrors errors="this.state.fieldErrors"
+                          server="this.state.serverError"
+                          attempt="this.state.attempt"/>
             <TpTableFilterBar controller="this.controller"
                               quickFilters="this.filters"
                               blocked="this.blocked"

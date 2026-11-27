@@ -16,6 +16,7 @@ const ATT_GROUP_ICONS = {
 
 const ATT_LEAF_ICONS = {
     "tp_hr_attendance.menu_dashboard": "dashboard",
+    "tp_hr_attendance.menu_board": "table_view",
     "tp_hr_attendance.menu_mine": "event_available",
 };
 
@@ -23,7 +24,7 @@ const ACTION_TO_LEAF_XMLID = {
     "tp_hr_attendance.action_dashboard": "tp_hr_attendance.menu_dashboard",
     "tp_hr_attendance.action_days": "tp_hr_attendance.menu_dashboard",
     "tp_hr_attendance.action_late": "tp_hr_attendance.menu_dashboard",
-    "tp_hr_attendance.action_board": "tp_hr_attendance.menu_dashboard",
+    "tp_hr_attendance.action_board": "tp_hr_attendance.menu_board",
     "tp_hr_attendance.action_mine": "tp_hr_attendance.menu_mine",
     "tp_hr_attendance.action_my_requests": "tp_hr_attendance.menu_mine",
     "tp_hr_attendance.action_sources": "tp_hr_attendance.menu_sources",
@@ -35,7 +36,7 @@ const ACTION_TO_LEAF_XMLID = {
     "tp_hr_attendance.action_enti_config": "tp_hr_attendance.menu_enti_config",
     "tp_hr_attendance.action_enti_logs": "tp_hr_attendance.menu_enti_logs",
     "tp_hr_attendance.action_review": "tp_hr_attendance.menu_review",
-    "tp_hr_attendance.action_periods": "tp_hr_attendance.action_periods",
+    "tp_hr_attendance.action_periods": "tp_hr_attendance.menu_periods",
     "tp_hr_attendance.action_logs": "tp_hr_attendance.menu_periods",
 };
 
@@ -170,8 +171,8 @@ export class TpAttendanceSidebar extends TpHrSidebar {
         super.syncActive();
     }
 
-    resolveFallbackLeaf(leaves, current) {
-        const xmlId = str(current.xml_id);
+    resolveFallbackLeaf(leaves, current, controllerModel = "") {
+        const xmlId = str(current?.xml_id);
         const targetXmlid = xmlId && ACTION_TO_LEAF_XMLID[xmlId];
         if (targetXmlid) {
             const hit = leaves.filter((l) => l.xmlid === targetXmlid);
@@ -179,7 +180,7 @@ export class TpAttendanceSidebar extends TpHrSidebar {
                 return hit;
             }
         }
-        const resModel = str(current.res_model);
+        const resModel = str(current?.res_model) || str(controllerModel);
         const modelXmlids = resModel && MODEL_TO_LEAF_XMLIDS[resModel];
         if (modelXmlids) {
             for (const xmlid of modelXmlids) {

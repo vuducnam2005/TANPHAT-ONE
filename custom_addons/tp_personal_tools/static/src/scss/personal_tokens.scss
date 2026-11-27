@@ -190,7 +190,7 @@ body.o_tp_personal_discuss_active {
         padding: 8px 12px;
         border-radius: var(--tp-pt-radius-input);
         border: 1px solid #94a3b8;
-        background: #ffffff;
+        background-color: #ffffff;
         color: var(--tp-pt-text);
         font-size: 14px;
         line-height: 1.45;
@@ -208,20 +208,24 @@ body.o_tp_personal_discuss_active {
             box-shadow: 0 0 0 3px rgba(23, 102, 192, 0.2);
         }
         &:disabled {
-            background: #e2e8f0;
+            background-color: #e2e8f0;
             color: #475569;
             border-color: #cbd5e1;
             cursor: not-allowed;
         }
         &[readonly] {
-            background: #f1f5f9;
+            background-color: #f1f5f9;
             color: #334155;
         }
         &.is-invalid {
             border-color: var(--tp-pt-danger);
-            background: #fffafa;
+            background-color: #fffafa;
             box-shadow: 0 0 0 3px rgba(200, 53, 66, 0.14);
         }
+    }
+
+    .tp-pt-select {
+        padding-right: 30px;
     }
 
     .tp-pt-textarea {

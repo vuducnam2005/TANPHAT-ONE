@@ -2,21 +2,40 @@
 <templates xml:space="preserve">
     <t t-name="tp_digital_office.Workspace">
         <div class="tp-do-shell">
-            <!-- Single Left Module Sidebar -->
-            <aside t-att-class="'tp-do-sidebar ' + (this.state.mobileNavOpen ? 'is-open' : '')">
-                <button type="button" class="tp-do-home-btn" t-on-click="this.goHome">
-                    <span>← Trang chủ TANPHAT ONE</span>
-                </button>
+            <div t-if="this.state.mobileNavOpen" class="tp-do-backdrop" t-on-click="this.toggleMobileNav"/>
+            <!-- Single Left Module Sidebar (64px icon rail on 1024px tablet, drawer on <=767px) -->
+            <aside t-att-class="'tp-do-sidebar' + (this.state.mobileNavOpen ? ' is-open' : '') + (this.state.sidebarCollapsed ? ' is-rail' : '') + (this.state.sidebarExpanded ? ' is-expanded' : '')">
+                <div class="tp-do-sidebar-top">
+                    <button type="button" class="tp-do-home-btn"
+                            title="Trang chủ TANPHAT ONE"
+                            aria-label="Trang chủ TANPHAT ONE"
+                            t-on-click="this.goHome">
+                        <i class="oi tp-do-nav-icon" data-icon="home" aria-hidden="true"/>
+                        <span class="tp-do-nav-label">Trang chủ TANPHAT ONE</span>
+                    </button>
+                    <button type="button" class="tp-do-rail-btn"
+                            title="Thu gọn hoặc mở rộng thanh danh mục"
+                            aria-label="Thu gọn hoặc mở rộng thanh danh mục"
+                            t-on-click="this.toggleSidebarRail">
+                        <i class="oi" data-icon="menu_open" aria-hidden="true"/>
+                    </button>
+                </div>
                 <div class="tp-do-brand-title">Văn phòng số</div>
                 <button type="button"
                         t-att-class="'tp-do-nav-item ' + (this.state.tab === 'announcements' ? 'is-active' : '')"
+                        title="Thông báo nội bộ"
+                        aria-label="Thông báo nội bộ"
                         t-on-click="() => this.switchTab('announcements')">
-                    <span>Thông báo nội bộ</span>
+                    <i class="oi tp-do-nav-icon" data-icon="campaign" aria-hidden="true"/>
+                    <span class="tp-do-nav-label">Thông báo nội bộ</span>
                 </button>
                 <button type="button"
                         t-att-class="'tp-do-nav-item ' + (this.state.tab === 'minutes' ? 'is-active' : '')"
+                        title="Biên bản họp &amp; Đầu việc"
+                        aria-label="Biên bản họp và Đầu việc"
                         t-on-click="() => this.switchTab('minutes')">
-                    <span>Biên bản họp &amp; Đầu việc</span>
+                    <i class="oi tp-do-nav-icon" data-icon="groups" aria-hidden="true"/>
+                    <span class="tp-do-nav-label">Biên bản họp &amp; Đầu việc</span>
                 </button>
             </aside>
 
@@ -81,21 +100,53 @@
                                             t-att-value="c.key" t-out="c.label"/>
                                 </select>
                                 <select class="tp-do-select"
+                                        aria-label="Lọc theo trạng thái đọc"
                                         t-att-value="this.state.filters.ack_filter"
                                         t-on-change="(ev) => this.onFilterChange('ack_filter', ev)">
                                     <option value="">Tất cả trạng thái đọc</option>
                                     <option value="unacked">Chưa xác nhận đọc</option>
                                     <option value="acked">Đã xác nhận đọc</option>
                                 </select>
+                                <select class="tp-do-select"
+                                        aria-label="Lọc theo đơn vị ban hành"
+                                        t-att-value="this.state.filters.department_id"
+                                        t-on-change="(ev) => this.onFilterChange('department_id', ev)">
+                                    <option value="0">Tất cả đơn vị ban hành</option>
+                                    <option t-foreach="this.state.filterOptions.departments" t-as="dp" t-key="dp.id"
+                                            t-att-value="dp.id" t-out="dp.name"/>
+                                </select>
                             </t>
                             <t t-else="">
                                 <select class="tp-do-select"
+                                        aria-label="Lọc theo phòng ban"
+                                        t-att-value="this.state.filters.department_id"
+                                        t-on-change="(ev) => this.onFilterChange('department_id', ev)">
+                                    <option value="0">Tất cả phòng ban</option>
+                                    <option t-foreach="this.state.filterOptions.departments" t-as="dp" t-key="dp.id"
+                                            t-att-value="dp.id" t-out="dp.name"/>
+                                </select>
+                                <select class="tp-do-select"
+                                        aria-label="Lọc theo dự án"
                                         t-att-value="this.state.filters.project_id"
                                         t-on-change="(ev) => this.onFilterChange('project_id', ev)">
                                     <option value="0">Tất cả dự án</option>
                                     <option t-foreach="this.state.filterOptions.projects" t-as="pr" t-key="pr.id"
                                             t-att-value="pr.id" t-out="pr.name"/>
                                 </select>
+                                <label class="tp-do-date-filter">
+                                    <span>Từ ngày</span>
+                                    <input type="date" class="tp-do-input tp-do-date-input"
+                                           aria-label="Từ ngày họp"
+                                           t-att-value="this.state.filters.date_from"
+                                           t-on-change="(ev) => this.onFilterChange('date_from', ev)"/>
+                                </label>
+                                <label class="tp-do-date-filter">
+                                    <span>Đến ngày</span>
+                                    <input type="date" class="tp-do-input tp-do-date-input"
+                                           aria-label="Đến ngày họp"
+                                           t-att-value="this.state.filters.date_to"
+                                           t-on-change="(ev) => this.onFilterChange('date_to', ev)"/>
+                                </label>
                             </t>
 
                             <select class="tp-do-select"
@@ -181,13 +232,17 @@
                         <!-- Pagination -->
                         <div class="tp-do-pager">
                             <div>Tổng số: <strong t-out="this.state.total"/> bản ghi</div>
-                            <div class="d-flex align-items-center gap-2">
-                                <select class="tp-do-select" t-att-value="this.state.pageSize" t-on-change="this.onPageSizeChange">
-                                    <option value="10">10 / trang</option>
-                                    <option value="20">20 / trang</option>
-                                    <option value="50">50 / trang</option>
-                                    <option value="100">100 / trang</option>
-                                </select>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <label class="tp-do-page-size-label">
+                                    <span>Hiển thị</span>
+                                    <select class="tp-do-select tp-do-page-select" t-att-value="this.state.pageSize" t-on-change="this.onPageSizeChange">
+                                        <option value="10">10</option>
+                                        <option value="20">20</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                    <span>dòng</span>
+                                </label>
                                 <button type="button" class="tp-do-btn" t-att-disabled="this.state.page &lt;= 1"
                                         t-on-click="() => this.changePage(-1)">Trước</button>
                                 <span>Trang <strong t-out="this.state.page"/> / <t t-out="this.state.maxPage"/></span>
@@ -431,8 +486,12 @@
                                 </select>
                             </div>
                             <div class="tp-do-field">
-                                <label class="tp-do-label">Thời gian họp</label>
-                                <input type="datetime-local" class="tp-do-input" t-model.proxy="this.state.minForm.meeting_date_iso"/>
+                                <label class="tp-do-label" for="min_date">Thời gian họp (24h)</label>
+                                <TpDateTime24Field id="'min_date'"
+                                                   value="this.state.minForm.meeting_date_iso"
+                                                   invalid="false"
+                                                   disabled="this.state.busy"
+                                                   onChange="(val) => (this.state.minForm.meeting_date_iso = val)"/>
                             </div>
                         </div>
 
@@ -443,13 +502,21 @@
                                    placeholder="Ví dụ: Họp giao ban tiến độ khảo sát &amp; thiết kế tuần 48"/>
                         </div>
 
-                        <div class="tp-do-grid-2">
+                        <div class="tp-do-grid-3">
                             <div class="tp-do-field">
                                 <label class="tp-do-label">Chủ trì cuộc họp</label>
                                 <select class="tp-do-select" t-model.proxy="this.state.minForm.chair_user_id">
                                     <option value="0">— Chọn người chủ trì —</option>
                                     <option t-foreach="this.state.filterOptions.users" t-as="u" t-key="u.id"
                                             t-att-value="u.id" t-out="u.name"/>
+                                </select>
+                            </div>
+                            <div class="tp-do-field">
+                                <label class="tp-do-label">Phòng ban chủ trì</label>
+                                <select class="tp-do-select" t-model.proxy="this.state.minForm.department_id">
+                                    <option value="0">— Không gắn phòng ban —</option>
+                                    <option t-foreach="this.state.filterOptions.departments" t-as="dp" t-key="dp.id"
+                                            t-att-value="dp.id" t-out="dp.name"/>
                                 </select>
                             </div>
                             <div class="tp-do-field">

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tp_web_home.TpTime24Field">
+        <div class="tp-time24-field"
+             t-att-class="this.props.class"
+             t-att-data-invalid="this.isInvalid ? '1' : undefined">
+            <select class="form-select tp-time24-select tp-time24-hour"
+                    t-att-class="{ 'is-invalid': this.isInvalid }"
+                    t-att-id="this.props.id || undefined"
+                    t-att-name="this.props.name || undefined"
+                    t-att-disabled="this.isLocked"
+                    t-att-aria-invalid="this.isInvalid ? 'true' : undefined"
+                    aria-label="Giờ (00–23)"
+                    title="Giờ (24 giờ)"
+                    t-on-change="this.onHourChange">
+                <option value="" t-att-selected="this.parsed.hour === ''">--</option>
+                <t t-foreach="this.hours" t-as="hr" t-key="hr">
+                    <option t-att-value="hr"
+                            t-att-selected="hr === this.parsed.hour"
+                            t-out="hr"/>
+                </t>
+            </select>
+            <span class="tp-time24-sep" aria-hidden="true">:</span>
+            <select class="form-select tp-time24-select tp-time24-minute"
+                    t-att-class="{ 'is-invalid': this.isInvalid }"
+                    t-att-disabled="this.isLocked"
+                    t-att-aria-invalid="this.isInvalid ? 'true' : undefined"
+                    aria-label="Phút (00–59)"
+                    title="Phút (00–59)"
+                    t-on-change="this.onMinuteChange">
+                <option value="" t-att-selected="this.parsed.minute === ''">--</option>
+                <t t-foreach="this.minutes" t-as="mn" t-key="mn">
+                    <option t-att-value="mn"
+                            t-att-selected="mn === this.parsed.minute"
+                            t-out="mn"/>
+                </t>
+            </select>
+        </div>
+    </t>
+
+    <t t-name="tp_web_home.TpDateTime24Field">
+        <div class="tp-datetime24-field"
+             t-att-class="this.props.class"
+             t-att-data-invalid="this.isInvalid ? '1' : undefined">
+            <input type="date"
+                   class="form-control tp-datetime24-date"
+                   t-att-class="{ 'is-invalid': this.isInvalid }"
+                   t-att-id="this.props.id || undefined"
+                   t-att-name="this.props.name || undefined"
+                   t-att-value="this.parsed.date"
+                   t-att-disabled="this.isLocked"
+                   t-att-aria-invalid="this.isInvalid ? 'true' : undefined"
+                   aria-label="Ngày"
+                   title="Ngày"
+                   t-on-change="this.onDateChange"/>
+            <TpTime24Field
+                value="this.parsed.time"
+                disabled="Boolean(this.props.disabled)"
+                readonly="Boolean(this.props.readonly)"
+                invalid="this.isInvalid"
+                stepMinutes="this.props.stepMinutes"
+                onChange="(hhmm) => this.onTimeChange(hhmm)"/>
+        </div>
+    </t>
+
+</templates>

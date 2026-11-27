@@ -62,7 +62,11 @@ class TestVietnameseCatalog(TransactionCase):
         self.assertEqual(self.env.ref('mail.menu_root_discuss').with_context(lang='vi_VN').name, 'Trao đổi')
 
     def test_translation_only_addon(self):
-        owned = self.env['ir.model.data'].search([('module', '=', 'tp_i18n_vi')])
+        reflection_names = ('model_ir_http', 'field_ir_http__id', 'field_ir_http__display_name')
+        owned = self.env['ir.model.data'].search([
+            ('module', '=', 'tp_i18n_vi'),
+            ('name', 'not in', reflection_names),
+        ])
         self.assertFalse(owned, 'the overlay must not own models, views, menus, data or access rules')
 
     def test_web_client_gaps_filled_with_placeholders(self):

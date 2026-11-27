@@ -129,16 +129,20 @@
                                     </div>
                                     <div class="tp_req_field" t-att-class="{'has-error': this.hasError('req_att_in')}">
                                         <label for="req_att_in">Giờ vào đúng (HH:MM) <span class="req_star">*</span></label>
-                                        <input id="req_att_in" type="time" class="tp_req_input"
-                                               t-att-value="this.state.form.att_requested_in"
-                                               t-on-input="(ev) => this.onFieldInput('att_requested_in', ev)"/>
+                                        <TpTime24Field id="'req_att_in'"
+                                                       value="this.state.form.att_requested_in"
+                                                       invalid="this.hasError('req_att_in')"
+                                                       disabled="this.state.submitting"
+                                                       onChange="(val) => this.onTimeFieldChange('att_requested_in', val)"/>
                                         <p t-if="this.hasError('req_att_in')" class="tp_req_field_err" t-out="this.errorMessage('req_att_in')"/>
                                     </div>
                                     <div class="tp_req_field" t-att-class="{'has-error': this.hasError('req_att_out')}">
                                         <label for="req_att_out">Giờ ra đúng (HH:MM) <span class="req_star">*</span></label>
-                                        <input id="req_att_out" type="time" class="tp_req_input"
-                                               t-att-value="this.state.form.att_requested_out"
-                                               t-on-input="(ev) => this.onFieldInput('att_requested_out', ev)"/>
+                                        <TpTime24Field id="'req_att_out'"
+                                                       value="this.state.form.att_requested_out"
+                                                       invalid="this.hasError('req_att_out')"
+                                                       disabled="this.state.submitting"
+                                                       onChange="(val) => this.onTimeFieldChange('att_requested_out', val)"/>
                                         <p t-if="this.hasError('req_att_out')" class="tp_req_field_err" t-out="this.errorMessage('req_att_out')"/>
                                     </div>
                                 </div>

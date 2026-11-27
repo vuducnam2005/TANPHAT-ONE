@@ -12,7 +12,20 @@
         </div>
     </header>
 
-    <section class="o_tp_att_toolbar" aria-label="Kỳ và bộ lọc">
+    <div class="o_tp_att_mobile_bar d-md-none">
+        <button type="button" class="btn btn-outline-secondary"
+            t-on-click="() => this.state.mobileFilterOpen = !this.state.mobileFilterOpen"
+            t-att-aria-expanded="this.state.mobileFilterOpen ? 'true' : 'false'">
+            <i class="oi me-1" data-icon="filter_list" aria-hidden="true"/>
+            Bộ lọc <t t-if="this.appliedChips.length">(<t t-out="this.appliedChips.length"/>)</t>
+        </button>
+        <div class="o_tp_att_segment" role="group" aria-label="Cách xem trên điện thoại">
+            <button type="button" t-att-class="{'active': this.state.mobileView === 'cards'}" t-on-click="() => this.state.mobileView = 'cards'">Thẻ người</button>
+            <button type="button" t-att-class="{'active': this.state.mobileView === 'table'}" t-on-click="() => this.state.mobileView = 'table'">Bảng ngang</button>
+        </div>
+    </div>
+
+    <section class="o_tp_att_toolbar" t-att-class="{'o_mobile_closed': !this.state.mobileFilterOpen}" aria-label="Kỳ và bộ lọc" t-on-keydown="this.onFilterKeydown">
         <div class="o_tp_att_segment" role="group" aria-label="Chế độ xem">
             <button t-foreach="this.modes" t-as="mode" t-key="mode[0]" type="button" t-att-class="{'active': this.state.mode === mode[0]}"
                 t-att-aria-pressed="this.state.mode === mode[0] ? 'true' : 'false'" t-on-click="() => this.setMode(mode[0])" t-out="mode[1]"/>
@@ -20,7 +33,7 @@
                 t-on-click="this.openRange">Khoảng ngày</button>
         </div>
         <div class="o_tp_att_period">
-            <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(-1)" aria-label="Kỳ trước"><i class="oi" data-icon="chevron_backward" aria-hidden="true"/></button>
+            <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(-1)" title="Kỳ trước" aria-label="Kỳ trước"><i class="oi" data-icon="chevron_backward" aria-hidden="true"/></button>
             <input t-if="this.state.mode === 'month'" type="month" t-att-value="this.data?.start?.slice(0, 7)" t-on-change="this.onMonth" aria-label="Chọn tháng"/>
             <t t-elif="this.state.mode === 'range'">
                 <input type="date" t-att-value="this.state.from" t-on-change="(ev) => this.onRange('from', ev)" aria-label="Từ ngày"/>
@@ -28,37 +41,82 @@
                 <input type="date" t-att-value="this.state.to" t-on-change="(ev) => this.onRange('to', ev)" aria-label="Đến ngày"/>
             </t>
             <input t-else="" type="date" t-att-value="this.state.date" t-on-change="this.onDate" t-att-aria-label="this.state.mode === 'week' ? 'Chọn một ngày trong tuần (T2–CN)' : 'Chọn ngày'"/>
-            <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(1)" aria-label="Kỳ sau"><i class="oi" data-icon="chevron_forward" aria-hidden="true"/></button>
+            <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(1)" title="Kỳ sau" aria-label="Kỳ sau"><i class="oi" data-icon="chevron_forward" aria-hidden="true"/></button>
             <button type="button" class="btn btn-light" t-on-click="this.goToday">Hôm nay</button>
         </div>
         <label class="o_tp_att_field"><span>Phòng ban</span>
-            <select t-on-change="this.onDepartment" aria-label="Lọc phòng ban">
-                <option value="" t-att-selected="!this.state.department">Tất cả phòng ban</option>
-                <option t-foreach="this.data?.departments or []" t-as="dept" t-key="dept.id" t-att-value="dept.id" t-att-selected="('' + dept.id) === ('' + this.state.department)" t-out="dept.name"/>
+            <select t-on-change="(ev) => this.state.draftDepartment = ev.target.value" aria-label="Lọc phòng ban">
+                <option value="" t-att-selected="!this.state.draftDepartment">Tất cả phòng ban</option>
+                <option t-foreach="this.data?.departments or []" t-as="dept" t-key="dept.id" t-att-value="dept.id" t-att-selected="('' + dept.id) === ('' + this.state.draftDepartment)" t-out="dept.name"/>
             </select>
         </label>
         <label class="o_tp_att_field o_tp_att_search"><span>Nhân viên</span>
-            <input type="search" placeholder="Tên hoặc mã nhân viên…" t-att-value="this.state.search" t-on-input="this.onSearch" aria-label="Tìm tên hoặc mã nhân viên"/>
+            <input type="search" placeholder="Tên hoặc mã nhân viên…" t-att-value="this.state.draftSearch" t-on-input="(ev) => this.state.draftSearch = ev.target.value" aria-label="Tìm tên hoặc mã nhân viên"/>
         </label>
-        <label t-if="this.isDay" class="o_tp_att_field"><span>Tình trạng</span>
-            <select t-on-change="this.onDayState" aria-label="Lọc tình trạng ngày">
-                <option t-foreach="this.dayStates" t-as="item" t-key="item[0]" t-att-value="item[0]" t-att-selected="this.state.dayState === item[0]" t-out="item[1]"/>
+        <label class="o_tp_att_field"><span>Tình trạng</span>
+            <select t-on-change="(ev) => this.state.draftState = ev.target.value" aria-label="Lọc tình trạng công">
+                <option t-foreach="this.dayStates" t-as="item" t-key="item[0]" t-att-value="item[0]" t-att-selected="this.state.draftState === item[0]" t-out="item[1]"/>
             </select>
         </label>
-        <button t-if="this.state.department or this.state.search or this.state.dayState" type="button" class="btn btn-link" t-on-click="this.clearFilters">Xóa lọc</button>
+        <div class="o_tp_att_filter_btns">
+            <button type="button" class="btn btn-primary" t-on-click="this.applyFilters">Áp dụng<t t-if="this.hasPendingFilterDiff"> *</t></button>
+            <button type="button" class="btn btn-outline-secondary" t-att-disabled="!this.appliedChips.length and !this.hasPendingFilterDiff" t-on-click="this.clearFilters">Xóa bộ lọc</button>
+        </div>
     </section>
+
+    <div t-if="this.appliedChips.length" class="o_tp_att_active_chips" role="region" aria-label="Điều kiện đang lọc">
+        <span class="o_tp_att_muted fw-semibold">Đang lọc:</span>
+        <span t-foreach="this.appliedChips" t-as="chip" t-key="chip.key" class="o_tp_att_filter_chip">
+            <t t-out="chip.label"/>
+            <button type="button" t-att-aria-label="'Gỡ điều kiện ' + chip.label" t-on-click="() => this.removeChip(chip.key)">×</button>
+        </span>
+    </div>
 
     <SourceStrip source="this.data?.source" onSources="this.data?.can_import ? (() => this.openSources()) : null"/>
 
-    <div t-if="this.state.error" class="alert alert-danger" role="alert"><t t-out="this.state.error"/> <button class="btn btn-link p-0" t-on-click="this.load">Thử lại</button></div>
-    <p t-elif="!this.data" role="status" class="o_tp_att_loading">Đang tải bảng chấm công…</p>
-    <t t-else="">
+    <InlineErrors errors="[]" server="this.state.serverError" attempt="this.state.attempt"/>
+    <div t-if="this.state.serverError and !this.data" class="mb-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="() => this.load()">Thử lại</button>
+    </div>
+    <p t-if="!this.data and !this.state.serverError" role="status" class="o_tp_att_loading">Đang tải bảng chấm công…</p>
+    <t t-elif="this.data">
         <div class="o_tp_att_note_row">
             <span class="o_tp_att_muted">Giờ làm tham chiếu <t t-out="this.data.reference_hours.replace('-', '–')"/>. Ô trống là chưa có ghi nhận, không phải nghỉ. Rê chuột vào ô để xem tình trạng.</span>
             <span t-if="this.data.late_source or this.data.late_note" class="o_tp_att_source_note" t-out="this.data.late_source or this.data.late_note"/>
             <button t-foreach="this.dayPeriods" t-as="item" t-key="item.from + item.to" type="button" class="btn btn-link btn-sm" t-on-click="() => this.openLate(item)">Xem tổng kỳ <t t-out="item.label"/></button>
             <button t-foreach="this.overlapPeriods" t-as="item" t-key="item.from + item.to" type="button" class="btn btn-link btn-sm" t-on-click="() => this.openFilePeriod(item)">Kỳ nguồn <t t-out="item.label"/></button>
         </div>
+
+        <div t-att-class="this.state.mobileView === 'cards' ? 'o_tp_att_mobile_cards d-md-none' : 'd-none'" aria-label="Danh sách nhân viên trên điện thoại">
+            <p t-if="!this.data.rows.length" class="o_tp_att_empty_box">Không có nhân viên trong phạm vi lọc.</p>
+            <article t-foreach="this.data.rows" t-as="row" t-key="'m-' + row.id" class="o_tp_att_mcard"
+                tabindex="0" t-on-click="() => this.openPerson(row)"
+                t-on-keydown="(ev) => ev.key === 'Enter' and this.openPerson(row)">
+                <div class="o_tp_att_mcard_head">
+                    <div>
+                        <strong><t t-out="row.stt"/>. <t t-out="row.name"/></strong>
+                        <small class="d-block o_tp_att_muted">
+                            Mã: <strong t-out="row.code or '—'"/> · <t t-out="row.department or 'Chưa có phòng ban'"/>
+                        </small>
+                    </div>
+                    <span t-if="this.isDay and row.cells?.length" class="o_tp_att_badge"
+                        t-att-class="(row.cells[0].state === 'missing' or row.cells[0].state === 'review' or row.cells[0].state === 'absent') ? 'o_warn' : (row.cells[0].state === 'out_recorded' or row.cells[0].state === 'working' ? 'o_ok' : 'o_muted')"
+                        t-out="row.cells[0].label"/>
+                </div>
+                <div class="o_tp_att_mcard_meta">
+                    <span t-if="this.isDay and row.cells?.length">
+                        Vào: <strong t-out="row.cells[0].in or '—'"/> · Ra: <strong t-out="row.cells[0].out or '—'"/>
+                    </span>
+                    <span t-else="">
+                        Đi muộn: <strong t-out="row.late.count === null ? '—' : (row.late.count + ' lần · ' + row.late.minutes + 'p')"/>
+                        · Vắng: <strong t-out="row.absent.days"/>
+                    </span>
+                    <span class="o_tp_att_link_hint">Chạm để xem chi tiết →</span>
+                </div>
+            </article>
+        </div>
+
+        <div t-att-class="this.state.mobileView === 'cards' ? 'd-none d-md-block' : ''">
         <div class="o_tp_att_matrix_wrap o_mobile_table_on o_tp_att_sheet_wrap" tabindex="0" role="region" aria-label="Bảng chấm công Vào/Ra, cuộn ngang để xem các ngày">
             <table class="o_tp_att_matrix_table o_tp_att_sheet_table">
                 <caption class="visually-hidden">Bảng chấm công theo phòng ban. Mỗi nhân viên gồm hai dòng Vào và Ra.</caption>
@@ -104,6 +162,7 @@
                     </tbody>
                 </t>
             </table>
+        </div>
         </div>
         <AttPager data="this.data" unit="'nhân viên'" onPage="(page) => this.setPage(page)" onSize="(size) => this.setSize(size)"/>
     </t>

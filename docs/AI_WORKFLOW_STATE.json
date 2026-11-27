@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-27T04:18:09.650411+00:00",
-  "last_change_id": "CHG-20261127-006",
-  "code_digest": "dd0bab87d4db759a90496d7b54cad4a885c2524bd14bfd4f3f4a1b49791c7312",
-  "code_file_count": 929,
+  "updated_at": "2026-11-27T18:09:14.480447+00:00",
+  "last_change_id": "CHG-20261128-001",
+  "code_digest": "2233289b22368784b256fd7577c4075e79a4419b47d78cdf03b809da23947aa2",
+  "code_file_count": 936,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "7b97a09e0572f40ff4be1c69c558aa18c79ca57a3e3db5697293f50bb9ecc4b3",
-    "docs/CHANGELOG.md": "a4ac97eafa388e8b4bc504538908bc782d510f1b2562ec4dba14d5c8656756d3",
+    "docs/PROJECT_STATUS.md": "33262355d4a5da787306c24c7f61863945015d6a91a5518acdf65398f5d94ee3",
+    "docs/CHANGELOG.md": "0de032e604f691d33982e38ba38d257f6430c4f3dc0953e75fd3ac40f76e1837",
     "AGENTS.md": "72c31b7b0d24828d2313203ad211348f916aec386e61ad31b478fb3f80ad4448",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,9 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Wave 4 deployed 368e9bdd (520/520 SHA256, rc=0, STRICT_INVARIANT_DRIFTS={}, public 200); Wave 5 regression 223/226 Odoo tests (14 modules), 5/5 roles x 5/5 viewports (36/36 routes, 0 overflow, 0 errorDialog) x Chromium 156 & Edge 158 PASS, 44 after PNGs; docs-only signoff"
+    "Static checks PASS: py_compiled=360, xml_parsed=171, js_checked=143, scss_compiled=54, ruff_checked_files=114 (0 errors), git diff --check rc=0",
+    "Odoo -d tp_tanphat_test -u <20_modules> --stop-after-init PASS: rc=0, error_lines=0",
+    "Odoo --test-enable on tp_tanphat_test PASS: 497/497 tests across 16 suites (0 failed, 0 errors; including tp_hr_attendance 157, tp_contract 81, tp_admin_delegation 68, tp_branding 34, tp_web_home 26, tp_web_login 22, tp_request 19, tp_i18n_vi 8)",
+    "Playwright Chromium E2E verify_ui_18079.cjs across 5 viewports (1440x900, 1280x800, 1024x768, 390x844, 360x800) PASS: 25/25 assertions, pageErrorsCount=0, 23 after screenshots saved"
   ]
 }

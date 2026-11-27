@@ -107,6 +107,8 @@ class BrandHome(AuthSignupHome, TotpHome, PortalHome):
     # Authentication pages
     # ------------------------------------------------------------------
     def _login_redirect(self, uid, redirect=None):
+        if not redirect and uid and is_user_internal(uid):
+            return '/app/trang-chu'
         return brand_url(super()._login_redirect(uid, redirect=redirect))
 
     @http.route(['/web/login', LOGIN_PATH])

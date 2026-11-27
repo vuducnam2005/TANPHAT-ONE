@@ -5,6 +5,7 @@ access_att_session_user,Attendance sessions read,tp.hr.attendance.session,base.g
 rule_att_session_company,Attendance sessions company,tp.hr.attendance.session,,crud,"[('company_id', 'in', company_ids)]"
 access_att_period_user,Attendance periods read,tp.hr.attendance.period,base.group_user,r,
 access_att_period_manager,Attendance periods HR manager,tp.hr.attendance.period,hr.group_hr_manager,crud,
+access_att_period_admin,Attendance periods Admin,tp.hr.attendance.period,base.group_system,crud,
 rule_att_period_company,Attendance periods company,tp.hr.attendance.period,,crud,"[('company_id', 'in', company_ids)]"
 access_att_rule_user,Attendance rules read,tp.hr.attendance.rule,base.group_user,r,
 access_att_rule_manager,Attendance rules HR manager,tp.hr.attendance.rule,hr.group_hr_manager,crud,
@@ -32,11 +33,13 @@ rule_att_correction_company,Attendance corrections company,tp.hr.attendance.corr
 access_att_review_wizard_user,Attendance review dialog,tp.hr.attendance.review.wizard,base.group_user,crud,
 access_att_withdraw_wizard_user,Attendance withdraw dialog,tp.hr.attendance.withdraw.wizard,base.group_user,crud,
 access_att_period_wizard_manager,Attendance period dialog HR manager,tp.hr.attendance.period.wizard,hr.group_hr_manager,crud,
+access_att_period_wizard_admin,Attendance period dialog Admin,tp.hr.attendance.period.wizard,base.group_system,crud,
 access_att_period_wizard_officer,Attendance period dialog officer,tp.hr.attendance.period.wizard,tp_hr_attendance.group_attendance_officer,crud,
 access_att_late_manager,Attendance machine late totals HR manager,tp.hr.attendance.late,hr.group_hr_manager,r,
 access_att_late_officer,Attendance machine late totals officer,tp.hr.attendance.late,tp_hr_attendance.group_attendance_officer,r,
 rule_att_late_company,Attendance machine late totals company,tp.hr.attendance.late,,crud,"[('company_id', 'in', company_ids)]"
 access_att_source_manager,Attendance device sources HR manager,tp.hr.attendance.source,hr.group_hr_manager,crud,
+access_att_source_admin,Attendance device sources Admin,tp.hr.attendance.source,base.group_system,crud,
 access_att_source_officer,Attendance device sources officer,tp.hr.attendance.source,tp_hr_attendance.group_attendance_officer,r,
 rule_att_source_company,Attendance device sources company,tp.hr.attendance.source,,crud,"[('company_id', 'in', company_ids)]"
 access_att_source_code_manager,Attendance device codes HR manager,tp.hr.attendance.source.code,hr.group_hr_manager,crud,
@@ -55,17 +58,21 @@ access_att_resolution_manager,Attendance compare resolution HR manager,tp.hr.att
 access_att_resolution_officer,Attendance compare resolution officer,tp.hr.attendance.resolution,tp_hr_attendance.group_attendance_officer,r,
 rule_att_resolution_company,Attendance compare resolution company,tp.hr.attendance.resolution,,crud,"[('company_id', 'in', company_ids)]"
 access_att_enti_map_manager,Attendance ENTI mapping HR manager,tp.hr.attendance.enti.mapping,hr.group_hr_manager,crud,
+access_att_enti_map_admin,Attendance ENTI mapping Admin,tp.hr.attendance.enti.mapping,base.group_system,crud,
 access_att_enti_map_officer,Attendance ENTI mapping officer,tp.hr.attendance.enti.mapping,tp_hr_attendance.group_attendance_officer,r,
 rule_att_enti_map_company,Attendance ENTI mapping company,tp.hr.attendance.enti.mapping,,crud,"[('company_id', 'in', company_ids)]"
-access_att_enti_day_manager,Attendance ENTI days HR manager,tp.hr.attendance.enti.day,hr.group_hr_manager,crud,
+access_att_enti_day_manager,Attendance ENTI days HR manager,tp.hr.attendance.enti.day,hr.group_hr_manager,r,
+access_att_enti_day_admin,Attendance ENTI days Admin,tp.hr.attendance.enti.day,base.group_system,r,
 access_att_enti_day_officer,Attendance ENTI days officer,tp.hr.attendance.enti.day,tp_hr_attendance.group_attendance_officer,r,
 rule_att_enti_day_company,Attendance ENTI days company,tp.hr.attendance.enti.day,,crud,"[('company_id', 'in', company_ids)]"
 access_att_enti_log_manager,Attendance ENTI sync log HR manager,tp.hr.attendance.enti.sync.log,hr.group_hr_manager,r,
+access_att_enti_log_admin,Attendance ENTI sync log Admin,tp.hr.attendance.enti.sync.log,base.group_system,r,
 access_att_enti_log_officer,Attendance ENTI sync log officer,tp.hr.attendance.enti.sync.log,tp_hr_attendance.group_attendance_officer,r,
 rule_att_enti_log_company,Attendance ENTI sync log company,tp.hr.attendance.enti.sync.log,,crud,"[('company_id', 'in', company_ids)]"
 access_att_enti_wizard_manager,Attendance ENTI config wizard HR manager,tp.hr.attendance.enti.config.wizard,hr.group_hr_manager,crud,
 access_att_enti_wizard_admin,Attendance ENTI config wizard Admin,tp.hr.attendance.enti.config.wizard,base.group_system,crud,
-access_att_enti_img_manager,Attendance ENTI employee images HR manager,tp.hr.attendance.enti.employee.image,hr.group_hr_manager,crud,
-access_att_enti_img_admin,Attendance ENTI employee images Admin,tp.hr.attendance.enti.employee.image,base.group_system,crud,
+rule_att_enti_wizard_own,Attendance ENTI config wizard own,tp.hr.attendance.enti.config.wizard,,crud,"[('create_uid', '=', user.id)]"
+access_att_enti_img_manager,Attendance ENTI employee images HR manager,tp.hr.attendance.enti.employee.image,hr.group_hr_manager,r,
+access_att_enti_img_admin,Attendance ENTI employee images Admin,tp.hr.attendance.enti.employee.image,base.group_system,r,
 access_att_enti_img_officer,Attendance ENTI employee images officer,tp.hr.attendance.enti.employee.image,tp_hr_attendance.group_attendance_officer,r,
 rule_att_enti_img_company,Attendance ENTI employee images company,tp.hr.attendance.enti.employee.image,,crud,"[('company_id', 'in', company_ids)]"

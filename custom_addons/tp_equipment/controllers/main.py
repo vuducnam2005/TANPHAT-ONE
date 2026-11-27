@@ -35,7 +35,7 @@ def _page(title, message, status):
         "h1{font-size:20px;margin:0 0 8px}p{margin:0 0 16px;line-height:1.5}"
         "a{display:inline-block;min-height:44px;line-height:44px;padding:0 16px;border-radius:8px;"
         "background:#17324d;color:#fff;text-decoration:none}</style></head><body><main>"
-        f"<h1>{escape(title)}</h1><p>{escape(message)}</p><a href='/odoo'>Về trang chủ</a></main></body></html>"
+        f"<h1>{escape(title)}</h1><p>{escape(message)}</p><a href='/app'>Về trang chủ</a></main></body></html>"
     )
     return request.make_response(body, headers=[("Content-Type", "text/html; charset=utf-8"),
                                                 ("Cache-Control", "no-store"),
@@ -58,7 +58,7 @@ class TpEquipmentQr(http.Controller):
             return _page("Mã QR không hợp lệ",
                          "Nhãn này không khớp thiết bị nào hoặc đã được cấp lại. Tra cứu theo mã thiết bị trong "
                          "Kho thiết bị văn phòng.", 404)
-        return request.redirect(f"/odoo/kho-thiet-bi/{equipment.id}")
+        return request.redirect(f"/app/thiet-bi/danh-sach/{equipment.id}")
 
     @http.route("/tp_equipment/qr_image/<string:token>", type="http", auth="user", methods=["GET"], readonly=True)
     def qr_image(self, token, **kwargs):

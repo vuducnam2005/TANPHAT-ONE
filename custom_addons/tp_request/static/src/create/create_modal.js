@@ -1,13 +1,19 @@
 /** @odoo-module **/
 import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
+import { TpTime24Field } from "@tp_web_home/inputs/time24";
 import { InlineErrors } from "@tp_web_home/validation/inline_errors";
 import { saveError } from "@tp_web_home/validation/validation";
 import { formatFileSize } from "../prefs";
 
+function todayLocalIso() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export class TpRequestCreateModal extends Component {
     static template = "tp_request.CreateModal";
-    static components = { InlineErrors };
+    static components = { InlineErrors, TpTime24Field };
     props = useProps();
 
     setup() {
@@ -88,13 +94,13 @@ export class TpRequestCreateModal extends Component {
         this.state.serverError = null;
         this.state.form.priority = typeCard.default_priority || "normal";
         if (typeCard.handler_kind === "attendance_correction" && !this.state.form.att_work_date) {
-            const today = new Date().toISOString().slice(0, 10);
+            const today = todayLocalIso();
             this.state.form.att_work_date = today;
             if (!this.state.form.title) {
                 this.state.form.title = `Đề nghị điều chỉnh công ngày ${today.split("-").reverse().join("/")}`;
             }
         } else if (["leave_request", "business_trip"].includes(typeCard.handler_kind) && !this.state.form.leave_date_from) {
-            const today = new Date().toISOString().slice(0, 10);
+            const today = todayLocalIso();
             this.state.form.leave_date_from = today;
             this.state.form.leave_date_to = today;
             this.state.form.leave_days_count = 1;
@@ -139,6 +145,11 @@ export class TpRequestCreateModal extends Component {
                 }
             }
         }
+    }
+
+    onTimeFieldChange(field, val) {
+        this.state.form[field] = val;
+        this.clearFieldError(field);
     }
 
     clearFieldError(fieldKey) {

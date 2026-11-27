@@ -113,7 +113,7 @@ class AccountSecurity(models.Model):
             return False
         return bool(
             self.env['res.users.apikeys'].has_access('read')
-            and self.env['res.users.apikeys.description'].has_access('create')
+            and self.env['res.users.apikeys.description'].has_access('create'),
         )
 
     def _tp_session_history_payload(self, status, limit, offset):

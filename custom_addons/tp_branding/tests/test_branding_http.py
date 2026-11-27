@@ -117,7 +117,7 @@ class TestBrandingHttp(HttpCase):
         self.assertTrue(document.xpath("//input[@name='csrf_token' and @value]"))
         self.assertFalse(document.xpath("//a[contains(@href, 'odoo.com')]"))
         text = ' '.join(document.text_content().split())
-        self.assertTrue('by Tadic' in text or 'TADIC' in text, text)
+        self.assertTrue('Tadic' in text or 'TADIC' in text, text)
         self.assertNotIn('Powered by', text)
         # Link preview metadata (native: only for a webclient deep link).
         shared = html.fromstring(self._get('/dang-nhap?redirect=%2Fapp%2Ftp-home').content)
@@ -194,7 +194,7 @@ class TestBrandingHttp(HttpCase):
         parameters.set_str('auth_signup.invitation_scope', 'b2c')
         parameters.set_bool('auth_signup.reset_password', True)
         login = html.fromstring(self._get('/dang-nhap').content)
-        self.assertTrue(login.xpath("//a[starts-with(@href, '/tao-tai-khoan')]"))
+        self.assertFalse(login.xpath("//a[starts-with(@href, '/tao-tai-khoan')]"))
         self.assertTrue(login.xpath("//a[starts-with(@href, '/quen-mat-khau')]"))
         for path, title in (('/tao-tai-khoan', 'Tạo tài khoản'), ('/quen-mat-khau', 'Đặt lại mật khẩu')):
             page = self._get(path)

@@ -150,7 +150,67 @@
     .o_tp_att_admin {
         padding-inline: 12px;
         .o_tp_att_admin_grid { grid-template-columns: minmax(0, 1fr); }
-        .o_tp_att_admin_export_fields > button { flex: 1 1 100%; }
+        .o_tp_att_admin_export_fields > button { flex: 1 1 100%; min-height: 44px; }
+        .o_tp_att_image_log_controls > button { flex: 1 1 100%; min-height: 44px; }
+        .o_tp_att_admin_export_fields,
+        .o_tp_att_image_log_controls {
+            select, input { min-height: 44px; font-size: 16px; }
+        }
+        .o_tp_att_image_table_wrap {
+            max-height: none;
+            overflow: visible;
+            border: 0;
+        }
+        .o_tp_att_image_table {
+            thead {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                overflow: hidden;
+                clip: rect(0 0 0 0);
+            }
+            tbody {
+                display: grid;
+                gap: 8px;
+            }
+            tbody tr {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                gap: 6px 12px;
+                padding: 12px;
+                background: var(--att-surface);
+                border: 1px solid var(--att-line);
+                border-radius: 10px;
+            }
+            tbody td {
+                display: block;
+                padding: 0;
+                border: 0;
+                text-align: left !important;
+                min-width: 0;
+            }
+            tbody td[data-label]::before {
+                content: attr(data-label);
+                display: block;
+                font-size: 11px;
+                font-weight: 600;
+                color: var(--att-muted);
+                margin-bottom: 2px;
+            }
+            tbody td:last-child {
+                grid-column: 1 / -1;
+                padding-top: 4px;
+                > div {
+                    display: flex !important;
+                    width: 100%;
+                    gap: 8px;
+                }
+                .btn {
+                    flex: 1 1 auto;
+                    min-height: 44px;
+                }
+            }
+        }
     }
 }
 

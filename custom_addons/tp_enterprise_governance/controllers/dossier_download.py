@@ -5,6 +5,7 @@ import base64
 from odoo import http
 from odoo.exceptions import AccessError, UserError
 from odoo.http import request
+from odoo.http.stream import content_disposition
 
 
 class TpProjectDossierController(http.Controller):
@@ -26,7 +27,7 @@ class TpProjectDossierController(http.Controller):
         headers = [
             ('Content-Type', att.mimetype or 'application/octet-stream'),
             ('Content-Length', str(len(raw))),
-            ('Content-Disposition', f'attachment; filename="{ver.file_name}"'),
+            ('Content-Disposition', content_disposition(ver.file_name or 'ho-so.pdf')),
             ('X-Content-Type-Options', 'nosniff'),
         ]
         return request.make_response(raw, headers=headers)

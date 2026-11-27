@@ -228,22 +228,22 @@
                                 <label class="tp-pt-label" for="tp_cal_ev_start_iso">
                                     Bắt đầu (24h) <span class="tp-pt-req">*</span>
                                 </label>
-                                <input id="tp_cal_ev_start_iso"
-                                    type="datetime-local"
-                                    t-att-class="'tp-pt-input ' + (this.hasFieldError('tp_cal_ev_start_iso') ? 'is-invalid' : '')"
-                                    t-model.proxy="this.state.startIso"
-                                    t-on-change="() => this.onTimeFieldChange()"/>
+                                <TpDateTime24Field id="'tp_cal_ev_start_iso'"
+                                                   value="this.state.startIso"
+                                                   invalid="this.hasFieldError('tp_cal_ev_start_iso')"
+                                                   disabled="this.state.busy"
+                                                   onChange="(val) => this.onStartIsoChange(val)"/>
                                 <div t-if="this.hasFieldError('tp_cal_ev_start_iso')" class="tp-pt-field-error" t-out="this.fieldErrorMessage('tp_cal_ev_start_iso')"/>
                             </div>
                             <div class="tp-pt-field">
                                 <label class="tp-pt-label" for="tp_cal_ev_stop_iso">
                                     Kết thúc (24h) <span class="tp-pt-req">*</span>
                                 </label>
-                                <input id="tp_cal_ev_stop_iso"
-                                    type="datetime-local"
-                                    t-att-class="'tp-pt-input ' + (this.hasFieldError('tp_cal_ev_stop_iso') ? 'is-invalid' : '')"
-                                    t-model.proxy="this.state.stopIso"
-                                    t-on-change="() => this.onTimeFieldChange()"/>
+                                <TpDateTime24Field id="'tp_cal_ev_stop_iso'"
+                                                   value="this.state.stopIso"
+                                                   invalid="this.hasFieldError('tp_cal_ev_stop_iso')"
+                                                   disabled="this.state.busy"
+                                                   onChange="(val) => this.onStopIsoChange(val)"/>
                                 <div t-if="this.hasFieldError('tp_cal_ev_stop_iso')" class="tp-pt-field-error" t-out="this.fieldErrorMessage('tp_cal_ev_stop_iso')"/>
                             </div>
                         </div>

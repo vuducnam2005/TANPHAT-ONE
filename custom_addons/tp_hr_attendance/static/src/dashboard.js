@@ -2,22 +2,14 @@ import { Component, onWillStart, onWillUnmount, proxy, useProps } from "@odoo/ow
 import { browser } from "@web/core/browser/browser";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
 import { CHART_COLORS, baseOptions, useLiveChart } from "./charts";
-import { GROUP_COLORS, GROUP_ORDER, STATE_ORDER, attendanceIssue, downloadBase64, formatDate, readStore, rpcError, stepPeriod, writeStore } from "./common";
+import { GROUP_COLORS, GROUP_ORDER, STATE_ORDER, attendanceIssue, downloadBase64, formatDate, readStore, stepPeriod, writeStore } from "./common";
 import { GroupDialog } from "./group_dialog";
 import { useAttendanceLive } from "./live";
-import { AttPager, PersonDialog } from "./parts";
+import { AttPager, PersonDialog, SourceStrip } from "./parts";
 
-/**
- * "Tổng quan chấm công" (ENTI-ATTENDANCE-002, ATTENDANCE-DASH-004). One scope (period, department, name/code)
- * drives three group cards — Đang làm, Đã về, Chưa đi làm (people, never punches, on one classification day) —
- * the donut, the daily trend, the compact newest-marks table and the detail table; the status filter only picks
- * the detail rows. A card opens the group list in a dialog (``GroupDialog``) with the same backend numbers.
- * Data come from one backend call (``tp_overview``); the server syncs the attendance source and wakes this screen
- * through the bus (``tp_hr_attendance/updated``), so new marks appear without F5, also in an open group dialog.
- * A slow fallback poll runs only while the tab is visible. Filters survive every automatic refresh; only changed
- * figures and new marks are highlighted.
- */
 const STORE_KEY = "tp_hr_attendance.overview.v2";
 const MODES = [["day", "Ngày"], ["week", "Tuần"], ["month", "Tháng"], ["range", "Khoảng ngày"]];
 const HIGHLIGHT_MS = 2400;
@@ -29,7 +21,7 @@ const GROUP_CARDS = [
 
 export class AttendanceDashboard extends Component {
     static template = "tp_hr_attendance.Dashboard";
-    static components = { AttPager };
+    static components = { AttPager, InlineErrors, SourceStrip };
     props = useProps();
 
     setup() {
@@ -43,7 +35,7 @@ export class AttendanceDashboard extends Component {
             mode: mode === "range" && !range ? "day" : mode, date: "", from: range ? saved.from : "", to: range ? saved.to : "",
             department: saved.department || "", search: saved.search || "", status: saved.status || "attention",
             page: 1, pageSize: saved.pageSize || 100,
-            loading: true, refreshing: false, exporting: false, error: "", exportError: "", data: null, fresh: {},
+            loading: true, refreshing: false, exporting: false, serverError: null, attempt: 0, data: null, fresh: {},
         });
         this.modes = MODES;
         this.groupCards = GROUP_CARDS;
@@ -291,7 +283,7 @@ export class AttendanceDashboard extends Component {
         const params = this.params();
         this.state[silent ? "refreshing" : "loading"] = true;
         if (!silent) {
-            this.state.error = "";
+            this.state.serverError = null;
         }
         try {
             const orm = silent ? this.orm.silent : this.orm;
@@ -304,7 +296,7 @@ export class AttendanceDashboard extends Component {
             this.loadedScope = this.scopeKey(params);
             this.autoRefresh.loaded();
             Object.assign(this.state, {
-                data, date: data.date, status: data.status, page: data.page, pageSize: data.page_size, error: "",
+                data, date: data.date, status: data.status, page: data.page, pageSize: data.page_size, serverError: null,
             });
             if (data.mode === "range") {
                 Object.assign(this.state, { from: data.start, to: data.end });
@@ -323,7 +315,8 @@ export class AttendanceDashboard extends Component {
             });
         } catch (error) {
             if (request === this.request && !silent) {
-                this.state.error = rpcError(error, "Không tải được tổng quan chấm công. Vui lòng thử lại.");
+                this.state.serverError = saveError(error, { verb: "tải tổng quan chấm công" });
+                this.state.attempt++;
             }
         } finally {
             if (request === this.request) {
@@ -490,13 +483,16 @@ export class AttendanceDashboard extends Component {
         this.dialog.add(PersonDialog, { params: { employee_id: row.employee_id, mode: "week", date: row.date } });
     }
     openBoard() {
-        return this.action.doAction({ type: "ir.actions.client", tag: "tp_hr_attendance.board", name: "Bảng chấm công" });
+        return this.action.doAction("tp_hr_attendance.action_board");
+    }
+    openSources() {
+        return this.action.doAction("tp_hr_attendance.action_sources");
     }
     async exportExcel() {
         if (this.state.exporting || !this.data) {
             return;
         }
-        Object.assign(this.state, { exporting: true, exportError: "" });
+        Object.assign(this.state, { exporting: true, serverError: null });
         try {
             const data = this.data;
             const file = await this.orm.call("tp.hr.attendance.day", "tp_export_sheet", [{
@@ -505,8 +501,8 @@ export class AttendanceDashboard extends Component {
             }]);
             downloadBase64(file);
         } catch (error) {
-            // Shown above the filters, next to the button the user pressed (no toast).
-            this.state.exportError = rpcError(error, "Không xuất được Excel. Dữ liệu trên màn hình không thay đổi; vui lòng thử lại.");
+            this.state.serverError = saveError(error, { verb: "xuất Excel", note: "Dữ liệu trên màn hình không thay đổi." });
+            this.state.attempt++;
         } finally {
             this.state.exporting = false;
             this.autoRefresh.flush();

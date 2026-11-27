@@ -1,7 +1,7 @@
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, ValidationError
 
-from .workspace import kd_leaf, open_records
+from .workspace import child_context, kd_leaf, open_records
 
 
 class Acceptance(models.Model):
@@ -102,13 +102,17 @@ class Acceptance(models.Model):
 
     def action_production(self):
         self.ensure_one()
+        if not self.production_id:
+            return False
         self.production_id.check_access("read")
         return {
             "type": "ir.actions.act_window",
             "res_model": "tp.production",
             "res_id": self.production_id.id,
             "view_mode": "form",
-            "context": kd_leaf("tp.production"),
+            "views": [(self.env.ref("tp_kd_workspace.production_form").id, "form")],
+            "target": "current",
+            "context": {**child_context(self.env), **kd_leaf("tp.production")},
         }
 
 

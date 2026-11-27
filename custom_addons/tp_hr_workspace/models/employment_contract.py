@@ -158,27 +158,38 @@ class HrEmploymentEmployee(models.Model):
         self.check_access('read')
         if not self.env.user.has_group('hr.group_hr_user'):
             raise AccessError(self.env._('Chỉ HR được xem hồ sơ hợp đồng nhân sự.'))
-        return {'type': 'ir.actions.act_window', 'name': self.env._('Hồ sơ hợp đồng nhân sự'),
-                'res_model': 'tp.hr.contract.document', 'view_mode': 'list,form',
-                'domain': [('employee_id', '=', self.id)],
-                'context': {'default_employee_id': self.id,
-                            'default_kind': 'outsourced' if self.tp_employment_kind == 'outsourced' else 'labor'}}
+        action = self.env['ir.actions.actions']._for_xml_id('tp_hr_workspace.action_contract_documents')
+        action.update(
+            domain=[('employee_id', '=', self.id)],
+            context={
+                'default_employee_id': self.id,
+                'default_kind': 'outsourced' if self.tp_employment_kind == 'outsourced' else 'labor',
+                'tp_hr_leaf': 'tp_hr_workspace.menu_employees',
+            },
+        )
+        return action
 
     def action_tp_add_contract_document(self):
         self.ensure_one()
         self.check_access('write')
         action = self.action_tp_contract_documents()
         self.version_id.check_access('write')
-        action.update(view_mode='form', views=[(False, 'form')], target='new')
-        action['context']['tp_contract_version_id'] = self.version_id.id
+        form_id = self.env.ref('tp_hr_workspace.contract_document_form').id
+        action.update(view_mode='form', views=[(form_id, 'form')], target='new')
+        action['context'] = dict(action.get('context') or {}, tp_contract_version_id=self.version_id.id)
         return action
 
     def action_tp_complete_profile(self):
         self.ensure_one()
         self.check_access('write')
-        return {'type': 'ir.actions.act_window', 'res_model': 'hr.employee', 'res_id': self.id,
-                'views': [(self.env.ref('tp_hr_workspace.employee_form').id, 'form')],
-                'context': {'form_view_initial_mode': 'edit'}}
+        action = self.env['ir.actions.actions']._for_xml_id('tp_hr_workspace.action_employees')
+        action.update(
+            res_id=self.id,
+            view_mode='form',
+            views=[(self.env.ref('tp_hr_workspace.employee_form').id, 'form')],
+            context={'form_view_initial_mode': 'edit', 'tp_hr_leaf': 'tp_hr_workspace.menu_employees'},
+        )
+        return action
 
 
 class HrContractAttachment(models.Model):

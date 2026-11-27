@@ -27,7 +27,7 @@ def _user_tz(env):
     tz_name = env.user.tz or env.company.partner_id.tz or "Asia/Ho_Chi_Minh"
     try:
         return ZoneInfo(tz_name)
-    except Exception:
+    except (KeyError, ValueError):
         return ZoneInfo("Asia/Ho_Chi_Minh")
 
 
@@ -67,6 +67,25 @@ class PersonalDiscussChannel(models.Model):
         export_string_translation=False,
     )
 
+    def _store_channel_fields(self, res):
+        super()._store_channel_fields(res)
+        is_sys_or_full_admin = (
+            self.env.user.has_group("base.group_system")
+            or self.env.user.has_group("tp_admin_delegation.group_full_admin")
+        )
+        is_shared_channel_bus = bool(
+            res.target.channel and res.target.channel._name == "discuss.channel",
+        )
+        res.attr("tp_channel_scope")
+        res.attr(
+            "tp_can_sync_members",
+            lambda c: bool(
+                c.tp_channel_scope in ("department", "project")
+                and (c.sudo().tp_manager_user_id.id == self.env.uid or is_sys_or_full_admin),
+            ),
+            predicate=lambda _c: not is_shared_channel_bus,
+        )
+
     def _tp_assert_caller_can_read_channel(self):
         self.ensure_one()
         self.check_access("read")
@@ -91,7 +110,7 @@ class PersonalDiscussChannel(models.Model):
                 ("active", "=", True),
                 ("department_id", "=", department.id),
                 ("user_id", "!=", False),
-            ]
+            ],
         )
         users = emps.mapped("user_id").filtered(lambda u: u.active and not u.share)
         if department.sudo().manager_id and department.sudo().manager_id.user_id:
@@ -114,13 +133,13 @@ class PersonalDiscussChannel(models.Model):
 
         if "tp.project.assignment" in self.env:
             assignments = self.env["tp.project.assignment"].sudo().search(
-                [("project_id", "=", project.id), ("active", "=", True)]
+                [("project_id", "=", project.id), ("active", "=", True)],
             )
             assign_users = assignments.mapped("user_id").filtered(lambda u: u.active and not u.share)
             users |= assign_users
 
         proj_tasks = self.env["project.task"].sudo().search(
-            [("project_id", "=", project.id), ("active", "=", True)]
+            [("project_id", "=", project.id), ("active", "=", True)],
         )
         task_users = proj_tasks.mapped("user_ids").filtered(lambda u: u.active and not u.share)
         users |= task_users
@@ -203,7 +222,7 @@ class PersonalDiscussChannel(models.Model):
         extra_uids = [int(u) for u in (vals.get("extra_user_ids") or []) if str(u).isdigit()]
         if extra_uids:
             extra_valid = self.env["res.users"].sudo().search(
-                [("id", "in", extra_uids), ("active", "=", True), ("share", "=", False)]
+                [("id", "in", extra_uids), ("active", "=", True), ("share", "=", False)],
             )
             member_users |= extra_valid
 
@@ -235,7 +254,7 @@ class PersonalDiscussChannel(models.Model):
                 "tp_department_id": dept.id if dept else False,
                 "tp_project_id": proj.id if proj else False,
                 "tp_manager_user_id": self.env.uid,
-            }
+            },
         )
         source_lbl = (
             f"phòng ban {dept.name}" if dept else f"dự án {proj.name}"
@@ -245,10 +264,10 @@ class PersonalDiscussChannel(models.Model):
                 "đã khởi tạo hội thoại liên kết %(src)s (%(cnt)s thành viên theo phân công).",
                 src=source_lbl,
                 cnt=len(member_users),
-            )
+            ),
         )
         channel.message_post(
-            body=note, message_type="notification", subtype_xmlid="mail.mt_comment"
+            body=note, message_type="notification", subtype_xmlid="mail.mt_comment",
         )
         op_log.record_success("create_scoped_channel", clean_token, fp, channel)
         return {
@@ -293,7 +312,7 @@ class PersonalDiscussChannel(models.Model):
         if to_add_pids:
             ch.sudo().add_members(partner_ids=to_add_pids)
         departed_pids = list(
-            current_pids - expected_pids - {ch.tp_manager_user_id.partner_id.id if ch.tp_manager_user_id else 0}
+            current_pids - expected_pids - {ch.tp_manager_user_id.partner_id.id if ch.tp_manager_user_id else 0},
         )
         return {
             "channel_id": ch.id,
@@ -370,7 +389,7 @@ class PersonalDiscussChannel(models.Model):
         if not supplied_uids:
             supplied_uids = [self.env.uid]
         valid_users = self.env["res.users"].sudo().search(
-            [("id", "in", supplied_uids), ("active", "=", True), ("share", "=", False)]
+            [("id", "in", supplied_uids), ("active", "=", True), ("share", "=", False)],
         )
         if not valid_users:
             raise ValidationError(self.env._("Vui lòng chọn ít nhất một người nhận công việc hợp lệ."))
@@ -399,13 +418,13 @@ class PersonalDiscussChannel(models.Model):
             stages = Task._tp_ensure_my_personal_stages()
             return existing._tp_serialize_tasks(stages)[0]
 
-        from .personal_task import _compose_description_html
+        from .personal_task import _compose_description_html  # noqa: PLC0415
 
         desc_lines = []
         if note_raw:
             desc_lines.append(note_raw)
         desc_lines.append(
-            f"[Nguồn Trao đổi: {preview['channel_name']} — {preview['author_name']} ({preview['sent_label']})]"
+            f"[Nguồn Trao đổi: {preview['channel_name']} — {preview['author_name']} ({preview['sent_label']})]",
         )
         desc_html = _compose_description_html("\n\n".join(desc_lines), [])
 
@@ -442,7 +461,7 @@ class PersonalDiscussChannel(models.Model):
             task_url = f"/app/ca-nhan/cong-viec/{task.id}"
             assignee_names = ", ".join(u.name for u in valid_users)
             post_body = Markup(
-                '<p>Đã tạo công việc từ tin nhắn: <a href="%s"><strong>#%s</strong></a> · Người thực hiện: %s</p>'
+                '<p>Đã tạo công việc từ tin nhắn: <a href="%s"><strong>#%s</strong></a> · Người thực hiện: %s</p>',
             ) % (html.escape(task_url), task.id, html.escape(assignee_names))
             channel.message_post(
                 body=post_body,
@@ -491,7 +510,7 @@ class PersonalDiscussChannel(models.Model):
                     "channel_type": ch.channel_type,
                     "type_label": scope_lbl,
                     "member_count": ch.member_count or 0,
-                }
+                },
             )
             if len(results) >= safe_limit:
                 break
@@ -529,7 +548,7 @@ class PersonalDiscussChannel(models.Model):
                         "title": ev.name or "Lịch làm việc",
                         "subtitle": sub,
                         "url": f"/app/ca-nhan/lich-lam-viec/{ev.id}",
-                    }
+                    },
                 )
             return items
 
@@ -553,13 +572,13 @@ class PersonalDiscussChannel(models.Model):
                     "title": t.name or "Công việc",
                     "subtitle": sub,
                     "url": f"/app/ca-nhan/cong-viec/{t.id}",
-                }
+                },
             )
         return items
 
     @api.model
     def tp_share_record_to_channel(
-        self, channel_id, target_model, target_id, note="", operation_token=""
+        self, channel_id, target_model, target_id, note="", operation_token="",
     ):
         """Post a safe internal link to a Task or Calendar Event into a Discuss channel."""
         self.env["res.users"]._tp_require_internal_caller()
@@ -614,11 +633,11 @@ class PersonalDiscussChannel(models.Model):
         if clean_note:
             parts.append(
                 Markup("<p>%s</p>")
-                % Markup("<br/>").join(html.escape(line) for line in clean_note.splitlines())
+                % Markup("<br/>").join(html.escape(line) for line in clean_note.splitlines()),
             )
         parts.append(
             Markup('<p><strong>%s:</strong> <a href="%s">%s</a></p>')
-            % (html.escape(kind_label), html.escape(url), html.escape(link_label))
+            % (html.escape(kind_label), html.escape(url), html.escape(link_label)),
         )
         msg = channel.message_post(
             body=Markup("").join(parts),
@@ -657,10 +676,10 @@ class PersonalDiscussChannel(models.Model):
         }
         channel = self.create(vals)
         note = Markup('<div class="o_mail_notification">%s</div>') % html.escape(
-            self.env._("đã tạo kênh trao đổi nội bộ.")
+            self.env._("đã tạo kênh trao đổi nội bộ."),
         )
         channel.message_post(
-            body=note, message_type="notification", subtype_xmlid="mail.mt_comment"
+            body=note, message_type="notification", subtype_xmlid="mail.mt_comment",
         )
         op_log.record_success("create_internal_channel", clean_token, fp, channel)
         return {"id": channel.id, "name": channel.name}

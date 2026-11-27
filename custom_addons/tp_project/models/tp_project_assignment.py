@@ -7,11 +7,11 @@ class TpProjectAssignment(models.Model):
     _description = 'Tan Phat Project Assignment'
     _check_company_auto = True
 
-    project_id = fields.Many2one('project.project', required=True, ondelete='cascade', index=True, check_company=True)
-    company_id = fields.Many2one(related='project_id.company_id', store=True, index=True)
-    user_id = fields.Many2one('res.users', required=True, ondelete='restrict', index=True)
-    role = fields.Selection([('reader', 'Reader'), ('coordinator', 'Coordinator')], required=True, default='reader')
-    active = fields.Boolean(default=True)
+    project_id = fields.Many2one('project.project', required=True, ondelete='cascade', index=True, check_company=True, string='Dự án')
+    company_id = fields.Many2one(related='project_id.company_id', store=True, index=True, string='Công ty')
+    user_id = fields.Many2one('res.users', required=True, ondelete='restrict', index=True, string='Nhân sự')
+    role = fields.Selection([('reader', 'Người xem'), ('coordinator', 'Điều phối viên')], required=True, default='reader', string='Vai trò')
+    active = fields.Boolean(default=True, string='Đang hiệu lực')
 
     _assignment_unique = models.Constraint(
         'UNIQUE(project_id, user_id, role)', 'This project assignment already exists.',

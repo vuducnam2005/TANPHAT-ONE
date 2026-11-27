@@ -168,7 +168,7 @@ button.o_tp_att_ov_kpi {
     .o_tp_att_gd_tools { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px;
         .o_tp_att_field { margin: 0; }
         select, input[type=search] { min-height: 40px; padding: 7px 12px; font-size: 14px; font-weight: 400; color: var(--att-navy);
-            background: var(--att-surface); border: 1px solid var(--att-line); border-radius: 8px; max-width: 100%;
+            background-color: var(--att-surface); border: 1px solid var(--att-line); border-radius: 8px; max-width: 100%;
             &:hover { border-color: var(--att-line-strong); }
             &:focus { outline: none; border-color: var(--att-accent); box-shadow: 0 0 0 3px rgba(31, 111, 178, .16); } }
         .o_tp_att_gd_search input { width: 260px; }
@@ -206,6 +206,16 @@ button.o_tp_att_ov_kpi {
 }
 @media (max-width: 767.98px) {
     .o_tp_att_ov { padding: 14px 12px 24px; }
+    .o_tp_att_gd {
+        .o_tp_att_gd_tab { min-height: 44px; }
+        .o_tp_att_gd_tools {
+            > .o_tp_att_field { flex: 1 1 100%; }
+            .o_tp_att_field input, .o_tp_att_field select { width: 100%; min-width: 0; max-width: none; min-height: 44px; font-size: 16px; }
+        }
+        .o_tp_att_gd_meta { margin: 0; }
+        .o_tp_att_gd_wrap { max-height: none; overflow: visible; }
+        .o_tp_att_gd_table .o_stt { width: auto; }
+    }
 }
 @container tpov (max-width: 719.98px) {
     .o_tp_att_ov_export { flex: 1 1 100%; }
@@ -230,8 +240,6 @@ button.o_tp_att_ov_kpi {
 }
 @container tpov (max-width: 419.98px) {
     .o_tp_att_ov_when .o_tp_att_segment { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@container tpov (max-width: 359.98px) {
     .o_tp_att_ov_recent_table { min-width: 0; font-size: 13px; td, tbody th, thead th { padding: 7px 6px; } }
 }
 @media (max-width: 575.98px) {

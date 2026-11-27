@@ -328,7 +328,7 @@ class MaintenanceRequestTp(models.Model):
                 request._tp_sync_native("vendor")
             elif kind == "repair_return" and request.tp_state == "vendor":
                 request._tp_sync_native("in_progress")
-            request.message_post(body=Markup("%s: <a href='/odoo/phieu-thiet-bi/%s'>%s</a>") % (
+            request.message_post(body=Markup("%s: <a href='/app/thiet-bi/phieu-ban-giao/%s'>%s</a>") % (
                 dict(move._fields["move_type"].selection)[move.move_type], move.id, move.name),
                 subtype_xmlid="mail.mt_note")
 
@@ -373,7 +373,7 @@ class MaintenanceRequestTp(models.Model):
                             _("Cấu hình sau: %s", "; ".join(
                                 f"{label}: {changes[field]}" for field, label in CONFIG_FIELDS if field in changes)))
                 equipment.write(vals)
-                equipment.message_post(body=Markup("%s <a href='/odoo/sua-chua-thiet-bi/%s'>%s</a>: %s%s") % (
+                equipment.message_post(body=Markup("%s <a href='/app/thiet-bi/sua-chua/%s'>%s</a>: %s%s") % (
                     _("Kết quả phiếu"), request.id, request.tp_code or request.name,
                     dict(TP_RESULT)[request.tp_result], note), subtype_xmlid="mail.mt_note")
             if request.tp_meter_value and equipment:
@@ -417,14 +417,14 @@ class MaintenanceRequestTp(models.Model):
 
     def action_tp_open_equipment(self):
         self.ensure_one()
-        return {
-            "type": "ir.actions.act_window",
-            "res_model": "maintenance.equipment",
+        action = self.env["ir.actions.act_window"]._for_xml_id("tp_equipment.action_equipment_all_records")
+        action.update({
             "res_id": self.equipment_id.id,
             "view_mode": "form",
             "views": [(self.env.ref("tp_equipment.equipment_form").id, "form")],
             "target": "current",
-        }
+        })
+        return action
 
 
 class MaintenanceEquipmentRepair(models.Model):
@@ -443,10 +443,9 @@ class MaintenanceEquipmentRepair(models.Model):
         check_admin(self.env, self)
         self.ensure_one()
         kind = self.env.context.get("tp_request_kind") or "fault"
-        return {
-            "type": "ir.actions.act_window",
+        action = self.env["ir.actions.act_window"]._for_xml_id("tp_equipment.action_repairs")
+        action.update({
             "name": _("Phiếu sửa chữa"),
-            "res_model": "maintenance.request",
             "view_mode": "form",
             "views": [(self.env.ref("tp_equipment.repair_form").id, "form")],
             "target": "current",
@@ -458,15 +457,15 @@ class MaintenanceEquipmentRepair(models.Model):
                 "default_maintenance_type": "preventive" if kind == "maintenance" else "corrective",
                 "tp_eq_leaf": "tp_equipment.menu_repairs",
             },
-        }
+        })
+        return action
 
     def action_tp_open_requests(self):
         check_admin(self.env, self)
         self.ensure_one()
-        return {
-            "type": "ir.actions.act_window",
+        action = self.env["ir.actions.act_window"]._for_xml_id("tp_equipment.action_repairs")
+        action.update({
             "name": _("Sửa chữa của %s", self.display_name),
-            "res_model": "maintenance.request",
             "view_mode": "list,form",
             "views": [(self.env.ref("tp_equipment.repair_list").id, "list"),
                       (self.env.ref("tp_equipment.repair_form").id, "form")],
@@ -474,4 +473,5 @@ class MaintenanceEquipmentRepair(models.Model):
             "domain": [("equipment_id", "=", self.id)],
             "context": {"default_equipment_id": self.id, "tp_filter_profile": "repair",
                         "tp_eq_leaf": "tp_equipment.menu_repairs"},
-        }
+        })
+        return action

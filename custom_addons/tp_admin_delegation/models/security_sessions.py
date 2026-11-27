@@ -11,6 +11,7 @@ from .guards import (
     account_target_kind,
     assert_can_manage_account_targets,
 )
+from odoo.addons.tp_web_login.models.session_guard import compare_and_clear_winner_in_cr
 
 
 def check_session_targets(records):
@@ -66,7 +67,6 @@ class ProtectedSessions(models.Model):
             )
         res = super()._revoke()
         if winner_snapshot:
-            from odoo.addons.tp_web_login.models.session_guard import compare_and_clear_winner_in_cr
             compare_and_clear_winner_in_cr(self.env.cr, *winner_snapshot)
         return res
 

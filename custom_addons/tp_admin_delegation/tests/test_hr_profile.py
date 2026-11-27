@@ -5,7 +5,7 @@ from lxml import etree
 from odoo.exceptions import AccessError
 from odoo.tests import tagged
 
-from .test_delegation import DelegationCase
+from .test_delegation import DelegationCase, pick_free_employee_codes
 
 
 @tagged('post_install', '-at_install')
@@ -37,11 +37,13 @@ class TestFullAdminHrAndNormalPrivacy(DelegationCase):
         self.assertIn(self.departments[1].id, dept_ids)
 
         # Full admin manages normal accounts even in their own department!
+        coworker_code = pick_free_employee_codes(self.env, 1)[0]
         coworker_same_dept = self.env['hr.employee'].with_user(self.users[0]).create({
             'name': 'Synthetic Same Dept Coworker',
             'company_id': self.company.id,
             'department_id': self.departments[0].id,
             'mobile_phone': '0919888777',
+            'tp_employee_code': coworker_code,
         })
         self.assertTrue(coworker_same_dept.tp_can_manage_account)
         wizard = self.env['tp.hr.account.wizard'].with_user(self.users[0]).create({

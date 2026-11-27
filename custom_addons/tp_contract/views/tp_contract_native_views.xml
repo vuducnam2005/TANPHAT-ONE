@@ -13,7 +13,7 @@
                 <field name="can_edit_header" invisible="1"/>
                 <field name="can_edit_money" invisible="1"/><field name="needs_intervention_reason" invisible="1"/>
                 <group>
-                    <field name="project_id" string="Dự án" domain="[('id', 'in', allowed_project_ids)]" readonly="mode == 'edit'" options="{'no_create': True}"/>
+                    <field name="project_id" string="Dự án" domain="[('id', 'in', allowed_project_ids)]" readonly="mode == 'edit'" options="{'no_open': True, 'no_create': True}"/>
                     <field name="revision_name"/>
                     <field name="revision_reference"/><field name="reason" invisible="not needs_intervention_reason" required="needs_intervention_reason"/>
                 </group>
@@ -24,8 +24,8 @@
                         <field name="contract_type" readonly="not can_edit_header"/>
                     </group>
                     <group>
-                        <field name="partner_id" readonly="not can_edit_header" options="{'no_create': True}"/>
-                        <field name="currency_id" readonly="not can_edit_header or (mode == 'edit' and not can_edit_money)" options="{'no_create': True}"/>
+                        <field name="partner_id" readonly="not can_edit_header" options="{'no_open': True, 'no_create': True}"/>
+                        <field name="currency_id" readonly="not can_edit_header or (mode == 'edit' and not can_edit_money)" options="{'no_open': True, 'no_create': True}"/>
                     </group>
                 </group>
                 <notebook>
@@ -64,7 +64,7 @@
         <field name="arch" type="xml">
             <form string="Tạo nháp phụ lục sửa đổi">
                 <group>
-                    <field name="contract_id"/>
+                    <field name="contract_id" options="{'no_open': True, 'no_create': True}"/>
                     <field name="expected_version" invisible="1" force_save="1"/>
                     <field name="name"/>
                     <field name="reference"/>
@@ -82,12 +82,12 @@
         <field name="arch" type="xml">
             <form string="Trình rà soát">
                 <group>
-                    <field name="contract_id"/>
-                    <field name="revision_id"/>
+                    <field name="contract_id" options="{'no_open': True, 'no_create': True}"/>
+                    <field name="revision_id" options="{'no_open': True, 'no_create': True}"/>
                     <field name="expected_version" invisible="1" force_save="1"/>
                     <field name="eligible_reviewer_ids" invisible="1"/>
                     <field name="is_resubmit" invisible="1"/>
-                    <field name="reviewer_id" domain="[('id', 'in', eligible_reviewer_ids)]" options="{'no_create': True}" required="1"/>
+                    <field name="reviewer_id" domain="[('id', 'in', eligible_reviewer_ids)]" options="{'no_open': True, 'no_create': True}" required="1"/>
                     <field name="last_return_reason" invisible="not is_resubmit"/>
                     <field name="last_return_issues" invisible="not is_resubmit"/>
                     <field name="fix_summary" invisible="not is_resubmit" required="is_resubmit"/>
@@ -106,13 +106,13 @@
         <field name="arch" type="xml">
             <form string="Điều phối và tài liệu hợp đồng">
                 <group>
-                    <field name="contract_id"/>
-                    <field name="revision_id"/>
+                    <field name="contract_id" options="{'no_open': True, 'no_create': True}"/>
+                    <field name="revision_id" options="{'no_open': True, 'no_create': True}"/>
                     <field name="expected_version" invisible="1" force_save="1"/>
                     <field name="operation"/><field name="reason" required="1"/>
                     <field name="eligible_owner_ids" invisible="1"/>
-                    <field name="owner_id" domain="[('id','in',eligible_owner_ids)]" invisible="operation != 'assign_owner'" required="operation == 'assign_owner'" options="{'no_create': True}"/>
-                    <field name="document_id" domain="[('revision_id','=',revision_id)]" invisible="operation != 'document_remove'" required="operation == 'document_remove'" options="{'no_create': True}"/>
+                    <field name="owner_id" domain="[('id','in',eligible_owner_ids)]" invisible="operation != 'assign_owner'" required="operation == 'assign_owner'" options="{'no_open': True, 'no_create': True}"/>
+                    <field name="document_id" domain="[('revision_id','=',revision_id)]" invisible="operation != 'document_remove'" required="operation == 'document_remove'" options="{'no_open': True, 'no_create': True}"/>
                     <field name="document_name" invisible="operation != 'document_add'" required="operation == 'document_add'"/>
                     <field name="document_kind" invisible="operation != 'document_add'"/>
                     <field name="confidentiality" invisible="operation != 'document_add'"/>
@@ -139,8 +139,8 @@
         <field name="arch" type="xml">
             <form string="Bắt đầu chỉnh sửa lại">
                 <group>
-                    <field name="contract_id"/>
-                    <field name="revision_id"/>
+                    <field name="contract_id" options="{'no_open': True, 'no_create': True}"/>
+                    <field name="revision_id" options="{'no_open': True, 'no_create': True}"/>
                     <field name="expected_version" invisible="1" force_save="1"/>
                     <field name="reason" required="1"/>
                 </group>
@@ -244,13 +244,13 @@
                     </div>
                     <group>
                         <group>
-                            <field name="project_id"/>
-                            <field name="partner_id"/>
+                            <field name="project_id" context="{'form_view_ref': 'tp_kd_workspace.project_governance_form', 'tp_kd_leaf': 'tp_kd_workspace.menu_projects'}" options="{'no_create': True}"/>
+                            <field name="partner_id" context="{'form_view_ref': 'tp_kd_workspace.kd_partner_summary_form'}" options="{'no_create': True}"/>
                             <field name="contract_type"/>
                         </group>
                         <group>
-                            <field name="department_id"/>
-                            <field name="currency_id"/>
+                            <field name="department_id" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="currency_id" options="{'no_open': True, 'no_create': True}"/>
                             <field name="lifecycle_state"/>
                             <field name="legacy_unverified"/>
                         </group>
@@ -318,10 +318,10 @@
                     </div>
                     <group>
                         <group>
-                            <field name="contract_id"/>
+                            <field name="contract_id" context="{'form_view_ref': 'tp_contract.view_contract_form', 'tp_kd_leaf': 'tp_kd_workspace.menu_contracts'}"/>
                             <field name="revision_kind"/>
                             <field name="reference"/>
-                            <field name="business_owner_id"/><field name="previous_revision_id"/>
+                            <field name="business_owner_id" options="{'no_open': True, 'no_create': True}"/><field name="previous_revision_id" context="{'form_view_ref': 'tp_contract.view_revision_form', 'tp_kd_leaf': 'tp_kd_workspace.menu_contracts'}"/>
                         </group>
                         <group>
                             <field name="signature_status"/>
@@ -380,16 +380,16 @@
         <field name="name">tp.contract.line.native.form</field>
         <field name="model">tp.contract.line</field>
         <field name="arch" type="xml">
-            <form create="0" edit="0" delete="0">
+            <form create="0" edit="0" delete="0" string="Dòng phạm vi hợp đồng">
                 <sheet>
                     <group>
-                        <field name="revision_id"/>
+                        <field name="revision_id" context="{'form_view_ref': 'tp_contract.view_revision_form', 'tp_kd_leaf': 'tp_kd_workspace.menu_contracts'}"/>
                         <field name="sequence"/>
                         <field name="scope_key"/>
                         <field name="name"/>
-                        <field name="work_item_id"/>
+                        <field name="work_item_id" options="{'no_open': True, 'no_create': True}"/>
                         <field name="change_kind"/>
-                        <field name="previous_line_id"/>
+                        <field name="previous_line_id" options="{'no_open': True, 'no_create': True}"/>
                     </group>
                 </sheet>
             </form>
@@ -399,11 +399,11 @@
         <field name="name">tp.approval.reference.native.form</field>
         <field name="model">tp.approval.reference</field>
         <field name="arch" type="xml">
-            <form create="0" edit="0" delete="0">
+            <form create="0" edit="0" delete="0" string="Tham chiếu BASE">
                 <sheet>
                     <p>Ghi nhận khai báo; không phải đã ký hoặc đã có hiệu lực.</p>
                     <group>
-                        <field name="revision_id"/>
+                        <field name="revision_id" context="{'form_view_ref': 'tp_contract.view_revision_form', 'tp_kd_leaf': 'tp_kd_workspace.menu_contracts'}"/>
                         <field name="reference_kind"/>
                         <field name="base_reference"/>
                         <field name="decision"/>
@@ -418,21 +418,21 @@
         <field name="name">tp.contract.submission.native.form</field>
         <field name="model">tp.contract.submission</field>
         <field name="arch" type="xml">
-            <form create="0" edit="0" delete="0">
+            <form create="0" edit="0" delete="0" string="Lần trình rà soát">
                 <sheet>
                     <group>
-                        <field name="revision_id"/>
+                        <field name="revision_id" context="{'form_view_ref': 'tp_contract.view_revision_form', 'tp_kd_leaf': 'tp_kd_workspace.menu_contracts'}"/>
                         <field name="sequence"/>
-                        <field name="submitted_by_id"/>
+                        <field name="submitted_by_id" options="{'no_open': True, 'no_create': True}"/>
                         <field name="submitted_at"/>
-                        <field name="reviewer_id"/><field name="assigned_reviewer_id"/>
+                        <field name="reviewer_id" options="{'no_open': True, 'no_create': True}"/><field name="assigned_reviewer_id" options="{'no_open': True, 'no_create': True}"/>
                         <field name="outcome"/>
                         <field name="fix_summary"/>
-                        <field name="returned_by_id"/>
+                        <field name="returned_by_id" options="{'no_open': True, 'no_create': True}"/>
                         <field name="returned_at"/>
                         <field name="return_reason"/>
                         <field name="tp_return_issues_text"/>
-                        <field name="rework_started_by_id"/>
+                        <field name="rework_started_by_id" options="{'no_open': True, 'no_create': True}"/>
                         <field name="rework_started_at"/>
                         <field name="rework_reason"/>
                     </group>
@@ -457,12 +457,12 @@
         <field name="name">tp.contract.document.native.form</field>
         <field name="model">tp.contract.document</field>
         <field name="arch" type="xml">
-            <form create="0" edit="0" delete="0">
+            <form create="0" edit="0" delete="0" string="Tài liệu hợp đồng">
                 <sheet>
                     <group>
                         <field name="name"/>
-                        <field name="contract_id"/>
-                        <field name="revision_id"/>
+                        <field name="contract_id" context="{'form_view_ref': 'tp_contract.view_contract_form', 'tp_kd_leaf': 'tp_kd_workspace.menu_contracts'}"/>
+                        <field name="revision_id" context="{'form_view_ref': 'tp_contract.view_revision_form', 'tp_kd_leaf': 'tp_kd_workspace.menu_contracts'}"/>
                         <field name="document_kind"/>
                         <field name="confidentiality"/>
                         <field name="file_name"/>
@@ -489,14 +489,14 @@
         <field name="name">tp.contract.line.amount.native.form</field>
         <field name="model">tp.contract.line.amount</field>
         <field name="arch" type="xml">
-            <form create="0" edit="0" delete="0">
+            <form create="0" edit="0" delete="0" string="Số tiền theo dòng">
                 <sheet>
                     <group>
-                        <field name="line_id"/>
+                        <field name="line_id" options="{'no_open': True, 'no_create': True}"/>
                         <field name="amount_state"/>
                         <field name="amount" invisible="amount_state != 'confirmed'"/>
                         <field name="tax_basis"/>
-                        <field name="currency_id"/>
+                        <field name="currency_id" options="{'no_open': True, 'no_create': True}"/>
                     </group>
                 </sheet>
             </form>
@@ -521,29 +521,61 @@
         <field name="name">tp.contract.audit.native.form</field>
         <field name="model">tp.contract.audit</field>
         <field name="arch" type="xml">
-            <form create="0" edit="0" delete="0">
+            <form create="0" edit="0" delete="0" string="Lịch sử hợp đồng">
                 <sheet>
                     <group>
-                        <field name="contract_id"/>
-                        <field name="revision_id"/>
+                        <field name="contract_id" context="{'form_view_ref': 'tp_contract.view_contract_form', 'tp_kd_leaf': 'tp_kd_workspace.menu_contracts'}"/>
+                        <field name="revision_id" context="{'form_view_ref': 'tp_contract.view_revision_form', 'tp_kd_leaf': 'tp_kd_workspace.menu_contracts'}"/>
                         <field name="acted_at"/>
-                        <field name="actor_id"/>
+                        <field name="actor_id" options="{'no_open': True, 'no_create': True}"/>
                         <field name="action"/>
                         <field name="state_before"/>
                         <field name="state_after"/>
                         <field name="version_before"/>
                         <field name="version_after"/>
                         <field name="reason"/>
-                    <field name="snapshot_before"/><field name="snapshot_after"/></group>
+                        <field name="snapshot_before" groups="base.group_no_one"/>
+                        <field name="snapshot_after" groups="base.group_no_one"/>
+                    </group>
                 </sheet>
             </form>
         </field>
+    </record>
+    <record id="action_tp_contract_revisions" model="ir.actions.act_window">
+        <field name="name">Bản hợp đồng</field>
+        <field name="res_model">tp.contract.revision</field>
+        <field name="view_mode">list,form</field>
+        <field name="path">khkd-phien-ban-hop-dong</field>
+        <field name="context">{'tp_kd_leaf': 'tp_kd_workspace.menu_contracts'}</field>
+    </record>
+    <record id="action_tp_contract_documents" model="ir.actions.act_window">
+        <field name="name">Tài liệu hợp đồng</field>
+        <field name="res_model">tp.contract.document</field>
+        <field name="view_mode">list,form</field>
+        <field name="path">khkd-tai-lieu-hop-dong</field>
+        <field name="context">{'tp_kd_leaf': 'tp_kd_workspace.menu_contracts'}</field>
+    </record>
+    <record id="action_tp_contract_audits" model="ir.actions.act_window">
+        <field name="name">Lịch sử hợp đồng</field>
+        <field name="res_model">tp.contract.audit</field>
+        <field name="view_mode">list,form</field>
+        <field name="path">khkd-lich-su-hop-dong</field>
+        <field name="context">{'tp_kd_leaf': 'tp_kd_workspace.menu_contracts'}</field>
+    </record>
+    <record id="action_tp_contract_line_amounts" model="ir.actions.act_window">
+        <field name="name">Số tiền theo dòng</field>
+        <field name="res_model">tp.contract.line.amount</field>
+        <field name="view_mode">list,form</field>
+        <field name="path">khkd-hang-muc-so-tien</field>
+        <field name="context">{'tp_kd_leaf': 'tp_kd_workspace.menu_contracts'}</field>
     </record>
     <record id="action_tp_contracts_list" model="ir.actions.act_window">
         <field name="name">TP Contracts</field>
         <field name="res_model">tp.contract</field>
         <field name="view_mode">list,form</field>
+        <field name="path">khkd-hop-dong</field>
         <field name="search_view_id" ref="view_contract_search"/>
+        <field name="context">{'tp_kd_leaf': 'tp_kd_workspace.menu_contracts', 'tp_can_create_contract': True}</field>
         <field name="help" type="html">
             <p>Chưa có hợp đồng trong các dự án bạn được phân công.</p>
         </field>

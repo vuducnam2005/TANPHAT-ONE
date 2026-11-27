@@ -346,18 +346,26 @@ class TestAttendanceCorrection(AttendanceCase):
         self.assign(can_lock=True)
         Period = self.env_for(self.officer)['tp.hr.attendance.period']
         period = Period.create({'name': 'Synthetic period', 'company_id': self.company.id, 'date_from': DAY, 'date_to': DAY})
-        period._tp_lock('Synthetic lock with pending')
+        self.assertTrue(period.tp_can_lock)
+        self.assertFalse(self.env_for(self.manager)['tp.hr.attendance.period'].browse(period.id).tp_can_lock)
+        with self.assertRaises(AccessError):
+            self.env_for(self.manager)['tp.hr.attendance.period'].browse(period.id)._tp_lock('HR manager without lock right')
+        lock_wiz = self.env_for(self.root)['tp.hr.attendance.period.wizard'].create({
+            'period_id': period.id, 'operation': 'lock', 'reason': 'Synthetic lock with pending',
+        })
+        lock_res = lock_wiz.action_confirm()
+        self.assertEqual((lock_res['tag'], lock_res['params']['type']), ('display_notification', 'success'))
+        period.invalidate_recordset()
+        self.assertEqual(period.state, 'locked')
         request = self.request()
         request.action_submit()
-        # A lock assignee is not an approver; the Original Admin still needs the existing lock right to amend.
+        # A lock assignee and HR manager are not approvers; Original Admin has full lock & amendment rights (DEC-053/061)
+        # and still requires a written amendment basis.
         with self.assertRaises(AccessError):
             self.as_user(self.officer, request).action_approve('Synthetic amendment basis')
-        admin = self.as_user(self.root, request)
-        self.assertFalse(admin.tp_can_review)
         with self.assertRaises(AccessError):
-            admin.action_approve('Synthetic amendment basis')
-        self.assign(user_id=self.root.id, can_review=False, can_lock=True)
-        admin.invalidate_recordset()
+            self.as_user(self.manager, request).action_approve('Synthetic amendment basis')
+        admin = self.as_user(self.root, request)
         self.assertTrue(admin.tp_can_review)
         with self.assertRaises(UserError):
             admin.action_approve(' ')

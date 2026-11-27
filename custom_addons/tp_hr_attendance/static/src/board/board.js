@@ -1,28 +1,31 @@
 import { Component, onWillStart, onWillUnmount, proxy, useProps } from "@odoo/owl";
-import { browser } from "@web/core/browser/browser";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { cellNote, downloadBase64, formatDate, readStore, rpcError, stepPeriod, writeStore } from "../common";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
+import { cellNote, downloadBase64, formatDate, lateText, readStore, stepPeriod, writeStore } from "../common";
 import { useAttendanceLive } from "../live";
 import { AttPager, LateDialog, PersonDialog, SourceStrip } from "../parts";
 
-/**
- * "Bảng chấm công" (HR-ATTENDANCE-SIMPLE-002). Day: Nhân viên · Phòng ban · Thứ/ngày · Giờ vào · Giờ ra.
- * Week / month / free range ("Khoảng ngày"): Nhân viên · Phòng ban · Số lần đi muộn · Tổng phút muộn (ENTI late
- * minutes, or an exact historical Excel period). Always canonical data: tp.hr.attendance.day.tp_sheet (record rules
- * apply); Excel file import is closed (ENTI-ATTENDANCE-002) and old Excel periods stay reachable as history links.
- * Mode, department and page size survive the breadcrumb round-trip; the date always starts at today.
- */
 const STORE_KEY = "tp_hr_attendance.sheet";
 const MODES = [["day", "Ngày"], ["week", "Tuần"], ["month", "Tháng"]];
 const DAY_STATES = [
-    ["", "Tất cả"], ["attention", "Cần kiểm tra / thiếu giờ"], ["out_recorded", "Đã ghi nhận ra"], ["working", "Đang làm"],
-    ["missing", "Thiếu giờ vào/ra"], ["review", "Cần kiểm tra"], ["no_punch", "Chưa chấm công"], ["no_source", "Chưa có dữ liệu"],
+    ["", "Tất cả tình trạng"],
+    ["attention", "Cần kiểm tra / thiếu giờ"],
+    ["out_recorded", "Đủ vào/ra"],
+    ["working", "Đang làm"],
+    ["missing", "Thiếu giờ vào/ra"],
+    ["review", "Cần kiểm tra"],
+    ["absent", "Vắng theo lịch"],
+    ["leave", "Nghỉ đã xác nhận"],
+    ["no_punch", "Chưa chấm công"],
+    ["rest", "Nghỉ theo lịch"],
+    ["no_source", "Chưa có dữ liệu"],
 ];
 
 export class AttendanceBoard extends Component {
     static template = "tp_hr_attendance.Board";
-    static components = { AttPager, SourceStrip };
+    static components = { AttPager, InlineErrors, SourceStrip };
     props = useProps();
 
     setup() {
@@ -32,18 +35,34 @@ export class AttendanceBoard extends Component {
         const saved = readStore(STORE_KEY);
         const params = this.props.action?.params || {};
         const period = params.from && params.to ? { mode: "range", from: params.from, to: params.to } : {};
+        const initDept = saved.department || "";
         this.state = proxy({
-            mode: ["day", "week", "month"].includes(saved.mode) ? saved.mode : "day", date: "", from: "", to: "",
-            department: saved.department || "", search: "", dayState: "", page: 1, pageSize: saved.pageSize || 100,
-            ...period, loading: true, exporting: false, error: "", data: null,
+            mode: ["day", "week", "month"].includes(saved.mode) ? saved.mode : "day",
+            date: "",
+            from: "",
+            to: "",
+            draftDepartment: initDept,
+            draftSearch: "",
+            draftState: "",
+            department: initDept,
+            search: "",
+            dayState: "",
+            page: 1,
+            pageSize: saved.pageSize || 100,
+            mobileFilterOpen: false,
+            mobileView: "cards",
+            ...period,
+            loading: true,
+            exporting: false,
+            serverError: null,
+            attempt: 0,
+            data: null,
         });
         this.modes = MODES;
-        this.dayStates = DAY_STATES;
         this.cellNote = cellNote;
         this.formatDate = formatDate;
+        this.lateText = lateText;
         this.request = 0;
-        this.searchTimer = null;
-        // ENTI-ATTENDANCE-002: new punches appear without F5 (server bus notification, visible-tab fallback poll).
         this.live = useAttendanceLive({
             refresh: () => (this.state.loading || this.state.exporting ? false : this.load({ silent: true })),
             relevant: (payload) => {
@@ -55,13 +74,38 @@ export class AttendanceBoard extends Component {
 
         onWillStart(() => this.load());
         onWillUnmount(() => {
-            browser.clearTimeout(this.searchTimer);
             this.request++;
         });
     }
 
     get data() {
         return this.state.data;
+    }
+    get dayStates() {
+        const hasLeave = Boolean(this.data?.has_leave_source);
+        return DAY_STATES.filter(([key]) => key !== "leave" || hasLeave);
+    }
+    get hasPendingFilterDiff() {
+        return (
+            String(this.state.draftDepartment || "") !== String(this.state.department || "") ||
+            this.state.draftSearch.trim() !== this.state.search ||
+            this.state.draftState !== this.state.dayState
+        );
+    }
+    get appliedChips() {
+        const chips = [];
+        if (this.state.department) {
+            const dept = (this.data?.departments || []).find((d) => String(d.id) === String(this.state.department));
+            chips.push({ key: "department", label: `Phòng: ${dept ? dept.name : this.state.department}` });
+        }
+        if (this.state.search) {
+            chips.push({ key: "search", label: `Tìm: ${this.state.search}` });
+        }
+        if (this.state.dayState) {
+            const st = DAY_STATES.find(([k]) => k === this.state.dayState);
+            chips.push({ key: "state", label: `Tình trạng: ${st ? st[1] : this.state.dayState}` });
+        }
+        return chips;
     }
     get groups() {
         const groups = new Map();
@@ -75,7 +119,9 @@ export class AttendanceBoard extends Component {
         return [...groups.values()];
     }
     cellTitle(cell) {
-        return `${this.formatDate(cell.date)} · ${cell.label || ""}`;
+        const base = `${this.formatDate(cell.date)} · ${cell.label || ""}`;
+        const note = cell.conflict_note || cell.leave_note || "";
+        return note ? `${base} · ${note}` : base;
     }
     /** Follows the loaded data, so a mode switch never renders day rows in the period table (or back). */
     get isDay() {
@@ -107,9 +153,15 @@ export class AttendanceBoard extends Component {
 
     params() {
         return {
-            mode: this.state.mode, date: this.state.date, from: this.state.from, to: this.state.to,
-            department_id: Number(this.state.department) || 0, search: this.state.search,
-            state: this.isDay ? this.state.dayState : "", page: this.state.page, page_size: this.state.pageSize,
+            mode: this.state.mode,
+            date: this.state.date,
+            from: this.state.from,
+            to: this.state.to,
+            department_id: Number(this.state.department) || 0,
+            search: this.state.search,
+            state: this.state.dayState,
+            page: this.state.page,
+            page_size: this.state.pageSize,
         };
     }
 
@@ -118,7 +170,7 @@ export class AttendanceBoard extends Component {
         const request = ++this.request;
         this.state.loading = true;
         if (!silent) {
-            this.state.error = "";
+            this.state.serverError = null;
         }
         try {
             const orm = silent ? this.orm.silent : this.orm;
@@ -126,16 +178,16 @@ export class AttendanceBoard extends Component {
             if (request !== this.request) {
                 return;
             }
-            Object.assign(this.state, { data, date: data.date, page: data.page, pageSize: data.page_size });
+            Object.assign(this.state, { data, date: data.date, page: data.page, pageSize: data.page_size, serverError: null });
             if (data.mode === "range") {
                 Object.assign(this.state, { from: data.start, to: data.end });
             }
             writeStore(STORE_KEY, { mode: data.mode === "range" ? "day" : data.mode, department: this.state.department, pageSize: data.page_size });
-            this.state.error = "";
             this.live.loaded();
         } catch (error) {
             if (request === this.request && !silent) {
-                this.state.error = rpcError(error, "Không tải được bảng chấm công. Vui lòng thử lại.");
+                this.state.serverError = saveError(error, { verb: "tải bảng chấm công" });
+                this.state.attempt++;
             }
         } finally {
             if (request === this.request) {
@@ -151,7 +203,7 @@ export class AttendanceBoard extends Component {
     }
     setMode(mode) {
         const anchor = this.state.mode === "range" ? this.state.from : this.state.date;
-        return this.reset({ mode, date: anchor || "", dayState: "" });
+        return this.reset({ mode, date: anchor || "" });
     }
     step(delta) {
         return this.reset(stepPeriod(this.state.mode, this.data, delta));
@@ -182,7 +234,6 @@ export class AttendanceBoard extends Component {
         }
         return this.reset(changes);
     }
-    /** Free date range (ENTI-ATTENDANCE-002 replaced the former "Kỳ theo file" picker); starts from the viewed period. */
     openRange() {
         if (this.state.mode === "range") {
             return;
@@ -190,23 +241,46 @@ export class AttendanceBoard extends Component {
         const from = this.data?.start || this.state.date;
         return this.reset({ mode: "range", from, to: this.data?.end || from });
     }
-    /** Historical machine late total of an old Excel period (read-only history). */
     openFilePeriod(item) {
         return this.reset({ mode: "range", from: item.from, to: item.to });
     }
-    onDepartment(ev) {
-        return this.reset({ department: ev.target.value });
+    applyFilters() {
+        return this.reset({
+            department: this.state.draftDepartment,
+            search: this.state.draftSearch.trim(),
+            dayState: this.state.draftState,
+            mobileFilterOpen: false,
+        });
     }
-    onDayState(ev) {
-        return this.reset({ dayState: ev.target.value });
+    onFilterKeydown(ev) {
+        if (ev.key === "Enter") {
+            ev.preventDefault();
+            this.applyFilters();
+        } else if (ev.key === "Escape" && this.state.mobileFilterOpen) {
+            this.state.mobileFilterOpen = false;
+        }
     }
-    onSearch(ev) {
-        const value = ev.target.value;
-        browser.clearTimeout(this.searchTimer);
-        this.searchTimer = browser.setTimeout(() => this.reset({ search: value.trim() }), 300);
+    removeChip(key) {
+        if (key === "department") {
+            Object.assign(this.state, { draftDepartment: "", department: "" });
+        } else if (key === "search") {
+            Object.assign(this.state, { draftSearch: "", search: "" });
+        } else if (key === "state") {
+            Object.assign(this.state, { draftState: "", dayState: "" });
+        }
+        this.state.page = 1;
+        return this.load();
     }
     clearFilters() {
-        return this.reset({ department: "", search: "", dayState: "" });
+        return this.reset({
+            draftDepartment: "",
+            draftSearch: "",
+            draftState: "",
+            department: "",
+            search: "",
+            dayState: "",
+            mobileFilterOpen: false,
+        });
     }
     setPage(page) {
         this.state.page = page;
@@ -235,11 +309,12 @@ export class AttendanceBoard extends Component {
             return;
         }
         this.state.exporting = true;
-        this.state.error = "";
+        this.state.serverError = null;
         try {
             downloadBase64(await this.orm.call("tp.hr.attendance.day", "tp_export_sheet", [this.params()]));
         } catch (error) {
-            this.state.error = rpcError(error, "Không xuất được bảng chấm công. Vui lòng thử lại.");
+            this.state.serverError = saveError(error, { verb: "xuất bảng chấm công" });
+            this.state.attempt++;
         } finally {
             this.state.exporting = false;
             this.live.flush();

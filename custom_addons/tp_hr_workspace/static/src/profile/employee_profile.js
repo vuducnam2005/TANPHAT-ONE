@@ -164,7 +164,15 @@ for (const [model, xmlid] of Object.entries({
     "hr.job": "tp_hr_workspace.action_jobs",
     "hr.work.location": "tp_hr_workspace.action_locations",
     "hr.employee.category": "tp_hr_workspace.action_categories",
+    "hr.skill.type": "tp_hr_workspace.action_categories",
+    "hr.resume.line.type": "tp_hr_workspace.action_categories",
     "tp.hr.import.batch": "tp_hr_workspace.action_import",
+    "tp.hr.import.line": "tp_hr_workspace.action_import",
+    "tp.hr.employee.audit": "tp_hr_workspace.action_employee_audit",
+    "tp.bank": "tp_hr_bank.action_tp_bank",
+    "tp.hr.contract.document": "tp_hr_workspace.action_contract_documents",
+    "hr.version": "tp_hr_workspace.action_employees",
+    "res.partner.bank": "tp_hr_workspace.action_employees",
 })) {
     backFallbacks.add(model, xmlid, {force: true});
 }

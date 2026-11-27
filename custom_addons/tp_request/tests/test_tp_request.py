@@ -1,17 +1,19 @@
 # Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
 """Comprehensive automated tests for tp_request covering all 18 acceptance scenarios."""
-import base64
 import io
 import json
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 from openpyxl import load_workbook
 
 from odoo import Command, fields
-from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.exceptions import AccessError, UserError
 from odoo.tests import HttpCase, TransactionCase, tagged
 
-from odoo.addons.tp_branding.brand_routes import get_route_by_action_xml_id, get_route_by_url
+from odoo.addons.tp_branding.brand_routes import (
+    get_route_by_action_xml_id,
+    get_route_by_url,
+)
 from odoo.addons.tp_equipment.models.common import INTERNAL as EQ_INTERNAL
 
 
@@ -648,6 +650,106 @@ class TestTpRequestWorkflow(TransactionCase):
             self.assertEqual(by_xml['url'], path)
         self.assertTrue(get_route_by_url('/app/de-nghi/ho-so')['has_detail'])
 
+    # ------------------------------------------------------------------ 16: Draft time validation, reopen history & safe excel cell
+    def test_16_draft_attendance_time_order_reopen_history_and_excel_formula_guard(self):
+        from odoo.addons.tp_request.controllers.main import _safe_excel_cell  # noqa: I001, PLC0415
+
+        self.assertEqual(_safe_excel_cell('=SUM(A1:A2)'), "'=SUM(A1:A2)")
+        self.assertEqual(_safe_excel_cell('  =CMD()'), "'  =CMD()")
+        self.assertEqual(_safe_excel_cell('\n+1+1'), "'\n+1+1")
+        self.assertEqual(_safe_excel_cell('Bình thường - không công thức'), 'Bình thường - không công thức')
+
+        type_att = self.env.ref('tp_request.type_attendance_correction')
+        bad_draft = self.env['tp.request'].with_user(self.user_emp).tp_save_request({
+            'type_id': type_att.id,
+            'title': 'Nháp sai giờ ra trước giờ vào',
+            'description': 'Kiểm tra lưu nháp giờ công',
+            'att_work_date': date.today().isoformat(),
+            'att_requested_in': '17:30',
+            'att_requested_out': '08:00',
+        }, submit=False)
+        self.assertFalse(bad_draft['ok'])
+        self.assertTrue(any(err['id'] == 'req_att_out' for err in bad_draft.get('field_errors', [])))
+
+        good_res = self.env['tp.request'].with_user(self.user_emp).tp_save_request({
+            'type_id': type_att.id,
+            'title': 'Đề nghị điều chỉnh công hợp lệ',
+            'description': 'Quên chấm vân tay buổi chiều',
+            'att_work_date': (date.today() - timedelta(days=1)).isoformat(),
+            'att_requested_in': '08:30',
+            'att_requested_out': '17:30',
+        }, submit=True)
+        self.assertTrue(good_res['ok'])
+        req = self.env['tp.request'].browse(good_res['id'])
+        corr = req.attendance_correction_id
+        self.assertTrue(corr)
+        corr.with_user(self.user_emp).action_withdraw(reason='Cần chỉnh lại giờ ra')
+        corr.with_user(self.user_emp).action_reopen_draft()
+        req.invalidate_recordset()
+        self.assertEqual(req.approval_state, 'draft')
+        self.assertIn('reopen_draft', req.history_ids.mapped('action'))
+
+    # ------------------------------------------------------------------ 17: 2-way attendance evidence sync (Step E)
+    def test_17_bidirectional_attendance_evidence_sync(self):
+        import base64 as b64  # noqa: PLC0415
+
+        type_att = self.env.ref('tp_request.type_attendance_correction')
+
+        # 1) Direction: Công của tôi (tp.hr.attendance.correction.evidence_file) -> Yêu cầu phê duyệt (tp.request)
+        day_a = date.today() - timedelta(days=2)
+        corr_res = self.env['tp.hr.attendance.correction'].with_user(self.user_emp).tp_save_and_submit(
+            {
+                'work_date': day_a.isoformat(),
+                'requested_in': 8.5,
+                'requested_out': 17.5,
+                'reason': 'Quên chấm máy buổi sáng có xác nhận',
+                'evidence_file': b64.b64encode(b'EVIDENCE_FROM_MINE_PDF').decode('ascii'),
+                'evidence_name': 'xac_nhan_cong.pdf',
+            },
+            False,
+            True,
+            '0123456789abcdef',
+        )
+        corr_a = self.env['tp.hr.attendance.correction'].sudo().browse(corr_res['id'])
+        req_a = corr_a.tp_request_id
+        self.assertTrue(req_a)
+        detail_a = self.env['tp.request'].with_user(self.admin).tp_detail_data(req_a.id)
+        self.assertEqual(len(detail_a['attachments']), 1, 'Evidence must appear once on Request detail without duplication')
+        self.assertEqual(detail_a['attachments'][0]['name'], 'xac_nhan_cong.pdf')
+
+        # Approve and verify still exactly 1 attachment (idempotent across transitions)
+        corr_a.with_user(self.admin).action_approve(note='Đồng ý minh chứng')
+        detail_a_after = self.env['tp.request'].with_user(self.admin).tp_detail_data(req_a.id)
+        self.assertEqual(len(detail_a_after['attachments']), 1)
+
+        # 2) Direction: Yêu cầu phê duyệt popup (orphan ir.attachment) -> tp.request + corr.evidence_file
+        orphan_att = self.env['ir.attachment'].with_user(self.user_emp).sudo().create({
+            'name': 'minh_chung_popup.txt',
+            'raw': b'POPUP_EVIDENCE_BYTES',
+            'mimetype': 'text/plain',
+            'res_model': False,
+            'res_id': 0,
+            'public': False,
+        })
+        day_b = date.today() - timedelta(days=3)
+        saved_b = self.env['tp.request'].with_user(self.user_emp).tp_save_request({
+            'type_id': type_att.id,
+            'title': 'Giải trình công kèm tệp từ popup',
+            'description': 'Đính kèm tệp từ Yêu cầu phê duyệt',
+            'att_work_date': day_b.isoformat(),
+            'att_requested_in': '08:15',
+            'att_requested_out': '17:30',
+            'attachment_ids': [orphan_att.id],
+        }, submit=True)
+        self.assertTrue(saved_b['ok'])
+        req_b = self.env['tp.request'].sudo().browse(saved_b['id'])
+        corr_b = req_b.attendance_correction_id.sudo()
+        self.assertEqual(orphan_att.sudo().res_model, 'tp.request')
+        self.assertEqual(orphan_att.sudo().res_id, req_b.id)
+        self.assertEqual(len(req_b.attachment_ids), 1)
+        self.assertTrue(bool(corr_b.evidence_file))
+        self.assertEqual(corr_b.evidence_name, 'minh_chung_popup.txt')
+
 
 @tagged('post_install', '-at_install')
 class TestTpRequestHttp(HttpCase):
@@ -661,7 +763,7 @@ class TestTpRequestHttp(HttpCase):
             'company_id': company.id, 'company_ids': [Command.set(company.ids)],
             'group_ids': [Command.set([base_group.id])],
         })
-        u_other = self.env['res.users'].with_context(no_reset_password=True).create({
+        self.env['res.users'].with_context(no_reset_password=True).create({
             'name': 'HTTP Other', 'login': 'http.req.other', 'password': 'TpReqTestPassword123!',
             'company_id': company.id, 'company_ids': [Command.set(company.ids)],
             'group_ids': [Command.set([base_group.id])],
@@ -703,3 +805,29 @@ class TestTpRequestHttp(HttpCase):
         for url in ('/app/de-nghi/tong-quan', '/app/de-nghi/cua-toi', f'/app/de-nghi/ho-so/{req_id}'):
             resp = self.url_open(url)
             self.assertEqual(resp.status_code, 200, f'Expected 200 for {url}')
+
+        # Cross-model attachment delete MUST be blocked with HTTP 403 even if created by same user (F-A07-0001)
+        foreign_partner = u_owner.partner_id
+        foreign_att = self.env['ir.attachment'].with_user(u_owner).sudo().create({
+            'name': 'avatar_or_hr_doc.txt',
+            'raw': b'DO_NOT_DELETE_ME',
+            'res_model': 'res.partner',
+            'res_id': foreign_partner.id,
+            'mimetype': 'text/plain',
+            'create_uid': u_owner.id,
+        })
+        csrf = self.csrf_token()
+        r_del_foreign = self.url_open(
+            f'/tp_request/attachment/{foreign_att.id}/delete',
+            data={'csrf_token': csrf},
+        )
+        self.assertEqual(r_del_foreign.status_code, 403)
+        self.assertTrue(foreign_att.exists(), 'Foreign model attachment must remain intact!')
+
+        # Submitted tp.request attachment delete MUST also be blocked with HTTP 403
+        r_del_submitted = self.url_open(
+            f'/tp_request/attachment/{att.id}/delete',
+            data={'csrf_token': csrf},
+        )
+        self.assertEqual(r_del_submitted.status_code, 403)
+        self.assertTrue(att.exists(), 'Submitted request attachment must remain intact!')

@@ -1,7 +1,7 @@
 # Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
 {
     'name': 'TANPHAT ONE — Tuyển dụng, Chứng chỉ, Liên thông Công - Thiết bị khảo sát, Đối soát Lương & Trợ lý AI',
-    'version': '20.0.1.0.2',
+    'version': '20.0.1.0.3',
     'category': 'Human Resources',
     'summary': 'Tuyển dụng end-to-end, Chứng chỉ hành nghề thống nhất, Nghỉ phép->Chấm công, Kiểm định thiết bị khảo sát, Đối soát đầu vào lương & Trợ lý AI có RBAC',
     'author': 'TANPHAT ONE',
@@ -31,6 +31,7 @@
     'data': [
         'security/ir.access.csv',
         'data/sequences.xml',
+        'views/survey_equipment_views.xml',
         'views/enterprise_ops_menus.xml',
     ],
     'assets': {

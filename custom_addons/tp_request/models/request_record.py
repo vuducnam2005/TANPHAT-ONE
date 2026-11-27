@@ -1,6 +1,7 @@
 # Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
 """Core request record, frozen sequential approval steps, attachment guard and UI RPCs."""
 from datetime import datetime, timedelta
+
 from markupsafe import Markup, escape
 
 from odoo import Command, _, api, fields, models
@@ -11,9 +12,6 @@ from .request_common import (
     APPROVAL_POLICIES,
     APPROVAL_STATES,
     APPROVER_RULES,
-    BRIDGE_INTERNAL,
-    BRIDGE_KEY,
-    DEFAULT_TZ,
     EXECUTION_STATES,
     EXECUTOR_MODES,
     EXPENSE_KINDS,
@@ -337,7 +335,7 @@ class TpRequest(models.Model):
                 rec.approval_state == 'approved'
                 and rec.execution_state in ('pending', 'in_progress')
                 and rec.execution_due_at
-                and rec.execution_due_at < now
+                and rec.execution_due_at < now,
             )
             rec.is_overdue = over_app or over_exec
 
@@ -397,7 +395,7 @@ class TpRequest(models.Model):
             return
         url = f'/app/de-nghi/ho-so/{self.id}'
         html_body = Markup(
-            '<p><strong>%s</strong> — <a href="%s">%s: %s</a></p><p>%s</p>'
+            '<p><strong>%s</strong> — <a href="%s">%s: %s</a></p><p>%s</p>',
         ) % (escape(subject), escape(url), escape(self.code), escape(self.title), escape(body_text))
         internal(self).with_context(
             mail_notify_noemail=True,
@@ -774,7 +772,7 @@ class TpRequest(models.Model):
         })
 
         next_step = self.step_ids.filtered(
-            lambda s: s.request_version == step.request_version and s.state == 'waiting'
+            lambda s: s.request_version == step.request_version and s.state == 'waiting',
         ).sorted(lambda s: (s.sequence, s.id))[:1]
 
         if next_step:
@@ -1347,7 +1345,7 @@ class TpRequest(models.Model):
         task_vals = {
             'name': f'[{self.code}] {self.title}',
             'description': Markup('<p>Triển khai từ đề nghị phê duyệt <strong>%s</strong>: %s</p>') % (
-                escape(self.code), escape(self.description or self.title)
+                escape(self.code), escape(self.description or self.title),
             ),
             'user_ids': [Command.set([target_uid])],
             'project_id': self.project_id.id or False,
@@ -1534,7 +1532,7 @@ class TpRequest(models.Model):
         overdue = bool(
             (self.approval_state == 'pending' and self.due_at and self.due_at < now)
             or (self.approval_state == 'approved' and self.execution_state in ('pending', 'in_progress')
-                and self.execution_due_at and self.execution_due_at < now)
+                and self.execution_due_at and self.execution_due_at < now),
         )
         return {
             'id': self.id,
@@ -1848,7 +1846,7 @@ class TpRequest(models.Model):
             if not rtype or not rtype.active:
                 return {'ok': False, 'field_errors': [
                     {'id': 'req_type', 'label': 'Loại đề nghị', 'location': 'Chọn loại đề nghị',
-                     'message': 'Vui lòng chọn loại đề nghị hợp lệ.'}
+                     'message': 'Vui lòng chọn loại đề nghị hợp lệ.'},
                 ]}
 
         # Parse attendance clocks cleanly
@@ -1949,11 +1947,22 @@ class TpRequest(models.Model):
 
         # Special 1-1 bridge for Attendance Correction (single authoritative tp.hr.attendance.correction record!)
         if rtype.handler_kind == 'attendance_correction':
-            if not payload.get('att_work_date') or att_in is None or att_out is None:
-                return {'ok': False, 'field_errors': [
-                    {'id': 'req_att_work_date', 'label': 'Ngày công & giờ vào/ra', 'location': 'Điều chỉnh công',
-                     'message': 'Vui lòng nhập đầy đủ Ngày công, Giờ vào và Giờ ra hợp lệ trước khi lưu.'}
-                ]}
+            att_errors = []
+            if not payload.get('att_work_date'):
+                att_errors.append({'id': 'req_att_work_date', 'label': 'Ngày công', 'location': 'Điều chỉnh công',
+                                   'message': 'Vui lòng chọn Ngày công cần điều chỉnh.'})
+            if att_in is None:
+                att_errors.append({'id': 'req_att_in', 'label': 'Giờ vào đúng', 'location': 'Điều chỉnh công',
+                                   'message': 'Vui lòng nhập Giờ vào đúng theo định dạng HH:MM.'})
+            if att_out is None:
+                att_errors.append({'id': 'req_att_out', 'label': 'Giờ ra đúng', 'location': 'Điều chỉnh công',
+                                   'message': 'Vui lòng nhập Giờ ra đúng theo định dạng HH:MM.'})
+            elif att_in is not None and att_out <= att_in:
+                att_errors.append({'id': 'req_att_out', 'label': 'Giờ ra đúng', 'location': 'Điều chỉnh công',
+                                   'message': 'Giờ ra phải sau giờ vào trong cùng ngày công.'})
+            if att_errors:
+                return {'ok': False, 'field_errors': att_errors}
+            # Binds payload['attachment_ids'] and syncs evidence_file <-> attachment_ids before submit
             rec = self._tp_save_attendance_request(rec, rtype, payload, att_in, att_out, submit=submit)
             return {'ok': True, 'id': rec.id, 'code': rec.code, 'approval_state': rec.approval_state}
 
@@ -2210,12 +2219,12 @@ class TpRequest(models.Model):
             and rec.handler_kind in ('expense_advance', 'equipment_purchase')
             and rec.financial_settlement_state != 'settled_confirmed'
             and (can_execute or is_mgr or is_eq_admin)
-            and (not is_owner or is_eq_admin)
+            and (not is_owner or is_eq_admin),
         )
         can_create_task = bool(
             rec.approval_state == 'approved'
             and not rec.linked_task_id
-            and (is_owner or can_execute or is_mgr or is_eq_admin)
+            and (is_owner or can_execute or is_mgr or is_eq_admin),
         )
 
         return {

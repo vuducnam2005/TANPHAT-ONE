@@ -39,7 +39,7 @@
     <field name="name">tp.repair_form</field>
     <field name="model">maintenance.request</field>
     <field name="arch" type="xml">
-      <form class="tp_eq_form" js_class="tp_equipment_form">
+      <form class="tp_eq_form o_tp_eq_form_wide" js_class="tp_equipment_form">
         <header>
           <button name="action_tp_start" type="object" string="Bắt đầu xử lý" invisible="tp_state != 'new'" class="btn-primary"/>
           <button name="action_tp_send_vendor" type="object" string="Gửi sửa ngoài" invisible="tp_state != 'in_progress'" class="btn-secondary"/>
@@ -59,18 +59,18 @@
           </div>
           <group>
             <group>
-              <field name="equipment_id"/>
+              <field name="equipment_id" options="{'no_create': True}"/>
               <field name="tp_kind"/>
-              <field name="tp_reporter_employee_id"/>
+              <field name="tp_reporter_employee_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/>
               <field name="tp_report_date"/>
               <field name="tp_deadline"/>
               <field name="priority"/>
             </group>
             <group>
               <field name="tp_technician_text"/>
-              <field name="tp_vendor_id"/>
-              <field name="company_id"/>
-              <field name="tp_proposal_line_id"/>
+              <field name="tp_vendor_id" options="{'no_create': True}"/>
+              <field name="company_id" options="{'no_open': True, 'no_create': True}"/>
+              <field name="tp_proposal_line_id" options="{'no_create': True}"/>
             </group>
           </group>
           <notebook>
@@ -89,11 +89,11 @@
                 <field name="tp_result_note"/>
                 <field name="tp_cost_known"/>
                 <field name="tp_cost"/>
-                <field name="tp_currency_id"/>
+                <field name="tp_currency_id" options="{'no_open': True, 'no_create': True}"/>
                 <field name="tp_cost_ref"/>
                 <field name="tp_meter_value"/>
                 <field name="tp_done_date"/>
-                <field name="tp_done_by_id"/>
+                <field name="tp_done_by_id" options="{'no_open': True, 'no_create': True}"/>
                 <field name="tp_cancel_reason"/>
               </group>
             </page>
@@ -111,6 +111,7 @@
               <field name="tp_move_ids" readonly="1" widget="tp_equipment_relation"><list limit="20"><field name="name"/><field name="move_type"/><field name="date"/><field name="state"/></list></field>
             </page>
           </notebook>
+          <div class="o_tp_eq_chatter_below"/>
         </sheet>
         <chatter/>
       </form>

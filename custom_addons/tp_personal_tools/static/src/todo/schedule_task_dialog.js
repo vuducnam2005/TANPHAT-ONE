@@ -2,6 +2,7 @@ import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 import { useService } from "@web/core/utils/hooks";
 import { uuid } from "@web/core/utils/strings";
+import { TpDateTime24Field } from "@tp_web_home/inputs/time24";
 import { InlineErrors } from "@tp_web_home/validation/inline_errors";
 import { saveError } from "@tp_web_home/validation/validation";
 import { TpColleaguePicker } from "../shared/colleague_picker";
@@ -28,7 +29,7 @@ function defaultScheduleSlot(deadlineIso) {
  */
 export class TpScheduleTaskDialog extends Component {
     static template = "tp_personal_tools.ScheduleTaskDialog";
-    static components = { Dialog, InlineErrors, TpColleaguePicker };
+    static components = { Dialog, InlineErrors, TpColleaguePicker, TpDateTime24Field };
     props = useProps();
     operationToken = uuid();
 
@@ -145,6 +146,10 @@ export class TpScheduleTaskDialog extends Component {
     onColleaguesChange(list) {
         this.state.invitedColleagues = list;
         this.checkConflicts();
+    }
+
+    hasFieldError(id) {
+        return this.fieldErrors.some((e) => e.id === id);
     }
 
     onTimeChange() {

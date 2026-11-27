@@ -594,7 +594,7 @@ class TpEquipmentMove(models.Model):
                 })
                 if move.move_type != "opening":
                     equipment.message_post(
-                        body=Markup("%s: <a href='/odoo/phieu-thiet-bi/%s'>%s</a>") % (
+                        body=Markup("%s: <a href='/app/thiet-bi/phieu-ban-giao/%s'>%s</a>") % (
                             dict(MOVE_TYPES)[move.move_type], move.id, move.name),
                         subtype_xmlid="mail.mt_note")
             move.with_context(tp_equipment_move_internal=INTERNAL).write({

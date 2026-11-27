@@ -13,6 +13,8 @@ import { deserializeDate, serializeDateTime } from "@web/core/l10n/dates";
 import { SearchBar } from "@web/search/search_bar/search_bar";
 import { useSetupAction } from "@web/search/action_hook";
 import { TpTableFilterBar } from "@tp_web_home/search/table_filter_bar";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
 import "./filter_profiles";
 
 class KdSearchBar extends SearchBar {
@@ -26,25 +28,50 @@ class KdSearchBar extends SearchBar {
  */
 export class KdTableTools extends Component {
     static template = "tp_kd_workspace.TableTools";
+    static components = { InlineErrors };
     props = useProps();
     prefs = kdPrefs;
     pageSizes = PAGE_SIZE_OPTIONS;
 
     setup() {
         KD_COLUMN_PREFIXES.add(this.columnPrefix);
-        this.state = proxy({ field: "", value: "", busy: false, open: false, headCreate: false });
+        this.state = proxy({
+            field: "",
+            value: "",
+            busy: false,
+            open: false,
+            headCreate: false,
+            contractCreate: false,
+            attempt: 0,
+            fieldErrors: [],
+            serverError: null,
+        });
         onWillStart(async () => {
-            if (this.controller.props.resModel === "project.project") {
-                const rights = await this.env.services.orm.call("project.project", "get_kd_ui_permissions", []);
-                this.state.headCreate = rights.head_create;
+            try {
+                if (this.controller.props.resModel === "project.project") {
+                    const rights = await this.env.services.orm.call("project.project", "get_kd_ui_permissions", []);
+                    this.state.headCreate = Boolean(rights?.head_create);
+                } else if (this.controller.props.resModel === "tp.contract") {
+                    const rights = await this.env.services.orm.call("tp.contract", "get_kd_ui_permissions", []);
+                    this.state.contractCreate = Boolean(rights?.can_create_contract);
+                }
+            } catch (err) {
+                this.state.attempt += 1;
+                this.state.serverError = saveError(err, { verb: "kiểm tra quyền thao tác bảng", write: false });
             }
         });
         useBus(this.env.searchModel, "update", () => render(this));
     }
 
     async createHeadProject() {
-        const action = await this.env.services.orm.call("project.project", "action_kd_head_new_project", []);
-        await this.env.services.action.doAction(action);
+        this.state.serverError = null;
+        try {
+            const action = await this.env.services.orm.call("project.project", "action_kd_head_new_project", []);
+            await this.env.services.action.doAction(action);
+        } catch (err) {
+            this.state.attempt += 1;
+            this.state.serverError = saveError(err, { verb: "mở hộp tạo dự án KH-KD", write: false });
+        }
     }
 
     get filters() {
@@ -75,10 +102,14 @@ export class KdTableTools extends Component {
         const limit = Number(ev.target.value);
         if (this.blocked || !PAGE_SIZE_OPTIONS.includes(limit)) return;
         this.state.busy = true;
+        this.state.serverError = null;
         try {
             await this.controller.model.root.load({ limit, offset: 0 });
             writePageSize(this.controller.kdPageKey, limit);
             render(this.controller);
+        } catch (err) {
+            this.state.attempt += 1;
+            this.state.serverError = saveError(err, { verb: "đổi số dòng hiển thị", write: false });
         } finally { this.state.busy = false; }
     }
     toggleFilter(item) {
@@ -143,7 +174,7 @@ export class KdTableTools extends Component {
 
 export class KdQuickFilters extends KdTableTools {
     static template = "tp_kd_workspace.QuickFilters";
-    static components = { TpTableFilterBar };
+    static components = { TpTableFilterBar, InlineErrors };
 }
 
 const kdTableSetup = (Base) =>

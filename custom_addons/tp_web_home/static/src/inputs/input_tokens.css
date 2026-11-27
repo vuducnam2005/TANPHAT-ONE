@@ -1,7 +1,58 @@
-/* UI-INPUT-001 — single source of input tokens for the backend (web.assets_backend)
-   and the authentication pages (tp_web_login.assets_login). Colours checked on #fff:
-   text 14:1, placeholder 4.7:1, border 3.4:1, focus 5.2:1, error 6.5:1. */
+/* UI-INPUT-001 & RUN-20261127T210000_ICT — single source of design & input tokens
+   for the backend (web.assets_backend) and authentication pages (tp_web_login.assets_login). */
 :root {
+    /* 1. Surfaces */
+    --tp-bg-canvas: #f4f7fb;
+    --tp-bg-surface: #ffffff;
+    --tp-bg-subtle: #eef3f9;
+    --tp-bg-table-head: #eaf0f7;
+    --tp-bg-row-hover: #f4f8fe;
+    --tp-shell-navy: #0d2b57;
+    --tp-shell-navy-gradient: linear-gradient(90deg, #061b40 0%, #0d2b57 55%, #163d73 100%);
+
+    /* 2. Typography Ink (WCAG AA/AAA on #ffffff) */
+    --tp-font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --tp-text-primary: #0f172a;
+    --tp-text-heading: #183153;
+    --tp-text-body: #1e293b;
+    --tp-text-label: #334155;
+    --tp-text-muted: #52627a;
+
+    /* 3. Brand Actions & Interactive States */
+    --tp-primary: #1766c0;
+    --tp-primary-hover: #12539e;
+    --tp-primary-active: #0e427e;
+    --tp-primary-soft: #ebf3fc;
+    --tp-danger: #dc2626;
+    --tp-danger-hover: #b91c1c;
+    --tp-danger-soft: #fcebec;
+
+    /* 4. Borders & Elevation */
+    --tp-border-card: #dce4ef;
+    --tp-border-subtle: #e5ecf6;
+    --tp-border-control: #cbd5e1;
+    --tp-shadow-card: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.03);
+    --tp-shadow-popover: 0 12px 28px rgba(15, 23, 42, 0.14), 0 2px 6px rgba(15, 23, 42, 0.06);
+    --tp-shadow-modal: 0 20px 48px rgba(15, 23, 42, 0.20);
+
+    /* 5. Semantic Status Badges (>= 5.5:1 text/bg contrast) */
+    --tp-badge-success-bg: #e7f5ec;
+    --tp-badge-success-fg: #15803d;
+    --tp-badge-success-border: #bbf7d0;
+    --tp-badge-warning-bg: #fff3db;
+    --tp-badge-warning-fg: #b45309;
+    --tp-badge-warning-border: #fde68a;
+    --tp-badge-danger-bg: #fcebec;
+    --tp-badge-danger-fg: #b91c1c;
+    --tp-badge-danger-border: #fecaca;
+    --tp-badge-info-bg: #e8f1ff;
+    --tp-badge-info-fg: #1d4ed8;
+    --tp-badge-info-border: #bfdbfe;
+    --tp-badge-neutral-bg: #edf1f5;
+    --tp-badge-neutral-fg: #475569;
+    --tp-badge-neutral-border: #cbd5e1;
+
+    /* 6. Inputs (UI-INPUT-001 — 100% backward compatible) */
     --tp-input-bg: #fff;
     --tp-input-text: #172b4d;
     --tp-input-label: #334155;
@@ -9,20 +60,31 @@
     --tp-input-border: #7a8ca5;
     --tp-input-border-hover: #52627a;
     --tp-input-focus: #2563eb;
-    --tp-input-ring: 0 0 0 3px rgba(37, 99, 235, .22);
+    --tp-input-ring: 0 0 0 3px rgba(37, 99, 235, 0.22);
     --tp-input-error: #b91c1c;
     --tp-input-error-bg: #fff7f7;
-    --tp-input-error-ring: 0 0 0 3px rgba(185, 28, 28, .18);
+    --tp-input-error-ring: 0 0 0 3px rgba(185, 28, 28, 0.18);
     --tp-input-readonly-bg: #f1f5f9;
     --tp-input-readonly-text: #334155;
     --tp-input-disabled-bg: #e2e8f0;
     --tp-input-disabled-text: #475569;
     --tp-input-disabled-border: #a3b1c2;
     --tp-input-icon: #52627a;
+
+    /* 7. Geometry & Z-Index Scale */
+    --tp-radius-control: 7px;
+    --tp-radius-card: 12px;
+    --tp-radius-modal: 14px;
     --tp-input-radius: 6px;
     --tp-input-px: 10px;
     --tp-input-h: 38px;
     --tp-input-font: 14px;
+    --tp-z-sticky-col: 3;
+    --tp-z-navbar: 40;
+    --tp-z-switcher: 1035;
+    --tp-z-popover: 1050;
+    --tp-z-modal: 1055;
+    --tp-z-user-dropdown: 1080;
 }
 
 /* Touch and narrow screens: 44px targets and 16px text (no iOS zoom on focus). */
@@ -31,4 +93,20 @@
         --tp-input-h: 44px;
         --tp-input-font: 16px;
     }
+}
+
+/* Chromium 152+ ::picker-icon & legacy ::-ms-expand suppression (pure CSS so libsass never touches it):
+   prevents native ▼ picker arrow from wrapping onto a second line and inflating select height to 60px. */
+select:not([multiple]):not([size]) {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+}
+
+select:not([multiple]):not([size])::picker-icon {
+    display: none !important;
+    content: none !important;
+}
+
+select:not([multiple]):not([size])::-ms-expand {
+    display: none !important;
 }

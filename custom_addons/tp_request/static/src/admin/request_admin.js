@@ -87,6 +87,7 @@ export class TpRequestAdmin extends Component {
             data: null,
             searchText: "",
             statusFilter: "all", // 'all' | 'active' | 'missing' | 'inactive'
+            listServerError: null,
             // Editor modal
             showEditor: false,
             saving: false,
@@ -329,6 +330,7 @@ export class TpRequestAdmin extends Component {
     }
 
     async toggleActive(t) {
+        this.state.listServerError = null;
         try {
             await this.orm.call("tp.request", "tp_admin_toggle_type", [t.id, !t.active]);
             this.notification.add(
@@ -337,7 +339,7 @@ export class TpRequestAdmin extends Component {
             );
             await this.load();
         } catch (err) {
-            this.notification.add(extractErrorMessage(err, "Không thể đổi trạng thái loại đề nghị."), { type: "danger" });
+            this.state.listServerError = saveError(err, { verb: "đổi trạng thái loại đề nghị" });
         }
     }
 

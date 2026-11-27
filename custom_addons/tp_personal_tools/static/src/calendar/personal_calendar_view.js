@@ -183,6 +183,7 @@ export class TpPersonalCalendarController extends AttendeeCalendarController {
             myCalendars: [],
             sharedCalendars: [],
             colleagueFilters: [],
+            rooms: [],
             showNewCalForm: false,
             newCalName: "",
             newCalColor: 2,
@@ -201,6 +202,7 @@ export class TpPersonalCalendarController extends AttendeeCalendarController {
             agendaDateFrom: "",
             agendaDateTo: "",
             agendaEventKind: "",
+            agendaRoomId: 0,
             agendaResponseState: "",
             agendaPrivacy: "",
             agendaOrganizer: [],
@@ -266,6 +268,7 @@ export class TpPersonalCalendarController extends AttendeeCalendarController {
             this.tpState.myCalendars = boot?.my_calendars || [];
             this.tpState.sharedCalendars = boot?.shared_calendars || [];
             this.tpState.colleagueFilters = boot?.colleague_filters || [];
+            this.tpState.rooms = boot?.rooms || [];
         } catch {
             // Keep existing state on transient error
         }
@@ -482,6 +485,7 @@ export class TpPersonalCalendarController extends AttendeeCalendarController {
             await this.reloadCurrentView();
         } catch (err) {
             colItem.active = !active;
+            this.tpState.bannerError = saveError(err, { verb: "bật/tắt lịch đồng nghiệp" });
         }
     }
 
@@ -555,6 +559,7 @@ export class TpPersonalCalendarController extends AttendeeCalendarController {
                     calendar_ids: checkedCalIds,
                     partner_ids: activePartnerIds,
                     event_kind: this.tpState.agendaEventKind,
+                    room_id: Number(this.tpState.agendaRoomId) || 0,
                     response_state: this.tpState.agendaResponseState,
                     privacy: this.tpState.agendaPrivacy,
                     organizer_id: this.tpState.agendaOrganizer[0]?.user_id || 0,
@@ -614,6 +619,16 @@ export class TpPersonalCalendarController extends AttendeeCalendarController {
                 },
             });
         }
+        if (Number(this.tpState.agendaRoomId) > 0) {
+            const rm = this.tpState.rooms.find((r) => r.id === Number(this.tpState.agendaRoomId));
+            chips.push({
+                key: "room",
+                label: `Phòng họp: ${rm ? rm.name : this.tpState.agendaRoomId}`,
+                clear: () => {
+                    this.tpState.agendaRoomId = 0;
+                },
+            });
+        }
         if (this.tpState.agendaResponseState) {
             const map = {
                 accepted: "Đã chấp nhận",
@@ -666,6 +681,7 @@ export class TpPersonalCalendarController extends AttendeeCalendarController {
         const today = DateTime.local();
         this.tpState.searchQuery = "";
         this.tpState.agendaEventKind = "";
+        this.tpState.agendaRoomId = 0;
         this.tpState.agendaResponseState = "";
         this.tpState.agendaPrivacy = "";
         this.tpState.agendaOrganizer = [];

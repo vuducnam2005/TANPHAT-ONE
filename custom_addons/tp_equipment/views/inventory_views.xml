@@ -82,7 +82,7 @@
     <field name="name">tp.inventory_form</field>
     <field name="model">tp.equipment.inventory</field>
     <field name="arch" type="xml">
-      <form class="tp_eq_form" js_class="tp_equipment_form">
+      <form class="tp_eq_form o_tp_eq_form_wide" js_class="tp_equipment_form">
         <header>
           <button name="action_start" type="object" string="Chụp sổ và bắt đầu" invisible="state != 'draft'" class="btn-primary"/>
           <button name="action_mark_pending_missing" type="object" string="Đánh dấu chưa đếm là thiếu" invisible="state != 'counting'" class="btn-secondary"/>
@@ -107,7 +107,7 @@
           <group>
             <group>
               <field name="date" readonly="state != 'draft'"/>
-              <field name="company_id" readonly="state != 'draft'"/>
+              <field name="company_id" readonly="state != 'draft'" options="{'no_open': True, 'no_create': True}"/>
               <field name="scope" readonly="state != 'draft'"/>
               <field name="location_ids" readonly="state != 'draft'"/>
               <field name="department_ids" readonly="state != 'draft'"/>
@@ -116,10 +116,10 @@
             </group>
             <group>
               <field name="team_text"/>
-              <field name="responsible_id"/>
+              <field name="responsible_id" options="{'no_open': True, 'no_create': True}"/>
               <field name="snapshot_date"/>
               <field name="closed_date"/>
-              <field name="closed_by_id"/>
+              <field name="closed_by_id" options="{'no_open': True, 'no_create': True}"/>
               <field name="cancel_reason"/>
             </group>
           </group>
@@ -141,15 +141,15 @@
             <page string="Kiểm đếm">
               <field name="line_ids" readonly="state != 'counting'" widget="tp_equipment_relation">
                 <list js_class="tp_equipment_table" class="tp_eq_table" editable="bottom" limit="20">
-                  <field name="equipment_id"/>
+                  <field name="equipment_id" options="{'no_create': True}"/>
                   <field name="extra_description"/>
                   <field name="is_extra"/>
                   <field name="expected_text" optional="show"/>
                   <field name="count_state" readonly="inventory_state != 'counting'" optional="show"/>
                   <field name="actual_custody" readonly="inventory_state != 'counting'" optional="show"/>
-                  <field name="actual_employee_id" readonly="inventory_state != 'counting'" optional="show"/>
-                  <field name="actual_department_id" readonly="inventory_state != 'counting'" optional="show"/>
-                  <field name="actual_location_id" readonly="inventory_state != 'counting'" optional="show"/>
+                  <field name="actual_employee_id" readonly="inventory_state != 'counting'" optional="show" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/>
+                  <field name="actual_department_id" readonly="inventory_state != 'counting'" optional="show" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.department_form'}"/>
+                  <field name="actual_location_id" readonly="inventory_state != 'counting'" optional="show" options="{'no_create': True}"/>
                   <field name="actual_state" readonly="inventory_state != 'counting'" optional="hide"/>
                   <field name="actual_meter" readonly="inventory_state != 'counting'" optional="hide"/>
                   <field name="result" optional="hide"/>
@@ -168,10 +168,21 @@
               <field name="note"/>
             </page>
           </notebook>
+          <div class="o_tp_eq_chatter_below"/>
         </sheet>
         <chatter/>
       </form>
     </field>
+  </record>
+  <record id="action_inventory_lines" model="ir.actions.act_window">
+    <field name="name">Dòng kiểm kê thiết bị</field>
+    <field name="res_model">tp.equipment.inventory.line</field>
+    <field name="path">thiet-bi-dong-kiem-ke</field>
+    <field name="view_mode">list</field>
+    <field name="view_id" ref="inventory_line_list"/>
+    <field name="search_view_id" ref="inventory_line_search"/>
+    <field name="context">{'tp_filter_profile': 'inventory_line', 'tp_eq_leaf': 'tp_equipment.menu_inventories'}</field>
+    <field name="group_ids" eval="[(4, ref('base.group_system'))]"/>
   </record>
   <record id="action_inventories" model="ir.actions.act_window">
     <field name="name">Kiểm kê thiết bị</field>

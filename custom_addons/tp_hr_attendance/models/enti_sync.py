@@ -38,6 +38,7 @@ from .enti_image import (
     _raw_image_bytes,
     check_enti_image_access,
     parse_image_value,
+    redact_image_url,
     sanitize_employee_metadata,
     validate_and_normalize_image,
 )
@@ -117,53 +118,72 @@ def _get_enti_credentials(env):
                 phone = (data.get("phone") or "").strip()
                 password = (data.get("password") or "").strip()
                 app_key = (data.get("app_key") or "").strip()
-    except Exception as exc:
+    except (OSError, ValueError, TypeError) as exc:
         _logger.warning("Could not read local ENTI secrets file: %s", exc)
 
     # Check environment variables
     if not phone or not password:
         phone = os.environ.get("ENTI_PHONE") or os.environ.get("TP_ENTI_PHONE") or phone
         password = os.environ.get("ENTI_PASSWORD") or os.environ.get("TP_ENTI_PASSWORD") or password
-        app_key = os.environ.get("ENTI_APP_KEY") or os.environ.get("TP_ENTI_APP_KEY") or app_key
+    if not app_key:
+        app_key = (os.environ.get("ENTI_APP_KEY") or os.environ.get("TP_ENTI_APP_KEY") or "").strip() or None
 
-    # Check ir.config_parameter
-    if not phone or not password:
+    # Check ir.config_parameter fallback
+    if not phone or not password or not app_key:
         Param = env["ir.config_parameter"].sudo()
         get_val = getattr(Param, "get_str", None) or getattr(Param, "get_param", None)
         if get_val:
-            p_phone = get_val("tp_hr_attendance.enti_phone")
-            p_pass = get_val("tp_hr_attendance.enti_password")
-            p_app = get_val("tp_hr_attendance.enti_app_key")
-            phone = phone or (p_phone.strip() if p_phone else None)
-            password = password or (p_pass.strip() if p_pass else None)
-            app_key = app_key or (p_app.strip() if p_app else None)
+            if not phone or not password:
+                p_phone = get_val("tp_hr_attendance.enti_phone")
+                p_pass = get_val("tp_hr_attendance.enti_password")
+                phone = phone or (p_phone.strip() if p_phone else None)
+                password = password or (p_pass.strip() if p_pass else None)
+            if not app_key:
+                p_app = get_val("tp_hr_attendance.enti_app_key")
+                app_key = p_app.strip() if p_app else None
 
     return phone, password, app_key
 
 
 def _save_enti_credentials(env, phone, password, app_key=None):
-    """Save credentials to local secrets file and/or ir.config_parameter."""
-    try:
-        norm_path = os.path.abspath(SECRETS_FILE_PATH)
-        os.makedirs(os.path.dirname(norm_path), exist_ok=True)
-        data = {
-            "phone": phone.strip(),
-            "password": password.strip(),
-            "app_key": (app_key or "").strip(),
-            "updated_at": fields.Datetime.now().isoformat(),
-        }
-        with open(norm_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-    except Exception as exc:
-        _logger.warning("Could not write to local ENTI secrets file: %s", exc)
-
+    """Update non-secret ENTI phone parameter first, then write local secrets file and purge DB secrets."""
     Param = env["ir.config_parameter"].sudo()
     set_val = getattr(Param, "set_str", None) or getattr(Param, "set_param", None)
     if set_val:
         set_val("tp_hr_attendance.enti_phone", phone.strip())
-        set_val("tp_hr_attendance.enti_password", password.strip())
-        if app_key:
-            set_val("tp_hr_attendance.enti_app_key", app_key.strip())
+
+    wrote_local = False
+    effective_app_key = (app_key or "").strip()
+    try:
+        norm_path = os.path.abspath(SECRETS_FILE_PATH)
+        if not effective_app_key and os.path.isfile(norm_path):
+            try:
+                with open(norm_path, encoding="utf-8") as prev_f:
+                    effective_app_key = (json.load(prev_f).get("app_key") or "").strip()
+            except (OSError, ValueError, TypeError):
+                effective_app_key = ""
+        os.makedirs(os.path.dirname(norm_path), exist_ok=True)
+        data = {
+            "phone": phone.strip(),
+            "password": password.strip(),
+            "app_key": effective_app_key,
+            "updated_at": fields.Datetime.now().isoformat(),
+        }
+        with open(norm_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        wrote_local = True
+    except (OSError, ValueError, TypeError) as exc:
+        _logger.warning("Could not write to local ENTI secrets file: %s", exc)
+
+    if set_val:
+        if wrote_local:
+            Param.search([
+                ("key", "in", ["tp_hr_attendance.enti_password", "tp_hr_attendance.enti_app_key"]),
+            ]).unlink()
+        else:
+            set_val("tp_hr_attendance.enti_password", password.strip())
+            if effective_app_key:
+                set_val("tp_hr_attendance.enti_app_key", effective_app_key)
 
 
 class AttendanceEntiSyncLog(models.Model):
@@ -252,7 +272,8 @@ class AttendanceSourceEnti(models.Model):
         """Cached client entry for this source; a credential change starts a fresh client (fresh login)."""
         phone, password, app_key = _get_enti_credentials(self.env)
         if not phone or not password:
-            raise EntiNotConfigured("Chưa cấu hình tài khoản ENTI trên máy chủ (tệp bí mật, biến môi trường hoặc tham số hệ thống).")
+            msg = "Chưa cấu hình tài khoản ENTI trên máy chủ (tệp bí mật, biến môi trường hoặc tham số hệ thống)."
+            raise EntiNotConfigured(msg)
         key = (self.env.cr.dbname, self.id)
         fingerprint = hashlib.sha256("\x00".join((phone, password, app_key or "")).encode()).hexdigest()
         entry = cached_client(key)
@@ -273,10 +294,11 @@ class AttendanceSourceEnti(models.Model):
             if not chosen:
                 app = client.find_app_for_company(self.company_id.name)
                 if not app:
-                    raise EntiError(
+                    msg = (
                         "Không xác định được duy nhất ứng dụng công ty Tấn Phát trên tài khoản ENTI; "
-                        "cần khai báo app_key trong Cấu hình kết nối ENTI.",
+                        "cần khai báo app_key trong Cấu hình kết nối ENTI."
                     )
+                    raise EntiError(msg)
                 chosen = app.get("app_key") or app.get("key") or app.get("id")
             client.select_app(chosen)
             entry["app_key"] = chosen
@@ -853,7 +875,7 @@ class AttendanceSourceEnti(models.Model):
         max_bytes = _number(Param.get_int(PARAM_MAX_IMAGE_BYTES, DEFAULT_MAX_IMAGE_BYTES), int) or DEFAULT_MAX_IMAGE_BYTES
         prefer_manual = bool(
             self.prefer_manual_image
-            or (Param.get_str(PARAM_PREFER_MANUAL_IMAGE) or "").strip().lower() in ("1", "true", "yes")
+            or (Param.get_str(PARAM_PREFER_MANUAL_IMAGE) or "").strip().lower() in ("1", "true", "yes"),
         )
         extra_hosts_raw = Param.get_str(PARAM_ALLOWED_IMAGE_HOSTS) or ""
         allowed_hosts = [h.strip() for h in extra_hosts_raw.split(",") if h.strip()] or None
@@ -1019,6 +1041,8 @@ class AttendanceSourceEnti(models.Model):
         field_name, raw_image_val = extract_employee_image_field(info)
 
         def _upsert_image_record(vals):
+            if vals.get("image_url"):
+                vals = dict(vals, image_url=redact_image_url(vals["image_url"]))
             base_vals = {
                 "mapping_id": mapping.id if mapping else False,
                 "ma_nv": ma_nv or (mapping.ma_nv if mapping else ""),
@@ -1101,17 +1125,20 @@ class AttendanceSourceEnti(models.Model):
             return ("no_image" if is_mapped else "unmapped"), rec
 
         # Case 2: Obtain raw bytes from Base64 or Server-side URL download
-        try:
+        def _download_or_decode():
             if source_kind == "url":
                 if not client or not hasattr(client, "download_image"):
-                    raise EntiError("Client ENTI chưa hỗ trợ tải ảnh từ URL.")
-                raw_bytes, declared_mime = client.download_image(
+                    msg = "Client ENTI chưa hỗ trợ tải ảnh từ URL."
+                    raise EntiError(msg)
+                return client.download_image(
                     ref_label,
                     max_bytes=max_bytes,
                     allowed_hosts=allowed_hosts,
                 )
-            else:
-                raw_bytes, declared_mime = inline_payload
+            return inline_payload
+
+        try:
+            raw_bytes, declared_mime = _download_or_decode()
         except Exception as exc:  # noqa: BLE001
             err_msg = str(exc) if isinstance(exc, EntiError) else f"Lỗi tải ảnh từ ENTI ({type(exc).__name__})."
             rec = _upsert_image_record({

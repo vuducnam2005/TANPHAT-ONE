@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 
 from odoo import api, fields, models
 
-from .attendance_common import DEFAULT_TZ, internal
+from .attendance_common import DEFAULT_TZ, deny_direct, internal, is_internal
 
 _logger = logging.getLogger(__name__)
 
@@ -119,7 +119,7 @@ class AttendanceEntiDay(models.Model):
         required=True,
         index=True,
     )
-    raw_json = fields.Text("Dữ liệu thô JSON")
+    raw_json = fields.Text("Dữ liệu thô JSON", groups="base.group_no_one")
     received_at = fields.Datetime("Thời điểm nhận", default=fields.Datetime.now)
     raw_hash = fields.Char("Dấu dữ liệu ENTI", readonly=True,
                            help="Dấu của các giá trị ENTI đã lưu; lượt đồng bộ chỉ ghi lại khi dấu thay đổi.")
@@ -131,17 +131,34 @@ class AttendanceEntiDay(models.Model):
         "Bản ghi ngày công ENTI đã tồn tại cho nhân viên và ngày này.",
     )
 
+    def _check_direct_guard(self):
+        if not self.env.su and not is_internal(self):
+            deny_direct(self)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        self._check_direct_guard()
+        return super().create(vals_list)
+
+    def write(self, vals):
+        self._check_direct_guard()
+        return super().write(vals)
+
+    def unlink(self):
+        self._check_direct_guard()
+        return super().unlink()
+
     @api.model
     def _tp_project_for_mapping(self, mapping):
         """Retroactively project all stored days for this employee after mapping confirmation."""
-        days = self.search([
+        days = self.sudo().search([
             ("source_id", "=", mapping.source_id.id),
             ("key_nv", "=", mapping.key_nv),
         ])
         changed = self.browse()
         for day in days:
             if day.employee_id != mapping.employee_id:
-                day.sudo().write({"employee_id": mapping.employee_id.id})
+                internal(day).write({"employee_id": mapping.employee_id.id})
             if day._tp_project_to_canonical():
                 changed |= day
         return changed
@@ -297,7 +314,7 @@ class AttendanceEntiDay(models.Model):
 
     def _tp_set_state(self, state):
         if self.state != state:
-            self.sudo().write({"state": state})
+            internal(self).write({"state": state})
 
 
 def _plain(record, name):

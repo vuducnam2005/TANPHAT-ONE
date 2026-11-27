@@ -2,6 +2,8 @@ import { onWillStart, proxy } from "@odoo/owl";
 import { useAskRecurrenceUpdatePolicy } from "@calendar/views/ask_recurrence_update_policy_hook";
 import { CalendarCommonPopover } from "@web/views/calendar/calendar_common/calendar_common_popover";
 import { useService } from "@web/core/utils/hooks";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
 import { TpShareToDiscussDialog } from "../shared/share_to_discuss_dialog";
 
 /**
@@ -12,6 +14,10 @@ import { TpShareToDiscussDialog } from "../shared/share_to_discuss_dialog";
  */
 export class TpCalendarPopover extends CalendarCommonPopover {
     static template = "tp_personal_tools.CalendarPopover";
+    static components = {
+        ...CalendarCommonPopover.components,
+        InlineErrors,
+    };
 
     setup() {
         super.setup();
@@ -24,6 +30,7 @@ export class TpCalendarPopover extends CalendarCommonPopover {
             loading: true,
             card: null,
             rsvpBusy: false,
+            serverError: null,
         });
 
         onWillStart(async () => {
@@ -84,6 +91,7 @@ export class TpCalendarPopover extends CalendarCommonPopover {
             }
         }
         this.state.rsvpBusy = true;
+        this.state.serverError = null;
         try {
             await this.orm.call("calendar.event", "change_attendee_status", [
                 [card.id],
@@ -94,9 +102,7 @@ export class TpCalendarPopover extends CalendarCommonPopover {
             await this.props.model.load();
             this.props.close();
         } catch (err) {
-            this.notification.add(err?.data?.message || "Không thể cập nhật trạng thái tham gia.", {
-                type: "warning",
-            });
+            this.state.serverError = saveError(err, { verb: "cập nhật phản hồi lời mời" });
         } finally {
             this.state.rsvpBusy = false;
         }

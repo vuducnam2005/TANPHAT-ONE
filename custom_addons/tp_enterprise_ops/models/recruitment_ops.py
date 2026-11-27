@@ -12,6 +12,24 @@ from odoo.addons.tp_request.models.request_common import (
     is_live_admin_user,
 )
 
+_STAGE_VI_MAP = {
+    'new': 'Mới ứng tuyển',
+    'initial qualification': 'Sơ loại hồ sơ',
+    'first interview': 'Phỏng vấn vòng 1',
+    'second interview': 'Phỏng vấn vòng 2',
+    'contract proposal': 'Đề nghị nhận việc',
+    'contract signed': 'Đã ký hợp đồng',
+    'refused': 'Từ chối',
+    'rejected': 'Từ chối',
+}
+
+
+def _vi_stage_name(raw_name):
+    text = (raw_name or '').strip()
+    if not text:
+        return 'Mới ứng tuyển'
+    return _STAGE_VI_MAP.get(text.lower(), text)
+
 
 def _is_recruitment_officer(env, company=None):
     user = env.user
@@ -21,7 +39,7 @@ def _is_recruitment_officer(env, company=None):
     return bool(
         user.has_group('hr_recruitment.group_hr_recruitment_user')
         or user.has_group('hr.group_hr_manager')
-        or user.has_group('tp_hr_workspace.group_tp_hr_manager')
+        or user.has_group('tp_hr_workspace.group_tp_hr_manager'),
     )
 
 
@@ -246,7 +264,7 @@ class HrApplicantEnterprise(models.Model):
             'job_name': a.job_id.name if a.job_id else 'Chưa gán vị trí',
             'department_name': a.department_id.name if a.department_id else '—',
             'stage_id': a.stage_id.id,
-            'stage_name': a.stage_id.name if a.stage_id else 'Mới',
+            'stage_name': _vi_stage_name(a.stage_id.name) if a.stage_id else 'Mới ứng tuyển',
             'employee_id': a.employee_id.id or 0,
             'interview_event_name': a.tp_interview_event_id.name if a.tp_interview_event_id else '',
             'eval_count': len(a.tp_evaluation_ids),
@@ -254,11 +272,12 @@ class HrApplicantEnterprise(models.Model):
         } for a in apps]
 
         reqs = self.env['tp.recruitment.requisition'].sudo().search([('company_id', '=', company.id)], limit=50)
-        depts = self.env['hr.department'].sudo().search([('company_id', '=', company.id)], order='name')
+        dept_order = 'tp_sequence, id' if 'tp_sequence' in self.env['hr.department']._fields else 'name, id'
+        depts = self.env['hr.department'].sudo().search([('company_id', '=', company.id)], order=dept_order)
         jobs = self.env['hr.job'].sudo().search([('company_id', 'in', [company.id, False])], order='name')
 
         return {
-            'stages': [{'id': s.id, 'name': s.name} for s in stages],
+            'stages': [{'id': s.id, 'name': _vi_stage_name(s.name)} for s in stages],
             'applicants': cards,
             'total_applicants': len(cards),
             'requisitions': [{

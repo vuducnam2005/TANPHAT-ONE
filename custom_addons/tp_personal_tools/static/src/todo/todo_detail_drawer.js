@@ -11,6 +11,7 @@ import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_d
 import { useService } from "@web/core/utils/hooks";
 import { user } from "@web/core/user";
 import { uuid } from "@web/core/utils/strings";
+import { TpDateTime24Field } from "@tp_web_home/inputs/time24";
 import { InlineErrors } from "@tp_web_home/validation/inline_errors";
 import { saveError } from "@tp_web_home/validation/validation";
 import { TpColleaguePicker } from "../shared/colleague_picker";
@@ -43,7 +44,7 @@ function formatBytes(bytes) {
 
 export class TpTodoDetailDrawer extends Component {
     static template = "tp_personal_tools.TodoDetailDrawer";
-    static components = { InlineErrors, TpColleaguePicker };
+    static components = { InlineErrors, TpColleaguePicker, TpDateTime24Field };
     props = useProps();
 
     drawerRef = signal.ref();
@@ -61,7 +62,7 @@ export class TpTodoDetailDrawer extends Component {
 
         this.state = proxy({
             loading: !this.props.isNew,
-            loadError: "",
+            loadError: null,
             expanded: false,
             dirty: false,
             confirmClosePrompt: false,
@@ -144,7 +145,7 @@ export class TpTodoDetailDrawer extends Component {
 
     async loadDetail(taskId) {
         this.state.loading = true;
-        this.state.loadError = "";
+        this.state.loadError = null;
         this.state.serverError = null;
         try {
             const detail = await this.orm.call("project.task", "tp_get_personal_task_detail", [
@@ -152,8 +153,7 @@ export class TpTodoDetailDrawer extends Component {
             ]);
             this.applyDetailData(detail);
         } catch (err) {
-            const parsed = saveError(err, { verb: "mở công việc", write: false });
-            this.state.loadError = parsed?.message || "Bạn không có quyền xem hoặc công việc không tồn tại.";
+            this.state.loadError = saveError(err, { verb: "mở công việc", write: false });
         } finally {
             this.state.loading = false;
         }

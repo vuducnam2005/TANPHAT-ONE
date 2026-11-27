@@ -66,15 +66,20 @@ def can(env, capability, company, departments=None):
     """Return True when the current user holds ``capability`` (import/review/lock) for ``company``.
 
     Import and configuration need HR manager rights or a company-wide import assignment.
-    Review and lock never follow from a job title or group: only an active assignment whose
-    department scope (empty = whole company) covers every given department. Since
-    CHG-20261119-005 a review assignment only widens shared exports; approving or returning a
-    correction belongs to the admins (``require_correction_admin``: Original or delegated Full Admin).
+    Lock is granted to Original Admins, live Delegated Full Admins (DEC-053/061), or an active lock
+    assignment covering the scope. Since CHG-20261119-005 a review assignment only widens shared exports;
+    approving or returning a correction belongs to the admins (``require_correction_admin``).
     """
     if company not in env.companies:
         return False
     if capability == 'import' and env.user.has_group(HR_MANAGER):
         return True
+    if capability == 'lock':
+        if _delegation_ready(env):
+            if _is_correction_admin_user(env.user, company):
+                return True
+        elif env.user.has_group('base.group_system'):
+            return True
     for assignment in assignments(env, company, capability):
         if not assignment.department_ids:
             return True
@@ -148,3 +153,23 @@ def require(env, capability, company, departments=None):
     if not can(env, capability, company, departments):
         labels = {'import': 'nhập dữ liệu công', 'review': 'duyệt điều chỉnh công', 'lock': 'chốt kỳ công'}
         raise AccessError(env._('Bạn chưa được phân công %(task)s trong phạm vi này.', task=labels.get(capability, capability)))
+
+
+def can_manage_enti_images(env, company=None):
+    """True for Original Admin, Delegated Full Admin (with live grant), HR Manager, or superuser."""
+    if env.su:
+        return True
+    user = env.user
+    if user.has_group(HR_MANAGER):
+        return True
+    target_company = company or env.company
+    if _delegation_ready(env):
+        return _is_correction_admin_user(user, target_company)
+    return user.has_group('base.group_system')
+
+
+def check_enti_image_access(env, company=None):
+    if not can_manage_enti_images(env, company):
+        raise AccessError(
+            env._('Chỉ Quản trị gốc, Quản trị viên ủy quyền hoặc Quản lý nhân sự mới được cấu hình hoặc chạy đồng bộ ảnh.'),
+        )

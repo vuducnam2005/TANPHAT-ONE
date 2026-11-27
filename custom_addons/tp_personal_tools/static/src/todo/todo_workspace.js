@@ -110,7 +110,7 @@ export class TpPersonalTodoWorkspace extends Component {
 
         this.state = proxy({
             loading: true,
-            loadError: "",
+            loadError: null,
             bannerError: null,
             bannerAttempt: 0,
             bucket: "all",
@@ -119,6 +119,8 @@ export class TpPersonalTodoWorkspace extends Component {
             searchQuery: "",
             filterPanelOpen: false,
             mobileSidebarOpen: false,
+            sidebarCollapsed: false,
+            sidebarExpanded: false,
             pendingFilters: emptyFilters(),
             appliedFilters: emptyFilters(),
             colleagues: [],
@@ -248,6 +250,14 @@ export class TpPersonalTodoWorkspace extends Component {
         });
     }
 
+    toggleSidebarRail() {
+        if (typeof window !== "undefined" && window.innerWidth >= 768 && window.innerWidth < 1280) {
+            this.state.sidebarExpanded = !this.state.sidebarExpanded;
+        } else {
+            this.state.sidebarCollapsed = !this.state.sidebarCollapsed;
+        }
+    }
+
     syncBrowserUrl(taskId = 0, isNew = false) {
         const base = "/app/ca-nhan/cong-viec";
         const targetPath = isNew ? `${base}/tao-moi` : taskId ? `${base}/${taskId}` : base;
@@ -272,7 +282,7 @@ export class TpPersonalTodoWorkspace extends Component {
     async loadWorkspace() {
         const seq = ++this.loadSeq;
         this.state.loading = true;
-        this.state.loadError = "";
+        this.state.loadError = null;
         const f = this.state.appliedFilters;
         try {
             const res = await this.orm.call("project.task", "tp_get_personal_workspace", [
@@ -309,8 +319,7 @@ export class TpPersonalTodoWorkspace extends Component {
             if (seq !== this.loadSeq) {
                 return;
             }
-            const parsed = saveError(err, { verb: "tải danh sách việc cá nhân", write: false });
-            this.state.loadError = parsed?.message || "Không tải được danh sách công việc.";
+            this.state.loadError = saveError(err, { verb: "tải danh sách việc cá nhân", write: false });
         } finally {
             if (seq === this.loadSeq) {
                 this.state.loading = false;

@@ -6,15 +6,15 @@
         <h1>Quản trị chấm công</h1>
     </header>
 
-    <div t-if="this.state.error" class="alert alert-danger" role="alert">
-        <t t-out="this.state.error"/>
-        <button type="button" class="btn btn-link p-0" t-on-click="() => this.load()">Thử lại</button>
+    <InlineErrors errors="[]" server="this.state.serverError" attempt="this.state.attempt"/>
+    <div t-if="this.state.serverError and !this.data" class="mb-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="() => this.load()">Thử lại</button>
     </div>
     <div t-if="this.state.notice" class="alert alert-success d-flex justify-content-between align-items-start gap-2" role="status">
         <span t-out="this.state.notice"/>
         <button type="button" class="btn-close" aria-label="Đóng thông báo" t-on-click="() => this.state.notice = ''"/>
     </div>
-    <p t-if="!this.data and !this.state.error" role="status" class="o_tp_att_loading">Đang tải quản trị chấm công…</p>
+    <p t-if="!this.data and !this.state.serverError" role="status" class="o_tp_att_loading">Đang tải quản trị chấm công…</p>
     <t t-if="this.data">
         <section class="o_tp_att_admin_connection" aria-label="Kết nối chấm công">
             <div class="o_tp_att_admin_connection_head">
@@ -32,11 +32,13 @@
             </div>
             <dl class="o_tp_att_admin_metrics">
                 <div><dt>Đồng bộ thành công gần nhất</dt><dd class="o_stamp" t-out="this.enti.last_success_at or 'Chưa có'"/></div>
+                <div><dt>Thời lượng lượt gần nhất</dt><dd t-out="this.enti.last_duration_seconds != null ? (this.enti.last_duration_seconds + ' giây') : '—'"/></div>
                 <div><dt>Bản ghi ngày công đã nhận</dt><dd t-out="this.enti.days_count ?? '—'"/></div>
                 <div><dt>Nhân viên đã khớp</dt><dd t-out="this.enti.mapped_count ?? '—'"/></div>
                 <div><dt>Nhân viên cần đối chiếu</dt><dd class="o_attention" t-out="this.enti.unmapped_count ?? '—'"/></div>
             </dl>
             <p t-if="this.enti.data_to" class="o_tp_att_admin_data_to">Dữ liệu máy đã nhận đến ngày <strong t-out="this.enti.data_to"/>.</p>
+            <p t-if="this.enti.last_error" class="o_tp_att_admin_data_to text-danger" t-out="this.enti.last_error"/>
         </section>
 
         <section class="o_tp_att_admin_panel o_tp_att_admin_images" aria-labelledby="tp_att_admin_images_title">
@@ -142,7 +144,7 @@
                     </thead>
                     <tbody>
                         <tr t-foreach="this.imageSync.rows" t-as="imgRow" t-key="imgRow.id">
-                            <td>
+                            <td data-label="Ảnh ENTI / Odoo">
                                 <div class="o_tp_att_image_pair">
                                     <img t-if="imgRow.has_enti_image"
                                         t-att-src="'/web/image/tp.hr.attendance.enti.employee.image/' + imgRow.id + '/enti_image_128'"
@@ -154,26 +156,26 @@
                                     <span t-else="" class="o_tp_att_thumb_empty" title="Chưa đối chiếu Odoo">—</span>
                                 </div>
                             </td>
-                            <td>
+                            <td data-label="Nhân viên ENTI">
                                 <strong t-out="imgRow.ten_nv or '—'"/>
                                 <div t-if="imgRow.ma_nv" class="text-muted small" t-out="imgRow.ma_nv"/>
                             </td>
-                            <td>
+                            <td data-label="Nhân viên Odoo">
                                 <t t-if="imgRow.employee_id">
                                     <strong t-out="imgRow.employee_name"/>
                                     <div t-if="imgRow.employee_code" class="text-muted small" t-out="imgRow.employee_code"/>
                                 </t>
                                 <span t-else="" class="text-warning fw-semibold">Chưa đối chiếu</span>
                             </td>
-                            <td t-out="imgRow.department_name or '—'"/>
-                            <td>
+                            <td data-label="Phòng ban" t-out="imgRow.department_name or '—'"/>
+                            <td data-label="Trạng thái">
                                 <span class="o_tp_att_badge"
                                     t-att-class="(imgRow.mapping_state === 'mapped' and (imgRow.state === 'downloaded' or imgRow.state === 'unchanged')) ? 'o_ok' : (imgRow.state === 'failed' ? 'o_warn' : 'o_muted')"
                                     t-out="imgRow.status_label"/>
                             </td>
-                            <td t-out="imgRow.downloaded_at or imgRow.last_seen_at or '—'"/>
-                            <td class="small text-muted" t-out="imgRow.error_message or (imgRow.image_mime ? (imgRow.image_mime + ' · ' + imgRow.image_size + ' B') : '—')"/>
-                            <td class="text-end">
+                            <td data-label="Đồng bộ lúc" t-out="imgRow.downloaded_at or imgRow.last_seen_at or '—'"/>
+                            <td data-label="Ghi chú / Lỗi" class="small text-muted" t-out="imgRow.error_message or (imgRow.image_mime ? (imgRow.image_mime + ' · ' + imgRow.image_size + ' B') : '—')"/>
+                            <td data-label="Thao tác" class="text-end">
                                 <div class="d-inline-flex gap-1">
                                     <button type="button" class="btn btn-sm btn-outline-secondary"
                                         t-on-click="() => this.openImageRecord(imgRow)">
@@ -234,7 +236,9 @@
                     <t t-out="this.state.exporting ? 'Đang xuất…' : 'Tải tệp .xlsx'"/>
                 </button>
             </form>
-            <p t-if="this.state.exportError" class="alert alert-danger mt-3 mb-0" role="alert" t-out="this.state.exportError"/>
+            <div class="mt-2">
+                <InlineErrors errors="this.state.exportErrors" server="this.state.exportServerError" attempt="this.state.exportAttempt"/>
+            </div>
         </section>
 
         <div class="o_tp_att_admin_grid">
@@ -281,10 +285,17 @@
                     <li t-foreach="this.data.sync_logs" t-as="row" t-key="row.id">
                         <div class="o_tp_att_admin_row_head">
                             <strong t-out="row.at"/>
-                            <span class="o_tp_att_badge" t-att-class="row.status === 'success' ? 'o_ok' : (row.status === 'error' ? 'o_warn' : 'o_muted')" t-out="row.status_label"/>
+                            <span class="o_tp_att_badge" t-att-class="row.status === 'success' ? 'o_ok' : ((row.status === 'error' or row.status === 'partial') ? 'o_warn' : 'o_muted')" t-out="row.status_label"/>
                         </div>
-                        <p>Đã nhận <strong t-out="row.days_received"/> · Đã cập nhật <strong t-out="row.days_applied"/></p>
+                        <p>
+                            Đã nhận <strong t-out="row.days_received"/> · Đã cập nhật <strong t-out="row.days_applied"/>
+                            <t t-if="row.duration_seconds != null"> · Thời lượng <strong t-out="row.duration_seconds"/>s</t>
+                        </p>
                         <p t-if="row.unmapped">Chưa khớp <strong t-out="row.unmapped"/> nhân viên</p>
+                        <p t-if="row.has_warning" class="text-warning small mb-0">
+                            <t t-if="row.kept_count">Giữ nguyên <strong t-out="row.kept_count"/> dòng thuộc kỳ chốt / điều chỉnh đã duyệt</t>
+                            <t t-else="">Có cảnh báo tải ảnh hồ sơ — mở Nhật ký để xem chi tiết</t>
+                        </p>
                     </li>
                 </ul>
             </section>

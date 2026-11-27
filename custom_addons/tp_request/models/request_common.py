@@ -130,6 +130,7 @@ STEP_STATES = [
 HISTORY_ACTIONS = [
     ('create', 'Tạo đề nghị'),
     ('update', 'Cập nhật nội dung'),
+    ('reopen_draft', 'Mở lại bản nháp'),
     ('submit', 'Gửi phê duyệt'),
     ('resubmit', 'Gửi lại sau bổ sung'),
     ('approve_step', 'Chấp thuận bước duyệt'),
@@ -188,7 +189,7 @@ def _delegation_ready(env):
     Users = env['res.users']
     return bool(
         env.ref('tp_admin_delegation.group_original_admin', raise_if_not_found=False)
-        and all(hasattr(Users, fn) for fn in ('_tp_is_original_admin', '_tp_has_live_admin_grant', '_tp_admin_lock'))
+        and all(hasattr(Users, fn) for fn in ('_tp_is_original_admin', '_tp_has_live_admin_grant', '_tp_admin_lock')),
     )
 
 
@@ -281,7 +282,7 @@ def add_working_hours(start_dt, hours, tz_name=DEFAULT_TZ):
 
     def next_window_start(dt_local):
         cur = dt_local
-        for _ in range(30):
+        for _day in range(30):
             if cur.weekday() >= 5:  # Sat/Sun -> Monday 08:30
                 cur = datetime.combine(cur.date() + timedelta(days=7 - cur.weekday()), time(8, 30), tzinfo=tz)
                 continue
@@ -297,7 +298,7 @@ def add_working_hours(start_dt, hours, tz_name=DEFAULT_TZ):
             cur = datetime.combine(cur.date() + timedelta(days=1), time(8, 30), tzinfo=tz)
         return cur
 
-    for _ in range(2000):
+    for _step in range(2000):
         if remaining <= 0.001:
             break
         current = next_window_start(current)

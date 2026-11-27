@@ -374,16 +374,16 @@ class MaintenanceEquipment(models.Model):
     def action_tp_open_detail(self):
         check_admin(self.env, self)
         self.ensure_one()
-        return {
-            "type": "ir.actions.act_window",
+        action = self.env["ir.actions.act_window"]._for_xml_id("tp_equipment.action_equipment_all_records")
+        action.update({
             "name": self.display_name,
-            "res_model": "maintenance.equipment",
             "res_id": self.id,
             "view_mode": "form",
             "views": [(self.env.ref("tp_equipment.equipment_form").id, "form")],
             "target": "current",
             "context": {"tp_eq_leaf": "tp_equipment.menu_equipment_all"},
-        }
+        })
+        return action
 
     def tp_refresh_availability(self):
         self.sudo()._compute_tp_availability()
@@ -604,11 +604,16 @@ class MaintenanceEquipment(models.Model):
                 raise UserError(_("%(name)s không ở trạng thái nháp.", name=equipment.display_name))
             if not equipment.category_id:
                 raise UserError(_("%(name)s: chọn phân loại trước khi đăng ký.", name=equipment.display_name))
-            equipment.with_context(tp_equipment_move=INTERNAL).write({
+            reg_vals = {
                 "tp_lifecycle": "active",
                 "tp_registered_date": fields.Datetime.now(),
                 "tp_registered_by_id": self.env.uid,
-            })
+            }
+            reg_ctx = {"tp_equipment_move": INTERNAL}
+            if not equipment.tp_qr_token:
+                reg_vals["tp_qr_token"] = uuid.uuid4().hex
+                reg_ctx["tp_equipment_rotate_qr"] = INTERNAL
+            equipment.with_context(**reg_ctx).write(reg_vals)
             equipment._tp_after_register()
             equipment.message_post(body=_("Đăng ký vào Kho thiết bị văn phòng."), subtype_xmlid="mail.mt_note")
         return True
@@ -633,17 +638,17 @@ class MaintenanceEquipment(models.Model):
 
     def action_tp_open_children(self):
         self.ensure_one()
-        return {
-            "type": "ir.actions.act_window",
+        action = self.env["ir.actions.act_window"]._for_xml_id("tp_equipment.action_equipment_all_records")
+        action.update({
             "name": _("Linh kiện / phụ kiện của %s", self.display_name),
-            "res_model": "maintenance.equipment",
             "view_mode": "list,form",
             "views": [(self.env.ref("tp_equipment.equipment_list").id, "list"),
                       (self.env.ref("tp_equipment.equipment_form").id, "form")],
             "domain": [("tp_parent_id", "=", self.id)],
             "context": {"default_tp_parent_id": self.id, "default_tp_asset_class": "component",
                         "tp_filter_profile": "equipment"},
-        }
+        })
+        return action
 
     def action_tp_new_move(self):
         """Open a pre-filled move document (header buttons, list action). Nothing is saved here."""
@@ -662,43 +667,43 @@ class MaintenanceEquipment(models.Model):
             context["default_target_partner_id"] = self.tp_owner_partner_id.id
         if move_type == "repair_return" and len(self.tp_vendor_id) == 1:
             context["default_target_partner_id"] = self.tp_vendor_id.id
-        return {
-            "type": "ir.actions.act_window",
+        action = self.env["ir.actions.act_window"]._for_xml_id("tp_equipment.action_moves")
+        action.update({
             "name": _("Lập phiếu"),
-            "res_model": "tp.equipment.move",
             "view_mode": "form",
             "views": [(self.env.ref("tp_equipment.move_form").id, "form")],
             "target": "current",
             "context": context,
-        }
+        })
+        return action
 
     def action_tp_open_pending_move(self):
         check_admin(self.env, self)
         self.ensure_one()
         if not self.tp_pending_move_id:
             raise UserError(_("Thiết bị không có phiếu chờ bàn giao."))
-        return {
-            "type": "ir.actions.act_window",
-            "res_model": "tp.equipment.move",
+        action = self.env["ir.actions.act_window"]._for_xml_id("tp_equipment.action_moves_pending")
+        action.update({
             "res_id": self.tp_pending_move_id.id,
             "view_mode": "form",
             "views": [(self.env.ref("tp_equipment.move_form").id, "form")],
             "target": "current",
-        }
+        })
+        return action
 
     def action_tp_open_moves(self):
         check_admin(self.env, self)
         self.ensure_one()
-        return {
-            "type": "ir.actions.act_window",
+        action = self.env["ir.actions.act_window"]._for_xml_id("tp_equipment.action_moves")
+        action.update({
             "name": _("Phiếu của %s", self.display_name),
-            "res_model": "tp.equipment.move",
             "view_mode": "list,form",
             "views": [(self.env.ref("tp_equipment.move_list").id, "list"),
                       (self.env.ref("tp_equipment.move_form").id, "form")],
             "domain": [("line_ids.equipment_id", "=", self.id)],
             "context": {"tp_filter_profile": "move", "tp_eq_leaf": "tp_equipment.menu_equipment_all"},
-        }
+        })
+        return action
 
     def action_tp_print_labels(self):
         check_admin(self.env, self)

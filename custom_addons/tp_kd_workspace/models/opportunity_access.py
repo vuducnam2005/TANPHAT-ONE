@@ -65,12 +65,18 @@ class Opportunity(models.Model):
     kd_can_edit_money = fields.Boolean(compute='_compute_kd_can_prepare')
     kd_money_display = fields.Char(compute='_compute_kd_money_display', string='Giá trị hồ sơ dự án dự kiến')
 
+    def _kd_money_read_allowed(self):
+        self.ensure_one()
+        if self.env.su or not self._kd_scoped():
+            return True
+        return bool(self.tp_project_id and self.tp_project_id.id in self._kd_financial_projects())
+
     @api.depends_context('uid')
     @api.depends('tp_project_id', 'expected_revenue')
     def _compute_kd_money_display(self):
         for lead in self:
             lead.kd_money_display = (formatLang(self.env, lead.expected_revenue, currency_obj=lead.company_currency)
-                if lead.tp_project_id and lead.tp_project_id.id in lead._kd_financial_projects()
+                if lead._kd_money_read_allowed()
                 else self.env._('Không có quyền xem tiền'))
 
     @api.model
@@ -144,7 +150,7 @@ class Opportunity(models.Model):
             lead.kd_can_edit = own and lead.kd_bid_state != 'submitted' and lead._kd_allowed('prepare')
             lead.kd_can_prepare = lead.kd_can_edit and lead.kd_bid_state == 'identified'
             lead.kd_can_submit = own and lead.kd_bid_state == 'preparation' and lead._kd_allowed('submit')
-            lead.kd_can_read_money = bool(lead.tp_project_id and lead.tp_project_id.id in lead._kd_financial_projects())
+            lead.kd_can_read_money = lead._kd_money_read_allowed()
             lead.kd_can_edit_money = lead.kd_can_edit and lead.tp_project_id.id in lead._kd_financial_projects(edit=True)
 
     @api.model

@@ -299,6 +299,16 @@
                                         <option value="department">Lịch phòng / Công ty</option>
                                     </select>
                                 </div>
+                                <div class="tp-cal-filter-field" t-if="this.tpState.rooms.length">
+                                    <label class="tp-cal-mini-label">Phòng họp</label>
+                                    <select class="tp-pt-select tp-pt-input-compact"
+                                        aria-label="Lọc theo phòng họp"
+                                        t-model.proxy="this.tpState.agendaRoomId"
+                                        t-on-change="() => (this.tpState.agendaPage = 1, this.loadAgenda())">
+                                        <option value="0">Tất cả phòng họp</option>
+                                        <option t-foreach="this.tpState.rooms" t-as="rm" t-key="rm.id" t-att-value="rm.id" t-out="rm.name"/>
+                                    </select>
+                                </div>
                                 <div class="tp-cal-filter-field">
                                     <label class="tp-cal-mini-label">Phản hồi của tôi</label>
                                     <select class="tp-pt-select tp-pt-input-compact"

@@ -44,21 +44,19 @@
                 <div t-if="!this.state.allday" class="row g-2">
                     <div class="col-12 col-sm-6 tp-pt-field">
                         <label class="tp-pt-label" for="tp_sched_start_iso">Bắt đầu <span class="tp-pt-req">*</span></label>
-                        <input id="tp_sched_start_iso"
-                               type="datetime-local"
-                               class="tp-pt-input"
-                               t-model.proxy="this.state.startIso"
-                               t-on-change="() => this.onTimeChange()"
-                               t-att-disabled="this.state.busy"/>
+                        <TpDateTime24Field id="'tp_sched_start_iso'"
+                                           value="this.state.startIso"
+                                           invalid="this.hasFieldError('tp_sched_start_iso')"
+                                           disabled="this.state.busy"
+                                           onChange="(val) => (this.state.startIso = val, this.onTimeChange())"/>
                     </div>
                     <div class="col-12 col-sm-6 tp-pt-field">
                         <label class="tp-pt-label" for="tp_sched_stop_iso">Kết thúc <span class="tp-pt-req">*</span></label>
-                        <input id="tp_sched_stop_iso"
-                               type="datetime-local"
-                               class="tp-pt-input"
-                               t-model.proxy="this.state.stopIso"
-                               t-on-change="() => this.onTimeChange()"
-                               t-att-disabled="this.state.busy"/>
+                        <TpDateTime24Field id="'tp_sched_stop_iso'"
+                                           value="this.state.stopIso"
+                                           invalid="this.hasFieldError('tp_sched_stop_iso')"
+                                           disabled="this.state.busy"
+                                           onChange="(val) => (this.state.stopIso = val, this.onTimeChange())"/>
                     </div>
                 </div>
 

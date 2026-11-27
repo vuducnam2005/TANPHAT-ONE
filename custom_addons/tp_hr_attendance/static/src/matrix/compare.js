@@ -1,6 +1,8 @@
 import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
-import { downloadBase64, formatDate, rpcError } from "../common";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
+import { downloadBase64, formatDate } from "../common";
 import { AttPager } from "../parts";
 
 const SCOPE_SHORT = {
@@ -17,7 +19,7 @@ const SCOPE_SHORT = {
  */
 export class AttendanceCompare extends Component {
     static template = "tp_hr_attendance.Compare";
-    static components = { AttPager };
+    static components = { AttPager, InlineErrors };
     props = useProps();
 
     setup() {
@@ -49,7 +51,8 @@ export class AttendanceCompare extends Component {
             pageSize: 100,
             mobileView: "cards",
             loading: true,
-            error: "",
+            serverError: null,
+            attempt: 0,
             data: null,
         });
         this.request = 0;
@@ -136,7 +139,7 @@ export class AttendanceCompare extends Component {
     async load() {
         const req = ++this.request;
         this.state.loading = true;
-        this.state.error = "";
+        this.state.serverError = null;
         try {
             const res = await this.orm.call("tp.hr.attendance.batch", "tp_compare_batches", [this.params()]);
             if (req !== this.request) {
@@ -153,7 +156,8 @@ export class AttendanceCompare extends Component {
             }
         } catch (error) {
             if (req === this.request) {
-                this.state.error = rpcError(error, "Không tải được bảng đối chiếu A/B. Vui lòng thử lại.");
+                this.state.serverError = saveError(error, { verb: "tải bảng đối chiếu A/B" });
+                this.state.attempt++;
             }
         } finally {
             if (req === this.request) {
@@ -305,7 +309,8 @@ export class AttendanceCompare extends Component {
             const file = await this.orm.call("tp.hr.attendance.batch", "tp_export_compare", [this.params()]);
             downloadBase64(file);
         } catch (error) {
-            this.state.error = rpcError(error, "Không xuất được tệp đối chiếu Excel.");
+            this.state.serverError = saveError(error, { verb: "xuất tệp đối chiếu Excel" });
+            this.state.attempt++;
         }
     }
 

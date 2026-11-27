@@ -7,6 +7,7 @@ import { useService } from "@web/core/utils/hooks";
 import { uuid } from "@web/core/utils/strings";
 import { HrListController } from "@tp_hr_workspace/table/table";
 import { TpHrMyProfile } from "@tp_hr_workspace/my_profile/my_profile";
+import { TpTime24Field } from "@tp_web_home/inputs/time24";
 import { InlineErrors } from "@tp_web_home/validation/inline_errors";
 import { saveError } from "@tp_web_home/validation/validation";
 import {
@@ -40,11 +41,14 @@ const STATE_OPTIONS = [
     ["missing_in", "Thiếu giờ vào"],
     ["missing_out", "Thiếu giờ ra"],
     ["review", "Cần kiểm tra"],
+    ["absent", "Vắng theo lịch"],
     ["no_punch", "Chưa chấm công"],
+    ["rest", "Nghỉ theo lịch"],
     ["no_source", "Chưa có dữ liệu"],
     ["leave", "Nghỉ đã xác nhận"],
     ["future", "Ngày tương lai"],
 ];
+const MAX_EVIDENCE_BYTES = 10 * 1024 * 1024;
 const WEEKDAY_OPTIONS = [
     ["", "Tất cả các ngày"],
     ["workdays", "Thứ 2 – Thứ 6"],
@@ -88,7 +92,7 @@ function readFileAsBase64(file) {
 
 export class CorrectionFormDialog extends Component {
     static template = "tp_hr_attendance.CorrectionFormDialog";
-    static components = { Dialog, InlineErrors };
+    static components = { Dialog, InlineErrors, TpTime24Field };
     props = useProps();
     evidenceInput = signal.ref();
     operationToken = uuid();
@@ -114,6 +118,10 @@ export class CorrectionFormDialog extends Component {
 
     get title() {
         return this.props.request ? `Sửa đề nghị ${this.props.request.name}` : "Đề nghị điều chỉnh công";
+    }
+
+    hasFieldError(field) {
+        return this.fieldErrors.some((err) => err.id === `tp_att_correction_${field}`);
     }
 
     get fieldErrors() {
@@ -146,6 +154,16 @@ export class CorrectionFormDialog extends Component {
         if (!file || this.state.busy || this.state.readingFile) {
             return;
         }
+        if (file.size > MAX_EVIDENCE_BYTES) {
+            ev.target.value = "";
+            this.state.serverError = {
+                kind: "validation",
+                title: "Tệp minh chứng quá lớn",
+                message: "Dung lượng tệp minh chứng tối đa là 10 MB.",
+            };
+            this.state.attempt++;
+            return;
+        }
         this.state.readingFile = true;
         try {
             this.state.evidenceFile = await readFileAsBase64(file);
@@ -154,6 +172,7 @@ export class CorrectionFormDialog extends Component {
         } catch (err) {
             ev.target.value = "";
             this.state.serverError = { kind: "validation", title: "Không đọc được minh chứng", message: err.message };
+            this.state.attempt++;
         } finally {
             this.state.readingFile = false;
         }
@@ -250,7 +269,7 @@ export class WithdrawDialog extends Component {
 
 export class MyAttendance extends Component {
     static template = "tp_hr_attendance.Mine";
-    static components = { AttPager, SourceStrip };
+    static components = { AttPager, InlineErrors, SourceStrip };
     props = useProps();
 
     setup() {
@@ -283,7 +302,8 @@ export class MyAttendance extends Component {
             loading: true,
             refreshing: false,
             exporting: false,
-            error: "",
+            serverError: null,
+            attempt: 0,
             data: null,
         });
         this.modes = MODES;
@@ -360,7 +380,9 @@ export class MyAttendance extends Component {
                 attention_days: 0,
                 missing_days: 0,
                 review_days: 0,
+                absent_days: 0,
                 no_punch_days: 0,
+                rest_days: 0,
                 no_source_days: 0,
                 leave_days: 0,
                 future_days: 0,
@@ -479,7 +501,7 @@ export class MyAttendance extends Component {
         const request = ++this.request;
         this.state[silent ? "refreshing" : "loading"] = true;
         if (!silent) {
-            this.state.error = "";
+            this.state.serverError = null;
         }
         try {
             const orm = silent ? this.orm.silent : this.orm;
@@ -501,11 +523,12 @@ export class MyAttendance extends Component {
                     pageSize: this.state.pageSize,
                 });
             }
-            this.state.error = "";
+            this.state.serverError = null;
             this.live.loaded();
         } catch (error) {
             if (request === this.request && !silent) {
-                this.state.error = rpcError(error, "Không tải được công cá nhân. Vui lòng thử lại.");
+                this.state.serverError = saveError(error, { verb: "tải công cá nhân" });
+                this.state.attempt++;
             }
         } finally {
             if (request === this.request) {
@@ -661,13 +684,19 @@ export class MyAttendance extends Component {
     }
 
     sourceName(code) {
+        if (code === "enti") {
+            return "Đồng bộ ENTI";
+        }
+        if (code === "correction") {
+            return "Điều chỉnh đã duyệt";
+        }
         if (code === "excel") {
             return "Excel máy chấm công";
         }
         if (code === "api") {
             return "API máy chấm công";
         }
-        return "";
+        return code || "";
     }
 
     async exportOwn() {
@@ -675,11 +704,12 @@ export class MyAttendance extends Component {
             return;
         }
         this.state.exporting = true;
-        this.state.error = "";
+        this.state.serverError = null;
         try {
             downloadBase64(await this.orm.call("tp.hr.attendance.day", "tp_export_mine", [this.buildQueryParams(false)]));
         } catch (error) {
-            this.state.error = rpcError(error, "Không xuất được công cá nhân. Vui lòng thử lại.");
+            this.state.serverError = saveError(error, { verb: "xuất công cá nhân" });
+            this.state.attempt++;
         } finally {
             this.state.exporting = false;
             this.live.flush();
@@ -723,27 +753,41 @@ export class MyAttendance extends Component {
     }
 
     async reopenDraft(req, workDate = "") {
+        this.state.serverError = null;
         try {
             await this.orm.call("tp.hr.attendance.correction", "action_reopen_draft", [[req.id]]);
             await this.load();
             this.openEditRequest({ ...req, state: "draft" }, workDate);
         } catch (error) {
-            this.state.error = rpcError(error, "Không mở lại được bản nháp. Vui lòng thử lại.");
+            this.state.serverError = saveError(error, { verb: "mở lại bản nháp" });
+            this.state.attempt++;
         }
     }
 
     openRequests() {
         return this.action.doAction("tp_hr_attendance.action_my_requests");
     }
+
+    openStandalone() {
+        return this.action.doAction("tp_hr_attendance.action_mine");
+    }
 }
 
 registry.category("actions").add("tp_hr_attendance.mine", MyAttendance);
 
 const CONTENT = {
-    "tp.hr.attendance.correction": ["Đề nghị điều chỉnh công", "Phiếu riêng của người đề nghị; chỉ admin (admin gốc hoặc admin được ủy quyền) duyệt hoặc trả lại.", "Tạo đề nghị", "Chưa có đề nghị"],
-    "tp.hr.attendance.period": ["Chốt kỳ công", "Rà soát các ngày và đề nghị trước khi chốt. Quyền chốt cần phân công riêng.", "Tạo kỳ công", "Chưa có kỳ công"],
-    "tp.hr.attendance.batch": ["Nhập dữ liệu công", "Xem trước và đối chiếu nguồn trước khi ghi nhận giờ công.", "Tạo lô nhập", "Chưa có lô nhập"],
-    "tp.hr.attendance.log": ["Nhật ký chấm công", "Lịch sử thao tác và phiên bản, không chứa giải trình hoặc minh chứng cá nhân.", "", "Chưa có nhật ký"],
+    "tp.hr.attendance.period": [
+        "Chốt kỳ công",
+        "Rà soát các ngày và đề nghị trước khi chốt. Chỉ Admin hoặc người được phân công chốt kỳ thực hiện.",
+        "Tạo kỳ công",
+        "Chưa có kỳ công",
+    ],
+    "tp.hr.attendance.log": [
+        "Nhật ký chấm công",
+        "Lịch sử thao tác và phiên bản, không chứa giải trình hoặc minh chứng cá nhân.",
+        "",
+        "Chưa có nhật ký",
+    ],
 };
 patch(HrListController.prototype, {
     setup() {
@@ -781,31 +825,31 @@ patch(HrListController.prototype, {
         }
     },
     get hrContent() {
+        if (this.props.resModel === "tp.hr.attendance.correction") {
+            if (this.props.context?.tp_review_queue) {
+                return [
+                    "Xử lý điều chỉnh công",
+                    "Phiếu chờ duyệt từ các phòng ban; chỉ Admin (Admin gốc hoặc Admin được ủy quyền đang hiệu lực) duyệt hoặc trả lại.",
+                    "",
+                    "Không có phiếu chờ xử lý",
+                ];
+            }
+            return [
+                "Yêu cầu điều chỉnh công của tôi",
+                "Các phiếu điều chỉnh giờ chấm công cá nhân của bạn; lưu nháp hoặc gửi Admin duyệt.",
+                "Tạo đề nghị",
+                "Chưa có đề nghị",
+            ];
+        }
         return CONTENT[this.props.resModel] || super.hrContent;
     },
 });
 
+TpHrMyProfile.components = { ...TpHrMyProfile.components, MyAttendance };
+
 patch(TpHrMyProfile.prototype, {
     setup() {
         super.setup(...arguments);
-        try {
-            this.menuService = useService("menu");
-        } catch {
-            this.menuService = null;
-        }
         this.tabs = [...this.tabs, { id: "attendance", label: "Công của tôi", icon: "calendar_today" }];
-    },
-    setTab(tabId) {
-        if (tabId === "attendance") {
-            const menus = this.menuService?.getAll?.() || [];
-            const mineMenu =
-                menus.find((m) => m.xmlid === "tp_hr_attendance.menu_mine") ||
-                menus.find((m) => m.xmlid === "tp_hr_attendance.menu_root");
-            if (mineMenu) {
-                return this.menuService.selectMenu(mineMenu);
-            }
-            return this.action.doAction("tp_hr_attendance.action_mine");
-        }
-        return super.setTab(tabId);
     },
 });

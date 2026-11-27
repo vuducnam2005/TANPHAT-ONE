@@ -3,6 +3,8 @@ import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { deserializeDateTime, formatDateTime } from "@web/core/l10n/dates";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
 
 function initialsOf(name) {
     const parts = String(name || "").trim().split(/[\s·/,-]+/).filter(Boolean);
@@ -17,6 +19,7 @@ function initialsOf(name) {
 
 export class AccountSecurity extends Component {
     static template = "tp_web_login.AccountSecurity";
+    static components = { InlineErrors };
     props = useProps();
 
     setup() {
@@ -26,6 +29,9 @@ export class AccountSecurity extends Component {
         this.state = proxy({
             data: null,
             error: "",
+            fieldErrors: [],
+            serverError: null,
+            errorAttempt: 0,
             notice: "",
             busy: false,
             status: "all",
@@ -40,6 +46,8 @@ export class AccountSecurity extends Component {
             pwBusy: false,
             pwSuccess: "",
             pwServerError: "",
+            pwServerObj: null,
+            pwAttempt: 0,
             pwCurrent: "",
             pwNew: "",
             pwConfirm: "",
@@ -62,6 +70,35 @@ export class AccountSecurity extends Component {
 
     get currentPage() {
         return Math.floor(this.state.offset / this.state.limit) + 1;
+    }
+
+    get pwFieldErrors() {
+        const list = [];
+        if (this.state.pwErrors.current) {
+            list.push({
+                id: "tp-pw-current",
+                label: "Mật khẩu hiện tại",
+                location: "Mật khẩu",
+                message: this.state.pwErrors.current,
+            });
+        }
+        if (this.state.pwErrors.next) {
+            list.push({
+                id: "tp-pw-new",
+                label: "Mật khẩu mới",
+                location: "Mật khẩu",
+                message: this.state.pwErrors.next,
+            });
+        }
+        if (this.state.pwErrors.confirm) {
+            list.push({
+                id: "tp-pw-confirm",
+                label: "Xác nhận mật khẩu mới",
+                location: "Mật khẩu",
+                message: this.state.pwErrors.confirm,
+            });
+        }
+        return list;
     }
 
     roleChipClass(roleCode) {
@@ -99,8 +136,14 @@ export class AccountSecurity extends Component {
         this.state.avatarFailed = true;
     }
 
-    async load() {
+    _clearScreenErrors() {
         this.state.error = "";
+        this.state.fieldErrors = [];
+        this.state.serverError = null;
+    }
+
+    async load() {
+        this._clearScreenErrors();
         try {
             this.state.data = await this.orm.call("res.users", "tp_my_security", [], {
                 status: this.state.status,
@@ -110,13 +153,21 @@ export class AccountSecurity extends Component {
             this.state.lang = this.state.data.lang;
             this.state.tz = this.state.data.tz;
         } catch (error) {
-            this.state.error = error.data?.message || "Không tải được thông tin bảo mật. Vui lòng thử lại.";
+            this.state.serverError = saveError(error, {
+                verb: "tải thông tin bảo mật",
+                write: false,
+                note: "Kiểm tra kết nối rồi bấm Thử tải lại.",
+            });
+            this.state.error =
+                error?.data?.message || "Không tải được thông tin bảo mật. Vui lòng thử lại.";
+            this.state.errorAttempt++;
         }
     }
 
     togglePasswordForm() {
         this.state.pwOpen = !this.state.pwOpen;
         this.state.pwServerError = "";
+        this.state.pwServerObj = null;
         this.state.pwErrors = { current: "", next: "", confirm: "" };
         if (!this.state.pwOpen) {
             this.resetPasswordInputs();
@@ -134,6 +185,7 @@ export class AccountSecurity extends Component {
         this.state.pwShowConfirm = false;
         this.state.pwErrors = { current: "", next: "", confirm: "" };
         this.state.pwServerError = "";
+        this.state.pwServerObj = null;
     }
 
     onPasswordInput(field, event) {
@@ -149,7 +201,8 @@ export class AccountSecurity extends Component {
                 this.state.pwErrors.next = "";
             }
             if (this.state.pwConfirm && this.state.pwErrors.confirm) {
-                this.state.pwErrors.confirm = value === this.state.pwConfirm ? "" : "Xác nhận mật khẩu mới chưa khớp.";
+                this.state.pwErrors.confirm =
+                    value === this.state.pwConfirm ? "" : "Xác nhận mật khẩu mới chưa khớp.";
             }
         } else if (field === "confirm") {
             this.state.pwConfirm = value;
@@ -158,6 +211,7 @@ export class AccountSecurity extends Component {
             }
         }
         this.state.pwServerError = "";
+        this.state.pwServerObj = null;
     }
 
     togglePasswordVisibility(field) {
@@ -194,7 +248,9 @@ export class AccountSecurity extends Component {
         }
         this.state.pwSuccess = "";
         this.state.pwServerError = "";
+        this.state.pwServerObj = null;
         if (!this.validatePasswordForm()) {
+            this.state.pwAttempt++;
             return;
         }
         this.state.pwBusy = true;
@@ -206,10 +262,12 @@ export class AccountSecurity extends Component {
             ]);
             this.resetPasswordInputs();
             this.state.pwOpen = false;
-            this.state.pwSuccess = "Đã đổi mật khẩu thành công. Phiên hiện tại vẫn được giữ; các thiết bị tin cậy cũ đã được hủy.";
+            this.state.pwSuccess =
+                "Đã đổi mật khẩu thành công. Phiên hiện tại vẫn được giữ; các thiết bị tin cậy cũ đã được hủy.";
             await this.load();
         } catch (error) {
-            const msg = error.data?.message || "Chưa đổi được mật khẩu. Vui lòng kiểm tra lại và thử lại.";
+            const msg =
+                error?.data?.message || "Chưa đổi được mật khẩu. Vui lòng kiểm tra lại và thử lại.";
             if (msg.includes("Mật khẩu hiện tại")) {
                 this.state.pwErrors = { ...this.state.pwErrors, current: msg };
             } else if (msg.includes("Xác nhận mật khẩu")) {
@@ -218,14 +276,17 @@ export class AccountSecurity extends Component {
                 this.state.pwErrors = { ...this.state.pwErrors, next: msg };
             } else {
                 this.state.pwServerError = msg;
+                this.state.pwServerObj = saveError(error, { verb: "đổi mật khẩu" });
             }
+            this.state.pwAttempt++;
         } finally {
             this.state.pwBusy = false;
         }
     }
 
     async filter(event) {
-        this.state[event.target.name] = event.target.name === "limit" ? Number(event.target.value) : event.target.value;
+        this.state[event.target.name] =
+            event.target.name === "limit" ? Number(event.target.value) : event.target.value;
         this.state.offset = 0;
         await this.load();
     }
@@ -254,7 +315,9 @@ export class AccountSecurity extends Component {
         }
         if (operation === "passkey_remove") {
             const removed = before.has(recordId) && !after.some((key) => key.id === recordId);
-            return removed ? `Đã thu hồi khóa truy cập “${before.get(recordId)}”. Khóa này không còn dùng để đăng nhập được.` : "";
+            return removed
+                ? `Đã thu hồi khóa truy cập “${before.get(recordId)}”. Khóa này không còn dùng để đăng nhập được.`
+                : "";
         }
         if (operation === "passkey_rename") {
             const renamed = after.find((key) => key.id === recordId);
@@ -270,7 +333,7 @@ export class AccountSecurity extends Component {
             return;
         }
         this.state.busy = true;
-        this.state.error = "";
+        this._clearScreenErrors();
         this.state.notice = "";
         const isPasskey = operation.startsWith("passkey_");
         const before = this.passkeySnapshot();
@@ -282,9 +345,14 @@ export class AccountSecurity extends Component {
             }
         };
         try {
-            const result = await this.orm.call("res.users", "tp_security_action", [operation, recordId]);
+            const result = await this.orm.call("res.users", "tp_security_action", [
+                operation,
+                recordId,
+            ]);
             if (result && typeof result === "object" && result.type) {
-                await this.action.doAction(result, { onClose: () => (isPasskey ? confirmPasskey() : this.load()) });
+                await this.action.doAction(result, {
+                    onClose: () => (isPasskey ? confirmPasskey() : this.load()),
+                });
                 await this.load();
             } else if (isPasskey) {
                 await confirmPasskey();
@@ -295,7 +363,9 @@ export class AccountSecurity extends Component {
                 await this.load();
             }
         } catch (error) {
-            this.state.error = error.data?.message || "Thao tác chưa hoàn tất. Vui lòng thử lại.";
+            this.state.serverError = saveError(error, { verb: "thực hiện thao tác bảo mật" });
+            this.state.error = error?.data?.message || "Thao tác chưa hoàn tất. Vui lòng thử lại.";
+            this.state.errorAttempt++;
         } finally {
             this.state.busy = false;
         }
@@ -317,14 +387,18 @@ export class AccountSecurity extends Component {
         }
         this.state.busy = true;
         this.state.saved = false;
-        this.state.error = "";
+        this._clearScreenErrors();
         try {
-            await this.orm.call("res.users", "tp_save_my_preferences", [values || { lang: this.state.lang, tz: this.state.tz }]);
+            await this.orm.call("res.users", "tp_save_my_preferences", [
+                values || { lang: this.state.lang, tz: this.state.tz },
+            ]);
             this.state.saved = true;
             this.state.avatarFailed = false;
             this.state.avatarVersion++;
         } catch (error) {
-            this.state.error = error.data?.message || "Chưa lưu được tùy chọn cá nhân.";
+            this.state.serverError = saveError(error, { verb: "lưu tùy chọn cá nhân" });
+            this.state.error = error?.data?.message || "Chưa lưu được tùy chọn cá nhân.";
+            this.state.errorAttempt++;
         } finally {
             this.state.busy = false;
         }
@@ -335,14 +409,35 @@ export class AccountSecurity extends Component {
         if (!file) {
             return;
         }
+        this._clearScreenErrors();
         if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+            this.state.fieldErrors = [
+                {
+                    id: "tp-security-avatar",
+                    label: "Ảnh đại diện",
+                    location: "Tùy chọn cá nhân",
+                    message: "Vui lòng chọn ảnh PNG/JPG tối đa 5 MB.",
+                },
+            ];
             this.state.error = "Vui lòng chọn ảnh tối đa 5 MB.";
+            this.state.errorAttempt++;
+            event.target.value = "";
             return;
         }
         const reader = new FileReader();
-        reader.onload = () => this.savePreferences({ image_1920: String(reader.result).split(",")[1] });
+        reader.onload = () =>
+            this.savePreferences({ image_1920: String(reader.result).split(",")[1] });
         reader.onerror = () => {
+            this.state.fieldErrors = [
+                {
+                    id: "tp-security-avatar",
+                    label: "Ảnh đại diện",
+                    location: "Tùy chọn cá nhân",
+                    message: "Không đọc được ảnh. Vui lòng chọn lại tệp khác.",
+                },
+            ];
             this.state.error = "Không đọc được ảnh. Vui lòng chọn lại.";
+            this.state.errorAttempt++;
         };
         reader.readAsDataURL(file);
         event.target.value = "";
@@ -350,7 +445,9 @@ export class AccountSecurity extends Component {
 
     back() {
         const previous = this.env.config?.breadcrumbs?.at(-2);
-        return previous ? this.action.restore(previous.jsId) : this.action.doAction("tp_web_home.action_home");
+        return previous
+            ? this.action.restore(previous.jsId)
+            : this.action.doAction("tp_web_home.action_home");
     }
 }
 

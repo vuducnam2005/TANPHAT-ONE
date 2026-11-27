@@ -1,7 +1,9 @@
 import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 import { useService } from "@web/core/utils/hooks";
-import { PAGE_SIZES, cellNote, formatDate, lateText, pagerText, rpcError } from "./common";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
+import { PAGE_SIZES, cellNote, formatDate, lateText, pagerText } from "./common";
 
 const HEALTH = {
     ok: ["Đồng bộ tự động: Hoạt động", "autorenew"],
@@ -17,14 +19,27 @@ export class SourceStrip extends Component {
     static template = "tp_hr_attendance.SourceStrip";
     props = useProps();
     get tone() {
-        return this.props.source.auto ? this.props.source.health : "off";
+        const source = this.props.source;
+        if (source.connected && source.cron_active === false) {
+            return "stale";
+        }
+        return source.auto ? source.health : "off";
     }
     get label() {
         const source = this.props.source;
+        if (source.connected && source.cron_active === false) {
+            return "Đồng bộ tự động: Đang tạm tắt";
+        }
+        if (source.auto && source.health === "stale" && !source.updated_at) {
+            return "Đồng bộ tự động: Chờ đồng bộ lần đầu";
+        }
         return source.auto && HEALTH[source.health] ? HEALTH[source.health][0] : source.label;
     }
     get icon() {
         const source = this.props.source;
+        if (source.connected && source.cron_active === false) {
+            return "pause_circle";
+        }
         if (source.auto && HEALTH[source.health]) {
             return HEALTH[source.health][1];
         }
@@ -83,18 +98,20 @@ export class PersonDetail extends Component {
 
 export class PersonDialog extends Component {
     static template = "tp_hr_attendance.PersonDialog";
-    static components = { Dialog, PersonDetail };
+    static components = { Dialog, InlineErrors, PersonDetail };
     props = useProps();
     setup() {
         this.orm = useService("orm");
-        this.state = proxy({ data: null, error: "" });
+        this.state = proxy({ data: null, serverError: null, attempt: 0 });
         onWillStart(() => this.load());
     }
     async load() {
         try {
             this.state.data = await this.orm.call("tp.hr.attendance.day", "tp_person", [this.props.params]);
+            this.state.serverError = null;
         } catch (error) {
-            this.state.error = rpcError(error, "Không tải được giờ theo ngày của nhân viên này.");
+            this.state.serverError = saveError(error, { verb: "tải giờ theo ngày" });
+            this.state.attempt++;
         }
     }
 }
@@ -102,12 +119,12 @@ export class PersonDialog extends Component {
 /** Machine late totals of a source period, opened from a day view without changing the day filter. */
 export class LateDialog extends Component {
     static template = "tp_hr_attendance.LateDialog";
-    static components = { Dialog, PeriodTable, AttPager };
+    static components = { Dialog, InlineErrors, PeriodTable, AttPager };
     props = useProps();
     setup() {
         this.orm = useService("orm");
         this.dialog = useService("dialog");
-        this.state = proxy({ data: null, error: "", page: 1, pageSize: 100 });
+        this.state = proxy({ data: null, serverError: null, attempt: 0, page: 1, pageSize: 100 });
         onWillStart(() => this.load());
     }
     async load() {
@@ -115,8 +132,10 @@ export class LateDialog extends Component {
             this.state.data = await this.orm.call("tp.hr.attendance.day", "tp_sheet", [{
                 ...this.props.params, mode: "range", page: this.state.page, page_size: this.state.pageSize,
             }]);
+            this.state.serverError = null;
         } catch (error) {
-            this.state.error = rpcError(error, "Không tải được tổng đi muộn của kỳ này.");
+            this.state.serverError = saveError(error, { verb: "tải tổng đi muộn" });
+            this.state.attempt++;
         }
     }
     setPage(page) {

@@ -605,8 +605,9 @@
         .tp-cal-page-select {
             border: 1px solid var(--tp-pt-border-strong);
             border-radius: 6px;
-            padding: 2px 6px;
-            background: #ffffff;
+            min-width: 72px;
+            padding: 2px 28px 2px 8px;
+            background-color: #ffffff;
         }
     }
 }

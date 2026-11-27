@@ -10,7 +10,7 @@ from odoo import Command
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import HttpCase, get_db_name, tagged
 
-from .test_delegation import DelegationCase
+from .test_delegation import DelegationCase, pick_free_employee_codes
 
 
 @tagged('post_install', '-at_install', 'tp_admin_account_policy')
@@ -231,8 +231,11 @@ class TestAdminAccountLockHttp(HttpCase):
             self.env.ref('tp_admin_delegation.group_original_admin').id),
             Command.link(self.env.ref('base.group_system').id),
             Command.link(self.env.ref('hr.group_hr_manager').id)]})
+        browser_codes = pick_free_employee_codes(self.env, len(users))
         employees = self.env['hr.employee'].create([
-            {'name': user.name, 'user_id': user.id} for user in users])
+            {'name': user.name, 'user_id': user.id, 'tp_employee_code': code}
+            for user, code in zip(users, browser_codes)
+        ])
         for user in users[1:3]:
             self.env['tp.admin.delegation'].with_user(admin)._change(
                 user, self.env.company, 'grant', 'Synthetic browser policy')
@@ -282,7 +285,8 @@ class TestAdminAccountLockHttp(HttpCase):
             'company_ids': [Command.set(self.env.company.ids)],
             'group_ids': [Command.set(self.env.ref('base.group_user').ids)],
         })
-        self.env['hr.employee'].create({'name': user.name, 'user_id': user.id})
+        http_code = pick_free_employee_codes(self.env, 1)[0]
+        self.env['hr.employee'].create({'name': user.name, 'user_id': user.id, 'tp_employee_code': http_code})
         self.env['tp.admin.delegation'].with_user(admin)._change(user, self.env.company, 'grant', 'Synthetic HTTP')
 
         def rpc(path, params):

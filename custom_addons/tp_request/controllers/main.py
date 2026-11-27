@@ -11,6 +11,7 @@ from odoo.exceptions import AccessError, UserError
 from odoo.http import request
 from odoo.http.stream import content_disposition
 
+from odoo.addons.tp_request.models.attendance_bridge import CORR_EVIDENCE_TAG
 from odoo.addons.tp_request.models.request_common import (
     APPROVAL_STATES,
     EXECUTION_STATES,
@@ -35,7 +36,7 @@ ALLOWED_MIME_PREFIXES = (
 
 def _safe_excel_cell(val):
     text = str(val or '')
-    if text and text[0] in ('=', '+', '-', '@', '\t', '\r'):
+    if text and (text.lstrip().startswith(('=', '+', '-', '@')) or text.startswith(('\t', '\r', '\n'))):
         return "'" + text
     return text
 
@@ -115,6 +116,19 @@ class TpRequestController(http.Controller):
         })
         if rec:
             internal(rec).write({'attachment_ids': [(4, att.id)]})
+            if (
+                rec.handler_kind == 'attendance_correction'
+                and rec.attendance_correction_id
+                and rec.requester_user_id.id == request.env.uid
+                and rec.approval_state in ('draft', 'returned')
+                and not rec.attendance_correction_id.sudo().evidence_file
+            ):
+                att.sudo().write({'description': CORR_EVIDENCE_TAG})
+                corr_user = request.env['tp.hr.attendance.correction'].browse(rec.attendance_correction_id.id)
+                corr_user.with_context(_tp_skip_evidence_mirror=True).write({
+                    'evidence_file': base64.b64encode(raw).decode('ascii'),
+                    'evidence_name': att.name,
+                })
         return request.make_json_response({
             'ok': True,
             'attachment': {
@@ -131,14 +145,40 @@ class TpRequestController(http.Controller):
         att = request.env['ir.attachment'].sudo().browse(attachment_id).exists()
         if not att:
             return request.make_json_response({'ok': False, 'error': 'Tệp không tồn tại.'}, status=404)
+        rec = None
+        was_corr_evidence = False
+        corr_id = 0
         if att.res_model == 'tp.request' and att.res_id:
             rec = request.env['tp.request'].browse(att.res_id).exists()
             if not rec or rec.requester_user_id.id != request.env.uid or rec.approval_state not in ('draft', 'returned'):
                 return request.make_json_response({'ok': False, 'error': 'Không có quyền gỡ tệp đính kèm này.'}, status=403)
+            was_corr_evidence = att.description == CORR_EVIDENCE_TAG
+            if rec.handler_kind == 'attendance_correction' and rec.attendance_correction_id:
+                corr_id = rec.attendance_correction_id.id
             internal(rec).write({'attachment_ids': [(3, att.id)]})
-        elif att.create_uid.id != request.env.uid:
-            return request.make_json_response({'ok': False, 'error': 'Không có quyền gỡ tệp này.'}, status=403)
+        elif not att.res_model and not att.res_id and att.create_uid.id == request.env.uid:
+            pass
+        else:
+            return request.make_json_response({'ok': False, 'error': 'Không có quyền gỡ tệp đính kèm này.'}, status=403)
         att.sudo().unlink()
+        if was_corr_evidence and corr_id and rec:
+            corr_user = request.env['tp.hr.attendance.correction'].browse(corr_id)
+            remaining = rec.sudo().attachment_ids.filtered(
+                lambda a: a.res_model == 'tp.request' and a.res_id == rec.id,
+            )[:1]
+            if remaining:
+                rem_obj = remaining.raw
+                rem_bytes = rem_obj.content if hasattr(rem_obj, 'content') else (rem_obj or b'')
+                remaining.sudo().write({'description': CORR_EVIDENCE_TAG})
+                corr_user.with_context(_tp_skip_evidence_mirror=True).write({
+                    'evidence_file': base64.b64encode(rem_bytes).decode('ascii') if rem_bytes else False,
+                    'evidence_name': remaining.name or False,
+                })
+            else:
+                corr_user.with_context(_tp_skip_evidence_mirror=True).write({
+                    'evidence_file': False,
+                    'evidence_name': False,
+                })
         return request.make_json_response({'ok': True})
 
     @http.route('/tp_request/export.xlsx', type='http', auth='user', methods=['GET'])

@@ -8,6 +8,7 @@
             <attribute name="class">oi</attribute>
         </xpath>
         <xpath expr="//button[hasclass('o_switch_company_menu')]" position="attributes">
+            <attribute name="title">Công ty đang hoạt động</attribute>
             <attribute name="aria-label">Công ty đang hoạt động</attribute>
         </xpath>
     </t>

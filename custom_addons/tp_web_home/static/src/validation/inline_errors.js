@@ -9,10 +9,22 @@ import { Component, onMounted, onPatched, signal, t, useProps } from "@odoo/owl"
 export class InlineErrors extends Component {
     static template = "tp_web_home.InlineErrors";
     props = useProps({
-        errors: t.array(), server: t.any().optional(), attempt: t.number().optional(),
-        intro: t.string().optional(), note: t.string().optional(),
+        errors: t.array().optional(),
+        server: t.any().optional(),
+        error: t.any().optional(),
+        attempt: t.number().optional(),
+        intro: t.string().optional(),
+        note: t.string().optional(),
     });
     section = signal.ref();
+
+    get normalizedErrors() {
+        return Array.isArray(this.props.errors) ? this.props.errors : [];
+    }
+
+    get normalizedServer() {
+        return this.props.server || this.props.error || null;
+    }
 
     setup() {
         let shownAttempt = 0;
@@ -28,7 +40,10 @@ export class InlineErrors extends Component {
     }
 
     focusError(error, ev) {
-        const scope = ev.currentTarget.closest('.modal, [role="dialog"], .o_form_renderer, .o_tp_hr_my_profile') || document;
+        const scope =
+            ev.currentTarget.closest(
+                '.modal, [role="dialog"], .o_form_renderer, .o_tp_hr_my_profile, .tp-account-security'
+            ) || document;
         const field = [...scope.querySelectorAll("[id]")].find((el) => el.id === error.id);
         if (!field) return;
         field.scrollIntoView({ block: "center", inline: "nearest" });

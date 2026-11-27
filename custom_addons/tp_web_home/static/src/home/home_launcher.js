@@ -522,13 +522,22 @@ export class HomeLauncher extends Component {
         return VI_NUMBER.format(value);
     }
 
+    barCanvasNeedsScroll() {
+        const bar = this.dashboard().charts?.bar;
+        const count = bar?.rows?.length || 0;
+        if (bar?.kind === "daily") {
+            return count > 14;
+        }
+        return count > 10;
+    }
+
     barCanvasMinWidth() {
         const bar = this.dashboard().charts?.bar;
         const count = bar?.rows?.length || 0;
         if (bar?.kind === "daily") {
             return count > 14 ? `${count * 34}px` : "100%";
         }
-        return count > 6 ? `${count * 76}px` : "100%";
+        return count > 10 ? `${count * 64}px` : "100%";
     }
 
     resultMessage() {
@@ -873,6 +882,59 @@ export class HomeLauncher extends Component {
         }
     }
 
+    async _openCanonicalRecordForm(resModel, resId, options = {}) {
+        const modelToXmlid = {
+            "hr.employee": "tp_hr_workspace.action_employees",
+            "hr.employee.public": "tp_hr_workspace.action_directory",
+            "hr.department": "tp_hr_workspace.action_departments",
+            "tp.contract": "tp_contract.action_tp_contracts_list",
+            "project.project": "tp_kd_workspace.action_projects",
+            "project.task": "tp_kd_workspace.action_tasks",
+            "crm.lead": "tp_kd_workspace.action_opportunities",
+            "tp.bid.package": "tp_kd_workspace.action_packages",
+            "maintenance.equipment": "tp_equipment.action_equipment",
+            "tp.equipment.move": "tp_equipment.action_moves",
+            "tp.equipment.proposal": "tp_equipment.action_proposals",
+            "tp.request": "tp_request.action_detail",
+            "calendar.event": "calendar.action_calendar_event",
+            "tp.report.document": "tp_reporting.action_personal",
+            "tp.report.plan": "tp_reporting.action_plans",
+        };
+        const xmlid = modelToXmlid[resModel];
+        if (xmlid) {
+            try {
+                const base = await this.actionService.loadAction(xmlid);
+                if (base && base.type === "ir.actions.act_window") {
+                    const formPair =
+                        (base.views || []).find((v) => v[1] === "form") || [false, "form"];
+                    await this.actionService.doAction(
+                        {
+                            ...base,
+                            res_model: resModel,
+                            res_id: resId,
+                            views: [formPair],
+                            view_mode: "form",
+                        },
+                        options
+                    );
+                    return;
+                }
+            } catch {
+                // Fall back to direct act_window below if module action is inaccessible
+            }
+        }
+        await this.actionService.doAction(
+            {
+                type: "ir.actions.act_window",
+                res_model: resModel,
+                res_id: resId,
+                views: [[false, "form"]],
+                view_mode: "form",
+            },
+            options
+        );
+    }
+
     async openDocumentHit(doc) {
         this.actionError.set(null);
         try {
@@ -889,13 +951,7 @@ export class HomeLauncher extends Component {
                 return;
             }
             if (doc.res_model && doc.res_id) {
-                await this.actionService.doAction({
-                    type: "ir.actions.act_window",
-                    res_model: doc.res_model,
-                    res_id: doc.res_id,
-                    views: [[false, "form"]],
-                    view_mode: "form",
-                });
+                await this._openCanonicalRecordForm(doc.res_model, doc.res_id);
             }
         } catch (error) {
             this.actionError.set(
@@ -1148,16 +1204,9 @@ export class HomeLauncher extends Component {
                     return;
                 }
             }
-            await this.actionService.doAction(
-                {
-                    type: "ir.actions.act_window",
-                    res_model: item.res_model,
-                    res_id: item.res_id,
-                    views: [[false, "form"]],
-                    view_mode: "form",
-                },
-                { clearBreadcrumbs: true }
-            );
+            await this._openCanonicalRecordForm(item.res_model, item.res_id, {
+                clearBreadcrumbs: true,
+            });
         } catch (error) {
             this.actionError.set(
                 saveError(error, {

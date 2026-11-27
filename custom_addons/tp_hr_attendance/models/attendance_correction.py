@@ -614,11 +614,23 @@ class AttendancePeriodWizard(models.TransientModel):
 
     def action_confirm(self):
         self.ensure_one()
+        period_name = self.period_id.name
         if self.operation == 'lock':
             self.period_id._tp_lock(self.reason)
+            message = self.env._('Đã chốt kỳ công %(name)s.', name=period_name)
         else:
             self.period_id._tp_unlock(self.reason)
-        return {'type': 'ir.actions.act_window_close'}
+            message = self.env._('Đã mở lại kỳ công %(name)s.', name=period_name)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'type': 'success',
+                'message': message,
+                'sticky': False,
+                'next': {'type': 'ir.actions.act_window_close'},
+            },
+        }
 
 
 class AttendanceEvidence(models.Model):

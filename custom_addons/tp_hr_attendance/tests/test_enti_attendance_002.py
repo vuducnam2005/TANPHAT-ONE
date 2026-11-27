@@ -20,6 +20,7 @@ import threading
 from datetime import date, datetime, timedelta
 from io import BytesIO
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import requests
 from openpyxl import load_workbook
@@ -426,14 +427,44 @@ class TestEntiSyncFake(AttendanceCase):
         with self.assertRaises(AccessError):
             self.env_for(self.viewer)['tp.hr.attendance.enti.mapping'].browse(self.mapping('syn-x').id).action_confirm_mapping()
 
-        # HR confirms the look-alike with written evidence: the stored ENTI days then reach the board.
+        # HR confirms the look-alike with written evidence (both inline match_reason and context work): ENTI days reach the board.
         similar = Manager.browse(self.mapping('syn-x').id)
-        similar.employee_id = self.emp_b
-        reason = 'Synthetic: HR xác nhận cùng một người'
-        similar.with_context(tp_mapping_reason=reason).action_confirm_mapping()
-        self.assertEqual((similar.state, similar.match_reason), ('mapped', reason))
+        similar.write({'employee_id': self.emp_b.id, 'match_reason': 'Synthetic: HR xác nhận trực tiếp trên danh sách'})
+        similar.action_confirm_mapping()
+        self.assertEqual((similar.state, similar.match_reason), ('mapped', 'Synthetic: HR xác nhận trực tiếp trên danh sách'))
         self.assertEqual(self.day(self.emp_b, D16).in_time, '08:00')
         self.assertIn([D16], [note[0] for note in self.notes])
+
+    def test_approved_leave_and_punch_conflict_and_multiday_sheet_state_filter(self):
+        """F-A04-0001 & F-A04-0009: approved leave without punch -> 'leave'; approved leave + machine punch -> 'review' + conflict_note; week state filter matches."""
+        self.sync([
+            enti_row('syn-a', 'Synthetic Người Một', [(D16, '08:15', '17:05', 0), (D18, None, None, 0)]),
+        ])
+        DayModel = type(self.env['tp.hr.attendance.day'])
+        fake_leaves = {
+            (self.emp_a.id, D16): 'Đơn xin nghỉ phép đã duyệt',
+            (self.emp_a.id, D18): 'Đơn công tác đã duyệt',
+        }
+        with self.mock_patch_leave_days(DayModel, fake_leaves):
+            DayMgr = self.env_for(self.manager)['tp.hr.attendance.day']
+            sheet = DayMgr.tp_sheet({'mode': 'week', 'date': D16.isoformat(), 'state': 'review'})
+            self.assertEqual([r['id'] for r in sheet['rows']], [self.emp_a.id])
+            cells = {c['date']: c for c in sheet['rows'][0]['cells']}
+            self.assertEqual(cells[D16.isoformat()]['state'], 'review')
+            self.assertIn('Xung đột', cells[D16.isoformat()]['conflict_note'])
+            self.assertEqual(cells[D18.isoformat()]['state'], 'leave')
+            self.assertEqual(cells[D18.isoformat()]['leave_note'], 'Đơn công tác đã duyệt')
+
+            mine = self.env_for(self.viewer)['tp.hr.attendance.day'].tp_mine({'mode': 'week', 'date': D16.isoformat()})
+            mine_rows = {r['date']: r for r in mine['rows']}
+            self.assertEqual(mine_rows[D16.isoformat()]['state'], 'review')
+            self.assertIn('Xung đột', mine_rows[D16.isoformat()]['conflict_note'])
+            self.assertEqual(mine_rows[D18.isoformat()]['state'], 'leave')
+            self.assertEqual(mine_rows[D18.isoformat()]['leave_note'], 'Đơn công tác đã duyệt')
+
+    @staticmethod
+    def mock_patch_leave_days(day_cls, fake_map):
+        return patch.object(day_cls, '_tp_leave_days', lambda _self, _company, _ids, _start, _end: dict(fake_map))
 
     # HR-EMPLOYEE-CODE-003 -------------------------------------------------------------------------------------
     def test_enti_code_never_picks_one_of_same_name_employees(self):
@@ -733,6 +764,8 @@ class TestExportTemplate(BaseCase):
         self.assertEqual(class_date(date(2026, 11, 23), date(2026, 11, 29), today), date(2026, 11, 23))
         self.assertEqual(class_date(D16, D18, today, {D16, D17, date(2026, 11, 1)}), D17)
         self.assertEqual(class_date(D16, D18, today), D18)
+        # Past week ending on a markless Sunday steps back to Saturday (last working day).
+        self.assertEqual(class_date(date(2026, 11, 9), date(2026, 11, 15), today), date(2026, 11, 14))
         for raw, expected in (('2026-11-17T08:10:23', True), ('2026-11-17T08:10:00', True), ('08:10:23', True),
                               ('08:10', False), ('', False), (None, False), ('2026-11-17T08:10', False)):
             self.assertEqual(clock_has_seconds(raw), expected, raw)

@@ -54,6 +54,23 @@ def kd_leaf(model):
     return {"tp_kd_leaf": f"tp_kd_workspace.{leaf}"} if leaf else {}
 
 
+ACTION_XMLID_BY_MODEL = {
+    "project.project": "tp_kd_workspace.action_projects",
+    "tp.bid.package": "tp_kd_workspace.action_packages",
+    "crm.lead": "tp_kd_workspace.action_opportunities",
+    "project.task": "tp_kd_workspace.action_tasks",
+    "tp.contract": "tp_contract.action_tp_contracts_list",
+    "tp.contract.revision": "tp_contract.action_tp_contract_revisions",
+    "tp.allocation": "tp_kd_workspace.action_allocations",
+    "tp.production": "tp_kd_workspace.action_productions",
+    "tp.acceptance": "tp_kd_workspace.action_acceptances",
+    "tp.payment.request": "tp_kd_workspace.action_payments",
+    "tp.periodic.plan": "tp_kd_workspace.action_plans",
+    "tp.credential": "tp_kd_workspace.action_credentials",
+    "tp.obligation": "tp_kd_workspace.action_obligations",
+}
+
+
 def open_records(env, model, domain, name, context=None):
     env[model].check_access("read")
     views = {}
@@ -73,15 +90,26 @@ def open_records(env, model, domain, name, context=None):
             (env.ref("tp_kd_workspace.kd_project_list").id, "list"),
             (env.ref("tp_kd_workspace.project_governance_form").id, "form"),
         ]
-    return {
+    base_action = {}
+    xmlid = ACTION_XMLID_BY_MODEL.get(model)
+    if xmlid and env.ref(xmlid, raise_if_not_found=False):
+        base_action = env["ir.actions.actions"]._for_xml_id(xmlid)
+    merged_ctx = {**child_context(env), **(context or {}), **kd_leaf(model)}
+    if model == "tp.contract":
+        merged_ctx.setdefault(
+            "tp_can_create_contract",
+            env["tp.contract"].get_kd_ui_permissions()["can_create_contract"],
+        )
+    base_action.update({
         **views,
         "type": "ir.actions.act_window",
         "name": name,
         "res_model": model,
         "view_mode": "list,form",
         "domain": domain,
-        "context": {**child_context(env), **(context or {}), **kd_leaf(model)},
-    }
+        "context": merged_ctx,
+    })
+    return base_action
 
 
 class KdGrant(models.Model):

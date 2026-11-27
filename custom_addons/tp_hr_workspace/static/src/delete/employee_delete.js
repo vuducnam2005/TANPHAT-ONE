@@ -2,6 +2,8 @@ import { Component, proxy, signal, useProps, onWillStart, onWillDestroy } from "
 import { Dialog } from "@web/core/dialog/dialog";
 import { registry } from "@web/core/registry";
 import { useAutofocus, useService } from "@web/core/utils/hooks";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
 
 /** HR-DELETE-010: one confirmation, the admin's own password, all or nothing. */
 export const DELETE_WARNING = "Hồ sơ sẽ bị xóa vĩnh viễn khỏi hệ thống. Thao tác này không thể hoàn tác bằng chức năng Bỏ lưu trữ.";
@@ -48,7 +50,7 @@ export function deleteInputError({ reason, password }) {
 
 export class EmployeeDelete extends Component {
     static template = "tp_hr_workspace.EmployeeDelete";
-    static components = { Dialog };
+    static components = { Dialog, InlineErrors };
     props = useProps();
     warning = DELETE_WARNING;
 
@@ -63,10 +65,40 @@ export class EmployeeDelete extends Component {
         this.state = proxy({
             loading: true, loadError: "", preview: null, reason: "", password: "", visible: false,
             lockAccounts: false, busy: false, error: "", errorField: "", stale: false,
-            locationId: null,
+            locationId: null, attempt: 0, server: null,
         });
         onWillStart(() => this.load());
         onWillDestroy(() => this.clearPassword());
+    }
+
+    get inlineFieldErrors() {
+        if (!this.state.error || this.state.server) {
+            return [];
+        }
+        if (this.state.errorField === "reason") {
+            return [{
+                id: "tp_hr_delete_reason",
+                label: "Lý do xóa",
+                location: "Xóa vĩnh viễn nhân viên",
+                message: this.state.error,
+            }];
+        }
+        return [{
+            id: "tp_hr_delete_password",
+            label: "Mật khẩu của bạn",
+            location: "Xóa vĩnh viễn nhân viên",
+            message: this.state.error,
+        }];
+    }
+
+    get allOtherAssignments() {
+        const list = [];
+        for (const emp of this.state.preview?.employees || []) {
+            for (const item of emp.otherAssignments || []) {
+                list.push({ employee: emp.name, label: item.label, value: item.value });
+            }
+        }
+        return list;
     }
 
     get employeeIds() {
@@ -141,6 +173,7 @@ export class EmployeeDelete extends Component {
     async reloadPreview() {
         this.state.error = "";
         this.state.errorField = "";
+        this.state.server = null;
         await this.load();
     }
 
@@ -151,6 +184,8 @@ export class EmployeeDelete extends Component {
         }
         const invalid = deleteInputError(this.state);
         if (invalid) {
+            this.state.attempt += 1;
+            this.state.server = null;
             this.state.error = invalid.message;
             this.state.errorField = invalid.field;
             this.focus(invalid.field);
@@ -159,6 +194,7 @@ export class EmployeeDelete extends Component {
         this.state.busy = true;
         this.state.error = "";
         this.state.errorField = "";
+        this.state.server = null;
         const password = this.state.password;
         this.clearPassword();
         let result;
@@ -168,6 +204,8 @@ export class EmployeeDelete extends Component {
             ]);
         } catch (error) {
             this.state.busy = false;
+            this.state.attempt += 1;
+            this.state.server = saveError(error, { verb: "xóa vĩnh viễn nhân viên" });
             if (EXPECTED.includes(error.data?.name)) {
                 this.state.error = error.data.message;
                 this.state.stale = error.data.name === "odoo.exceptions.UserError";
@@ -180,6 +218,8 @@ export class EmployeeDelete extends Component {
         }
         this.state.busy = false;
         if (!result?.ok) {
+            this.state.attempt += 1;
+            this.state.server = null;
             this.state.error = result?.message || "Chưa xác minh được mật khẩu. Chưa có hồ sơ nào bị xóa.";
             this.state.errorField = result?.field || "password";
             this.focus(this.state.errorField);

@@ -14,9 +14,7 @@
         </button>
     </header>
 
-    <div t-if="this.state.exportError" class="alert alert-danger o_tp_att_ov_alert" role="alert">
-        <strong>Xuất Excel chưa thành công.</strong> <t t-out="this.state.exportError"/>
-    </div>
+    <InlineErrors errors="[]" server="this.state.serverError" attempt="this.state.attempt"/>
 
     <section class="o_tp_att_ov_filters" aria-label="Kỳ và bộ lọc">
       <div class="o_tp_att_ov_when">
@@ -25,19 +23,19 @@
                 t-att-aria-pressed="this.state.mode === mode[0] ? 'true' : 'false'" t-on-click="() => this.setMode(mode[0])" t-out="mode[1]"/>
         </div>
         <div class="o_tp_att_period" t-if="this.state.mode !== 'range'">
-            <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(-1)" aria-label="Kỳ trước"><i class="oi" data-icon="chevron_backward" aria-hidden="true"/></button>
+            <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(-1)" aria-label="Kỳ trước" title="Kỳ trước"><i class="oi" data-icon="chevron_backward" aria-hidden="true"/></button>
             <input t-if="this.state.mode === 'month'" type="month" t-att-value="this.data?.start?.slice(0, 7)" t-on-change="this.onMonth" aria-label="Chọn tháng"/>
             <input t-else="" type="date" t-att-value="this.data?.date or this.state.date" t-on-change="this.onDate"
                    t-att-aria-label="this.state.mode === 'week' ? 'Chọn một ngày trong tuần (T2–CN)' : 'Chọn ngày'"/>
-            <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(1)" aria-label="Kỳ sau"><i class="oi" data-icon="chevron_forward" aria-hidden="true"/></button>
+            <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(1)" aria-label="Kỳ sau" title="Kỳ sau"><i class="oi" data-icon="chevron_forward" aria-hidden="true"/></button>
             <button type="button" class="btn btn-light" t-on-click="this.goToday">Hôm nay</button>
         </div>
         <div class="o_tp_att_period o_tp_att_ov_range" t-else="">
-            <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(-1)" aria-label="Khoảng trước"><i class="oi" data-icon="chevron_backward" aria-hidden="true"/></button>
+            <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(-1)" aria-label="Khoảng trước" title="Khoảng trước"><i class="oi" data-icon="chevron_backward" aria-hidden="true"/></button>
             <input type="date" t-att-value="this.state.from" t-on-change="(ev) => this.onRange('from', ev)" aria-label="Từ ngày"/>
             <span aria-hidden="true">→</span>
             <input type="date" t-att-value="this.state.to" t-on-change="(ev) => this.onRange('to', ev)" aria-label="Đến ngày"/>
-            <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(1)" aria-label="Khoảng sau"><i class="oi" data-icon="chevron_forward" aria-hidden="true"/></button>
+            <button type="button" class="o_tp_att_icon_btn" t-att-disabled="!this.data" t-on-click="() => this.step(1)" aria-label="Khoảng sau" title="Khoảng sau"><i class="oi" data-icon="chevron_forward" aria-hidden="true"/></button>
         </div>
       </div>
       <div class="o_tp_att_ov_which">
@@ -61,7 +59,11 @@
       </div>
     </section>
 
-    <div t-if="this.state.error" class="alert alert-danger" role="alert"><t t-out="this.state.error"/> <button class="btn btn-link p-0" t-on-click="() => this.load()">Thử lại</button></div>
+    <SourceStrip t-if="this.data?.source" source="this.data.source" onSources="this.data?.can_import ? (() => this.openSources()) : null"/>
+
+    <div t-if="this.state.serverError and !this.data" class="mb-2">
+        <button class="btn btn-sm btn-outline-secondary" t-on-click="() => this.load()">Thử lại</button>
+    </div>
     <p t-elif="!this.data" role="status" class="o_tp_att_loading">Đang tải tổng quan…</p>
     <t t-else="">
         <p t-if="this.data.future" class="alert alert-secondary">Kỳ này chưa đến; chưa có dữ liệu chấm công.</p>

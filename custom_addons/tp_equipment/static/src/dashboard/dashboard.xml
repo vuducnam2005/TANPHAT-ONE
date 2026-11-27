@@ -91,17 +91,15 @@
             </header>
             <div class="tp_eq_busy_bar" t-att-class="{ 'is-on': this.state.busy and this.state.data }" aria-hidden="true"/>
 
+            <InlineErrors errors="[]" server="this.state.serverError"/>
+
             <div t-if="this.state.loading" class="tp_eq_loading_grid" aria-busy="true">
                 <div class="tp_eq_skel_kpi" t-foreach="[1, 2, 3, 4]" t-as="s" t-key="s"/>
                 <div class="tp_eq_skel_chart"/>
                 <div class="tp_eq_skel_chart"/>
             </div>
 
-            <div t-elif="this.state.error" class="tp_eq_error_card" role="alert">
-                <div>
-                    <strong>Không tải được số liệu tổng quan</strong>
-                    <p><t t-out="this.state.error"/></p>
-                </div>
+            <div t-elif="this.state.serverError and !this.state.data" class="tp_eq_error_card">
                 <button type="button" class="tp_eq_btn tp_eq_btn_primary" t-on-click="() => this.load()">Tải lại</button>
             </div>
 

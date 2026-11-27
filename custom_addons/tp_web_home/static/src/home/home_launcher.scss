@@ -1,9 +1,19 @@
 // UI-HOME-006 & UI-HOME-007: 5-tier Executive (Admin) & Personal (Employee) Home
 // Compact single-screen proportions matching reference image with zero vertical page scroll on desktop.
+.o_web_client:has(> .o_action_manager > .o_action.o_tp_web_home) > .o_action_manager {
+    overflow: hidden !important;
+}
+
 .o_web_client > .o_action_manager > .o_action.o_tp_web_home {
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior-y: contain;
+
+    &:has(.tp-apps-backdrop),
+    &:has(.tp-home-modal-backdrop),
+    &:has(.tp-home-drawer-backdrop) {
+        overflow: hidden !important;
+    }
 
     @media (min-width: 1201px) and (min-height: 650px) {
         overflow: hidden;
@@ -1490,20 +1500,21 @@
     }
 
     .tp-filter-select {
-        height: 26px;
-        max-width: 152px;
-        padding: 1px 7px;
+        height: 28px;
+        min-height: 28px;
+        max-width: 176px;
+        padding: 2px 30px 2px 8px;
         font-size: 11.5px;
         font-weight: 600;
         color: #2E4466;
-        background: #F7FAFF;
+        background-color: #F7FAFF;
         border: 1px solid var(--tp-home-border);
         border-radius: 7px;
         cursor: pointer;
 
         &:hover {
             border-color: #B4CBF0;
-            background: #FFFFFF;
+            background-color: #FFFFFF;
         }
     }
 
@@ -1578,8 +1589,12 @@
         min-width: 0;
         height: 100%;
         min-height: 110px;
-        overflow-x: auto;
+        overflow-x: hidden;
         overflow-y: hidden;
+
+        &.has-scroll {
+            overflow-x: auto;
+        }
     }
 
     .tp-bar-canvas-box {
@@ -2203,8 +2218,9 @@
         .tp-apps-panel .tp-dept-grid .tp-dept-tile {
             min-height: 76px;
         }
-        .tp-agenda-list {
-            max-height: 230px;
+        .tp-agenda-list:not(.tp-agenda-modal-list) {
+            max-height: none;
+            overflow-y: visible;
         }
         .tp-chart-panel {
             min-height: 230px;
@@ -2250,6 +2266,44 @@
         }
         .tp-banner-username {
             font-size: 23px;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .tp-home-icon-btn,
+        .tp-home-bell-host .o-dropdown > button,
+        .tp-home-bell-host button,
+        .o_tp_web_home_panel_close,
+        .o_tp_web_home_search_clear,
+        .tp-refresh-icon-btn {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            min-height: 44px;
+        }
+        .o_tp_web_home_search_clear {
+            right: 2px;
+        }
+        .tp-home-user-btn,
+        .tp-see-all-btn,
+        .tp-help-link-btn,
+        .tp-agenda-linked-pill,
+        .tp-back {
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .o_tp_web_home_search_input {
+            height: 44px;
+            min-height: 44px;
+            font-size: 16px;
+            padding-right: 44px;
+        }
+        .tp-filter-select {
+            height: 44px;
+            min-height: 44px;
+            font-size: 16px;
+            max-width: 100%;
         }
     }
 

@@ -15,6 +15,7 @@ from .attendance_common import (
     DEFAULT_TZ,
     HR_MANAGER,
     can,
+    can_manage_enti_images,
     deny_direct,
     internal,
     is_correction_admin,
@@ -132,7 +133,6 @@ class AttendanceSource(models.Model):
         if not is_internal(self):
             if set(vals) & _SYSTEM_FIELDS:
                 raise AccessError(self.env._('Trạng thái nhận dữ liệu chỉ được hệ thống cập nhật.'))
-            from .enti_image import can_manage_enti_images
             if not can_manage_enti_images(self.env, self.company_id[:1] if self else self.env.company):
                 raise AccessError(self.env._('Chỉ quản lý nhân sự được khai báo nguồn dữ liệu chấm công.'))
 
@@ -231,9 +231,16 @@ class AttendanceSource(models.Model):
         Existing backend rights and canonical attendance calculations remain authoritative.
         """
         company = self.env.company
-        require(self.env, 'import', company)
+        if not is_correction_admin(self.env, company):
+            require(self.env, 'import', company)
         Day = self.env['tp.hr.attendance.day']
-        tz_env = Day.with_context(tz=self.env.user.tz or DEFAULT_TZ)
+        sources = self.sudo().search([('company_id', '=', company.id)])
+        Event = self.env['tp.hr.attendance.event'].sudo()
+        Mapping = self.env['tp.hr.attendance.enti.mapping'].sudo()
+        EntiDay = self.env['tp.hr.attendance.enti.day'].sudo()
+        enti_sources = sources.filtered(lambda s: s.kind == 'enti_api')
+        tz_name = enti_sources[:1].timezone if enti_sources else DEFAULT_TZ
+        tz_env = Day.with_context(tz=tz_name or DEFAULT_TZ)
 
         def stamp(value):
             return fields.Datetime.context_timestamp(tz_env, value).strftime('%d/%m/%Y %H:%M') if value else ''
@@ -242,11 +249,6 @@ class AttendanceSource(models.Model):
             return value.strftime('%d/%m/%Y') if value else ''
 
         states = dict(self._fields['state'].selection)
-        sources = self.sudo().search([('company_id', '=', company.id)])
-        Event = self.env['tp.hr.attendance.event'].sudo()
-        Mapping = self.env['tp.hr.attendance.enti.mapping'].sudo()
-        EntiDay = self.env['tp.hr.attendance.enti.day'].sudo()
-        enti_sources = sources.filtered(lambda s: s.kind == 'enti_api')
         live_active = any(s.live_enabled for s in sources)
         mapped_count = Mapping.search_count([('company_id', '=', company.id), ('state', '=', 'mapped')])
         unmapped_count = Mapping.search_count([('company_id', '=', company.id), ('state', '!=', 'mapped')])
@@ -259,11 +261,22 @@ class AttendanceSource(models.Model):
             'candidate': row.employee_id.name or '',
         } for row in Mapping.search([('company_id', '=', company.id), ('state', '!=', 'mapped')], order='state desc, ten_nv, id', limit=30)]
 
+        today = local_today(DEFAULT_TZ)
+        strip = Day._tp_source_strip(company, today)
+        health = strip['health']
+        cron_active = strip.get('cron_active', True)
+
         api_label = 'Chưa cấu hình'
         if enti_sources:
             first_enti = enti_sources[0]
-            if first_enti.live_enabled and first_enti.state == 'ready':
+            if health == 'ok':
                 api_label = 'Đang hoạt động (Trực tiếp)'
+            elif health == 'error':
+                api_label = 'Cần kiểm tra đồng bộ'
+            elif health == 'stale':
+                api_label = 'Đồng bộ đang chậm' if first_enti.last_success_at else 'Chờ đồng bộ thành công'
+            elif not cron_active or not first_enti.live_enabled or first_enti.state == 'paused':
+                api_label = 'Đồng bộ tự động đang tắt'
             else:
                 api_label = states.get(first_enti.state, 'Chưa kết nối')
         elif sources:
@@ -272,17 +285,33 @@ class AttendanceSource(models.Model):
         # The administration preview uses the same company and read ACLs as the full native log.
         Log = self.env['tp.hr.attendance.enti.sync.log']
         sync_logs = []
+        last_duration_seconds = 0.0
         if Log.has_access('read'):
-            sync_logs = [{
-                'id': log.id, 'at': stamp(log.synced_at), 'status': log.state,
-                'status_label': 'Thành công' if log.state == 'success' else 'Chưa thành công',
-                'days_received': log.days_received, 'days_applied': log.days_applied,
-                'unmapped': log.unmapped_count, 'duration': log.duration_seconds,
-                'from': day(log.start_date), 'to': day(log.end_date),
-            } for log in Log.search([('company_id', '=', company.id)], order='synced_at desc, id desc', limit=5)]
-        today = local_today(DEFAULT_TZ)
-        health = Day._tp_source_strip(company, today)['health']
-        from .enti_image import can_manage_enti_images
+            recent_logs = Log.search([('company_id', '=', company.id)], order='synced_at desc, id desc', limit=5)
+            if recent_logs:
+                last_duration_seconds = round(recent_logs[0].duration_seconds or 0.0, 2)
+            for log in recent_logs:
+                has_img_warn = bool(log.message and ' lỗi,' in log.message and ' 0 lỗi,' not in log.message)
+                is_warn = log.state == 'success' and (bool(log.kept_count) or has_img_warn)
+                dur = round(log.duration_seconds or 0.0, 2)
+                sync_logs.append({
+                    'id': log.id,
+                    'at': stamp(log.synced_at),
+                    'status': 'partial' if is_warn else log.state,
+                    'status_label': (
+                        'Hoàn tất (Có lưu ý)' if is_warn
+                        else ('Thành công' if log.state == 'success' else 'Chưa thành công')
+                    ),
+                    'days_received': log.days_received,
+                    'days_applied': log.days_applied,
+                    'changed_count': log.changed_count,
+                    'kept_count': log.kept_count,
+                    'unmapped': log.unmapped_count,
+                    'duration_seconds': dur,
+                    'has_warning': is_warn,
+                    'from': day(log.start_date),
+                    'to': day(log.end_date),
+                })
         can_manage_img = can_manage_enti_images(self.env, company)
         image_sync = self._tp_build_image_sync_overview(company, enti_sources, tz_env, params=params)
 
@@ -290,6 +319,7 @@ class AttendanceSource(models.Model):
             'today': today.isoformat(),
             'departments': Day._tp_departments(company),
             'health': health,
+            'cron_active': cron_active,
             'mapping': {
                 'suggested': Mapping.search_count([('company_id', '=', company.id), ('state', '=', 'suggested')]),
                 'unmapped': Mapping.search_count([('company_id', '=', company.id), ('state', '=', 'unmapped')]),
@@ -300,15 +330,17 @@ class AttendanceSource(models.Model):
             'can_review': is_correction_admin(self.env, company),
             'can_lock': can(self.env, 'lock', company),
             'can_export': Day._tp_can_export_shared(company),
-            'api': {'label': api_label, 'live': live_active,
+            'api': {'label': api_label, 'live': live_active and cron_active,
                     'events': Event.search_count([('company_id', '=', company.id)]),
                     'unmapped': Event.search_count([('company_id', '=', company.id), ('state', '=', 'unmapped')]),
                     'enti': {
                         'configured': bool(enti_sources),
-                        'live': bool(enti_sources and enti_sources[0].live_enabled),
+                        'live': bool(enti_sources and enti_sources[0].live_enabled and cron_active),
+                        'cron_active': cron_active,
                         'state': enti_sources[:1].state if enti_sources else 'not_configured',
                         'last_success_at': stamp(enti_sources[:1].last_success_at) if enti_sources else '',
                         'last_error': enti_sources[:1].last_error or '' if enti_sources else '',
+                        'last_duration_seconds': last_duration_seconds,
                         'mapped_count': mapped_count,
                         'unmapped_count': unmapped_count,
                         'days_count': enti_days_count,
@@ -328,10 +360,12 @@ class AttendanceSource(models.Model):
     def tp_enti_image_logs(self, params=None):
         """Return filtered ENTI employee image sync overview and rows for the Admin UI."""
         company = self.env.company
-        require(self.env, 'import', company)
+        if not is_correction_admin(self.env, company):
+            require(self.env, 'import', company)
         Day = self.env['tp.hr.attendance.day']
-        tz_env = Day.with_context(tz=self.env.user.tz or DEFAULT_TZ)
         enti_sources = self.sudo().search([('company_id', '=', company.id), ('kind', '=', 'enti_api')])
+        tz_name = enti_sources[:1].timezone if enti_sources else DEFAULT_TZ
+        tz_env = Day.with_context(tz=tz_name or DEFAULT_TZ)
         return self._tp_build_image_sync_overview(company, enti_sources, tz_env, params=params)
 
     @api.model

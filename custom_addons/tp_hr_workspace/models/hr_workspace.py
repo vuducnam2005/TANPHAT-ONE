@@ -118,10 +118,13 @@ class HrWorkspace(models.AbstractModel):
         groups = employees._read_group(domain, ['department_id'], ['__count'])
         departments = [
             {'id': department.id or 0, 'name': department.name if department else 'Chưa khai báo đơn vị',
+             'tp_sequence': department.tp_sequence if department else 999999,
              'count': count, 'percent': count / total * 100 if total else 0}
             for department, count in groups
         ]
-        departments.sort(key=lambda row: row['name'].casefold())
+        departments.sort(key=lambda row: (not bool(row['id']), row['tp_sequence'], row['id']))
+        for row in departments:
+            row.pop('tp_sequence', None)
         missing_domain = employees._tp_missing_domain()
         missing = employees.search_count(domain + missing_domain)
         linked = employees.search_count(domain + [('user_id', '!=', False)])
@@ -138,8 +141,9 @@ class HrWorkspace(models.AbstractModel):
         catalog_scope = [('company_id', 'in', [False, self.env.company.id])]
 
         def catalog(model):
+            order = 'tp_sequence, id' if model == 'hr.department' else 'name, id'
             return [{'id': record.id, 'name': record.name} for record in
-                    self.env[model].with_context(active_test=False).search(catalog_scope, order='name, id')]
+                    self.env[model].with_context(active_test=False).search(catalog_scope, order=order)]
         return {
             'total': total, 'units': sum(bool(row['id']) for row in departments),
             'departments': departments, 'missing_basic': missing, 'complete_basic': total - missing,

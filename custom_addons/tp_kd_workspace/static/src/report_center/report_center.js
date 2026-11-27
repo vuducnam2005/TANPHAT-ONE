@@ -10,6 +10,8 @@ import { session } from "@web/session";
 import { user } from "@web/core/user";
 import { kdPrefs, PAGE_SIZE_OPTIONS } from "../prefs";
 import { TpKdPrefs } from "../sidebar/sidebar";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
 
 const STATE_STORAGE_PREFIX = "tp_kd_report_state_v1";
 const COL_STORAGE_PREFIX = "tp_kd_report_cols_v1";
@@ -136,7 +138,7 @@ function extractErrorMessage(err, fallback) {
 
 export class KdReportCenter extends Component {
     static template = "tp_kd_workspace.ReportCenter";
-    static components = { Dropdown, DropdownItem, TpKdPrefs };
+    static components = { Dropdown, DropdownItem, TpKdPrefs, InlineErrors };
     props = useProps();
 
     setup() {
@@ -164,6 +166,9 @@ export class KdReportCenter extends Component {
             exporting: false,
             intro: true,
             denied: false,
+            attempt: 0,
+            fieldErrors: [],
+            serverError: null,
             error: "",
             dateError: "",
             data: null,
@@ -240,6 +245,7 @@ export class KdReportCenter extends Component {
             this.state.pending.date_to = "";
         }
         this.state.dateError = "";
+        this.state.fieldErrors = [];
     }
 
     setPendingField(field, ev) {
@@ -248,6 +254,7 @@ export class KdReportCenter extends Component {
             this.state.pending[field] = val || "";
             this.state.pending.period_preset = (this.state.pending.date_from || this.state.pending.date_to) ? "custom" : "";
             this.state.dateError = "";
+            this.state.fieldErrors = [];
             return;
         }
         if (field === "project_id") {
@@ -270,10 +277,21 @@ export class KdReportCenter extends Component {
     async applyFilters() {
         const p = this.state.pending;
         if (p.date_from && p.date_to && p.date_from > p.date_to) {
-            this.state.dateError = "Khoảng ngày không hợp lệ: 'Từ ngày' không được lớn hơn 'Đến ngày'.";
+            const msg = "Khoảng ngày không hợp lệ: 'Từ ngày' không được lớn hơn 'Đến ngày'.";
+            this.state.dateError = msg;
+            this.state.attempt += 1;
+            this.state.fieldErrors = [
+                {
+                    id: "rc_date_from",
+                    label: "Khoảng ngày lọc",
+                    location: "Bộ lọc kỳ báo cáo",
+                    message: msg,
+                },
+            ];
             return;
         }
         this.state.dateError = "";
+        this.state.fieldErrors = [];
         this.state.applied = { ...p };
         this.state.page = 1;
         await this.loadReport();
@@ -285,6 +303,7 @@ export class KdReportCenter extends Component {
         this.state.applied = { ...clean };
         this.state.search = "";
         this.state.dateError = "";
+        this.state.fieldErrors = [];
         this.state.page = 1;
         await this.loadReport();
     }
@@ -470,6 +489,7 @@ export class KdReportCenter extends Component {
         const seq = ++this.seq;
         this.state.loading = true;
         this.state.error = "";
+        this.state.serverError = null;
         try {
             const res = await this.orm.call(
                 "tp.kd.report.center",
@@ -500,12 +520,19 @@ export class KdReportCenter extends Component {
             if (seq !== this.seq) {
                 return;
             }
+            this.state.attempt += 1;
             if (isAccessFailure(err)) {
                 this.state.data = null;
                 this.state.denied = true;
                 this.state.error = extractErrorMessage(err, "Quyền truy cập của bạn đã thay đổi hoặc hết phiên.");
+                this.state.serverError = saveError(err, {
+                    verb: "tải báo cáo KH-KD",
+                    write: false,
+                    note: "Dữ liệu trên màn hình đã được xóa để bảo mật; vui lòng tải lại hoặc liên hệ quản trị nếu cần cấp quyền.",
+                });
             } else {
                 this.state.error = extractErrorMessage(err, "Không tải được dữ liệu báo cáo. Vui lòng thử lại.");
+                this.state.serverError = saveError(err, { verb: "tải dữ liệu báo cáo KH-KD", write: false });
             }
         } finally {
             if (seq === this.seq) {
@@ -516,16 +543,20 @@ export class KdReportCenter extends Component {
 
     async openDrill(kind, payload) {
         this.persistCurrentState();
+        this.state.serverError = null;
         try {
             const act = await this.orm.call("tp.kd.report.center", "action_kd_report_open", [kind, payload]);
             await this.action.doAction(act);
         } catch (err) {
+            this.state.attempt += 1;
             if (isAccessFailure(err)) {
                 this.state.data = null;
                 this.state.denied = true;
                 this.state.error = extractErrorMessage(err, "Bạn không còn quyền mở hồ sơ nguồn này.");
+                this.state.serverError = saveError(err, { verb: "mở hồ sơ nguồn", write: false });
             } else {
                 this.state.error = extractErrorMessage(err, "Không mở được hồ sơ nguồn.");
+                this.state.serverError = saveError(err, { verb: "mở hồ sơ nguồn", write: false });
             }
         }
     }
@@ -536,6 +567,7 @@ export class KdReportCenter extends Component {
         }
         this.state.exporting = true;
         this.state.error = "";
+        this.state.serverError = null;
         try {
             const res = await this.orm.call(
                 "tp.kd.report.center",
@@ -566,12 +598,15 @@ export class KdReportCenter extends Component {
             a.remove();
             setTimeout(() => URL.revokeObjectURL(url), 2000);
         } catch (err) {
+            this.state.attempt += 1;
             if (isAccessFailure(err)) {
                 this.state.data = null;
                 this.state.denied = true;
                 this.state.error = extractErrorMessage(err, "Bạn không còn quyền xuất báo cáo này.");
+                this.state.serverError = saveError(err, { verb: "xuất báo cáo Excel", write: false });
             } else {
                 this.state.error = extractErrorMessage(err, "Xuất file Excel không thành công.");
+                this.state.serverError = saveError(err, { verb: "xuất báo cáo Excel", write: false });
             }
         } finally {
             this.state.exporting = false;

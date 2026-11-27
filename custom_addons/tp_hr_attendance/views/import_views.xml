@@ -112,12 +112,12 @@
                     <notebook invisible="state == 'draft'">
                         <page string="Dòng cần chú ý" name="attention">
                             <field name="attention_line_ids" readonly="1">
-                                <list create="0" edit="0" delete="0" limit="40">
+                                <list create="0" edit="0" delete="0" no_open="1" limit="40">
                                     <field name="sheet_name"/>
                                     <field name="cell_ref"/>
                                     <field name="machine_code"/>
                                     <field name="source_name"/>
-                                    <field name="employee_id"/>
+                                    <field name="employee_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/>
                                     <field name="work_date"/>
                                     <field name="raw_in"/>
                                     <field name="raw_out"/>
@@ -129,12 +129,12 @@
                         </page>
                         <page string="Tổng đi muộn" name="late">
                             <field name="late_ids" readonly="1">
-                                <list create="0" edit="0" delete="0" limit="40">
+                                <list create="0" edit="0" delete="0" no_open="1" limit="40">
                                     <field name="sheet_name"/>
                                     <field name="cell_ref"/>
                                     <field name="machine_code"/>
                                     <field name="source_name"/>
-                                    <field name="employee_id"/>
+                                    <field name="employee_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/>
                                     <field name="date_from"/>
                                     <field name="date_to"/>
                                     <field name="late_count"/>
@@ -157,7 +157,7 @@
     <record id="action_import" model="ir.actions.act_window">
         <field name="name">Lịch sử nhập Excel chấm công</field>
         <field name="res_model">tp.hr.attendance.batch</field>
-        <field name="path">nhap-cong</field>
+        <field name="path">cham-cong-nhap-excel</field>
         <field name="view_mode">list,form</field>
         <field name="view_ids" eval="[(5, 0, 0),
             (0, 0, {'view_mode': 'list', 'view_id': ref('batch_list')}),
@@ -177,7 +177,7 @@
                 <field name="cell_ref"/>
                 <field name="machine_code"/>
                 <field name="source_name"/>
-                <field name="employee_id"/>
+                <field name="employee_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/>
                 <field name="work_date"/>
                 <field name="raw_in"/>
                 <field name="raw_out"/>
@@ -215,6 +215,7 @@
     <record id="action_import_lines" model="ir.actions.act_window">
         <field name="name">Dòng nhập dữ liệu công</field>
         <field name="res_model">tp.hr.attendance.line</field>
+        <field name="path">cham-cong-dong-nhap-excel</field>
         <field name="view_mode">list</field>
         <field name="view_id" ref="line_list"/>
         <field name="search_view_id" ref="line_search"/>
@@ -224,6 +225,6 @@
     <record id="action_file_matrix" model="ir.actions.client">
         <field name="name">Bảng dữ liệu theo file</field>
         <field name="tag">tp_hr_attendance.file_matrix</field>
-        <field name="path">bang-cong-theo-file</field>
+        <field name="path">cham-cong-lich-su-nguon</field>
     </record>
 </odoo>

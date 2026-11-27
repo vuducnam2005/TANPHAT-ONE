@@ -1,7 +1,7 @@
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, ValidationError
 
-from .workspace import kd_leaf, open_records
+from .workspace import child_context, kd_leaf, open_records
 
 
 class PaymentRequest(models.Model):
@@ -129,7 +129,9 @@ class PaymentRequest(models.Model):
             "res_model": "tp.acceptance",
             "res_id": self.acceptance_id.id,
             "view_mode": "form",
-            "context": kd_leaf("tp.acceptance"),
+            "views": [(self.env.ref("tp_kd_workspace.acceptance_form").id, "form")],
+            "target": "current",
+            "context": {**child_context(self.env), **kd_leaf("tp.acceptance")},
         }
 
 

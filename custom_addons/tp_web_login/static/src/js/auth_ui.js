@@ -10,7 +10,8 @@ patch(ShowPassword.prototype, {
         if (this.el.closest(".tp-native-login")) {
             Object.assign(this.dynamicContent[".o_show_password"], {
                 "t-att-aria-pressed": () => String(Boolean(this.showPassword)),
-                "t-att-aria-label": () => this.showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu",
+                "t-att-aria-label": () => (this.showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"),
+                "t-att-title": () => (this.showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"),
             });
         }
     },

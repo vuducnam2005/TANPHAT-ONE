@@ -781,15 +781,43 @@
     }
 
     .tp-apps-home-btn {
-        min-height: 40px;
-        height: 40px;
-        padding: 0 9px;
+        min-height: 44px;
+        height: 44px;
+        padding: 0 10px;
         font-size: 12px;
     }
 
     .tp-apps-close-btn {
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .tp-apps-search-input {
+        height: 44px;
+        min-height: 44px;
+        font-size: 16px;
+        padding-right: 44px;
+    }
+
+    .tp-apps-search-clear {
+        width: 44px;
+        height: 44px;
+        right: 2px;
+    }
+
+    .tp-apps-tab {
+        height: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .tp-apps-mobile-subnav-toggle,
+    .tp-apps-mobile-subnav-item,
+    .tp-apps-reset-btn {
+        min-height: 44px;
     }
 
     .tp-apps-scroll-body {
@@ -813,7 +841,7 @@
             overflow: hidden;
         }
 
-        .tp-apps-card-badge {
+        .tp-apps-badge {
             max-width: 100%;
             font-size: 10px;
             padding: 1px 5px;

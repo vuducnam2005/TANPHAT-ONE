@@ -3,9 +3,12 @@
 import base64
 from datetime import date, timedelta
 
+from psycopg2 import IntegrityError
+
 from odoo import Command, fields
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import HttpCase, TransactionCase, tagged
+from odoo.tools import mute_logger
 
 
 @tagged('post_install', '-at_install')
@@ -225,10 +228,106 @@ class TestEnterpriseGovernance(TransactionCase):
         self.assertTrue(by_key['contract_value']['has_data'])
         self.assertEqual(by_key['contract_value']['value'], 12500000000.0)
         # Accepted value, accounting revenue, cash_in MUST NOT be faked as 0 or copied from contract_value!
-        for other_key in ('accepted_value', 'accounting_revenue', 'cash_in', 'cash_out'):
+        for other_key in ('internal_allocated_value', 'subcontract_value', 'accepted_value', 'accounting_revenue', 'cash_in', 'cash_out'):
             self.assertFalse(by_key[other_key]['has_data'])
             self.assertIsNone(by_key[other_key]['value'])
             self.assertEqual(by_key[other_key]['display_value'], 'Chưa đủ dữ liệu')
+
+        # Cross-period guard: recording an earlier period 2026-10 MUST NOT sum into default latest period 2026-11
+        Fin.with_user(self.user_fin).tp_record_financial_entry({
+            'project_id': self.project.id,
+            'period_label': '2026-10',
+            'metric_kind': 'contract_value',
+            'amount': 5000000000,
+            'data_state': 'confirmed',
+            'source_ref': 'HĐ-GOV-2026-00',
+        })
+        default_dash = Fin.with_user(self.admin).tp_get_executive_dashboard_data('')
+        self.assertEqual(default_dash['active_period'], '2026-11')
+        default_by_key = {c['key']: c for c in default_dash['financial_cards']}
+        self.assertEqual(default_by_key['contract_value']['value'], 12500000000.0)
+
+    def test_04_dossier_orm_guards_workflow_and_unique_version(self):
+        """F-A07-0004 & F-A06-0016: Dossier write/unlink guards, sequential upload FOR UPDATE, UniqueIndex, and state transitions."""
+        user_reader = self._make_user(
+            'gov.reader',
+            'Kỹ sư Xem Dự án (Gov)',
+            [self.env.ref('base.group_user').id, self.env.ref('tp_core.group_user').id],
+        )
+        self._make_employee(user_reader, self.dept_bridge)
+        self.env['tp.project.assignment'].sudo().create({
+            'project_id': self.project.id,
+            'user_id': user_reader.id,
+            'role': 'reader',
+            'active': True,
+        })
+
+        dossier = self.env['tp.project.dossier'].with_user(self.user_pm).create({
+            'project_id': self.project.id,
+            'phase_stage': 'tkkt',
+            'name': 'Hồ sơ TKKT Cầu dẫn phía Bắc',
+        })
+        # Direct external write on system fields must be blocked even for PM
+        for forbidden_vals in (
+            {'state': 'issued'},
+            {'current_version_no': 99},
+            {'nas_relative_path': 'HACKED/PATH'},
+            {'code': 'FORGED-01'},
+        ):
+            with self.assertRaises(AccessError), self.env.cr.savepoint():
+                dossier.with_user(self.user_pm).write(forbidden_vals)
+
+        # Non-owner reader cannot mutate metadata or upload versions
+        with self.assertRaises(AccessError), self.env.cr.savepoint():
+            dossier.with_user(user_reader).write({'name': 'Sửa trái phép'})
+        with self.assertRaises(AccessError), self.env.cr.savepoint():
+            dossier.with_user(user_reader).action_upload_new_version(
+                'Reader.pdf', base64.b64encode(b'%PDF-1.4 x').decode('ascii'),
+            )
+
+        # Cannot submit without uploaded version
+        with self.assertRaises(UserError), self.env.cr.savepoint():
+            dossier.with_user(self.user_pm).action_submit_review()
+
+        # Sequential version upload & DB UniqueIndex on (dossier_id, version_no)
+        v1 = dossier.with_user(self.user_pm).action_upload_new_version(
+            'Cau_Dan_v1.pdf', base64.b64encode(b'%PDF-1.4 v1').decode('ascii'),
+        )
+        v2 = dossier.with_user(self.user_pm).action_upload_new_version(
+            'Cau_Dan_v2.pdf', base64.b64encode(b'%PDF-1.4 v2').decode('ascii'),
+        )
+        self.assertEqual((v1['version_no'], v2['version_no'], dossier.current_version_no), (1, 2, 2))
+
+        ver1_rec = self.env['tp.project.dossier.version'].sudo().browse(v1['version_id'])
+        with self.assertRaises(IntegrityError), self.env.cr.savepoint(), mute_logger('odoo.sql_db'):
+            self.env['tp.project.dossier.version'].sudo().create({
+                'dossier_id': dossier.id,
+                'version_no': 1,
+                'attachment_id': ver1_rec.attachment_id.id,
+                'file_name': 'Duplicate_v1.pdf',
+            })
+
+        # Dossier with versions cannot be physically deleted
+        with self.assertRaises(UserError), self.env.cr.savepoint():
+            dossier.with_user(self.user_pm).unlink()
+
+        # Workflow transitions: draft -> in_review -> approved -> issued
+        dossier.with_user(self.user_pm).action_submit_review()
+        self.assertEqual(dossier.state, 'in_review')
+        dossier.with_user(self.user_pm).action_approve_technical()
+        self.assertEqual(dossier.state, 'approved')
+        dossier.with_user(self.user_pm).action_issue_dossier()
+        self.assertEqual(dossier.state, 'issued')
+
+        # Issued dossier locks metadata, new uploads, and unlink
+        with self.assertRaises(UserError), self.env.cr.savepoint():
+            dossier.with_user(self.user_pm).write({'name': 'Đổi tên sau ban hành'})
+        with self.assertRaises(UserError), self.env.cr.savepoint():
+            dossier.with_user(self.user_pm).action_upload_new_version(
+                'Cau_Dan_v3.pdf', base64.b64encode(b'%PDF-1.4 v3').decode('ascii'),
+            )
+        with self.assertRaises(UserError), self.env.cr.savepoint():
+            dossier.with_user(self.user_pm).unlink()
 
 
 @tagged('post_install', '-at_install')
@@ -238,7 +337,7 @@ class TestDossierDownloadHttpAcl(HttpCase):
         company = self.env.company
         admin = self.env.ref('base.user_admin')
         base_group = self.env.ref('base.group_user')
-        outsider = self.env['res.users'].with_context(no_reset_password=True).create({
+        self.env['res.users'].with_context(no_reset_password=True).create({
             'name': 'HTTP Outsider Test',
             'login': 'http.dossier.outsider',
             'password': 'TestPassword!123',

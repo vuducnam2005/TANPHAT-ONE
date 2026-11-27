@@ -64,7 +64,16 @@ export class TpNotFoundAction extends Component {
     }
 
     goBack() {
-        if (window.history.length > 1) {
+        let sameOriginReferrer = false;
+        try {
+            if (document.referrer) {
+                sameOriginReferrer =
+                    new URL(document.referrer).origin === window.location.origin;
+            }
+        } catch {
+            sameOriginReferrer = false;
+        }
+        if (window.history.length > 1 && sameOriginReferrer) {
             window.history.back();
             return;
         }
@@ -192,12 +201,17 @@ const webClientPatch = {
             browser.setTimeout(() => {
                 document.getElementById("tp-emergency-recovery")?.remove();
                 const actionManager = document.querySelector(".o_action_manager");
-                if (actionManager && actionManager.children.length === 0 && activeRpcCount === 0) {
+                if (
+                    this.actionService?.currentController == null &&
+                    actionManager &&
+                    actionManager.children.length === 0 &&
+                    activeRpcCount === 0
+                ) {
                     openNotFoundOrHome(this, requestedPath, "unknown_route").catch(() =>
                         super._loadDefaultApp()
                     );
                 }
-            }, 650);
+            }, 2000);
         }
     },
 
@@ -293,7 +307,7 @@ if (typeof window !== "undefined" && window.location.pathname.startsWith(APP_PAT
                         <h2 style="font-size:20px;font-weight:600;color:#0f172a;margin-bottom:12px;">Hệ thống đang tải hoặc gặp sự cố hiển thị</h2>
                         <p style="font-size:14px;color:#64748b;margin-bottom:24px;line-height:1.5;">Giao diện chưa thể hiển thị thành phần màn hình sau khi làm mới. Vui lòng bấm nút bên dưới để thử lại.</p>
                         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-                            <button id="tp-recovery-reload" style="background:#0284c7;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:500;cursor:pointer;font-size:14px;">Tải lại trang</button>
+                            <button id="tp-recovery-reload" style="background:#1766c0;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;min-height:44px;">Tải lại trang</button>
                             <button id="tp-recovery-home" style="background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;padding:10px 20px;border-radius:8px;font-weight:500;cursor:pointer;font-size:14px;">Về Trang chủ</button>
                             <button id="tp-recovery-login" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;padding:10px 20px;border-radius:8px;font-weight:500;cursor:pointer;font-size:14px;">Đăng nhập lại</button>
                         </div>

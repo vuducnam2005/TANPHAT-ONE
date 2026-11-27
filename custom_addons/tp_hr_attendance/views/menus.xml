@@ -7,7 +7,7 @@
 
     <menuitem id="menu_group_attendance" name="Chấm công" parent="menu_root" sequence="15" groups="base.group_user"/>
     <menuitem id="menu_dashboard" name="Tổng quan chấm công" parent="menu_group_attendance" action="action_dashboard" sequence="10" groups="base.group_user"/>
-    <menuitem id="menu_board" name="Bảng chấm công" parent="menu_group_attendance" action="action_board" sequence="20" groups="base.group_user" active="False"/>
+    <menuitem id="menu_board" name="Bảng chấm công" parent="menu_group_attendance" action="action_board" sequence="20" groups="base.group_user"/>
     <menuitem id="menu_mine" name="Công của tôi" parent="menu_group_attendance" action="action_mine" sequence="30" groups="base.group_user"/>
     <!-- Reachable from "Công của tôi". -->
     <menuitem id="menu_my_requests" name="Yêu cầu của tôi" parent="menu_group_attendance" action="action_my_requests" sequence="40" groups="base.group_user" active="False"/>
@@ -18,15 +18,15 @@
     <menuitem id="menu_import" name="Lịch sử nhập Excel" parent="menu_group_attendance_admin" action="action_import" sequence="90" active="False"
               groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
     <menuitem id="menu_sources" name="Tổng quan quản trị" parent="menu_group_attendance_admin" action="action_sources" sequence="20"
-              groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
+              groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer,base.group_system"/>
     <menuitem id="menu_enti_mapping" name="Đối chiếu nhân viên" parent="menu_group_attendance_admin" action="action_enti_mapping" sequence="22"
-              groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
+              groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer,base.group_system"/>
     <menuitem id="menu_enti_config" name="Cấu hình kết nối" parent="menu_group_attendance_admin" action="action_enti_config" sequence="23"
               groups="hr.group_hr_manager,base.group_system"/>
     <menuitem id="menu_enti_logs" name="Nhật ký đồng bộ" parent="menu_group_attendance_admin" action="action_enti_logs" sequence="24"
-              groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
+              groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer,base.group_system"/>
     <menuitem id="menu_review" name="Xử lý điều chỉnh" parent="menu_group_attendance_admin" action="action_review" sequence="30"
               groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer,base.group_system"/>
     <menuitem id="menu_periods" name="Chốt kỳ" parent="menu_group_attendance_admin" action="action_periods" sequence="40"
-              groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
+              groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer,base.group_system"/>
 </odoo>

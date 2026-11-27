@@ -125,7 +125,7 @@
                                 class="'tp_filter_m2o_input'"
                             />
                             <button t-if="this.state.pending[crit.key] or this.state.m2oInputs[crit.key]"
-                                    type="button" class="tp_filter_m2o_clear" aria-label="Xóa lựa chọn"
+                                    type="button" class="tp_filter_m2o_clear" title="Xóa lựa chọn" aria-label="Xóa lựa chọn"
                                     t-on-click="() => this.clearM2o(crit)">×</button>
                         </div>
 
@@ -180,7 +180,7 @@
                     <span t-foreach="this.activeFacets" t-as="facet" t-key="facet.groupId" class="tp_filter_chip">
                         <strong t-if="facet.title" t-out="facet.title + ':'"/>
                         <span t-out="facet.values.join(', ')"/>
-                        <button type="button" class="tp_filter_chip_remove" aria-label="Gỡ điều kiện lọc"
+                        <button type="button" class="tp_filter_chip_remove" title="Gỡ điều kiện lọc" aria-label="Gỡ điều kiện lọc"
                                 t-att-disabled="this.blocked" t-on-click="() => this.removeFacet(facet)">×</button>
                     </span>
                 </div>

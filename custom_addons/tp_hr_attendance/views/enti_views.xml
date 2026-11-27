@@ -59,14 +59,14 @@
                 <field name="ten_nv" string="Họ tên trên máy" readonly="1"/>
                 <field name="ten_bp" string="Bộ phận trên máy" readonly="1" optional="hide"/>
                 <field name="odoo_image_128" string="Ảnh hiện tại Odoo" widget="image" options="{'size': [40, 40]}" readonly="1"/>
-                <field name="employee_id" string="Nhân viên trong hệ thống"/>
+                <field name="employee_id" string="Nhân viên trong hệ thống" options="{'no_create': True, 'no_create_edit': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/>
                 <field name="employee_code" string="Mã nhân viên" readonly="1" optional="hide"/>
                 <field name="employee_department" string="Phòng ban trong hệ thống" readonly="1" optional="hide"/>
                 <field name="state" widget="badge" decoration-success="state == 'mapped'" decoration-warning="state == 'suggested'" decoration-danger="state == 'unmapped'" readonly="1"/>
                 <field name="image_status_label" string="Đồng bộ ảnh" widget="badge" decoration-success="image_state in ('downloaded', 'unchanged') and state == 'mapped'" decoration-warning="image_state in ('pending', 'no_image') or state != 'mapped'" decoration-danger="image_state == 'failed'" readonly="1"/>
                 <field name="has_enti_image" column_invisible="1"/>
                 <field name="image_state" column_invisible="1"/>
-                <field name="match_reason" string="Căn cứ đối chiếu" readonly="1" optional="hide"/>
+                <field name="match_reason" string="Căn cứ đối chiếu" readonly="state == 'mapped'" optional="show" placeholder="Nhập căn cứ đối chiếu…"/>
                 <button name="action_open_image_compare" type="object" string="Xem ảnh" class="btn btn-sm btn-outline-secondary"/>
                 <button name="action_apply_enti_image" type="object" string="Cập nhật ảnh" class="btn btn-sm btn-outline-primary" invisible="state != 'mapped' or not has_enti_image"/>
                 <button name="action_confirm_mapping" type="object" string="Xác nhận" class="btn btn-sm btn-primary" invisible="state == 'mapped'"/>
@@ -109,13 +109,13 @@
                             <field name="last_seen_at" string="Lần đọc gần nhất" readonly="1"/>
                         </group>
                         <group string="Hồ sơ trong hệ thống">
-                            <field name="employee_id" string="Nhân viên"/>
+                            <field name="employee_id" string="Nhân viên" options="{'no_create': True, 'no_create_edit': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/>
                             <field name="employee_code" string="Mã nhân viên" readonly="1"/>
                             <field name="employee_department" string="Phòng ban" readonly="1"/>
                         </group>
                     </group>
                     <group>
-                        <field name="match_reason" string="Căn cứ đối chiếu" readonly="1"/>
+                        <field name="match_reason" string="Căn cứ đối chiếu" readonly="state == 'mapped'" placeholder="Nhập căn cứ đối chiếu…"/>
                     </group>
                 </sheet>
             </form>
@@ -158,7 +158,7 @@ records.action_auto_match()
         <field name="res_model">tp.hr.attendance.enti.mapping</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="enti_mapping_search"/>
-        <field name="context">{'search_default_state_suggested': 1, 'search_default_state_unmapped': 1}</field>
+        <field name="context">{'tp_filter_profile': 'enti_mappings', 'search_default_state_suggested': 1, 'search_default_state_unmapped': 1}</field>
         <field name="help" type="html">
             <p>Xác nhận đối chiếu để ghi nhận giờ công từ máy vào đúng hồ sơ nhân viên.</p>
         </field>
@@ -169,7 +169,7 @@ records.action_auto_match()
         <field name="name">tp.hr.attendance.enti.sync.log.list</field>
         <field name="model">tp.hr.attendance.enti.sync.log</field>
         <field name="arch" type="xml">
-            <list string="Nhật ký đồng bộ" create="0" edit="0" delete="0">
+            <list string="Nhật ký đồng bộ" js_class="tp_hr_table" create="0" edit="0" delete="0">
                 <field name="synced_at" string="Thời điểm"/>
                 <field name="origin" string="Hình thức" widget="badge"/>
                 <field name="state" widget="badge" decoration-success="state == 'success'" decoration-danger="state == 'error'"/>
@@ -179,8 +179,9 @@ records.action_auto_match()
                 <field name="mapped_count" string="Đã khớp" optional="hide"/>
                 <field name="unmapped_count" string="Chưa khớp" optional="hide"/>
                 <field name="days_applied" string="Ngày công cập nhật"/>
-                <field name="duration_seconds" string="Thời lượng (giây)" optional="hide"/>
-                <field name="message" string="Chi tiết" optional="hide"/>
+                <field name="changed_count" string="Ngày thay đổi" optional="show"/>
+                <field name="duration_seconds" string="Thời lượng (giây)" optional="show"/>
+                <field name="message" string="Chi tiết" optional="show"/>
             </list>
         </field>
     </record>
@@ -222,6 +223,10 @@ records.action_auto_match()
         <field name="model">tp.hr.attendance.enti.sync.log</field>
         <field name="arch" type="xml">
             <search string="Nhật ký đồng bộ">
+                <field name="message" string="Thông báo"/>
+                <field name="origin"/>
+                <field name="state"/>
+                <field name="synced_at"/>
                 <filter name="success" string="Thành công" domain="[('state', '=', 'success')]"/>
                 <filter name="error" string="Lỗi" domain="[('state', '=', 'error')]"/>
                 <separator/>
@@ -243,6 +248,7 @@ records.action_auto_match()
         <field name="res_model">tp.hr.attendance.enti.sync.log</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="enti_sync_log_search"/>
+        <field name="context">{'tp_filter_profile': 'enti_logs'}</field>
         <field name="help" type="html">
             <p>Chưa có lượt đồng bộ trong phạm vi đang xem.</p>
         </field>
@@ -258,9 +264,9 @@ records.action_auto_match()
                 <field name="ma_nv" string="Mã ENTI"/>
                 <field name="ten_nv" string="Họ tên ENTI"/>
                 <field name="odoo_image_128" string="Ảnh Odoo hiện tại" widget="image" options="{'size': [40, 40]}"/>
-                <field name="employee_id" string="Nhân viên Odoo"/>
+                <field name="employee_id" string="Nhân viên Odoo" options="{'no_create': True, 'no_create_edit': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/>
                 <field name="employee_code" string="Mã nhân viên" optional="show"/>
-                <field name="department_id" string="Phòng ban"/>
+                <field name="department_id" string="Phòng ban" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.department_form'}"/>
                 <field name="mapping_state" string="Đối chiếu" widget="badge" decoration-success="mapping_state == 'mapped'" decoration-warning="mapping_state == 'suggested'" decoration-danger="mapping_state == 'unmapped'"/>
                 <field name="status_label" string="Trạng thái ảnh" widget="badge" decoration-success="state in ('downloaded', 'unchanged') and mapping_state == 'mapped'" decoration-warning="state in ('pending', 'no_image') or mapping_state != 'mapped'" decoration-danger="state == 'failed'"/>
                 <field name="state" column_invisible="1"/>
@@ -293,9 +299,9 @@ records.action_auto_match()
                         </group>
                         <group string="Ảnh hiện tại trong Odoo HR">
                             <field name="odoo_image_1920" string="Ảnh hiện tại Odoo" widget="image" options="{'size': [180, 180]}"/>
-                            <field name="employee_id"/>
+                            <field name="employee_id" options="{'no_create': True, 'no_create_edit': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/>
                             <field name="employee_code"/>
-                            <field name="department_id"/>
+                            <field name="department_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.department_form'}"/>
                             <field name="mapping_state"/>
                         </group>
                     </group>
@@ -310,14 +316,10 @@ records.action_auto_match()
                             <field name="status_label"/>
                             <field name="downloaded_at"/>
                             <field name="last_seen_at"/>
-                            <field name="image_url" groups="hr.group_hr_manager,base.group_system"/>
                         </group>
                     </group>
                     <group invisible="not error_message">
                         <field name="error_message"/>
-                    </group>
-                    <group string="Metadata hồ sơ ENTI" groups="hr.group_hr_manager,base.group_system" invisible="not raw_metadata_json">
-                        <field name="raw_metadata_json"/>
                     </group>
                 </sheet>
             </form>

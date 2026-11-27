@@ -9,11 +9,15 @@ and ACL isolation scenarios for:
 """
 
 import base64
+import xml.etree.ElementTree as ET
 from datetime import date
+from pathlib import Path
 
 from odoo import Command
 from odoo.exceptions import AccessError, ValidationError
 from odoo.tests import TransactionCase, tagged
+
+from odoo.addons.mail.tools.discuss import Store
 
 
 @tagged("post_install", "-at_install", "tp_personal_tools")
@@ -36,7 +40,7 @@ class TestPersonalToolsSuite(TransactionCase):
                 "email": "pt.user.a@tanphat.test",
                 "tz": "Asia/Ho_Chi_Minh",
                 "group_ids": [Command.set([group_user.id, group_scoped_kd.id])],
-            }
+            },
         )
         cls.user_b = Users.create(
             {
@@ -45,7 +49,7 @@ class TestPersonalToolsSuite(TransactionCase):
                 "email": "pt.user.b@tanphat.test",
                 "tz": "Asia/Ho_Chi_Minh",
                 "group_ids": [Command.set([group_user.id])],
-            }
+            },
         )
         cls.user_c = Users.create(
             {
@@ -54,7 +58,7 @@ class TestPersonalToolsSuite(TransactionCase):
                 "email": "pt.user.c@tanphat.test",
                 "tz": "Asia/Ho_Chi_Minh",
                 "group_ids": [Command.set([group_user.id])],
-            }
+            },
         )
         cls.delegated_admin = Users.create(
             {
@@ -63,18 +67,18 @@ class TestPersonalToolsSuite(TransactionCase):
                 "email": "pt.del.admin@tanphat.test",
                 "tz": "Asia/Ho_Chi_Minh",
                 "group_ids": [Command.set([group_user.id, group_full_admin.id])],
-            }
+            },
         )
 
         used_codes = set(
             cls.env["hr.employee"]
             .with_context(active_test=False)
             .search([("tp_employee_code", "!=", False)])
-            .mapped("tp_employee_code")
+            .mapped("tp_employee_code"),
         )
         if "tp.hr.employee.audit" in cls.env:
             used_codes |= set(
-                cls.env["tp.hr.employee.audit"].sudo().search([]).mapped("employee_code")
+                cls.env["tp.hr.employee.audit"].sudo().search([]).mapped("employee_code"),
             )
         free_code = next(
             (f"TP{n:03d}" for n in range(950, 100, -1) if f"TP{n:03d}" not in used_codes),
@@ -89,7 +93,7 @@ class TestPersonalToolsSuite(TransactionCase):
                 "department_id": cls.dept_tech.id,
                 "job_id": cls.job_eng.id,
                 "identification_id": "079099001122",
-            }
+            },
         )
 
     # =========================================================================
@@ -133,7 +137,7 @@ class TestPersonalToolsSuite(TransactionCase):
         # Upload attachment -> must remain private (`public=False`)
         raw_b64 = base64.b64encode(b"Bang tinh khoi luong").decode()
         att_info = TaskA.tp_upload_personal_task_attachment(
-            t1["id"], "khoi_luong.txt", raw_b64, "text/plain"
+            t1["id"], "khoi_luong.txt", raw_b64, "text/plain",
         )
         att_rec = self.env["ir.attachment"].sudo().browse(att_info["id"])
         self.assertFalse(att_rec.public, "Task attachment must never be marked public=True")
@@ -170,7 +174,7 @@ class TestPersonalToolsSuite(TransactionCase):
                 "name": "Việc chia sẻ A-B",
                 "stage_id": stage_a1,
                 "user_ids": [self.user_a.id, self.user_b.id],
-            }
+            },
         )
         c3 = TaskA.tp_create_personal_task({"name": "Việc A3", "stage_id": stage_a1})
 
@@ -211,7 +215,7 @@ class TestPersonalToolsSuite(TransactionCase):
                 "name": "Dự án Cầu Thủ Thiêm 4",
                 "user_id": self.user_b.id,
                 "type_ids": [Command.set([proj_stage_1.id, proj_stage_2.id])],
-            }
+            },
         )
         # User B is standard internal user assigned to project task -> permitted!
         total_before = self.env["project.task"].sudo().search_count([])
@@ -223,7 +227,7 @@ class TestPersonalToolsSuite(TransactionCase):
                 "user_ids": [Command.set([self.user_b.id])],
                 "tp_verifier_user_id": self.delegated_admin.id,
                 "tp_deliverable": "Báo cáo thẩm tra PDF",
-            }
+            },
         )
         self.assertEqual(
             self.env["project.task"].sudo().search_count([]),
@@ -242,7 +246,7 @@ class TestPersonalToolsSuite(TransactionCase):
         self.assertIn(proj_task.id, b_ids, "Assigned project task must appear in Công việc của tôi")
 
         ws_b_proj_only = TaskB.tp_get_personal_workspace(
-            {"bucket": "all", "source_kind": "project"}
+            {"bucket": "all", "source_kind": "project"},
         )
         self.assertIn(proj_task.id, [t["id"] for t in ws_b_proj_only["tasks"]])
 
@@ -260,14 +264,14 @@ class TestPersonalToolsSuite(TransactionCase):
 
         # Two-step completion: Executor User B reports done -> does NOT mark project state 1_done or verified!
         rep_detail = TaskB.tp_report_or_verify_task(
-            proj_task.id, "report_done", "Đã xuất file PDF ký nháy"
+            proj_task.id, "report_done", "Đã xuất file PDF ký nháy",
         )
         self.assertEqual(rep_detail["exec_report_state"], "reported_done")
         self.assertEqual(proj_task.state, "01_in_progress")
         # User C (outsider) cannot verify
         with self.assertRaises(AccessError):
             self.env["project.task"].with_user(self.user_c).tp_report_or_verify_task(
-                proj_task.id, "verify"
+                proj_task.id, "verify",
             )
         # Authorized verifier confirms result -> `verified`
         ver_detail = (
@@ -298,7 +302,7 @@ class TestPersonalToolsSuite(TransactionCase):
     def test_04_schedule_personal_task_onto_calendar_without_deadline_mutation(self):
         TaskA = self.env["project.task"].with_user(self.user_a)
         t = TaskA.tp_create_personal_task(
-            {"name": "Chuẩn bị báo cáo tuần", "deadline_iso": "2026-11-30T17:00"}
+            {"name": "Chuẩn bị báo cáo tuần", "deadline_iso": "2026-11-30T17:00"},
         )
         ev_card = TaskA.tp_schedule_personal_task(
             t["id"],
@@ -509,7 +513,7 @@ class TestPersonalToolsSuite(TransactionCase):
                     "date_from": "2026-11-25",
                     "date_to": "2026-11-30",
                     "partner_ids": [self.user_a.partner_id.id],
-                }
+                },
             )
             self.assertEqual(agenda_hits["total_count"], 0)
 
@@ -554,7 +558,7 @@ class TestPersonalToolsSuite(TransactionCase):
         grp = ChanA._create_group(self.user_a | self.user_b, name="Nhóm Cầu Dây Văng")
         member_pids = grp.sudo().channel_member_ids.mapped("partner_id").ids
         self.assertCountEqual(
-            member_pids, [self.user_a.partner_id.id, self.user_b.partner_id.id]
+            member_pids, [self.user_a.partner_id.id, self.user_b.partner_id.id],
         )
 
         # Outsider User C cannot read private group or private DM
@@ -573,7 +577,7 @@ class TestPersonalToolsSuite(TransactionCase):
                     "raw": b"%PDF-1.4 test",
                     "res_model": "discuss.channel",
                     "res_id": dm1.id,
-                }
+                },
             )
         )
         self.assertFalse(att.public)
@@ -597,7 +601,7 @@ class TestPersonalToolsSuite(TransactionCase):
         self.assertNotIn("9911", msg.body, "Private task title must not be leaked in shared anchor")
         with self.assertRaises(AccessError):
             self.env["project.task"].with_user(self.user_b).tp_get_personal_task_detail(
-                priv_task["id"]
+                priv_task["id"],
             )
 
     def test_10_admin_delegation_and_deactivated_user_guards(self):
@@ -614,7 +618,7 @@ class TestPersonalToolsSuite(TransactionCase):
         )
         with self.assertRaises(AccessError):
             self.env["project.task"].with_user(self.delegated_admin).tp_get_personal_task_detail(
-                priv_task["id"]
+                priv_task["id"],
             )
 
         # Deactivated user cannot call personal tools endpoints
@@ -624,7 +628,7 @@ class TestPersonalToolsSuite(TransactionCase):
                 "login": "pt.locked@tanphat.test",
                 "active": False,
                 "group_ids": [Command.set([self.env.ref("base.group_user").id])],
-            }
+            },
         )
         with self.assertRaises(AccessError):
             self.env["project.task"].with_user(locked_user).tp_get_personal_workspace({})
@@ -642,7 +646,7 @@ class TestPersonalToolsSuite(TransactionCase):
         """
         with self.assertRaises(AccessError):
             self.env["tp.meeting.room"].with_user(self.user_b).tp_save_meeting_room(
-                0, {"code": "PH-HACK", "name": "Phòng trái phép", "capacity": 8}
+                0, {"code": "PH-HACK", "name": "Phòng trái phép", "capacity": 8},
             )
 
         room = (
@@ -735,7 +739,7 @@ class TestPersonalToolsSuite(TransactionCase):
                 {
                     "start": self.env["calendar.event"].sudo().browse(ev1["id"]).start,
                     "stop": self.env["calendar.event"].sudo().browse(ev1["id"]).stop,
-                }
+                },
             )
 
     def test_12_scoped_project_department_channels_and_message_to_task(self):
@@ -775,7 +779,7 @@ class TestPersonalToolsSuite(TransactionCase):
             ChanC.tp_preview_message_for_task(msg.id)
         with self.assertRaises(AccessError):
             ChanC.tp_create_task_from_message(
-                msg.id, {"name": "Hack task", "user_ids": [self.user_c.id]}, "tok-hack"
+                msg.id, {"name": "Hack task", "user_ids": [self.user_c.id]}, "tok-hack",
             )
 
         # User A previews & confirms task creation for User B (idempotent on retry)
@@ -813,3 +817,50 @@ class TestPersonalToolsSuite(TransactionCase):
         detail_b = TaskB.tp_get_personal_task_detail(created_1["id"])
         self.assertEqual(detail_b["source_message_info"]["message_id"], msg.id)
         self.assertEqual(detail_b["deliverable"], "File Excel + PDF khối lượng cọc")
+
+    def test_08_scoped_channel_store_sync_flag_and_xml_no_en_us_override(self):
+        """Scoped channel serializes tp_channel_scope & tp_can_sync_members to Store; XML keeps core en_US clean."""
+        ChanA = self.env["discuss.channel"].with_user(self.user_a)
+        created = ChanA.tp_create_scoped_channel(
+            {
+                "scope": "department",
+                "source_id": self.dept_tech.id,
+                "name": "Nhóm Kỹ thuật Store",
+                "extra_user_ids": [self.user_b.id],
+            },
+            operation_token="tok-store-sync-001",
+        )
+        ch_id = created["id"]
+
+        # Manager (user_a) receives tp_can_sync_members=True in Store payload
+        ch_for_a = self.env["discuss.channel"].with_user(self.user_a).browse(ch_id)
+        store_a = Store().add(ch_for_a, "_store_channel_fields").as_dict()
+        rows_a = store_a.get("discuss.channel", [])
+        row_a = next((r for r in rows_a if r.get("id") == ch_id), {})
+        self.assertEqual(row_a.get("tp_channel_scope"), "department")
+        self.assertTrue(row_a.get("tp_can_sync_members"))
+
+        # Regular member (user_b) receives tp_can_sync_members=False in Store payload
+        ch_for_b = self.env["discuss.channel"].with_user(self.user_b).browse(ch_id)
+        store_b = Store().add(ch_for_b, "_store_channel_fields").as_dict()
+        rows_b = store_b.get("discuss.channel", [])
+        row_b = next((r for r in rows_b if r.get("id") == ch_id), {})
+        self.assertEqual(row_b.get("tp_channel_scope"), "department")
+        self.assertFalse(row_b.get("tp_can_sync_members"))
+
+        # Core XMLIDs in personal_menus_and_views.xml must not override <field name="name">
+        xml_path = Path(__file__).resolve().parents[1] / "views" / "personal_menus_and_views.xml"
+        tree = ET.parse(xml_path)
+        core_ids = {
+            "mail.menu_root_discuss",
+            "mail.action_discuss",
+            "project_todo.menu_todo_todos",
+            "project_todo.project_task_action_todo",
+            "calendar.mail_menu_calendar",
+            "calendar.calendar_event_menu",
+            "calendar.action_calendar_event",
+        }
+        for rec in tree.findall(".//record"):
+            if rec.attrib.get("id") in core_ids:
+                name_fields = [f for f in rec.findall("field") if f.attrib.get("name") == "name"]
+                self.assertEqual(name_fields, [], f"Core XMLID {rec.attrib.get('id')} must not override en_US name")

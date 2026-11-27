@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- 1. VIỆC CÁ NHÂN: Client Action & Menu -->
+    <!-- 1. VIỆC CÁ NHÂN: Client Action & Menu (core menu/action labels translated via tp_i18n_vi/i18n/vi.po) -->
     <record id="action_personal_todo" model="ir.actions.client">
         <field name="name">Việc cá nhân</field>
         <field name="tag">tp_personal_tools.todo_workspace</field>
@@ -8,12 +8,7 @@
     </record>
 
     <record id="project_todo.menu_todo_todos" model="ir.ui.menu">
-        <field name="name">Việc cá nhân</field>
         <field name="action" ref="tp_personal_tools.action_personal_todo"/>
-    </record>
-
-    <record id="project_todo.project_task_action_todo" model="ir.actions.act_window">
-        <field name="name">Việc cá nhân</field>
     </record>
 
     <!-- Preserve DEC-053 admin bypass + KH-KD project task isolation while allowing
@@ -24,16 +19,10 @@
 
     <!-- 2. LỊCH LÀM VIỆC: Menu, Action & Custom Calendar View Class -->
     <record id="calendar.mail_menu_calendar" model="ir.ui.menu">
-        <field name="name">Lịch làm việc</field>
         <field name="action" ref="calendar.action_calendar_event"/>
     </record>
 
-    <record id="calendar.calendar_event_menu" model="ir.ui.menu">
-        <field name="name">Lịch làm việc</field>
-    </record>
-
     <record id="calendar.action_calendar_event" model="ir.actions.act_window">
-        <field name="name">Lịch làm việc</field>
         <field name="context">{'default_mode': 'week'}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -56,14 +45,5 @@
                 <attribute name="string">Lịch làm việc</attribute>
             </xpath>
         </field>
-    </record>
-
-    <!-- 3. TRAO ĐỔI: Menu & Action -->
-    <record id="mail.menu_root_discuss" model="ir.ui.menu">
-        <field name="name">Trao đổi</field>
-    </record>
-
-    <record id="mail.action_discuss" model="ir.actions.client">
-        <field name="name">Trao đổi</field>
     </record>
 </odoo>

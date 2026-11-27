@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf8'?>
+<?xml version='1.0' encoding='utf-8'?>
 <odoo>
     <record id="receipt_list" model="ir.ui.view">
         <field name="name">tp.equipment.receipt.list</field>
@@ -48,7 +48,7 @@
         <field name="name">tp.equipment.receipt.form</field>
         <field name="model">tp.equipment.receipt</field>
         <field name="arch" type="xml">
-            <form string="Phiếu nhập thiết bị" class="tp_eq_form">
+            <form string="Phiếu nhập thiết bị" class="tp_eq_form o_tp_eq_form_wide" js_class="tp_equipment_form">
                 <header>
                     <button name="action_done" type="object" string="Nhập kho" class="btn-primary" invisible="state != 'draft' or not id" confirm="Tạo hồ sơ và đăng ký từng thiết bị trên phiếu vào kho? Phiếu đã nhập không sửa được."/>
                     <button name="action_cancel" type="object" string="Hủy phiếu" invisible="state != 'draft' or not id"/>
@@ -74,8 +74,8 @@
                             <field name="date" readonly="state != 'draft'"/>
                             <field name="location_id" options="{'no_create': True}" readonly="state != 'draft'"/>
                             <field name="done_date" invisible="state != 'done'"/>
-                            <field name="done_by_id" invisible="state != 'done'"/>
-                            <field name="company_id" invisible="1"/>
+                            <field name="done_by_id" invisible="state != 'done'" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="company_id" invisible="1" options="{'no_open': True, 'no_create': True}"/>
                         </group>
                     </group>
                     <p class="o_tp_eq_note">
@@ -119,6 +119,7 @@
                             <field name="note" nolabel="1" placeholder="Ghi chú giao nhận, tình trạng bao bì…"/>
                         </page>
                     </notebook>
+                    <div class="o_tp_eq_chatter_below"/>
                 </sheet>
                 <chatter/>
             </form>
@@ -142,7 +143,7 @@
     <record id="action_scan" model="ir.actions.client">
         <field name="name">Quét mã thiết bị</field>
         <field name="tag">tp_equipment.scan</field>
-        <field name="path">quet-ma-thiet-bi</field>
+        <field name="path">thiet-bi-quet-ma</field>
         <field name="context">{'tp_eq_leaf': 'tp_equipment.menu_scan'}</field>
     </record>
 </odoo>

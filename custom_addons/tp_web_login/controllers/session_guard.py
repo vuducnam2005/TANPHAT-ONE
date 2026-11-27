@@ -48,7 +48,7 @@ class TpLoginSessionController(WebSession):
         """A new document disposes all private webclient state and pending callbacks."""
         relogin_url = request.env['ir.http']._tp_relogin_url(request.env)
         if request.session.uid:
-            return request.redirect('/app/tp-home' if relogin_url.startswith('/dang-nhap') else '/odoo/tp-home')
+            return request.redirect('/app/trang-chu' if relogin_url.startswith('/dang-nhap') else '/odoo/tp-home')
         reason = request.session.get('tp_ended_reason')
         if reason not in (SESSION_REPLACED_REASON, SESSION_CUTOVER_REASON):
             return request.redirect(relogin_url)
@@ -83,7 +83,9 @@ class TpLoginHomeController(AuthSignupHome, TotpHome):
             reason = request.session.pop('tp_ended_reason', None)
             request.session.pop('tp_ended_at', None)
             request.session['tp_login_notice'] = reason
-            return request.redirect_query('/web/login', query={'redirect': '/odoo/tp-home'}, code=303)
+            branded = 'tp_branding' in request.env.registry._init_modules
+            home_target = '/app/trang-chu' if branded else '/odoo/tp-home'
+            return request.redirect_query('/web/login', query={'redirect': home_target}, code=303)
         return super().web_client(s_action=s_action, **kw)
 
     @http.route()

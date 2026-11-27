@@ -70,20 +70,17 @@
                 </div>
             </header>
 
-            <!-- 2. Access Denied / Error Alerts -->
-            <div t-if="this.state.denied" class="o_tp_kd_rc_denied" role="alert">
+            <!-- 2. Unified InlineErrors & Access Denied Notice -->
+            <InlineErrors errors="this.state.fieldErrors"
+                          server="this.state.serverError"
+                          attempt="this.state.attempt"/>
+            <div t-if="this.state.denied" class="o_tp_kd_rc_denied" role="status">
                 <i class="oi" data-icon="lock" aria-hidden="true"/>
                 <div>
                     <strong>Không hiển thị số liệu báo cáo. </strong>
-                    <span t-out="this.state.error"/>
-                    <span> Dữ liệu trên màn hình đã được xóa để bảo mật; vui lòng tải lại hoặc liên hệ quản trị nếu bạn cần cấp quyền.</span>
+                    <span>Dữ liệu trên màn hình đã được xóa để bảo mật; vui lòng bấm Thử lại hoặc liên hệ quản trị nếu cần cấp quyền.</span>
                 </div>
                 <button type="button" class="btn btn-secondary" t-on-click="() => this.loadReport()">Thử lại</button>
-            </div>
-            <div t-elif="this.state.error" class="o_tp_kd_rc_alert" role="alert">
-                <i class="oi" data-icon="warning" aria-hidden="true"/>
-                <span t-out="this.state.error"/>
-                <button type="button" class="btn btn-link" t-on-click="() => this.loadReport()">Thử lại</button>
             </div>
 
             <!-- 3. Six Report Group Tabs (R01 - R06) -->
@@ -138,14 +135,14 @@
                     <div class="o_tp_kd_rc_filter_grid">
                         <label>
                             <span>Từ ngày</span>
-                            <input type="date" class="o_input o_tp_kd_rc_date_from"
+                            <input id="rc_date_from" type="date" class="o_input o_tp_kd_rc_date_from"
                                    t-att-value="this.state.pending.date_from or ''"
                                    t-att-aria-invalid="(this.state.dateError) ? 'true' : 'false'"
                                    t-on-change="(ev) => this.setPendingField('date_from', ev)"/>
                         </label>
                         <label>
                             <span>Đến ngày</span>
-                            <input type="date" class="o_input o_tp_kd_rc_date_to"
+                            <input id="rc_date_to" type="date" class="o_input o_tp_kd_rc_date_to"
                                    t-att-value="this.state.pending.date_to or ''"
                                    t-att-aria-invalid="(this.state.dateError) ? 'true' : 'false'"
                                    t-on-change="(ev) => this.setPendingField('date_to', ev)"/>
@@ -185,8 +182,6 @@
                             </select>
                         </label>
                     </div>
-
-                    <p t-if="this.state.dateError" class="o_tp_kd_rc_field_error" role="alert" t-out="this.state.dateError"/>
 
                     <!-- Applied Chips & Pending Notice -->
                     <div class="o_tp_kd_rc_filter_status_bar">

@@ -10,9 +10,15 @@
                 <button type="button" class="btn btn-outline-secondary" t-on-click="this.back">Quay lại</button>
             </div>
 
-            <div t-if="this.state.error" class="alert alert-danger tp-security-banner" role="alert">
-                <span t-out="this.state.error"/>
-                <button type="button" class="btn btn-link p-0" t-on-click="this.load">Thử tải lại</button>
+            <div t-if="this.state.fieldErrors.length or this.state.serverError" class="mb-3">
+                <InlineErrors
+                    errors="this.state.fieldErrors"
+                    server="this.state.serverError"
+                    attempt="this.state.errorAttempt"/>
+                <button t-if="!this.state.data"
+                        type="button"
+                        class="btn btn-outline-secondary btn-sm mt-2"
+                        t-on-click="this.load">Thử tải lại</button>
             </div>
             <div t-if="this.state.notice" class="alert alert-success tp-security-banner" role="status">
                 <span t-out="this.state.notice"/>
@@ -57,7 +63,10 @@
                             <div t-if="this.state.pwSuccess" class="alert alert-success tp-security-inline-msg" role="status" t-out="this.state.pwSuccess"/>
 
                             <form t-if="this.state.pwOpen" class="tp-password-form" novalidate="novalidate" t-on-submit="this.submitPasswordChange">
-                                <div t-if="this.state.pwServerError" class="alert alert-danger tp-security-inline-msg" role="alert" t-out="this.state.pwServerError"/>
+                                <InlineErrors
+                                    errors="this.pwFieldErrors"
+                                    server="this.state.pwServerObj"
+                                    attempt="this.state.pwAttempt"/>
 
                                 <div class="tp-field-group">
                                     <label class="tp-field-label" for="tp-pw-current">Mật khẩu hiện tại</label>
@@ -75,6 +84,7 @@
                                                t-on-input="(ev) => this.onPasswordInput('current', ev)"/>
                                         <button type="button"
                                                 class="tp-eye-btn"
+                                                t-att-title="this.state.pwShowCurrent ? 'Ẩn mật khẩu hiện tại' : 'Hiện mật khẩu hiện tại'"
                                                 t-att-aria-label="this.state.pwShowCurrent ? 'Ẩn mật khẩu hiện tại' : 'Hiện mật khẩu hiện tại'"
                                                 t-att-aria-pressed="this.state.pwShowCurrent ? 'true' : 'false'"
                                                 t-on-click="() => this.togglePasswordVisibility('current')">
@@ -102,6 +112,7 @@
                                                    t-on-input="(ev) => this.onPasswordInput('next', ev)"/>
                                             <button type="button"
                                                     class="tp-eye-btn"
+                                                    t-att-title="this.state.pwShowNew ? 'Ẩn mật khẩu mới' : 'Hiện mật khẩu mới'"
                                                     t-att-aria-label="this.state.pwShowNew ? 'Ẩn mật khẩu mới' : 'Hiện mật khẩu mới'"
                                                     t-att-aria-pressed="this.state.pwShowNew ? 'true' : 'false'"
                                                     t-on-click="() => this.togglePasswordVisibility('next')">
@@ -128,6 +139,7 @@
                                                    t-on-input="(ev) => this.onPasswordInput('confirm', ev)"/>
                                             <button type="button"
                                                     class="tp-eye-btn"
+                                                    t-att-title="this.state.pwShowConfirm ? 'Ẩn xác nhận mật khẩu mới' : 'Hiện xác nhận mật khẩu mới'"
                                                     t-att-aria-label="this.state.pwShowConfirm ? 'Ẩn xác nhận mật khẩu mới' : 'Hiện xác nhận mật khẩu mới'"
                                                     t-att-aria-pressed="this.state.pwShowConfirm ? 'true' : 'false'"
                                                     t-on-click="() => this.togglePasswordVisibility('confirm')">
@@ -383,7 +395,7 @@
                     <p t-if="this.state.saved" class="text-success mt-2 mb-0" role="status">Đã lưu tùy chọn cá nhân. Tải lại trang để áp dụng ngôn ngữ hoặc múi giờ mới.</p>
                 </details>
             </t>
-            <p t-elif="!this.state.error" role="status">Đang tải thông tin bảo mật…</p>
+            <p t-elif="!this.state.fieldErrors.length and !this.state.serverError" role="status">Đang tải thông tin bảo mật…</p>
         </main>
     </t>
 </templates>

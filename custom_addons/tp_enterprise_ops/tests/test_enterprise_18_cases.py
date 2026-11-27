@@ -1,14 +1,16 @@
 # Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
 """Section O: Complete 18 Mandatory Cross-Module Cases + Unified Certificate, Survey Calibration, Payroll Gate & AI RBAC."""
-import base64
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 
-from odoo import Command, fields
+from odoo import Command
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import TransactionCase, tagged
 
 from odoo.addons.tp_equipment.models.common import INTERNAL as EQ_INTERNAL
-from odoo.addons.tp_hr_attendance.models.attendance_common import internal as att_internal, local_to_utc
+from odoo.addons.tp_hr_attendance.models.attendance_common import (
+    internal as att_internal,
+)
+from odoo.addons.tp_hr_attendance.models.attendance_common import local_to_utc
 
 
 @tagged('post_install', '-at_install')
@@ -193,13 +195,13 @@ class TestEnterprise18MandatoryCases(TransactionCase):
         )
         self.assertTrue(has_leave)
         # d1: approved leave, no punch -> 'leave'
-        self.assertEqual(cells[(self.emp_a.id, d1)]['state'], 'leave')
-        self.assertEqual(cells[(self.emp_a.id, d1)]['in'], '')
+        self.assertEqual(cells[self.emp_a.id, d1]['state'], 'leave')
+        self.assertEqual(cells[self.emp_a.id, d1]['in'], '')
         # d2: approved leave + real punch -> 'review' conflict AND original clock times preserved!
-        self.assertEqual(cells[(self.emp_a.id, d2)]['state'], 'review')
-        self.assertTrue(cells[(self.emp_a.id, d2)].get('tp_leave_conflict'))
-        self.assertEqual(cells[(self.emp_a.id, d2)]['in'], '08:30')
-        self.assertEqual(cells[(self.emp_a.id, d2)]['out'], '17:00')
+        self.assertEqual(cells[self.emp_a.id, d2]['state'], 'review')
+        self.assertTrue(cells[self.emp_a.id, d2].get('tp_leave_conflict'))
+        self.assertEqual(cells[self.emp_a.id, d2]['in'], '08:30')
+        self.assertEqual(cells[self.emp_a.id, d2]['out'], '17:00')
 
         # Case #13: Survey gear with expired calibration CANNOT be issued via tp.equipment.move!
         cat = self.env['maintenance.equipment.category'].create({'name': 'Máy toàn đạc điện tử (18Case)'})
@@ -313,3 +315,67 @@ class TestEnterprise18MandatoryCases(TransactionCase):
             )
         with self.assertRaises(AccessError):
             self.admin.with_user(self.user_del_admin).write({'email': 'hack@example.com'})
+
+    def test_step_d_readonly_payroll_survey_free_domain_and_stage_i18n(self):
+        """Step D regressions: F-A03-0001 read-only payroll load, F-A06-0002 survey free_domain/tp_can_assign, F-A03-0008 stage i18n, F-A06-0014 AI draft validation."""
+        # 1. F-A03-0001: tp_get_input_reconciliation NEVER creates sheet/lines on ungenerated month
+        Sheet = self.env['tp.payroll.input.sheet'].with_user(self.user_hr_mgr)
+        res_empty = Sheet.tp_get_input_reconciliation('2026-08')
+        self.assertFalse(res_empty['exists'])
+        self.assertEqual(res_empty['lines'], [])
+        self.assertEqual(
+            self.env['tp.payroll.input.sheet'].sudo().search_count([
+                ('company_id', '=', self.company.id), ('period_month', '=', '2026-08'),
+            ]),
+            0,
+        )
+
+        # Generate explicitly -> now tp_get_input_reconciliation returns ordered lines with employee_code & department_name
+        Sheet.tp_generate_input_reconciliation('2026-08')
+        res_loaded = Sheet.tp_get_input_reconciliation('2026-08')
+        self.assertTrue(res_loaded['exists'])
+        self.assertGreaterEqual(len(res_loaded['lines']), 1)
+        self.assertIn('employee_code', res_loaded['lines'][0])
+        self.assertIn('department_name', res_loaded['lines'][0])
+
+        # 2. F-A06-0002: Survey gear unset/expired excluded from free_domain & tp_can_assign == False
+        cat = self.env['maintenance.equipment.category'].create({'name': 'Máy Thủy chuẩn (StepD)'})
+        unset_gear = self.env['maintenance.equipment'].with_user(self.admin).create({
+            'name': 'Máy Thủy chuẩn Leica NA730 (Chưa khai KĐ)',
+            'category_id': cat.id,
+            'company_id': self.company.id,
+            'tp_technical_state': 'good',
+            'tp_is_survey_gear': True,
+            'tp_calibration_due_date': False,
+        })
+        unset_gear.action_tp_register()
+        self.assertEqual(unset_gear.tp_calibration_state, 'unset')
+        self.assertFalse(unset_gear.tp_can_assign)
+        self.assertTrue(bool(unset_gear._tp_assign_problem()))
+        free_recs = self.env['maintenance.equipment'].search(self.env['maintenance.equipment'].free_domain())
+        self.assertNotIn(unset_gear, free_recs)
+
+        # Update calibration via RPC -> now valid, assignable, and included in free_domain!
+        self.env['maintenance.equipment'].with_user(self.admin).tp_save_survey_calibration(
+            unset_gear.id,
+            {
+                'tp_calibration_date': date.today().isoformat(),
+                'tp_calibration_due_date': (date.today() + timedelta(days=180)).isoformat(),
+                'tp_calibration_cert_no': 'GCN-STEPD-01',
+                'tp_calibration_org': 'Viện Đo lường Việt Nam',
+            },
+        )
+        unset_gear.invalidate_recordset()
+        self.assertEqual(unset_gear.tp_calibration_state, 'valid')
+        self.assertTrue(unset_gear.tp_can_assign)
+        self.assertIn(unset_gear, self.env['maintenance.equipment'].search(self.env['maintenance.equipment'].free_domain()))
+
+        # 3. F-A03-0008: English default stage names mapped to Vietnamese
+        en_stage = self.env['hr.recruitment.stage'].sudo().create({'name': 'Initial Qualification', 'sequence': 99})
+        rec_ws = self.env['hr.applicant'].with_user(self.user_hr_mgr).tp_recruitment_workspace_data({})
+        mapped_names = {s['id']: s['name'] for s in rec_ws['stages']}
+        self.assertEqual(mapped_names.get(en_stage.id), 'Sơ loại hồ sơ')
+
+        # 4. F-A06-0014: Empty AI draft prompt rejected with UserError & citations carry action_xmlid
+        with self.assertRaises(UserError):
+            self.env['tp.ai.assistant'].with_user(self.user_emp_a).tp_preview_draft_from_prompt('   ')

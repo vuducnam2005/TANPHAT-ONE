@@ -31,6 +31,7 @@ const GROUP_ICONS = {
     "tp_hr_workspace.menu_group_records": "article",
     "tp_hr_workspace.menu_group_payment": "database",
     "tp_hr_workspace.menu_group_admin": "tune",
+    "tp_hr_workspace.menu_group_config": "tune",
 };
 const BODY_CLASSES = [
     "o_tp_hr_shell",
@@ -257,15 +258,35 @@ export class TpHrSidebar extends Component {
     }
 
     resolveFallbackLeaf(leaves, current, controllerModel = "") {
-        const model = controllerModel || current?.res_model;
+        let model = controllerModel || current?.res_model || "";
+        if (!model) {
+            const stack = router.current?.actionStack || [];
+            const lastSegment = stack[stack.length - 1];
+            model = lastSegment?.model || lastSegment?.resModel || "";
+            if (!model) {
+                const pathMatch = (browser.location?.pathname || "").match(
+                    /\/(hr\.[a-z_.]+|tp\.hr\.[a-z_.]+|tp\.bank|res\.partner\.bank)(?:\/|$)/
+                );
+                if (pathMatch) {
+                    model = pathMatch[1];
+                }
+            }
+        }
         const map = {
             "hr.job": ["tp_hr_workspace.menu_jobs"],
             "hr.department": ["tp_hr_workspace.menu_departments"],
             "hr.work.location": ["tp_hr_workspace.menu_locations"],
             "hr.employee.category": ["tp_hr_workspace.menu_categories"],
+            "hr.skill.type": ["tp_hr_workspace.menu_categories"],
+            "hr.resume.line.type": ["tp_hr_workspace.menu_categories"],
             "tp.hr.import.batch": ["tp_hr_workspace.menu_import"],
+            "tp.hr.import.line": ["tp_hr_workspace.menu_import"],
             "tp.hr.employee.audit": ["tp_hr_workspace.menu_employee_audit"],
+            "tp.hr.audit.cleanup.wizard": ["tp_hr_workspace.menu_employee_audit"],
             "tp.bank": ["tp_hr_bank.menu_tp_bank"],
+            "tp.hr.contract.document": ["tp_hr_workspace.menu_employees", "tp_hr_workspace.menu_directory"],
+            "hr.version": ["tp_hr_workspace.menu_employees"],
+            "res.partner.bank": ["tp_hr_workspace.menu_employees", "tp_hr_bank.menu_tp_bank"],
             "hr.employee": ["tp_hr_workspace.menu_employees", "tp_hr_workspace.menu_directory"],
             "hr.employee.public": ["tp_hr_workspace.menu_directory"],
         };

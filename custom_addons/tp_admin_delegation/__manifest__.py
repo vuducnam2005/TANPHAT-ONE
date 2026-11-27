@@ -1,9 +1,9 @@
 {
     'name': 'TANPHAT ONE — Quản trị viên toàn hệ thống',
-    'version': '20.0.2.3.0',
+    'version': '20.0.2.3.1',
     'license': 'LGPL-3',
     'author': 'Tan Phat JSC',
-    'depends': ['tp_hr_workspace', 'tp_equipment', 'tp_reporting', 'auth_passkey'],
+    'depends': ['tp_hr_workspace', 'tp_equipment', 'tp_reporting', 'auth_passkey', 'hr_skills'],
     'data': [
         'security/admin_full_security.xml',
         'security/ir.access.csv',

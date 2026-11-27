@@ -8,7 +8,6 @@ returned unchanged so nothing here can turn into an open redirect.
 """
 
 from odoo.addons.tp_branding.brand_routes import (
-    ROUTE_DEFINITIONS,
     get_route_by_native_slug,
     get_route_by_url,
 )

@@ -1,12 +1,15 @@
 # Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
 """G1: Biên bản họp (tp.meeting.minute) linked to calendar.event and generating project.task once on issue."""
-from datetime import datetime
+from datetime import UTC, datetime
+from zoneinfo import ZoneInfo
+
 from markupsafe import Markup, escape
 
 from odoo import Command, _, api, fields, models
 from odoo.exceptions import AccessError, UserError
 
 from odoo.addons.tp_request.models.request_common import (
+    DEFAULT_TZ,
     active_internal_users,
     fold_text,
     format_date_vn,
@@ -21,6 +24,7 @@ MINUTE_STATES = [
 ]
 
 _INTERNAL_MINUTE_CTX = '_tp_minute_internal_write'
+_INTERNAL_MINUTE_OP_CTX = '_tp_internal_minute_op'
 
 
 class TpMeetingMinute(models.Model):
@@ -64,6 +68,30 @@ class TpMeetingMinute(models.Model):
     )
 
     # ------------------------------------------------------------------ Helpers & Guards
+    def _tp_user_tz_name(self):
+        tz_name = self.env.user.tz or self.env.context.get('tz') or DEFAULT_TZ
+        try:
+            ZoneInfo(tz_name)
+            return tz_name
+        except (KeyError, ValueError):
+            return DEFAULT_TZ
+
+    def _tp_utc_to_local_iso(self, dt_utc):
+        if not dt_utc:
+            return ''
+        tz = ZoneInfo(self._tp_user_tz_name())
+        return dt_utc.replace(tzinfo=UTC).astimezone(tz).strftime('%Y-%m-%dT%H:%M')
+
+    def _tp_local_iso_to_utc(self, iso_str):
+        raw = (iso_str or '').strip()
+        if not raw:
+            return False
+        tz = ZoneInfo(self._tp_user_tz_name())
+        dt = datetime.fromisoformat(raw.replace('Z', ''))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=tz)
+        return dt.astimezone(UTC).replace(tzinfo=None)
+
     def _tp_can_manage(self, user=None):
         self.ensure_one()
         user = user or self.env.user
@@ -71,9 +99,7 @@ class TpMeetingMinute(models.Model):
             return True
         if user.id in (self.secretary_user_id.id, self.chair_user_id.id):
             return True
-        if self.department_id and self.department_id.sudo().manager_id.user_id.id == user.id:
-            return True
-        return False
+        return bool(self.department_id and self.department_id.sudo().manager_id.user_id.id == user.id)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -91,7 +117,7 @@ class TpMeetingMinute(models.Model):
                     raise AccessError(_('Chỉ Thư ký, Chủ trì cuộc họp, Trưởng phòng chủ trì hoặc Admin mới được sửa biên bản họp.'))
                 if rec.state == 'issued':
                     raise UserError(_(
-                        'Biên bản họp đã phát hành. Vui lòng sử dụng thao tác "Hiệu chỉnh phiên bản" kèm lý do bắt buộc.'
+                        'Biên bản họp đã phát hành. Vui lòng sử dụng thao tác "Hiệu chỉnh phiên bản" kèm lý do bắt buộc.',
                     ))
         return super().write(vals)
 
@@ -141,7 +167,7 @@ class TpMeetingMinute(models.Model):
                 task_vals = {
                     'name': item.name.strip(),
                     'description': Markup(
-                        '<p>Giao từ Biên bản họp <strong>%s — %s</strong> (v%s).</p><p>Kết luận: %s</p>'
+                        '<p>Giao từ Biên bản họp <strong>%s — %s</strong> (v%s).</p><p>Kết luận: %s</p>',
                     ) % (escape(rec.code), escape(rec.name), rec.version, escape(rec.conclusion_content or '')),
                     'user_ids': [Command.set([item.assignee_user_id.id])],
                     'project_id': rec.project_id.id or False,
@@ -152,19 +178,19 @@ class TpMeetingMinute(models.Model):
                 if 'tp_source_kind' in Task._fields:
                     task_vals['tp_source_kind'] = 'meeting'
                 new_task = Task.create(task_vals)
-                item.with_context(**{_INTERNAL_MINUTE_CTX: True}).write({'task_id': new_task.id})
+                item.with_context(**{_INTERNAL_MINUTE_CTX: True, _INTERNAL_MINUTE_OP_CTX: True}).write({'task_id': new_task.id})
                 created_tasks.append(new_task)
 
             now = fields.Datetime.now()
-            rec.with_context(**{_INTERNAL_MINUTE_CTX: True}).write({
+            rec.with_context(**{_INTERNAL_MINUTE_CTX: True, _INTERNAL_MINUTE_OP_CTX: True}).write({
                 'state': 'issued',
                 'issued_at': now,
                 'issued_by_id': self.env.uid,
             })
             rec.message_post(
                 body=Markup('<p>Đã phát hành biên bản họp <strong>v%s</strong> (%s đầu việc mới được khởi tạo).</p>') % (
-                    rec.version, len(created_tasks)
-                )
+                    rec.version, len(created_tasks),
+                ),
             )
         return True
 
@@ -194,8 +220,8 @@ class TpMeetingMinute(models.Model):
         self.with_context(**{_INTERNAL_MINUTE_CTX: True}).write(write_vals)
         self.message_post(
             body=Markup('<p>Mở hiệu chỉnh biên bản lên <strong>v%s</strong>. Lý do: %s</p>') % (
-                new_ver, escape(clean_reason)
-            )
+                new_ver, escape(clean_reason),
+            ),
         )
         return {'version': new_ver, 'state': self.state}
 
@@ -214,7 +240,7 @@ class TpMeetingMinute(models.Model):
             'existing_minute_id': 0,
             'calendar_event_id': ev.id,
             'name': ev.name or '',
-            'meeting_date': ev.start.strftime('%Y-%m-%dT%H:%M') if ev.start else '',
+            'meeting_date': self._tp_utc_to_local_iso(ev.start),
             'project_id': ev.tp_project_id.id if 'tp_project_id' in ev._fields and ev.tp_project_id else False,
             'chair_user_id': ev.user_id.id or self.env.uid,
             'attendee_user_ids': att_users.ids,
@@ -223,6 +249,7 @@ class TpMeetingMinute(models.Model):
     @api.model
     def tp_minute_list_data(self, params=None):
         params = params or {}
+        tz_name = self._tp_user_tz_name()
         dom = [('company_id', '=', self.env.company.id)]
         st = (params.get('state') or '').strip()
         if st in dict(MINUTE_STATES):
@@ -238,9 +265,13 @@ class TpMeetingMinute(models.Model):
         if date_from and date_to and date_from > date_to:
             raise UserError(_('Từ ngày không được lớn hơn Đến ngày.'))
         if date_from:
-            dom.append(('meeting_date', '>=', f'{date_from} 00:00:00'))
+            dt_from = self._tp_local_iso_to_utc(f'{date_from}T00:00:00')
+            if dt_from:
+                dom.append(('meeting_date', '>=', dt_from))
         if date_to:
-            dom.append(('meeting_date', '<=', f'{date_to} 23:59:59'))
+            dt_to = self._tp_local_iso_to_utc(f'{date_to}T23:59:59')
+            if dt_to:
+                dom.append(('meeting_date', '<=', dt_to))
 
         search_q = (params.get('search') or '').strip()
         if search_q:
@@ -266,7 +297,7 @@ class TpMeetingMinute(models.Model):
                 'id': r.id,
                 'code': r.code,
                 'name': r.name,
-                'meeting_date': format_dt_local(r.meeting_date),
+                'meeting_date': format_dt_local(r.meeting_date, tz_name=tz_name),
                 'chair_name': r.chair_user_id.sudo().name if r.chair_user_id else '—',
                 'secretary_name': r.secretary_user_id.sudo().name if r.secretary_user_id else '—',
                 'department_name': r.department_id.sudo().name if r.department_id else '—',
@@ -296,7 +327,7 @@ class TpMeetingMinute(models.Model):
                 'departments': [{'id': d.id, 'name': d.name} for d in depts],
                 'projects': [{'id': p.id, 'name': p.name} for p in projs],
                 'users': [{'id': u.id, 'name': u.name} for u in users],
-                'events': [{'id': e.id, 'name': f"{e.name} ({format_dt_local(e.start)})"} for e in events],
+                'events': [{'id': e.id, 'name': f"{e.name} ({format_dt_local(e.start, tz_name=tz_name)})"} for e in events],
             },
         }
 
@@ -331,14 +362,15 @@ class TpMeetingMinute(models.Model):
             'file_size': a.file_size or 0,
             'download_url': f'/tp_digital_office/attachment/tp.meeting.minute/{rec.id}/{a.id}',
         } for a in rec.attachment_ids.sudo() if a.res_model == 'tp.meeting.minute' and a.res_id == rec.id]
+        tz_name = self._tp_user_tz_name()
         return {
             'id': rec.id,
             'code': rec.code,
             'name': rec.name,
             'calendar_event_id': rec.calendar_event_id.id or 0,
             'calendar_event_name': rec.calendar_event_id.sudo().name if rec.calendar_event_id else '',
-            'meeting_date_iso': rec.meeting_date.strftime('%Y-%m-%dT%H:%M') if rec.meeting_date else '',
-            'meeting_date_display': format_dt_local(rec.meeting_date),
+            'meeting_date_iso': self._tp_utc_to_local_iso(rec.meeting_date),
+            'meeting_date_display': format_dt_local(rec.meeting_date, tz_name=tz_name),
             'chair_user_id': rec.chair_user_id.id or 0,
             'chair_name': rec.chair_user_id.sudo().name if rec.chair_user_id else '—',
             'secretary_user_id': rec.secretary_user_id.id,
@@ -354,7 +386,7 @@ class TpMeetingMinute(models.Model):
             'state': rec.state,
             'state_label': dict(MINUTE_STATES).get(rec.state, rec.state),
             'version': rec.version,
-            'issued_at': format_dt_local(rec.issued_at),
+            'issued_at': format_dt_local(rec.issued_at, tz_name=tz_name),
             'issued_by': rec.issued_by_id.sudo().name if rec.issued_by_id else '',
             'revision_reason': rec.revision_reason or '',
             'action_items': items,
@@ -398,7 +430,7 @@ class TpMeetingMinute(models.Model):
         parsed_dt = fields.Datetime.now()
         if mdate:
             try:
-                parsed_dt = datetime.fromisoformat(mdate.replace('Z', ''))
+                parsed_dt = self._tp_local_iso_to_utc(mdate) or parsed_dt
             except ValueError:
                 pass
 
@@ -464,10 +496,56 @@ class TpMeetingActionItem(models.Model):
     deliverable_expected = fields.Char(string='Sản phẩm đầu ra')
     task_id = fields.Many2one('project.task', string='Công việc đã sinh', readonly=True, ondelete='restrict', index=True)
 
+    def _tp_is_internal_minute_op(self):
+        return bool(self.env.context.get(_INTERNAL_MINUTE_CTX) or self.env.context.get(_INTERNAL_MINUTE_OP_CTX))
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        if not self._tp_is_internal_minute_op():
+            Minute = self.env['tp.meeting.minute']
+            for vals in vals_list:
+                if vals.get('task_id'):
+                    raise AccessError(_('Không được gán trực tiếp Công việc (task_id) trên đầu việc biên bản họp.'))
+                minute = Minute.browse(int(vals.get('minute_id') or 0)).exists()
+                if minute:
+                    if not minute._tp_can_manage():
+                        raise AccessError(_('Bạn không có quyền thêm đầu việc vào biên bản họp này.'))
+                    if minute.state == 'issued':
+                        raise UserError(_(
+                            'Biên bản họp đã phát hành. Vui lòng mở "Hiệu chỉnh phiên bản" trước khi thêm đầu việc.',
+                        ))
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if not self._tp_is_internal_minute_op():
+            if 'task_id' in vals:
+                raise AccessError(_('Không được ghi trực tiếp Công việc (task_id) trên đầu việc biên bản họp.'))
+            if 'minute_id' in vals:
+                target_min = self.env['tp.meeting.minute'].browse(int(vals.get('minute_id') or 0)).exists()
+                if target_min and not target_min._tp_can_manage():
+                    raise AccessError(_('Bạn không có quyền chuyển đầu việc sang biên bản họp khác.'))
+                if target_min and target_min.state == 'issued':
+                    raise UserError(_('Không được chuyển đầu việc vào biên bản họp đã phát hành.'))
+            for item in self:
+                if not item.minute_id._tp_can_manage():
+                    raise AccessError(_('Bạn không có quyền sửa đầu việc của biên bản họp này.'))
+                if item.minute_id.state == 'issued':
+                    raise UserError(_(
+                        'Biên bản họp đã phát hành. Vui lòng mở "Hiệu chỉnh phiên bản" trước khi sửa đầu việc.',
+                    ))
+        return super().write(vals)
+
     def unlink(self):
         for item in self:
             if item.task_id:
                 raise UserError(_(
-                    'Không được xóa đầu việc "%s" vì đã sinh Công việc #%s trên hệ thống.'
+                    'Không được xóa đầu việc "%s" vì đã sinh Công việc #%s trên hệ thống.',
                 ) % (item.name, item.task_id.id))
+            if not self._tp_is_internal_minute_op():
+                if not item.minute_id._tp_can_manage():
+                    raise AccessError(_('Bạn không có quyền xóa đầu việc của biên bản họp này.'))
+                if item.minute_id.state == 'issued':
+                    raise UserError(_(
+                        'Biên bản họp đã phát hành. Vui lòng mở "Hiệu chỉnh phiên bản" trước khi xóa đầu việc.',
+                    ))
         return super().unlink()

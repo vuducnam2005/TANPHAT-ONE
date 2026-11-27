@@ -8,20 +8,26 @@ from odoo.addons.tp_request.models.request_common import (
     is_live_admin_user,
 )
 
-# Strictly separated 11+ financial concepts per Section I2 & Baseline Doc
+# Strictly separated 11 management financial concepts per Section I2 & Baseline Doc
 FINANCIAL_METRIC_KINDS = [
-    ('contract_value', '1. Giá trị hợp đồng đã ký'),
-    ('allocated_value', '2. Giá trị giao khoán / thầu phụ'),
-    ('executed_output', '3. Sản lượng thực hiện ước tính'),
-    ('accepted_value', '4. Giá trị nghiệm thu xác nhận'),
-    ('payment_request_value', '5. Giá trị đề nghị thanh toán'),
-    ('invoiced_value', '6. Giá trị hóa đơn phát hành'),
-    ('accounting_revenue', '7. Doanh thu kế toán ghi nhận'),
-    ('cash_in', '8. Tiền về thực tế'),
-    ('cash_out', '9. Tiền chi thực tế'),
+    ('contract_value', '1. Giá trị hợp đồng hiệu lực'),
+    ('internal_allocated_value', '2. Giá trị giao khoán nội bộ'),
+    ('subcontract_value', '3. Giá trị thầu phụ'),
+    ('executed_output', '4. Sản lượng thực hiện trong kỳ'),
+    ('accepted_value', '5. Giá trị nghiệm thu xác nhận'),
+    ('payment_request_value', '6. Giá trị đề nghị thanh toán'),
+    ('invoiced_value', '7. Giá trị hóa đơn GTGT'),
+    ('accounting_revenue', '8. Doanh thu kế toán ghi nhận'),
+    ('cash_in', '9a. Tiền thực thu'),
+    ('cash_out', '9b. Tiền thực chi'),
     ('receivable_payable', '10. Công nợ phải thu / phải trả ròng'),
     ('estimated_cost', '11a. Chi phí dự kiến'),
     ('confirmed_cost', '11b. Chi phí đã xác nhận chứng từ'),
+]
+
+# Keep legacy key readable in Selection so existing historical rows never fail ORM validation
+FINANCIAL_METRIC_SELECTION = FINANCIAL_METRIC_KINDS + [
+    ('allocated_value', 'Giá trị giao khoán / thầu phụ (cũ — cần tách)'),
 ]
 
 FIN_DATA_STATES = [
@@ -35,18 +41,18 @@ class TpFinancialSummaryEntry(models.Model):
     _description = 'Chỉ tiêu Tài chính Quản trị có nguồn chứng minh (11 khái niệm tách biệt)'
     _order = 'period_label desc, id desc'
 
-    company_id = fields.Many2one('res.company', required=True, default=lambda s: s.env.company, index=True)
+    company_id = fields.Many2one('res.company', required=True, default=lambda s: s.env.company, index=True, string='Công ty')
     project_id = fields.Many2one('project.project', string='Dự án', ondelete='restrict', index=True)
     department_id = fields.Many2one('hr.department', string='Đơn vị / Phòng ban', ondelete='restrict', index=True)
     contract_id = fields.Many2one('tp.contract', string='Hợp đồng liên quan', ondelete='set null')
     period_label = fields.Char(string='Kỳ dữ liệu (YYYY-MM / YYYY-Q#)', required=True, index=True)
-    metric_kind = fields.Selection(FINANCIAL_METRIC_KINDS, string='Chỉ tiêu tài chính', required=True, index=True)
-    currency_id = fields.Many2one('res.currency', required=True, default=lambda s: s.env.company.currency_id)
+    metric_kind = fields.Selection(FINANCIAL_METRIC_SELECTION, string='Chỉ tiêu tài chính', required=True, index=True)
+    currency_id = fields.Many2one('res.currency', required=True, default=lambda s: s.env.company.currency_id, string='Tiền tệ')
     amount = fields.Monetary(currency_field='currency_id', string='Giá trị (VNĐ)', required=True)
-    data_state = fields.Selection(FIN_DATA_STATES, default='unconfirmed', required=True, index=True)
+    data_state = fields.Selection(FIN_DATA_STATES, default='unconfirmed', required=True, index=True, string='Trạng thái xác nhận')
     source_ref = fields.Char(string='Nguồn / Chứng từ gốc', required=True)
     note = fields.Text(string='Ghi chú giải trình')
-    recorded_by_id = fields.Many2one('res.users', default=lambda s: s.env.user, readonly=True)
+    recorded_by_id = fields.Many2one('res.users', default=lambda s: s.env.user, readonly=True, string='Người ghi nhận')
 
     @api.constrains('period_label', 'source_ref')
     def _check_provenance(self):
@@ -59,9 +65,7 @@ class TpFinancialSummaryEntry(models.Model):
         user = user or self.env.user
         if is_live_admin_user(user, company=self.env.company):
             return True
-        if user.has_group('tp_reporting.group_reporting_finance'):
-            return True
-        return False
+        return bool(user.has_group('tp_reporting.group_reporting_finance'))
 
     @api.model
     def tp_record_financial_entry(self, payload):
@@ -83,7 +87,7 @@ class TpFinancialSummaryEntry(models.Model):
                 'location': 'Chỉ tiêu tài chính',
                 'message': 'Vui lòng nhập Nguồn chứng từ gốc (số hợp đồng, biên bản nghiệm thu, sổ kế toán...).',
             })
-        if payload.get('amount') is None or str(payload.get('amount')).strip() == '':
+        if payload.get('amount') is None or not str(payload.get('amount')).strip():
             field_errors.append({
                 'id': 'fin_amount',
                 'label': 'Giá trị số tiền',
@@ -115,8 +119,11 @@ class TpFinancialSummaryEntry(models.Model):
         if not (is_admin or can_finance or user.has_group('tp_core.group_manager')):
             raise AccessError(_('Màn hình Điều hành Lãnh đạo chỉ dành cho Ban Giám đốc và Quản lý được phân quyền.'))
 
-        # 1. Project Portfolio & Critical Path Overview
-        projs = self.env['project.project'].search([('company_id', '=', company.id)], limit=200)
+        # 1. Project Portfolio & Critical Path Overview (strictly managed TANPHAT projects)
+        projs = self.env['project.project'].search([
+            ('company_id', '=', company.id),
+            ('tp_managed', '=', True),
+        ], limit=200)
         project_cards = []
         for p in projs[:15]:
             crit_count = self.env['project.task'].sudo().search_count([
@@ -133,7 +140,7 @@ class TpFinancialSummaryEntry(models.Model):
                 'cpm_ready': p.tp_cpm_data_ready,
                 'cpm_duration_days': p.tp_cpm_duration_days,
                 'open_critical_tasks': crit_count,
-                'drilldown_url': '/app/du-an/wbs-tien-do',
+                'drilldown_action': 'tp_enterprise_governance.action_project_wbs_cpm',
             })
 
         # 2. Operational Bottlenecks (Pending Requests, Overdue Requests, Unacked Announcements, Broken/Alert Gear)
@@ -154,14 +161,23 @@ class TpFinancialSummaryEntry(models.Model):
             ('tp_technical_state', 'in', ('broken', 'repair_needed')),
         ])
 
-        # 3. 11 Separated Financial Metrics (ONLY if caller has finance read permission; missing -> has_data=False, NEVER fake 0!)
+        # 3. 11 Separated Financial Metrics (ONLY if caller has finance read permission; missing -> has_data=False, NEVER fake 0, NEVER sum across periods!)
         financial_cards = []
+        available_periods = []
+        active_period = (period_filter or '').strip()
         if can_finance:
-            fin_dom = [('company_id', '=', company.id)]
-            clean_period = (period_filter or '').strip()
-            if clean_period:
-                fin_dom.append(('period_label', '=', clean_period))
-            entries = self.search(fin_dom, order='write_date desc, id desc')
+            period_groups = self._read_group(
+                [('company_id', '=', company.id)],
+                groupby=['period_label'],
+                order='period_label desc',
+            )
+            available_periods = [period_label for (period_label,) in period_groups if period_label]
+            if not active_period:
+                active_period = available_periods[0] if available_periods else fields.Date.context_today(self).strftime('%Y-%m')
+            entries = self.search(
+                [('company_id', '=', company.id), ('period_label', '=', active_period)],
+                order='write_date desc, id desc',
+            )
 
             for m_key, m_label in FINANCIAL_METRIC_KINDS:
                 m_rows = entries.filtered(lambda e: e.metric_kind == m_key)
@@ -173,8 +189,8 @@ class TpFinancialSummaryEntry(models.Model):
                         'value': None,
                         'display_value': 'Chưa đủ dữ liệu',
                         'unit': 'VNĐ',
-                        'period': clean_period or 'Toàn kỳ ghi nhận',
-                        'source': 'Chưa có bản ghi đối chiếu',
+                        'period': active_period,
+                        'source': 'Chưa có bản ghi đối chiếu trong kỳ',
                         'updated_at': '—',
                         'state_label': 'Chưa ghi nhận',
                     })
@@ -190,7 +206,7 @@ class TpFinancialSummaryEntry(models.Model):
                         'value': total_amt,
                         'display_value': f"{total_amt:,.0f} ₫".replace(',', '.'),
                         'unit': 'VNĐ',
-                        'period': clean_period or latest.period_label,
+                        'period': active_period,
                         'source': latest.source_ref,
                         'updated_at': format_dt_local(latest.write_date),
                         'state_label': 'Đã xác nhận' if confirmed_rows else 'Tạm tính (chưa xác nhận)',
@@ -198,10 +214,15 @@ class TpFinancialSummaryEntry(models.Model):
 
         # 4. Department Workload Honesty Summary
         workload = self.env['project.task'].tp_get_honest_workload_summary()
+        depts = self.env['hr.department'].sudo().search(
+            [('company_id', 'in', [False, company.id])], order='name asc', limit=200,
+        )
 
         return {
             'updated_at': format_dt_local(fields.Datetime.now()),
             'can_finance': can_finance,
+            'active_period': active_period,
+            'available_periods': available_periods,
             'kpis': {
                 'total_projects': len(projs),
                 'pending_requests': pending_requests,
@@ -214,4 +235,6 @@ class TpFinancialSummaryEntry(models.Model):
             'financial_cards': financial_cards,
             'workload_rows': (workload.get('rows') or [])[:15],
             'metric_options': [{'key': k, 'label': v} for k, v in FINANCIAL_METRIC_KINDS],
+            'project_options': [{'id': p.id, 'name': f"{p.tp_code + ' · ' if p.tp_code else ''}{p.name}"} for p in projs],
+            'department_options': [{'id': d.id, 'name': d.name} for d in depts],
         }

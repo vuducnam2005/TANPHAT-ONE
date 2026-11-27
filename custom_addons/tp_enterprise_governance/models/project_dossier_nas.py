@@ -9,7 +9,6 @@ from odoo.exceptions import AccessError, UserError
 
 from odoo.addons.tp_request.models.request_common import (
     fold_text,
-    format_dt_local,
     is_live_admin_user,
 )
 
@@ -40,6 +39,16 @@ STANDARD_NAS_SUBFOLDERS = [
     '06_Ho_So_Phat_Hanh_PDF',
 ]
 
+_DOSSIER_INTERNAL = object()
+_DOSSIER_SYSTEM_FIELDS = frozenset({
+    'state',
+    'current_version_no',
+    'nas_relative_path',
+    'code',
+    'project_id',
+    'company_id',
+})
+
 
 class TpProjectDossier(models.Model):
     _name = 'tp.project.dossier'
@@ -50,11 +59,11 @@ class TpProjectDossier(models.Model):
     code = fields.Char(string='Mã hồ sơ', required=True, copy=False, readonly=True, default='Mới', index=True)
     name = fields.Char(string='Tên bộ hồ sơ / bản vẽ', required=True, tracking=True)
     project_id = fields.Many2one('project.project', string='Dự án', required=True, ondelete='restrict', index=True)
-    company_id = fields.Many2one(related='project_id.company_id', store=True, index=True, precompute=True)
+    company_id = fields.Many2one(related='project_id.company_id', store=True, index=True, precompute=True, string='Công ty')
     phase_stage = fields.Selection(DOSSIER_PHASES, required=True, default='tkkt', string='Giai đoạn hồ sơ', index=True)
     task_id = fields.Many2one('project.task', string='Hạng mục WBS nguồn', ondelete='set null')
     owner_user_id = fields.Many2one('res.users', string='Chủ trì lập', default=lambda s: s.env.user, index=True)
-    state = fields.Selection(DOSSIER_STATES, default='draft', required=True, tracking=True, index=True)
+    state = fields.Selection(DOSSIER_STATES, default='draft', required=True, tracking=True, index=True, string='Trạng thái')
     current_version_no = fields.Integer(string='Phiên bản hiện hành', default=0, readonly=True)
     nas_relative_path = fields.Char(
         string='Đường dẫn lưu trữ chuẩn trên NAS (metadata)',
@@ -78,6 +87,25 @@ class TpProjectDossier(models.Model):
             return True
         raise AccessError(_('Bạn không được phân công vào dự án này nên không có quyền truy cập hồ sơ kỹ thuật.'))
 
+    def _tp_is_pm_or_admin(self):
+        self.ensure_one()
+        try:
+            self.project_id._tp_check_pm_or_admin()
+            return True
+        except AccessError:
+            return False
+
+    def _tp_check_dossier_write_access(self):
+        self.ensure_one()
+        user = self.env.user
+        if self._tp_is_pm_or_admin():
+            return True
+        if self.owner_user_id and self.owner_user_id.id == user.id and self.project_id._tp_scope_allowed(user):
+            return True
+        raise AccessError(
+            _('Chỉ Chủ nhiệm dự án (PM), Trưởng đơn vị chủ trì, Chủ trì lập hồ sơ thuộc dự án hoặc Admin mới được cập nhật bộ hồ sơ này.'),
+        )
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -86,6 +114,8 @@ class TpProjectDossier(models.Model):
                 raise UserError(_('Vui lòng chọn Dự án hợp lệ.'))
             if not is_live_admin_user(self.env.user, company=proj.company_id) and not proj._tp_scope_allowed(self.env.user):
                 raise AccessError(_('Bạn không thuộc phạm vi dự án để tạo hồ sơ giao nộp.'))
+            vals['state'] = 'draft'
+            vals['current_version_no'] = 0
             if not vals.get('code') or vals['code'] == 'Mới':
                 vals['code'] = self.env['ir.sequence'].sudo().next_by_code('tp.project.dossier') or 'HSDA-0001'
             pcode = proj.tp_code or f'PRJ{proj.id}'
@@ -101,10 +131,34 @@ class TpProjectDossier(models.Model):
             vals['nas_relative_path'] = f'PROJECTS/{pcode}/{phase_folder}/{vals["code"]}'
         return super().create(vals_list)
 
+    def write(self, vals):
+        if self.env.context.get('_tp_dossier_internal') is _DOSSIER_INTERNAL:
+            return super().write(vals)
+        if _DOSSIER_SYSTEM_FIELDS & set(vals.keys()):
+            raise AccessError(
+                _('Không được ghi trực tiếp trạng thái, số phiên bản, mã hoặc đường dẫn hệ thống của hồ sơ dự án. Vui lòng thực hiện qua quy trình nghiệp vụ.'),
+            )
+        for rec in self:
+            rec._tp_check_dossier_write_access()
+            if rec.state in ('issued', 'superseded') or any(v.issued_at for v in rec.sudo().version_ids):
+                raise UserError(_('Hồ sơ đã phát hành chính thức hoặc đã thay thế nên không thể chỉnh sửa thông tin gốc.'))
+        return super().write(vals)
+
+    def unlink(self):
+        for rec in self:
+            rec.project_id._tp_check_pm_or_admin()
+            if rec.state in ('issued', 'superseded') or rec.sudo().version_ids:
+                raise UserError(_('Không được xóa vật lý bộ hồ sơ đã có phiên bản tệp hoặc đã phát hành chính thức.'))
+        return super().unlink()
+
     def action_upload_new_version(self, file_name, datas_b64, mimetype='application/pdf', change_note=''):
-        """Upload a new versioned file with SHA-256 checksum and private ACL."""
+        """Upload a new versioned file with row lock FOR UPDATE, SHA-256 checksum and private ACL."""
         self.ensure_one()
-        self._tp_check_project_read()
+        self._tp_check_dossier_write_access()
+        self.env.cr.execute('SELECT id FROM tp_project_dossier WHERE id = %s FOR UPDATE', [self.id])
+        self.invalidate_recordset(['current_version_no', 'state'])
+        if self.state in ('issued', 'superseded'):
+            raise UserError(_('Hồ sơ đã phát hành chính thức hoặc đã thay thế nên không thể tải chèn phiên bản mới.'))
         raw = base64.b64decode(datas_b64 or '')
         if not raw:
             raise UserError(_('Tệp hồ sơ tải lên không được rỗng.'))
@@ -128,12 +182,50 @@ class TpProjectDossier(models.Model):
             'change_note': (change_note or '').strip() or f'Tải lên phiên bản v{next_ver}',
             'uploaded_by_id': self.env.uid,
         })
-        self.sudo().write({'current_version_no': next_ver})
+        self.sudo().with_context(_tp_dossier_internal=_DOSSIER_INTERNAL).write({'current_version_no': next_ver})
         return {'version_id': ver.id, 'version_no': next_ver, 'checksum_sha256': sha}
+
+    def action_submit_review(self):
+        self.ensure_one()
+        self._tp_check_dossier_write_access()
+        self.env.cr.execute('SELECT id FROM tp_project_dossier WHERE id = %s FOR UPDATE', [self.id])
+        self.invalidate_recordset(['current_version_no', 'state'])
+        if self.state != 'draft':
+            raise UserError(_('Chỉ hồ sơ ở trạng thái Nháp mới trình kiểm tra nội bộ.'))
+        if not self.version_ids:
+            raise UserError(_('Cần tải lên ít nhất một phiên bản tệp hồ sơ trước khi trình kiểm tra nội bộ.'))
+        self.sudo().with_context(_tp_dossier_internal=_DOSSIER_INTERNAL).write({'state': 'in_review'})
+        return {'state': self.state}
+
+    def action_approve_technical(self):
+        self.ensure_one()
+        self.project_id._tp_check_pm_or_admin()
+        self.env.cr.execute('SELECT id FROM tp_project_dossier WHERE id = %s FOR UPDATE', [self.id])
+        self.invalidate_recordset(['current_version_no', 'state'])
+        if self.state != 'in_review':
+            raise UserError(_('Chỉ hồ sơ Đang kiểm tra nội bộ mới phê duyệt kỹ thuật.'))
+        if not self.version_ids:
+            raise UserError(_('Hồ sơ chưa có phiên bản tệp để phê duyệt kỹ thuật.'))
+        self.sudo().with_context(_tp_dossier_internal=_DOSSIER_INTERNAL).write({'state': 'approved'})
+        return {'state': self.state}
+
+    def action_return_draft(self):
+        self.ensure_one()
+        self.project_id._tp_check_pm_or_admin()
+        self.env.cr.execute('SELECT id FROM tp_project_dossier WHERE id = %s FOR UPDATE', [self.id])
+        self.invalidate_recordset(['current_version_no', 'state'])
+        if self.state not in ('in_review', 'approved'):
+            raise UserError(_('Chỉ hồ sơ đang kiểm tra nội bộ hoặc đã duyệt kỹ thuật mới trả về Nháp để chỉnh sửa.'))
+        self.sudo().with_context(_tp_dossier_internal=_DOSSIER_INTERNAL).write({'state': 'draft'})
+        return {'state': self.state}
 
     def action_issue_dossier(self):
         self.ensure_one()
         self.project_id._tp_check_pm_or_admin()
+        self.env.cr.execute('SELECT id FROM tp_project_dossier WHERE id = %s FOR UPDATE', [self.id])
+        self.invalidate_recordset(['current_version_no', 'state'])
+        if self.state in ('issued', 'superseded'):
+            raise UserError(_('Hồ sơ này đã được phát hành chính thức hoặc đã thay thế.'))
         if not self.version_ids:
             raise UserError(_('Cần tải lên ít nhất một phiên bản tệp hồ sơ trước khi phát hành chính thức.'))
         latest = self.version_ids.sorted('version_no', reverse=True)[:1]
@@ -141,7 +233,7 @@ class TpProjectDossier(models.Model):
             'approved_by_id': self.env.uid,
             'issued_at': fields.Datetime.now(),
         })
-        self.sudo().write({'state': 'issued'})
+        self.sudo().with_context(_tp_dossier_internal=_DOSSIER_INTERNAL).write({'state': 'issued'})
         if self.task_id:
             self.task_id.sudo().write({'tp_state_dossier_issued': True})
         return True
@@ -185,6 +277,13 @@ class TpProjectDossier(models.Model):
         rows = []
         for r in visible[offset:offset + page_size]:
             latest_ver = r.version_ids.sorted('version_no', reverse=True)[:1]
+            can_pm = r._tp_is_pm_or_admin()
+            try:
+                r._tp_check_dossier_write_access()
+                can_write_rec = True
+            except AccessError:
+                can_write_rec = False
+            mutable = r.state not in ('issued', 'superseded')
             rows.append({
                 'id': r.id,
                 'code': r.code,
@@ -197,10 +296,40 @@ class TpProjectDossier(models.Model):
                 'current_version_no': r.current_version_no,
                 'nas_relative_path': r.nas_relative_path or '',
                 'latest_download_url': f'/tp/dossier/download/{latest_ver.id}' if latest_ver else '',
+                'can_upload': bool(can_write_rec and mutable),
+                'can_submit': bool(can_write_rec and r.state == 'draft' and r.current_version_no > 0),
+                'can_approve': bool(can_pm and r.state == 'in_review' and r.current_version_no > 0),
+                'can_issue': bool(can_pm and r.state in ('in_review', 'approved') and r.current_version_no > 0),
+                'can_return': bool(can_pm and r.state in ('in_review', 'approved')),
             })
 
-        projs = self.env['project.project'].search([('company_id', '=', self.env.company.id)], limit=100)
-        nas_jobs = self.env['tp.nas.folder.job'].search([('company_id', '=', self.env.company.id)], limit=50)
+        projs = self.env['project.project'].search([
+            ('company_id', '=', self.env.company.id),
+            ('tp_managed', '=', True),
+        ], limit=100)
+        visible_proj_ids = set(projs.ids)
+        nas_jobs = self.env['tp.nas.folder.job'].search([
+            ('company_id', '=', self.env.company.id),
+            ('project_id', 'in', list(visible_proj_ids)),
+        ], limit=50)
+        nas_job_rows = []
+        for j in nas_jobs:
+            try:
+                j.project_id._tp_check_pm_or_admin()
+                can_retry = True
+            except AccessError:
+                can_retry = False
+            nas_job_rows.append({
+                'id': j.id,
+                'project_code': j.project_code_immutable,
+                'project_name': j.project_id.sudo().name,
+                'root_folder_path': j.root_folder_path,
+                'contract_count': len(json.loads(j.contract_folders_json or '[]')),
+                'state': j.state,
+                'state_label': dict(j._fields['state'].selection).get(j.state, j.state),
+                'retry_count': j.retry_count,
+                'can_retry': can_retry,
+            })
         return {
             'rows': rows,
             'total': total,
@@ -210,15 +339,7 @@ class TpProjectDossier(models.Model):
             'projects': [{'id': p.id, 'name': f"{p.tp_code + ' · ' if p.tp_code else ''}{p.name}"} for p in projs],
             'phases': [{'key': k, 'label': v} for k, v in DOSSIER_PHASES],
             'states': [{'key': k, 'label': v} for k, v in DOSSIER_STATES],
-            'nas_jobs': [{
-                'id': j.id,
-                'project_code': j.project_code_immutable,
-                'project_name': j.project_id.sudo().name,
-                'root_folder_path': j.root_folder_path,
-                'contract_count': len(json.loads(j.contract_folders_json or '[]')),
-                'state': j.state,
-                'state_label': dict(j._fields['state'].selection).get(j.state, j.state),
-            } for j in nas_jobs],
+            'nas_jobs': nas_job_rows,
         }
 
 
@@ -227,17 +348,22 @@ class TpProjectDossierVersion(models.Model):
     _description = 'Phiên bản tệp Hồ sơ dự án'
     _order = 'version_no desc, id desc'
 
-    dossier_id = fields.Many2one('tp.project.dossier', required=True, ondelete='cascade', index=True)
-    company_id = fields.Many2one(related='dossier_id.company_id', store=True, index=True)
+    dossier_id = fields.Many2one('tp.project.dossier', required=True, ondelete='cascade', index=True, string='Bộ hồ sơ')
+    company_id = fields.Many2one(related='dossier_id.company_id', store=True, index=True, string='Công ty')
     version_no = fields.Integer(string='Số phiên bản', required=True, readonly=True)
-    attachment_id = fields.Many2one('ir.attachment', required=True, ondelete='restrict', readonly=True)
-    file_name = fields.Char(required=True, readonly=True)
-    file_size = fields.Integer(readonly=True)
+    attachment_id = fields.Many2one('ir.attachment', required=True, ondelete='restrict', readonly=True, string='Tệp đính kèm')
+    file_name = fields.Char(required=True, readonly=True, string='Tên tệp')
+    file_size = fields.Integer(readonly=True, string='Dung lượng (bytes)')
     checksum_sha256 = fields.Char(string='SHA-256 Checksum', readonly=True)
     change_note = fields.Char(string='Ghi chú thay đổi', readonly=True)
-    uploaded_by_id = fields.Many2one('res.users', readonly=True)
-    approved_by_id = fields.Many2one('res.users', readonly=True)
-    issued_at = fields.Datetime(readonly=True)
+    uploaded_by_id = fields.Many2one('res.users', readonly=True, string='Người tải lên')
+    approved_by_id = fields.Many2one('res.users', readonly=True, string='Người phê duyệt')
+    issued_at = fields.Datetime(readonly=True, string='Thời điểm phát hành')
+
+    _dossier_version_uniq = models.UniqueIndex(
+        '(dossier_id, version_no)',
+        'Số phiên bản hồ sơ không được trùng trong cùng bộ hồ sơ.',
+    )
 
 
 class TpNasFolderJob(models.Model):

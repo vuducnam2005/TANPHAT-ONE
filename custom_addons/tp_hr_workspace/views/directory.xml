@@ -30,6 +30,7 @@
         <field name="arch" type="xml">
             <list string="Danh sách nhân viên" js_class="tp_hr_table" limit="20" groups_limit="20" expand="1" create="0" edit="0" delete="0" import="0" export_xlsx="0" default_order="sequence, id">
                 <field name="sequence" column_invisible="True"/>
+                <field name="is_user" column_invisible="True"/>
                 <field name="department_id" string="Đơn vị / Phòng ban" optional="show"/>
                 <field name="tp_employee_code" string="Mã nhân viên"/>
                 <field name="name" string="Họ và tên" widget="tp_hr_identity"/>
@@ -195,7 +196,7 @@
     <record id="action_public_overview" model="ir.actions.client">
         <field name="name">Tổng quan TP HR</field>
         <field name="tag">tp_hr_workspace.overview</field>
-        <field name="path">tp-hr-tong-quan</field>
+        <field name="path">tp-hr-directory</field>
         <field name="context">{'tp_hr_public_overview': True}</field>
     </record>
 

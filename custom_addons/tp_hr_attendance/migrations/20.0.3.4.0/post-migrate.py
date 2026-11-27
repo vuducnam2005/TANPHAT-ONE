@@ -2,7 +2,6 @@
 
 Drop tp_hr_attendance_source_live_off so live_enabled=True can be set safely.
 """
-from odoo import SUPERUSER_ID, api
 
 
 def migrate(cr, version):

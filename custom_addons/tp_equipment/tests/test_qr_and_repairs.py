@@ -94,3 +94,43 @@ class TestEquipmentQrAndRepairs(BaseHrWorkspace):
         with patch("odoo.addons.tp_equipment.controllers.main.request", fake_req_staff):
             res_403 = ctrl.qr_image(eq.tp_qr_token)
             self.assertEqual(res_403.status_code, 403)
+
+    def test_primary_form_priority_and_qr_redirect_and_backfill(self):
+        eq_form = self.env.ref("tp_equipment.equipment_form")
+        cat_form = self.env.ref("tp_equipment.category_form")
+        self.assertEqual(eq_form.priority, 5)
+        self.assertEqual(eq_form.mode, "primary")
+        self.assertEqual(cat_form.priority, 5)
+        self.assertEqual(cat_form.mode, "primary")
+
+        cat = self.env["maintenance.equipment.category"].with_user(self.admin).with_company(self.company).create({
+            "name": "Laptop QR Priority Test",
+            "company_id": self.company.id,
+        })
+        eq = self.env["maintenance.equipment"].with_user(self.admin).with_company(self.company).create({
+            "name": "Laptop Không Token Gốc",
+            "category_id": cat.id,
+            "company_id": self.company.id,
+            "tp_custody": "stock",
+            "tp_technical_state": "good",
+            "tp_ownership": "company",
+            "tp_asset_class": "device",
+            "serial_no": f"SN-{uuid.uuid4().hex[:6].upper()}",
+        })
+        self.env.cr.execute("UPDATE maintenance_equipment SET tp_qr_token = NULL WHERE id = %s", [eq.id])
+        eq.invalidate_recordset()
+        self.assertFalse(eq.tp_qr_token)
+
+        eq.with_user(self.admin).with_company(self.company).action_tp_register()
+        eq.invalidate_recordset()
+        self.assertTrue(eq.tp_qr_token)
+        self.assertEqual(eq.tp_qr_image_url, f"/tp_equipment/qr_image/{eq.tp_qr_token}")
+
+        ctrl = TpEquipmentQr()
+        fake_req = MagicMock()
+        fake_req.env = self.env(user=self.admin)
+        fake_req.redirect.side_effect = lambda url: Response("", status=302, headers=[("Location", url)])
+        with patch("odoo.addons.tp_equipment.controllers.main.request", fake_req):
+            redir = ctrl.open_by_qr(eq.tp_qr_token)
+            self.assertEqual(redir.headers.get("Location"), f"/app/thiet-bi/danh-sach/{eq.id}")
+            self.assertNotIn("/odoo", redir.headers.get("Location", ""))

@@ -8,7 +8,7 @@ from odoo import Command, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tools import SQL
 
-from .workspace import _INTERNAL
+from .workspace import _INTERNAL, child_context, kd_leaf
 
 
 class Task(models.Model):
@@ -75,13 +75,13 @@ class Task(models.Model):
     def action_kd_task_history(self):
         self.ensure_one()
         self.check_access("read")
-        return {
-            "type": "ir.actions.act_window",
+        action = self.env["ir.actions.actions"]._for_xml_id("tp_kd_workspace.action_task_updates")
+        action.update({
             "name": "Lịch sử thực hiện",
-            "res_model": "tp.task.update",
-            "view_mode": "list,form",
             "domain": [("task_id", "=", self.id)],
-        }
+            "context": {**child_context(self.env), **kd_leaf("project.task")},
+        })
+        return action
 
 
 class Project(models.Model):

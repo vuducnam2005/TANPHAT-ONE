@@ -1,7 +1,7 @@
 # Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
 {
     "name": "TANPHAT ONE — Công cụ cá nhân (Việc cá nhân, Lịch làm việc, Trao đổi)",
-    "version": "20.0.2.0.2",
+    "version": "20.0.2.0.3",
     "category": "Productivity",
     "summary": "Không gian Việc cá nhân, Lịch làm việc và Trao đổi đồng bộ thương hiệu TANPHAT ONE",
     "author": "TANPHAT ONE",

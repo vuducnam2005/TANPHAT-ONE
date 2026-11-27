@@ -1,0 +1,64 @@
+// F-A02-0006: Place .o-mail-Form-chatter below .o_form_sheet across all native forms.
+// Eliminates the 60/40 side-by-side aside chatter column on wide screens while keeping
+// chatter inside notebook tabs (e.g. employee_form .o_tp_hr_history) completely untouched.
+
+.o_web_client .o_form_view {
+    &.o_xxl_form_view {
+        flex-flow: column nowrap !important;
+        overflow-y: auto;
+
+        .o_form_view_container {
+            width: 100%;
+            height: auto;
+            flex: 0 0 auto;
+        }
+
+        .o_form_sheet_bg {
+            overflow: visible;
+            flex: 0 0 auto;
+        }
+    }
+
+    .o_form_view_container,
+    .o_form_renderer {
+        display: flex;
+        flex-direction: column !important;
+        align-items: stretch;
+        max-width: none;
+    }
+
+    .o_form_sheet_bg {
+        width: 100%;
+        max-width: none;
+        margin-right: 0;
+        --formView-sheetBg-padding-right: var(--formView-sheetBg-padding-x);
+    }
+
+    // Zero-specificity default centering so custom module form widths always take precedence.
+    :where(.o_form_sheet) {
+        width: 100%;
+        max-width: 1200px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    // Collapse aside chatter column to a centered block underneath .o_form_sheet.
+    // Never matches chatter mounted inside .o_form_sheet tabs (such as employee_form).
+    :is(.o_form_view_container, .o_form_renderer, .o_content) > .o-mail-Form-chatter,
+    .o-mail-Form-chatter.o-aside:not(.o_form_sheet .o-mail-Form-chatter) {
+        width: 100% !important;
+        max-width: 1200px;
+        margin: 16px auto 24px !important;
+        padding-left: 16px;
+        padding-right: 16px;
+        padding-top: 12px;
+        border-left: 0 !important;
+        border-top: 1px solid var(--tp-border-card, #dce4ef);
+        flex: 0 0 auto !important;
+
+        .o-mail-Chatter {
+            overflow: visible;
+            height: auto;
+        }
+    }
+}

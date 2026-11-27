@@ -18,7 +18,8 @@
                     <group>
                         <group string="Ngày công">
                             <field name="employee_code"/>
-                            <field name="department_id" options="{'no_open': True}"/>
+                            <field name="department_id" options="{'no_open': True}" groups="!hr.group_hr_user,!base.group_system"/>
+                            <field name="department_id" options="{'no_create': True, 'no_create_edit': True}" context="{'form_view_ref': 'tp_hr_workspace.department_form'}" groups="hr.group_hr_user,base.group_system"/>
                             <field name="data_state" widget="badge" decoration-success="data_state == 'ok'" decoration-danger="data_state == 'missing'" decoration-warning="data_state == 'review'"/>
                             <field name="lock_state" widget="badge" decoration-info="lock_state == 'locked'"/>
                         </group>
@@ -110,6 +111,7 @@
     <record id="action_days" model="ir.actions.act_window">
         <field name="name">Ngày công</field>
         <field name="res_model">tp.hr.attendance.day</field>
+        <field name="path">cham-cong-ngay-cong</field>
         <field name="view_mode">list,form</field>
         <field name="view_ids" eval="[(5, 0, 0),
             (0, 0, {'view_mode': 'list', 'view_id': ref('day_list')}),
@@ -121,6 +123,6 @@
     <record id="action_board" model="ir.actions.client">
         <field name="name">Bảng chấm công</field>
         <field name="tag">tp_hr_attendance.board</field>
-        <field name="path">bang-cong</field>
+        <field name="path">cham-cong-bang-cong</field>
     </record>
 </odoo>

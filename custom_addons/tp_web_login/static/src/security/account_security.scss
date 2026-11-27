@@ -2,13 +2,13 @@
     --security-ink: #18334e;
     --security-muted: #52667d;
     --security-border: #d5e0ec;
-    --security-focus: #2365a7;
+    --security-focus: var(--tp-primary, #1766c0);
     overflow-y: auto;
     overflow-x: hidden;
     min-height: 0;
     height: 100%;
     padding: 28px 32px 48px;
-    background: #f4f7fb;
+    background-color: var(--tp-bg-canvas, #f4f7fb);
     color: var(--security-ink);
     font-size: 14.5px;
 
@@ -71,9 +71,9 @@
         display: flex;
         align-items: center;
         gap: 14px;
-        background: #ffffff;
+        background-color: #ffffff;
         border: 1px solid var(--security-border);
-        border-left: 4px solid #2365a7;
+        border-left: 4px solid var(--tp-primary, #1766c0);
         padding: 16px 20px;
         margin-bottom: 20px;
         border-radius: 10px;
@@ -451,6 +451,7 @@
 
         select {
             border: 1px solid #8fa4bc;
+            background-color: #ffffff;
             color: var(--security-ink);
             min-height: 38px;
             border-radius: 7px;
@@ -540,21 +541,21 @@
     }
 
     .btn-primary {
-        background: #2365a7;
-        border-color: #2365a7;
+        background-color: var(--tp-primary, #1766c0);
+        border-color: var(--tp-primary, #1766c0);
 
         &:hover {
-            background: #1c538a;
-            border-color: #1c538a;
+            background-color: var(--tp-primary-hover, #12539e);
+            border-color: var(--tp-primary-hover, #12539e);
         }
     }
 
     .btn-outline-primary {
-        color: #2365a7;
-        border-color: #2365a7;
+        color: var(--tp-primary, #1766c0);
+        border-color: var(--tp-primary, #1766c0);
 
         &:hover {
-            background: #2365a7;
+            background-color: var(--tp-primary, #1766c0);
             color: #ffffff;
         }
     }
@@ -562,8 +563,31 @@
     button:focus-visible,
     select:focus-visible,
     summary:focus-visible {
-        outline: 3px solid #78a9df;
+        outline: 2px solid #2563eb;
         outline-offset: 2px;
+    }
+
+    @media (max-width: 767.98px) {
+        .btn,
+        .btn-sm {
+            min-height: 44px;
+        }
+
+        .tp-eye-btn {
+            width: 44px;
+            height: 44px;
+            right: 2px;
+        }
+
+        .tp-password-input-wrap .tp-field-input {
+            padding-right: 48px;
+        }
+
+        .tp-field-input,
+        .tp-security-toolbar select {
+            min-height: 44px;
+            font-size: 16px;
+        }
     }
 
     @media (max-width: 860px) {
@@ -654,8 +678,8 @@
     }
 
     .btn-primary {
-        background: #2365a7;
-        border-color: #2365a7;
+        background-color: var(--tp-primary, #1766c0);
+        border-color: var(--tp-primary, #1766c0);
     }
 
     .o_form_label {

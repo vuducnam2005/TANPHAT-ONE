@@ -338,7 +338,7 @@ body.o_tp_kd_compact .o_tp_kd_rc {
         padding: 4px 8px;
         border: 1px solid var(--tp-input-border);
         border-radius: 8px;
-        background: #fff;
+        background-color: #fff;
         width: 100%;
         &:focus {
             outline: 2px solid transparent; border-color: var(--tp-input-focus); box-shadow: var(--tp-input-ring);
@@ -641,7 +641,7 @@ body.o_tp_kd_compact .o_tp_kd_rc {
         padding: 3px 8px;
         border: 1px solid var(--tp-input-border);
         border-radius: 8px;
-        background: #fff;
+        background-color: #fff;
         color: var(--kd-ink);
     }
 }

@@ -58,10 +58,8 @@
             </div>
 
             <div t-elif="this.state.loadError" class="tp-todo-drawer-body">
-                <div class="p-4 rounded-3 border bg-white text-center">
-                    <i class="oi fs-2 text-danger mb-2 d-block" data-icon="lock" aria-hidden="true"/>
-                    <h3 class="fs-6 fw-bold mb-1">Không thể mở công việc này</h3>
-                    <p class="small text-muted mb-3" t-out="this.state.loadError"/>
+                <InlineErrors errors="[]" server="this.state.loadError"/>
+                <div class="mt-2">
                     <button type="button" class="tp-pt-btn" t-on-click="() => this.discardAndClose()">Đóng</button>
                 </div>
             </div>
@@ -151,14 +149,15 @@
                 <div class="tp-todo-section-box">
                     <div class="row g-2 align-items-end">
                         <div class="col-12 col-sm-7 tp-pt-field">
-                            <label class="tp-pt-label" for="tp_todo_drawer_deadline">Hạn hoàn thành</label>
-                            <div class="d-flex gap-1">
-                                <input id="tp_todo_drawer_deadline"
-                                       type="datetime-local"
-                                       class="tp-pt-input"
-                                       t-model.proxy="this.state.deadlineIso"
-                                       t-on-change="() => this.markDirty()"
-                                       t-att-disabled="!this.state.canWrite"/>
+                            <label class="tp-pt-label" for="tp_todo_drawer_deadline">Hạn hoàn thành (24h)</label>
+                            <div class="d-flex gap-1 align-items-center">
+                                <div class="flex-grow-1 min-w-0">
+                                    <TpDateTime24Field id="'tp_todo_drawer_deadline'"
+                                                       value="this.state.deadlineIso"
+                                                       invalid="false"
+                                                       disabled="!this.state.canWrite"
+                                                       onChange="(val) => (this.state.deadlineIso = val, this.markDirty())"/>
+                                </div>
                                 <button t-if="this.state.deadlineIso and this.state.canWrite"
                                         type="button"
                                         class="tp-pt-btn tp-pt-btn-sm"
@@ -293,10 +292,10 @@
                               t-att-readonly="!this.state.canWrite"/>
                 </div>
 
-                <!-- 7. Checklist công việc -->
+                <!-- 7. Danh sách kiểm tra công việc -->
                 <div class="tp-todo-section-box">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <label class="tp-pt-label">Danh sách kiểm tra (Checklist)</label>
+                        <label class="tp-pt-label">Danh sách kiểm tra</label>
                         <span t-if="this.state.checklist.length" class="small text-muted">
                             <t t-out="this.state.checklist.filter((c) => c.checked).length"/>/<t t-out="this.state.checklist.length"/> hoàn thành
                         </span>

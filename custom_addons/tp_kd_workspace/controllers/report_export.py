@@ -3,6 +3,7 @@ import json
 from odoo import _
 from odoo.exceptions import AccessError, ValidationError
 from odoo.http import Controller, request, route
+from odoo.http.stream import content_disposition
 
 
 class KdReportExportController(Controller):
@@ -39,7 +40,7 @@ class KdReportExportController(Controller):
         )
         headers = [
             ("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-            ("Content-Disposition", f'attachment; filename="{payload["filename"]}"'),
+            ("Content-Disposition", content_disposition(payload["filename"])),
             ("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0"),
             ("Pragma", "no-cache"),
             ("X-Content-Type-Options", "nosniff"),

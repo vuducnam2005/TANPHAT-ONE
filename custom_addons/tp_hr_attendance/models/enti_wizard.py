@@ -4,13 +4,12 @@ Restricted to HR Manager and Admin.
 Never echoes the saved password back to the UI.
 Only displays 'Đã cấu hình' / 'Chưa cấu hình'.
 """
-from datetime import date
-
 from odoo import api, fields, models
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import UserError
 
-from .attendance_common import internal
+from .attendance_common import DEFAULT_TZ, internal, local_today
 from .enti_client import EntiClient
+from .enti_image import check_enti_image_access
 from .enti_sync import _get_enti_credentials, _save_enti_credentials
 
 
@@ -34,11 +33,11 @@ class AttendanceEntiConfigWizard(models.TransientModel):
 
     date_from = fields.Date(
         "Đồng bộ từ ngày",
-        default=lambda self: date(date.today().year, date.today().month, 1),
+        default=lambda self: local_today(DEFAULT_TZ).replace(day=1),
     )
     date_to = fields.Date(
         "Đồng bộ đến ngày",
-        default=fields.Date.today,
+        default=lambda self: local_today(DEFAULT_TZ),
     )
 
     @api.depends("company_id")
@@ -49,8 +48,11 @@ class AttendanceEntiConfigWizard(models.TransientModel):
             rec.status_display = "Đã cấu hình thông tin xác thực" if rec.is_configured else "Chưa cấu hình"
 
     def _check_permission(self):
-        if not self.env.user.has_group("hr.group_hr_manager") and not self.env.su:
-            raise AccessError(self.env._("Chỉ Quản lý nhân sự hoặc Admin mới được cấu hình kết nối ENTI."))
+        check_enti_image_access(self.env, self.company_id or self.env.company)
+
+    def _scrub_password(self):
+        if self.ids:
+            self.sudo().write({"password": False})
 
     def action_test_connection(self):
         """Test authentication with ENTI without persisting credentials."""
@@ -59,10 +61,11 @@ class AttendanceEntiConfigWizard(models.TransientModel):
 
         test_phone = self.phone
         test_pass = self.password
+        self._scrub_password()
 
         # If not typed in wizard, check existing saved credentials
         if not test_phone or not test_pass:
-            saved_phone, saved_pass, saved_app = _get_enti_credentials(self.env)
+            saved_phone, saved_pass, _saved_app = _get_enti_credentials(self.env)
             test_phone = test_phone or saved_phone
             test_pass = test_pass or saved_pass
 
@@ -98,7 +101,7 @@ class AttendanceEntiConfigWizard(models.TransientModel):
                 "view_mode": "form",
                 "target": "new",
             }
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             self.write({"last_test_result": f"✗ Lỗi kết nối ENTI: {exc}"})
             return {
                 "type": "ir.actions.act_window",
@@ -113,10 +116,13 @@ class AttendanceEntiConfigWizard(models.TransientModel):
         self.ensure_one()
         self._check_permission()
 
-        if not self.phone or not self.password:
+        raw_phone = self.phone
+        raw_pass = self.password
+        if not raw_phone or not raw_pass:
             raise UserError(self.env._("Vui lòng nhập đầy đủ số điện thoại và mật khẩu."))
 
-        _save_enti_credentials(self.env, self.phone, self.password, self.app_key)
+        _save_enti_credentials(self.env, raw_phone, raw_pass, self.app_key)
+        self._scrub_password()
 
         # Find or create ENTI Attendance Source record
         Source = internal(self.env["tp.hr.attendance.source"])
@@ -132,7 +138,7 @@ class AttendanceEntiConfigWizard(models.TransientModel):
             "namespace": "enti-tanphat",
             "vendor": "ENTI",
             "device_model": "Cloud API (enti.vn)",
-            "timezone": "Asia/Ho_Chi_Minh",
+            "timezone": DEFAULT_TZ,
             "state": "ready",
             "live_enabled": True,
         }
@@ -156,6 +162,7 @@ class AttendanceEntiConfigWizard(models.TransientModel):
         """Trigger immediate sync for the specified date range."""
         self.ensure_one()
         self._check_permission()
+        self._scrub_password()
 
         Source = internal(self.env["tp.hr.attendance.source"])
         source = Source.search([
@@ -175,24 +182,17 @@ class AttendanceEntiConfigWizard(models.TransientModel):
                 "namespace": "enti-tanphat",
                 "vendor": "ENTI",
                 "device_model": "Cloud API (enti.vn)",
-                "timezone": "Asia/Ho_Chi_Minh",
+                "timezone": DEFAULT_TZ,
                 "state": "ready",
                 "live_enabled": True,
             })
 
         res = source.action_sync_enti_now(start_date=self.date_from, end_date=self.date_to)
         if not res.get("success"):
-            # The error and its log row stay committed; raising here would roll them back.
-            return {
-                "type": "ir.actions.client",
-                "tag": "display_notification",
-                "params": {
-                    "title": "Đồng bộ ENTI chưa thành công",
-                    "message": f"{res.get('message')} Dữ liệu công đã có được giữ nguyên.",
-                    "type": "danger",
-                    "sticky": True,
-                },
-            }
+            raise UserError(self.env._(
+                "%(msg)s Dữ liệu công đã có được giữ nguyên.",
+                msg=res.get("message") or "Đồng bộ ENTI chưa thành công.",
+            ))
         msg = (
             f"Đồng bộ ENTI thành công:\n"
             f"• Nhân viên ENTI: {res.get('employees')}\n"

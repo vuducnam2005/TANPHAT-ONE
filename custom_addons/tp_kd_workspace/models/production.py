@@ -1,7 +1,7 @@
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, ValidationError
 
-from .workspace import kd_leaf, open_records
+from .workspace import child_context, kd_leaf, open_records
 
 
 class Production(models.Model):
@@ -101,7 +101,9 @@ class Production(models.Model):
             "res_model": "tp.allocation",
             "res_id": self.allocation_id.id,
             "view_mode": "form",
-            "context": kd_leaf("tp.allocation"),
+            "views": [(self.env.ref("tp_kd_workspace.allocation_form").id, "form")],
+            "target": "current",
+            "context": {**child_context(self.env), **kd_leaf("tp.allocation")},
         }
 
 

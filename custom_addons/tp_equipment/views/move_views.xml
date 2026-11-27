@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf8'?>
+<?xml version='1.0' encoding='utf-8'?>
 <odoo>
     <record id="move_list" model="ir.ui.view">
         <field name="name">tp.equipment.move.list</field>
@@ -61,7 +61,7 @@
         <field name="name">tp.equipment.move.form</field>
         <field name="model">tp.equipment.move</field>
         <field name="arch" type="xml">
-            <form string="Phiếu bàn giao thiết bị" class="tp_eq_form tp_eq_move_form">
+            <form string="Phiếu bàn giao thiết bị" class="tp_eq_form tp_eq_move_form o_tp_eq_form_wide" js_class="tp_equipment_form">
                 <header>
                     <button name="action_confirm" type="object" string="Xác nhận – chờ bàn giao" class="btn-primary" invisible="state != 'draft' or not id" help="Giữ chỗ thiết bị, chốt thông tin trước khi giao. Có thể in biên bản để ký."/>
                     <button name="action_done" type="object" string="Hoàn tất bàn giao" class="btn-primary" invisible="state != 'pending'" confirm="Ghi nhận thiết bị đã được giao / nhận thực tế? Phiếu hoàn tất không sửa được, chỉ đảo phiếu."/>
@@ -91,10 +91,10 @@
                     <group>
                         <group string="Bên nhận" invisible="move_type not in ('assign', 'transfer', 'loan', 'send_repair', 'rental_return', 'return', 'loan_return', 'repair_return')">
                             <field name="target_custody" widget="radio" options="{'horizontal': true}" invisible="move_type not in ('assign', 'transfer')" required="move_type in ('assign', 'transfer')" readonly="state != 'draft'"/>
-                            <field name="target_employee_id" options="{'no_create': True}" invisible="target_employee_deleted or not (move_type == 'loan' or (move_type in ('assign', 'transfer') and target_custody == 'employee'))" required="(move_type == 'loan' or (move_type in ('assign', 'transfer') and target_custody == 'employee')) and not target_employee_deleted" readonly="state != 'draft'"/>
+                            <field name="target_employee_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}" invisible="target_employee_deleted or not (move_type == 'loan' or (move_type in ('assign', 'transfer') and target_custody == 'employee'))" required="(move_type == 'loan' or (move_type in ('assign', 'transfer') and target_custody == 'employee')) and not target_employee_deleted" readonly="state != 'draft'"/>
                             <field name="target_employee_name" string="Nhân viên nhận (Đã xóa)" readonly="1" invisible="not target_employee_deleted"/>
                             <field name="target_employee_deleted" invisible="1"/>
-                            <field name="target_department_id" options="{'no_create': True}" invisible="not (move_type in ('assign', 'transfer') and target_custody == 'department')" required="move_type in ('assign', 'transfer') and target_custody == 'department'" readonly="state != 'draft'"/>
+                            <field name="target_department_id" options="{'no_create': True}" context="{'form_view_ref': 'tp_hr_workspace.department_form'}" invisible="not (move_type in ('assign', 'transfer') and target_custody == 'department')" required="move_type in ('assign', 'transfer') and target_custody == 'department'" readonly="state != 'draft'"/>
                             <field name="target_location_id" options="{'no_create': True}" string="Vị trí đặt / kho nhận" invisible="move_type not in ('assign', 'transfer', 'return', 'loan_return', 'repair_return')" required="move_type in ('assign', 'transfer') and target_custody == 'location'" readonly="state != 'draft'"/>
                             <field name="target_partner_id" options="{'no_create': True}" invisible="move_type not in ('send_repair', 'rental_return')" required="move_type == 'send_repair'" readonly="state != 'draft'"/>
                             <field name="expected_return_date" invisible="move_type != 'loan'" required="move_type == 'loan'" readonly="state in ('done', 'cancel')"/>
@@ -107,11 +107,11 @@
                         </group>
                         <group string="Phiếu">
                             <field name="date" readonly="state != 'draft'"/>
-                            <field name="responsible_id"/>
+                            <field name="responsible_id" options="{'no_open': True, 'no_create': True}"/>
                             <field name="date_done" invisible="state != 'done'"/>
-                            <field name="done_by_id" invisible="state != 'done'"/>
+                            <field name="done_by_id" invisible="state != 'done'" options="{'no_open': True, 'no_create': True}"/>
                             <field name="reversal_of_id" invisible="not reversal_of_id"/>
-                            <field name="company_id" invisible="1"/>
+                            <field name="company_id" invisible="1" options="{'no_open': True, 'no_create': True}"/>
                         </group>
                     </group>
                     <field name="reason" placeholder="Lý do, căn cứ, ghi chú giao nhận…" required="move_type in ('retire', 'lost')" readonly="state in ('done', 'cancel')"/>
@@ -134,6 +134,7 @@
                             <p class="o_tp_eq_note" invisible="preview_html">Chọn thiết bị và bên nhận để xem thay đổi sẽ ghi nhận.</p>
                         </page>
                     </notebook>
+                    <div class="o_tp_eq_chatter_below"/>
                 </sheet>
                 <chatter/>
             </form>
@@ -179,7 +180,7 @@
     <record id="action_moves_pending" model="ir.actions.act_window">
         <field name="name">Phiếu chờ bàn giao</field>
         <field name="res_model">tp.equipment.move</field>
-        <field name="path">phieu-cho-ban-giao</field>
+        <field name="path">thiet-bi-cho-ban-giao</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="move_search"/>
         <field name="domain">[('state', 'in', ('draft', 'pending'))]</field>
@@ -193,8 +194,9 @@
     <record id="action_move_lines" model="ir.actions.act_window">
         <field name="name">Lịch sử bàn giao theo thiết bị</field>
         <field name="res_model">tp.equipment.move.line</field>
-        <field name="path">lich-su-ban-giao</field>
+        <field name="path">thiet-bi-dong-ban-giao</field>
         <field name="view_mode">list</field>
+        <field name="search_view_id" ref="move_line_search"/>
         <field name="domain">[('state', '=', 'done')]</field>
         <field name="context">{'tp_filter_profile': 'move_line', 'tp_eq_leaf': 'tp_equipment.menu_move_lines'}</field>
         <field name="group_ids" eval="[Command.set([ref('base.group_system')])]"/>

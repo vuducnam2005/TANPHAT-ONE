@@ -124,14 +124,24 @@ export class TpEquipmentMainHeader extends Component {
     props = useProps();
     advancedScopes = [
         { section: "Hồ sơ thiết bị" },
+        { xmlid: "tp_equipment.action_equipment_stock", label: "Thiết bị tồn kho" },
+        { xmlid: "tp_equipment.action_equipment_shared", label: "Thiết bị dùng chung & chưa xác định người" },
         { xmlid: "tp_equipment.action_equipment_all_records", label: "Tất cả hồ sơ (gồm dịch vụ, linh kiện đã gắn)" },
         { xmlid: "tp_equipment.action_equipment_draft", label: "Hồ sơ nháp" },
         { xmlid: "tp_equipment.action_equipment_retired", label: "Ngừng quản lý" },
-        { section: "Dữ liệu nguồn & lịch sử" },
-        { xmlid: "tp_equipment.action_import_pending", label: "Dòng nguồn chờ bổ sung" },
-        { xmlid: "tp_equipment.action_move_lines", label: "Lịch sử bàn giao" },
+        { section: "Nghiệp vụ kho & phiếu" },
+        { xmlid: "tp_equipment.action_moves", label: "Phiếu bàn giao / thu hồi" },
         { xmlid: "tp_equipment.action_moves_pending", label: "Phiếu chờ bàn giao" },
+        { xmlid: "tp_equipment.action_move_lines", label: "Lịch sử bàn giao" },
+        { xmlid: "tp_equipment.action_receipts", label: "Phiếu nhập thiết bị" },
+        { xmlid: "tp_equipment.action_proposals", label: "Yêu cầu đề xuất" },
         { xmlid: "tp_equipment.action_repairs", label: "Sửa chữa / bảo trì" },
+        { xmlid: "tp_equipment.action_inventories", label: "Kiểm kê thiết bị" },
+        { xmlid: "tp_equipment.action_scan", label: "Quét mã thiết bị (QR)" },
+        { section: "Dữ liệu nguồn & đối chiếu" },
+        { xmlid: "tp_equipment.action_import", label: "Nhập nguồn có xem trước" },
+        { xmlid: "tp_equipment.action_import_pending", label: "Dòng nguồn chờ bổ sung" },
+        { xmlid: "tp_equipment.action_import_alias", label: "Ánh xạ tên đã xác nhận" },
         { section: "Cấu hình" },
         { xmlid: "tp_equipment.action_category", label: "Phân loại thiết bị" },
         { xmlid: "tp_equipment.action_location", label: "Vị trí đặt thiết bị" },
@@ -207,6 +217,11 @@ export class TpEquipmentMainHeader extends Component {
     openScope(scope) {
         if (!this.blocked) {
             this.actionService.doAction(scope.xmlid);
+        }
+    }
+    openScan() {
+        if (!this.blocked) {
+            this.actionService.doAction("tp_equipment.action_scan");
         }
     }
 }

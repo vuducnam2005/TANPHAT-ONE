@@ -76,8 +76,12 @@
                             <field name="current_in"/><field name="current_out"/>
                         </group>
                         <group string="Hồ sơ gắn với tài khoản">
-                            <field name="employee_name"/><field name="employee_code"/><field name="department_id" options="{'no_open': True}"/>
-                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="employee_name" groups="!hr.group_hr_user,!base.group_system"/>
+                            <field name="employee_id" string="Người đề nghị" options="{'no_create': True, 'no_create_edit': True}" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}" groups="hr.group_hr_user,base.group_system"/>
+                            <field name="employee_code"/>
+                            <field name="department_id" options="{'no_open': True}" groups="!hr.group_hr_user,!base.group_system"/>
+                            <field name="department_id" options="{'no_create': True, 'no_create_edit': True}" context="{'form_view_ref': 'tp_hr_workspace.department_form'}" groups="hr.group_hr_user,base.group_system"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1" options="{'no_open': True}"/>
                             <field name="version"/><field name="is_amendment"/>
                         </group>
                     </group>
@@ -107,7 +111,7 @@
     </record>
     <record id="action_review" model="ir.actions.act_window">
         <field name="name">Xử lý điều chỉnh</field><field name="res_model">tp.hr.attendance.correction</field><field name="view_mode">list,form</field>
-        <field name="domain">[('state', '=', 'submitted')]</field><field name="context">{'tp_filter_profile': 'corrections'}</field>
+        <field name="domain">[('state', '=', 'submitted')]</field><field name="context">{'tp_filter_profile': 'corrections', 'tp_review_queue': 1}</field>
         <field name="view_id" ref="correction_review_list"/><field name="search_view_id" ref="correction_search"/>
         <field name="help" type="html"><p>Không có phiếu chờ xử lý. Chỉ các phiếu đang ở trạng thái Chờ admin duyệt mới hiển thị tại đây; không ai tự duyệt phiếu của mình.</p></field>
     </record>
@@ -136,7 +140,7 @@
         <field name="name">tp.hr.attendance.period.list</field><field name="model">tp.hr.attendance.period</field>
         <field name="arch" type="xml"><list string="Chốt kỳ công" js_class="tp_hr_table" import="0" limit="20">
             <field name="name"/><field name="date_from"/><field name="date_to"/><field name="state" widget="badge"/>
-            <field name="day_count"/><field name="pending_count"/><field name="version"/><field name="locked_by"/>
+            <field name="day_count"/><field name="pending_count"/><field name="version"/><field name="locked_by" options="{'no_open': True}"/>
         </list></field>
     </record>
     <record id="period_search" model="ir.ui.view">
@@ -146,15 +150,15 @@
     <record id="period_form" model="ir.ui.view">
         <field name="name">tp.hr.attendance.period.form</field><field name="model">tp.hr.attendance.period</field>
         <field name="arch" type="xml"><form string="Kỳ công" duplicate="0">
-            <header><button name="action_open_lock" type="object" string="Chốt kỳ" class="btn-primary" invisible="state != 'open' or not can_lock"/>
-                <button name="action_open_unlock" type="object" string="Mở lại kỳ" invisible="state != 'locked' or not can_lock"/><field name="state" widget="statusbar"/>
+            <header><button name="action_open_lock" type="object" string="Chốt kỳ" class="btn-primary" invisible="state != 'open' or not tp_can_lock"/>
+                <button name="action_open_unlock" type="object" string="Mở lại kỳ" invisible="state != 'locked' or not tp_can_lock"/><field name="state" widget="statusbar"/>
             </header><sheet>
                 <div class="alert alert-info" role="status">Chốt kỳ giữ nguyên kết quả đã rà soát. Công chưa có quy tắc vẫn là Chưa xác nhận; chốt kỳ không duyệt lương hoặc tăng ca.</div>
-                <field name="can_lock" invisible="1"/><div class="oe_title"><label for="name" string="Tên kỳ công"/><h1><field name="name" readonly="state == 'locked'" placeholder="Ví dụ: Kỳ công tháng 11/2026"/></h1></div>
-                <group><group><field name="date_from" readonly="state == 'locked'"/><field name="date_to" readonly="state == 'locked'"/><field name="company_id" groups="base.group_multi_company" readonly="state == 'locked'"/></group>
-                    <group><field name="version"/><field name="locked_by"/><field name="locked_at"/></group></group>
+                <field name="can_lock" invisible="1"/><field name="tp_can_lock" invisible="1"/><div class="oe_title"><label for="name" string="Tên kỳ công"/><h1><field name="name" readonly="state == 'locked'" placeholder="Ví dụ: Kỳ công tháng 11/2026"/></h1></div>
+                <group><group><field name="date_from" readonly="state == 'locked'"/><field name="date_to" readonly="state == 'locked'"/><field name="company_id" groups="base.group_multi_company" readonly="state == 'locked'" options="{'no_open': True}"/></group>
+                    <group><field name="version"/><field name="locked_by" options="{'no_open': True}"/><field name="locked_at"/></group></group>
                 <group string="Đối chiếu trước chốt"><field name="day_count"/><field name="ok_count"/><field name="missing_count"/><field name="review_count"/><field name="pending_count"/><field name="amend_count"/></group>
-                <button name="action_open_logs" type="object" string="Xem nhật ký kỳ" groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer"/>
+                <button name="action_open_logs" type="object" string="Xem nhật ký kỳ" groups="hr.group_hr_manager,tp_hr_attendance.group_attendance_officer,base.group_system"/>
             </sheet>
         </form></field>
     </record>

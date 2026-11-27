@@ -7,8 +7,11 @@ and preservation of HR-DELEGATE-FIX-001 field-group privacy for non-HR users.
   code/ACL/module/XMLID vectors — even when entering through `.sudo()`, import, copy, or defaults.
 - System always preserves at least one active Original Administrator.
 """
+from typing import Any
+
 from odoo import SUPERUSER_ID, api, fields, models
 from odoo.exceptions import AccessError, UserError
+from odoo.fields import Domain
 from odoo.http import request
 
 from .delegation import (
@@ -44,7 +47,22 @@ _SENSITIVE_PARAM_EXACT = frozenset({
     'base.login_cooldown_after',
     'base.login_cooldown_duration',
 })
-_SENSITIVE_PARAM_PREFIXES = ('tp_admin',)
+_SENSITIVE_PARAM_PREFIXES = (
+    'tp_admin',
+    'tp_hr_attendance.enti_password',
+    'tp_hr_attendance.enti_app_key',
+    'tp_hr_attendance.enti_token',
+    'tp_hr_attendance.enti_secret',
+)
+_SECRET_VALUE_PARAM_EXACT = frozenset({
+    'database.secret',
+})
+_SECRET_VALUE_PARAM_PREFIXES = (
+    'tp_hr_attendance.enti_password',
+    'tp_hr_attendance.enti_app_key',
+    'tp_hr_attendance.enti_token',
+    'tp_hr_attendance.enti_secret',
+)
 _SENSITIVE_XMLID_MODELS = frozenset({
     'res.users',
     'res.groups',
@@ -666,18 +684,76 @@ class AccountProfileAudit(models.Model):
                               ondelete={'account_profile_change': 'cascade'})
 
 
+def _users_for_employees(env, employees):
+    employees = employees.sudo().with_context(active_test=False)
+    if not employees:
+        return env['res.users'].sudo().browse()
+    return (
+        employees.mapped('user_id')
+        | employees.mapped('work_contact_id.user_ids')
+    ).sudo().with_context(active_test=False)
+
+
+def _users_for_partners(env, partners):
+    partners = partners.sudo().with_context(active_test=False)
+    if not partners:
+        return env['res.users'].sudo().browse()
+    employees = env['hr.employee'].sudo().with_context(active_test=False).search([
+        ('work_contact_id', 'in', partners.ids),
+    ])
+    return (
+        partners.mapped('user_ids')
+        | _users_for_employees(env, employees)
+    ).sudo().with_context(active_test=False)
+
+
+def _users_for_bank_accounts(env, banks):
+    banks = banks.sudo().with_context(active_test=False)
+    if not banks:
+        return env['res.users'].sudo().browse()
+    partners = banks.mapped('partner_id')
+    employees = env['hr.employee'].sudo().with_context(active_test=False).search([
+        ('bank_account_ids', 'in', banks.ids),
+    ])
+    if 'employee_id' in banks._fields:
+        employees |= banks.mapped('employee_id')
+    if 'employee_ids' in banks._fields:
+        employees |= banks.mapped('employee_ids')
+    return _users_for_partners(env, partners) | _users_for_employees(env, employees)
+
+
 def _assert_profile_commands(env, vals):
     """Preflight profile inverse commands before their parent can write any fields."""
-    for field, model in (('employee_ids', 'hr.employee'), ('version_ids', 'hr.version')):
+    command_specs = (
+        ('employee_ids', 'hr.employee', False),
+        ('version_ids', 'hr.version', False),
+        ('tp_contract_document_ids', 'tp.hr.contract.document', False),
+        ('bank_account_ids', 'res.partner.bank', True),
+        ('bank_ids', 'res.partner.bank', True),
+        ('resume_line_ids', 'hr.resume.line', True),
+        ('employee_skill_ids', 'hr.employee.skill', True),
+        ('current_employee_skill_ids', 'hr.employee.skill', True),
+        ('certification_ids', 'hr.employee.skill', True),
+    )
+    for field, model, allow_self in command_specs:
+        if model not in env:
+            continue
         commands = vals.get(field, env.context.get('default_' + field, ()))
         for command in commands or ():
+            if not isinstance(command, (list, tuple)) or not command:
+                continue
             operation = command[0]
             ids = command[2] if operation == 6 else ([command[1]] if operation in (1, 2, 3, 4) else [])
             if ids:
                 records = env[model].sudo().with_context(active_test=False).browse(ids)
-                users = records.mapped('user_id' if model == 'hr.employee' else 'employee_id.user_id')
-                assert_can_manage_account_targets(env, users, allow_self=False)
-            if operation in (0, 1) and isinstance(command[2], dict):
+                if model == 'res.partner.bank':
+                    users = _users_for_bank_accounts(env, records)
+                elif model == 'hr.employee':
+                    users = _users_for_employees(env, records)
+                else:
+                    users = _users_for_employees(env, records.mapped('employee_id'))
+                assert_can_manage_account_targets(env, users, allow_self=allow_self)
+            if operation in (0, 1) and len(command) > 2 and isinstance(command[2], dict):
                 _assert_profile_links(env, command[2])
 
 
@@ -755,6 +831,180 @@ class ProtectedHrVersion(models.Model):
 
     def unlink(self):
         assert_can_manage_account_targets(self.env, self.sudo().mapped('employee_id.user_id'), allow_self=False)
+        return super().unlink()
+
+
+def _satellite_employees_from_vals(model, vals, defaults=False):
+    emp_id = vals.get('employee_id')
+    if not emp_id and defaults:
+        emp_id = model.env.context.get('default_employee_id')
+    if not emp_id:
+        return model.env['hr.employee'].sudo().browse()
+    return model.env['hr.employee'].sudo().with_context(active_test=False).browse(emp_id)
+
+
+def _check_employee_satellite_create(model, vals_list, allow_self):
+    if _is_trusted_original_or_cli(model.env):
+        return
+    for vals in vals_list:
+        _assert_profile_commands(model.env, vals)
+        employees = _satellite_employees_from_vals(model, vals, defaults=True)
+        assert_can_manage_account_targets(
+            model.env, _users_for_employees(model.env, employees), allow_self=allow_self,
+        )
+
+
+def _check_employee_satellite_write(records, vals, allow_self):
+    if not records or _is_trusted_original_or_cli(records.env):
+        return
+    _assert_profile_commands(records.env, vals)
+    current_emps = records.sudo().with_context(active_test=False).mapped('employee_id')
+    assert_can_manage_account_targets(
+        records.env, _users_for_employees(records.env, current_emps), allow_self=allow_self,
+    )
+    if 'employee_id' in vals and vals.get('employee_id'):
+        new_emp_id = vals['employee_id']
+        relinking = any(
+            rec.employee_id.id != new_emp_id
+            for rec in records.sudo().with_context(active_test=False)
+        )
+        new_emps = records.env['hr.employee'].sudo().with_context(active_test=False).browse(new_emp_id)
+        assert_can_manage_account_targets(
+            records.env,
+            _users_for_employees(records.env, new_emps),
+            allow_self=bool(allow_self and not relinking),
+        )
+
+
+def _check_employee_satellite_unlink(records, allow_self):
+    if not records or _is_trusted_original_or_cli(records.env):
+        return
+    current_emps = records.sudo().with_context(active_test=False).mapped('employee_id')
+    assert_can_manage_account_targets(
+        records.env, _users_for_employees(records.env, current_emps), allow_self=allow_self,
+    )
+
+
+class ProtectedPartnerBank(models.Model):
+    _inherit = 'res.partner.bank'
+
+    def _tp_bank_vals_target_users(self, vals, defaults=False):
+        users = self.env['res.users'].sudo().browse()
+        partner_id = vals.get('partner_id', self.env.context.get('default_partner_id') if defaults else None)
+        if partner_id:
+            users |= _users_for_partners(self.env, self.env['res.partner'].browse(partner_id))
+        for emp_field in ('employee_id', 'employee_ids'):
+            if emp_field not in self._fields:
+                continue
+            raw = vals.get(emp_field, self.env.context.get('default_' + emp_field) if defaults else None)
+            if not raw:
+                continue
+            if isinstance(raw, int):
+                users |= _users_for_employees(self.env, self.env['hr.employee'].browse(raw))
+            elif isinstance(raw, (list, tuple)):
+                for command in raw:
+                    if not isinstance(command, (list, tuple)) or not command:
+                        continue
+                    op = command[0]
+                    ids = command[2] if op == 6 else ([command[1]] if op in (1, 2, 3, 4) else [])
+                    if ids:
+                        users |= _users_for_employees(self.env, self.env['hr.employee'].browse(ids))
+                    if op in (0, 1) and len(command) > 2 and isinstance(command[2], dict):
+                        _assert_profile_links(self.env, command[2])
+        return users
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        if not _is_trusted_original_or_cli(self.env):
+            for vals in vals_list:
+                target_users = self._tp_bank_vals_target_users(vals, defaults=True)
+                assert_can_manage_account_targets(self.env, target_users, allow_self=True)
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if not self:
+            return super().write(vals)
+        if not _is_trusted_original_or_cli(self.env):
+            current_users = _users_for_bank_accounts(self.env, self)
+            assert_can_manage_account_targets(self.env, current_users, allow_self=True)
+            if 'partner_id' in vals and vals.get('partner_id'):
+                new_partner_id = vals['partner_id']
+                relinking = any(
+                    rec.partner_id.id != new_partner_id
+                    for rec in self.sudo().with_context(active_test=False)
+                )
+                new_users = _users_for_partners(self.env, self.env['res.partner'].browse(new_partner_id))
+                assert_can_manage_account_targets(self.env, new_users, allow_self=not relinking)
+            extra_users = self._tp_bank_vals_target_users(
+                {k: v for k, v in vals.items() if k != 'partner_id'}, defaults=False,
+            )
+            if extra_users:
+                assert_can_manage_account_targets(self.env, extra_users, allow_self=False)
+        return super().write(vals)
+
+    def unlink(self):
+        if self and not _is_trusted_original_or_cli(self.env):
+            assert_can_manage_account_targets(
+                self.env, _users_for_bank_accounts(self.env, self), allow_self=True,
+            )
+        return super().unlink()
+
+
+class ProtectedHrContractDocument(models.Model):
+    _inherit = 'tp.hr.contract.document'
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        if not _is_trusted_original_or_cli(self.env):
+            ver_id = self.env.context.get('tp_contract_version_id')
+            if ver_id:
+                ver_emps = self.env['hr.version'].sudo().with_context(active_test=False).browse(ver_id).mapped('employee_id')
+                assert_can_manage_account_targets(
+                    self.env, _users_for_employees(self.env, ver_emps), allow_self=False,
+                )
+        _check_employee_satellite_create(self, vals_list, allow_self=False)
+        return super().create(vals_list)
+
+    def write(self, vals):
+        _check_employee_satellite_write(self, vals, allow_self=False)
+        return super().write(vals)
+
+    def unlink(self):
+        _check_employee_satellite_unlink(self, allow_self=False)
+        return super().unlink()
+
+
+class ProtectedHrResumeLine(models.Model):
+    _inherit = 'hr.resume.line'
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        _check_employee_satellite_create(self, vals_list, allow_self=True)
+        return super().create(vals_list)
+
+    def write(self, vals):
+        _check_employee_satellite_write(self, vals, allow_self=True)
+        return super().write(vals)
+
+    def unlink(self):
+        _check_employee_satellite_unlink(self, allow_self=True)
+        return super().unlink()
+
+
+class ProtectedHrEmployeeSkill(models.Model):
+    _inherit = 'hr.employee.skill'
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        _check_employee_satellite_create(self, vals_list, allow_self=True)
+        return super().create(vals_list)
+
+    def write(self, vals):
+        _check_employee_satellite_write(self, vals, allow_self=True)
+        return super().write(vals)
+
+    def unlink(self):
+        _check_employee_satellite_unlink(self, allow_self=True)
         return super().unlink()
 
 
@@ -943,30 +1193,120 @@ class ProtectedConfig(models.Model):
             return False
         return key in _SENSITIVE_PARAM_EXACT or key.startswith(_SENSITIVE_PARAM_PREFIXES)
 
+    def _tp_is_secret_value_key(self, key):
+        if not key:
+            return False
+        return key in _SECRET_VALUE_PARAM_EXACT or key.startswith(_SECRET_VALUE_PARAM_PREFIXES)
+
+    def _tp_is_non_secret_enti_key(self, key):
+        return bool(key and key.startswith('tp_hr_attendance.enti_') and not self._tp_is_sensitive_key(key))
+
+    def _tp_can_read_secret_params(self):
+        return bool(self.env.su or _is_trusted_original_or_cli(self.env))
+
+    def _tp_assert_can_read_secret_key(self, key):
+        if self._tp_is_secret_value_key(key) and not self._tp_can_read_secret_params():
+            raise AccessError(self.env._('Tham số bí mật hệ thống chỉ dành cho Quản trị gốc.'))
+
+    def _access_domain(self, operation):
+        domain = super()._access_domain(operation)
+        if operation == 'read' and not self._tp_can_read_secret_params():
+            secret_conds = [Domain('key', '=', k) for k in _SECRET_VALUE_PARAM_EXACT] + [
+                Domain('key', '=like', f'{prefix}%') for prefix in _SECRET_VALUE_PARAM_PREFIXES
+            ]
+            domain &= ~Domain.OR(secret_conds)
+        return domain
+
+    def read(self, fields=None, load='_classic_read'):
+        if not self._tp_can_read_secret_params():
+            if any(self._tp_is_secret_value_key(rec.key) for rec in self.sudo()):
+                raise AccessError(self.env._('Tham số bí mật hệ thống chỉ dành cho Quản trị gốc.'))
+        return super().read(fields=fields, load=load)
+
+    def export_data(self, fields_to_export):
+        if not self._tp_can_read_secret_params():
+            if any(self._tp_is_secret_value_key(rec.key) for rec in self.sudo()):
+                raise AccessError(self.env._('Tham số bí mật hệ thống chỉ dành cho Quản trị gốc.'))
+        return super().export_data(fields_to_export)
+
+    @api.model
+    def get_bool(self, key: str, default: Any = False):
+        self._tp_assert_can_read_secret_key(key)
+        return super().get_bool(key, default=default)
+
+    @api.model
+    def get_int(self, key: str, default: Any = 0):
+        self._tp_assert_can_read_secret_key(key)
+        return super().get_int(key, default=default)
+
+    @api.model
+    def get_float(self, key: str, default: Any = 0.0):
+        self._tp_assert_can_read_secret_key(key)
+        return super().get_float(key, default=default)
+
+    @api.model
+    def get_str(self, key: str, default: Any = ''):
+        self._tp_assert_can_read_secret_key(key)
+        return super().get_str(key, default=default)
+
+    @api.model
+    def get_param(self, key: str, default: Any = False):
+        self._tp_assert_can_read_secret_key(key)
+        parent = super()
+        if hasattr(parent, 'get_param'):
+            return parent.get_param(key, default=default)
+        self.browse().check_access('read')
+        value = self._get(key, 'str')[0]
+        if value is None or not isinstance(value, str):
+            return default
+        return value
+
     @api.model_create_multi
     def create(self, vals_list):
         if not _is_trusted_original_or_cli(self.env):
+            if any(self._tp_is_sensitive_key(v.get('key')) for v in vals_list):
+                raise AccessError(self.env._('Tham số cấu hình bảo mật/hệ thống chỉ dành cho Quản trị gốc.'))
             in_settings = self.env.context.get('_tp_settings_execute') is _SETTINGS_EXEC
-            if not in_settings or any(self._tp_is_sensitive_key(v.get('key')) for v in vals_list):
+            sudo_enti_non_secret = self.env.su and all(
+                self._tp_is_non_secret_enti_key(v.get('key')) for v in vals_list
+            )
+            if not (in_settings or sudo_enti_non_secret):
                 raise AccessError(self.env._('Tham số cấu hình bảo mật/hệ thống chỉ dành cho Quản trị gốc.'))
         return super().create(vals_list)
 
     def write(self, vals):
         if not _is_trusted_original_or_cli(self.env):
             in_settings = self.env.context.get('_tp_settings_execute') is _SETTINGS_EXEC
-            if not in_settings:
-                raise AccessError(self.env._('Tham số cấu hình hệ thống trực tiếp chỉ dành cho Quản trị gốc.'))
-            for rec in self.sudo():
+            recs = self.sudo()
+            for rec in recs:
                 new_key = vals.get('key', rec.key)
                 if self._tp_is_sensitive_key(rec.key) or self._tp_is_sensitive_key(new_key):
+                    if not in_settings:
+                        raise AccessError(self.env._('Tham số bảo mật hệ thống chỉ dành cho Quản trị gốc.'))
                     new_val = vals.get('value', rec.value)
                     if new_key != rec.key or (new_val or '') != (rec.value or ''):
                         raise AccessError(self.env._('Tham số bảo mật hệ thống chỉ dành cho Quản trị gốc.'))
+            sudo_enti_non_secret = self.env.su and all(
+                self._tp_is_non_secret_enti_key(rec.key)
+                and self._tp_is_non_secret_enti_key(vals.get('key', rec.key))
+                for rec in recs
+            )
+            if not (in_settings or sudo_enti_non_secret):
+                raise AccessError(self.env._('Tham số cấu hình hệ thống trực tiếp chỉ dành cho Quản trị gốc.'))
         return super().write(vals)
 
     def unlink(self):
         if not _is_trusted_original_or_cli(self.env):
+            recs = self.sudo()
+            # Allow backend `.sudo()` (`env.su=True`) to purge legacy plaintext `enti_password` /
+            # `enti_app_key` or clean non-secret ENTI runtime metadata when HR Manager / Granted Admin saves ENTI config.
+            if self.env.su and all(
+                rec.key in ('tp_hr_attendance.enti_password', 'tp_hr_attendance.enti_app_key')
+                or self._tp_is_non_secret_enti_key(rec.key)
+                for rec in recs
+            ):
+                return super().unlink()
             in_settings = self.env.context.get('_tp_settings_execute') is _SETTINGS_EXEC
-            if not in_settings or any(self._tp_is_sensitive_key(rec.key) for rec in self.sudo()):
+            if not in_settings or any(self._tp_is_sensitive_key(rec.key) for rec in recs):
                 raise AccessError(self.env._('Không được xóa tham số cấu hình bảo mật/hệ thống.'))
         return super().unlink()

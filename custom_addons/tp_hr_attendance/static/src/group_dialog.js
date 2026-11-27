@@ -2,23 +2,18 @@ import { Component, onWillStart, onWillUnmount, proxy, useProps } from "@odoo/ow
 import { browser } from "@web/core/browser/browser";
 import { Dialog } from "@web/core/dialog/dialog";
 import { useService } from "@web/core/utils/hooks";
-import { GROUP_ORDER, formatDate, rpcError } from "./common";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
+import { GROUP_ORDER, formatDate } from "./common";
 import { AttPager } from "./parts";
 
-/**
- * People of one dashboard group (ATTENDANCE-DASH-004): "Đang làm", "Đã về", "Chưa đi làm" or "Chưa xác định" on
- * the dashboard's classification day. The server (``tp_overview_group``) applies the same scope, read policy and
- * classification as the cards, so on open the list total is the card number; the search, department filter and
- * paging here only narrow that group. The dashboard calls ``refresh()`` after each automatic update, which keeps
- * the group, filters, page and scroll and highlights only rows that are new. Rows never open an HR profile.
- */
 const SIZES = [10, 20, 50, 100];
 const HIGHLIGHT_MS = 2400;
 const NOTE_LABELS = { working: "Trạng thái", done: "Ghi chú", unknown: "Lý do" };
 
 export class GroupDialog extends Component {
     static template = "tp_hr_attendance.GroupDialog";
-    static components = { Dialog, AttPager };
+    static components = { Dialog, InlineErrors, AttPager };
     props = useProps();
 
     setup() {
@@ -27,7 +22,7 @@ export class GroupDialog extends Component {
         this.formatDate = formatDate;
         this.state = proxy({
             group: this.props.group, q: "", dept: 0, page: 1, pageSize: 100,
-            data: null, loading: true, error: "", fresh: {},
+            data: null, loading: true, serverError: null, attempt: 0, fresh: {},
         });
         this.request = 0;
         this.timers = { search: null, highlight: null };
@@ -89,7 +84,7 @@ export class GroupDialog extends Component {
     async load({ silent = false } = {}) {
         const request = ++this.request;
         if (!silent) {
-            Object.assign(this.state, { loading: true, error: "" });
+            Object.assign(this.state, { loading: true, serverError: null });
         }
         try {
             const orm = silent ? this.orm.silent : this.orm;
@@ -101,10 +96,11 @@ export class GroupDialog extends Component {
             if (silent && before && before.group === data.group) {
                 this.highlight(before, data);
             }
-            Object.assign(this.state, { data, page: data.page, pageSize: data.page_size, dept: data.dept, error: "" });
+            Object.assign(this.state, { data, page: data.page, pageSize: data.page_size, dept: data.dept, serverError: null });
         } catch (error) {
             if (request === this.request && !silent) {
-                this.state.error = rpcError(error, "Không tải được danh sách nhân viên. Vui lòng thử lại.");
+                this.state.serverError = saveError(error, { verb: "tải danh sách nhân viên" });
+                this.state.attempt++;
             }
         } finally {
             if (request === this.request) {

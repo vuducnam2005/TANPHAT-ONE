@@ -4,6 +4,7 @@ import { browser } from "@web/core/browser/browser";
 import { router } from "@web/core/browser/router";
 import { registry } from "@web/core/registry";
 import { useBus, useService } from "@web/core/utils/hooks";
+import { TpTime24Field } from "@tp_web_home/inputs/time24";
 import { InlineErrors } from "@tp_web_home/validation/inline_errors";
 import { saveError } from "@tp_web_home/validation/validation";
 import {
@@ -40,7 +41,7 @@ function resolveRequestId(props) {
 
 export class TpRequestDetail extends Component {
     static template = "tp_request.Detail";
-    static components = { InlineErrors };
+    static components = { InlineErrors, TpTime24Field };
     props = useProps();
 
     setup() {
@@ -93,6 +94,7 @@ export class TpRequestDetail extends Component {
             settlementError: "",
             // Upload & comments
             uploading: false,
+            attachmentServerError: null,
             commentBody: "",
             commentBusy: false,
             commentError: "",
@@ -230,6 +232,21 @@ export class TpRequestDetail extends Component {
     onEditField(field, ev) {
         if (!this.state.editForm) return;
         this.state.editForm[field] = ev.target.value;
+    }
+
+    onEditTimeField(field, val) {
+        if (!this.state.editForm) return;
+        this.state.editForm[field] = val;
+        if (this.state.editFieldErrors?.length) {
+            const targetId = field === "att_requested_in" ? "req_att_in" : field === "att_requested_out" ? "req_att_out" : "";
+            if (targetId) {
+                this.state.editFieldErrors = this.state.editFieldErrors.filter((e) => e.id !== targetId);
+            }
+        }
+    }
+
+    hasEditError(fieldId) {
+        return (this.state.editFieldErrors || []).some((e) => e.id === fieldId);
     }
 
     onEditFollowerToggle(uid, ev) {
@@ -686,6 +703,7 @@ export class TpRequestDetail extends Component {
         ev.target.value = "";
         if (!files.length || !this.state.requestId) return;
         this.state.uploading = true;
+        this.state.attachmentServerError = null;
         try {
             for (const file of files) {
                 const fd = new FormData();
@@ -705,7 +723,7 @@ export class TpRequestDetail extends Component {
             this.notification.add("Đã tải tệp đính kèm thành công.", { type: "success" });
             await this.load(true);
         } catch (err) {
-            this.notification.add(extractErrorMessage(err, "Không tải được tệp đính kèm."), { type: "danger" });
+            this.state.attachmentServerError = saveError(err, { verb: "tải tệp đính kèm" });
         } finally {
             this.state.uploading = false;
         }
@@ -714,6 +732,7 @@ export class TpRequestDetail extends Component {
     async deleteAttachment(att) {
         if (!att?.id || this.state.busy) return;
         this.state.busy = true;
+        this.state.attachmentServerError = null;
         try {
             const fd = new FormData();
             fd.append("csrf_token", odoo.csrf_token);
@@ -729,7 +748,7 @@ export class TpRequestDetail extends Component {
             this.notification.add("Đã xóa tệp đính kèm.", { type: "info" });
             await this.load(true);
         } catch (err) {
-            this.notification.add(extractErrorMessage(err, "Không thể xóa tệp."), { type: "danger" });
+            this.state.attachmentServerError = saveError(err, { verb: "xóa tệp đính kèm" });
         } finally {
             this.state.busy = false;
         }

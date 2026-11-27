@@ -8,24 +8,27 @@
                     <p class="alert alert-warning" role="alert">Bạn không có quyền truy cập Kho thiết bị văn phòng. Liên hệ quản trị hệ thống nếu cần.</p>
                 </t>
                 <t t-else="">
+                    <InlineErrors errors="this.state.fieldErrors"
+                                  server="this.state.serverError"
+                                  attempt="this.state.attempt"/>
                     <p class="o_tp_eq_scan_help" id="tp_eq_scan_help">
                         Đặt con trỏ vào ô dưới rồi quét nhãn QR bằng máy quét (máy quét tự nhấn Enter),
                         hoặc gõ mã thiết bị / serial rồi nhấn Enter.
                     </p>
                     <form class="o_tp_eq_scan_form" t-on-submit="(ev) => this.submit(ev)" autocomplete="off" role="search">
                         <label for="tp_eq_scan_input" class="visually-hidden">Mã QR, mã thiết bị hoặc serial</label>
-                        <input id="tp_eq_scan_input" type="text" class="form-control o_tp_eq_scan_input"
+                        <input id="tp_eq_scan_input" type="text"
+                               t-att-class="'form-control o_tp_eq_scan_input ' + (this.hasInputError ? 'is-invalid' : '')"
                                t-ref="this.input" t-att-value="this.state.value"
-                               t-on-input="(ev) => this.state.value = ev.target.value"
+                               t-on-input="(ev) => this.onInput(ev)"
                                t-att-readonly="this.state.busy" placeholder="Quét hoặc nhập mã…"
                                maxlength="512" spellcheck="false" autocapitalize="none"
-                               aria-describedby="tp_eq_scan_help tp_eq_scan_error"
-                               t-att-aria-invalid="this.state.error ? 'true' : 'false'"/>
-                        <button type="submit" class="btn btn-primary" t-att-disabled="this.state.busy or !this.state.value.trim()">
-                            Tìm thiết bị
+                               aria-describedby="tp_eq_scan_help"
+                               t-att-aria-invalid="this.hasInputError ? 'true' : 'false'"/>
+                        <button type="submit" class="btn btn-primary" t-att-disabled="this.state.busy">
+                            <t t-out="this.state.busy ? 'Đang tìm…' : 'Tìm thiết bị'"/>
                         </button>
                     </form>
-                    <p id="tp_eq_scan_error" class="o_tp_eq_scan_error" role="alert" aria-live="assertive" t-out="this.state.error"/>
                     <div t-if="this.state.recent.length" class="o_tp_eq_scan_recent">
                         <h2>Vừa quét</h2>
                         <ul>

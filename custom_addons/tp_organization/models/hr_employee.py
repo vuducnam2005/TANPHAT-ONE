@@ -34,15 +34,15 @@ CODE_FORMAT_REQUEST = 'HR-EMPLOYEE-CODE-003'
 class HrEmployee(models.Model):
     _inherit = 'hr.employee'
 
-    tp_employee_code = fields.Char(string='TP Employee Code', copy=False, index=True, tracking=True)
-    tp_source_code = fields.Char(string='Source Code', copy=False, index=True, groups='hr.group_hr_user')
-    tp_source_department = fields.Char(string='Source Department', groups='hr.group_hr_user')
-    tp_source_title = fields.Char(string='Source Title', groups='hr.group_hr_user')
-    tp_source_snapshot = fields.Json(string='Source Snapshot', copy=False, groups='hr.group_hr_user')
-    tp_import_batch_id = fields.Many2one('tp.hr.import.batch', string='Import Batch', copy=False, ondelete='restrict', groups='hr.group_hr_user')
+    tp_employee_code = fields.Char(string='Mã nhân viên', copy=False, index=True, tracking=True)
+    tp_source_code = fields.Char(string='Mã nguồn', copy=False, index=True, groups='hr.group_hr_user')
+    tp_source_department = fields.Char(string='Phòng ban nguồn', groups='hr.group_hr_user')
+    tp_source_title = fields.Char(string='Chức vụ nguồn', groups='hr.group_hr_user')
+    tp_source_snapshot = fields.Json(string='Ảnh chụp dữ liệu nguồn', copy=False, groups='hr.group_hr_user')
+    tp_import_batch_id = fields.Many2one('tp.hr.import.batch', string='Lô nhập danh sách', copy=False, ondelete='restrict', groups='hr.group_hr_user')
 
-    _tp_code_unique = models.Constraint('UNIQUE(company_id, tp_employee_code)', 'Employee TP code is already used, including archived records.')
-    _tp_source_unique = models.Constraint('UNIQUE(company_id, tp_source_code)', 'Source identity is already used in this company.')
+    _tp_code_unique = models.Constraint('UNIQUE(company_id, tp_employee_code)', 'Mã nhân viên TP đã được sử dụng (bao gồm cả hồ sơ lưu trữ).')
+    _tp_source_unique = models.Constraint('UNIQUE(company_id, tp_source_code)', 'Mã định danh nguồn đã được sử dụng trong công ty này.')
 
     @api.constrains('tp_employee_code')
     def _check_tp_employee_code(self):

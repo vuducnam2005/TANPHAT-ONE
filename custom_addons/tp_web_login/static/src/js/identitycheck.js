@@ -4,6 +4,7 @@ import { FormController } from "@web/views/form/form_controller";
 import { formView } from "@web/views/form/form_view";
 import { useBus, useService } from "@web/core/utils/hooks";
 import * as passkeyLib from "@auth_passkey/../lib/simplewebauthn";
+import { saveError } from "@tp_web_home/validation/validation";
 import { PasskeyUnsupportedError, describePasskeyError, reportPasskeyFailure } from "./passkey_errors";
 
 /** Native buttons are disabled before a dialog mounts, so native focus capture can see body. */
@@ -16,7 +17,9 @@ export function useDialogOpener(rootRef) {
             opener = null;
         }
     });
-    return name => { opener = rootRef()?.querySelector(`button[name="${name}"]`); };
+    return (name) => {
+        opener = rootRef()?.querySelector(`button[name="${name}"]`);
+    };
 }
 
 /**
@@ -27,7 +30,6 @@ export function useDialogOpener(rootRef) {
 export class IdentityCheckController extends FormController {
     setup() {
         super.setup(...arguments);
-        this.notification = useService("notification");
         this.tpPasskeyBusy = false;
     }
 
@@ -36,6 +38,7 @@ export class IdentityCheckController extends FormController {
             return false;
         }
         this.tpPasskeyBusy = true;
+        this.model.root._tpSaveError = null;
         try {
             if (!passkeyLib.browserSupportsWebAuthn()) {
                 throw new PasskeyUnsupportedError();
@@ -47,7 +50,19 @@ export class IdentityCheckController extends FormController {
         } catch (error) {
             const { kind, message } = describePasskeyError(error, "identity");
             reportPasskeyFailure("identity", kind, error);
-            this.notification.add(message, { type: "danger", sticky: false });
+            const classified = error?.data?.name
+                ? error
+                : {
+                      data: {
+                          name: kind === "network" ? "ConnectionLostError" : "ValidationError",
+                          message,
+                      },
+                  };
+            this.model.root._tpSaveError = saveError(classified, {
+                verb: "xác nhận danh tính",
+                write: false,
+            });
+            this.model.root._tpAttempts = (this.model.root._tpAttempts || 0) + 1;
             return false;
         } finally {
             this.tpPasskeyBusy = false;
@@ -55,7 +70,8 @@ export class IdentityCheckController extends FormController {
     }
 
     async beforeExecuteActionButton(params) {
-        const passkey = params.name === "run_check" && this.model.root.data.auth_method === "webauthn";
+        const passkey =
+            params.name === "run_check" && this.model.root.data.auth_method === "webauthn";
         if (passkey && !(await this.tpCollectPasskey())) {
             return false;
         }
@@ -68,4 +84,6 @@ export class IdentityCheckController extends FormController {
     }
 }
 
-registry.category("views").add("tp_identity_check", { ...formView, Controller: IdentityCheckController });
+registry
+    .category("views")
+    .add("tp_identity_check", { ...formView, Controller: IdentityCheckController });

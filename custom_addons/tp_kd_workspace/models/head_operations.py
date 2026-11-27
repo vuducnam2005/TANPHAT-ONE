@@ -454,11 +454,14 @@ class Opportunity(models.Model):
                 rec.kd_can_read_money = True
                 rec.kd_can_edit_money = rec.kd_can_edit
 
+    def _kd_money_read_allowed(self):
+        self.ensure_one()
+        return bool(self._kd_head() or super()._kd_money_read_allowed())
+
     def _compute_kd_money_display(self):
         for rec in self:
             rec.kd_money_display = (formatLang(self.env, rec.expected_revenue,
-                currency_obj=rec.company_currency) if rec._kd_head() or (
-                    rec.tp_project_id and rec.tp_project_id.id in rec._kd_financial_projects())
+                currency_obj=rec.company_currency) if rec._kd_money_read_allowed()
                 else self.env._('Không có quyền xem tiền'))
 
     @api.model

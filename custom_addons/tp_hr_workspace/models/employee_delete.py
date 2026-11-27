@@ -137,6 +137,17 @@ class HrEmployee(models.Model):
         for employee_id in employees.ids:
             entry = plan['employees'][employee_id]
             account = plan['accounts'].get(str(employee_id))
+            other_assignments = []
+            if account and account['pending']:
+                other_assignments.append({
+                    'label': 'Công việc đang phụ trách cần bàn giao (không tự đổi người phụ trách)',
+                    'value': account['pending'],
+                })
+            for cm in entry.get('cancelled_moves', []):
+                other_assignments.append({
+                    'label': cm.get('label', 'Phiếu chờ bàn giao liên quan'),
+                    'value': cm.get('count', ''),
+                })
             rows.append({
                 'id': employee_id,
                 'name': entry['name'],
@@ -150,6 +161,7 @@ class HrEmployee(models.Model):
                 'keep': [{'label': label, 'value': value} for label, value in entry['keep']]
                 + ([{'label': 'Tài khoản đăng nhập ' + account['login'], 'value': 'Giữ (mặc định); có thể chọn khóa'}] if account else [])
                 + ([{'label': 'Công việc đang phụ trách cần bàn giao (không tự đổi người phụ trách)', 'value': account['pending']}] if account and account['pending'] else []),
+                'otherAssignments': other_assignments,
                 'block': [{'label': label, 'value': count, 'hint': hint} for label, count, hint in entry['block']]
                 + ([{'label': text, 'value': '', 'hint': ''} for text in account['block']] if account else []),
                 'lockBlock': account['lock_block'] if account else [],

@@ -31,6 +31,7 @@ import {
 import {
     buildBrandedUrl,
     findRouteByAction,
+    findRouteByModel,
     getActionIdByXmlId,
     parseBrandedUrl,
 } from "@tp_branding/brand_routes";
@@ -48,6 +49,34 @@ let pending = null;
 
 function hasHashState(hash) {
     return Boolean(hash) && hash !== "#" && hash.includes("=");
+}
+
+/**
+ * True when `sessionStorage.current_action` holds an inline `ir.actions.act_window`
+ * (without `id`, `path`, or `xml_id`) matching `modelName`. Preserving `m-<model>`
+ * internally in `urlToState` lets Odoo's `_getActionParams` restore `current_action`
+ * (including domain & context) on F5 while keeping the branded `/app/...` URL bar.
+ */
+function hasMatchingInlineStoredAction(modelName) {
+    if (!modelName) {
+        return false;
+    }
+    try {
+        const raw = browser.sessionStorage?.getItem("current_action");
+        if (!raw) {
+            return false;
+        }
+        const stored = JSON.parse(raw);
+        return Boolean(
+            stored &&
+                !stored.id &&
+                !stored.path &&
+                !stored.xml_id &&
+                stored.res_model === modelName
+        );
+    } catch {
+        return false;
+    }
 }
 
 patch(router, {
@@ -72,7 +101,11 @@ patch(router, {
         const actionIdentifier = activeAction?.action;
         const resId = activeAction?.resId !== undefined ? activeAction.resId : state?.resId;
 
-        const route = findRouteByAction(actionIdentifier);
+        const route =
+            findRouteByAction(actionIdentifier) ||
+            (!actionIdentifier && activeAction?.model
+                ? findRouteByModel(activeAction.model)
+                : null);
         if (route) {
             const isNew = resId === "new";
             const businessPath = buildBrandedUrl(route, { resId, isNew });
@@ -112,47 +145,64 @@ patch(router, {
                 const parsed = parseBrandedUrl(pathname);
                 if (parsed.route) {
                     const route = parsed.route;
-                    let actionId = null;
-                    if (route.action_xml_id) {
-                        actionId = getActionIdByXmlId(route.action_xml_id) || route.action_xml_id;
-                    } else if (route.action_tag) {
-                        actionId = route.action_tag;
-                    } else if (route.native_slug) {
-                        actionId = route.native_slug;
-                    }
-
-                    if (actionId) {
-                        let nativeSegment;
-                        if (
-                            typeof actionId === "number" ||
-                            (typeof actionId === "string" && actionId.includes("."))
-                        ) {
-                            nativeSegment = `action-${actionId}`;
-                        } else {
-                            nativeSegment = actionId;
-                        }
-
-                        let nativeSub = `/${nativeSegment}`;
-                        if (route.action_tag === "mail.action_discuss" && typeof parsed.resId === "number") {
-                            if (!target.searchParams.has("active_id")) {
-                                target.searchParams.set("active_id", `discuss.channel_${parsed.resId}`);
-                            }
-                        } else if (
-                            route.action_xml_id === "calendar.action_calendar_event" &&
-                            typeof parsed.resId === "number"
-                        ) {
-                            if (!target.searchParams.has("event_id")) {
-                                target.searchParams.set("event_id", String(parsed.resId));
-                            }
-                        } else if (parsed.isNew || parsed.resId === "new") {
+                    if (route.model && hasMatchingInlineStoredAction(route.model)) {
+                        let nativeSub = `/m-${route.model}`;
+                        if (parsed.isNew || parsed.resId === "new") {
                             nativeSub += "/new";
                         } else if (typeof parsed.resId === "number") {
                             nativeSub += `/${parsed.resId}`;
                         }
-
                         target.pathname = `${LEGACY_APP_PATH}${nativeSub}`;
                     } else {
-                        target.pathname = LEGACY_APP_PATH + pathname.slice(APP_PATH.length);
+                        let actionId = null;
+                        if (route.action_xml_id) {
+                            actionId =
+                                getActionIdByXmlId(route.action_xml_id) || route.action_xml_id;
+                        } else if (route.action_tag) {
+                            actionId = route.action_tag;
+                        } else if (route.native_slug) {
+                            actionId = route.native_slug;
+                        }
+
+                        if (actionId) {
+                            let nativeSegment;
+                            if (
+                                typeof actionId === "number" ||
+                                (typeof actionId === "string" && actionId.includes("."))
+                            ) {
+                                nativeSegment = `action-${actionId}`;
+                            } else {
+                                nativeSegment = actionId;
+                            }
+
+                            let nativeSub = `/${nativeSegment}`;
+                            if (
+                                route.action_tag === "mail.action_discuss" &&
+                                typeof parsed.resId === "number"
+                            ) {
+                                if (!target.searchParams.has("active_id")) {
+                                    target.searchParams.set(
+                                        "active_id",
+                                        `discuss.channel_${parsed.resId}`
+                                    );
+                                }
+                            } else if (
+                                route.action_xml_id === "calendar.action_calendar_event" &&
+                                typeof parsed.resId === "number"
+                            ) {
+                                if (!target.searchParams.has("event_id")) {
+                                    target.searchParams.set("event_id", String(parsed.resId));
+                                }
+                            } else if (parsed.isNew || parsed.resId === "new") {
+                                nativeSub += "/new";
+                            } else if (typeof parsed.resId === "number") {
+                                nativeSub += `/${parsed.resId}`;
+                            }
+
+                            target.pathname = `${LEGACY_APP_PATH}${nativeSub}`;
+                        } else {
+                            target.pathname = LEGACY_APP_PATH + pathname.slice(APP_PATH.length);
+                        }
                     }
                 } else {
                     target.pathname = LEGACY_APP_PATH + pathname.slice(APP_PATH.length);

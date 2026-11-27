@@ -49,6 +49,8 @@ def extract_employee_image_field(record):
             if isinstance(val, str) and val.strip():
                 return key, val.strip()
     return first_present, ""
+
+
 # One authenticated client per (database, source, account): the cron and the "sync now" button reuse the
 # token and session cookies instead of logging in every minute (ENTI-ATTENDANCE-002). Process memory only:
 # tokens never reach the database, logs or the browser.
@@ -135,7 +137,8 @@ class EntiClient:
                 if renewed:
                     headers = self._auth_headers()
                     continue
-                raise EntiAuthError("Phiên làm việc ENTI đã hết hạn hoặc thông tin đăng nhập không đúng.", status_code=401)
+                msg = "Phiên làm việc ENTI đã hết hạn hoặc thông tin đăng nhập không đúng."
+                raise EntiAuthError(msg, status_code=401)
 
             # Handle 429 Too Many Requests or 5xx server errors with bounded backoff
             if resp.status_code in RETRY_STATUS and attempt < retry_count:
@@ -154,16 +157,19 @@ class EntiClient:
             try:
                 data = resp.json()
             except ValueError as exc:
-                raise EntiError("Máy chủ ENTI không trả về dữ liệu định dạng JSON hợp lệ.") from exc
+                msg = "Máy chủ ENTI không trả về dữ liệu định dạng JSON hợp lệ."
+                raise EntiError(msg) from exc
 
             return data
 
-        raise EntiError("Đã hết số lần thử kết nối lại tới máy chủ ENTI.")
+        msg = "Đã hết số lần thử kết nối lại tới máy chủ ENTI."
+        raise EntiError(msg)
 
     def login(self, phone, password):
         """Authenticate with phone and password. Returns dict with token info."""
         if not phone or not password:
-            raise EntiAuthError("Thiếu số điện thoại hoặc mật khẩu đăng nhập ENTI.")
+            msg = "Thiếu số điện thoại hoặc mật khẩu đăng nhập ENTI."
+            raise EntiAuthError(msg)
 
         self._phone = phone
         self._password = password
@@ -213,7 +219,7 @@ class EntiClient:
                         self.refresh_token = refresh_data.get("refresh_token")
                     _logger.info("ENTI token refreshed successfully")
                     return True
-            except Exception as exc:
+            except (EntiError, requests.RequestException, ValueError) as exc:
                 _logger.info("ENTI refresh token endpoint failed: %s; falling back to re-login", exc)
 
         if self._phone and self._password:
@@ -222,7 +228,7 @@ class EntiClient:
                 if self.selected_app_key:
                     self.select_app(self.selected_app_key)
                 return True
-            except Exception as exc:
+            except (EntiError, requests.RequestException, ValueError) as exc:
                 _logger.error("ENTI re-login fallback failed: %s", exc)
                 return False
 
@@ -231,7 +237,8 @@ class EntiClient:
     def _ensure_authenticated(self):
         if not self.is_token_valid():
             if not self._renew_token():
-                raise EntiAuthError("Chưa có phiên đăng nhập ENTI hợp lệ hoặc phiên đã hết hạn.")
+                msg = "Chưa có phiên đăng nhập ENTI hợp lệ hoặc phiên đã hết hạn."
+                raise EntiAuthError(msg)
 
     def get_me(self):
         """Fetch logged-in user profile."""
@@ -240,8 +247,7 @@ class EntiClient:
     def get_apps(self):
         """Fetch list of companies/applications available for this user."""
         res = self._request("GET", "/__enti/api/v1/apps/my")
-        apps = res.get("data") or []
-        return apps
+        return res.get("data") or []
 
     def find_app_for_company(self, target_name=DEFAULT_COMPANY_KEYWORD):
         """Find the ENTI application of the company; never guess between several applications."""
@@ -259,7 +265,8 @@ class EntiClient:
     def select_app(self, app_key):
         """Select active company context and establish session cookies."""
         if not app_key:
-            raise EntiError("Thiếu khóa ứng dụng (app_key) để chọn công ty trên ENTI.")
+            msg = "Thiếu khóa ứng dụng (app_key) để chọn công ty trên ENTI."
+            raise EntiError(msg)
 
         payload = {"app_key": app_key}
         res = self._request("POST", "/__enti/api/v1/session/select-app", json_data=payload)
@@ -268,12 +275,12 @@ class EntiClient:
         # Execute supplementary context endpoints observed during browser probe
         try:
             self._request("POST", "/api/apps/available", json_data={}, retry_count=0)
-        except Exception as exc:
+        except (EntiError, requests.RequestException, ValueError) as exc:
             _logger.debug("ENTI apps/available context call: %s", exc)
 
         try:
             self._request("POST", "/api/auth/get-acount-info", json_data={}, retry_count=0)
-        except Exception as exc:
+        except (EntiError, requests.RequestException, ValueError) as exc:
             _logger.debug("ENTI get-acount-info context call: %s", exc)
 
         _logger.info("ENTI application selected: app_key=%s", app_key)
@@ -390,7 +397,8 @@ class EntiClient:
         """Validate and normalize an ENTI image URL (HTTP/HTTPS only, host inside configured ENTI hosts)."""
         raw = str(image_url or "").strip()
         if not raw:
-            raise EntiError("URL ảnh trống.")
+            msg = "URL ảnh trống."
+            raise EntiError(msg)
         if raw.startswith("/"):
             raw = urljoin(f"{self.base_url}/", raw.lstrip("/"))
         parsed = urlparse(raw)
@@ -398,7 +406,8 @@ class EntiClient:
             raise EntiError(f"Giao thức URL ảnh không hợp lệ ({parsed.scheme or 'trống'}); chỉ chấp nhận HTTP/HTTPS.")
         host = (parsed.hostname or "").lower()
         if not host:
-            raise EntiError("URL ảnh thiếu tên miền (host).")
+            msg = "URL ảnh thiếu tên miền (host)."
+            raise EntiError(msg)
         allowed = self._allowed_image_hosts(allowed_hosts)
         host_ok = any(host == candidate or host.endswith(f".{candidate}") for candidate in allowed)
         if not host_ok:
@@ -406,75 +415,102 @@ class EntiClient:
         return raw
 
     def download_image(self, image_url, max_bytes=DEFAULT_MAX_IMAGE_BYTES, allowed_hosts=None, retry_count=2):
-        """Download binary image from an allowed ENTI URL with bounded retry, Content-Type and size checks."""
+        """Download binary image from an allowed ENTI URL with bounded retry, safe redirect hops, and size checks."""
         url = self.validate_image_url(image_url, allowed_hosts=allowed_hosts)
         max_bytes = max(1024, int(max_bytes or DEFAULT_MAX_IMAGE_BYTES))
-        headers = {"Accept": "image/*,*/*;q=0.8"}
-        if self.access_token:
-            headers["Authorization"] = f"Bearer {self.access_token}"
+        base_host = (urlparse(self.base_url).hostname or "").lower()
 
+        def _headers_for(target_url):
+            req_headers = {"Accept": "image/*,*/*;q=0.8"}
+            target_host = (urlparse(target_url).hostname or "").lower()
+            if self.access_token and base_host and target_host == base_host:
+                req_headers["Authorization"] = f"Bearer {self.access_token}"
+            return req_headers
+
+        renewed_once = False
         for attempt in range(retry_count + 1):
-            try:
-                resp = self.session.request(
-                    method="GET",
-                    url=url,
-                    headers=headers,
-                    timeout=self.timeout,
-                    stream=True,
-                )
-            except requests.RequestException as exc:
-                if attempt < retry_count:
-                    time.sleep(1 * (attempt + 1))
-                    continue
-                raise EntiError(f"Lỗi mạng hoặc hết thời gian chờ khi tải ảnh ENTI: {exc}") from exc
-
-            try:
-                if resp.status_code == 401 and attempt == 0 and (self._phone or self.refresh_token):
-                    resp.close()
-                    if self._renew_token():
-                        if self.access_token:
-                            headers["Authorization"] = f"Bearer {self.access_token}"
-                        continue
-                    raise EntiAuthError("Phiên ENTI hết hạn khi tải ảnh.", status_code=401)
-
-                if resp.status_code in RETRY_STATUS and attempt < retry_count:
-                    retry_after = resp.headers.get("Retry-After")
-                    sleep_sec = int(retry_after) if retry_after and retry_after.isdigit() else (2 * (attempt + 1))
-                    resp.close()
-                    time.sleep(min(sleep_sec, 10))
-                    continue
-
-                if resp.status_code >= 400:
-                    raise EntiError(f"Máy chủ ENTI trả lỗi HTTP {resp.status_code} khi tải ảnh.", status_code=resp.status_code)
-
-                content_type = (resp.headers.get("Content-Type") or "").split(";", 1)[0].strip().lower()
-                if not content_type.startswith("image/"):
-                    raise EntiError(
-                        f"Content-Type phản hồi không hợp lệ ({content_type or 'trống'}); yêu cầu image/*.",
+            current_url = url
+            redirects = 0
+            while True:
+                try:
+                    resp = self.session.request(
+                        method="GET",
+                        url=current_url,
+                        headers=_headers_for(current_url),
+                        timeout=self.timeout,
+                        stream=True,
+                        allow_redirects=False,
                     )
+                except requests.RequestException as exc:
+                    if attempt < retry_count:
+                        time.sleep(1 * (attempt + 1))
+                        break
+                    raise EntiError(f"Lỗi mạng hoặc hết thời gian chờ khi tải ảnh ENTI: {exc}") from exc
 
-                content_len = resp.headers.get("Content-Length")
-                if content_len and content_len.strip().isdigit() and int(content_len.strip()) > max_bytes:
-                    raise EntiError(
-                        f"Dung lượng ảnh ({content_len.strip()} bytes) vượt quá giới hạn tối đa ({max_bytes} bytes).",
-                    )
-
-                chunks = []
-                total = 0
-                for chunk in resp.iter_content(chunk_size=65536):
-                    if not chunk:
-                        continue
-                    total += len(chunk)
-                    if total > max_bytes:
-                        raise EntiError(
-                            f"Dung lượng ảnh vượt quá giới hạn tối đa ({max_bytes} bytes).",
+                try:
+                    if resp.status_code in (301, 302, 303, 307, 308):
+                        location = (resp.headers.get("Location") or "").strip()
+                        if not location:
+                            msg = "Máy chủ ENTI trả mã chuyển hướng nhưng thiếu đích Location."
+                            raise EntiError(msg)
+                        redirects += 1
+                        if redirects > 3:
+                            msg = "Quá số bước chuyển hướng tối đa (3) khi tải ảnh ENTI."
+                            raise EntiError(msg)
+                        current_url = self.validate_image_url(
+                            urljoin(current_url, location),
+                            allowed_hosts=allowed_hosts,
                         )
-                    chunks.append(chunk)
-                return b"".join(chunks), content_type
-            finally:
-                resp.close()
+                        continue
 
-        raise EntiError("Đã hết số lần thử tải ảnh từ máy chủ ENTI.")
+                    if resp.status_code == 401 and not renewed_once and (self._phone or self.refresh_token):
+                        renewed_once = True
+                        if self._renew_token():
+                            continue
+                        msg = "Phiên ENTI hết hạn khi tải ảnh."
+                        raise EntiAuthError(msg, status_code=401)
+
+                    if resp.status_code in RETRY_STATUS and attempt < retry_count:
+                        retry_after = resp.headers.get("Retry-After")
+                        sleep_sec = int(retry_after) if retry_after and retry_after.isdigit() else (2 * (attempt + 1))
+                        time.sleep(min(sleep_sec, 10))
+                        break
+
+                    if resp.status_code >= 400:
+                        raise EntiError(
+                            f"Máy chủ ENTI trả lỗi HTTP {resp.status_code} khi tải ảnh.",
+                            status_code=resp.status_code,
+                        )
+
+                    content_type = (resp.headers.get("Content-Type") or "").split(";", 1)[0].strip().lower()
+                    if not content_type.startswith("image/"):
+                        raise EntiError(
+                            f"Content-Type phản hồi không hợp lệ ({content_type or 'trống'}); yêu cầu image/*.",
+                        )
+
+                    content_len = resp.headers.get("Content-Length")
+                    if content_len and content_len.strip().isdigit() and int(content_len.strip()) > max_bytes:
+                        raise EntiError(
+                            f"Dung lượng ảnh ({content_len.strip()} bytes) vượt quá giới hạn tối đa ({max_bytes} bytes).",
+                        )
+
+                    chunks = []
+                    total = 0
+                    for chunk in resp.iter_content(chunk_size=65536):
+                        if not chunk:
+                            continue
+                        total += len(chunk)
+                        if total > max_bytes:
+                            raise EntiError(
+                                f"Dung lượng ảnh vượt quá giới hạn tối đa ({max_bytes} bytes).",
+                            )
+                        chunks.append(chunk)
+                    return b"".join(chunks), content_type
+                finally:
+                    resp.close()
+
+        msg = "Đã hết số lần thử tải ảnh từ máy chủ ENTI."
+        raise EntiError(msg)
 
     def get_attendance(self, start_date, end_date, max_results_per_page=50):
         """Fetch attendance report for the date range with full pagination handling.

@@ -1,9 +1,9 @@
 # TANPHAT ONE — Quy chuẩn thông báo thông tin còn thiếu khi thêm mới/lưu
 
 Ngày: 19/11/2026. Task `FORM-VALIDATION-001`, CHG-20261119-023; mở rộng
-`FORM-VALIDATION-002`, CHG-20261119-027 (thao tác xóa/sắp xếp/mở trong màn tự viết).
-Trạng thái: **đã triển khai cho mọi form native, các form tùy biến HR và các thao tác
-ghi ở mục 6**; phần còn lại ghi rõ ở mục 7, không coi là đã đạt.
+`FORM-VALIDATION-002`, CHG-20261119-027 (thao tác xóa/sắp xếp/mở trong màn tự viết);
+hoàn thiện toàn hệ thống tại `AUDIT-SWEEP-20261127`, CHG-20261128-001.
+Trạng thái: **đã triển khai cho mọi form native và toàn bộ màn hình/hộp thoại OWL thuộc 20 custom addons đã kiểm chứng (mục 6)**; các ngoại lệ có chủ đích ghi rõ ở mục 7.
 
 ## 1. Mục tiêu
 
@@ -131,20 +131,24 @@ gọi backend để kiểm tra.
 | Ba công cụ cá nhân (`tp_personal_tools`, CHG-20261125-006 & CHG-20261125-008): ngăn chi tiết Công việc của tôi (`TodoDetailDrawer`, báo kết quả/xác nhận), hộp thoại Đưa vào lịch (`ScheduleTaskDialog`), hộp thoại Tạo/Sửa lịch & Đặt phòng họp (`CalendarEventDialog`), Tạo trao đổi mới / Nhóm Dự án-Phòng ban (`CreateChatDialog`), Chuyển tin nhắn thành việc (`MessageToTaskDialog`), Chia sẻ liên kết (`ShareToDiscussDialog`, `ShareItemDialog`) và khôi phục kéo thả Kanban/FullCalendar khi lỗi | `InlineErrors` + `saveError` trong đúng ngăn/hộp thoại hoặc thanh thông báo trên bảng lịch/bảng việc; kiểm tiêu đề, khoảng giờ bắt đầu < kết thúc, xung đột đặt phòng họp đồng thời, ngày kết thúc lặp và thành viên/nguồn nhóm tại đúng trường kèm khối tổng hợp, không dùng toast `danger` cho lỗi lưu/kéo thả |
 | Văn phòng số & Yêu cầu phê duyệt mở rộng (`tp_digital_office`, `tp_request 20.0.2.0.0`, CHG-20261125-009): biểu mẫu Thông báo nội bộ, Biên bản họp (kèm kiểm tra dòng đầu việc kết luận), Nghỉ phép, Công tác hiện trường và Tạm ứng/Chi phí | `InlineErrors` + `saveError` hiển thị rõ tên trường/bảng con thiếu thông tin (tiêu đề, kết luận trước phát hành, đối tượng nhận, ngày nghỉ/công tác, địa điểm công tác, số tiền đề nghị), giữ nguyên dữ liệu nhập, không dùng toast `danger` cho lỗi lưu |
 | Điều hành & Quản trị dự án (`tp_enterprise_governance`, CHG-20261125-010): biểu mẫu ghi nhận chỉ tiêu tài chính có nguồn, điều chỉnh mốc tiến độ WBS, khởi tạo bộ hồ sơ giao nộp | `InlineErrors` + `saveError` kiểm tra kỳ dữ liệu, nguồn chứng từ gốc, số tiền, lý do điều chỉnh mốc tiến độ, dự án và tên bộ hồ sơ ngay trong màn hình, không dùng toast `danger` |
-| Tuyển dụng, Thiết bị khảo sát, Đối soát đầu vào Lương & Trợ lý AI (`tp_enterprise_ops`, CHG-20261125-011): biểu mẫu Nhu cầu tuyển dụng, Hồ sơ ứng viên, Đặt lịch phỏng vấn, Tiếp nhận nhân sự trúng tuyển, Cập nhật hạn kiểm định thiết bị khảo sát, Đối soát kỳ công lương và câu lệnh Trợ lý AI | `InlineErrors` + `saveError` kiểm tra vị trí/phòng ban tuyển dụng, họ tên ứng viên, trùng CCCD/email/SĐT khi tiếp nhận nhân sự, hạn hiệu chuẩn máy khảo sát, cổng khóa quy chế lương và câu hỏi trợ lý ngay trong màn hình, không dùng toast `danger` |
+| Tuyển dụng, Thiết bị khảo sát, Đối soát đầu vào Lương & Trợ lý AI (`tp_enterprise_ops`, CHG-20261125-011 & CHG-20261128-001): biểu mẫu Nhu cầu tuyển dụng, Hồ sơ ứng viên, Đặt lịch phỏng vấn, Tiếp nhận nhân sự trúng tuyển, Cập nhật hạn kiểm định thiết bị khảo sát, Đối soát kỳ công lương và câu lệnh / tạo nháp Trợ lý AI (`previewAiDraft`) | `InlineErrors` + `saveError` kiểm tra vị trí/phòng ban tuyển dụng, họ tên ứng viên, trùng CCCD/email/SĐT khi tiếp nhận nhân sự, hạn hiệu chuẩn máy khảo sát, cổng khóa quy chế lương và câu hỏi/tạo nháp trợ lý ngay trong màn hình, không dùng toast `danger` |
+| Trang chủ, Đăng nhập & Bảo mật tài khoản (`tp_web_home 20.0.3.0.5`, `tp_web_login 20.0.2.4.1`, CHG-20261128-001): `HomeLauncher` (`<InlineErrors errors="[]" server="this.actionError()"/>`), `AccountSecurity` (đổi mật khẩu, thu hồi phiên, tạo/thu hồi khóa API, đổi tên/xóa Passkey), `IdentityCheck` và `PasskeyCreate` | `InlineErrors` + `saveError` ngay trong màn hình/hộp thoại bảo mật; gỡ bỏ hoàn toàn 2 toast `danger` cũ trên `AccountSecurity` và bổ sung giá trị mặc định an toàn cho `props.errors` trong `InlineErrors` |
+| Hộp thoại Xóa nhân viên HR (`tp_hr_workspace 20.0.1.24.5`, CHG-20261128-001): `EmployeeDelete` | Chuẩn hóa lỗi RPC bằng `saveError(e, { verb: "xóa" })` kết hợp `InlineErrors` ngay trong hộp thoại |
+| Chấm công & Nguồn ENTI (`tp_hr_attendance 20.0.4.0.3`, CHG-20261128-001): `MyAttendance`, `CorrectionFormDialog` (kèm `TpTime24Field` & đính kèm minh chứng), `AttendanceOverview` và `SourceAdmin` | Chuyển toàn bộ `state.error` tự viết sang `InlineErrors` + `saveError` đồng nhất câu chữ theo mục 4, giữ nguyên dữ liệu đang nhập |
+| Trung tâm Báo cáo & Công cụ bảng con KH-KD (`tp_kd_workspace 20.0.1.11.4`, CHG-20261128-001): `KdReportCenter` (`R01–R06`) và `KdRelationField` / `table_tools` | `InlineErrors` + `saveError` hiển thị lỗi khoảng ngày/tải báo cáo/mở bảng quan hệ ngay dưới thanh điều khiển, giữ nguyên bộ lọc đang chọn |
+| Quét mã Thiết bị & Yêu cầu phê duyệt (`tp_equipment 20.0.1.7.5`, `tp_request 20.0.2.0.3`, CHG-20261128-001): `TpEquipmentScan`, `TpRequestCreateModal`, `TpRequestDetail` và `TpRequestAdmin` | Chuyển `TpEquipmentScan` sang `InlineErrors` + `saveError`; gỡ toàn bộ 3 toast `danger` còn sót trong `tp_request` (`create_modal.js`, `request_detail.js`, `request_admin.js`) sang khối lỗi tại chỗ và kiểm tra `att_out > att_in` ngay khi lưu nháp |
 
 ## 7. Chưa áp dụng hoặc cố ý giữ cách khác
 
-Sau CHG-027 không còn `notification.add(..., {type: "danger"})` cho lỗi lưu/ghi trong
-`custom_addons/*/static/src`; chỉ còn hai toast danger có chủ đích của menu người
+Sau CHG-20261128-001 không còn `notification.add(..., {type: "danger"})` cho lỗi lưu/ghi/tải trong
+20 addon đã kiểm chứng (`custom_addons/*/static/src`); chỉ còn hai toast `danger` có chủ đích của menu người
 dùng (dòng đầu bảng).
 
 | Vị trí | Hiện trạng | Lý do |
 |---|---|---|
 | `tp_web_home` identity_service.js: đăng xuất, mở thông tin cá nhân từ menu người dùng | toast danger | thao tác từ menu trên cùng, không có form/màn để đặt khối lỗi; `user_menu_logout.test.js` khóa hành vi này |
 | Hồ sơ của tôi: chọn ảnh đại diện sai loại hoặc quá 5 MB | toast cảnh báo (`warning`), kiểm trước khi gửi | không có ô nhập để gắn lỗi; chưa chuyển |
-| `tp_reporting` person | lỗi riêng trong màn (`state.error`) | file đang có thay đổi chưa commit của tác vụ khác; chuyển sau khi tác vụ đó đóng |
-| `tp_equipment` (scan), `tp_hr_attendance` (upload, công của tôi), `tp_kd_workspace` (report center, table tools) | lỗi riêng trong màn (`state.error`), không toast danger | chưa đổi sang `InlineErrors`/`saveError`, nên câu chữ chưa theo bảng mục 4 |
+| `tp_reporting` person | lỗi riêng trong màn (`state.error`) | module đang có thay đổi chưa commit của phiên `CORP-REPORT-001`; chuyển sau khi tác vụ đó đóng |
 
 ## 8. Giới hạn đã biết
 

@@ -371,7 +371,7 @@ class AttendanceDay(models.Model):
         if not periods:
             return None, applied
         covered_to = max(periods)
-        stamp = fields.Datetime.context_timestamp(self.with_context(tz=self.env.user.tz or DEFAULT_TZ), applied[0].applied_at or applied[0].create_date)
+        stamp = fields.Datetime.context_timestamp(self.with_context(tz=DEFAULT_TZ), applied[0].applied_at or applied[0].create_date)
         return {'to': covered_to.strftime('%d/%m/%Y'), 'at': stamp.strftime('%d/%m/%Y %H:%M')}, applied
 
     @api.model

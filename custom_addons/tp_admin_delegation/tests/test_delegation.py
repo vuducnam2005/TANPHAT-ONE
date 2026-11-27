@@ -3,6 +3,35 @@ from odoo import Command, fields
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import TransactionCase, tagged
 
+from odoo.addons.tp_organization.models.code_format import (
+    CODE_MAX,
+    CODE_MIN,
+    code_aliases,
+    format_code,
+)
+
+
+def pick_free_employee_codes(env, count=1):
+    """Pick unused, non-retired TPnnn codes so fixtures never fail when TP999 is already reached."""
+    employee_model = env['hr.employee'].sudo().with_context(active_test=False)
+    picked = []
+    candidates = list(range(max(CODE_MIN, 100), CODE_MAX + 1)) + list(range(CODE_MIN, min(100, CODE_MAX + 1)))
+    for num in candidates:
+        code = format_code(num)
+        aliases = tuple(code_aliases(code))
+        if employee_model.search_count([('tp_employee_code', 'in', aliases)]):
+            continue
+        env.cr.execute(
+            'SELECT 1 FROM tp_hr_employee_audit WHERE employee_code IN %s OR new_code IN %s LIMIT 1',
+            [aliases, aliases],
+        )
+        if env.cr.fetchone() or employee_model._tp_code_retired(code):
+            continue
+        picked.append(code)
+        if len(picked) >= count:
+            return picked
+    raise AssertionError(f'Cannot find {count} free employee codes in TP001..TP999 for test setup.')
+
 
 @tagged('post_install', '-at_install')
 class DelegationCase(TransactionCase):
@@ -13,7 +42,9 @@ class DelegationCase(TransactionCase):
         sequence = employee_model._tp_code_sequence()
         cls.env.cr.execute('SELECT last_value, is_called FROM ir_sequence_%03d' % sequence.id)
         cls.addClassCleanup(cls._restore_employee_sequence, sequence.id, *cls.env.cr.fetchone())
-        employee_model._tp_reset_code_sequence(employee_model._tp_code_floor())
+        floor = employee_model._tp_code_floor()
+        if floor <= CODE_MAX:
+            employee_model._tp_reset_code_sequence(floor)
         cls.company = cls.env.company
         cls.admin = cls.env.ref('base.user_admin')
         cls.env['tp.admin.delegation']._migrate_admin_full_001()
@@ -31,6 +62,7 @@ class DelegationCase(TransactionCase):
             }
             for index in range(3)
         ])
+        free_codes = pick_free_employee_codes(cls.env, len(cls.users))
         cls.employees = cls.env['hr.employee'].create([
             {
                 'name': user.name,
@@ -38,6 +70,7 @@ class DelegationCase(TransactionCase):
                 'department_id': cls.departments[index].id,
                 'job_title': f'Chức danh nhân viên {index}',
                 'user_id': user.id,
+                'tp_employee_code': free_codes[index],
                 'date_version': fields.Date.today(),
             }
             for index, user in enumerate(cls.users)

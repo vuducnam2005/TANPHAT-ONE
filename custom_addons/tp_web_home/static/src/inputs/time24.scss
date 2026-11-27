@@ -1,0 +1,99 @@
+// F-A06-0005: Shared 24-hour time & datetime controls (@tp_web_home/inputs/time24)
+.tp-time24-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    flex-shrink: 0;
+
+    .tp-time24-select {
+        width: auto;
+        min-width: 68px;
+        height: var(--tp-input-h, 38px);
+        min-height: var(--tp-input-h, 38px);
+        padding: 4px 28px 4px 9px;
+        border: 1px solid var(--tp-input-border, #7a8ca5);
+        border-radius: var(--tp-radius-control, 7px);
+        background-color: var(--tp-input-bg, #ffffff);
+        color: var(--tp-input-text, #172b4d);
+        font-size: var(--tp-input-font, 14px);
+        font-variant-numeric: tabular-nums;
+        line-height: 1.3;
+        flex: 0 0 auto;
+
+        &:focus {
+            border-color: var(--tp-input-focus, #2563eb);
+            box-shadow: var(--tp-input-ring, 0 0 0 3px rgba(37, 99, 235, 0.22));
+            outline: none;
+        }
+
+        &.is-invalid {
+            border-color: var(--tp-input-error, #b91c1c);
+            background-color: var(--tp-input-error-bg, #fff7f7);
+        }
+
+        &:disabled {
+            background-color: var(--tp-input-disabled-bg, #e2e8f0);
+            color: var(--tp-input-disabled-text, #475569);
+            border-color: var(--tp-input-disabled-border, #a3b1c2);
+            cursor: not-allowed;
+        }
+    }
+
+    .tp-time24-sep {
+        font-weight: 700;
+        color: var(--tp-text-label, #334155);
+        user-select: none;
+        padding: 0 1px;
+    }
+}
+
+.tp-datetime24-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    width: 100%;
+    min-width: 0;
+
+    .tp-datetime24-date {
+        flex: 1 1 148px;
+        min-width: 142px;
+        height: var(--tp-input-h, 38px);
+        min-height: var(--tp-input-h, 38px);
+        padding: 4px 10px;
+        border: 1px solid var(--tp-input-border, #7a8ca5);
+        border-radius: var(--tp-radius-control, 7px);
+        background-color: var(--tp-input-bg, #ffffff);
+        color: var(--tp-input-text, #172b4d);
+        font-size: var(--tp-input-font, 14px);
+        font-variant-numeric: tabular-nums;
+
+        &:focus {
+            border-color: var(--tp-input-focus, #2563eb);
+            box-shadow: var(--tp-input-ring, 0 0 0 3px rgba(37, 99, 235, 0.22));
+            outline: none;
+        }
+
+        &.is-invalid {
+            border-color: var(--tp-input-error, #b91c1c);
+            background-color: var(--tp-input-error-bg, #fff7f7);
+        }
+
+        &:disabled {
+            background-color: var(--tp-input-disabled-bg, #e2e8f0);
+            color: var(--tp-input-disabled-text, #475569);
+            border-color: var(--tp-input-disabled-border, #a3b1c2);
+            cursor: not-allowed;
+        }
+    }
+}
+
+@media (max-width: 767.98px) {
+    .tp-time24-field .tp-time24-select,
+    .tp-datetime24-field .tp-datetime24-date {
+        min-height: 44px;
+        height: 44px;
+        font-size: 16px;
+    }
+}

@@ -226,6 +226,7 @@ class AttendancePeriod(models.Model):
     pending_count = fields.Integer('Đề nghị chờ duyệt', compute='_compute_tp_counts')
     amend_count = fields.Integer('Đính chính sau chốt', compute='_compute_tp_counts')
     can_lock = fields.Boolean('Được chốt/mở kỳ', compute='_compute_tp_counts')
+    tp_can_lock = fields.Boolean('Được chốt/mở kỳ (giao diện)', compute='_compute_tp_counts')
 
     _dates_valid = models.Constraint('CHECK(date_from <= date_to)', 'Ngày kết thúc kỳ phải sau ngày bắt đầu.')
 
@@ -235,7 +236,9 @@ class AttendancePeriod(models.Model):
         Day = self.env['tp.hr.attendance.day'].sudo()
         Correction = self.env['tp.hr.attendance.correction'].sudo()
         for period in self:
-            period.can_lock = bool(period.company_id) and can(self.env, 'lock', period.company_id)
+            allowed = bool(period.company_id) and can(self.env, 'lock', period.company_id)
+            period.can_lock = allowed
+            period.tp_can_lock = allowed
             if not (period.company_id and period.date_from and period.date_to):
                 period.update({'day_count': 0, 'ok_count': 0, 'missing_count': 0, 'review_count': 0, 'pending_count': 0, 'amend_count': 0})
                 continue

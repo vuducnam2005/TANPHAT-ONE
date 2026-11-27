@@ -709,6 +709,36 @@ const TABLE_CONTENT = {
         "",
         "Chưa có dữ liệu đi muộn",
     ],
+    "tp.bank": [
+        "Danh mục ngân hàng",
+        "Danh sách ngân hàng chuẩn NAPAS/VietQR phục vụ khai báo tài khoản nhận lương.",
+        "Thêm ngân hàng",
+        "Chưa có ngân hàng trong danh mục",
+    ],
+    "tp.hr.contract.document": [
+        "Hồ sơ hợp đồng nhân sự",
+        "Quản lý hồ sơ giấy tờ hợp đồng lao động, thuê khoán và tệp bằng chứng đính kèm.",
+        "Thêm hồ sơ hợp đồng",
+        "Chưa có hồ sơ hợp đồng nhân sự",
+    ],
+    "hr.skill.type": [
+        "Loại kỹ năng và cấp độ",
+        "Danh mục nhóm kỹ năng và chứng chỉ hành nghề dùng trong hồ sơ năng lực.",
+        "Thêm loại kỹ năng",
+        "Chưa có loại kỹ năng",
+    ],
+    "hr.resume.line.type": [
+        "Loại hồ sơ năng lực",
+        "Phân loại quá trình công tác, đào tạo và bằng cấp của nhân sự.",
+        "Thêm loại năng lực",
+        "Chưa có loại hồ sơ năng lực",
+    ],
+    "hr.version": [
+        "Phiên bản hồ sơ nhân sự",
+        "Lịch sử các mốc hiệu lực công tác và thời hạn hợp đồng trên hồ sơ nhân viên.",
+        "",
+        "Chưa có phiên bản hồ sơ",
+    ],
 };
 
 export class HrListController extends ListController {
@@ -752,6 +782,15 @@ export class HrListController extends ListController {
 
     get isReadonlyDirectory() {
         return this.props.resModel === "hr.employee.public" && !this.activeActions?.edit;
+    }
+
+    async openRecord(record, mode) {
+        // DEC-065: Clicking one's own row in the public employee list opens self-editable My Profile directly.
+        if (this.props.resModel === "hr.employee.public" && record?.data?.is_user && !this.env.inDialog) {
+            await this.actionService.doAction("tp_hr_workspace.action_my_profile");
+            return;
+        }
+        return super.openRecord(record, mode);
     }
 
     get className() {

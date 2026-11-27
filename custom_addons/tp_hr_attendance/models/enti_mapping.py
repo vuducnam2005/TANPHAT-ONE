@@ -14,7 +14,17 @@ from datetime import timedelta
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
 
+from .attendance_common import DEFAULT_TZ, can_manage_enti_images, local_today
+
 SEEN_REFRESH = timedelta(hours=1)
+_AUTO_REASON_PREFIXES = (
+    "ENTI không trả họ tên",
+    "Không có nhân viên Odoo nào trùng chính xác",
+    "Khớp chính xác họ tên",
+    "Họ tên trùng",
+    "Có ",
+    "Bị từ chối đối chiếu tự động",
+)
 
 
 def _norm(name):
@@ -84,7 +94,7 @@ class AttendanceEntiMapping(models.Model):
         required=True,
         index=True,
     )
-    match_reason = fields.Char("Căn cứ đối chiếu / Lý do", readonly=True)
+    match_reason = fields.Char("Căn cứ đối chiếu / Lý do")
     last_seen_at = fields.Datetime("Lần thấy gần nhất", readonly=True)
     active = fields.Boolean("Đang theo dõi", default=True)
 
@@ -138,7 +148,7 @@ class AttendanceEntiMapping(models.Model):
         by_pair = {}
         if source_ids and keys:
             for img in ImageModel.search([("source_id", "in", source_ids), ("key_nv", "in", keys)]):
-                by_pair[(img.source_id.id, img.key_nv)] = img
+                by_pair[img.source_id.id, img.key_nv] = img
         for rec in self:
             img = by_pair.get((rec.source_id.id, rec.key_nv))
             rec.image_record_id = img.id if img else False
@@ -156,7 +166,6 @@ class AttendanceEntiMapping(models.Model):
             rec.image_error = img.error_message if img else False
 
     def _check_hr_manager(self):
-        from .enti_image import can_manage_enti_images
         if not can_manage_enti_images(self.env, self.company_id[:1] if self else self.env.company):
             raise AccessError(self.env._("Chỉ Quản lý nhân sự hoặc Admin mới được đối chiếu nhân viên."))
 
@@ -172,8 +181,8 @@ class AttendanceEntiMapping(models.Model):
     def action_confirm_mapping(self):
         """Confirm suggestion or manual mapping; the confirming manager is recorded as the evidence owner."""
         self._check_hr_manager()
-        reason = self.env.context.get("tp_mapping_reason")
-        today = fields.Date.context_today(self)
+        ctx_reason = (self.env.context.get("tp_mapping_reason") or "").strip()
+        today = local_today(DEFAULT_TZ)
         for rec in self:
             if not rec.employee_id:
                 raise UserError(self.env._("Vui lòng chọn nhân viên Odoo trước khi xác nhận."))
@@ -188,9 +197,11 @@ class AttendanceEntiMapping(models.Model):
                     "%(employee)s đã gắn với mã ENTI %(code)s (%(name)s). Gỡ đối chiếu đó trước khi gắn mã khác.",
                     employee=rec.employee_id.name, code=clash.ma_nv or clash.key_nv, name=clash.ten_nv,
                 ))
+            typed = (rec.match_reason or "").strip()
+            manual_reason = typed if (typed and not typed.startswith(_AUTO_REASON_PREFIXES)) else ""
             rec.write({
                 "state": "mapped",
-                "match_reason": reason or self.env._(
+                "match_reason": ctx_reason or manual_reason or self.env._(
                     "%(user)s xác nhận đối chiếu ngày %(day)s.", user=self.env.user.name, day=today.strftime("%d/%m/%Y"),
                 ),
             })

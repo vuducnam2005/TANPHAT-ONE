@@ -148,3 +148,12 @@ registerTableFilterProfile("tp.hr.contract.document", {
         { key: "signed_date", field: "signed_date", label: "Ngày ký", type: "date" },
     ],
 });
+
+registerTableFilterProfile("tp.bank", {
+    criteria: [
+        { key: "short_name", field: "short_name", label: "Ngân hàng / Mã / BIN", type: "char", placeholder: "Tìm tên, mã hoặc BIN…" },
+        { key: "kind", field: "kind", label: "Phân loại", type: "selection", multi: true },
+        { key: "napas_transfer", field: "napas_transfer", label: "Chuyển nhanh NAPAS", type: "boolean", positiveLabel: "Hỗ trợ NAPAS", negativeLabel: "Chưa hỗ trợ" },
+        { key: "active", field: "active", label: "Trạng thái", type: "boolean", positiveLabel: "Đang dùng", negativeLabel: "Ngừng dùng" },
+    ],
+});

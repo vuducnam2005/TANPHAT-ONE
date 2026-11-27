@@ -82,7 +82,7 @@
                     </div>
                     <button type="button"
                             class="o_tp_web_home_panel_close cursor-interaction"
-                            title="Đóng danh sách"
+                            title="Đóng danh sách ứng dụng"
                             aria-label="Đóng danh sách ứng dụng"
                             t-on-click="this.closePanel">
                         <svg class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -106,7 +106,7 @@
                     <button t-if="this.panelQuery()"
                             type="button"
                             class="o_tp_web_home_search_clear cursor-interaction"
-                            title="Xóa từ khóa"
+                            title="Xóa từ khóa tìm ứng dụng"
                             aria-label="Xóa từ khóa tìm ứng dụng"
                             t-on-click="this.clearPanelSearch">
                         <svg class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -177,6 +177,7 @@
                     </div>
                     <button type="button"
                             class="o_tp_web_home_panel_close cursor-interaction"
+                            title="Đóng menu điều hướng"
                             aria-label="Đóng menu điều hướng"
                             t-ref="this.navCloseBtn"
                             t-on-click="this.closeNavDrawer">
@@ -227,6 +228,7 @@
                     <h2 id="tp_home_help_title" class="o_tp_web_home_panel_title">Hướng dẫn Trang chủ TANPHAT ONE</h2>
                     <button type="button"
                             class="o_tp_web_home_panel_close cursor-interaction"
+                            title="Đóng hướng dẫn"
                             aria-label="Đóng hướng dẫn"
                             t-ref="this.helpCloseBtn"
                             t-on-click="this.closeHelp">
@@ -291,6 +293,7 @@
                     </div>
                     <button type="button"
                             class="o_tp_web_home_panel_close cursor-interaction"
+                            title="Đóng danh sách hôm nay"
                             aria-label="Đóng danh sách hôm nay"
                             t-ref="this.agendaCloseBtn"
                             t-on-click="this.closeAgendaModal">
@@ -415,7 +418,7 @@
                             <button t-if="this.query()"
                                     type="button"
                                     class="o_tp_web_home_search_clear"
-                                    title="Xóa từ khóa"
+                                    title="Xóa từ khóa tìm"
                                     aria-label="Xóa từ khóa tìm"
                                     t-on-click="this.clearSearch">
                                 <svg class="tp-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -568,7 +571,7 @@
                 <t t-call="tp_web_home.AgendaAllModal"/>
 
                 <main class="tp-home-main">
-                    <InlineErrors t-if="this.actionError()" error="this.actionError()"/>
+                    <InlineErrors t-if="this.actionError()" errors="[]" server="this.actionError()"/>
 
                     <div t-if="this.menuState() === 'loading'" class="o_tp_web_home_loading" aria-busy="true">
                         <div class="tp-skeleton-banner"/>
@@ -914,7 +917,7 @@
                                     <div t-if="this.dashboard().charts?.status === 'loading'" class="tp-chart-skeleton" aria-busy="true"/>
                                     <div t-elif="this.dashboard().charts?.status === 'ok' and (this.dashboard().charts?.bar?.rows?.length || 0) &gt; 0"
                                          class="tp-bar-layout">
-                                        <div class="tp-bar-scroll">
+                                        <div class="tp-bar-scroll" t-att-class="{ 'has-scroll': this.barCanvasNeedsScroll() }">
                                             <div class="tp-bar-canvas-box" t-attf-style="min-width: {{this.barCanvasMinWidth()}};">
                                                 <canvas t-ref="this.barChart.ref" role="img" t-att-aria-label="this.barChartTitle()"/>
                                             </div>

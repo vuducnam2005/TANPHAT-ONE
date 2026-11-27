@@ -38,6 +38,7 @@ from odoo.addons.tp_hr_attendance.models.enti_client import EntiClient, EntiErro
 from odoo.addons.tp_hr_attendance.models.enti_image import (
     detect_magic_mime,
     parse_image_value,
+    redact_image_url,
     sanitize_employee_metadata,
     validate_and_normalize_image,
 )
@@ -88,8 +89,23 @@ class _FakeImageSession:
         self.routes = routes
         self.calls = []
 
-    def request(self, method, url, json=None, params=None, headers=None, timeout=None, stream=False):
-        self.calls.append({"method": method, "url": url, "headers": headers or {}})
+    def request(
+        self,
+        method,
+        url,
+        json=None,
+        params=None,
+        headers=None,
+        timeout=None,
+        stream=False,
+        allow_redirects=True,
+    ):
+        self.calls.append({
+            "method": method,
+            "url": url,
+            "headers": dict(headers or {}),
+            "allow_redirects": allow_redirects,
+        })
         handler = self.routes.get(url)
         if callable(handler):
             res = handler()
@@ -146,6 +162,58 @@ class TestEntiImagePure(BaseCase):
         self.assertNotIn("cookie", meta)
         self.assertNotIn("day1", meta)
         self.assertTrue(meta["anh"].startswith("<base64:image/jpeg:42B:"))
+
+        # URL redaction strips userinfo, query tokens, and fragments before storage
+        self.assertEqual(
+            redact_image_url("https://user:secret@enti.invalid/avatars/a.jpg?token=SECRET_TOK#frag"),
+            "https://enti.invalid/avatars/a.jpg",
+        )
+        meta_url = json.loads(sanitize_employee_metadata({
+            "keyNV": "k2",
+            "anh": "https://enti.invalid/avatars/a.jpg?access_token=SECRET_Q",
+            "profileLink": "https://enti.invalid/u/k2?sig=SECRET_SIG#top",
+        }, image_field="anh", image_source="url"))
+        self.assertTrue(meta_url["anh"].startswith("<url:"))
+        self.assertNotIn("SECRET_Q", meta_url["anh"])
+        self.assertEqual(meta_url["profileLink"], "https://enti.invalid/u/k2")
+
+    def test_download_image_ssrf_redirect_and_bearer_host_isolation(self):
+        jpg_raw = _make_image_bytes(color=(30, 60, 90), fmt="JPEG")
+        routes = {
+            f"{ENTI_BASE}/avatars/redir-cdn": _FakeBinaryResponse(
+                302,
+                headers={"Location": "https://cdn.enti.invalid/img/final.jpg"},
+            ),
+            "https://cdn.enti.invalid/img/final.jpg": _FakeBinaryResponse(
+                200,
+                content=jpg_raw,
+                headers={"Content-Type": "image/jpeg"},
+            ),
+            f"{ENTI_BASE}/avatars/redir-ssrf": _FakeBinaryResponse(
+                302,
+                headers={"Location": "http://169.254.169.254/latest/meta-data/"},
+            ),
+        }
+        client = EntiClient(base_url=ENTI_BASE)
+        client.session = _FakeImageSession(routes)
+        client.access_token = "SECRET_BEARER"
+
+        raw, mime = client.download_image(
+            f"{ENTI_BASE}/avatars/redir-cdn",
+            allowed_hosts=["enti.invalid"],
+        )
+        self.assertEqual((raw, mime), (jpg_raw, "image/jpeg"))
+        self.assertEqual(len(client.session.calls), 2)
+        first_call, second_call = client.session.calls
+        self.assertFalse(first_call["allow_redirects"])
+        self.assertFalse(second_call["allow_redirects"])
+        self.assertEqual(first_call["headers"].get("Authorization"), "Bearer SECRET_BEARER")
+        self.assertNotIn("Authorization", second_call["headers"])
+
+        client.session.calls.clear()
+        with self.assertRaises(EntiError):
+            client.download_image(f"{ENTI_BASE}/avatars/redir-ssrf", allowed_hosts=["enti.invalid"])
+        self.assertEqual([c["url"] for c in client.session.calls], [f"{ENTI_BASE}/avatars/redir-ssrf"])
 
 
 @tagged("post_install", "-at_install")
@@ -506,11 +574,13 @@ class TestEntiImageSync(AttendanceCase):
         act = self.env.ref("tp_hr_attendance.action_enti_employee_images")
         self.assertEqual(act.path, "cham-cong-anh-enti")
 
-        # Admin & HR Manager can search_read
+        # Admin & HR Manager can search_read, while direct UI write/unlink is blocked (only internal sync / apply action writes)
         admin_rows = self.env_for(admin)["tp.hr.attendance.enti.employee.image"].search_read([], ["key_nv", "state"])
         mgr_rows = self.env_for(self.manager)["tp.hr.attendance.enti.employee.image"].search_read([], ["key_nv", "state"])
         self.assertTrue(admin_rows)
         self.assertEqual(len(admin_rows), len(mgr_rows))
+        with self.assertRaises(AccessError):
+            self.env_for(self.manager)["tp.hr.attendance.enti.employee.image"].browse(mgr_rows[0]["id"]).write({"ten_nv": "Forged"})
 
         # Attendance Officer can read but cannot unlink/create
         att_officer_grp = self.env.ref("tp_hr_attendance.group_attendance_officer")

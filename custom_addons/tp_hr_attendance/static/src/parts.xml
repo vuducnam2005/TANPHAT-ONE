@@ -23,9 +23,9 @@
                 <option t-foreach="this.sizes" t-as="size" t-key="size" t-att-value="size" t-att-selected="size === this.props.data.page_size"><t t-out="size"/> / trang</option>
             </select>
         </label>
-        <button type="button" class="o_tp_att_icon_btn" t-att-disabled="this.props.data.page &lt;= 1" t-on-click="() => this.props.onPage(this.props.data.page - 1)" aria-label="Trang trước"><i class="oi" data-icon="chevron_backward" aria-hidden="true"/></button>
+        <button type="button" class="o_tp_att_icon_btn" t-att-disabled="this.props.data.page &lt;= 1" t-on-click="() => this.props.onPage(this.props.data.page - 1)" aria-label="Trang trước" title="Trang trước"><i class="oi" data-icon="chevron_backward" aria-hidden="true"/></button>
         <span><t t-out="this.props.data.page"/> / <t t-out="this.props.data.page_count"/></span>
-        <button type="button" class="o_tp_att_icon_btn" t-att-disabled="this.props.data.page &gt;= this.props.data.page_count" t-on-click="() => this.props.onPage(this.props.data.page + 1)" aria-label="Trang sau"><i class="oi" data-icon="chevron_forward" aria-hidden="true"/></button>
+        <button type="button" class="o_tp_att_icon_btn" t-att-disabled="this.props.data.page &gt;= this.props.data.page_count" t-on-click="() => this.props.onPage(this.props.data.page + 1)" aria-label="Trang sau" title="Trang sau"><i class="oi" data-icon="chevron_forward" aria-hidden="true"/></button>
     </nav>
 </t>
 
@@ -81,18 +81,18 @@
 
 <t t-name="tp_hr_attendance.PersonDialog">
     <Dialog title="'Giờ theo ngày'" size="'lg'" contentClass="'o_tp_att_dialog'">
-        <div t-if="this.state.error" class="alert alert-danger" role="alert" t-out="this.state.error"/>
-        <p t-elif="!this.state.data" role="status">Đang tải…</p>
-        <PersonDetail t-else="" data="this.state.data"/>
+        <InlineErrors errors="[]" server="this.state.serverError" attempt="this.state.attempt"/>
+        <p t-if="!this.state.data and !this.state.serverError" role="status">Đang tải…</p>
+        <PersonDetail t-elif="this.state.data" data="this.state.data"/>
         <t t-set-slot="footer"><button class="btn btn-outline-secondary" t-on-click="() => this.props.close()">Đóng</button></t>
     </Dialog>
 </t>
 
 <t t-name="tp_hr_attendance.LateDialog">
     <Dialog title="'Tổng đi muộn kỳ ' + this.props.label" size="'lg'" contentClass="'o_tp_att_dialog'">
-        <div t-if="this.state.error" class="alert alert-danger" role="alert" t-out="this.state.error"/>
-        <p t-elif="!this.state.data" role="status">Đang tải…</p>
-        <t t-else="">
+        <InlineErrors errors="[]" server="this.state.serverError" attempt="this.state.attempt"/>
+        <p t-if="!this.state.data and !this.state.serverError" role="status">Đang tải…</p>
+        <t t-elif="this.state.data">
             <p class="o_tp_att_source_note" t-out="this.state.data.late_source or 'Chưa có tổng đúng kỳ này.'"/>
             <p class="o_tp_att_muted">Tổng cả kỳ của tệp máy, không chia theo ngày. Bộ lọc ngày trên bảng giữ nguyên.</p>
             <PeriodTable rows="this.state.data.rows" onPerson="(row) => this.openPerson(row)"/>

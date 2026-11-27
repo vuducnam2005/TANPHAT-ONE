@@ -3,13 +3,12 @@
 
 <t t-name="tp_hr_attendance.Mine">
 <section class="o_tp_att o_tp_att_mine" t-att-class="{'o_tp_att_embedded': this.isEmbedded, 'o_tp_mine_loading': this.state.loading and !!this.data}" aria-label="Công của tôi" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
-    <div t-if="this.state.error" class="alert alert-danger o_tp_mine_alert" role="alert">
-        <i class="oi" data-icon="error_outline" aria-hidden="true"/>
-        <span t-out="this.state.error"/>
-        <button type="button" class="btn btn-link btn-sm p-0 ms-auto" t-on-click="() => this.load()">Thử lại</button>
+    <InlineErrors errors="[]" server="this.state.serverError" attempt="this.state.attempt"/>
+    <div t-if="this.state.serverError and !this.data" class="d-flex justify-content-end">
+        <button type="button" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.load()">Thử lại</button>
     </div>
 
-    <div t-if="!this.data and !this.state.error" class="o_tp_mine_skeleton" role="status" aria-label="Đang tải công cá nhân">
+    <div t-if="!this.data and !this.state.serverError" class="o_tp_mine_skeleton" role="status" aria-label="Đang tải công cá nhân">
         <div class="o_tp_mine_skel_bar"/>
         <div class="o_tp_mine_skel_summary">
             <div class="o_tp_mine_skel_card"/>
@@ -69,6 +68,10 @@
                 <span t-out="this.rangeBannerText"/>
             </div>
             <div class="o_tp_mine_actions">
+                <button type="button" class="btn btn-sm o_tp_mine_btn_tertiary" t-on-click="() => this.openStandalone()">
+                    <i class="oi" data-icon="open_in_new" aria-hidden="true"/>
+                    <span>Mở toàn màn hình</span>
+                </button>
                 <button type="button" class="btn btn-sm o_tp_mine_btn_tertiary" t-on-click="() => this.openRequests()">
                     <i class="oi" data-icon="receipt_long" aria-hidden="true"/>
                     <span>Yêu cầu của tôi</span>
@@ -343,6 +346,14 @@
                             <tr t-if="row.has_detail and this.isExpanded(row.date)" class="o_tp_mine_detail_row">
                                 <td t-att-colspan="this.anyRowHasDetail ? 5 : 4">
                                     <div class="o_tp_mine_detail_panel">
+                                        <div t-if="row.conflict_note" class="alert alert-warning py-2 px-3 mb-0 small" role="status">
+                                            <i class="oi me-1" data-icon="warning" aria-hidden="true"/>
+                                            <t t-out="row.conflict_note"/>
+                                        </div>
+                                        <div t-elif="row.leave_note" class="alert alert-info py-2 px-3 mb-0 small" role="status">
+                                            <i class="oi me-1" data-icon="event_available" aria-hidden="true"/>
+                                            <t t-out="row.leave_note"/>
+                                        </div>
                                         <div class="o_tp_mine_detail_meta">
                                             <span t-if="row.source" class="o_tp_mine_detail_tag">
                                                 <i class="oi" data-icon="description" aria-hidden="true"/>
@@ -446,11 +457,15 @@
             <div class="row g-3 mb-3">
                 <div class="col-6">
                     <label for="tp_att_correction_in" class="form-label fw-semibold">Giờ vào đề nghị <span class="text-danger">*</span></label>
-                    <input id="tp_att_correction_in" type="time" class="form-control" t-model.proxy="this.state.requestedIn" t-att-disabled="this.state.busy"/>
+                    <TpTime24Field id="'tp_att_correction_in'" value="this.state.requestedIn"
+                        invalid="this.hasFieldError('in')" disabled="Boolean(this.state.busy)" stepMinutes="1"
+                        onChange="(val) => { this.state.requestedIn = val; }"/>
                 </div>
                 <div class="col-6">
                     <label for="tp_att_correction_out" class="form-label fw-semibold">Giờ ra đề nghị <span class="text-danger">*</span></label>
-                    <input id="tp_att_correction_out" type="time" class="form-control" t-model.proxy="this.state.requestedOut" t-att-disabled="this.state.busy"/>
+                    <TpTime24Field id="'tp_att_correction_out'" value="this.state.requestedOut"
+                        invalid="this.hasFieldError('out')" disabled="Boolean(this.state.busy)" stepMinutes="1"
+                        onChange="(val) => { this.state.requestedOut = val; }"/>
                 </div>
             </div>
             <div class="mb-3">
@@ -463,9 +478,12 @@
                 <input id="tp_att_correction_evidence" type="file" class="form-control" t-ref="this.evidenceInput"
                     t-on-change="(ev) => this.onFileChange(ev)" t-att-disabled="this.state.busy or this.state.readingFile"/>
                 <div t-if="this.state.evidenceName" class="d-flex align-items-center gap-2 mt-1 small text-muted">
-                    <span>Tệp đã chọn: <strong t-out="this.state.evidenceName"/></span>
+                    <span>Tệp minh chứng: <strong t-out="this.state.evidenceName"/></span>
                     <button type="button" class="btn btn-link btn-sm p-0 text-danger"
                         t-att-disabled="this.state.busy or this.state.readingFile" t-on-click="() => this.clearFile()">Bỏ tệp</button>
+                </div>
+                <div t-elif="this.props.request?.has_evidence" class="mt-1 small text-muted">
+                    <span>Đang có tệp minh chứng đã lưu trên phiếu. Chọn tệp mới nếu muốn thay thế.</span>
                 </div>
             </div>
         </div>
@@ -506,5 +524,13 @@
             </button>
         </t>
     </Dialog>
+</t>
+
+<t t-name="tp_hr_attendance.MyProfileAttendanceTab" t-inherit="tp_hr_workspace.MyProfile" t-inherit-mode="extension">
+    <xpath expr="//div[hasclass('tab-content')]" position="inside">
+        <div t-if="this.state.activeTab === 'attendance'" class="tab-pane active show">
+            <MyAttendance embedded="true"/>
+        </div>
+    </xpath>
 </t>
 </templates>

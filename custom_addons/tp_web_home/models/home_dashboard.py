@@ -301,14 +301,24 @@ class ResUsersHomeDashboard(models.Model):
                 return ws.action_employees({"status": "active"})
             if hasattr(ws, "action_public_employees"):
                 return ws.action_public_employees({})
+        fallback_xmlids = {
+            "hr.employee": ("tp_hr_workspace.action_employees", "hr.open_view_employee_list_my"),
+            "hr.employee.public": ("tp_hr_workspace.action_directory",),
+        }
         for model_name in ("hr.employee", "hr.employee.public"):
             if model_name in self.env and self.env[model_name].sudo(False).has_access("read"):
+                dom = [("company_id", "=", company.id), ("active", "=", True)]
+                for xmlid in fallback_xmlids.get(model_name, ()):
+                    if self.env.ref(xmlid, raise_if_not_found=False):
+                        action = self.env["ir.actions.actions"]._for_xml_id(xmlid)
+                        action["domain"] = dom
+                        return action
                 return {
                     "type": "ir.actions.act_window",
                     "name": "Danh sách nhân viên",
                     "res_model": model_name,
                     "view_mode": "list,form",
-                    "domain": [("company_id", "=", company.id), ("active", "=", True)],
+                    "domain": dom,
                 }
         raise AccessError(self.env._("Bạn không có quyền mở danh sách nhân sự."))
 
@@ -508,6 +518,15 @@ class ResUsersHomeDashboard(models.Model):
                 "create": False,
             }
             return action
+        for xmlid in (
+            "tp_equipment.action_equipment_stock",
+            "tp_equipment.action_equipment",
+            "maintenance.hr_equipment_action",
+        ):
+            if self.env.ref(xmlid, raise_if_not_found=False):
+                action = self.env["ir.actions.actions"]._for_xml_id(xmlid)
+                action["domain"] = [("company_id", "in", [False, company.id])]
+                return action
         return {
             "type": "ir.actions.act_window",
             "name": "Thiết bị tồn kho",
@@ -795,17 +814,31 @@ class ResUsersHomeDashboard(models.Model):
             raise AccessError(self.env._("Phân hệ Lịch làm việc chưa được cài đặt."))
         events, today_local, _tz, _tz_name = self._tp_home_collect_today_calendar_events()
         event_ids = [ev.id for ev in events]
+        title = f"Lịch hẹn hôm nay · {today_local.strftime('%d/%m/%Y')}"
+        ctx = {
+            "default_mode": "day",
+            "initial_date": today_local.isoformat(),
+        }
+        if self.env.ref("calendar.action_calendar_event", raise_if_not_found=False):
+            action = self.env["ir.actions.actions"]._for_xml_id("calendar.action_calendar_event")
+            base_ctx = action.get("context") if isinstance(action.get("context"), dict) else {}
+            action.update(
+                name=title,
+                res_model="calendar.event",
+                view_mode="calendar,list,form",
+                views=[(False, "calendar"), (False, "list"), (False, "form")],
+                domain=[("id", "in", event_ids)],
+                context={**base_ctx, **ctx},
+            )
+            return action
         return {
             "type": "ir.actions.act_window",
-            "name": f"Lịch hẹn hôm nay · {today_local.strftime('%d/%m/%Y')}",
+            "name": title,
             "res_model": "calendar.event",
             "view_mode": "calendar,list,form",
             "views": [(False, "calendar"), (False, "list"), (False, "form")],
             "domain": [("id", "in", event_ids)],
-            "context": {
-                "default_mode": "day",
-                "initial_date": today_local.isoformat(),
-            },
+            "context": ctx,
         }
 
     @api.model
@@ -1729,6 +1762,23 @@ class ResUsersHomeDashboard(models.Model):
                 },
             )
             return action
+        for xmlid in (
+            "project_todo.project_task_action_todo",
+            "tp_kd_workspace.action_tasks",
+            "project.action_view_my_task",
+        ):
+            if self.env.ref(xmlid, raise_if_not_found=False):
+                action = self.env["ir.actions.actions"]._for_xml_id(xmlid)
+                base_ctx = action.get("context") if isinstance(action.get("context"), dict) else {}
+                action.update(
+                    name=title,
+                    res_model="project.task",
+                    view_mode="list,form",
+                    views=[(False, "list"), (False, "form")],
+                    domain=[("id", "in", matched_ids)],
+                    context={**base_ctx, "create": False},
+                )
+                return action
         return {
             "type": "ir.actions.act_window",
             "name": title,

@@ -27,12 +27,12 @@
             </p>
         </div>
 
-        <div t-if="this.state.error" class="alert alert-danger o_tp_att_gd_error" role="alert">
-            <t t-out="this.state.error"/>
-            <button type="button" class="btn btn-sm btn-outline-danger ms-2" t-on-click="() => this.load()">Thử lại</button>
+        <div t-if="this.state.serverError" class="o_tp_att_gd_error">
+            <InlineErrors errors="[]" server="this.state.serverError" attempt="this.state.attempt"/>
+            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" t-on-click="() => this.load()">Thử lại</button>
         </div>
-        <p t-elif="!this.data" role="status" class="o_tp_att_loading">Đang tải danh sách…</p>
-        <t t-else="">
+        <p t-if="!this.data and !this.state.serverError" role="status" class="o_tp_att_loading">Đang tải danh sách…</p>
+        <t t-elif="this.data">
             <p t-if="!this.data.live_ok and this.state.group !== 'unknown'" class="o_tp_att_gd_warn" role="status">
                 <i class="oi me-1" data-icon="schedule" aria-hidden="true"/>Chưa nhận được dữ liệu mới từ nguồn chấm công; người chưa có lượt chấm được tính là Chưa xác định.
             </p>

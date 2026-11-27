@@ -4,7 +4,7 @@
     'description': 'Native glossary overlay, missing Vietnamese client/server messages '
                    'and calendar locale correction. No business model or access rule. See README.md.',
     'author': 'Tan Phat JSC',
-    'version': '20.0.1.1.2',
+    'version': '20.0.1.1.3',
     'license': 'LGPL-3',
     # every module whose terms the catalog overrides: loaded after them in topological order
     'depends': [

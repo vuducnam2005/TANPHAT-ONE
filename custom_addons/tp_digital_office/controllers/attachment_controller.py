@@ -1,11 +1,11 @@
 # Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
 """ACL-checked upload & download controller for tp.announcement and tp.meeting.minute."""
 import base64
-import json
 
 from odoo import Command, http
 from odoo.exceptions import AccessError
 from odoo.http import request
+from odoo.http.stream import content_disposition
 
 
 class TpDigitalOfficeAttachmentController(http.Controller):
@@ -74,7 +74,7 @@ class TpDigitalOfficeAttachmentController(http.Controller):
         headers = [
             ('Content-Type', att.mimetype or 'application/octet-stream'),
             ('Content-Length', str(len(raw))),
-            ('Content-Disposition', f'attachment; filename="{att.name}"'),
+            ('Content-Disposition', content_disposition(att.name or f'tai-lieu-{att.id}')),
             ('X-Content-Type-Options', 'nosniff'),
         ]
         return request.make_response(raw, headers=headers)

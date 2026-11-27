@@ -2,6 +2,7 @@
 """Expose dynamic XML ID <-> Action ID route map in session_info (SYSTEM-URL-001)."""
 
 from odoo import models
+
 from odoo.addons.tp_branding.brand_routes import get_all_action_xml_ids
 
 
@@ -44,6 +45,6 @@ class IrHttp(models.AbstractModel):
         res = super().session_info()
         try:
             res['tp_action_routes'] = self._tp_get_url_route_map()
-        except Exception:
+        except Exception:  # noqa: BLE001
             res['tp_action_routes'] = {'xml_to_id': {}, 'id_to_xml': {}}
         return res

@@ -1,7 +1,7 @@
 # Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
 """E1-E6: Project WBS, DAG Critical Path Method (CPM), Weighted Progress Rollup, Baselines, and Allocation Settlement."""
-from collections import defaultdict, deque
 import json
+from collections import defaultdict, deque
 
 from odoo import Command, _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
@@ -265,10 +265,19 @@ class ProjectEnterpriseWbs(models.Model):
 
     @api.model
     def tp_wbs_workspace_data(self, project_id=0):
-        projs = self.search([('company_id', '=', self.env.company.id)], order='tp_code asc, name asc', limit=100)
+        projs = self.search([
+            ('company_id', '=', self.env.company.id),
+            ('tp_managed', '=', True),
+        ], order='tp_code asc, name asc', limit=100)
         selected = projs.filtered(lambda p: p.id == int(project_id or 0))[:1] or projs[:1]
         if not selected:
-            return {'projects': [], 'selected_project': None, 'tasks': [], 'baselines': [], 'logs': []}
+            return {'projects': [], 'selected_project': None, 'can_manage_wbs': False, 'tasks': [], 'baselines': [], 'logs': []}
+
+        try:
+            selected._tp_check_pm_or_admin()
+            can_manage_wbs = True
+        except AccessError:
+            can_manage_wbs = False
 
         tasks = self.env['project.task'].search([('project_id', '=', selected.id)], order='tp_wbs_code asc, sequence asc, id asc')
         task_rows = []
@@ -327,6 +336,7 @@ class ProjectEnterpriseWbs(models.Model):
                 'cpm_duration_days': selected.tp_cpm_duration_days,
                 'cpm_data_ready': selected.tp_cpm_data_ready,
             },
+            'can_manage_wbs': can_manage_wbs,
             'tasks': task_rows,
             'baselines': baselines,
             'logs': logs,
@@ -407,8 +417,8 @@ class TpProjectBaseline(models.Model):
     _description = 'Snapshot Baseline Kế hoạch & Đường găng Dự án'
     _order = 'version desc, id desc'
 
-    project_id = fields.Many2one('project.project', required=True, ondelete='cascade', index=True)
-    company_id = fields.Many2one(related='project_id.company_id', store=True, index=True)
+    project_id = fields.Many2one('project.project', required=True, ondelete='cascade', index=True, string='Dự án')
+    company_id = fields.Many2one(related='project_id.company_id', store=True, index=True, string='Công ty')
     version = fields.Integer(string='Phiên bản Baseline', required=True, readonly=True)
     name = fields.Char(string='Tên Baseline', required=True, readonly=True)
     reason = fields.Text(string='Ghi chú / căn cứ chốt', readonly=True)
@@ -422,9 +432,9 @@ class TpProjectMilestoneLog(models.Model):
     _description = 'Nhật ký điều chỉnh mốc tiến độ dự án'
     _order = 'create_date desc, id desc'
 
-    project_id = fields.Many2one('project.project', required=True, ondelete='cascade', index=True)
-    company_id = fields.Many2one(related='project_id.company_id', store=True, index=True)
-    task_id = fields.Many2one('project.task', required=True, ondelete='cascade')
+    project_id = fields.Many2one('project.project', required=True, ondelete='cascade', index=True, string='Dự án')
+    company_id = fields.Many2one(related='project_id.company_id', store=True, index=True, string='Công ty')
+    task_id = fields.Many2one('project.task', required=True, ondelete='cascade', string='Hạng mục WBS')
     old_date = fields.Date(string='Mốc cũ', readonly=True)
     new_date = fields.Date(string='Mốc mới', readonly=True)
     reason = fields.Text(string='Lý do điều chỉnh', required=True, readonly=True)
@@ -435,7 +445,7 @@ class TpAllocationEnterpriseSettlement(models.Model):
     """E4 Thầu phụ & E5 Giao khoán nội bộ: advance, retention, settlement & handover tracking."""
     _inherit = 'tp.allocation'
 
-    tp_currency_id = fields.Many2one('res.currency', default=lambda s: s.env.company.currency_id)
+    tp_currency_id = fields.Many2one('res.currency', default=lambda s: s.env.company.currency_id, string='Tiền tệ')
     tp_advance_amount = fields.Monetary(currency_field='tp_currency_id', string='Tạm ứng đã đối chiếu', default=0.0)
     tp_settled_amount = fields.Monetary(currency_field='tp_currency_id', string='Giá trị quyết toán xác nhận', default=0.0)
     tp_retention_amount = fields.Monetary(currency_field='tp_currency_id', string='Giá trị giữ lại bảo hành', default=0.0)

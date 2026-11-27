@@ -188,15 +188,19 @@
                                         </div>
                                         <div class="tp_req_field">
                                             <label class="tp_req_label">Giờ vào đúng (HH:MM) <span class="tp_req_star">*</span></label>
-                                            <input id="req_att_in" type="time" class="tp_req_input"
-                                                   t-att-value="this.state.editForm.att_requested_in"
-                                                   t-on-input="(ev) => this.onEditField('att_requested_in', ev)"/>
+                                            <TpTime24Field id="'req_att_in'"
+                                                           value="this.state.editForm.att_requested_in"
+                                                           invalid="this.hasEditError('req_att_in')"
+                                                           disabled="this.state.busy"
+                                                           onChange="(val) => this.onEditTimeField('att_requested_in', val)"/>
                                         </div>
                                         <div class="tp_req_field">
                                             <label class="tp_req_label">Giờ ra đúng (HH:MM) <span class="tp_req_star">*</span></label>
-                                            <input id="req_att_out" type="time" class="tp_req_input"
-                                                   t-att-value="this.state.editForm.att_requested_out"
-                                                   t-on-input="(ev) => this.onEditField('att_requested_out', ev)"/>
+                                            <TpTime24Field id="'req_att_out'"
+                                                           value="this.state.editForm.att_requested_out"
+                                                           invalid="this.hasEditError('req_att_out')"
+                                                           disabled="this.state.busy"
+                                                           onChange="(val) => this.onEditTimeField('att_requested_out', val)"/>
                                         </div>
                                     </t>
 
@@ -560,6 +564,7 @@
                                            t-on-change="this.onUploadAttachment" t-att-disabled="this.state.uploading"/>
                                 </label>
                             </div>
+                            <InlineErrors errors="[]" server="this.state.attachmentServerError"/>
                             <div class="tp_req_muted" t-if="!d.attachments.length">Chưa có tệp đính kèm nào.</div>
                             <ul class="tp_req_att_list" t-else="">
                                 <li t-foreach="d.attachments" t-as="att" t-key="att.id" class="tp_req_att_item">

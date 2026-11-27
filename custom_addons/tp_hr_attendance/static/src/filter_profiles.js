@@ -112,3 +112,26 @@ registerTableFilterProfile("tp.hr.attendance.enti.employee.image", {
         { key: "mapping_state", field: "mapping_state", label: "Trạng thái đối chiếu", type: "selection", multi: true },
     ],
 });
+
+const ENTI_MAPPING_PROFILE = {
+    criteria: [
+        { key: "ten_nv", field: "ten_nv", label: "Họ tên trên máy", type: "char", placeholder: "Họ tên ENTI…" },
+        { key: "ma_nv", field: "ma_nv", label: "Mã trên máy", type: "char", placeholder: "Mã ENTI…" },
+        { key: "ten_bp", field: "ten_bp", label: "Bộ phận trên máy", type: "char", placeholder: "Bộ phận…" },
+        { key: "employee_id", field: "employee_id", label: "Nhân viên trong hệ thống", type: "many2one", allowEmpty: true },
+        { key: "state", field: "state", label: "Trạng thái đối chiếu", type: "selection", multi: true },
+    ],
+};
+registerTableFilterProfile("tp.hr.attendance.enti.mapping::enti_mappings", ENTI_MAPPING_PROFILE);
+registerTableFilterProfile("tp.hr.attendance.enti.mapping", ENTI_MAPPING_PROFILE);
+
+const ENTI_LOG_PROFILE = {
+    criteria: [
+        { key: "message", field: "message", label: "Thông báo / Chi tiết", type: "char", placeholder: "Nội dung thông báo…" },
+        { key: "state", field: "state", label: "Kết quả", type: "selection", multi: true },
+        { key: "origin", field: "origin", label: "Hình thức", type: "selection" },
+        { key: "synced_at", field: "synced_at", label: "Thời điểm đồng bộ", type: "datetime" },
+    ],
+};
+registerTableFilterProfile("tp.hr.attendance.enti.sync.log::enti_logs", ENTI_LOG_PROFILE);
+registerTableFilterProfile("tp.hr.attendance.enti.sync.log", ENTI_LOG_PROFILE);

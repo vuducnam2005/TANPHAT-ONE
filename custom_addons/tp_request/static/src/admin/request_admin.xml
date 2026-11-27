@@ -67,6 +67,8 @@
                         </div>
                     </div>
 
+                    <InlineErrors errors="[]" server="this.state.listServerError"/>
+
                     <div class="tp_req_card tp_req_filter_card">
                         <div class="tp_req_filter_row">
                             <div class="tp_req_search_box">
@@ -133,7 +135,7 @@
                                             <span t-elif="t.executor_mode === 'specific_users'">
                                                 <t t-out="this.userNamesFromIds(t.executor_user_ids) || 'Chưa chọn người'"/>
                                             </span>
-                                            <span t-elif="t.executor_mode === 'department'">Theo phòng ban</span>
+                                            <span t-elif="t.executor_mode === 'department_members'">Theo phòng ban</span>
                                             <span t-else="" class="tp_req_warn_txt">Chưa cấu hình</span>
                                         </td>
                                         <td>
@@ -283,7 +285,7 @@
                                 </div>
                             </div>
 
-                            <div class="tp_req_field is-full" t-if="this.state.form.submitter_scope === 'specific_users'">
+                            <div class="tp_req_field is-full" t-if="this.state.form.submitter_scope === 'users'">
                                 <label class="tp_req_label">Chọn nhân sự được phép gửi</label>
                                 <div class="tp_req_checklist is-cols">
                                     <label t-foreach="this.state.data.users" t-as="u" t-key="u.id" class="tp_req_check_item">
@@ -427,7 +429,7 @@
                                         </t>
                                     </select>
                                 </div>
-                                <div class="tp_req_field" t-if="this.state.form.executor_mode === 'department'">
+                                <div class="tp_req_field" t-if="this.state.form.executor_mode === 'department_members'">
                                     <label class="tp_req_label">Phòng ban thực hiện</label>
                                     <select class="tp_req_select" t-att-value="this.state.form.executor_department_id"
                                             t-on-change="(ev) => this.onFormInput('executor_department_id', ev)">

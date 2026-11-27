@@ -107,6 +107,31 @@
         flex-direction: column;
         gap: 18px;
         overflow-y: auto;
+        transition: width 160ms ease, padding 160ms ease;
+
+        &.is-rail {
+            width: 64px;
+            padding: 14px 8px;
+            align-items: center;
+
+            .tp-todo-nav-list {
+                width: 100%;
+                align-items: center;
+            }
+
+            .tp-todo-nav-item {
+                width: 44px;
+                min-height: 44px;
+                padding: 0;
+                justify-content: center;
+            }
+
+            .tp-todo-nav-label,
+            .tp-todo-nav-count,
+            .tp-todo-sidebar-stages {
+                display: none;
+            }
+        }
     }
 
     .tp-todo-nav-list {
@@ -994,7 +1019,35 @@
     }
 }
 
-@media (max-width: 991.98px) {
+@media (min-width: 768px) and (max-width: 1279.98px) {
+    .o_tp_personal_todo {
+        .tp-todo-sidebar:not(.is-expanded) {
+            width: 64px;
+            padding: 14px 8px;
+            align-items: center;
+
+            .tp-todo-nav-list {
+                width: 100%;
+                align-items: center;
+            }
+
+            .tp-todo-nav-item {
+                width: 44px;
+                min-height: 44px;
+                padding: 0;
+                justify-content: center;
+            }
+
+            .tp-todo-nav-label,
+            .tp-todo-nav-count,
+            .tp-todo-sidebar-stages {
+                display: none;
+            }
+        }
+    }
+}
+
+@media (max-width: 767.98px) {
     .o_tp_personal_todo {
         .tp-todo-sidebar-backdrop {
             position: fixed;
@@ -1016,11 +1069,6 @@
                 transform: translateX(0);
             }
         }
-    }
-}
-
-@media (max-width: 767.98px) {
-    .o_tp_personal_todo {
         .tp-todo-topbar {
             padding: 10px 12px;
             flex-wrap: wrap;
@@ -1038,6 +1086,21 @@
         }
         .tp-todo-subbar {
             padding: 8px 12px;
+        }
+        .tp-todo-nav-item,
+        .tp-todo-stage-pill,
+        .tp-todo-stat-pill,
+        .tp-todo-source-pill,
+        .tp-todo-switch-btn,
+        .tp-todo-menu-item,
+        .tp-pt-btn,
+        .tp-pt-input,
+        .tp-pt-select {
+            min-height: 44px;
+        }
+        .tp-pt-icon-btn {
+            min-width: 44px;
+            min-height: 44px;
         }
         .tp-todo-list-container {
             padding: 10px 12px;
@@ -1070,6 +1133,18 @@
         top: 0;
         width: 100vw !important;
         z-index: 1060;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .o_tp_personal_todo,
+    .tp-todo-drawer {
+        *,
+        *::before,
+        *::after {
+            transition: none !important;
+            animation: none !important;
+        }
     }
 }
 

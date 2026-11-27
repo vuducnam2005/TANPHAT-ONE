@@ -11,10 +11,12 @@ access_tp_minute_item_orig_admin,Meeting action items original admin,tp.meeting.
 access_tp_minute_item_full_admin,Meeting action items delegated admin,tp.meeting.action.item,tp_admin_delegation.group_full_admin,crud,
 access_tp_minute_item_system,Meeting action items system admin,tp.meeting.action.item,base.group_system,crud,
 access_tp_announcement_issuer,Announcements own issuer CRUD,tp.announcement,base.group_user,crud,"[('issuer_user_id', '=', user.id)]"
-access_tp_announcement_published_read,Announcements published read,tp.announcement,base.group_user,r,"[('state', '!=', 'draft')]"
+access_tp_announcement_published_read,Announcements recipient scoped read,tp.announcement,base.group_user,r,"['&', ('state', '!=', 'draft'), '|', '|', '|', ('issuer_user_id', '=', user.id), ('audience_scope', '=', 'company'), '&', ('audience_scope', '=', 'users'), ('target_user_ids', 'in', [user.id]), '&', ('audience_scope', '=', 'departments'), '|', ('target_department_ids.member_ids.user_id', '=', user.id), ('target_department_ids.child_ids.member_ids.user_id', '=', user.id)]"
 access_tp_announcement_orig_admin,Announcements original admin CRUD,tp.announcement,tp_admin_delegation.group_original_admin,crud,
 access_tp_announcement_full_admin,Announcements delegated admin CRUD,tp.announcement,tp_admin_delegation.group_full_admin,crud,
 access_tp_announcement_system,Announcements system admin CRUD,tp.announcement,base.group_system,crud,
 rule_tp_announcement_company,Announcements company scope,tp.announcement,,crud,"[('company_id', 'in', company_ids)]"
-access_tp_announcement_ack_read,Announcement acks read,tp.announcement.ack,base.group_user,r,"[('announcement_id', 'access', 'read')]"
+access_tp_announcement_ack_read,Announcement acks own read,tp.announcement.ack,base.group_user,r,"[('user_id', '=', user.id)]"
+access_tp_announcement_ack_orig_admin,Announcement acks original admin CRUD,tp.announcement.ack,tp_admin_delegation.group_original_admin,crud,
+access_tp_announcement_ack_full_admin,Announcement acks delegated admin CRUD,tp.announcement.ack,tp_admin_delegation.group_full_admin,crud,
 access_tp_announcement_ack_system,Announcement acks system CRUD,tp.announcement.ack,base.group_system,crud,

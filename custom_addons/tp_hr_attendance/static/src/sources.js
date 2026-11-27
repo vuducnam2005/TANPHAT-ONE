@@ -1,7 +1,9 @@
 import { Component, onWillStart, onWillUnmount, proxy, useProps } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { downloadBase64, rpcError } from "./common";
+import { InlineErrors } from "@tp_web_home/validation/inline_errors";
+import { saveError } from "@tp_web_home/validation/validation";
+import { downloadBase64 } from "./common";
 import { useAttendanceLive } from "./live";
 
 /**
@@ -11,14 +13,17 @@ import { useAttendanceLive } from "./live";
  */
 export class AttendanceSources extends Component {
     static template = "tp_hr_attendance.Sources";
+    static components = { InlineErrors };
     props = useProps();
 
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
         this.state = proxy({
-            loading: true, refreshing: false, syncing: false, error: "", notice: "", data: null,
-            exporting: false, exportError: "", mode: "month", date: "", from: "", to: "", department: "",
+            loading: true, refreshing: false, syncing: false,
+            serverError: null, attempt: 0, notice: "", data: null,
+            exporting: false, exportErrors: [], exportServerError: null, exportAttempt: 0,
+            mode: "month", date: "", from: "", to: "", department: "",
             imageSyncing: false, imageRetrying: false, imageFiltering: false,
             imageState: "", imageDepartment: "", imageSearch: "",
         });
@@ -84,7 +89,7 @@ export class AttendanceSources extends Component {
         if (this.data?.health === "stale") {
             return { tone: "warn", text: source.last_success_at ? "Đồng bộ đang chậm" : "Chờ đồng bộ thành công" };
         }
-        if (!source.live || source.state === "paused") {
+        if (!source.live || source.state === "paused" || source.cron_active === false) {
             return { tone: "neutral", text: "Đồng bộ tự động đang tắt" };
         }
         return source.last_success_at
@@ -109,13 +114,14 @@ export class AttendanceSources extends Component {
                 }
                 this.state.data = data;
                 if (!silent) {
-                    this.state.error = "";
+                    this.state.serverError = null;
                 }
                 this.live.loaded();
             }
         } catch (error) {
             if (request === this.request && !silent) {
-                this.state.error = rpcError(error, "Không tải được nguồn dữ liệu chấm công. Vui lòng thử lại.");
+                this.state.serverError = saveError(error, { verb: "tải nguồn dữ liệu chấm công" });
+                this.state.attempt++;
             }
         } finally {
             if (request === this.request) {
@@ -131,18 +137,22 @@ export class AttendanceSources extends Component {
         if (this.state.syncing) {
             return;
         }
-        Object.assign(this.state, { syncing: true, error: "", notice: "" });
+        Object.assign(this.state, { syncing: true, serverError: null, notice: "" });
         try {
             const res = await this.orm.call("tp.hr.attendance.source", "action_sync_enti_quick", []);
             if (res && res.success === false) {
-                this.state.error = res.skipped
+                const msg = res.skipped
                     ? res.message
-                    : "Đồng bộ chưa thành công. Xem Nhật ký đồng bộ để kiểm tra.";
+                    : (res.message || "Đồng bộ chưa thành công. Xem Nhật ký đồng bộ để kiểm tra.");
+                this.state.serverError = { title: "Chưa đồng bộ được", message: msg };
+                this.state.attempt++;
             } else {
-                this.state.notice = `Đã đồng bộ ${res?.employees || 0} nhân viên, cập nhật ${res?.days_applied || 0} bản ghi công.`;
+                const dur = res?.duration_seconds != null ? ` (${res.duration_seconds}s)` : "";
+                this.state.notice = `Đã đồng bộ ${res?.employees || 0} nhân viên, cập nhật ${res?.days_applied || 0} bản ghi công${dur}.`;
             }
         } catch (error) {
-            this.state.error = rpcError(error, "Đồng bộ thất bại. Vui lòng thử lại.");
+            this.state.serverError = saveError(error, { verb: "đồng bộ dữ liệu chấm công" });
+            this.state.attempt++;
         } finally {
             this.state.syncing = false;
         }
@@ -154,19 +164,24 @@ export class AttendanceSources extends Component {
             return;
         }
         const flag = onlyFailed ? "imageRetrying" : "imageSyncing";
-        Object.assign(this.state, { [flag]: true, error: "", notice: "" });
+        Object.assign(this.state, { [flag]: true, serverError: null, notice: "" });
         try {
             const method = onlyFailed
                 ? "action_retry_failed_enti_images_quick"
                 : "action_sync_enti_images_quick";
             const res = await this.orm.call("tp.hr.attendance.source", method, []);
             if (res && res.success === false) {
-                this.state.error = res.message || "Đồng bộ ảnh hồ sơ chưa thành công.";
+                this.state.serverError = {
+                    title: "Chưa đồng bộ được ảnh hồ sơ",
+                    message: res.message || "Đồng bộ ảnh hồ sơ chưa thành công.",
+                };
+                this.state.attempt++;
             } else {
                 this.state.notice = res?.message || "Đã đồng bộ ảnh hồ sơ nhân viên từ ENTI.";
             }
         } catch (error) {
-            this.state.error = rpcError(error, "Đồng bộ ảnh hồ sơ thất bại. Vui lòng thử lại.");
+            this.state.serverError = saveError(error, { verb: "đồng bộ ảnh hồ sơ" });
+            this.state.attempt++;
         } finally {
             this.state[flag] = false;
         }
@@ -181,7 +196,8 @@ export class AttendanceSources extends Component {
                 this.state.data.image_sync.prefer_manual_image = Boolean(res?.prefer_manual_image);
             }
         } catch (error) {
-            this.state.error = rpcError(error, "Không cập nhật được cấu hình ưu tiên ảnh thủ công.");
+            this.state.serverError = saveError(error, { verb: "cập nhật cấu hình ưu tiên ảnh thủ công" });
+            this.state.attempt++;
         }
     }
 
@@ -197,7 +213,8 @@ export class AttendanceSources extends Component {
                 this.state.data.image_sync = imgData;
             }
         } catch (error) {
-            this.state.error = rpcError(error, "Không lọc được nhật ký đồng bộ ảnh.");
+            this.state.serverError = saveError(error, { verb: "lọc nhật ký đồng bộ ảnh" });
+            this.state.attempt++;
         } finally {
             this.state.imageFiltering = false;
         }
@@ -226,7 +243,8 @@ export class AttendanceSources extends Component {
             this.state.notice = `Đã cập nhật ảnh hồ sơ cho nhân viên ${row.employee_name || row.ten_nv}.`;
             await this.load({ silent: true });
         } catch (error) {
-            this.state.error = rpcError(error, "Không thể cập nhật ảnh hồ sơ.");
+            this.state.serverError = saveError(error, { verb: "cập nhật ảnh hồ sơ" });
+            this.state.attempt++;
         }
     }
 
@@ -237,17 +255,20 @@ export class AttendanceSources extends Component {
         }
         const { mode, date, from, to } = state;
         if (mode === "range" ? (!from || !to || from > to) : !date) {
-            state.exportError = "Chọn kỳ xuất hợp lệ.";
+            state.exportErrors = [{ label: "Kỳ xuất", message: "Vui lòng chọn kỳ xuất hợp lệ." }];
+            state.exportServerError = null;
+            state.exportAttempt++;
             return;
         }
-        Object.assign(state, { exporting: true, exportError: "" });
+        Object.assign(state, { exporting: true, exportErrors: [], exportServerError: null });
         try {
             const file = await this.orm.call("tp.hr.attendance.day", "tp_export_sheet", [{
                 mode, date, from, to, department_id: Number(state.department) || 0,
             }]);
             downloadBase64(file);
         } catch (error) {
-            state.exportError = rpcError(error, "Không xuất được bảng công. Vui lòng thử lại.");
+            state.exportServerError = saveError(error, { verb: "xuất bảng công" });
+            state.exportAttempt++;
         } finally {
             state.exporting = false;
         }

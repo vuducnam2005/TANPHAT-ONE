@@ -9,6 +9,8 @@ import xlsxwriter
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, ValidationError
 
+from .workspace import child_context, kd_leaf
+
 PAGE_SIZES = (10, 20, 50, 100)
 TAX_SHORT = {
     "before_tax": "trước thuế",
@@ -193,11 +195,11 @@ def _fmt_date(d):
 
 
 def _sanitize_excel_text(value):
-    """Prevent CSV/Excel formula injection for strings starting with =, +, -, @, tab, CR."""
+    """Prevent CSV/Excel formula injection for strings starting with =, +, -, @, tab, CR, LF."""
     if value is None:
         return ""
     text = str(value)
-    if text and text[0] in ("=", "+", "-", "@", "\t", "\r"):
+    if text and (text.lstrip().startswith(("=", "+", "-", "@")) or text.startswith(("\t", "\r", "\n"))):
         return "'" + text
     return text
 
@@ -934,7 +936,6 @@ class KdReportCenter(models.TransientModel):
             domain.append(("kd_bid_state", "=", status_filter))
 
         leads = Lead.search(domain, order="kd_deadline asc, id desc")
-        fin_lead_projects = set(Lead._kd_financial_projects())
 
         owners_map = {}
         rows = []
@@ -965,7 +966,7 @@ class KdReportCenter(models.TransientModel):
             if is_overdue:
                 overdue_count += 1
 
-            can_money = lead._kd_head() or bool(lead.tp_project_id and lead.tp_project_id.id in fin_pids and lead.tp_project_id.id in fin_lead_projects)
+            can_money = lead._kd_money_read_allowed()
             if not can_money:
                 m_cell = {
                     "state": "forbidden",
@@ -2695,6 +2696,7 @@ class KdReportCenter(models.TransientModel):
             "updated_at": now.strftime("%H:%M:%S %d/%m/%Y"),
             "today": str(today),
             "user_name": self.env.user.name,
+            "can_view_money": bool(fin_pids),
             "financial_project_count": len(fin_pids),
             "accessible_project_count": len(accessible_projects),
             "options": {
@@ -2808,14 +2810,34 @@ class KdReportCenter(models.TransientModel):
             if model_name == "tp.credential" and rec.subject_kind == "person" and not self.env.is_admin():
                 if self.env.uid not in (rec.owner_id.id, rec.reviewer_id.id) and not rec.project_id._tp_head_allowed():
                     raise AccessError(_("Chứng chỉ cá nhân chỉ người phụ trách hoặc người rà soát mới có quyền xem."))
+            custom_form_map = {
+                "project.project": "tp_kd_workspace.project_governance_form",
+                "tp.contract": "tp_contract.view_contract_form",
+                "tp.contract.revision": "tp_contract.view_revision_form",
+                "crm.lead": "tp_kd_workspace.opportunity_form",
+                "project.task": "tp_kd_workspace.kd_task_form",
+                "tp.allocation": "tp_kd_workspace.allocation_form",
+                "tp.production": "tp_kd_workspace.production_form",
+                "tp.acceptance": "tp_kd_workspace.acceptance_form",
+                "tp.payment.request": "tp_kd_workspace.payment_form",
+                "tp.periodic.plan": "tp_kd_workspace.plan_form",
+                "tp.credential": "tp_kd_workspace.credential_form",
+                "tp.obligation": "tp_kd_workspace.obligation_form",
+            }
+            view_xmlid = custom_form_map.get(model_name)
+            view_ref = self.env.ref(view_xmlid, raise_if_not_found=False) if view_xmlid else False
+            ctx = {**child_context(self.env), **kd_leaf(model_name)}
+            if view_xmlid:
+                ctx["form_view_ref"] = view_xmlid
             return {
                 "type": "ir.actions.act_window",
                 "name": rec.display_name,
                 "res_model": model_name,
                 "res_id": rec.id,
-                "views": [(False, "form")],
+                "views": [(view_ref.id if view_ref else False, "form")],
                 "view_mode": "form",
                 "target": "current",
+                "context": ctx,
             }
 
         if kind == "list":
@@ -2909,8 +2931,14 @@ class KdReportCenter(models.TransientModel):
             ("Nhóm dữ liệu theo", _sanitize_excel_text(applied["group_by_label"]), "Sắp xếp / Từ khóa", _sanitize_excel_text(f"{applied['sort_by_label']} ({applied['sort_dir']}) · {applied['search'] or 'Không lọc từ khóa'}")),
             ("Quy tắc cộng tổng", _sanitize_excel_text(meta["basis_note"]), "Ghi chú loại trừ", _sanitize_excel_text(full["exclusion_info"]["note"])),
         ]
+        fin_cnt = int(full.get("financial_project_count") or 0)
+        acc_cnt = int(full.get("accessible_project_count") or 0)
         if not full.get("can_view_money"):
             meta_rows.append(("Quyền hạn số tiền", "Không có quyền xem tiền", "Lưu ý bảo mật", "Báo cáo xuất không bao gồm giá trị tiền tài chính"))
+        elif acc_cnt and fin_cnt < acc_cnt:
+            meta_rows.append(("Quyền hạn số tiền", f"Có quyền xem tiền theo phạm vi ({fin_cnt}/{acc_cnt} dự án)", "Lưu ý bảo mật", "Chỉ hiển thị và cộng tổng các khoản thuộc dự án được cấp quyền tài chính"))
+        else:
+            meta_rows.append(("Quyền hạn số tiền", f"Có quyền xem tiền ({fin_cnt} dự án trong quyền)", "Lưu ý bảo mật", "Chỉ cộng tổng các khoản đã xác nhận cùng đơn vị tiền tệ và cơ sở thuế"))
         r_idx = 3
         for m_row in meta_rows:
             sheet.write_string(r_idx, 0, m_row[0], fmt_meta_lbl)

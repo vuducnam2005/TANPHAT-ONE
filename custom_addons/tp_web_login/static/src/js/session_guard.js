@@ -62,7 +62,7 @@ export function resolveReloginUrl(rawUrl) {
     if (typeof rawUrl === "string" && rawUrl.startsWith("/") && !rawUrl.startsWith("//")) {
         return rawUrl;
     }
-    return "/dang-nhap?redirect=%2Fapp%2Ftp-home";
+    return "/dang-nhap?redirect=%2Fapp%2Ftrang-chu";
 }
 
 let activeGuardInstance = null;

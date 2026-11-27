@@ -64,7 +64,7 @@ class Credential(models.Model):
                 if not rec.valid_to
                 else "Đã hết hạn"
                 if rec.valid_to < today
-                else "Còn30ngày — ngưỡng minh họa"
+                else "Còn > 30 ngày — ngưỡng minh họa"
                 if rec.valid_to <= today + timedelta(days=30)
                 else "Còn hạn — chưa xác minh"
             )

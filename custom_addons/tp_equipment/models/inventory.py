@@ -310,31 +310,31 @@ class TpEquipmentInventory(models.Model):
     def action_open_moves(self):
         check_admin(self.env)
         self.ensure_one()
-        return {
-            "type": "ir.actions.act_window",
+        action = self.env["ir.actions.act_window"]._for_xml_id("tp_equipment.action_moves")
+        action.update({
             "name": _("Phiếu điều chỉnh của %s", self.name),
-            "res_model": "tp.equipment.move",
             "view_mode": "list,form",
             "views": [(self.env.ref("tp_equipment.move_list").id, "list"),
                       (self.env.ref("tp_equipment.move_form").id, "form")],
             "domain": [("inventory_id", "=", self.id)],
             "context": {"tp_filter_profile": "move", "tp_eq_leaf": "tp_equipment.menu_inventories"},
-        }
+        })
+        return action
 
     def action_open_lines(self):
         check_admin(self.env)
         self.ensure_one()
-        return {
-            "type": "ir.actions.act_window",
+        action = self.env["ir.actions.act_window"]._for_xml_id("tp_equipment.action_inventory_lines")
+        action.update({
             "name": _("Dòng kiểm kê %s", self.name),
-            "res_model": "tp.equipment.inventory.line",
             "view_mode": "list",
             "views": [(self.env.ref("tp_equipment.inventory_line_list").id, "list")],
             "search_view_id": self.env.ref("tp_equipment.inventory_line_search").id,
             "domain": [("inventory_id", "=", self.id)],
             "context": {"tp_filter_profile": "inventory_line", "tp_eq_leaf": "tp_equipment.menu_inventories",
                         "default_inventory_id": self.id},
-        }
+        })
+        return action
 
 
 class TpEquipmentInventoryLine(models.Model):
@@ -723,13 +723,13 @@ class TpEquipmentInventoryAdjust(models.TransientModel):
         })
         move.with_context(tp_equipment_move_internal=INTERNAL).action_done()
         lines.with_context(tp_inventory_internal=INTERNAL).write({"adjust_move_id": move.id})
-        inventory.message_post(body=Markup("%s <a href='/odoo/phieu-thiet-bi/%s'>%s</a>: %s") % (
+        inventory.message_post(body=Markup("%s <a href='/app/thiet-bi/phieu-ban-giao/%s'>%s</a>: %s") % (
             _("Đã điều chỉnh"), move.id, move.name, reason), subtype_xmlid="mail.mt_note")
-        return {
-            "type": "ir.actions.act_window",
-            "res_model": "tp.equipment.move",
+        action = self.env["ir.actions.act_window"]._for_xml_id("tp_equipment.action_moves")
+        action.update({
             "res_id": move.id,
             "view_mode": "form",
             "views": [(self.env.ref("tp_equipment.move_form").id, "form")],
             "target": "current",
-        }
+        })
+        return action

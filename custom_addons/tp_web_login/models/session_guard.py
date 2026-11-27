@@ -306,7 +306,7 @@ class IrHttpSingleSession(models.AbstractModel):
             session.get('tp_session_nonce'),
             acquire_shared_lock=acquire_shared_lock,
             allow_test_synthetic=allow_synth,
-            winner_cursor_factory=Registry(env.cr.dbname).cursor if not allow_synth else None,
+            winner_cursor_factory=(lambda: Registry(env.cr.dbname).cursor(readonly=True)) if not allow_synth else None,
         )
         if (
             not allow_synth
@@ -394,7 +394,7 @@ class IrHttpSingleSession(models.AbstractModel):
     def _tp_relogin_url(cls, env) -> str:
         branded = 'tp_branding' in env.registry._init_modules
         login_path = '/dang-nhap' if branded else '/web/login'
-        home_path = '/app/tp-home' if branded else '/odoo/tp-home'
+        home_path = '/app/trang-chu' if branded else '/odoo/tp-home'
         return f'{login_path}?redirect={quote(home_path, safe="")}'
 
     def session_info(self):
