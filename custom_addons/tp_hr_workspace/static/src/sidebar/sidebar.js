@@ -256,7 +256,26 @@ export class TpHrSidebar extends Component {
         this.lastApp = on;
     }
 
-    resolveFallbackLeaf(_leaves, _current) {
+    resolveFallbackLeaf(leaves, current, controllerModel = "") {
+        const model = controllerModel || current?.res_model;
+        const map = {
+            "hr.job": ["tp_hr_workspace.menu_jobs"],
+            "hr.department": ["tp_hr_workspace.menu_departments"],
+            "hr.work.location": ["tp_hr_workspace.menu_locations"],
+            "hr.employee.category": ["tp_hr_workspace.menu_categories"],
+            "tp.hr.import.batch": ["tp_hr_workspace.menu_import"],
+            "tp.hr.employee.audit": ["tp_hr_workspace.menu_employee_audit"],
+            "tp.bank": ["tp_hr_bank.menu_tp_bank"],
+            "hr.employee": ["tp_hr_workspace.menu_employees", "tp_hr_workspace.menu_directory"],
+            "hr.employee.public": ["tp_hr_workspace.menu_directory"],
+        };
+        const candidates = map[model] || [];
+        for (const xmlid of candidates) {
+            const hit = leaves.filter((l) => l.xmlid === xmlid);
+            if (hit.length) {
+                return hit;
+            }
+        }
         return [];
     }
 
@@ -269,21 +288,26 @@ export class TpHrSidebar extends Component {
         }
         const leaves = this.leaves();
         const current = this.action.currentController?.action;
-        let matches = current
-            ? leaves.filter(
-                  (l) =>
-                      (current.id && l.actionID === current.id) ||
-                      (current.path && l.actionPath === current.path)
-              )
-            : [];
+        const controllerModel = this.action.currentController?.props?.resModel || "";
+        const isRelationalSubView = Boolean(
+            controllerModel && current?.res_model && controllerModel !== current.res_model
+        );
+        let matches =
+            current && !isRelationalSubView
+                ? leaves.filter(
+                      (l) =>
+                          (current.id && l.actionID === current.id) ||
+                          (current.path && l.actionPath === current.path)
+                  )
+                : [];
         // KD-UI-003: actions built by the server (Overview drilldowns, smart buttons, "open
         // source") carry the leaf menu XML ID in their context; nothing is written anywhere.
-        const hint = current?.context?.tp_hr_leaf;
+        const hint = !isRelationalSubView ? current?.context?.tp_hr_leaf : "";
         if (!matches.length && hint) {
             matches = leaves.filter((l) => l.xmlid === hint);
         }
-        if (!matches.length && current) {
-            matches = this.resolveFallbackLeaf(leaves, current);
+        if (!matches.length && (current || controllerModel)) {
+            matches = this.resolveFallbackLeaf(leaves, current, controllerModel);
         }
         if (!matches.length && this.pendingLeaf) {
             // A leaf whose menu runs a server action (TP Contracts) opens another action id.

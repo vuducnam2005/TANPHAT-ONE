@@ -8,14 +8,18 @@
  * other registration and no browser storage is touched.
  */
 
+import { Component, useProps } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
 import { rpcBus } from "@web/core/network/rpc";
+import { registry } from "@web/core/registry";
+import { useService } from "@web/core/utils/hooks";
 import { patch } from "@web/core/utils/patch";
 import { WebClient } from "@web/webclient/webclient";
 import { APP_PATH, LEGACY_APP_PATH } from "@tp_branding/brand_urls";
 import { HOME_MENU_XMLID } from "@tp_web_home/home/home_catalog";
 
 const SW_SCRIPT_PATH = "/web/service-worker.js";
+let pushUnavailableLogged = false;
 
 function syncHomeMenu(menuService) {
     const home = menuService?.getAll?.().find((m) => m.xmlid === HOME_MENU_XMLID);
@@ -23,6 +27,83 @@ function syncHomeMenu(menuService) {
         menuService.setCurrentMenu(home);
     }
 }
+
+function isHomeOrRootPath(pathname) {
+    const clean = (pathname || "").replace(/\/+$/, "") || "/";
+    return (
+        clean === APP_PATH ||
+        clean === "/app/trang-chu" ||
+        clean === "/app/tp-home" ||
+        clean === LEGACY_APP_PATH ||
+        clean === "/web"
+    );
+}
+
+export class TpNotFoundAction extends Component {
+    static template = "tp_branding.NotFound";
+    props = useProps();
+
+    setup() {
+        this.actionService = useService("action");
+        this.menuService = useService("menu");
+    }
+
+    get params() {
+        return this.props?.action?.params || {};
+    }
+
+    get requestedPath() {
+        return this.params.requestedPath || browser.location.pathname || "";
+    }
+
+    get reasonText() {
+        if (this.params.kind === "missing_or_denied") {
+            return "Bản ghi hoặc đường dẫn bạn vừa mở không tồn tại, đã được dọn dẹp hoặc tài khoản hiện tại chưa được cấp quyền truy cập.";
+        }
+        return "Đường dẫn bạn truy cập không tồn tại trong hệ thống TANPHAT ONE hoặc đã thay đổi.";
+    }
+
+    goBack() {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+        this.goHome();
+    }
+
+    async goHome() {
+        await this.actionService.doAction("tp_web_home.action_home", { clearBreadcrumbs: true });
+        syncHomeMenu(this.menuService);
+    }
+}
+
+registry.category("actions").add("tp_branding.not_found", TpNotFoundAction);
+
+// F-0030: Track active RPCs so stuck .o_loading_indicator never lingers after idle settle
+let activeRpcCount = 0;
+let idleClearTimer = null;
+function scheduleIdleIndicatorCheck() {
+    if (idleClearTimer) {
+        browser.clearTimeout(idleClearTimer);
+    }
+    if (activeRpcCount <= 0) {
+        idleClearTimer = browser.setTimeout(() => {
+            if (activeRpcCount <= 0 && typeof document !== "undefined") {
+                document.body?.classList?.add("tp-rpc-idle");
+            }
+        }, 600);
+    }
+}
+rpcBus.addEventListener("RPC:REQUEST", () => {
+    activeRpcCount++;
+    if (typeof document !== "undefined") {
+        document.body?.classList?.remove("tp-rpc-idle");
+    }
+});
+rpcBus.addEventListener("RPC:RESPONSE", () => {
+    activeRpcCount = Math.max(0, activeRpcCount - 1);
+    scheduleIdleIndicatorCheck();
+});
 
 async function unregisterLegacyWorker(serviceWorker) {
     try {
@@ -43,36 +124,81 @@ async function unregisterLegacyWorker(serviceWorker) {
     }
 }
 
-patch(WebClient.prototype, {
+async function openNotFoundOrHome(webClient, requestedPath, kind = "unknown_route") {
+    if (isHomeOrRootPath(requestedPath.split("?")[0])) {
+        await webClient.actionService.doAction("tp_web_home.action_home", {
+            clearBreadcrumbs: true,
+        });
+        syncHomeMenu(webClient.menuService);
+        return;
+    }
+    await webClient.actionService.doAction(
+        {
+            type: "ir.actions.client",
+            tag: "tp_branding.not_found",
+            name: "Không tìm thấy trang",
+            params: { requestedPath, kind },
+        },
+        { clearBreadcrumbs: true }
+    );
+    try {
+        if (requestedPath && browser.location.pathname + browser.location.search !== requestedPath) {
+            browser.history.replaceState(browser.history.state || {}, "", requestedPath);
+        }
+    } catch {
+        // Ignore history state restrictions
+    }
+}
+
+const webClientPatch = {
+    async _loadDefaultApp() {
+        const reqPath = this._tpBootRequestedPath || "";
+        if (reqPath && !isHomeOrRootPath(reqPath.split("?")[0])) {
+            const isDetailId = /\/\d+(?:[/?#]|$)/.test(reqPath);
+            await openNotFoundOrHome(
+                this,
+                reqPath,
+                isDetailId ? "missing_or_denied" : "unknown_route"
+            );
+            return;
+        }
+        return await super._loadDefaultApp();
+    },
+
     async loadRouterState() {
+        const requestedPath = browser.location.pathname + (browser.location.search || "");
+        let routerFailed = false;
+        this._tpBootRequestedPath = requestedPath;
         try {
             await super.loadRouterState();
         } catch (error) {
-            console.error("TANPHAT ONE: loadRouterState error, attempting fallback:", error);
+            routerFailed = true;
+            console.warn("TANPHAT ONE: loadRouterState error, showing branded fallback:", error);
             try {
-                await this.actionService.doAction("tp_web_home.action_home", {
-                    clearBreadcrumbs: true,
-                });
-                syncHomeMenu(this.menuService);
+                await openNotFoundOrHome(this, requestedPath, "missing_or_denied");
             } catch (fallbackError) {
-                console.error("TANPHAT ONE: fallback to home failed:", fallbackError);
-                await this._loadDefaultApp();
+                console.error("TANPHAT ONE: fallback failed:", fallbackError);
+                this._tpBootRequestedPath = "";
+                await super._loadDefaultApp();
             }
+        } finally {
+            this._tpBootRequestedPath = "";
         }
 
         // Post-load check: ensure action manager has active content & clear any slow-boot recovery overlay
         document.getElementById("tp-emergency-recovery")?.remove();
-        browser.setTimeout(() => {
-            document.getElementById("tp-emergency-recovery")?.remove();
-            const actionManager = document.querySelector(".o_action_manager");
-            if (actionManager && actionManager.children.length === 0) {
-                console.warn("TANPHAT ONE: Action manager empty after boot, loading default home...");
-                this.actionService
-                    .doAction("tp_web_home.action_home", { clearBreadcrumbs: true })
-                    .then(() => syncHomeMenu(this.menuService))
-                    .catch(() => this._loadDefaultApp());
-            }
-        }, 500);
+        scheduleIdleIndicatorCheck();
+        if (!routerFailed) {
+            browser.setTimeout(() => {
+                document.getElementById("tp-emergency-recovery")?.remove();
+                const actionManager = document.querySelector(".o_action_manager");
+                if (actionManager && actionManager.children.length === 0 && activeRpcCount === 0) {
+                    openNotFoundOrHome(this, requestedPath, "unknown_route").catch(() =>
+                        super._loadDefaultApp()
+                    );
+                }
+            }, 650);
+        }
     },
 
     registerServiceWorker() {
@@ -105,7 +231,49 @@ patch(WebClient.prototype, {
                 console.error("Service worker registration failed, error:", error);
             });
     },
-});
+};
+
+patch(WebClient.prototype, webClientPatch);
+
+// F-0015: Suppress sticky red danger toast when browser push service (FCM/GCM) is unavailable
+if (typeof WebClient.prototype._subscribePush === "function") {
+    patch(WebClient.prototype, {
+        async _subscribePush(...args) {
+            const origNotification = this.notification;
+            const wrappedNotification = origNotification
+                ? Object.create(origNotification, {
+                      add: {
+                          value: (message, options = {}) => {
+                              const msgStr = String(message || "");
+                              if (
+                                  options?.type === "danger" &&
+                                  options?.sticky &&
+                                  /push service|registration failed|pushmanager|notification/i.test(
+                                      msgStr + " " + String(options?.title || "")
+                                  )
+                              ) {
+                                  if (!pushUnavailableLogged) {
+                                      pushUnavailableLogged = true;
+                                      console.info(
+                                          "TANPHAT ONE: Push notification service unavailable in browser; sticky banner suppressed."
+                                      );
+                                  }
+                                  return () => {};
+                              }
+                              return origNotification.add(message, options);
+                          },
+                      },
+                  })
+                : origNotification;
+            this.notification = wrappedNotification;
+            try {
+                return await super._subscribePush(...args);
+            } finally {
+                this.notification = origNotification;
+            }
+        },
+    });
+}
 
 // Emergency boot safety: If WebClient fails to mount after 8s on /app, display recovery banner
 if (typeof window !== "undefined" && window.location.pathname.startsWith(APP_PATH)) {

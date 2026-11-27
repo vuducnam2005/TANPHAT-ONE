@@ -152,3 +152,26 @@ class TestHrUi(TransactionCase):
         self.assertGreaterEqual(len(nodes), 2)
         for node in nodes:
             self.assertIn(node.get('invisible'), ('1', 'True', 'not id'))
+
+    def test_relational_many2one_resolves_custom_tp_hr_forms(self):
+        """T-0006 (F-0004, F-0005): Default primary form resolution on hr.job / hr.department / hr.work.location
+        must return TANPHAT ONE Vietnamese forms without English recruitment tabs."""
+        Job = self.env['hr.job'].with_user(self.officer).with_context(allowed_company_ids=self.company.ids)
+        job_view = Job.get_view(view_type='form')
+        self.assertEqual(job_view['id'], self.env.ref('tp_hr_workspace.job_form').id)
+        for forbidden_en in ('Matching Talents', 'Salary Range', 'Expected Degree'):
+            self.assertNotIn(forbidden_en, job_view['arch'])
+
+        Dept = self.env['hr.department'].with_user(self.officer).with_context(allowed_company_ids=self.company.ids)
+        dept_view = Dept.get_view(view_type='form')
+        self.assertEqual(dept_view['id'], self.env.ref('tp_hr_workspace.department_form').id)
+
+        Loc = self.env['hr.work.location'].with_user(self.officer).with_context(allowed_company_ids=self.company.ids)
+        loc_view = Loc.get_view(view_type='form')
+        self.assertEqual(loc_view['id'], self.env.ref('tp_hr_workspace.location_form').id)
+
+        emp_arch = self.env['hr.employee'].with_user(self.officer).get_view(
+            self.env.ref('tp_hr_workspace.employee_form').id, view_type='form',
+        )['arch']
+        self.assertIn("tp_hr_workspace.job_form", emp_arch)
+        self.assertIn("tp_hr_workspace.department_form", emp_arch)

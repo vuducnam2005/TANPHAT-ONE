@@ -69,7 +69,7 @@
  <div class="o_tp_hr_header">
   <div class="o_tp_hr_avatar"><field name="image_1920" widget="image" options="{'size':[72,72], 'preview_image':'avatar_128'}"/></div>
   <div class="o_tp_hr_identity"><h1 class="o_tp_hr_name"><field name="name" placeholder="Họ và tên" required="True"/></h1>
-   <div class="o_tp_hr_badges"><span class="o_tp_hr_badge_code"><i class="oi" data-icon="person" aria-hidden="true"/><field name="tp_employee_code" readonly="1"/></span><span><svg class="o_tp_hr_line_icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 10 6-10 6L2 9Z M2 13l10 6 10-6 M2 17l10 6 10-6"/></svg><field name="department_id" readonly="1"/></span><span><i class="oi" data-icon="work" aria-hidden="true"/><field name="job_id" readonly="1"/></span></div>
+   <div class="o_tp_hr_badges"><span class="o_tp_hr_badge_code"><i class="oi" data-icon="person" aria-hidden="true"/><field name="tp_employee_code" readonly="1"/></span><span><svg class="o_tp_hr_line_icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 10 6-10 6L2 9Z M2 13l10 6 10-6 M2 17l10 6 10-6"/></svg><field name="department_id" readonly="1" context="{'form_view_ref': 'tp_hr_workspace.department_form'}"/></span><span><i class="oi" data-icon="work" aria-hidden="true"/><field name="job_id" readonly="1" context="{'form_view_ref': 'tp_hr_workspace.job_form'}"/></span></div>
   </div>
   <field name="tp_account_status" widget="badge" decoration-success="tp_account_status == 'active'" decoration-danger="tp_account_status == 'disabled'" decoration-muted="tp_account_status == 'unlinked'"/>
  </div>
@@ -79,7 +79,7 @@
 <xpath expr="//page[@name='work_information']" position="before">
  <page name="page_overview" string="Tổng quan">
   <div class="o_tp_hr_overview_grid">
-   <section class="o_tp_hr_card"><h2 class="o_tp_hr_card_title"><i class="oi" data-icon="work" aria-hidden="true"/>Thông tin công việc</h2><group><field name="department_id" string="Phòng ban"/><field name="job_id" string="Chức vụ nhân sự"/><field name="parent_id" string="Quản lý trực tiếp" widget="many2one_avatar_employee"/><field name="work_location_id" string="Nơi làm việc"/><field name="company_id" groups="base.group_multi_company"/><field name="job_title" string="Chức danh hiển thị"/><div class="text-muted" invisible="parent_id" colspan="2">Chưa khai báo quản lý trực tiếp</div></group></section>
+   <section class="o_tp_hr_card"><h2 class="o_tp_hr_card_title"><i class="oi" data-icon="work" aria-hidden="true"/>Thông tin công việc</h2><group><field name="department_id" string="Phòng ban" context="{'form_view_ref': 'tp_hr_workspace.department_form'}"/><field name="job_id" string="Chức vụ nhân sự" context="{'form_view_ref': 'tp_hr_workspace.job_form'}"/><field name="parent_id" string="Quản lý trực tiếp" widget="many2one_avatar_employee" context="{'form_view_ref': 'tp_hr_workspace.employee_form'}"/><field name="work_location_id" string="Nơi làm việc" context="{'form_view_ref': 'tp_hr_workspace.location_form'}"/><field name="company_id" groups="base.group_multi_company"/><field name="job_title" string="Chức danh hiển thị"/><div class="text-muted" invisible="parent_id" colspan="2">Chưa khai báo quản lý trực tiếp</div></group></section>
    <section class="o_tp_hr_card"><h2 class="o_tp_hr_card_title"><i class="oi" data-icon="phone" aria-hidden="true"/>Liên hệ công việc</h2><group><field name="work_email" widget="email"/><field name="work_phone" widget="phone"/><field name="mobile_phone" widget="phone"/></group></section>
    <div class="o_tp_hr_account_card"><div class="o_tp_hr_account_summary"><i class="oi" data-icon="person" aria-hidden="true"/><div><span class="text-muted">Tài khoản cá nhân</span><div><field name="tp_user_login" readonly="1" invisible="not user_id"/><span invisible="user_id">Chưa có tài khoản</span></div></div></div><div class="o_tp_hr_account_summary"><svg class="o_tp_hr_line_icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 10 6-10 6L2 9Z M2 13l10 6 10-6 M2 17l10 6 10-6"/></svg><div><span class="text-muted">Vai trò nghiệp vụ</span><div><field name="tp_business_role" readonly="1"/></div></div></div><button name="action_open_account_dialog" type="object" string="Quản lý tài khoản" icon="settings" class="btn btn-outline-primary" groups="base.group_system"/></div>
   </div>
@@ -298,8 +298,8 @@
  <sheet><div class="o_tp_hr_account_grid"><section>
  <div class="o_tp_hr_account_row"><i class="oi" data-icon="person" aria-hidden="true"/><label for="employee_name" string="Nhân viên"/><field name="employee_name" readonly="1"/></div>
  <div class="o_tp_hr_account_row"><i class="oi" data-icon="badge" aria-hidden="true"/><label for="tp_employee_code" string="Mã nhân viên"/><field name="tp_employee_code" readonly="1"/></div>
- <div class="o_tp_hr_account_row"><svg class="o_tp_hr_line_icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 10 6-10 6L2 9Z M2 13l10 6 10-6 M2 17l10 6 10-6"/></svg><label for="department_id" string="Phòng ban"/><field name="department_id" readonly="1"/></div>
- <div class="o_tp_hr_account_row"><i class="oi" data-icon="work" aria-hidden="true"/><label for="job_id" string="Chức vụ"/><field name="job_id" readonly="1"/></div></section><section>
+ <div class="o_tp_hr_account_row"><svg class="o_tp_hr_line_icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 10 6-10 6L2 9Z M2 13l10 6 10-6 M2 17l10 6 10-6"/></svg><label for="department_id" string="Phòng ban"/><field name="department_id" readonly="1" context="{'form_view_ref': 'tp_hr_workspace.department_form'}"/></div>
+ <div class="o_tp_hr_account_row"><i class="oi" data-icon="work" aria-hidden="true"/><label for="job_id" string="Chức vụ"/><field name="job_id" readonly="1" context="{'form_view_ref': 'tp_hr_workspace.job_form'}"/></div></section><section>
  <div class="o_tp_hr_account_row" invisible="not is_linked"><i class="oi" data-icon="person" aria-hidden="true"/><label for="current_login"/><field name="current_login"/></div>
  <div class="o_tp_hr_account_row"><i class="oi" data-icon="check_circle" aria-hidden="true"/><label for="account_status"/><field name="account_status" widget="badge" decoration-success="account_status == 'active'" decoration-danger="account_status == 'disabled'" decoration-muted="account_status == 'unlinked'"/></div></section></div>
  <field name="expected_user_id" invisible="1"/><field name="is_linked" invisible="1"/><field name="is_admin" invisible="1"/><field name="can_change_login" invisible="1"/><field name="employee_id" invisible="1"/>
@@ -374,6 +374,9 @@
     <record id="job_form" model="ir.ui.view">
         <field name="name">tp.hr.job.form</field>
         <field name="model">hr.job</field>
+        <field name="inherit_id" eval="False"/>
+        <field name="mode">primary</field>
+        <field name="priority">5</field>
         <field name="arch" type="xml">
             <form string="Chức vụ" class="o_tp_hr_catalog_form" js_class="tp_hr_catalog">
                 <sheet>
@@ -385,7 +388,7 @@
                     </div>
                     <group>
                         <group string="Thông tin tổ chức">
-                            <field name="department_id" string="Đơn vị / Phòng ban mặc định"/>
+                            <field name="department_id" string="Đơn vị / Phòng ban mặc định" context="{'form_view_ref': 'tp_hr_workspace.department_form'}"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="sequence" string="Thứ tự ưu tiên"/>
                         </group>

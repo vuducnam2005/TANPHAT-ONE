@@ -2,31 +2,58 @@
 <templates xml:space="preserve">
     <t t-name="tp_enterprise_ops.Workspace">
         <div class="tp-ops-shell">
-            <!-- Single Left Module Sidebar -->
+            <!-- Single Left Module Sidebar (strictly scoped to current app: Điều hành vs Tuyển dụng) -->
             <aside t-att-class="'tp-ops-sidebar ' + (this.state.mobileNavOpen ? 'is-open' : '')">
                 <button type="button" class="tp-ops-home-btn" t-on-click="this.goHome">
                     <span>← Trang chủ TANPHAT ONE</span>
                 </button>
-                <button type="button"
-                        t-att-class="'tp-ops-nav-btn ' + (this.state.tab === 'recruitment' ? 'is-active' : '')"
-                        t-on-click="() => this.switchTab('recruitment')">
-                    <span>Tuyển dụng &amp; Tiếp nhận</span>
-                </button>
-                <button type="button"
-                        t-att-class="'tp-ops-nav-btn ' + (this.state.tab === 'payroll' ? 'is-active' : '')"
-                        t-on-click="() => this.switchTab('payroll')">
-                    <span>Đối soát đầu vào Lương</span>
-                </button>
-                <button type="button"
-                        t-att-class="'tp-ops-nav-btn ' + (this.state.tab === 'survey' ? 'is-active' : '')"
-                        t-on-click="() => this.switchTab('survey')">
-                    <span>Thiết bị khảo sát &amp; Kiểm định</span>
-                </button>
-                <button type="button"
-                        t-att-class="'tp-ops-nav-btn ' + (this.state.tab === 'ai' ? 'is-active' : '')"
-                        t-on-click="() => this.switchTab('ai')">
-                    <span>Trợ lý AI Nội bộ (RBAC)</span>
-                </button>
+                <t t-if="this.isGovernanceTab()">
+                    <div class="tp-ops-nav-label">Điều hành &amp; Dự án</div>
+                    <button t-if="this.hasMenu('tp_enterprise_governance.menu_governance_executive')"
+                            type="button"
+                            class="tp-ops-nav-btn"
+                            t-on-click="() => this.switchTab('executive')">
+                        <span>Dashboard Lãnh đạo</span>
+                    </button>
+                    <button t-if="this.hasMenu('tp_enterprise_governance.menu_governance_wbs')"
+                            type="button"
+                            class="tp-ops-nav-btn"
+                            t-on-click="() => this.switchTab('wbs')">
+                        <span>Tiến độ WBS &amp; Đường găng</span>
+                    </button>
+                    <button t-if="this.hasMenu('tp_enterprise_governance.menu_governance_dossiers')"
+                            type="button"
+                            class="tp-ops-nav-btn"
+                            t-on-click="() => this.switchTab('dossiers')">
+                        <span>Hồ sơ dự án &amp; NAS</span>
+                    </button>
+                    <button t-if="this.hasMenu('tp_enterprise_ops.menu_survey_gear')"
+                            type="button"
+                            t-att-class="'tp-ops-nav-btn ' + (this.state.tab === 'survey' ? 'is-active' : '')"
+                            t-on-click="() => this.switchTab('survey')">
+                        <span>Thiết bị khảo sát &amp; Kiểm định</span>
+                    </button>
+                    <button t-if="this.hasMenu('tp_enterprise_ops.menu_ai_assistant')"
+                            type="button"
+                            t-att-class="'tp-ops-nav-btn ' + (this.state.tab === 'ai' ? 'is-active' : '')"
+                            t-on-click="() => this.switchTab('ai')">
+                        <span>Trợ lý AI Nội bộ (RBAC)</span>
+                    </button>
+                </t>
+                <t t-else="">
+                    <div class="tp-ops-nav-label">Tuyển dụng &amp; Nhân sự</div>
+                    <button type="button"
+                            t-att-class="'tp-ops-nav-btn ' + (this.state.tab === 'recruitment' ? 'is-active' : '')"
+                            t-on-click="() => this.switchTab('recruitment')">
+                        <span>Tuyển dụng &amp; Tiếp nhận</span>
+                    </button>
+                    <button t-if="this.hasMenu('tp_enterprise_ops.menu_payroll_reconcile')"
+                            type="button"
+                            t-att-class="'tp-ops-nav-btn ' + (this.state.tab === 'payroll' ? 'is-active' : '')"
+                            t-on-click="() => this.switchTab('payroll')">
+                        <span>Đối soát đầu vào Lương</span>
+                    </button>
+                </t>
             </aside>
 
             <main class="tp-ops-main">

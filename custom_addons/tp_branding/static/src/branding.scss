@@ -1,0 +1,157 @@
+// Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
+// T-0008 (F-0011, F-0027, F-0030): Friendly 404/MissingRecord action + smooth empty loading state.
+
+.tp-not-found-shell {
+    min-height: calc(100vh - var(--tp-ui-navbar-h, 56px));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    background: #F4F7FB;
+    font-family: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: #172B4D;
+}
+
+.tp-not-found-card {
+    width: 100%;
+    max-width: 560px;
+    background: #FFFFFF;
+    border: 1px solid #D6DFEA;
+    border-radius: 16px;
+    padding: 32px 28px;
+    box-shadow: 0 12px 32px rgba(22, 52, 91, 0.08);
+    text-align: center;
+}
+
+.tp-not-found-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: #EBF3FC;
+    color: #1766C0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    margin-bottom: 14px;
+}
+
+.tp-not-found-icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 14px;
+    border-radius: 14px;
+    background: #FEF3C7;
+    color: #B45309;
+    display: grid;
+    place-items: center;
+}
+
+.tp-not-found-title {
+    font-size: 21px;
+    font-weight: 700;
+    color: #16345B;
+    margin: 0 0 10px;
+}
+
+.tp-not-found-desc {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #526580;
+    margin: 0 0 16px;
+}
+
+.tp-not-found-path {
+    display: inline-block;
+    max-width: 100%;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    color: #334155;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 22px;
+}
+
+.tp-not-found-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.tp-not-found-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 8px 18px;
+    border-radius: 9px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid #CBD5E1;
+    background: #FFFFFF;
+    color: #172B4D;
+    transition: background-color 150ms ease, border-color 150ms ease;
+
+    &:hover {
+        background: #F1F5F9;
+        border-color: #94A3B8;
+    }
+
+    &.is-primary {
+        background: #1766C0;
+        border-color: #1766C0;
+        color: #FFFFFF;
+
+        &:hover {
+            background: #12539E;
+            border-color: #12539E;
+        }
+    }
+}
+
+// F-0027: Subtle Vietnamese loading state when slow server actions (e.g. /app/settings) are mounting
+.o_web_client > .o_action_manager:empty {
+    position: relative;
+    min-height: calc(100vh - var(--tp-ui-navbar-h, 56px));
+    background: #F4F7FB;
+
+    &::after {
+        content: "Đang tải màn hình...";
+        position: absolute;
+        top: 42%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 10px 18px;
+        border-radius: 999px;
+        background: #FFFFFF;
+        border: 1px solid #D6DFEA;
+        box-shadow: 0 4px 12px rgba(22, 52, 91, 0.06);
+        color: #526580;
+        font-size: 13.5px;
+        font-weight: 600;
+        opacity: 0;
+        animation: tpActionEmptyFadeIn 220ms ease 220ms forwards;
+    }
+}
+
+@keyframes tpActionEmptyFadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+// F-0030: Hide loading indicator cleanly when marked idle
+body.tp-rpc-idle .o_loading_indicator {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 180ms ease;
+}

@@ -43,7 +43,13 @@ const PAGE_SIZES = [10, 20, 50, 100];
 
 function resolveInitialTaskstate(props) {
     const path = browser.location?.pathname || "";
-    if (/\/app\/ca-nhan\/cong-viec\/(tao-moi|new)$/.test(path) || props?.resId === "new") {
+    if (
+        /\/app\/ca-nhan\/cong-viec\/(tao-moi|new)$/.test(path) ||
+        props?.resId === "new" ||
+        props?.action?.params?.resId === "new" ||
+        props?.action?.params?.openCreate ||
+        props?.action?.context?.tp_open_create
+    ) {
         return { taskId: 0, isNew: true };
     }
     const candidates = [

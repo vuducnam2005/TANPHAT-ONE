@@ -73,6 +73,21 @@ body.o_tp_kd_shell {
         display: none !important;
     }
 }
+// T-0007 (F-0012, F-0013): Custom OWL workspaces already render their own dedicated left sidebar;
+// hide duplicate top horizontal menu tabs and stale app brand labels on standalone screens.
+body:has(.tp-gov-shell, .tp-do-shell, .tp-ops-shell) {
+    .o_main_navbar.tp-shell-navbar .o_menu_sections,
+    .o_main_navbar.tp-shell-navbar .o_mobile_menu_toggle {
+        display: none !important;
+    }
+}
+body:has(.tp-account-security, .tp-not-found-shell) {
+    .o_main_navbar.tp-shell-navbar .o_menu_sections,
+    .o_main_navbar.tp-shell-navbar .o_menu_brand,
+    .o_main_navbar.tp-shell-navbar .o_mobile_menu_toggle {
+        display: none !important;
+    }
+}
 @media (max-width: 1199.98px) {
     .tp-shell-navbar .tp-shell-user-name { display: none; }
     .o_main_navbar.tp-shell-navbar .tp-shell-brand { padding-right: 8px; }

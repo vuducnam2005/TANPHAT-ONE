@@ -1191,24 +1191,97 @@ export class HomeLauncher extends Component {
         }
         this.agendaModalOpen.set(false);
         this.helpOpen.set(false);
+        this.actionError.set(null);
         this._activateModuleContext("project_todo.menu_todo_todos");
-        await this.actionService.doAction(todoMenu.actionID, {
-            clearBreadcrumbs: true,
-            props: { resId: "new" },
-        });
+        try {
+            const baseAction = await this.actionService.loadAction(todoMenu.actionID);
+            if (baseAction && baseAction.type === "ir.actions.client") {
+                await this.actionService.doAction(
+                    {
+                        ...baseAction,
+                        params: { ...(baseAction.params || {}), resId: "new", openCreate: true },
+                    },
+                    {
+                        clearBreadcrumbs: true,
+                        additionalContext: { tp_open_create: true },
+                        props: { resId: "new" },
+                    }
+                );
+                return;
+            }
+            if (baseAction && typeof baseAction === "object") {
+                const formPair =
+                    (baseAction.views || []).find((v) => v[1] === "form") || [false, "form"];
+                await this.actionService.doAction(
+                    {
+                        ...baseAction,
+                        views: [formPair],
+                        view_mode: "form",
+                        res_id: false,
+                        target: "current",
+                    },
+                    { clearBreadcrumbs: true }
+                );
+                return;
+            }
+            await this.actionService.doAction(todoMenu.actionID, {
+                clearBreadcrumbs: true,
+                additionalContext: { tp_open_create: true },
+                props: { resId: "new" },
+            });
+        } catch (error) {
+            this.actionError.set(
+                saveError(error, {
+                    verb: "mở biểu mẫu tạo việc mới",
+                    write: false,
+                    note: "Trang chủ đang xem được giữ nguyên.",
+                })
+            );
+        }
     }
 
-    openPersonalShortcut(xmlid) {
-        const menu = this.menuService.getAll().find((m) => m.xmlid === xmlid);
-        if (menu) {
-            this.agendaModalOpen.set(false);
-            this.helpOpen.set(false);
-            this.menuService.selectMenu(menu);
+    _resolveMenuActionTarget(xmlid) {
+        const all = this.menuService.getAll();
+        const menu = all.find((m) => m.xmlid === xmlid);
+        if (!menu) {
+            return null;
+        }
+        if (menu.actionID) {
+            return { appMenu: menu, leafMenu: menu };
+        }
+        const tree = this.menuService.getMenuAsTree(menu.id);
+        const queue = [...(tree?.childrenTree || [])];
+        while (queue.length) {
+            const node = queue.shift();
+            if (node?.actionID) {
+                return { appMenu: menu, leafMenu: node };
+            }
+            if (node?.childrenTree?.length) {
+                queue.push(...node.childrenTree);
+            }
+        }
+        return null;
+    }
+
+    async openPersonalShortcut(xmlid) {
+        const resolved = this._resolveMenuActionTarget(xmlid);
+        if (!resolved) {
+            return;
+        }
+        this.agendaModalOpen.set(false);
+        this.helpOpen.set(false);
+        this.actionError.set(null);
+        const { appMenu, leafMenu } = resolved;
+        this._activateModuleContext(appMenu.xmlid || xmlid, leafMenu.xmlid || "");
+        try {
+            await this.actionService.doAction(leafMenu.actionID, { clearBreadcrumbs: true });
+        } catch {
+            this.menuService.selectMenu(leafMenu);
         }
     }
 
     hasMenuXmlid(xmlid) {
-        return Boolean(this.menuService.getAll().find((m) => m.xmlid === xmlid && m.actionID));
+        return Boolean(this._resolveMenuActionTarget(xmlid));
     }
 
     async openAgendaAllModal() {

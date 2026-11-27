@@ -15,6 +15,7 @@ class TpGovernanceBase extends Component {
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
+        this.menu = useService("menu");
         this.notification = useService("notification");
 
         this.state = proxy({
@@ -77,12 +78,18 @@ class TpGovernanceBase extends Component {
         this.state.mobileNavOpen = !this.state.mobileNavOpen;
     }
 
+    hasOpsMenu(xmlid) {
+        return Boolean(this.menu?.getAll?.().some((m) => m.xmlid === xmlid));
+    }
+
     async switchTab(target) {
         this.state.mobileNavOpen = false;
         const map = {
             executive: "tp_enterprise_governance.action_executive_dashboard",
             wbs: "tp_enterprise_governance.action_project_wbs_cpm",
             dossiers: "tp_enterprise_governance.action_project_dossier_nas",
+            survey: "tp_enterprise_ops.action_survey_equipment_workspace",
+            ai: "tp_enterprise_ops.action_ai_assistant_workspace",
         };
         await this.action.doAction(map[target] || map.wbs, { clearBreadcrumbs: true });
     }

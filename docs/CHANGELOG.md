@@ -1,5 +1,12 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261127-003 — 2026-11-27 — PHASE2-WAVE-002: Đợt 2 sửa điều hướng Many2one HR, loại bỏ 2 thanh nav, màn hình 404 thân thiện, tắt banner lỗi push service và sửa 3 nút Công việc hôm nay (`tp_branding 20.0.2.7.1`, `tp_web_home 20.0.3.0.2`, `tp_hr_workspace 20.0.1.24.2`, `tp_personal_tools 20.0.2.0.1`, `tp_digital_office 20.0.1.0.1`, `tp_enterprise_governance 20.0.1.0.1`, `tp_enterprise_ops 20.0.1.0.1`)
+
+- **Form Many2one & đồng bộ sidebar HR (`T-0006` / `F-0004`, `F-0005`, `F-0006`):** đặt `mode="primary"`, `priority="5"` và `form_view_ref` cho `job_form`, `department_form`, `location_form`, `category_form` (loại bỏ form `hr_recruitment` tiếng Anh); nâng cấp `TpHrSidebar.syncActive()` nhận diện sub-view quan hệ để sáng đúng mục `Chức vụ` / `Phòng ban và đơn vị`.
+- **Một thanh điều hướng & tách bạch ứng dụng (`T-0007` / `F-0012`, `F-0013`):** ẩn `.o_menu_sections` trùng lặp trên `.tp-gov-shell`, `.tp-do-shell`, `.tp-ops-shell` và xóa ngữ cảnh app cũ trên `.tp-account-security` / `.tp-not-found-shell`; đồng bộ 5 mục *Điều hành & Dự án* và tách riêng 2 mục *Tuyển dụng & Nhân sự*.
+- **Trang 404 thân thiện, tắt banner push service & 3 nút Công việc hôm nay (`T-0008`, `T-0009` / `F-0010`, `F-0011`, `F-0015`, `F-0027`, `F-0030`):** thêm `TpNotFoundAction` chặn `_loadDefaultApp()` cho URL/bản ghi lỗi; bọc `_subscribePush` không hiển thị banner đỏ khi trình duyệt thiếu push service; sửa `Xem tất cả` (`z-index: 1055`), `Lịch làm việc` (`/app/ca-nhan/lich-lam-viec`) và `Tạo việc` (mở ngăn kéo `Thêm việc mới` trong `tp_personal_tools`).
+- **Kiểm thử (`tp_tanphat_test`):** Static PY/XML/ESM-JS/`ruff` PASS; Odoo `--test-enable` **68/68 PASS (`0 failed, 0 error`)**; Playwright E2E chụp `evidence/after/` **100% PASS (`0 pageErrors`, `0 http500s`)**. Ghi nhận Đợt 1 (`bc23433a`) đã deploy thành công lên PC server (`C:\TANPHAT-backups\phase2-wave1\wave1-20261127T093128`, `STRICT_INVARIANT_DRIFTS: {}`, `orphan_audit_emps: 2 -> 0`, public `https://tpone.tadic.vn` `200`).
+
 ## CHG-20261127-002 — 2026-11-27 — PHASE2-WAVE-001-MIGRATE: Chuyển migration `20.0.1.24.1` sang `end-migrate.py` an toàn thứ tự nạp module khi nâng cấp đồng thời `tp_hr_workspace` và `tp_equipment`
 
 - **Migration (`custom_addons/tp_hr_workspace 20.0.1.24.1`):** đổi `post-migrate.py` sang `end-migrate.py` và kiểm tra `'tp_employee_id' in eq_model._fields` trước khi truy vấn `maintenance.equipment` để không phụ thuộc thứ tự nạp registry khi nâng cấp nhiều module.

@@ -42,6 +42,45 @@ export class HomeButton extends Component {
         }
         document.body?.classList?.remove("o_tp_home_active");
 
+        // T-0007 (F-0012, F-0013): Standalone account/system client actions have no menu item;
+        // clear stale previous app context (e.g. "Trao đổi") so top navbar stays neutral.
+        const tag = str(current.tag);
+        if (tag === "tp_web_login.account_security" || tag === "tp_branding.not_found") {
+            if (home && this.menuService.getCurrentApp()?.id !== home.id) {
+                this.menuService.setCurrentMenu(home);
+            }
+            document.body?.classList?.remove("o_tp_home_active");
+            return;
+        }
+        if (tag === "tp_hr_workspace.my_profile") {
+            const hrRoot = this.menuService
+                .getAll()
+                .find((m) => m.xmlid === "tp_hr_workspace.menu_hr");
+            if (hrRoot && this.menuService.getCurrentApp()?.id !== hrRoot.id) {
+                this.menuService.setCurrentMenu(hrRoot);
+            }
+            return;
+        }
+        // Survey Gear & AI Assistant belong to Điều hành & Dự án (tp_enterprise_governance).
+        if (tag === "tp_enterprise_ops.survey_equipment" || tag === "tp_enterprise_ops.ai_assistant") {
+            const govRoot = this.menuService
+                .getAll()
+                .find((m) => m.xmlid === "tp_enterprise_governance.menu_governance_root");
+            if (govRoot && this.menuService.getCurrentApp()?.id !== govRoot.id) {
+                this.menuService.setCurrentMenu(govRoot);
+            }
+            return;
+        }
+        if (tag === "tp_enterprise_ops.recruitment" || tag === "tp_enterprise_ops.payroll_reconcile") {
+            const recRoot = this.menuService
+                .getAll()
+                .find((m) => m.xmlid === "tp_enterprise_ops.menu_recruitment_root");
+            if (recRoot && this.menuService.getCurrentApp()?.id !== recRoot.id) {
+                this.menuService.setCurrentMenu(recRoot);
+            }
+            return;
+        }
+
         const stack = router.current?.actionStack || [];
         const rootAction = stack[0]?.action;
         const isRootStaleHome = Boolean(

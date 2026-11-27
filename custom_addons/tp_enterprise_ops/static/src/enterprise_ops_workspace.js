@@ -15,6 +15,7 @@ class TpEnterpriseOpsBase extends Component {
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
+        this.menu = useService("menu");
         this.notification = useService("notification");
 
         this.state = proxy({
@@ -67,9 +68,20 @@ class TpEnterpriseOpsBase extends Component {
         this.state.mobileNavOpen = !this.state.mobileNavOpen;
     }
 
+    isGovernanceTab() {
+        return this.state.tab === "survey" || this.state.tab === "ai";
+    }
+
+    hasMenu(xmlid) {
+        return Boolean(this.menu?.getAll?.().some((m) => m.xmlid === xmlid));
+    }
+
     async switchTab(target) {
         this.state.mobileNavOpen = false;
         const map = {
+            executive: "tp_enterprise_governance.action_executive_dashboard",
+            wbs: "tp_enterprise_governance.action_project_wbs_cpm",
+            dossiers: "tp_enterprise_governance.action_project_dossier_nas",
             recruitment: "tp_enterprise_ops.action_recruitment_workspace",
             survey: "tp_enterprise_ops.action_survey_equipment_workspace",
             payroll: "tp_enterprise_ops.action_payroll_reconcile_workspace",

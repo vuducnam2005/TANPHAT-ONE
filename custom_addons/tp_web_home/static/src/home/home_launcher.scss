@@ -1737,9 +1737,9 @@
     .tp-home-drawer-backdrop {
         position: fixed;
         inset: 0;
-        z-index: 90;
-        background: rgba(15, 28, 52, 0.36);
-        backdrop-filter: blur(2px);
+        z-index: 1055;
+        background: rgba(15, 28, 52, 0.46);
+        backdrop-filter: blur(2.5px);
         display: flex;
         align-items: center;
         justify-content: center;

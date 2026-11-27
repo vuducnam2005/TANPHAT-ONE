@@ -32,4 +32,30 @@
         </xpath>
     </t>
 
+    <t t-name="tp_branding.NotFound">
+        <main class="tp-not-found-shell" role="alert">
+            <section class="tp-not-found-card">
+                <div class="tp-not-found-badge">TANPHAT ONE · 404</div>
+                <div class="tp-not-found-icon" aria-hidden="true">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+                <h1 class="tp-not-found-title">Không tìm thấy trang hoặc hồ sơ yêu cầu</h1>
+                <p class="tp-not-found-desc" t-out="this.reasonText"/>
+                <div t-if="this.requestedPath" class="tp-not-found-path" t-out="this.requestedPath"/>
+                <div class="tp-not-found-actions">
+                    <button type="button" class="tp-not-found-btn" t-on-click="this.goBack">
+                        ← Quay lại trang trước
+                    </button>
+                    <button type="button" class="tp-not-found-btn is-primary" t-on-click="this.goHome">
+                        Về Trang chủ TANPHAT ONE
+                    </button>
+                </div>
+            </section>
+        </main>
+    </t>
+
 </templates>

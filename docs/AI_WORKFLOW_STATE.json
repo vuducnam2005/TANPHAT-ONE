@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-27T02:31:06.673801+00:00",
-  "last_change_id": "CHG-20261127-002",
-  "code_digest": "e51fa467597deb08793d97038e930cb47a88ed70d408b39be3e4b5cd8a121dc9",
+  "updated_at": "2026-11-27T03:18:44.505271+00:00",
+  "last_change_id": "CHG-20261127-003",
+  "code_digest": "71b58d73481e03f0124b0d4444ce3a63cb294420a88f975a9670f38c2e7fbd62",
   "code_file_count": 928,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "8d9f3bbcfff48c95e4f6d753b966e7e1f752f49b27a1385cba07bc7777da8e03",
-    "docs/CHANGELOG.md": "78a315eef2a353bd8c47823af844827ecef779722ee4d349deacdebc39f9bd54",
+    "docs/PROJECT_STATUS.md": "57fb3085dad814baa6b475237ebc4f3e0a3bc74f8b6a06cef4673924efe24c48",
+    "docs/CHANGELOG.md": "7185ac97adcd42ff3bef3c97cfcd7f2f8c866c727d2d4d4188d7f479c785ea7a",
     "AGENTS.md": "72c31b7b0d24828d2313203ad211348f916aec386e61ad31b478fb3f80ad4448",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "ruff 0 errors; end-migrate registry order guard verified"
+    "static py/xml/esm-js/ruff PASS; Odoo 68/68 PASS; Playwright Wave 2 E2E 100% PASS"
   ]
 }
