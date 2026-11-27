@@ -30,19 +30,19 @@
     <field name="name">tp.import_line_list</field>
     <field name="model">tp.equipment.import.line</field>
     <field name="arch" type="xml">
-      <list js_class="tp_equipment_table" class="tp_eq_table" limit="20">
-        <field name="sheet_name"/>
-        <field name="row_number"/>
-        <field name="disposition"/>
-        <field name="name" optional="show"/>
-        <field name="employee_id" optional="show"/>
-        <field name="department_id" optional="show"/>
-        <field name="location_id" optional="show"/>
-        <field name="mapping_confirmed" readonly="1" optional="show"/>
-        <field name="applied" optional="show"/>
-        <field name="equipment_id" optional="show"/>
-        <field name="proposal_line_id" optional="show"/>
-        <field name="resolution_note" optional="show"/>
+      <list js_class="tp_equipment_table" class="tp_eq_table tp_eq_wide_table" limit="20">
+        <field name="sheet_name" width="[100,150]"/>
+        <field name="row_number" width="[76,96]"/>
+        <field name="disposition" width="[120,160]"/>
+        <field name="name" optional="show" width="[150,240]"/>
+        <field name="employee_id" optional="show" width="[140,200]"/>
+        <field name="department_id" optional="show" width="[140,200]"/>
+        <field name="location_id" optional="show" width="[120,180]"/>
+        <field name="mapping_confirmed" string="Xác nhận ánh xạ" readonly="1" optional="show" width="[128,148]"/>
+        <field name="applied" optional="show" width="[96,116]"/>
+        <field name="equipment_id" optional="show" width="[140,200]"/>
+        <field name="proposal_line_id" optional="show" width="[140,200]"/>
+        <field name="resolution_note" optional="show" width="[160,260]"/>
         <field name="suggestion" optional="hide"/>
       </list>
     </field>
@@ -280,7 +280,12 @@
     <field name="domain">[('disposition', 'in', ('unknown', 'wait', 'missing'))]</field>
     <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('import_line_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('import_line_form')})]"/>
     <field name="group_ids" eval="[(4, ref('base.group_system'))]"/>
-  <field name="path">dong-nguon-thiet-bi-cho</field></record>
+    <field name="path">dong-nguon-thiet-bi-cho</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">Không có dòng nguồn nào đang chờ bổ sung</p>
+      <p>Các dòng nhập thiết bị cần xác nhận nhân sự hoặc ánh xạ phòng ban sẽ hiển thị tại đây.</p>
+    </field>
+  </record>
   <record id="action_import_alias" model="ir.actions.act_window">
     <field name="name">Ánh xạ tên đã xác nhận</field>
     <field name="res_model">tp.equipment.import.alias</field>

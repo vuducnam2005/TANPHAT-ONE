@@ -39,6 +39,10 @@ body.o_tp_eq_shell.o_tp_eq_compact {
     border-radius: var(--tp-eq-radius);
     background: var(--tp-eq-surface);
 
+    &:has(.o_view_nocontent):not(:has(.o_data_row)) > .o_list_table > thead {
+        display: none;
+    }
+
     .o_list_table {
         --table-bg: var(--tp-eq-surface);
         --table-color: var(--tp-eq-ink);
@@ -72,6 +76,11 @@ body.o_tp_eq_shell.o_tp_eq_compact {
                 box-shadow: inset 0 -1px 0 var(--tp-eq-line-strong);
             }
             // Header labels wrap instead of an ellipsis ("never truncated").
+            // T-0013 (F-0018): enforce comfortable min-width so multi-column tables scroll horizontally
+            // instead of wrapping Vietnamese headers into 11 vertical lines.
+            &:not(.o_list_record_selector):not(.o_handle_cell):not(.o_list_actions_header) {
+                min-width: 108px;
+            }
             .text-truncate {
                 white-space: normal;
                 overflow: visible;
@@ -374,11 +383,12 @@ body.o_tp_eq_shell {
     .tp_eq_filter_label { color: #17324d; font-weight: 600; padding-right: 5px; }
     .tp_eq_quick_states .btn { border-radius: 18px; padding: 4px 11px; background: #fff; color: #334c68; border-color: #c6d6e7; transition: background-color 180ms, border-color 180ms; }
     .tp_eq_quick_states .btn.active { background: #dbeafe; border-color: #93c5fd; color: #1e40af; font-weight: 600; }
-    .tp_eq_field_filters select, .tp_eq_field_filters input, .tp_eq_page_size select, .tp_eq_relation_tools select { min-height: var(--tp-ui-control-h, 36px); max-width: 100%; border: 1px solid var(--tp-input-border); border-radius: 5px; background: var(--tp-input-bg); color: var(--tp-input-text); padding: 5px 8px; }
+    .tp_eq_field_filters select, .tp_eq_field_filters input, .tp_eq_page_size select, .tp_eq_relation_tools select { min-height: var(--tp-ui-control-h, 36px); max-width: 100%; border: 1px solid var(--tp-input-border); border-radius: 5px; background-color: var(--tp-input-bg); color: var(--tp-input-text); padding: 5px 8px; }
+    .tp_eq_field_filters select, .tp_eq_page_size select, .tp_eq_relation_tools select { padding-right: 28px; }
     .tp_eq_field_filters input { flex: 0 1 250px; min-width: 120px; }
     .tp_eq_field_filters select { max-width: 310px; }
     .tp_eq_page_size { display: flex; align-items: center; gap: 6px; font-size: 13px; margin: 0; white-space: nowrap; }
-    .tp_eq_page_size select { font-weight: 600; }
+    .tp_eq_page_size select { font-weight: 600; width: auto; min-width: 72px; }
     .o_tp_eq_list_tools { flex-wrap: wrap; }
     .tp_eq_display_options { position: relative; margin-left: 8px; font-size: 12px; }
     .tp_eq_display_options summary { cursor: pointer; padding: 8px; color: #52677d; }
@@ -937,6 +947,35 @@ body.o_tp_eq_shell {
             white-space: nowrap;
             text-align: right;
             font-weight: 600;
+        }
+
+        th[data-name="mapping_confirmed"],
+        td[name="mapping_confirmed"] {
+            width: 132px !important;
+            min-width: 132px !important;
+            white-space: normal !important;
+            text-align: center;
+        }
+
+        th[data-name="applied"],
+        td[name="applied"] {
+            width: 100px !important;
+            min-width: 100px !important;
+            white-space: nowrap !important;
+            text-align: center;
+        }
+    }
+
+    .o_list_view.tp_eq_wide_table .o_list_renderer {
+        overflow-x: auto;
+        .o_list_table {
+            min-width: 1460px;
+            > thead > tr > th:not(.o_list_record_selector):not(.o_list_actions_header) {
+                min-width: 104px;
+                white-space: normal;
+                word-break: normal;
+                overflow-wrap: break-word;
+            }
         }
     }
 }

@@ -113,6 +113,27 @@
     gap: 10px;
     align-items: center;
     margin-bottom: 12px;
+
+    .tp-do-select {
+        width: auto;
+        flex: 0 1 195px;
+        min-width: 155px;
+    }
+
+    .tp-do-search-input {
+        width: auto;
+        flex: 1 1 240px;
+        min-width: 200px;
+    }
+
+    @media (max-width: 767.98px) {
+        .tp-do-select,
+        .tp-do-search-input {
+            width: 100%;
+            flex: 1 1 100%;
+            min-width: 0;
+        }
+    }
 }
 
 .tp-do-input,

@@ -65,9 +65,29 @@ $tp-input-editable: ".o_form_editable .o_field_widget:not(.o_readonly_modifier)"
         cursor: pointer;
     }
     &:is(select) {
-        padding-right: calc(var(--tp-input-px) + 18px);
-        background-position: right var(--tp-input-px) center; // core caret image, kept off the border
+        appearance: none;
+        -webkit-appearance: none;
+        padding-right: calc(var(--tp-input-px) + 22px);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2352627a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 9px center;
+        background-size: 14px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
     }
+}
+
+// T-0010 (F-0014): Consistent single custom SVG chevron across all TANPHAT custom selects (no double arrows).
+:is(.o_tp_hr_page_size, .tp_kd_page_size, .tp_kd_relation_tools, .tp_filter_bar, .tp-do-shell, .tp-ops-shell, .tp-gov-shell, .tp_req_page) select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 30px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2352627a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+    background-size: 14px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 // Headings keep their own type scale (employee name, record titles).

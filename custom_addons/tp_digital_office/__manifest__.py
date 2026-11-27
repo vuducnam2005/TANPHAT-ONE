@@ -1,7 +1,7 @@
 # Part of TANPHAT ONE. License LGPL-3 (see LICENSE of the Odoo distribution).
 {
     'name': 'TANPHAT ONE — Văn phòng số (Thông báo & Biên bản họp)',
-    'version': '20.0.1.0.1',
+    'version': '20.0.1.0.2',
     'category': 'Productivity',
     'summary': 'Thông báo nội bộ có xác nhận đã đọc, Biên bản họp sinh đầu việc, và cầu nối Kế hoạch - Báo cáo',
     'author': 'TANPHAT ONE',

@@ -143,9 +143,34 @@
     border-radius: 8px;
     padding: 7px 10px;
     font-size: 13px;
-    min-height: 36px;
-    background: #FFFFFF;
+    min-height: 38px;
+    background-color: #FFFFFF;
     color: #172B4D;
+}
+
+.tp-ops-card > .d-flex.flex-wrap {
+    align-items: center;
+
+    > .tp-ops-input {
+        width: auto;
+        flex: 1 1 260px;
+        min-width: 200px;
+    }
+
+    > .tp-ops-select {
+        width: auto;
+        flex: 0 1 220px;
+        min-width: 170px;
+    }
+
+    @media (max-width: 767.98px) {
+        > .tp-ops-input,
+        > .tp-ops-select {
+            width: 100%;
+            flex: 1 1 100%;
+            min-width: 0;
+        }
+    }
 }
 
 .tp-ops-table-wrap {

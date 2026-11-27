@@ -23,11 +23,12 @@ body.o_tp_kd_shell {
     .tp_kd_filter_label { color: #17324d; font-weight: 600; padding-right: 5px; }
     .tp_kd_quick_states .btn { border-radius: 18px; padding: 4px 11px; background: #fff; color: #334c68; border-color: #c6d6e7; transition: background-color 180ms, border-color 180ms; }
     .tp_kd_quick_states .btn.active { background: #dbeafe; border-color: #93c5fd; color: #1e40af; font-weight: 600; }
-    .tp_kd_field_filters select, .tp_kd_field_filters input, .tp_kd_page_size select, .tp_kd_relation_tools select { min-height: var(--tp-ui-control-h, 36px); max-width: 100%; border: 1px solid var(--tp-input-border); border-radius: 5px; background: var(--tp-input-bg); color: var(--tp-input-text); padding: 5px 8px; }
+    .tp_kd_field_filters select, .tp_kd_field_filters input, .tp_kd_page_size select, .tp_kd_relation_tools select { min-height: var(--tp-ui-control-h, 36px); max-width: 100%; border: 1px solid var(--tp-input-border); border-radius: 5px; background-color: var(--tp-input-bg); color: var(--tp-input-text); padding: 5px 8px; }
+    .tp_kd_field_filters select, .tp_kd_page_size select, .tp_kd_relation_tools select { padding-right: 28px; }
     .tp_kd_field_filters input { flex: 0 1 250px; min-width: 120px; }
     .tp_kd_field_filters select { max-width: 310px; }
     .tp_kd_page_size { display: flex; align-items: center; gap: 6px; font-size: 13px; margin: 0; white-space: nowrap; }
-    .tp_kd_page_size select { font-weight: 600; }
+    .tp_kd_page_size select { font-weight: 600; width: auto; min-width: 72px; }
     .o_tp_kd_list_tools { flex-wrap: wrap; }
     .tp_kd_display_options { position: relative; margin-left: 8px; font-size: 12px; }
     .tp_kd_display_options summary { cursor: pointer; padding: 8px; color: #52677d; }
@@ -103,5 +104,91 @@ body.o_tp_kd_shell {
 
     @media (max-width: 767px) {
         .tp_kd_filter_bar { padding: 8px; }
+    }
+}
+
+// T-0011 (F-0016): Ensure tp_kd_relation sub-table toolbar stays cleanly above the table header
+// across ALL apps (HR job_form/department_form, KH-KD, Contracts) with zero label overlap.
+.o_field_x2many:has(.tp_kd_relation_tools) .o_list_renderer {
+    margin-top: 0 !important;
+}
+
+.o_field_x2many .o_x2m_control_panel:has(.tp_kd_relation_tools) {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+    margin-bottom: 10px !important;
+    position: static;
+    height: auto;
+}
+
+.tp_kd_relation_tools {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 9px 12px;
+    background: #f1f6fc;
+    border: 1px solid #d6e2f0;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #334155;
+    box-sizing: border-box;
+
+    strong {
+        margin-right: auto;
+        font-size: 14px;
+        font-weight: 650;
+        color: #172b4d;
+        white-space: nowrap;
+    }
+
+    .tp_kd_relation_filter {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 34px;
+        padding: 4px 12px;
+        white-space: nowrap;
+        font-size: 13px;
+    }
+
+    label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0;
+        white-space: nowrap;
+        flex-wrap: nowrap;
+    }
+
+    select {
+        width: auto !important;
+        min-width: 72px;
+        flex: 0 0 auto;
+        min-height: 34px;
+        padding: 4px 28px 4px 10px;
+        border: 1px solid var(--tp-input-border, #cbd5e1);
+        border-radius: 6px;
+        background-color: var(--tp-input-bg, #ffffff);
+        color: var(--tp-input-text, #172b4d);
+        font-weight: 600;
+    }
+
+    .text-muted,
+    .tp_kd_save_hint {
+        white-space: nowrap;
+    }
+
+    @media (max-width: 767px) {
+        align-items: flex-start;
+
+        strong {
+            flex: 1 1 100%;
+        }
     }
 }

@@ -29,7 +29,7 @@
 .o_tp_hr_mobile_form_actions { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 12px; background: #fff; border-bottom: 1px solid #dce4ef; .btn { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; } }
 .o_tp_hr_catalog_view {
     .o_form_renderer { display: flex; flex-direction: column; }
-    .o-mail-Form-chatter { width: 100%; max-width: none; flex: 0 0 auto; }
+    .o-mail-Form-chatter { width: 100%; max-width: 1260px; margin: 16px auto 0; flex: 0 0 auto; border-top: 1px solid #dce4ef; padding-top: 12px; }
     .o_form_sheet_bg { background: #f4f7fb; padding: 20px; }
     .o_form_sheet { max-width: 1260px; margin: 0 auto; border: 1px solid #dce4ef; border-radius: 8px; box-shadow: none; background: #fff; padding: 24px; }
     .oe_title { max-width: none; margin: 8px 0 24px; h1, h1 .o_field_widget { font-size: 26px; color: #183153; font-weight: 650; } }

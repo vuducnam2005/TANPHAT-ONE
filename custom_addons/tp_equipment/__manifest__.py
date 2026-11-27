@@ -1,7 +1,7 @@
 {
     "name": "TANPHAT ONE — Kho thiết bị văn phòng",
     "summary": "Danh mục, bàn giao, sửa chữa, đề xuất và kiểm kê thiết bị văn phòng (chỉ quản trị hệ thống)",
-    "version": "20.0.1.7.2",
+    "version": "20.0.1.7.3",
     "license": "LGPL-3",
     "author": "Tan Phat JSC",
     "category": "Supply Chain/Maintenance",

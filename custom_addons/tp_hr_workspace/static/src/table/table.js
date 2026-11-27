@@ -643,6 +643,72 @@ const TABLE_CONTENT = {
         "",
         "Không có dòng đối chiếu",
     ],
+    "tp.hr.attendance.day": [
+        "Bảng ngày công",
+        "Tổng hợp giờ vào/ra và trạng thái ngày công trong phạm vi được xem.",
+        "",
+        "Chưa có dữ liệu ngày công",
+    ],
+    "tp.hr.attendance.correction": [
+        "Đề nghị điều chỉnh công",
+        "Danh sách phiếu giải trình và phê duyệt điều chỉnh giờ chấm công.",
+        "Tạo đề nghị",
+        "Chưa có đề nghị điều chỉnh",
+    ],
+    "tp.hr.attendance.period": [
+        "Chốt kỳ công",
+        "Quản lý kỳ chấm công, kiểm soát ngày cần rà soát và khóa kỳ.",
+        "Tạo kỳ công",
+        "Chưa có kỳ công nào",
+    ],
+    "tp.hr.attendance.rule": [
+        "Quy tắc công",
+        "Thiết lập khung giờ hành chính và quy tắc xác nhận công theo phòng ban.",
+        "Thêm quy tắc",
+        "Chưa có quy tắc công",
+    ],
+    "tp.hr.attendance.code": [
+        "Mã máy chấm công",
+        "Ánh xạ mã thiết bị chấm công với hồ sơ nhân sự tương ứng.",
+        "Thêm mã máy",
+        "Chưa có mã máy chấm công",
+    ],
+    "tp.hr.attendance.assignment": [
+        "Phân công xử lý công",
+        "Phân quyền phụ trách nhập liệu, rà soát và chốt kỳ công theo phòng ban.",
+        "Thêm phân công",
+        "Chưa có phân công xử lý công",
+    ],
+    "tp.hr.attendance.batch": [
+        "Lịch sử nhập Excel chấm công",
+        "Lưu vết các lô dữ liệu chấm công lịch sử trước khi đồng bộ ENTI tự động.",
+        "",
+        "Chưa có lô nhập lịch sử",
+    ],
+    "tp.hr.attendance.enti.mapping": [
+        "Đối chiếu nhân viên chấm công",
+        "Ghép nối tài khoản trên máy chấm công ENTI với hồ sơ nhân viên trong hệ thống.",
+        "",
+        "Chưa có dữ liệu đối chiếu ENTI",
+    ],
+    "tp.hr.attendance.enti.sync.log": [
+        "Nhật ký đồng bộ chấm công",
+        "Theo dõi lịch sử kết nối, số bản ghi đồng bộ và cảnh báo từ hệ thống ENTI.",
+        "",
+        "Chưa có nhật ký đồng bộ",
+    ],
+    "tp.hr.attendance.enti.employee.image": [
+        "Nhật ký đồng bộ ảnh hồ sơ ENTI",
+        "Lịch sử kiểm tra và áp dụng ảnh đại diện từ máy chấm công ENTI sang hồ sơ HR.",
+        "",
+        "Chưa có nhật ký đồng bộ ảnh",
+    ],
+    "tp.hr.attendance.late": [
+        "Tổng đi muộn theo kỳ",
+        "Thống kê số lần và số phút đi muộn ghi nhận theo kỳ công.",
+        "",
+        "Chưa có dữ liệu đi muộn",
+    ],
 };
 
 export class HrListController extends ListController {
@@ -693,14 +759,20 @@ export class HrListController extends ListController {
     }
 
     get hrContent() {
-        return (
-            TABLE_CONTENT[this.props.resModel] || [
-                this.env.config.displayName || "Danh sách HR",
-                "Quản lý danh mục nhân sự trong phạm vi được xem.",
-                "Thêm mới",
-                "Chưa có dữ liệu",
-            ]
-        );
+        const mapped = TABLE_CONTENT[this.props.resModel];
+        if (mapped) {
+            return mapped;
+        }
+        const title =
+            this.env.config?.displayName ||
+            this.props.archInfo?.xmlDoc?.getAttribute?.("string") ||
+            "Danh sách dữ liệu";
+        return [
+            title,
+            "Quản lý và tra cứu dữ liệu trong phạm vi được xem.",
+            "Thêm mới",
+            "Chưa có dữ liệu",
+        ];
     }
 
     get hrHasFilters() {

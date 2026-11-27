@@ -722,6 +722,13 @@
 
         &.is-num { text-align: right; }
         &.is-right { text-align: right; }
+        &:last-child {
+            position: sticky;
+            right: 0;
+            z-index: 2;
+            background: #f8fafc;
+            box-shadow: -6px 0 10px -6px rgba(15, 23, 42, 0.14);
+        }
     }
 
     td {
@@ -731,6 +738,13 @@
 
         &.is-num { text-align: right; font-variant-numeric: tabular-nums; }
         &.is-right { text-align: right; }
+        &:last-child {
+            position: sticky;
+            right: 0;
+            z-index: 1;
+            background: #ffffff;
+            box-shadow: -6px 0 10px -6px rgba(15, 23, 42, 0.14);
+        }
     }
 }
 
@@ -740,6 +754,10 @@
 
     &:hover {
         background: #f8fafc;
+
+        td:last-child {
+            background: #f8fafc;
+        }
     }
 }
 
@@ -1896,6 +1914,15 @@
 @media (max-width: 680px) {
     .tp_req_page {
         padding: 14px 12px 24px;
+    }
+    .tp_req_filter_row {
+        grid-template-columns: 1fr;
+
+        > *,
+        .tp_req_input {
+            min-width: 0;
+            width: 100%;
+        }
     }
     .tp_req_kpi_grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));

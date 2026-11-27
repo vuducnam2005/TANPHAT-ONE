@@ -698,8 +698,13 @@
                             </div>
 
                             <div class="tp_req_field">
-                                <label class="tp_req_label">Nhận xét / lý do <span class="tp_req_muted">(bắt buộc khi Trả lại hoặc Từ chối)</span></label>
-                                <textarea rows="3" class="tp_req_textarea" placeholder="Nhập ý kiến phê duyệt hoặc lý do trả lại / từ chối..."
+                                <label class="tp_req_label">
+                                    Nhận xét / lý do
+                                    <span class="tp_req_muted" t-if="d.permissions.can_reject">(bắt buộc khi Trả lại hoặc Từ chối)</span>
+                                    <span class="tp_req_muted" t-else="">(bắt buộc khi Trả lại bổ sung)</span>
+                                </label>
+                                <textarea rows="3" class="tp_req_textarea"
+                                          t-att-placeholder="d.permissions.can_reject ? 'Nhập ý kiến phê duyệt hoặc lý do trả lại / từ chối...' : 'Nhập ý kiến phê duyệt hoặc lý do trả lại bổ sung...'"
                                           t-att-value="this.state.decisionNote"
                                           t-on-input="(ev) => { this.state.decisionNote = ev.target.value; this.state.decisionError = ''; }"/>
                             </div>

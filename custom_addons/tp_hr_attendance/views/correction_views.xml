@@ -150,7 +150,7 @@
                 <button name="action_open_unlock" type="object" string="Mở lại kỳ" invisible="state != 'locked' or not can_lock"/><field name="state" widget="statusbar"/>
             </header><sheet>
                 <div class="alert alert-info" role="status">Chốt kỳ giữ nguyên kết quả đã rà soát. Công chưa có quy tắc vẫn là Chưa xác nhận; chốt kỳ không duyệt lương hoặc tăng ca.</div>
-                <field name="can_lock" invisible="1"/><h1><field name="name" readonly="state == 'locked'"/></h1>
+                <field name="can_lock" invisible="1"/><div class="oe_title"><label for="name" string="Tên kỳ công"/><h1><field name="name" readonly="state == 'locked'" placeholder="Ví dụ: Kỳ công tháng 11/2026"/></h1></div>
                 <group><group><field name="date_from" readonly="state == 'locked'"/><field name="date_to" readonly="state == 'locked'"/><field name="company_id" groups="base.group_multi_company" readonly="state == 'locked'"/></group>
                     <group><field name="version"/><field name="locked_by"/><field name="locked_at"/></group></group>
                 <group string="Đối chiếu trước chốt"><field name="day_count"/><field name="ok_count"/><field name="missing_count"/><field name="review_count"/><field name="pending_count"/><field name="amend_count"/></group>

@@ -1,7 +1,7 @@
 {
     "name": "TANPHAT ONE — Chấm công",
     "summary": "Chấm công tự động, quản trị kết nối và xuất bảng công theo kỳ",
-    "version": "20.0.4.0.1",
+    "version": "20.0.4.0.2",
     "category": "Human Resources/Attendances",
     "license": "LGPL-3",
     "author": "Tan Phat JSC",
