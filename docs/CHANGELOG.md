@@ -1,5 +1,10 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261127-006 — 2026-11-27 — PHASE2-WAVE-005-SIGNOFF: Biên bản triển khai Đợt 4 (`368e9bdd`) lên PC server & Kết quả Hồi quy Toàn hệ thống Đợt 5 (`T-0018`..`T-0020`, docs-only)
+
+- **Triển khai Đợt 4 (`368e9bdd`):** backup nhị phân `C:\TANPHAT-backups\phase2-wave4\wave4-20261127T110742` (`tp_tanphat_dev.dump` `10.216.409` B, SHA256 `b014b736...`, `17.687` TOC), `520/520` SHA256, `-u` 8 module đạt `rc=0, error_lines=0`, `STRICT_INVARIANT_DRIFTS: {}`, `alarm_1day_vi = "Email - Trước 1 ngày"`, public `https://tpone.tadic.vn` `/web/health` `200`, live bundles `08e7aad`/`53e92fd` `200`.
+- **Hồi quy Đợt 5 (`tp_tanphat_test`):** Odoo `--test-enable` **223/226 PASS** trên 14 module (3 ca cũ ngoài scope); Playwright **5/5 vai trò** × **5 độ phân giải (36/36 tuyến, 0 overflow, 0 errorDialog, 0 `/action-*`)** × **Chromium 156 & Microsoft Edge 158 PASS** (`Firefox`/`WebKit` ghi rõ `NOT_TESTED`). Bàn giao đủ `75/75` kịch bản (`47 VERIFIED_PUBLIC`, `23 VERIFIED_LOCAL`, `3 DEFERRED_WITH_REASON`, `2 NOT_TESTED`) cùng `44` ảnh đối chứng `evidence/after/`. Chỉ cập nhật tài liệu, không restart lại Odoo.
+
 ## CHG-20261127-005 — 2026-11-27 — PHASE2-WAVE-004: Đợt 4 chuẩn hóa 24 URL `/app/*` tiếng Việt & bỏ `/tao-moi` KH-KD, tinh chỉnh Mobile `360px/390px`, Việt hóa `Company`/`Thứ tự hiển thị`/`Email - Trước 1 ngày`/`hr_recruitment`, ẩn preview ma `sample` & nút mở nhanh Phòng ban HR tại Quản trị Request (`tp_branding 20.0.2.7.2`, `tp_web_home 20.0.3.0.4`, `tp_hr_workspace 20.0.1.24.4`, `tp_kd_workspace 20.0.1.11.3`, `tp_equipment 20.0.1.7.4`, `tp_request 20.0.2.0.2`, `tp_personal_tools 20.0.2.0.2`, `tp_i18n_vi 20.0.1.1.2`)
 
 - **URL thương hiệu & Mobile `360px/390px` (`T-0014`, `T-0015` / `F-0023`, `F-0024`, `F-0027`):** bỏ `has_detail` trên `action_management`/`action_governance` (hết `/tao-moi`), đăng ký thêm 24 route tiếng Việt sạch trong `brand_routes.py/js`; sửa `TpAppSwitcher` full-width `100vw` trên mobile `360px`, giữ avatar trên `.tp-shell-navbar` `<= 400px`, nâng nút `Menu TP HR`/`Quay lại` `>= 44px`, bỏ cuộn dọc kép `.nav-tabs` HR và bọc gọn 5 tab `Trao đổi` (`Kênh` không cắt mép).
