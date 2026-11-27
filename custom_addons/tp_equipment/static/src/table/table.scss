@@ -180,6 +180,20 @@ body.o_tp_eq_shell .o_list_view.tp_eq_table {
             max-height: 100%;
         }
     }
+    .o_list_renderer:has(.o_view_nocontent) {
+        position: relative;
+        min-height: 260px;
+        display: flex;
+        flex-direction: column;
+
+        .o_view_nocontent {
+            position: relative;
+            inset: auto;
+            flex: 1 1 auto;
+            min-height: 220px;
+            padding: 28px 20px;
+        }
+    }
     // Table tools sit just before the pager.
     .o_control_panel_navigation .o_tp_eq_list_tools {
         order: -1;

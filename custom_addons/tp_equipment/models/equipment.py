@@ -2,7 +2,6 @@
 import re
 import uuid
 from datetime import timedelta
-from urllib.parse import urlencode as url_encode
 
 from dateutil.relativedelta import relativedelta
 
@@ -328,8 +327,7 @@ class MaintenanceEquipment(models.Model):
             if equipment.tp_qr_token and equipment.tp_lifecycle != "draft":
                 url = f"{base}/tp_equipment/qr/{equipment.tp_qr_token}"
                 equipment.tp_qr_url = url
-                equipment.tp_qr_image_url = "/report/barcode/?" + url_encode({
-                    "barcode_type": "QR", "value": url, "width": 240, "height": 240})
+                equipment.tp_qr_image_url = f"/tp_equipment/qr_image/{equipment.tp_qr_token}"
             else:
                 equipment.tp_qr_url = False
                 equipment.tp_qr_image_url = False

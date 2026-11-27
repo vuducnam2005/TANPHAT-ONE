@@ -2,6 +2,9 @@ import json
 import re
 
 from markupsafe import escape
+from reportlab.graphics import renderSVG
+from reportlab.graphics.barcode.qr import QrCodeWidget
+from reportlab.graphics.shapes import Drawing
 
 from odoo import http
 from odoo.exceptions import AccessError
@@ -56,6 +59,43 @@ class TpEquipmentQr(http.Controller):
                          "Nhãn này không khớp thiết bị nào hoặc đã được cấp lại. Tra cứu theo mã thiết bị trong "
                          "Kho thiết bị văn phòng.", 404)
         return request.redirect(f"/odoo/kho-thiet-bi/{equipment.id}")
+
+    @http.route("/tp_equipment/qr_image/<string:token>", type="http", auth="user", methods=["GET"], readonly=True)
+    def qr_image(self, token, **kwargs):
+        if not _can_read("maintenance.equipment"):
+            return request.make_response(
+                "Forbidden",
+                headers=[("Content-Type", "text/plain; charset=utf-8"), ("Cache-Control", "no-store")],
+                status=403,
+            )
+        token = (token or "").strip().lower()
+        equipment = request.env["maintenance.equipment"]
+        if TOKEN_RE.match(token):
+            equipment = equipment.with_context(active_test=False).search([("tp_qr_token", "=", token)], limit=1)
+        if not equipment or equipment.tp_lifecycle == "draft":
+            return request.make_response(
+                "Not Found",
+                headers=[("Content-Type", "text/plain; charset=utf-8"), ("Cache-Control", "no-store")],
+                status=404,
+            )
+        equipment.check_access("read")
+        qr_url = f"{equipment.get_base_url()}/tp_equipment/qr/{token}"
+        widget = QrCodeWidget(qr_url)
+        widget.barLevel = "M"
+        bx1, by1, bx2, by2 = widget.getBounds()
+        size = 240.0
+        drawing = Drawing(size, size, transform=[size / (bx2 - bx1), 0, 0, size / (by2 - by1), 0, 0])
+        drawing.add(widget)
+        svg_bytes = renderSVG.drawToString(drawing)
+        return request.make_response(
+            svg_bytes,
+            headers=[
+                ("Content-Type", "image/svg+xml; charset=utf-8"),
+                ("Cache-Control", "private, no-store"),
+                ("X-Robots-Tag", "noindex"),
+            ],
+            status=200,
+        )
 
 
 def _pdf(content, filename):

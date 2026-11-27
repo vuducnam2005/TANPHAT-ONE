@@ -4,6 +4,7 @@ import { formView } from "@web/views/form/form_view";
 import { FormCompiler } from "@web/views/form/form_compiler";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { user } from "@web/core/user";
+import { askUnsavedChoice } from "@tp_web_home/back/back_navigation";
 import { useDialogOpener } from "@tp_web_login/js/identitycheck";
 
 export class HrProfileCompiler extends FormCompiler {
@@ -38,7 +39,11 @@ export class HrProfileController extends FormController {
     static template = "tp_hr_workspace.EmployeeProfile";
     setup() {
         super.setup();
+        this.disableSaveOnVisibilityChange = true;
         this.rememberAccountOpener = useDialogOpener(this.rootRef);
+    }
+    async beforeVisibilityChange() {
+        // Explicit [Lưu] / [Hủy] workflow: never silently auto-save or create draft records on tab switch.
     }
     async beforeExecuteActionButton(params) {
         const result = await super.beforeExecuteActionButton(params);
@@ -94,10 +99,53 @@ export class HrProfileController extends FormController {
             confirm: () => resolve(true), cancel: () => resolve(false), dismiss: () => resolve(false),
         }));
     }
+    promptUnsavedLeave() {
+        return askUnsavedChoice(this.dialogService, {
+            body: "Bản ghi này có thay đổi chưa lưu. Bạn muốn làm gì trước khi rời trang?",
+            saveLabel: "Lưu và rời trang",
+        });
+    }
+    hasPendingInputChanges() {
+        const root = this.model?.root;
+        if (!root) {
+            return false;
+        }
+        if (root.dirty) {
+            return true;
+        }
+        const active = document.activeElement;
+        const container = this.rootRef?.el;
+        if (
+            active &&
+            container?.contains(active) &&
+            active.matches("input, textarea, select, [contenteditable='true']")
+        ) {
+            return active.value !== active.defaultValue;
+        }
+        return false;
+    }
+    beforeUnload(ev) {
+        if (!this.skipSaveOnLeave && this.hasPendingInputChanges()) {
+            ev.preventDefault();
+            ev.returnValue = "";
+        }
+    }
     async beforeLeave(options = {}) {
-        if (!options.forceLeave && !this.skipSaveOnLeave && await this.model.root.isDirty()
-            && !await this.confirmChanges("Thay đổi chưa lưu", "Lưu thay đổi trước khi rời trang?", "Lưu và rời trang")) return false;
-        return super.beforeLeave(options);
+        if (options.forceLeave || this.skipSaveOnLeave || !(await this.model.root.isDirty())) {
+            return true;
+        }
+        const choice = await this.promptUnsavedLeave();
+        if (choice === "save") {
+            return this.save({
+                reload: false,
+                onError: (error, opts) => this.onSaveError(error, opts, true),
+            });
+        }
+        if (choice === "discard") {
+            await this.discard();
+            return true;
+        }
+        return false;
     }
 }
 

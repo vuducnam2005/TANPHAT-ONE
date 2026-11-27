@@ -11,4 +11,5 @@ from . import (
     test_login_rename,
     test_my_profile,
     test_table_filter_hr,
+    test_unsaved_guard_cleanup,
 )

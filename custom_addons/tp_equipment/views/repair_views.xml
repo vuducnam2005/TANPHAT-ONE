@@ -126,5 +126,10 @@
     <field name="domain">[]</field>
     <field name="group_ids" eval="[(4, ref('base.group_system'))]"/>
     <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('repair_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('repair_form')})]"/>
-  <field name="path">sua-chua-thiet-bi</field></record>
+    <field name="path">sua-chua-thiet-bi</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">Chưa có phiếu sửa chữa hoặc bảo trì nào</p>
+      <p>Chọn <b>Mới</b> để ghi nhận yêu cầu sửa chữa, bảo trì thiết bị hoặc thay đổi bộ lọc tìm kiếm.</p>
+    </field>
+  </record>
 </odoo>

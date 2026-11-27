@@ -166,11 +166,12 @@ export class TpTableFilterBar extends Component {
     }
 
     get resultCountText() {
-        const root = this.props.controller?.model?.root;
-        if (!root || !this.props.controller?.model?.isReady?.()) {
+        const model = this.props.controller?.model;
+        const root = model?.root;
+        if (!root || !model?.isReady?.()) {
             return "";
         }
-        const count = root.count ?? 0;
+        const count = model.useSampleModel ? 0 : (root.count ?? 0);
         return root.isGrouped ? `${count} nhóm kết quả` : `${count} kết quả`;
     }
 

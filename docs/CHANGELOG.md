@@ -1,5 +1,11 @@
 # TANPHAT ONE — Nhật ký thay đổi
 
+## CHG-20261127-001 — 2026-11-27 — PHASE2-WAVE-001: Đợt 1 sửa lỗi khẩn P1/P2 từ Audit `20261126T223300_ICT` (`tp_web_home 20.0.3.0.1`, `tp_hr_workspace 20.0.1.24.1`, `tp_hr_attendance 20.0.4.0.1`, `tp_kd_workspace 20.0.1.11.1`, `tp_equipment 20.0.1.7.2`)
+
+- **HR Unsaved Guard & Dọn bản ghi rỗng (`T-0001` / `F-0002`):** tái sử dụng `TpUnsavedBackDialog` 3 nút (`Lưu và rời trang`, `Bỏ thay đổi`, `Ở lại`) trong `HrProfileController.beforeLeave`, chặn tự lưu ngầm khi chuyển tab / `beforeunload` (`urgentSave`) trên hồ sơ nhân sự và thêm migration `20.0.1.24.1` dọn an toàn bản ghi thử nghiệm rỗng `AUDIT_UNSAVED_TEST` qua `_tp_permanent_unlink` có ghi audit.
+- **Chấm công ENTI, Dự án KH-KD & Kho thiết bị (`T-0003`, `T-0004`, `T-0005` / `F-0003`, `F-0007`, `F-0008`, `F-0009`, `F-0022`):** nâng `tp_hr_attendance 20.0.4.0.1` nạp quyền `tp.hr.attendance.enti.employee.image` (`/app/cham-cong-anh-enti`); tắt `sample="0"` trên `kd_project_list` (`/app/khkd-du-an`), sửa đếm mẫu trên `TpTableFilterBar` và bỏ chuỗi fixture trong `wbs.xml` (`/app/khkd-cong-viec`); sửa CSS chiều cao trạng thái trống `repair_list` và thay `/report/barcode/` bằng route SVG kiểm quyền `/tp_equipment/qr_image/<token>`.
+- **Kiểm thử (`tp_tanphat_test`):** Static PY/XML/JS/`ruff` PASS; Odoo `--test-enable` **26/26 PASS (`0 failed, 0 error`)**; Playwright E2E chụp `evidence/after/` **PASS (`ORPHAN_COUNT=0`, `0 pageErrors`, `0 http500s`)**.
+
 ## CHG-20261126-013 — 2026-11-26 — UI-APPS-001-DEPLOY: Biên bản Sao lưu nhị phân, Triển khai PC Server (`192.168.1.73`) & Kiểm chứng Public `https://tpone.tadic.vn` cho commit `84de6b6c` (`tp_web_home 20.0.3.0.0`)
 
 - **Sao lưu & Triển khai PC Server (`tp_tanphat_dev`):** sao lưu nhị phân tại `C:\TANPHAT-backups\apps-menu001\apps001-20261126T165847` (`tp_tanphat_dev.dump` `10.109.305` bytes, SHA256 `d2a6bbcb...`, `restore-list.txt` `17.687` dòng TOC, `source-pre-tp_web_home.tar.gz`, `release-apps001.tar.gz`, `docker.odoo.conf`); đối chiếu **70/70** tệp khớp SHA256 (`MISMATCHES=0`); nâng cấp `-u tp_web_home` đạt `rc=0, error_lines=0` (`20.0.3.0.0:installed`), chỉ khởi động lại `tp-odoo` và giữ bất biến 100% dữ liệu doanh nghiệp (`STRICT_INVARIANT_DRIFTS: {}` trên `employees=39`, `users=33/12`, `att_days=1014`, `corrections=3`, `requests=5`, `equipment=55`).

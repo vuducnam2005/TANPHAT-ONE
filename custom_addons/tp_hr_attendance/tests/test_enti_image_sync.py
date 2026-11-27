@@ -490,3 +490,36 @@ class TestEntiImageSync(AttendanceCase):
         retry_res = SourceMgr.action_retry_failed_enti_images_quick()
         self.assertTrue(retry_res["success"])
         self.assertEqual((retry_res["downloaded"], retry_res["total_failed"]), (1, 0))
+
+    def test_08_enti_employee_image_acl_and_action(self):
+        """T-0003 (F-0003): Admin & HR Manager have CRUD, Officer has Read, Regular user denied."""
+        self.routes[f"{ENTI_BASE}/avatars/a.jpg"] = _FakeBinaryResponse(
+            200,
+            content=_make_image_bytes(color=(10, 80, 160), fmt="JPEG"),
+            headers={"Content-Type": "image/jpeg"},
+        )
+        self._run_profiles([
+            {"keyNV": "k-a", "maNV": "E1", "tenNV": "Synthetic Người Một", "anh": f"{ENTI_BASE}/avatars/a.jpg"},
+        ])
+        admin = self.env.ref("base.user_admin")
+        admin.sudo().write({"company_ids": [(4, self.company.id)]})
+        act = self.env.ref("tp_hr_attendance.action_enti_employee_images")
+        self.assertEqual(act.path, "cham-cong-anh-enti")
+
+        # Admin & HR Manager can search_read
+        admin_rows = self.env_for(admin)["tp.hr.attendance.enti.employee.image"].search_read([], ["key_nv", "state"])
+        mgr_rows = self.env_for(self.manager)["tp.hr.attendance.enti.employee.image"].search_read([], ["key_nv", "state"])
+        self.assertTrue(admin_rows)
+        self.assertEqual(len(admin_rows), len(mgr_rows))
+
+        # Attendance Officer can read but cannot unlink/create
+        att_officer_grp = self.env.ref("tp_hr_attendance.group_attendance_officer")
+        self.officer.sudo().write({"group_ids": [(4, att_officer_grp.id)]})
+        off_model = self.env_for(self.officer)["tp.hr.attendance.enti.employee.image"]
+        self.assertTrue(off_model.search_read([], ["key_nv"]))
+        with self.assertRaises(AccessError):
+            off_model.browse(admin_rows[0]["id"]).unlink()
+
+        # Regular employee without HR/Attendance group cannot read ENTI sync logs
+        with self.assertRaises(AccessError):
+            self.env_for(self.viewer)["tp.hr.attendance.enti.employee.image"].search_read([], ["key_nv"])

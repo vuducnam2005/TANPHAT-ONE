@@ -11,9 +11,9 @@
 
     <t t-name="tp_web_home.UnsavedBackDialog">
         <Dialog title="'Thay đổi chưa lưu'" size="'md'">
-            <p class="mb-0">Bản ghi này có thay đổi chưa lưu. Bạn muốn làm gì trước khi quay lại?</p>
+            <p class="mb-0" t-out="this.props.body || 'Bản ghi này có thay đổi chưa lưu. Bạn muốn làm gì trước khi quay lại?'"/>
             <t t-set-slot="footer">
-                <button type="button" class="btn btn-primary o_tp_back_save" t-on-click="() => this.choose('save')">Lưu và quay lại</button>
+                <button type="button" class="btn btn-primary o_tp_back_save" t-on-click="() => this.choose('save')" t-out="this.props.saveLabel || 'Lưu và quay lại'"/>
                 <button type="button" class="btn btn-outline-danger o_tp_back_discard" t-on-click="() => this.choose('discard')">Bỏ thay đổi</button>
                 <button type="button" class="btn btn-secondary o_tp_back_stay" t-on-click="() => this.choose('stay')">Ở lại</button>
             </t>

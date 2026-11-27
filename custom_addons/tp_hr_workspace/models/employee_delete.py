@@ -10,6 +10,7 @@ and with committed data, then locks/keeps accounts, deletes and audits in one
 transaction. The password is never stored, logged or audited.
 """
 import re
+import uuid
 
 from odoo import Command, api, models
 from odoo.exceptions import AccessDenied, AccessError, UserError
@@ -324,3 +325,47 @@ class HrEmployee(models.Model):
                 action = 'already_locked'
             results[employee.id] = {'action': action, 'revoked': revoked}
         return results
+
+    @api.model
+    def _tp_cleanup_audit_unsaved_orphans(self):
+        """Idempotently remove empty orphan records auto-created by F-0002 (TP073/TP074).
+
+        Strict safety guard: only matches records named AUDIT_UNSAVED_TEST / AUDIT_UNSAVED_TEST_2
+        with no linked user, no department, no job, no contracts, no equipment, and no attendance.
+        """
+        candidates = self.sudo().with_context(active_test=False).search([
+            ('name', 'in', ('AUDIT_UNSAVED_TEST', 'AUDIT_UNSAVED_TEST_2')),
+            ('user_id', '=', False),
+            ('department_id', '=', False),
+            ('job_id', '=', False),
+        ])
+        removed_codes = []
+        for emp in candidates:
+            if 'tp.employment.contract' in self.env and self.env['tp.employment.contract'].sudo().search_count([('employee_id', '=', emp.id)]):
+                continue
+            if 'maintenance.equipment' in self.env and self.env['maintenance.equipment'].sudo().with_context(active_test=False).search_count([('tp_employee_id', '=', emp.id)]):
+                continue
+            if 'tp.hr.attendance.day' in self.env and self.env['tp.hr.attendance.day'].sudo().search_count([('employee_id', '=', emp.id)]):
+                continue
+            plan = emp._tp_full_plan()
+            if plan['employees'].get(emp.id, {}).get('block'):
+                continue
+            code = emp.tp_employee_code or str(emp.id)
+            audit_vals = [{
+                'action': 'permanent_delete',
+                'employee_ref': emp.id,
+                'employee_name': emp.name,
+                'employee_code': emp.tp_employee_code,
+                'source_code': emp.tp_source_code,
+                'company_id': emp.company_id.id,
+                'reason': 'Dọn tự động bản ghi nháp rỗng sinh bởi lỗi urgentSave (F-0002 / T-0001)',
+                'request_id': str(uuid.uuid4()),
+                'account_action': 'none',
+                'account_ref': 0,
+                'account_login': False,
+                'verification': 'Migration 20.0.1.24.1',
+                'snapshot': {'migration_cleanup': 'F-0002'},
+            }]
+            emp._tp_permanent_unlink(plan, audit_vals)
+            removed_codes.append(code)
+        return removed_codes

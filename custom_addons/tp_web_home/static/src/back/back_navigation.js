@@ -66,7 +66,7 @@ export class TpUnsavedBackDialog extends Component {
     }
 }
 
-export function askUnsavedChoice(dialogService) {
+export function askUnsavedChoice(dialogService, options = {}) {
     return new Promise((resolve) => {
         let done = false;
         const once = (choice) => {
@@ -75,7 +75,11 @@ export function askUnsavedChoice(dialogService) {
                 resolve(choice);
             }
         };
-        dialogService.add(TpUnsavedBackDialog, { resolve: once }, { onClose: () => once("stay") });
+        dialogService.add(
+            TpUnsavedBackDialog,
+            { resolve: once, body: options.body, saveLabel: options.saveLabel },
+            { onClose: () => once("stay") }
+        );
     });
 }
 
