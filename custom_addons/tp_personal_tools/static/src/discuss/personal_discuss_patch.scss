@@ -80,18 +80,15 @@
         .tp-discuss-pill-bar {
             display: flex;
             align-items: center;
-            gap: 4px;
-            overflow-x: auto;
+            flex-wrap: wrap;
+            gap: 5px;
             padding-bottom: 2px;
-
-            &::-webkit-scrollbar {
-                height: 0;
-            }
         }
 
         .tp-discuss-pill {
             display: inline-flex;
             align-items: center;
+            flex-shrink: 0;
             gap: 5px;
             padding: 5px 10px;
             border-radius: 999px;

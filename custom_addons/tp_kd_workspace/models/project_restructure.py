@@ -436,7 +436,7 @@ class Participation(models.Model):
         check_company=True,
         ondelete="restrict",
     )
-    company_id = fields.Many2one(related="project_id.company_id", store=True)
+    company_id = fields.Many2one(related="project_id.company_id", store=True, string="Công ty")
     package_id = fields.Many2one(
         "tp.bid.package",
         check_company=True,
@@ -568,7 +568,7 @@ class BidPackage(models.Model):
         check_company=True,
         string="Dự án",
     )
-    company_id = fields.Many2one(related="project_id.company_id", store=True)
+    company_id = fields.Many2one(related="project_id.company_id", store=True, string="Công ty")
     investor_id = fields.Many2one(
         related="project_id.kd_investor_id",
         string="Chủ đầu tư",
@@ -813,7 +813,7 @@ class PackageAmount(models.Model):
         check_company=True,
     )
     project_id = fields.Many2one(related="package_id.project_id", store=True)
-    company_id = fields.Many2one(related="project_id.company_id", store=True)
+    company_id = fields.Many2one(related="project_id.company_id", store=True, string="Công ty")
     kind = fields.Selection(
         [
             ("package_total", "Tổng dự kiến giá gói"),
@@ -986,7 +986,7 @@ class ProjectUpdate(models.Model):
     _order = "id desc"
     project_id = fields.Many2one("project.project", required=True, ondelete="restrict")
     package_id = fields.Many2one("tp.bid.package", ondelete="restrict")
-    company_id = fields.Many2one(related="project_id.company_id", store=True)
+    company_id = fields.Many2one(related="project_id.company_id", store=True, string="Công ty")
     actor_id = fields.Many2one("res.users", required=True)
     kind = fields.Selection(
         [

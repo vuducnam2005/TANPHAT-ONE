@@ -75,6 +75,7 @@ export class TpRequestAdmin extends Component {
 
     setup() {
         this.orm = useService("orm");
+        this.action = useService("action");
         this.notification = useService("notification");
         this.ICON_CHOICES = ICON_CHOICES;
         this.COLOR_CHOICES = COLOR_CHOICES;
@@ -115,6 +116,26 @@ export class TpRequestAdmin extends Component {
 
     get missingConfigTypes() {
         return (this.state.data?.types || []).filter((t) => t.active && !t.is_config_ready);
+    }
+
+    get hasMissingDeptManagerWarning() {
+        return this.missingConfigTypes.some((t) =>
+            (t.warnings || []).some((w) => {
+                const txt = String(w || "").toLowerCase();
+                return txt.includes("trưởng phòng") || txt.includes("phòng ban");
+            })
+        );
+    }
+
+    async openHrDepartments() {
+        try {
+            await this.action.doAction("tp_hr_workspace.action_departments");
+        } catch (err) {
+            this.notification.add(
+                extractErrorMessage(err, "Không thể mở danh mục Phòng ban HR."),
+                { type: "warning" }
+            );
+        }
     }
 
     get filteredTypes() {

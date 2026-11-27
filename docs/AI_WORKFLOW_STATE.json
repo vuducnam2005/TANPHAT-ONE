@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-27T03:40:59.538842+00:00",
-  "last_change_id": "CHG-20261127-004",
-  "code_digest": "95881819827f20628bd8e52ab57bde39eaa727a87327f7f57f893b13adcf3a3c",
-  "code_file_count": 928,
+  "updated_at": "2026-11-27T04:02:50.004030+00:00",
+  "last_change_id": "CHG-20261127-005",
+  "code_digest": "dd0bab87d4db759a90496d7b54cad4a885c2524bd14bfd4f3f4a1b49791c7312",
+  "code_file_count": 929,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "9ff4359aa81df943192c5c40ef18dc0205f9516c9eeecab660f1af58fddacd4a",
-    "docs/CHANGELOG.md": "b7e6f0e4bb05a4284bdda7b3f29303c3c52b5f0786c061b883771d1515491960",
+    "docs/PROJECT_STATUS.md": "1ee95b33ce6758d3581ad8e28c6f59fac555faca62daed16d0c042984b28cc28",
+    "docs/CHANGELOG.md": "db317b43cfeb6a46e9556de73da8d6c2dc9000c0decac38047bd49099a49dc5b",
     "AGENTS.md": "72c31b7b0d24828d2313203ad211348f916aec386e61ad31b478fb3f80ad4448",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "Wave 3 static PY/XML/ESM-JS/ruff/diff clean; Odoo --test-enable 29/29 PASS (0 failed, 0 error); Playwright E2E 9/9 after screenshots verified (0 pageErrors, 0 http500s)"
+    "Wave 4 static PY/XML/ESM-JS/ruff/diff clean; Odoo --test-enable PASS tp_branding 34/34, tp_kd_workspace 17/17, tp_request 4/4, tp_i18n_vi 6/8 (2 legacy); CALENDAR_ALARMS_VI verified; Playwright desktop + 390x844 + 360x800 7/7 PNGs PASS (0 pageErrors, 0 http500s, 0 overflow)"
   ]
 }

@@ -1,0 +1,51 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TANPHAT ONE\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: hr_recruitment
+#. odoo-javascript
+#. odoo-python
+#: code:addons/hr_recruitment/models/hr_job.py:0
+msgid "new applications"
+msgstr "hồ sơ ứng tuyển mới"
+
+#. module: hr_recruitment
+#. odoo-javascript
+#. odoo-python
+#: code:addons/hr_recruitment/models/hr_job.py:0
+msgid "New Applications"
+msgstr "Hồ sơ ứng tuyển mới"
+
+#. module: hr_recruitment
+#. odoo-javascript
+#. odoo-python
+#: code:addons/hr_recruitment/models/hr_job.py:0
+msgid "To Recruit"
+msgstr "Cần tuyển"
+
+#. module: hr_recruitment
+#. odoo-javascript
+#. odoo-python
+#: code:addons/hr_recruitment/models/hr_job.py:0
+msgid "Matching Talents"
+msgstr "Ứng viên phù hợp"
+
+#. module: hr_recruitment
+#. odoo-javascript
+#. odoo-python
+#: code:addons/hr_recruitment/models/hr_job.py:0
+msgid "Salary Range"
+msgstr "Khung lương"
+
+#. module: hr_recruitment
+#. odoo-javascript
+#. odoo-python
+#: code:addons/hr_recruitment/models/hr_job.py:0
+msgid "Expected Degree"
+msgstr "Trình độ yêu cầu"

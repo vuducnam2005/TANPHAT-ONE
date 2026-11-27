@@ -1,6 +1,6 @@
 {
     "name": "TANPHAT ONE — Kế hoạch Kinh doanh",
-    "version": "20.0.1.11.2",
+    "version": "20.0.1.11.3",
     "license": "LGPL-3",
     "author": "Tan Phat JSC",
     "depends": ["tp_contract", "tp_crm_project_bridge", "tp_web_home"],

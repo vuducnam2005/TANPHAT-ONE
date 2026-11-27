@@ -155,3 +155,18 @@ body.tp-rpc-idle .o_loading_indicator {
     pointer-events: none !important;
     transition: opacity 180ms ease;
 }
+
+// T-0017 (F-0021): Suppress Odoo client-side Lorem Ipsum / $ fake sample preview ghost rows behind empty states
+.o_view_sample_data {
+    .o_list_table > tbody,
+    .o_kanban_record,
+    .o_kanban_group {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        visibility: hidden !important;
+    }
+
+    .o_view_nocontent {
+        background: #F8FAFC;
+    }
+}

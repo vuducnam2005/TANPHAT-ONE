@@ -93,16 +93,26 @@ body:has(.tp-account-security, .tp-not-found-shell) {
     .o_main_navbar.tp-shell-navbar .tp-shell-brand { padding-right: 8px; }
 }
 @media (max-width: 767.98px) {
-    .o_main_navbar.tp-shell-navbar { padding: 4px; gap: 0;
-        .tp-shell-brand { padding: 0 8px 0 2px; gap: 5px; font-size: 12px; }
+    .o_main_navbar.tp-shell-navbar { padding: 4px; gap: 0; overflow: hidden;
+        .tp-shell-brand { padding: 0 6px 0 2px; gap: 5px; font-size: 12px; }
         .tp-shell-logo { width: 28px; height: 28px; border-radius: 7px; }
         .tp-shell-logo img { width: 21px; height: 21px; }
         .tp-shell-wordmark { display: none; }
         .tp-shell-shortmark { display: inline; }
-        .o_menu_systray { gap: 0; }
-        .o_menu_systray .o_nav_entry, .o_menu_systray button { min-width: 36px; padding-left: 6px; padding-right: 6px; }
-        .o_user_menu { margin-left: 4px; &::before { display: none; } }
-        .o_mobile_menu_toggle { min-width: 44px; padding-right: 8px !important; }
+        .o_menu_brand { max-width: 118px; padding-left: 8px; margin-right: 4px; font-size: 13px; }
+        .o_menu_systray { gap: 0; flex-shrink: 0; }
+        .o_menu_systray .o_nav_entry, .o_menu_systray button { min-width: 34px; padding-left: 5px; padding-right: 5px; }
+        .o_user_menu { margin-left: 2px; padding: 2px 4px !important; flex-shrink: 0; &::before { display: none; } }
+        .o_mobile_menu_toggle { min-width: 44px; min-height: 44px; padding-right: 8px !important; }
+    }
+}
+@media (max-width: 400px) {
+    .o_main_navbar.tp-shell-navbar {
+        .o_navbar_apps_menu .tp-apps-trigger-btn { min-width: 36px; padding: 0 6px; }
+        .tp-shell-brand { padding: 0 4px 0 2px; }
+        .tp-shell-shortmark { display: none; }
+        .o_menu_brand { max-width: 102px; padding-left: 6px; font-size: 12.5px; }
+        .o_menu_systray .o_nav_entry, .o_menu_systray button { min-width: 32px; padding-left: 4px; padding-right: 4px; }
     }
 }
 @media (max-width: 359.98px) { .tp-shell-navbar .tp-shell-mobile-context { display: none; } }

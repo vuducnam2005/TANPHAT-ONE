@@ -52,7 +52,7 @@
         .o_form_readonly .o_form_label { opacity: 1; color: #172b4d; }
         .o_form_readonly .o_form_label { color: #475569; }
     }
-    .o_notebook .nav-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; gap: 4px; border-bottom: 1px solid #dce4ef; }
+    .o_notebook .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden !important; scrollbar-width: none; gap: 4px; border-bottom: 1px solid #dce4ef; &::-webkit-scrollbar { display: none; } }
     .o_notebook .nav-link { display: inline-flex; align-items: center; gap: 6px; color: #607087; font-size: 15px; font-weight: 600; white-space: nowrap; padding: 12px 14px; border: 0; border-radius: 0; border-bottom: 3px solid transparent; background: transparent; transition: color 200ms, background-color 200ms; .oi { font-size: 20px; } }
     .o_notebook .nav-link.active { color: #2563eb; border-bottom-color: #2563eb; background: #f0f5ff; }
     .o_notebook .nav-link:hover { background-color: #f4f7fb; }
@@ -99,7 +99,7 @@
     .o_tp_hr_employee_form .o_tp_hr_personal_grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 767px) {
-    .o_tp_hr_profile_view .o_control_panel { padding: 10px 12px !important; .btn { font-size: 14px; padding: 7px 12px; } }
+    .o_tp_hr_profile_view .o_control_panel { padding: 10px 12px !important; .btn { min-height: 44px; min-width: 44px; font-size: 14px; padding: 7px 12px; } }
     .o_tp_hr_employee_form {
         .o_form_sheet_bg { padding: 12px 8px !important; }
         .o_form_sheet { padding: 20px 16px !important; }

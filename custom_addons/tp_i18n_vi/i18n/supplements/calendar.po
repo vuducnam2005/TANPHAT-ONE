@@ -295,3 +295,10 @@ msgstr ""
 #: code:addons/calendar/models/calendar_event.py:0
 msgid "[Draft]"
 msgstr "[Bản nháp]"
+
+#. module: calendar
+#. odoo-python
+#. odoo-javascript
+#: code:addons/calendar/models/calendar_alarm.py:0
+msgid "Email - 1 day"
+msgstr "Email - Trước 1 ngày"
