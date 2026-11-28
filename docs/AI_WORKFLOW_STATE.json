@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "scope_version": 1,
-  "updated_at": "2026-11-28T00:48:25.247971+00:00",
-  "last_change_id": "CHG-20261128-002",
+  "updated_at": "2026-11-28T00:59:42.521909+00:00",
+  "last_change_id": "CHG-20261128-003",
   "code_digest": "b0a9dd426175b67ccf14b83acbd29b6d96196d468ee2b335a4f4b6e8b5203de9",
   "code_file_count": 936,
   "documentation": {
-    "docs/PROJECT_STATUS.md": "2f7741647633fddf9691167278d41504b47e3144b32f62772208737fdc816a51",
-    "docs/CHANGELOG.md": "5be48490ec444530825fd6c01f2e0dbe6eb9247f62695dd91b0fdc336a93a295",
+    "docs/PROJECT_STATUS.md": "cf214042a8f28de419d81b992202f90657f49644017aea4e0393293b013dd875",
+    "docs/CHANGELOG.md": "621fc247cfbf9d4f94fa5de4ce91c3021cdaeecb62b29f833ca26156017a46c1",
     "AGENTS.md": "72c31b7b0d24828d2313203ad211348f916aec386e61ad31b478fb3f80ad4448",
     "README_TANPHAT.md": "405fa341eb32b5cfa3d590f5ba8c68dc181026c7cfc2a851dbfd37fb27bc9bf2",
     "docs/AI_CHANGE_WORKFLOW.md": "e5d8b8b7b0cd5f3f652c9214f3cdbc8d05232aac9c714fef544e09ff9785d5e1",
@@ -20,6 +20,6 @@
     "docs/architecture/TP_PRODUCT_NAMING.md": "008b98f50c87a5a441f7da5c6c2c30072a99ac4d103cfeecadcd3a310d43d105"
   },
   "reported_checks": [
-    "QWeb XML parse + libsass SCSS compile PASS across all 20 addons; 0 unbound String/Boolean/Number expressions remaining; git diff --cached --check rc=0"
+    "PC Server deployment of bf1ecfce + ca0f4c1f verified (rc=0, error_lines=0, STRICT_INVARIANT_DRIFTS={}) + Agent A08 live public regression on https://tpone.tadic.vn PASS (bundles dd00875/9560259, 0 JS/HTTP errors)"
   ]
 }
