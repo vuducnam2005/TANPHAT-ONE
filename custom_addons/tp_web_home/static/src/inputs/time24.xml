@@ -56,8 +56,8 @@
                    t-on-change="this.onDateChange"/>
             <TpTime24Field
                 value="this.parsed.time"
-                disabled="Boolean(this.props.disabled)"
-                readonly="Boolean(this.props.readonly)"
+                disabled="!!this.props.disabled"
+                readonly="!!this.props.readonly"
                 invalid="this.isInvalid"
                 stepMinutes="this.props.stepMinutes"
                 onChange="(hhmm) => this.onTimeChange(hhmm)"/>

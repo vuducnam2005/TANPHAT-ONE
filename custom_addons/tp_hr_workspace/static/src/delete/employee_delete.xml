@@ -30,7 +30,7 @@
                     <p class="text-muted small mb-2">Hệ thống sẽ tự động tạo và hoàn tất phiếu thu hồi về kho khi xác nhận xóa. Người đang sử dụng được gỡ bỏ; mã tài sản, serial và tình trạng kỹ thuật được giữ nguyên.</p>
                     <div t-if="this.state.preview.availableLocations and this.state.preview.availableLocations.length > 1" class="o_tp_hr_delete_location_picker mb-2 d-flex align-items-center gap-2">
                         <label for="tp_hr_delete_warehouse" class="small fw-semibold text-nowrap mb-0">Kho nhận thu hồi:</label>
-                        <select id="tp_hr_delete_warehouse" class="form-select form-select-sm" t-att-value="this.state.locationId" t-on-change="(ev) => this.state.locationId = Number(ev.target.value)" t-att-disabled="this.state.busy">
+                        <select id="tp_hr_delete_warehouse" class="form-select form-select-sm" t-att-value="this.state.locationId" t-on-change="(ev) => this.state.locationId = +ev.target.value" t-att-disabled="this.state.busy">
                             <option t-foreach="this.state.preview.availableLocations" t-as="loc" t-key="loc.id" t-att-value="loc.id" t-att-selected="loc.id == this.state.locationId">
                                 <t t-out="loc.name"/><t t-if="loc.is_default"> (Mặc định)</t>
                             </option>

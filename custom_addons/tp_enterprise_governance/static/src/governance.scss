@@ -512,6 +512,17 @@ body:has(.tp-gov-shell) .o_main_navbar .o_menu_sections {
     }
     .tp-gov-mobile-toggle {
         display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+    .tp-gov-topbar > div:first-child {
+        flex-wrap: wrap;
+        align-items: flex-start !important;
+    }
+    .tp-gov-h1 {
+        font-size: 18px;
     }
     .tp-gov-main {
         padding: 14px 12px 28px;

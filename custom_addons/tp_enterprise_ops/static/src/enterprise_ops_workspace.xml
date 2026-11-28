@@ -614,7 +614,7 @@
                                         t-att-value="this.state.payrollDeptFilter"
                                         t-on-change="this.onPayrollDeptChange">
                                     <option value="all">Tất cả phòng ban</option>
-                                    <option t-foreach="this.state.payrollDepartments" t-as="d" t-key="d.id" t-att-value="String(d.id)" t-out="d.name"/>
+                                    <option t-foreach="this.state.payrollDepartments" t-as="d" t-key="d.id" t-att-value="'' + d.id" t-out="d.name"/>
                                     <option value="0">Chưa khai báo phòng ban</option>
                                 </select>
                                 <select class="tp-ops-select tp-ops-filter-select"

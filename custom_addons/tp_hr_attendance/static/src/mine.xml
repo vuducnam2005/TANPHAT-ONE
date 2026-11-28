@@ -458,13 +458,13 @@
                 <div class="col-6">
                     <label for="tp_att_correction_in" class="form-label fw-semibold">Giờ vào đề nghị <span class="text-danger">*</span></label>
                     <TpTime24Field id="'tp_att_correction_in'" value="this.state.requestedIn"
-                        invalid="this.hasFieldError('in')" disabled="Boolean(this.state.busy)" stepMinutes="1"
+                        invalid="this.hasFieldError('in')" disabled="!!this.state.busy" stepMinutes="1"
                         onChange="(val) => { this.state.requestedIn = val; }"/>
                 </div>
                 <div class="col-6">
                     <label for="tp_att_correction_out" class="form-label fw-semibold">Giờ ra đề nghị <span class="text-danger">*</span></label>
                     <TpTime24Field id="'tp_att_correction_out'" value="this.state.requestedOut"
-                        invalid="this.hasFieldError('out')" disabled="Boolean(this.state.busy)" stepMinutes="1"
+                        invalid="this.hasFieldError('out')" disabled="!!this.state.busy" stepMinutes="1"
                         onChange="(val) => { this.state.requestedOut = val; }"/>
                 </div>
             </div>

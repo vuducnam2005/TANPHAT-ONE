@@ -3,7 +3,7 @@
     'summary': 'Native Home: executive & workspace dashboard with real-time KPIs, shortcuts, agenda and task analytics',
     'description': 'Native Odoo home page & unified app switcher for TANPHAT ONE (UI-HOME-006..010, UI-APPS-001). See README.md.',
     'author': 'Tan Phat JSC',
-    'version': '20.0.3.0.5',
+    'version': '20.0.3.0.6',
     'license': 'LGPL-3',
     'depends': ['web', 'tp_web_login'],
     'data': [

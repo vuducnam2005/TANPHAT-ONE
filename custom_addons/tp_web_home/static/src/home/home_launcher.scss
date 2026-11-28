@@ -1,5 +1,11 @@
 // UI-HOME-006 & UI-HOME-007: 5-tier Executive (Admin) & Personal (Employee) Home
 // Compact single-screen proportions matching reference image with zero vertical page scroll on desktop.
+html:has(.o_action.o_tp_web_home),
+body.o_web_client:has(.o_action.o_tp_web_home) {
+    overflow: hidden !important;
+    height: 100dvh !important;
+}
+
 .o_web_client:has(> .o_action_manager > .o_action.o_tp_web_home) > .o_action_manager {
     overflow: hidden !important;
 }
